@@ -8,5 +8,5 @@ Local.dat is the file used by GW2 to store settings related to your computer, su
 
 When -sharedArchive is enabled, GW2 will not be able to modify any files. In order to update the game or modify your settings, the game must be launched normally.
 
-## Preview
+### Preview
 ![Preview](https://github.com/Healix/Gw2Launcher/wiki/images/preview.jpg)
