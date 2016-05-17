@@ -804,9 +804,11 @@ namespace Gw2Launcher.Client
                 else
                 {
                     double duration = gw2.ExitTime.Subtract(gw2.StartTime).TotalSeconds;
-                    if (IsUpdate(mode) && duration < 0.5 || !IsUpdate(mode) && duration < 1)
+                    bool isUpdate = IsUpdate(mode);
+
+                    if (isUpdate || duration < 1) //(IsUpdate(mode) && duration < 0.5 || !IsUpdate(mode) && duration < 1)
                     {
-                        //GW2 was likely closed due to another copy running
+                        //GW2 was likely closed due to another copy running, or the client is being updated
 
                         Thread.Sleep(500);
 
@@ -820,7 +822,11 @@ namespace Gw2Launcher.Client
                             catch { }
                         }
 
-                        if (account.Process.Process != null)
+                        if (isUpdate)
+                        {
+                            return true;
+                        }
+                        else if (account.Process.Process != null)
                         {
                             //was handled by taskScan
                             //assuming GW2 closed itself, restarted and that process was attached
@@ -1083,12 +1089,29 @@ namespace Gw2Launcher.Client
         {
             int startTime = Environment.TickCount;
             Process[] ps = Process.GetProcessesByName(fi.Name.Substring(0, fi.Name.Length - fi.Extension.Length));
-            
+
             foreach (Process p in ps)
             {
                 try
                 {
-                    if (string.Equals(p.MainModule.FileName, fi.FullName, StringComparison.OrdinalIgnoreCase))
+                    string path = null, 
+                           commandLine = null,
+                           query = string.Format("SELECT ExecutablePath, CommandLine FROM Win32_Process WHERE ProcessId={0}", p.Id);
+
+                    using (ManagementObjectSearcher searcher = new ManagementObjectSearcher(query))
+                    {
+                        using (ManagementObjectCollection results = searcher.Get())
+                        {
+                            foreach (ManagementObject o in results)
+                            {
+                                path = o["ExecutablePath"] as string;
+                                commandLine = o["CommandLine"] as string;
+                                break;
+                            }
+                        }
+                    }
+
+                    if (string.Equals(path, fi.FullName, StringComparison.OrdinalIgnoreCase))
                     {
                         bool isUnknown = false;
 
@@ -1102,7 +1125,7 @@ namespace Gw2Launcher.Client
 
                                 try
                                 {
-                                    string commandLine = GetProcessCommandLine(p);
+                                    //string commandLine = GetProcessCommandLine(p);
                                     if (commandLine != null)
                                         uqid = GetUIDFromCommandLine(commandLine);
                                 }
@@ -1139,7 +1162,8 @@ namespace Gw2Launcher.Client
 
                                     if (account != null)
                                     {
-                                        account.SetState(AccountState.Active, true, p);
+                                        if (!account.IsActive)
+                                            account.SetState(AccountState.Active, true, p);
 
                                         account.Process.Attach(p);
                                         
@@ -1347,6 +1371,28 @@ namespace Gw2Launcher.Client
                     watcher.SetBounds(e, r, 30000);
                 }
             }
+        }
+
+        private static string[] GetProcessDetails(Process p)
+        {
+            string query = string.Format("SELECT ExecutablePath, CommandLine FROM Win32_Process WHERE ProcessId={0}", p.Id);
+
+            using (ManagementObjectSearcher searcher = new ManagementObjectSearcher(query))
+            {
+                using (ManagementObjectCollection results = searcher.Get())
+                {
+                    foreach (ManagementObject o in results)
+                    {
+                        return new string[]
+                        {
+                            o["ExecutablePath"] as string,
+                            o["CommandLine"] as string
+                        };
+                    }
+                }
+            }
+
+            return null;
         }
 
         private static string GetProcessCommandLine(Process p)

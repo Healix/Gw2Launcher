@@ -37,31 +37,64 @@ namespace Gw2Launcher.Tools
 
                 try
                 {
-                    using (WebClient client = new WebClient())
-                    {
-                        string data = client.DownloadString(URL_BUILD_API);
-                        int i = data.IndexOf("id\":");
-                        if (i != -1)
-                        {
-                            i += 4;
+                    HttpWebRequest request = HttpWebRequest.CreateHttp(URL_BUILD_API);
+                    request.Timeout=5000;
 
-                            int b;
-                            for (int j = i, l = data.Length; j < l; j++)
+                    using (HttpWebResponse response = (HttpWebResponse)request.GetResponse())
+                    {
+                        using (System.IO.StreamReader reader = new System.IO.StreamReader(response.GetResponseStream()))
+                        {
+                            string data = reader.ReadToEnd();
+                            int i = data.IndexOf("id\":");
+                            if (i != -1)
                             {
-                                if (!char.IsDigit(data[j]))
+                                i += 4;
+
+                                int b;
+                                for (int j = i, l = data.Length; j < l; j++)
                                 {
-                                    if (Int32.TryParse(data.Substring(i, j - i), out b))
+                                    if (!char.IsDigit(data[j]))
                                     {
-                                        build = b;
-                                        time = Environment.TickCount;
-                                        return b;
+                                        if (Int32.TryParse(data.Substring(i, j - i), out b))
+                                        {
+                                            build = b;
+                                            time = Environment.TickCount;
+                                            return b;
+                                        }
                                     }
                                 }
                             }
                         }
                     }
+
+                    //using (WebClient client = new WebClient())
+                    //{
+                    //    string data = client.DownloadString(URL_BUILD_API);
+                    //    int i = data.IndexOf("id\":");
+                    //    if (i != -1)
+                    //    {
+                    //        i += 4;
+
+                    //        int b;
+                    //        for (int j = i, l = data.Length; j < l; j++)
+                    //        {
+                    //            if (!char.IsDigit(data[j]))
+                    //            {
+                    //                if (Int32.TryParse(data.Substring(i, j - i), out b))
+                    //                {
+                    //                    build = b;
+                    //                    time = Environment.TickCount;
+                    //                    return b;
+                    //                }
+                    //            }
+                    //        }
+                    //    }
+                    //}
                 }
-                catch { }
+                catch (Exception e)
+                {
+                    Console.WriteLine("Gw2Build.GetBuild: " + e.Message);
+                }
             }
 
             return -1;

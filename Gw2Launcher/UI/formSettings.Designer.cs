@@ -640,10 +640,10 @@
             this.Controls.Add(this.buttonCancel);
             this.Controls.Add(this.buttonOK);
             this.Controls.Add(this.sidebarPanel1);
+            this.Controls.Add(this.panelGeneral);
             this.Controls.Add(this.panelStyle);
             this.Controls.Add(this.panelPasswords);
             this.Controls.Add(this.panelArguments);
-            this.Controls.Add(this.panelGeneral);
             this.Font = new System.Drawing.Font("Segoe UI", 8.25F);
             this.FormBorderStyle = System.Windows.Forms.FormBorderStyle.FixedDialog;
             this.Icon = global::Gw2Launcher.Properties.Resources.Gw2;
