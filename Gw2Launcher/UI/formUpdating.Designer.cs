@@ -32,7 +32,7 @@
             this.progressUpdating = new System.Windows.Forms.ProgressBar();
             this.label1 = new System.Windows.Forms.Label();
             this.labelAbort = new System.Windows.Forms.Label();
-            this.labelDifference = new System.Windows.Forms.Label();
+            this.labelWritten = new System.Windows.Forms.Label();
             this.label2 = new System.Windows.Forms.Label();
             this.label3 = new System.Windows.Forms.Label();
             this.label4 = new System.Windows.Forms.Label();
@@ -46,10 +46,10 @@
             // labelName
             // 
             this.labelName.AutoSize = true;
-            this.labelName.Font = new System.Drawing.Font("Segoe UI Light", 8.25F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+            this.labelName.Font = new System.Drawing.Font("Segoe UI Semilight", 8.25F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
             this.labelName.Location = new System.Drawing.Point(10, 10);
             this.labelName.Name = "labelName";
-            this.labelName.Size = new System.Drawing.Size(122, 13);
+            this.labelName.Size = new System.Drawing.Size(125, 13);
             this.labelName.TabIndex = 18;
             this.labelName.Text = "Updating [account name]";
             // 
@@ -62,7 +62,7 @@
             // 
             // label1
             // 
-            this.label1.Font = new System.Drawing.Font("Segoe UI Light", 8.25F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+            this.label1.Font = new System.Drawing.Font("Segoe UI Semilight", 8.25F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
             this.label1.Location = new System.Drawing.Point(10, 151);
             this.label1.Name = "label1";
             this.label1.Size = new System.Drawing.Size(304, 13);
@@ -82,15 +82,15 @@
             this.labelAbort.Text = "abort";
             this.labelAbort.Click += new System.EventHandler(this.labelAbort_Click);
             // 
-            // labelDifference
+            // labelWritten
             // 
-            this.labelDifference.AutoSize = true;
-            this.labelDifference.Font = new System.Drawing.Font("Segoe UI Light", 8.25F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            this.labelDifference.Location = new System.Drawing.Point(85, 123);
-            this.labelDifference.Name = "labelDifference";
-            this.labelDifference.Size = new System.Drawing.Size(31, 13);
-            this.labelDifference.TabIndex = 24;
-            this.labelDifference.Text = "0 MB";
+            this.labelWritten.AutoSize = true;
+            this.labelWritten.Font = new System.Drawing.Font("Segoe UI Semilight", 8.25F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+            this.labelWritten.Location = new System.Drawing.Point(80, 123);
+            this.labelWritten.Name = "labelWritten";
+            this.labelWritten.Size = new System.Drawing.Size(32, 13);
+            this.labelWritten.TabIndex = 24;
+            this.labelWritten.Text = "0 MB";
             // 
             // label2
             // 
@@ -106,30 +106,30 @@
             // label3
             // 
             this.label3.AutoSize = true;
-            this.label3.Font = new System.Drawing.Font("Segoe UI Light", 8.25F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+            this.label3.Font = new System.Drawing.Font("Segoe UI Semilight", 8.25F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
             this.label3.Location = new System.Drawing.Point(10, 105);
             this.label3.Name = "label3";
-            this.label3.Size = new System.Drawing.Size(50, 13);
+            this.label3.Size = new System.Drawing.Size(51, 13);
             this.label3.TabIndex = 26;
             this.label3.Text = "Total Size";
             // 
             // label4
             // 
             this.label4.AutoSize = true;
-            this.label4.Font = new System.Drawing.Font("Segoe UI Light", 8.25F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+            this.label4.Font = new System.Drawing.Font("Segoe UI Semilight", 8.25F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
             this.label4.Location = new System.Drawing.Point(10, 123);
             this.label4.Name = "label4";
-            this.label4.Size = new System.Drawing.Size(55, 13);
+            this.label4.Size = new System.Drawing.Size(57, 13);
             this.label4.TabIndex = 27;
-            this.label4.Text = "Difference";
+            this.label4.Text = "Disk usage";
             // 
             // labelTotalSize
             // 
             this.labelTotalSize.AutoSize = true;
-            this.labelTotalSize.Font = new System.Drawing.Font("Segoe UI Light", 8.25F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            this.labelTotalSize.Location = new System.Drawing.Point(85, 105);
+            this.labelTotalSize.Font = new System.Drawing.Font("Segoe UI Semilight", 8.25F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+            this.labelTotalSize.Location = new System.Drawing.Point(80, 105);
             this.labelTotalSize.Name = "labelTotalSize";
-            this.labelTotalSize.Size = new System.Drawing.Size(31, 13);
+            this.labelTotalSize.Size = new System.Drawing.Size(32, 13);
             this.labelTotalSize.TabIndex = 28;
             this.labelTotalSize.Text = "0 MB";
             // 
@@ -145,7 +145,7 @@
             // 
             // label5
             // 
-            this.label5.Font = new System.Drawing.Font("Segoe UI Light", 8.25F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+            this.label5.Font = new System.Drawing.Font("Segoe UI Semilight", 8.25F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
             this.label5.Location = new System.Drawing.Point(0, 32);
             this.label5.Name = "label5";
             this.label5.Size = new System.Drawing.Size(320, 31);
@@ -173,7 +173,7 @@
             this.Controls.Add(this.label4);
             this.Controls.Add(this.label3);
             this.Controls.Add(this.label2);
-            this.Controls.Add(this.labelDifference);
+            this.Controls.Add(this.labelWritten);
             this.Controls.Add(this.labelAbort);
             this.Controls.Add(this.label1);
             this.Controls.Add(this.progressUpdating);
@@ -203,7 +203,7 @@
         private System.Windows.Forms.ProgressBar progressUpdating;
         private System.Windows.Forms.Label label1;
         private System.Windows.Forms.Label labelAbort;
-        private System.Windows.Forms.Label labelDifference;
+        private System.Windows.Forms.Label labelWritten;
         private System.Windows.Forms.Label label2;
         private System.Windows.Forms.Label label3;
         private System.Windows.Forms.Label label4;

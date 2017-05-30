@@ -217,10 +217,10 @@
             // label13
             // 
             this.label13.AutoSize = true;
-            this.label13.Font = new System.Drawing.Font("Segoe UI Light", 8.25F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+            this.label13.Font = new System.Drawing.Font("Segoe UI Semilight", 8.25F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
             this.label13.Location = new System.Drawing.Point(14, 188);
             this.label13.Name = "label13";
-            this.label13.Size = new System.Drawing.Size(252, 13);
+            this.label13.Size = new System.Drawing.Size(258, 13);
             this.label13.TabIndex = 42;
             this.label13.Text = "Resets the position and automatically sizes the window";
             // 
@@ -282,10 +282,10 @@
             // label9
             // 
             this.label9.AutoSize = true;
-            this.label9.Font = new System.Drawing.Font("Segoe UI Light", 8.25F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+            this.label9.Font = new System.Drawing.Font("Segoe UI Semilight", 8.25F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
             this.label9.Location = new System.Drawing.Point(14, 98);
             this.label9.Name = "label9";
-            this.label9.Size = new System.Drawing.Size(232, 13);
+            this.label9.Size = new System.Drawing.Size(237, 13);
             this.label9.TabIndex = 33;
             this.label9.Text = "Show an icon in the area next to the system clock";
             // 
@@ -302,12 +302,12 @@
             // label5
             // 
             this.label5.AutoSize = true;
-            this.label5.Font = new System.Drawing.Font("Segoe UI Light", 8.25F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+            this.label5.Font = new System.Drawing.Font("Segoe UI Semilight", 8.25F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
             this.label5.Location = new System.Drawing.Point(14, 26);
             this.label5.Name = "label5";
-            this.label5.Size = new System.Drawing.Size(153, 13);
+            this.label5.Size = new System.Drawing.Size(137, 13);
             this.label5.TabIndex = 19;
-            this.label5.Text = "The path to the GW2\'s launcher";
+            this.label5.Text = "The path to GW2\'s launcher";
             // 
             // textGW2Path
             // 
@@ -357,10 +357,10 @@
             // label1
             // 
             this.label1.AutoSize = true;
-            this.label1.Font = new System.Drawing.Font("Segoe UI Light", 8.25F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+            this.label1.Font = new System.Drawing.Font("Segoe UI Semilight", 8.25F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
             this.label1.Location = new System.Drawing.Point(14, 98);
             this.label1.Name = "label1";
-            this.label1.Size = new System.Drawing.Size(312, 13);
+            this.label1.Size = new System.Drawing.Size(319, 13);
             this.label1.TabIndex = 37;
             this.label1.Text = "Lookup the current build and automatically update when launching";
             // 
@@ -388,10 +388,10 @@
             // label7
             // 
             this.label7.AutoSize = true;
-            this.label7.Font = new System.Drawing.Font("Segoe UI Light", 8.25F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+            this.label7.Font = new System.Drawing.Font("Segoe UI Semilight", 8.25F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
             this.label7.Location = new System.Drawing.Point(14, 26);
             this.label7.Name = "label7";
-            this.label7.Size = new System.Drawing.Size(295, 13);
+            this.label7.Size = new System.Drawing.Size(303, 13);
             this.label7.TabIndex = 21;
             this.label7.Text = "Optional command line arguments that will apply to all accounts";
             // 
@@ -444,11 +444,11 @@
             // label11
             // 
             this.label11.AutoSize = true;
-            this.label11.Font = new System.Drawing.Font("Segoe UI Light", 8.25F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+            this.label11.Font = new System.Drawing.Font("Segoe UI Semilight", 8.25F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
             this.label11.Location = new System.Drawing.Point(14, 93);
             this.label11.MaximumSize = new System.Drawing.Size(340, 0);
             this.label11.Name = "label11";
-            this.label11.Size = new System.Drawing.Size(312, 26);
+            this.label11.Size = new System.Drawing.Size(317, 26);
             this.label11.TabIndex = 33;
             this.label11.Text = "All stored passwords will be cleared, including those cached by the current sessi" +
     "on";
@@ -477,10 +477,10 @@
             // label6
             // 
             this.label6.AutoSize = true;
-            this.label6.Font = new System.Drawing.Font("Segoe UI Light", 8.25F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+            this.label6.Font = new System.Drawing.Font("Segoe UI Semilight", 8.25F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
             this.label6.Location = new System.Drawing.Point(14, 26);
             this.label6.Name = "label6";
-            this.label6.Size = new System.Drawing.Size(277, 13);
+            this.label6.Size = new System.Drawing.Size(282, 13);
             this.label6.TabIndex = 31;
             this.label6.Text = "Passwords will be saved and encrypted for the current user";
             // 
@@ -588,7 +588,7 @@
             this.buttonSample.Cursor = System.Windows.Forms.Cursors.Hand;
             this.buttonSample.DisplayName = "example@example.com";
             this.buttonSample.FontLarge = new System.Drawing.Font("Segoe UI Semibold", 8.25F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            this.buttonSample.FontSmall = new System.Drawing.Font("Segoe UI Light", 8.25F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+            this.buttonSample.FontSmall = new System.Drawing.Font("Segoe UI Semilight", 8.25F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
             this.buttonSample.Index = 0;
             this.buttonSample.LastUsedUtc = new System.DateTime(((long)(0)));
             this.buttonSample.Location = new System.Drawing.Point(24, 157);
@@ -605,17 +605,17 @@
             // label15
             // 
             this.label15.AutoSize = true;
-            this.label15.Font = new System.Drawing.Font("Segoe UI Light", 8.25F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+            this.label15.Font = new System.Drawing.Font("Segoe UI Semilight", 8.25F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
             this.label15.Location = new System.Drawing.Point(104, 26);
             this.label15.Name = "label15";
-            this.label15.Size = new System.Drawing.Size(58, 13);
+            this.label15.Size = new System.Drawing.Size(59, 13);
             this.label15.TabIndex = 35;
             this.label15.Text = "Descriptors";
             // 
             // label17
             // 
             this.label17.AutoSize = true;
-            this.label17.Font = new System.Drawing.Font("Segoe UI Light", 8.25F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+            this.label17.Font = new System.Drawing.Font("Segoe UI Semilight", 8.25F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
             this.label17.Location = new System.Drawing.Point(14, 26);
             this.label17.Name = "label17";
             this.label17.Size = new System.Drawing.Size(26, 13);

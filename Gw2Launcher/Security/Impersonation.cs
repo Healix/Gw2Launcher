@@ -36,6 +36,7 @@ namespace Gw2Launcher.Security
                 }
                 catch (Exception e)
                 {
+                    Util.Logging.Log(e);
                     this.Dispose();
                     throw e;
                 }
@@ -120,6 +121,7 @@ namespace Gw2Launcher.Security
             }
             catch (System.ComponentModel.Win32Exception e)
             {
+                Util.Logging.Log(e);
                 //1327: account restriction/blank password
                 //1331: account is disabled
                 if (((System.ComponentModel.Win32Exception)e).NativeErrorCode == 1326)
@@ -138,6 +140,7 @@ namespace Gw2Launcher.Security
             }
             catch (Exception e)
             {
+                Util.Logging.Log(e);
                 throw e;
             }
         }

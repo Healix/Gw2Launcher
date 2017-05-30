@@ -10,17 +10,16 @@ namespace Gw2Launcher.Tools
 {
     static class Gw2Build
     {
-        private const int BUILD_RECACHE_TIME = 60000 * 10;
+        private const int BUILD_RECACHE_TIME = 60000;
         private const string URL_BUILD_API = "https://api.guildwars2.com/v2/build";
 
         private static readonly object _lock;
         private static int build;
-        private static int time;
+        private static DateTime nextCheck;
 
         static Gw2Build()
         {
             _lock = new object();
-            time = -BUILD_RECACHE_TIME;
         }
 
         public static Task<int> GetBuildAsync()
@@ -32,13 +31,14 @@ namespace Gw2Launcher.Tools
         {
             lock (_lock)
             {
-                if (Environment.TickCount < time + BUILD_RECACHE_TIME)
+                if (DateTime.UtcNow < nextCheck)
                     return build;
 
                 try
                 {
                     HttpWebRequest request = HttpWebRequest.CreateHttp(URL_BUILD_API);
-                    request.Timeout=5000;
+                    request.AutomaticDecompression = DecompressionMethods.Deflate | DecompressionMethods.GZip;
+                    request.Timeout = 5000;
 
                     using (HttpWebResponse response = (HttpWebResponse)request.GetResponse())
                     {
@@ -58,7 +58,7 @@ namespace Gw2Launcher.Tools
                                         if (Int32.TryParse(data.Substring(i, j - i), out b))
                                         {
                                             build = b;
-                                            time = Environment.TickCount;
+                                            nextCheck = DateTime.UtcNow.AddMilliseconds(BUILD_RECACHE_TIME);
                                             return b;
                                         }
                                     }
@@ -66,34 +66,10 @@ namespace Gw2Launcher.Tools
                             }
                         }
                     }
-
-                    //using (WebClient client = new WebClient())
-                    //{
-                    //    string data = client.DownloadString(URL_BUILD_API);
-                    //    int i = data.IndexOf("id\":");
-                    //    if (i != -1)
-                    //    {
-                    //        i += 4;
-
-                    //        int b;
-                    //        for (int j = i, l = data.Length; j < l; j++)
-                    //        {
-                    //            if (!char.IsDigit(data[j]))
-                    //            {
-                    //                if (Int32.TryParse(data.Substring(i, j - i), out b))
-                    //                {
-                    //                    build = b;
-                    //                    time = Environment.TickCount;
-                    //                    return b;
-                    //                }
-                    //            }
-                    //        }
-                    //    }
-                    //}
                 }
                 catch (Exception e)
                 {
-                    Console.WriteLine("Gw2Build.GetBuild: " + e.Message);
+                    Util.Logging.Log(e);
                 }
             }
 
@@ -104,7 +80,7 @@ namespace Gw2Launcher.Tools
         {
             get
             {
-                if (Environment.TickCount > time + BUILD_RECACHE_TIME)
+                if (DateTime.UtcNow > nextCheck)
                 {
                     if (Monitor.TryEnter(_lock, 5000))
                     {

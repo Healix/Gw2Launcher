@@ -6,6 +6,7 @@ using System.Drawing;
 using System.Text;
 using System.Windows.Forms;
 using System.Threading;
+using System.Threading.Tasks;
 
 namespace Gw2Launcher.UI
 {
@@ -15,7 +16,7 @@ namespace Gw2Launcher.UI
 
         private enum ResizeMode { Move, Left, Right, Top, Bottom, TopLeft, TopRight, BottomLeft, BottomRight };
 
-        private Thread resizeThread;
+        //private Thread resizeThread;
         private bool formClosing;
 
         private ResizeMode resizeMode;
@@ -39,8 +40,10 @@ namespace Gw2Launcher.UI
             this.GotFocus += new EventHandler(formWindowSize_GotFocus);
             this.LostFocus += new EventHandler(formWindowSize_LostFocus);
 
-            resizeThread = new Thread(new ThreadStart(ResizeWindow));
-            resizeThread.Start();
+            ResizeWindow();
+
+            //resizeThread = new Thread(new ThreadStart(ResizeWindow));
+            //resizeThread.Start();
         }
 
         private void formWindowSize_LostFocus(object sender, EventArgs e)
@@ -77,7 +80,10 @@ namespace Gw2Launcher.UI
                             SetWindowLocation(rect);
                         }));
                 }
-                catch { }
+                catch (Exception ex)
+                {
+                    Util.Logging.Log(ex);
+                }
 
                 return;
             }
@@ -98,7 +104,7 @@ namespace Gw2Launcher.UI
             }
         }
 
-        private void ResizeWindow()
+        private async void ResizeWindow()
         {
             while (!formClosing && !this.Disposing && !this.IsDisposed)
             {
@@ -140,7 +146,7 @@ namespace Gw2Launcher.UI
                     SetWindowLocation(new Rectangle(x, y, width, height));
                 }
 
-                Thread.Sleep(10);
+                await Task.Delay(10);
             }
         }
 
@@ -231,7 +237,6 @@ namespace Gw2Launcher.UI
         private void formWindowSize_FormClosing(object sender, FormClosingEventArgs e)
         {
             formClosing = true;
-            overlay.Dispose();
         }
 
         private void saveToolStripMenuItem_Click(object sender, EventArgs e)

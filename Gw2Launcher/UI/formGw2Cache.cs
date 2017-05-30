@@ -95,16 +95,23 @@ namespace Gw2Launcher.UI
                                         {
                                             size += (ulong)file.Length;
                                         }
-                                        catch { }
+                                        catch (Exception ex)
+                                        {
+                                            Util.Logging.Log(ex);
+                                        }
                                     }
                                 }
-                                catch { }
+                                catch (Exception ex)
+                                {
+                                    Util.Logging.Log(ex);
+                                }
                             }
 
                             return new object[] { folders.Length, size, folders };
                         }
-                        catch
+                        catch (Exception ex)
                         {
+                            Util.Logging.Log(ex);
                             return new object[] { -1, (ulong)0, null };
                         }
                     }));
@@ -168,20 +175,25 @@ namespace Gw2Launcher.UI
                         {
                             f.Delete();
                         }
-                        catch 
+                        catch (Exception e)
                         {
+                            Util.Logging.Log(e);
                             try
                             {
                                 f.Attributes = FileAttributes.Temporary;
                             }
-                            catch { }
+                            catch (Exception ex)
+                            {
+                                Util.Logging.Log(ex);
+                            }
                         }
                     }
 
                     folder.Delete(true);
                 }
-                catch
+                catch (Exception e)
                 {
+                    Util.Logging.Log(e);
                     failed.Add(folder.FullName);
                 }
             }
@@ -235,7 +247,10 @@ namespace Gw2Launcher.UI
                 {
                     Util.ProcessUtil.DeleteCacheFolders(roots);
                 }
-                catch { }
+                catch (Exception ex)
+                {
+                    Util.Logging.Log(ex);
+                }
             }
 
             Scan();
@@ -265,7 +280,10 @@ namespace Gw2Launcher.UI
             {
                 Util.ShowInExplorer.SelectFiles(folders[0].Parent.FullName, f);
             }
-            catch { }
+            catch (Exception ex)
+            {
+                Util.Logging.Log(ex);
+            }
         }
 
         private void gridCache_CellContentClick(object sender, DataGridViewCellEventArgs e)

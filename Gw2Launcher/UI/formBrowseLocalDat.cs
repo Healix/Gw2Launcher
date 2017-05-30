@@ -52,7 +52,10 @@ namespace Gw2Launcher.UI
                     {
                         File.Move(this.Path, this.movedFrom);
                     }
-                    catch { }
+                    catch (Exception ex)
+                    {
+                        Util.Logging.Log(ex);
+                    }
                     movedFrom = null;
                 }
                 else if (this.Path != null)
@@ -61,7 +64,10 @@ namespace Gw2Launcher.UI
                     {
                         File.Delete(this.Path);
                     }
-                    catch { }
+                    catch (Exception ex)
+                    {
+                        Util.Logging.Log(ex);
+                    }
                 }
             }
         }
@@ -244,8 +250,9 @@ namespace Gw2Launcher.UI
             {
                 temp = Path.GetTempFileName();
             }
-            catch
+            catch (Exception ex)
             {
+                Util.Logging.Log(ex);
                 temp = Util.FileUtil.GetTemporaryFileName(Path.GetDirectoryName(path));
             }
 
@@ -257,13 +264,17 @@ namespace Gw2Launcher.UI
                     {
                         File.Delete(temp);
                     }
-                    catch { }
+                    catch (Exception ex)
+                    {
+                        Util.Logging.Log(ex);
+                    }
                     File.Move(path, temp);
 
                     this.Result = new SelectedFile(temp, path);
                 }
                 catch (Exception ex)
                 {
+                    Util.Logging.Log(ex);
                     MessageBox.Show(this, "An error occured while trying to move the file.\n\n" + ex.Message, "Failed to move file", MessageBoxButtons.OK, MessageBoxIcon.Error);
                     return;
                 }
@@ -278,11 +289,15 @@ namespace Gw2Launcher.UI
                 }
                 catch (Exception ex)
                 {
+                    Util.Logging.Log(ex);
                     try
                     {
                         File.Delete(temp);
                     }
-                    catch { }
+                    catch (Exception ex2)
+                    {
+                        Util.Logging.Log(ex2);
+                    }
                     MessageBox.Show(this, "An error occured while trying to copy the file.\n\n" + ex.Message, "Failed to copy file", MessageBoxButtons.OK, MessageBoxIcon.Error);
                     return;
                 }

@@ -111,6 +111,7 @@ namespace Gw2Launcher.UI
                 }
                 catch (Exception ex)
                 {
+                    Util.Logging.Log(ex);
                     MessageBox.Show(this, "The tasks required to use this feature could not be created", "Unable to create tasks", MessageBoxButtons.OK, MessageBoxIcon.Error);
                     return;
                 }
@@ -123,6 +124,7 @@ namespace Gw2Launcher.UI
                 }
                 catch (Exception ex)
                 {
+                    Util.Logging.Log(ex);
                     MessageBox.Show(this, "The tasks used by this feature could not be deleted.\n\nTo delete them manually, open the Windows Task Scheduler and look for tasks with the name gw2launcher.", "Unable to delete tasks", MessageBoxButtons.OK, MessageBoxIcon.Error);
                 }
             }

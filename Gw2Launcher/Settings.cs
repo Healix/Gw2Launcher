@@ -939,7 +939,7 @@ namespace Gw2Launcher
         private static object _lock = new object();
         private static System.Threading.CancellationTokenSource cancelWrite;
         private static Task task;
-        private static int _lastModified;
+        private static DateTime _lastModified;
         private static ushort _accountUID;
         private static ushort _datUID;
 
@@ -980,14 +980,27 @@ namespace Gw2Launcher
             string path = Path.Combine(DataPath.AppData, FILE_NAME);
             try
             {
-                if (File.Exists(path + ".tmp"))
+                var tmp = new FileInfo(path + ".tmp");
+
+                if (tmp.Exists && tmp.Length > 0)
                 {
                     try
                     {
                         Load(path + ".tmp");
+                        try
+                        {
+                            if (File.Exists(path))
+                                File.Delete(path);
+                            File.Move(path + ".tmp", path);
+                        }
+                        catch (Exception ex)
+                        {
+                            Util.Logging.Log(ex);
+                        }
                     }
-                    catch
+                    catch (Exception ex)
                     {
+                        Util.Logging.Log(ex);
                         Load(path);
                     }
                 }
@@ -996,6 +1009,7 @@ namespace Gw2Launcher
             }
             catch (Exception e)
             {
+                Util.Logging.Log(e);
                 SetDefaults();
             }
         }
@@ -1017,7 +1031,7 @@ namespace Gw2Launcher
         {
             lock (_lock)
             {
-                _lastModified = Environment.TickCount;
+                _lastModified = DateTime.UtcNow;
                 if (task == null || task.IsCompleted)
                 {
                     var cancel = cancelWrite.Token;
@@ -1037,12 +1051,12 @@ namespace Gw2Launcher
             {
                 while (true)
                 {
-                    int remaining = WRITE_DELAY - Environment.TickCount + _lastModified;
+                    int remaining = WRITE_DELAY - (int)DateTime.UtcNow.Subtract(_lastModified).TotalMilliseconds;
                     if (remaining > 0)
                     {
                         if (cancel.WaitHandle.WaitOne(remaining))
                         {
-                            _lastModified = 0;
+                            _lastModified = DateTime.MinValue;
                             break;
                         }
                     }
@@ -1050,10 +1064,10 @@ namespace Gw2Launcher
                     {
                         lock (_lock)
                         {
-                            remaining = WRITE_DELAY - Environment.TickCount + _lastModified;
+                            remaining = WRITE_DELAY - (int)DateTime.UtcNow.Subtract(_lastModified).TotalMilliseconds;
                             if (remaining <= 0)
                             {
-                                _lastModified = 0;
+                                _lastModified = DateTime.MinValue;
                                 break;
                             }
                         }
@@ -1067,9 +1081,9 @@ namespace Gw2Launcher
 
                 lock (_lock)
                 {
-                    if (e != null || _lastModified != 0)
+                    if (e != null || _lastModified != DateTime.MinValue)
                     {
-                        _lastModified = Environment.TickCount;
+                        _lastModified = DateTime.UtcNow;
                     }
                     else
                     {
@@ -1222,8 +1236,9 @@ namespace Gw2Launcher
                         {
                             writer.Write(new FontConverter().ConvertToString(_FontLarge.Value));
                         }
-                        catch
+                        catch (Exception e)
                         {
+                            Util.Logging.Log(e);
                             writer.Write("");
                         }
                     }
@@ -1233,8 +1248,9 @@ namespace Gw2Launcher
                         {
                             writer.Write(new FontConverter().ConvertToString(_FontSmall.Value));
                         }
-                        catch
+                        catch (Exception e)
                         {
+                            Util.Logging.Log(e);
                             writer.Write("");
                         }
                     }
@@ -1368,12 +1384,17 @@ namespace Gw2Launcher
                     }
                 }
 
-                if (File.Exists(path))
-                    File.Delete(path);
-                File.Move(path + ".tmp", path);
+                var tmp = new FileInfo(path + ".tmp");
+                if (tmp.Length > 0)
+                {
+                    if (File.Exists(path))
+                        File.Delete(path);
+                    File.Move(path + ".tmp", path);
+                }
             }
             catch (Exception e)
             {
+                Util.Logging.Log(e);
                 return e;
             }
 
@@ -1471,7 +1492,10 @@ namespace Gw2Launcher
                     {
                         font = new FontConverter().ConvertFromString(reader.ReadString()) as Font;
                     }
-                    catch { }
+                    catch (Exception ex)
+                    {
+                        Util.Logging.Log(ex);
+                    }
                     if (font != null)
                         _FontLarge.Value = font;
                     else
@@ -1487,7 +1511,10 @@ namespace Gw2Launcher
                     {
                         font = new FontConverter().ConvertFromString(reader.ReadString()) as Font;
                     }
-                    catch { }
+                    catch (Exception ex)
+                    {
+                        Util.Logging.Log(ex);
+                    }
                     if (font != null)
                         _FontSmall.Value = font;
                     else

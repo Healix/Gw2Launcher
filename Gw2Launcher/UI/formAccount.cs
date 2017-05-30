@@ -98,7 +98,18 @@ namespace Gw2Launcher.UI
             textArguments.Text = account.Arguments;
 
             checkWindowed.Checked = account.Windowed;
-            textWindowed.Text = ToString(account.WindowBounds);
+            if (!account.Windowed && account.WindowBounds.IsEmpty)
+            {
+                Rectangle bounds = Screen.PrimaryScreen.Bounds;
+                Rectangle r = new Rectangle();
+                r.Width = bounds.Width / 3;
+                r.Height = bounds.Height / 3;
+                r.X = bounds.X + bounds.Width / 2 - r.Width / 2;
+                r.Y = bounds.Y + bounds.Height / 2 - r.Height / 2;
+                textWindowed.Text = ToString(r);
+            }
+            else
+                textWindowed.Text = ToString(account.WindowBounds);
 
             checkShowDaily.Checked = account.ShowDaily;
 
@@ -212,7 +223,10 @@ namespace Gw2Launcher.UI
                         userExists = user != null;
                     }
                 }
-                catch { }
+                catch (Exception ex)
+                {
+                    Util.Logging.Log(ex);
+                }
 
                 if (userExists)
                 {
@@ -243,6 +257,8 @@ namespace Gw2Launcher.UI
                         }
                         catch (Win32Exception ex)
                         {
+                            Util.Logging.Log(ex);
+
                             if (ex.NativeErrorCode == 1326)
                             {
                                 password = null;
@@ -253,6 +269,7 @@ namespace Gw2Launcher.UI
                         }
                         catch (Exception ex)
                         {
+                            Util.Logging.Log(ex);
                             break;
                         }
                     }
@@ -277,14 +294,17 @@ namespace Gw2Launcher.UI
                             File.Move(selectedFile.Path, path);
                             wasMoved = true;
                         }
-                        catch
+                        catch (Exception ex)
                         {
+                            Util.Logging.Log(ex);
+
                             try
                             {
                                 File.Copy(selectedFile.Path, path, true);
                             }
                             catch (Exception e)
                             {
+                                Util.Logging.Log(e);
                                 throw e;
                             }
                         }
@@ -315,7 +335,10 @@ namespace Gw2Launcher.UI
                     File.Move(path, _path);
                     path = _path;
                 }
-                catch { }
+                catch (Exception ex)
+                {
+                    Util.Logging.Log(ex);
+                }
                 datFile.Path = Path.GetFullPath(path);
             }
 
@@ -325,7 +348,10 @@ namespace Gw2Launcher.UI
                 {
                     File.Delete(selectedFile.Path);
                 }
-                catch { }
+                catch (Exception ex)
+                {
+                    Util.Logging.Log(ex);
+                }
             }
 
             return datFile;
@@ -359,6 +385,7 @@ namespace Gw2Launcher.UI
             }
             catch (Exception ex)
             {
+                Util.Logging.Log(ex);
                 MessageBox.Show(this, "An error occured while handling Local.dat.\n\n" + ex.Message, "Failed handling Local.dat", MessageBoxButtons.OK, MessageBoxIcon.Error);
                 return;
             }
@@ -465,8 +492,9 @@ namespace Gw2Launcher.UI
 
                 return r;
             }
-            catch
+            catch (Exception e)
             {
+                Util.Logging.Log(e);
                 return Rectangle.Empty;
             }
         }
@@ -488,9 +516,8 @@ namespace Gw2Launcher.UI
                 Rectangle r = FixSize(ParseWindowSize(textWindowed.Text));
 
                 f.SetBounds(r.X, r.Y, r.Width, r.Height);
-                f.ShowDialog(this);
-
-                textWindowed.Text = ToString(f.Bounds);
+                if (f.ShowDialog(this) == DialogResult.OK)
+                    textWindowed.Text = ToString(f.Bounds);
             }
         }
 
@@ -552,6 +579,7 @@ namespace Gw2Launcher.UI
                         }
                         catch (Exception ex)
                         {
+                            Util.Logging.Log(ex);
                             MessageBox.Show(this, "An error occured while trying to save the file:\n\n" + ex.Message, "Unable to save file", MessageBoxButtons.OK, MessageBoxIcon.Error);
                         }
                     }
@@ -561,7 +589,10 @@ namespace Gw2Launcher.UI
                         {
                             File.Delete(path);
                         }
-                        catch { }
+                        catch (Exception ex)
+                        {
+                            Util.Logging.Log(ex);
+                        }
                     }
                 }
             }

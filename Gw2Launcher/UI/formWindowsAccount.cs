@@ -61,7 +61,10 @@ namespace Gw2Launcher.UI
                     }
                 }
             }
-            catch { }
+            catch (Exception ex)
+            {
+                Util.Logging.Log(ex);
+            }
 
             try
             {
@@ -78,7 +81,10 @@ namespace Gw2Launcher.UI
                         listAccounts.Enabled = true;
                     }));
             }
-            catch { }
+            catch (Exception ex)
+            {
+                Util.Logging.Log(ex);
+            }
         }
 
         private Principal GetAccount(string username)
@@ -117,8 +123,9 @@ namespace Gw2Launcher.UI
                 bool created = GetAccount(name) != null;
                 return created;
             }
-            catch
+            catch (Exception e)
             {
+                Util.Logging.Log(e);
                 return false;
             }
         }
@@ -234,6 +241,7 @@ namespace Gw2Launcher.UI
                                     }
                                     catch (Exception ex)
                                     {
+                                        Util.Logging.Log(ex);
                                         MessageBox.Show(this, "The user has been successfully created, but you will need to first login to the account before it can be used.", "User created", MessageBoxButtons.OK, MessageBoxIcon.Information);
                                     }
                                 }

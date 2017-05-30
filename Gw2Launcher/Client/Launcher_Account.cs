@@ -18,28 +18,31 @@ namespace Gw2Launcher.Client
                 this.Process = new LinkedProcess(this);
             }
 
-            public bool InUse
-            {
-                get
-                {
-                    return InUseCount > 0;
-                }
-                set
-                {
-                    if (value)
-                    {
-                        InUseCount++;
-                    }
-                    else if (InUseCount > 0)
-                        InUseCount--;
-                }
-            }
+            public byte inQueueCount;
+            public byte errors;
 
-            public byte InUseCount
-            {
-                get;
-                set;
-            }
+            //public bool InUse
+            //{
+            //    get
+            //    {
+            //        return InUseCount > 0;
+            //    }
+            //    set
+            //    {
+            //        if (value)
+            //        {
+            //            InUseCount++;
+            //        }
+            //        else if (InUseCount > 0)
+            //            InUseCount--;
+            //    }
+            //}
+
+            //public byte InUseCount
+            //{
+            //    get;
+            //    set;
+            //}
 
             public Settings.IAccount Settings
             {
@@ -66,6 +69,7 @@ namespace Gw2Launcher.Client
                     switch (this.State)
                     {
                         case AccountState.Active:
+                        case AccountState.ActiveGame:
                         case AccountState.Updating:
                         case AccountState.UpdatingVisible:
                             return true;
@@ -81,7 +85,20 @@ namespace Gw2Launcher.Client
                     AccountState previousState = this.State;
                     this.State = state;
                     if (announce && AccountStateChanged != null)
-                        AccountStateChanged(this.Settings.UID, state, previousState, data);
+                    {
+                        lock (queueAnnounce)
+                        {
+                            queueAnnounce.Enqueue(new QueuedAnnounce(this.Settings.UID, state, previousState, data));
+                            if (taskAnnounce == null || taskAnnounce.IsCompleted)
+                            {
+                                taskAnnounce = Task.Factory.StartNew(
+                                    delegate
+                                    {
+                                        DoAnnounce();
+                                    });
+                            }
+                        }
+                    }
                 }
             }
 

@@ -32,7 +32,10 @@ namespace Gw2Launcher.Tools
                         {
                             Delete(username);
                         }
-                        catch { }
+                        catch (Exception ex)
+                        {
+                            Util.Logging.Log(ex);
+                        }
                     }
                 }
             }
@@ -70,7 +73,10 @@ namespace Gw2Launcher.Tools
                         {
                             Util.FileUtil.AllowFolderAccess(folder.FullName, System.Security.AccessControl.FileSystemRights.Modify);
                         }
-                        catch { }
+                        catch (Exception ex)
+                        {
+                            Util.Logging.Log(ex);
+                        }
                     }
 
                     return folders;
@@ -87,6 +93,7 @@ namespace Gw2Launcher.Tools
         {
             DirectoryInfo newest = null;
             DateTime utc = DateTime.MinValue;
+            DateTime limit = DateTime.UtcNow.Subtract(new TimeSpan(6, 0, 0));
 
             foreach (var d in folders)
             {
@@ -104,31 +111,38 @@ namespace Gw2Launcher.Tools
                         }
                     }
                 }
-                catch
+                catch (Exception e)
                 {
+                    Util.Logging.Log(e);
                 }
 
                 if (lastWrite > utc)
                 {
-                    if (newest != null)
+                    if (newest != null && utc < limit)
                     {
                         try
                         {
                             newest.Delete(true);
                         }
-                        catch { }
+                        catch (Exception ex)
+                        {
+                            Util.Logging.Log(ex);
+                        }
                     }
 
                     utc = lastWrite;
                     newest = d;
                 }
-                else
+                else if (utc < limit)
                 {
                     try
                     {
                         d.Delete(true);
                     }
-                    catch { }
+                    catch (Exception ex)
+                    {
+                        Util.Logging.Log(ex);
+                    }
                 }
             }
         }

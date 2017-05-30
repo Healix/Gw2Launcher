@@ -94,6 +94,7 @@ namespace Gw2Launcher.UI
             }
             catch (Exception ex)
             {
+                Util.Logging.Log(ex);
                 MessageBox.Show(this, "Unable to clear all stored passwords\n\n" + ex.Message, "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
             }
         }
@@ -106,8 +107,17 @@ namespace Gw2Launcher.UI
         private void buttonGW2Path_Click(object sender, EventArgs e)
         {
             OpenFileDialog f = new OpenFileDialog();
-            f.Filter = "Guild Wars 2|Gw2.exe|All executables|*.exe";
-            f.Title = "Open Gw2.exe";
+
+            f.Filter = "Guild Wars 2|Gw2*.exe|All executables|*.exe";
+            if (Environment.Is64BitOperatingSystem)
+                f.Title = "Open Gw2-64.exe";
+            else
+                f.Title = "Open Gw2.exe";
+
+            if (textGW2Path.TextLength != 0)
+            {
+                f.InitialDirectory = System.IO.Path.GetDirectoryName(textGW2Path.Text);
+            }
 
             if (f.ShowDialog(this) == System.Windows.Forms.DialogResult.OK)
             {
@@ -180,6 +190,7 @@ namespace Gw2Launcher.UI
                 }
                 catch (Exception ex)
                 {
+                    Util.Logging.Log(ex);
                     MessageBox.Show(this, ex.Message, "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
                 }
             }

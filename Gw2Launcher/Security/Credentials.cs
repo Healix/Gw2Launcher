@@ -86,8 +86,9 @@ namespace Gw2Launcher.Security
                                                 password = s;
                                             }
                                         }
-                                        catch
+                                        catch (Exception e)
                                         {
+                                            Util.Logging.Log(e);
                                         }
                                         finally
                                         {
@@ -110,7 +111,10 @@ namespace Gw2Launcher.Security
                             }
                         }
                     }
-                    catch { }
+                    catch (Exception ex)
+                    {
+                        Util.Logging.Log(ex);
+                    }
                 }
             }
 
@@ -163,7 +167,10 @@ namespace Gw2Launcher.Security
 
                     cache[username] = s;
                 }
-                catch { }
+                catch (Exception ex)
+                {
+                    Util.Logging.Log(ex);
+                }
 
                 if (storeCredentials)
                 {
@@ -181,7 +188,10 @@ namespace Gw2Launcher.Security
                                     if (!hasHeader)
                                         reader.BaseStream.Position = 0;
                                 }
-                                catch { }
+                                catch (Exception ex)
+                                {
+                                    Util.Logging.Log(ex);
+                                }
 
                                 ushort count;
 
@@ -244,7 +254,10 @@ namespace Gw2Launcher.Security
                             }
                         }
                     }
-                    catch { }
+                    catch (Exception ex)
+                    {
+                        Util.Logging.Log(ex);
+                    }
                 }
             }
         }
@@ -253,7 +266,8 @@ namespace Gw2Launcher.Security
         {
             lock (_lock)
             {
-                cache.Clear();
+                if (cache != null)
+                    cache.Clear();
 
                 string path = Path.Combine(DataPath.AppData, FILE);
                 if (File.Exists(path))
@@ -314,7 +328,10 @@ namespace Gw2Launcher.Security
                                 File.Delete(FILE);
                         }
                     }
-                    catch { }
+                    catch (Exception ex)
+                    {
+                        Util.Logging.Log(ex);
+                    }
                 }
             }
         }

@@ -14,6 +14,25 @@ namespace Gw2Launcher.Util
     {
         private class ApplicationObject : IDisposable
         {
+            public ApplicationObject()
+            {
+
+            }
+
+            public string Path
+            {
+                get
+                {
+                    return System.IO.Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location);
+                }
+            }
+
+            public void Dispose()
+            {
+
+            }
+
+            /*//ProcessUtil.exe (no longer used)
             protected static object _lock;
             protected static int references;
 
@@ -135,6 +154,7 @@ namespace Gw2Launcher.Util
                     }
                 }
             }
+            */
         }
 
         static ProcessUtil()
@@ -152,7 +172,7 @@ namespace Gw2Launcher.Util
         {
             using (ApplicationObject a = new ApplicationObject())
             {
-                ProcessStartInfo p = new ProcessStartInfo(a.Path, "-user -u \"" + name + "\" -p \"" + password + "\"");
+                ProcessStartInfo p = new ProcessStartInfo(a.Path, "-pu -user -u \"" + name + "\" -p \"" + password + "\"");
                 p.UseShellExecute = true;
                 p.Verb = "runas";
 
@@ -178,9 +198,12 @@ namespace Gw2Launcher.Util
                     //other users will be using this
                     Util.FileUtil.AllowFileAccess(a.Path, System.Security.AccessControl.FileSystemRights.Modify);
                 }
-                catch { }
+                catch (Exception ex)
+                {
+                    Util.Logging.Log(ex);
+                }
 
-                ProcessStartInfo p = new ProcessStartInfo(a.Path, "-userinit");
+                ProcessStartInfo p = new ProcessStartInfo(a.Path, "-pu -userinit");
 
                 p.UseShellExecute = false;
                 p.UserName = username;
@@ -208,7 +231,7 @@ namespace Gw2Launcher.Util
         {
             using (ApplicationObject a = new ApplicationObject())
             {
-                ProcessStartInfo p = new ProcessStartInfo(a.Path, "-handle -p \"" + gw2Path + "\" \"AN-Mutex-Window-Guild Wars 2\" 0");
+                ProcessStartInfo p = new ProcessStartInfo(a.Path, "-pu -handle -p \"" + gw2Path + "\" \"AN-Mutex-Window-Guild Wars 2\" 0");
                 p.UseShellExecute = true;
                 p.Verb = "runas";
 
@@ -229,7 +252,7 @@ namespace Gw2Launcher.Util
         {
             using (ApplicationObject a = new ApplicationObject())
             {
-                ProcessStartInfo p = new ProcessStartInfo(a.Path, "-handle -n \"" + name + "\" \"AN-Mutex-Window-Guild Wars 2\" 0");
+                ProcessStartInfo p = new ProcessStartInfo(a.Path, "-pu -handle -n \"" + name + "\" \"AN-Mutex-Window-Guild Wars 2\" 0");
                 p.UseShellExecute = true;
                 p.Verb = "runas";
 
@@ -248,7 +271,7 @@ namespace Gw2Launcher.Util
         {
             using (ApplicationObject a = new ApplicationObject())
             {
-                ProcessStartInfo p = new ProcessStartInfo(a.Path, "-handle -pid 0 \"AN-Mutex-Window-Guild Wars 2\" 0");
+                ProcessStartInfo p = new ProcessStartInfo(a.Path, "-pu -handle -pid 0 \"AN-Mutex-Window-Guild Wars 2\" 0");
                 p.UseShellExecute = true;
                 p.Verb = "runas";
 
@@ -271,7 +294,7 @@ namespace Gw2Launcher.Util
         {
             using (ApplicationObject a = new ApplicationObject())
             {
-                ProcessStartInfo p = new ProcessStartInfo(a.Path, "-handle -pid " + pid + " \"AN-Mutex-Window-Guild Wars 2\" 0");
+                ProcessStartInfo p = new ProcessStartInfo(a.Path, "-pu -handle -pid " + pid + " \"AN-Mutex-Window-Guild Wars 2\" 0");
                 if (username != null)
                 {
                     p.UseShellExecute = false;
@@ -282,7 +305,10 @@ namespace Gw2Launcher.Util
                             //other users will be using this
                             Util.FileUtil.AllowFileAccess(a.Path, System.Security.AccessControl.FileSystemRights.Modify);
                         }
-                        catch { }
+                        catch (Exception ex)
+                        {
+                            Util.Logging.Log(ex);
+                        }
 
                         p.UserName = username;
                         p.LoadUserProfile = true;
@@ -314,7 +340,7 @@ namespace Gw2Launcher.Util
             {
                 StringBuilder args = new StringBuilder(512);
 
-                args.Append("-delgw2cache");
+                args.Append("-pu -delgw2cache");
 
                 foreach (string root in roots)
                 {
@@ -351,7 +377,7 @@ namespace Gw2Launcher.Util
                 {
                     string _xml1, _xml2;
 
-                    _xml1 = Properties.Resources.Task.Replace("{path}", Assembly.GetEntryAssembly().Location /*Process.GetCurrentProcess().MainModule.FileName*/);
+                    _xml1 = Properties.Resources.Task.Replace("{path}", Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location));
 
                     _xml2 = _xml1.Replace("{args}", "-users:active:no");
                     _xml1 = _xml1.Replace("{args}", "-users:active:yes");
@@ -360,7 +386,7 @@ namespace Gw2Launcher.Util
                     File.WriteAllText(path2, _xml2);
 
                     StringBuilder args = new StringBuilder(512);
-                    args.Append("-task -create \"gw2launcher-users-active-yes\" \"");
+                    args.Append("-pu -task -create \"gw2launcher-users-active-yes\" \"");
                     args.Append(path1);
                     args.Append("\" \"gw2launcher-users-active-no\" \"");
                     args.Append(path2);
@@ -385,12 +411,18 @@ namespace Gw2Launcher.Util
                     {
                         File.Delete(path1);
                     }
-                    catch { }
+                    catch (Exception ex)
+                    {
+                        Util.Logging.Log(ex);
+                    }
                     try
                     {
                         File.Delete(path2);
                     }
-                    catch { }
+                    catch (Exception ex)
+                    {
+                        Util.Logging.Log(ex);
+                    }
                 }
             }
         }
@@ -403,7 +435,7 @@ namespace Gw2Launcher.Util
         {
             using (ApplicationObject a = new ApplicationObject())
             {
-                ProcessStartInfo p = new ProcessStartInfo(a.Path, "-task -run \"" + name + "\"");
+                ProcessStartInfo p = new ProcessStartInfo(a.Path, "-pu -task -run \"" + name + "\"");
                 p.UseShellExecute = true;
 
                 Process proc = Process.Start(p);
@@ -423,7 +455,7 @@ namespace Gw2Launcher.Util
             using (ApplicationObject a = new ApplicationObject())
             {
                 StringBuilder args = new StringBuilder(512);
-                args.Append("-task -delete");
+                args.Append("-pu -task -delete");
                 foreach (string name in names)
                 {
                     args.Append(" \"");
@@ -453,7 +485,7 @@ namespace Gw2Launcher.Util
             using (ApplicationObject a = new ApplicationObject())
             {
                 StringBuilder args = new StringBuilder(512);
-                args.Append("-users -activate:");
+                args.Append("-pu -users -activate:");
                 if (activate)
                     args.Append("yes");
                 else

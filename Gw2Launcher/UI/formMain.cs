@@ -18,14 +18,40 @@ namespace Gw2Launcher.UI
 
         private Dictionary<ushort, AccountGridButton> buttons;
         private formAccountTooltip tooltip;
+        private formUpdating updatingWindow;
+        private formAssetProxy assetProxyWindow;
 
         private byte activeWindows;
+        private List<Form> windows;
         private FormWindowState windowState;
+
+        private event EventHandler ActiveWindowChanged;
+
+        private class DialogLock : IDisposable
+        {
+            private Action onDispose;
+            public DialogLock(Action onDispose)
+            {
+                this.onDispose = onDispose;
+            }
+            public void Dispose()
+            {
+                lock (this)
+                {
+                    if (onDispose != null)
+                    {
+                        onDispose();
+                        onDispose = null;
+                    }
+                }
+            }
+        }
 
         public formMain()
         {
             InitializeComponent();
 
+            windows = new List<Form>();
             buttons = new Dictionary<ushort, AccountGridButton>();
 
             Client.Launcher.AccountStateChanged += Launcher_AccountStateChanged;
@@ -34,6 +60,7 @@ namespace Gw2Launcher.UI
             Client.Launcher.AccountExited += Launcher_AccountExited;
             Client.Launcher.ActiveProcessCountChanged += Launcher_ActiveProcessCountChanged;
             Client.Launcher.BuildUpdated += Launcher_BuildUpdated;
+            Client.Launcher.AccountQueued += Launcher_AccountQueued;
 
             notifyIcon = new NotifyIcon();
             notifyIcon.Icon = new System.Drawing.Icon(Properties.Resources.Gw2, SystemInformation.SmallIconSize);
@@ -64,6 +91,133 @@ namespace Gw2Launcher.UI
             Client.Launcher.Scan();
         }
 
+        public void ShowPatchProxy()
+        {
+            if (this.InvokeRequired)
+            {
+                try
+                {
+                    this.Invoke(new MethodInvoker(ShowPatchProxy));
+                }
+                catch (Exception e)
+                {
+                    Util.Logging.Log(e);
+                }
+
+                return;
+            }
+
+            var f = assetProxyWindow;
+
+            if (f == null || f.IsDisposed)
+            {
+                assetProxyWindow = f = new formAssetProxy();
+
+                if (this.WindowState != FormWindowState.Minimized)
+                {
+                    f.StartPosition = FormStartPosition.Manual;
+                    var screen = Screen.FromControl(this);
+                    int x = this.Location.X + this.Width + 5;
+                    if (x >= screen.WorkingArea.Width / 2)
+                        x = this.Location.X - f.Width - 5;
+                    f.Location = new Point(x, this.Location.Y + this.Height / 2 - f.Height / 2);
+                    f.DesktopBounds = Util.RectangleConstraint.ConstrainToScreen(f.DesktopBounds);
+                }
+                else
+                    f.StartPosition = FormStartPosition.CenterScreen;
+
+                f.FormClosing += delegate
+                {
+                    assetProxyWindow = null;
+                };
+
+                System.Threading.Thread t = new System.Threading.Thread(new System.Threading.ThreadStart(
+                    delegate
+                    {
+                        Application.Run(f);
+                    }));
+
+                t.IsBackground = true;
+                t.SetApartmentState(System.Threading.ApartmentState.STA);
+                t.Start();
+            }
+            else
+            {
+                try
+                {
+
+                    f.Invoke(new MethodInvoker(
+                        delegate
+                        {
+                            var h = f.Handle;
+                            if (h != IntPtr.Zero)
+                            {
+                                Windows.FindWindow.ShowWindow(h, 1);
+                                Windows.FindWindow.SetForegroundWindow(h);
+                                Windows.FindWindow.BringWindowToTop(h);
+                            }
+                        }));
+                }
+                catch (Exception ex)
+                {
+                    Util.Logging.Log(ex);
+                }
+            }
+        }
+
+        void Launcher_AccountQueued(Settings.IAccount account, Client.Launcher.LaunchMode e)
+        {
+            if (e == Client.Launcher.LaunchMode.Update || e == Client.Launcher.LaunchMode.UpdateVisible)
+            {
+                System.Threading.CancellationTokenSource cancel = new System.Threading.CancellationTokenSource(3000);
+
+                try
+                {
+                    this.Invoke(new MethodInvoker(
+                        delegate
+                        {
+                            if (updatingWindow != null && !updatingWindow.IsDisposed)
+                            {
+                                updatingWindow.AddAccount(account);
+                                if (cancel != null)
+                                    cancel.Cancel();
+                                return;
+                            }
+
+                            List<Settings.IAccount> accounts = new List<Settings.IAccount>();
+                            accounts.Add(account);
+
+                            formUpdating f = updatingWindow = new formUpdating(accounts, true, true);
+
+                            this.BeginInvoke(new MethodInvoker(
+                                delegate
+                                {
+                                    using (BeforeShowDialog())
+                                    {
+                                        using (AddWindow(f))
+                                        {
+                                            f.Shown += delegate
+                                            {
+                                                if (cancel != null)
+                                                    cancel.Cancel();
+                                            };
+                                            f.ShowDialog(this);
+                                            updatingWindow = null;
+                                        }
+                                    }
+                                }));
+                        }));
+
+                    cancel.Token.WaitHandle.WaitOne();
+                }
+                catch (Exception ex)
+                {
+                    Util.Logging.Log(ex);
+                    cancel.Cancel();
+                }
+            }
+        }
+
         void Launcher_BuildUpdated(Client.Launcher.BuildUpdatedEventArgs e)
         {
             HashSet<Settings.IDatFile> dats = new HashSet<Settings.IDatFile>();
@@ -82,47 +236,76 @@ namespace Gw2Launcher.UI
 
             if (accounts.Count > 0)
             {
-                System.Threading.CancellationTokenSource cancel = new System.Threading.CancellationTokenSource(3000);
+                //System.Threading.CancellationTokenSource cancel = new System.Threading.CancellationTokenSource(3000);
 
-                try
-                {
-                    this.BeginInvoke(new MethodInvoker(
-                        delegate
-                        {
-                            BeforeShowDialog();
-                            try
-                            {
-                                activeWindows++;
-                                using (formUpdating f = new formUpdating(accounts, true, true))
-                                {
-                                    f.Shown += delegate
-                                    {
-                                        cancel.Cancel();
-                                    };
-                                    f.ShowDialog(this);
-                                }
-                            }
-                            finally
-                            {
-                                activeWindows--;
-                            }
-                        }));
-                }
-                catch { }
+                //try
+                //{
+                //    this.BeginInvoke(new MethodInvoker(
+                //        delegate
+                //        {
+                //            BeforeShowDialog();
+                //            try
+                //            {
+                //                activeWindows++;
+                //                using (formUpdating f = new formUpdating(accounts, true, true))
+                //                {
+                //                    f.Shown += delegate
+                //                    {
+                //                        cancel.Cancel();
+                //                    };
+                //                    f.ShowDialog(this);
+                //                }
+                //            }
+                //            finally
+                //            {
+                //                activeWindows--;
+                //            }
+                //        }));
+                //}
+                //catch { }
 
-                try
-                {
-                    cancel.Token.WaitHandle.WaitOne();
-                }
-                catch (Exception ex)
-                {
-                    ex = ex;
-                }
+                //try
+                //{
+                //    cancel.Token.WaitHandle.WaitOne();
+                //}
+                //catch (Exception ex)
+                //{
+                //    Console.WriteLine(ex.Message);
+                //}
 
                 e.Update(accounts);
             }
         }
 
+        private formWaiting ShowWaiting()
+        {
+            formWaiting w = new formWaiting(this);
+            w.Owner = this;
+
+            EventHandler onActiveChange = delegate
+            {
+                foreach (var form in windows)
+                {
+                    if (form.Owner == null || form.Owner == this)
+                        form.Owner = w;
+                }
+                w.SendToBack();
+            };
+
+            w.Shown += delegate
+            {
+                onActiveChange(null, null);
+                this.ActiveWindowChanged += onActiveChange;
+            };
+
+            w.Disposed += delegate
+            {
+                this.ActiveWindowChanged -= onActiveChange;
+            };
+
+            return w;
+        }
+        
         void formMain_Shown(object sender, EventArgs e)
         {
             this.Shown -= formMain_Shown;
@@ -136,7 +319,7 @@ namespace Gw2Launcher.UI
         private async void CheckBuild()
         {
             int build = await Tools.Gw2Build.GetBuildAsync();
-            if (Settings.CheckForNewBuilds && Settings.LastKnownBuild.Value != build)
+            if (build > 0 && Settings.CheckForNewBuilds && Settings.LastKnownBuild.Value != build)
             {
                 //ask to update if nothing else is happening
                 if (activeWindows == 0 && Client.Launcher.GetPendingLaunchCount() == 0 && Client.Launcher.GetActiveProcessCount() == 0)
@@ -157,30 +340,96 @@ namespace Gw2Launcher.UI
 
                     if (accounts.Count > 0)
                     {
-                        try
+                        using (BeforeShowDialog())
                         {
-                            BeforeShowDialog();
-                            activeWindows++;
-
-                            if (MessageBox.Show(this, "A new build is available for Guild Wars 2.\n\nWould you like to update now?", "New build available", MessageBoxButtons.YesNo, MessageBoxIcon.Question) == DialogResult.Yes)
+                            using (var parent = AddMessageBox(this))
                             {
-                                try
+                                if (MessageBox.Show(parent, "Local.dat needs to be updated.\n\nWould you like to update now?", "Update required", MessageBoxButtons.YesNo, MessageBoxIcon.Question) == DialogResult.Yes)
                                 {
-                                    Client.Launcher.CancelPendingLaunches();
-                                    Client.Launcher.KillAllActiveProcesses();
-                                }
-                                catch { }
+                                    Func<bool> hasActive = delegate
+                                    {
+                                        foreach (var account in accounts)
+                                        {
+                                            if (Client.Launcher.GetState(account) != Client.Launcher.AccountState.None)
+                                                return true;
+                                        }
+                                        return false;
+                                    };
 
-                                using (formUpdating f = new formUpdating(accounts))
-                                {
-                                    if (f.ShowDialog(this) == DialogResult.OK)
-                                        Settings.LastKnownBuild.Value = build;
+                                    if (Client.Launcher.GetActiveProcessCount() > 0 || hasActive())
+                                    {
+                                        using (formWaiting f = ShowWaiting())
+                                        {
+                                            f.Shown += delegate
+                                            {
+                                                Task.Factory.StartNew(new Action(
+                                                    delegate
+                                                    {
+                                                        int retries = 0;
+
+                                                        while (Client.Launcher.GetActiveProcessCount() > 0 || hasActive())
+                                                        {
+                                                            if (retries++ >= 10)
+                                                                break;
+
+                                                            try
+                                                            {
+                                                                Client.Launcher.CancelPendingLaunches();
+                                                                Client.Launcher.KillAllActiveProcesses();
+                                                                System.Threading.Thread.Sleep(1000);
+                                                            }
+                                                            catch (Exception ex)
+                                                            {
+                                                                Util.Logging.Log(ex);
+                                                            }
+                                                        }
+                                                        f.Invoke(new MethodInvoker(delegate
+                                                        {
+                                                            f.Close();
+                                                        }));
+                                                    }));
+                                            };
+
+                                            f.ShowDialog(this);
+                                        }
+                                    }
+
+                                    Action launch = delegate
+                                    {
+                                        bool first = true;
+                                        foreach (var account in accounts)
+                                        {
+                                            Client.Launcher.LaunchMode mode;
+                                            if (first)
+                                            {
+                                                mode = Client.Launcher.LaunchMode.UpdateVisible;
+                                                first = false;
+                                            }
+                                            else
+                                                mode = Client.Launcher.LaunchMode.Update;
+                                            Client.Launcher.Launch(account, mode);
+                                        }
+                                    };
+
+                                    if (updatingWindow == null || updatingWindow.IsDisposed)
+                                    {
+                                        using (formUpdating f = updatingWindow = (formUpdating)AddWindow(new formUpdating(null, true, true)))
+                                        {
+                                            f.Shown += delegate
+                                            {
+                                                launch();
+                                            };
+                                            if (f.ShowDialog(this) == DialogResult.OK)
+                                                Settings.LastKnownBuild.Value = build;
+                                            updatingWindow = null;
+                                        }
+                                    }
+                                    else
+                                    {
+                                        launch();
+                                    }
                                 }
                             }
-                        }
-                        finally
-                        {
-                            activeWindows--;
                         }
                     }
                 }
@@ -205,7 +454,10 @@ namespace Gw2Launcher.UI
                             ShowToFront();
                         }));
                 }
-                catch { }
+                catch (Exception ex)
+                {
+                    Util.Logging.Log(ex);
+                }
             }
         }
 
@@ -279,11 +531,18 @@ namespace Gw2Launcher.UI
 
             if (Settings.DeleteCacheOnLaunch.Value)
             {
-                try
-                {
-                    Tools.Gw2Cache.Delete(Util.Users.GetUserName(account.WindowsAccount));
-                }
-                catch { }
+                Task.Factory.StartNew(new Action(
+                   delegate
+                   {
+                       try
+                       {
+                           Tools.Gw2Cache.Delete(Util.Users.GetUserName(account.WindowsAccount));
+                       }
+                       catch (Exception ex)
+                       {
+                           Util.Logging.Log(ex);
+                       }
+                   }));
             }
         }
 
@@ -303,7 +562,10 @@ namespace Gw2Launcher.UI
                                 OnSettingsInvalid();
                             }));
                     }
-                    catch { }
+                    catch (Exception ex) 
+                    {
+                        Util.Logging.Log(ex);
+                    }
                 }
                 else
                 {
@@ -326,7 +588,10 @@ namespace Gw2Launcher.UI
                                 e.Retry = OnPasswordRequired(username) == DialogResult.OK;
                             }));
                     }
-                    catch { }
+                    catch (Exception ex)
+                    {
+                        Util.Logging.Log(ex);
+                    }
                 }
                 else
                 {
@@ -345,7 +610,10 @@ namespace Gw2Launcher.UI
                                 e.Retry = OnDatFileNotInitialized(account) == DialogResult.OK;
                             }));
                     }
-                    catch { }
+                    catch (Exception ex)
+                    {
+                        Util.Logging.Log(ex);
+                    }
                 }
                 else
                 {
@@ -356,34 +624,40 @@ namespace Gw2Launcher.UI
 
         private DialogResult OnDatFileNotInitialized(Settings.IAccount account)
         {
-            BeforeShowDialog();
-            DialogResult r = MessageBox.Show(this, account.Name + "\n\nThe Local.dat file for this account is being used for the first time. GW2 will not be able to modify your settings while allowing multiple clients to be opened.\n\nWould you like to run GW2 normally so that your settings can be modified?", "Local.dat first use", MessageBoxButtons.YesNoCancel, MessageBoxIcon.Exclamation);
-            switch (r)
+            using (BeforeShowDialog())
             {
-                case DialogResult.Yes:
-                    return DialogResult.OK;
-                case DialogResult.No:
-                    account.DatFile.IsInitialized = true;
-                    return DialogResult.OK;
-                default:
-                    return DialogResult.Cancel;
+                using (var f = AddMessageBox(this))
+                {
+                    DialogResult r = MessageBox.Show(f, account.Name + "\n\nThe Local.dat file for this account is being used for the first time. GW2 will not be able to modify your settings while allowing multiple clients to be opened.\n\nWould you like to run GW2 normally so that your settings can be modified?", "Local.dat first use", MessageBoxButtons.YesNoCancel, MessageBoxIcon.Exclamation);
+                    switch (r)
+                    {
+                        case DialogResult.Yes:
+                            return DialogResult.OK;
+                        case DialogResult.No:
+                            account.DatFile.IsInitialized = true;
+                            return DialogResult.OK;
+                        default:
+                            return DialogResult.Cancel;
+                    }
+                }
             }
         }
 
         private DialogResult OnPasswordRequired(string username)
         {
-            try
+            using (BeforeShowDialog())
             {
-                BeforeShowDialog();
-                activeWindows++;
-                using (formPassword f = new formPassword("Password for " + username + ":"))
+                using (formPassword f = (formPassword)AddWindow(new formPassword("Password for " + username + ":")))
                 {
                     while (true)
                     {
                         if (f.ShowDialog(this) != DialogResult.OK || f.Password.Length == 0)
                         {
-                            if (MessageBox.Show(this, "A password is required to use this account", "Password required", MessageBoxButtons.RetryCancel, MessageBoxIcon.Exclamation) != System.Windows.Forms.DialogResult.Retry)
-                                return DialogResult.Cancel;
+                            using (var parent = AddMessageBox(this))
+                            {
+                                if (MessageBox.Show(parent, "A password is required to use this account", "Password required", MessageBoxButtons.RetryCancel, MessageBoxIcon.Exclamation) != System.Windows.Forms.DialogResult.Retry)
+                                    return DialogResult.Cancel;
+                            }
                         }
                         else
                         {
@@ -393,26 +667,16 @@ namespace Gw2Launcher.UI
                     }
                 }
             }
-            finally
-            {
-                activeWindows--;
-            }
         }
 
         private void OnSettingsInvalid()
         {
-            try
+            using (BeforeShowDialog())
             {
-                BeforeShowDialog();
-                activeWindows++;
-                using (formSettings f = new formSettings())
+                using (var f = AddWindow(new formSettings()))
                 {
                     f.ShowDialog(this);
                 }
-            }
-            finally
-            {
-                activeWindows--;
             }
         }
 
@@ -422,13 +686,16 @@ namespace Gw2Launcher.UI
             {
                 try
                 {
-                    this.Invoke(new MethodInvoker(
+                    this.BeginInvoke(new MethodInvoker(
                         delegate
                         {
                             Launcher_AccountStateChanged(uid, state, previousState, data);
                         }));
                 }
-                catch { }
+                catch (Exception ex)
+                {
+                    Util.Logging.Log(ex);
+                }
                 return;
             }
 
@@ -441,18 +708,40 @@ namespace Gw2Launcher.UI
                     OnButtonDataChanged(button, data);
                 }
 
-                if (previousState == Client.Launcher.AccountState.Active && button.AccountData != null)
+                if (button.AccountData != null)
                 {
-                    DateTime d = DateTime.UtcNow;
-                    button.AccountData.LastUsedUtc = d;
-                    button.LastUsedUtc = d;
-                    if (Settings.SortingMode.Value == Settings.SortMode.LastUsed)
-                        gridContainer.Sort(Settings.SortingMode.Value, Settings.SortingOrder.Value);
+                    bool exited = previousState == Client.Launcher.AccountState.ActiveGame;
+
+                    //as a backup in case catching the DX window failed, catch the exit time
+                    if (previousState == Client.Launcher.AccountState.Active && state == Client.Launcher.AccountState.Exited && data is TimeSpan)
+                    {
+                        TimeSpan elapsed = (TimeSpan)data;
+                        if (elapsed != TimeSpan.MinValue)
+                        {
+                            if (elapsed.TotalMinutes > 10)
+                            {
+                                exited = true;
+                            }
+                        }
+                    }
+
+                    if (exited)
+                    {
+                        DateTime d = DateTime.UtcNow;
+                        if (button.AccountData != null)
+                            button.AccountData.LastUsedUtc = d;
+                        button.LastUsedUtc = d;
+                        if (Settings.SortingMode.Value == Settings.SortMode.LastUsed)
+                            gridContainer.Sort(Settings.SortingMode.Value, Settings.SortingOrder.Value);
+                    }
                 }
 
                 switch (state)
                 {
                     case Client.Launcher.AccountState.Active:
+                        button.SetStatus("active", Color.DarkGreen);
+                        break;
+                    case Client.Launcher.AccountState.ActiveGame:
                         button.SetStatus("active", Color.DarkGreen);
                         DateTime d = DateTime.UtcNow;
                         if (button.AccountData != null)
@@ -506,7 +795,10 @@ namespace Gw2Launcher.UI
                     this.Visible = true;
                 }
             }
-            catch { }
+            catch (Exception ex)
+            {
+                Util.Logging.Log(ex);
+            }
         }
 
         private void OnStyleChanged()
@@ -665,7 +957,8 @@ namespace Gw2Launcher.UI
 
             try
             {
-                var active = Client.Launcher.GetActive();
+                //if any recorded accounts are still active, add a record for exiting the program (ID 0)
+                var active = Client.Launcher.GetActiveProcesses();
                 foreach (var account in active)
                 {
                     if (account.RecordLaunches)
@@ -675,7 +968,10 @@ namespace Gw2Launcher.UI
                     }
                 }
             }
-            catch { }
+            catch (Exception ex)
+            {
+                Util.Logging.Log(ex);
+            }
 
             notifyIcon.Dispose();
 
@@ -701,12 +997,36 @@ namespace Gw2Launcher.UI
 
                     clearSelectionToolStripMenuItem.Enabled = false;
                     selectedToolStripMenuItem.Tag = null;
+
+                    applyWindowedBoundsToolStripMenuItem.Enabled = false;
+                    var a = button.AccountData;
+                    if (a != null && a.Windowed && !a.WindowBounds.IsEmpty)
+                    {
+                        var state = Client.Launcher.GetState(a);
+                        if (state == Client.Launcher.AccountState.Active || state == Client.Launcher.AccountState.ActiveGame)
+                            applyWindowedBoundsToolStripMenuItem.Enabled = true;
+                    }
                 }
                 else
                 {
                     var selected = gridContainer.GetSelected();
                     clearSelectionToolStripMenuItem.Enabled = true;
                     selectedToolStripMenuItem.Tag = selected;
+
+                    applyWindowedBoundsToolStripMenuItem.Enabled = false;
+                    foreach (var b in selected)
+                    {
+                        var a = b.AccountData;
+                        if (a != null && a.Windowed && !a.WindowBounds.IsEmpty)
+                        {
+                            var state = Client.Launcher.GetState(a);
+                            if (state == Client.Launcher.AccountState.Active || state == Client.Launcher.AccountState.ActiveGame)
+                            {
+                                applyWindowedBoundsToolStripMenuItem.Enabled = true;
+                                break;
+                            }
+                        }
+                    }
                 }
 
                 int pending = Client.Launcher.GetPendingLaunchCount();
@@ -727,27 +1047,87 @@ namespace Gw2Launcher.UI
 
         private void formMain_Load(object sender, EventArgs e)
         {
-
         }
 
         private void settingsToolStripMenuItem_Click(object sender, EventArgs e)
         {
-            try
+            using (BeforeShowDialog())
             {
-                BeforeShowDialog();
-                activeWindows++;
-                using (formSettings f = new formSettings())
+                using (var f = AddWindow(new formSettings()))
                 {
                     f.ShowDialog(this);
                 }
             }
-            finally
+        }
+
+        private Form AddMessageBox(Form owner)
+        {
+            Form form = new Form();
+            form.Owner = owner;
+
+            form.Disposed += OnWindowHidden;
+
+            //form.Disposed += delegate
+            //{
+            //    for (var i = windows.Count - 1; i >= 0; i--)
+            //    {
+            //        if (windows[i] == form)
+            //        {
+            //            windows.RemoveAt(i);
+            //            break;
+            //        }
+            //    }
+            //};
+
+            windows.Add(form);
+            OnActiveWindowChanged();
+
+            return form;
+        }
+
+        private void OnWindowVisibleChanged(object sender, EventArgs e)
+        {
+            var form = (Form)sender;
+
+            if (form.Visible)
             {
-                activeWindows--;
+                windows.Add(form);
+                form.Disposed += OnWindowHidden;
+
+                OnActiveWindowChanged();
+            }
+            else
+            {
+                OnWindowHidden(sender, e);
             }
         }
 
-        private void BeforeShowDialog()
+        private void OnWindowHidden(object sender, EventArgs e)
+        {
+            var form = (Form)sender;
+            
+            form.Disposed -= OnWindowHidden;
+
+            for (var i = windows.Count - 1; i >= 0; i--)
+            {
+                if (windows[i] == form)
+                {
+                    windows.RemoveAt(i);
+                    break;
+                }
+            }
+            
+            OnActiveWindowChanged();
+        }
+
+        private Form AddWindow(Form form)
+        {
+            form.VisibleChanged += OnWindowVisibleChanged;
+
+            return form;
+        }
+
+        private IDisposable BeforeShowDialog()
         {
             if (!this.Visible || this.WindowState == FormWindowState.Minimized)
             {
@@ -759,24 +1139,42 @@ namespace Gw2Launcher.UI
                 }
                 this.Visible = true;
             }
+
+            activeWindows++;
+            OnActiveWindowsChanged();
+
+            return new DialogLock(OnDialogLockDisposed);
+        }
+
+        private void OnDialogLockDisposed()
+        {
+            activeWindows--;
+            OnActiveWindowsChanged();
+        }
+
+        private void OnActiveWindowChanged()
+        {
+            if (ActiveWindowChanged != null)
+                ActiveWindowChanged(this, EventArgs.Empty);
+        }
+
+        private void OnActiveWindowsChanged()
+        {
+            bool isFree = activeWindows == 0;
+            toolsToolStripMenuItem.Enabled = isFree;
+            allToolStripMenuItem1.Enabled = isFree;
+            newAccountToolStripMenuItem.Enabled = isFree;
+            toolsToolStripMenuItem.Enabled = isFree;
+            settingsToolStripMenuItem1.Enabled = isFree;
         }
 
         private void settingsToolStripMenuItem1_Click(object sender, EventArgs e)
         {
-            if (activeWindows == 0)
+            using (BeforeShowDialog())
             {
-                BeforeShowDialog();
-                try
+                using (var f = AddWindow(new formSettings()))
                 {
-                    activeWindows++;
-                    using (formSettings f = new formSettings())
-                    {
-                        f.ShowDialog(this);
-                    }
-                }
-                finally
-                {
-                    activeWindows--;
+                    f.ShowDialog(this);
                 }
             }
         }
@@ -811,21 +1209,15 @@ namespace Gw2Launcher.UI
 
         private void AddAccount()
         {
-            try
+            using (BeforeShowDialog())
             {
-                BeforeShowDialog();
-                activeWindows++;
-                using (formAccount f = new formAccount())
+                using (formAccount f = (formAccount)AddWindow(new formAccount()))
                 {
                     if (f.ShowDialog(this) == DialogResult.OK)
                     {
                         AddAccount(f.Account, true);
                     }
                 }
-            }
-            finally
-            {
-                activeWindows--;
             }
         }
 
@@ -953,31 +1345,35 @@ namespace Gw2Launcher.UI
             AccountGridButton button = contextMenu.Tag as AccountGridButton;
             if (button != null && button.AccountData != null)
             {
-                try
+                using (BeforeShowDialog())
                 {
-                    BeforeShowDialog();
-                    activeWindows++;
                     var account = button.AccountData;
-                    using (formAccount f = new formAccount(account))
+                    using (formAccount f = (formAccount)AddWindow(new formAccount(account)))
                     {
-                        var datFile = account.DatFile;
+                        var datBefore = account.DatFile;
 
                         if (f.ShowDialog(this) == DialogResult.OK)
                         {
-                            if (datFile != null && datFile != account.DatFile && !string.IsNullOrEmpty(datFile.Path) && System.IO.File.Exists(datFile.Path))
+                            if (datBefore != null && datBefore != account.DatFile && !string.IsNullOrEmpty(datBefore.Path) && System.IO.File.Exists(datBefore.Path))
                             {
-                                if (Util.DatFiles.GetAccounts(datFile).Count == 1)
+                                if (Util.DatFiles.GetAccounts(datBefore).Count == 0)
                                 {
-                                    if (MessageBox.Show(this, "The following Local.dat file is no longer being used:\n\n" + datFile.Path + "\n\nWould you like to delete it?", "Local.dat not used", MessageBoxButtons.YesNo, MessageBoxIcon.Exclamation, MessageBoxDefaultButton.Button2) == DialogResult.Yes)
+                                    using (var parent = AddMessageBox(this))
                                     {
-                                        try
+                                        if (MessageBox.Show(parent, "The following Local.dat file is no longer being used:\n\n" + datBefore.Path + "\n\nWould you like to delete it?", "Local.dat not used", MessageBoxButtons.YesNo, MessageBoxIcon.Exclamation, MessageBoxDefaultButton.Button2) == DialogResult.Yes)
                                         {
-                                            System.IO.File.Delete(datFile.Path);
+                                            try
+                                            {
+                                                Client.DatManager.Delete(datBefore);
+                                            }
+                                            catch (Exception ex)
+                                            {
+                                                Util.Logging.Log(ex);
+                                            }
                                         }
-                                        catch { }
                                     }
 
-                                    Settings.DatFiles[datFile.UID].Clear();
+                                    Settings.DatFiles[datBefore.UID].Clear();
                                 }
                             }
 
@@ -986,10 +1382,6 @@ namespace Gw2Launcher.UI
                                 button.AccountName = "(current user)";
                         }
                     }
-                }
-                finally
-                {
-                    activeWindows--;
                 }
             }
         }
@@ -1002,25 +1394,34 @@ namespace Gw2Launcher.UI
                 var account = button.AccountData;
                 if (account != null)
                 {
-                    if (MessageBox.Show(this, "Are you sure you want to delete \"" + account.Name + "\"?", "Are you sure?", MessageBoxButtons.YesNo, MessageBoxIcon.Exclamation, MessageBoxDefaultButton.Button2) == DialogResult.Yes)
+                    using (BeforeShowDialog())
                     {
-                        if (account.DatFile != null && !string.IsNullOrEmpty(account.DatFile.Path) && System.IO.File.Exists(account.DatFile.Path))
+                        using (var parent = AddMessageBox(this))
                         {
-                            if (Util.DatFiles.GetAccounts(account.DatFile).Count == 1)
+                            if (MessageBox.Show(parent, "Are you sure you want to delete \"" + account.Name + "\"?", "Are you sure?", MessageBoxButtons.YesNo, MessageBoxIcon.Exclamation, MessageBoxDefaultButton.Button2) == DialogResult.Yes)
                             {
-                                if (MessageBox.Show(this, "The following Local.dat file is no longer being used:\n\n" + account.DatFile.Path + "\n\nWould you like to delete it?", "Local.dat not used", MessageBoxButtons.YesNo, MessageBoxIcon.Exclamation, MessageBoxDefaultButton.Button2) == DialogResult.Yes)
+                                if (account.DatFile != null && !string.IsNullOrEmpty(account.DatFile.Path) && System.IO.File.Exists(account.DatFile.Path))
                                 {
-                                    try
+                                    if (Util.DatFiles.GetAccounts(account.DatFile).Count == 1)
                                     {
-                                        System.IO.File.Delete(account.DatFile.Path);
-                                    }
-                                    catch { }
-                                }
+                                        if (MessageBox.Show(parent, "The following Local.dat file is no longer being used:\n\n" + account.DatFile.Path + "\n\nWould you like to delete it?", "Local.dat not used", MessageBoxButtons.YesNo, MessageBoxIcon.Exclamation, MessageBoxDefaultButton.Button2) == DialogResult.Yes)
+                                        {
+                                            try
+                                            {
+                                                Client.DatManager.Delete(account.DatFile);
+                                            }
+                                            catch (Exception ex)
+                                            {
+                                                Util.Logging.Log(ex);
+                                            }
+                                        }
 
-                                Settings.DatFiles[account.DatFile.UID].Clear();
+                                        Settings.DatFiles[account.DatFile.UID].Clear();
+                                    }
+                                }
+                                RemoveAccount(account);
                             }
                         }
-                        RemoveAccount(account);
                     }
                 }
                 else
@@ -1045,44 +1446,107 @@ namespace Gw2Launcher.UI
                 if (account != null)
                 {
                     if (accounts == null)
-                    {
                         accounts = new List<Settings.IAccount>();
-
-                        while (Client.Launcher.GetActiveProcessCount() > 0)
-                        {
-                            BeforeShowDialog();
-                            if (MessageBox.Show(this, "Guild Wars 2 cannot be updated while allowing multiple clients to be opened.\n\nClose all clients to continue.", "Close GW2 to continue", MessageBoxButtons.RetryCancel, MessageBoxIcon.Exclamation) == DialogResult.Retry)
-                            {
-                                int killed = Client.Launcher.KillAllActiveProcesses();
-                                if (killed > 0)
-                                {
-                                    Client.Launcher.Scan();
-                                    System.Threading.Thread.Sleep(500);
-                                }
-                            }
-                            else
-                                return;
-                        }
-                    }
 
                     accounts.Add(account);
                 }
             }
 
-            if (accounts != null)
+            if (accounts != null && accounts.Count > 0)
             {
-                try
+                Func<bool> hasActive = delegate
                 {
-                    BeforeShowDialog();
-                    activeWindows++;
-                    using (formUpdating f = new formUpdating(accounts))
+                    foreach (var account in accounts)
                     {
-                        f.ShowDialog(this);
+                        if (Client.Launcher.GetState(account) != Client.Launcher.AccountState.None)
+                            return true;
+                    }
+                    return false;
+                };
+
+                while (Client.Launcher.GetActiveProcessCount() > 0 || hasActive())
+                {
+                    using (BeforeShowDialog())
+                    {
+                        using (var parent = AddMessageBox(this))
+                        {
+                            if (MessageBox.Show(parent, "Guild Wars 2 cannot be updated while allowing multiple clients to be opened.\n\nClose all clients to continue.", "Close GW2 to continue", MessageBoxButtons.RetryCancel, MessageBoxIcon.Exclamation) == DialogResult.Retry)
+                            {
+                                using (formWaiting f = ShowWaiting())
+                                {
+                                    f.Shown += delegate
+                                    {
+                                        Task.Factory.StartNew(new Action(
+                                            delegate
+                                            {
+                                                int retries = 0;
+
+                                                while (Client.Launcher.GetActiveProcessCount() > 0 || hasActive())
+                                                {
+                                                    if (retries++ >= 10)
+                                                        break;
+
+                                                    try
+                                                    {
+                                                        Client.Launcher.CancelPendingLaunches();
+                                                        Client.Launcher.KillAllActiveProcesses();
+                                                        System.Threading.Thread.Sleep(1000);
+                                                    }
+                                                    catch (Exception ex)
+                                                    {
+                                                        Util.Logging.Log(ex);
+                                                    }
+                                                }
+                                                f.Invoke(new MethodInvoker(delegate
+                                                {
+                                                    f.Close();
+                                                }));
+                                            }));
+                                    };
+
+                                    f.ShowDialog(this);
+                                }
+                            }
+                            else
+                            {
+                                return;
+                            }
+                        }
                     }
                 }
-                finally
+
+                Action launch = delegate
                 {
-                    activeWindows--;
+                    bool first = true;
+                    foreach (var account in accounts)
+                    {
+                        Client.Launcher.LaunchMode mode;
+                        if (first)
+                        {
+                            mode = Client.Launcher.LaunchMode.UpdateVisible;
+                            first = false;
+                        }
+                        else
+                            mode = Client.Launcher.LaunchMode.Update;
+                        Client.Launcher.Launch(account, mode);
+                    }
+                };
+
+                if (updatingWindow == null || updatingWindow.IsDisposed)
+                {
+                    using (formUpdating f = updatingWindow = (formUpdating)AddWindow(new formUpdating(null, true, true)))
+                    {
+                        f.Shown += delegate
+                        {
+                            launch();
+                        };
+                        f.ShowDialog(this);
+                        updatingWindow = null;
+                    }
+                }
+                else
+                {
+                    launch();
                 }
             }
         }
@@ -1176,40 +1640,22 @@ namespace Gw2Launcher.UI
 
         private void deleteGw2cacheFoldersToolStripMenuItem_Click(object sender, EventArgs e)
         {
-            if (activeWindows == 0)
+            using (BeforeShowDialog())
             {
-                BeforeShowDialog();
-                try
+                using (var f = AddWindow(new formGw2Cache()))
                 {
-                    activeWindows++;
-                    using (formGw2Cache f = new formGw2Cache())
-                    {
-                        f.ShowDialog(this);
-                    }
-                }
-                finally
-                {
-                    activeWindows--;
+                    f.ShowDialog(this);
                 }
             }
         }
 
         private void hideUserAccountsToolStripMenuItem_Click(object sender, EventArgs e)
         {
-            if (activeWindows == 0)
+            using (BeforeShowDialog())
             {
-                BeforeShowDialog();
-                try
+                using (var f = AddWindow(new formManagedInactiveUsers()))
                 {
-                    activeWindows++;
-                    using (formManagedInactiveUsers f = new formManagedInactiveUsers())
-                    {
-                        f.ShowDialog(this);
-                    }
-                }
-                finally
-                {
-                    activeWindows--;
+                    f.ShowDialog(this);
                 }
             }
         }
@@ -1219,53 +1665,46 @@ namespace Gw2Launcher.UI
             if (string.IsNullOrEmpty(Settings.GW2Path.Value))
                 return;
 
-            BeforeShowDialog();
-            try
+            using (BeforeShowDialog())
             {
-                activeWindows++;
-                if (MessageBox.Show(this, "Attempt to kill all processes with the following path?\n\n\"" + Settings.GW2Path.Value + "\"", "Confirm", MessageBoxButtons.YesNo, MessageBoxIcon.Exclamation) == DialogResult.Yes)
+                using (var f = AddMessageBox(this))
                 {
-                    Client.Launcher.KillAllActiveProcesses();
+                    if (MessageBox.Show(f, "Attempt to kill all processes with the following path?\n\n\"" + Settings.GW2Path.Value + "\"", "Confirm", MessageBoxButtons.YesNo, MessageBoxIcon.Exclamation) == DialogResult.Yes)
+                    {
+                        Client.Launcher.KillAllActiveProcesses();
+                    }
                 }
-            }
-            finally
-            {
-                activeWindows--;
             }
         }
         
-        private void killMutexToolStripMenuItem_Click(object sender, EventArgs e)
+        private async void killMutexToolStripMenuItem_Click(object sender, EventArgs e)
         {
-            BeforeShowDialog();
-            try
+            using (BeforeShowDialog())
             {
-                activeWindows++;
-                if (MessageBox.Show(this, "All processes will be scanned in an attempt to find the mutex that prevents Guild Wars 2 from opening multiple times. This should only be needed if another GW2 client is active under an unknown name.\n\nThis may take a minute. Are you sure?", "Confirm", MessageBoxButtons.YesNo, MessageBoxIcon.Exclamation) == DialogResult.Yes)
+                using (var parent = AddMessageBox(this))
                 {
-                    KillMutex();
+                    if (MessageBox.Show(parent, "All processes will be scanned in an attempt to find the mutex that prevents Guild Wars 2 from opening multiple times. This should only be needed if another GW2 client is active under an unknown name.\n\nThis may take a minute. Are you sure?", "Confirm", MessageBoxButtons.YesNo, MessageBoxIcon.Exclamation) == DialogResult.Yes)
+                    {
+                        using (formWaiting f = ShowWaiting())
+                        {
+                            f.Show(this);
+
+                            await Task.Factory.StartNew(new Action(
+                                delegate
+                                {
+                                    try
+                                    {
+                                        Util.ProcessUtil.KillMutexWindow();
+                                    }
+                                    catch (Exception ex)
+                                    {
+                                        Util.Logging.Log(ex);
+                                    }
+                                }));
+                        }
+                    }
                 }
             }
-            finally
-            {
-                activeWindows--;
-            }
-        }
-
-        private async void KillMutex()
-        {
-            killMutexToolStripMenuItem.Enabled = false;
-
-            await Task.Factory.StartNew(new Action(
-                delegate
-                {
-                    try
-                    {
-                        Util.ProcessUtil.KillMutexWindow();
-                    }
-                    catch { }
-                }));
-
-            killMutexToolStripMenuItem.Enabled = true;
         }
 
         private void deleteCacheFoldersToolStripMenuItem_Click(object sender, EventArgs e)
@@ -1287,6 +1726,52 @@ namespace Gw2Launcher.UI
         private void killMutexToolStripMenuItem1_Click(object sender, EventArgs e)
         {
             killMutexToolStripMenuItem_Click(sender, e);
+        }
+
+        private async void applyWindowedBoundsToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            var selected = GetSelected();
+
+            await Task.Factory.StartNew(new Action(
+                delegate
+                {
+                    try
+                    {
+                        foreach (var button in selected)
+                        {
+                            var account = button.AccountData;
+                            if (account != null /*&& account.Windowed && !account.WindowBounds.IsEmpty && Client.Launcher.GetState(account) == Client.Launcher.AccountState.Active*/)
+                            {
+                                Client.Launcher.ApplyWindowedBounds(account);
+                            }
+                        }
+                    }
+                    catch (Exception ex)
+                    {
+                        Util.Logging.Log(ex);
+                    }
+                }));
+        }
+
+        private void supportToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            using (BeforeShowDialog())
+            {
+                using (var f = AddWindow(new formSupport()))
+                {
+                    f.ShowDialog(this);
+                }
+            }
+        }
+
+        private void assetProxyServerToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            ShowPatchProxy();
+        }
+
+        private void assetServerInterceptToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            ShowPatchProxy();
         }
     }
 }

@@ -35,7 +35,7 @@ namespace Gw2Launcher.Tools
 
         private static Queue<QueuedRecord> queue;
         private static Task task;
-        private static int lastQueue;
+        private static DateTime lastQueue;
         private static CancellationTokenSource cancelToken;
         private static object _writer = new object();
 
@@ -47,8 +47,7 @@ namespace Gw2Launcher.Tools
 
         public static void Record(RecordType type, ushort uid)
         {
-            var now = DateTime.UtcNow;
-            lastQueue = Environment.TickCount;
+            var now = lastQueue = DateTime.UtcNow;
             lock(queue)
             {
                 queue.Enqueue(new QueuedRecord(type, uid, now));
@@ -71,7 +70,7 @@ namespace Gw2Launcher.Tools
             {
                 while (true)
                 {
-                    int remaining = WRITE_DELAY - Environment.TickCount + lastQueue;
+                    int remaining = WRITE_DELAY - (int)DateTime.UtcNow.Subtract(lastQueue).TotalMilliseconds;
                     if (remaining > 0)
                     {
                         if (cancel.WaitHandle.WaitOne(remaining))
@@ -120,7 +119,10 @@ namespace Gw2Launcher.Tools
                 {
                     Write(items);
                 }
-                catch { }
+                catch (Exception ex)
+                {
+                    Util.Logging.Log(ex);
+                }
             }
         }
 
@@ -198,7 +200,10 @@ namespace Gw2Launcher.Tools
                     }
                 }
             }
-            catch { }
+            catch (Exception ex)
+            {
+                Util.Logging.Log(ex);
+            }
 
             if (launch != DateTime.MinValue && programExit > launch)
                 l.Add(new QueuedRecord(RecordType.Exited, 0, programExit));
@@ -254,13 +259,18 @@ namespace Gw2Launcher.Tools
                     }
                 }
             }
-            catch
+            catch (Exception e)
             {
+                Util.Logging.Log(e);
+
                 try
                 {
                     File.Delete(path);
                 }
-                catch { }
+                catch (Exception ex)
+                {
+                    Util.Logging.Log(ex);
+                }
                 return null;
             }
 

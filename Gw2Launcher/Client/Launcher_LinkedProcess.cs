@@ -12,6 +12,7 @@ namespace Gw2Launcher.Client
         private class LinkedProcess : IDisposable
         {
             public static event EventHandler<Account> ProcessExited;
+            public static event EventHandler<Account> ProcessActive;
 
             public event EventHandler<Account> Exited;
             public event EventHandler<Process> Changed;
@@ -28,7 +29,7 @@ namespace Gw2Launcher.Client
                 public ProcessWatcher(Process p)
                 {
                     this.process = p;
-                    this.waiter = Task.Factory.StartNew(WaitForExit);
+                    this.waiter = Task.Factory.StartNew(WaitForExit, TaskCreationOptions.LongRunning);
                 }
 
                 private void WaitForExit()
@@ -105,6 +106,9 @@ namespace Gw2Launcher.Client
                         if (!p.HasExited)
                         {
                             activeProcesses.Add(p.Id, this);
+
+                            if (ProcessActive != null)
+                                ProcessActive(p, this.account);
                         }
                     }
                 }
@@ -124,6 +128,19 @@ namespace Gw2Launcher.Client
             {
                 if (this.Process != null)
                 {
+                    try
+                    {
+                        int pid = this.Process.Id;
+                        lock (activeProcesses)
+                        {
+                            activeProcesses.Remove(pid);
+                        }
+                    }
+                    catch (Exception e)
+                    {
+                        Util.Logging.Log(e);
+                    }
+
                     if (watcher != null)
                     {
                         watcher.Dispose();
@@ -140,10 +157,13 @@ namespace Gw2Launcher.Client
 
                 try
                 {
+                    hasStarted = p.Id > 0;
                     hasExited = p.HasExited;
-                    hasStarted = true;
                 }
-                catch { }
+                catch (Exception ex)
+                {
+                    Util.Logging.Log(ex);
+                }
 
                 this.Process = p;
 
@@ -160,8 +180,10 @@ namespace Gw2Launcher.Client
                             p.EnableRaisingEvents = true;
                             supportsEvents = true;
                         }
-                        catch 
+                        catch  (Exception e)
                         {
+                            Util.Logging.Log(e);
+
                             if (!Util.Users.IsCurrentUser(account.Settings.WindowsAccount))
                             {
                                 string username = Util.Users.GetUserName(account.Settings.WindowsAccount);
@@ -174,7 +196,10 @@ namespace Gw2Launcher.Client
                                         supportsEvents = true;
                                     }
                                 }
-                                catch { }
+                                catch (Exception ex)
+                                {
+                                    Util.Logging.Log(ex);
+                                }
                             }
                         }
                     }
@@ -214,6 +239,9 @@ namespace Gw2Launcher.Client
                         if (!p.HasExited)
                         {
                             activeProcesses.Add(p.Id, this);
+
+                            if (ProcessActive != null)
+                                ProcessActive(p, this.account);
                         }
                     }
                 }
@@ -288,8 +316,9 @@ namespace Gw2Launcher.Client
                             _KillMutex();
                         }
                     }
-                    catch
+                    catch (Exception e)
                     {
+                        Util.Logging.Log(e);
                         Util.ProcessUtil.KillMutexWindow(this.Process.Id, username, password);
                     }
                 }
@@ -303,7 +332,7 @@ namespace Gw2Launcher.Client
 
             private void _KillMutex()
             {
-                Windows.Win32Handles.IObjectHandle handle = Windows.Win32Handles.GetHandle(this.Process, "AN-Mutex-Window-Guild Wars 2", false);
+                Windows.Win32Handles.IObjectHandle handle = Windows.Win32Handles.GetHandle(this.Process.Id, "AN-Mutex-Window-Guild Wars 2", false);
                 if (handle != null)
                 {
                     handle.Kill();

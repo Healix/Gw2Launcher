@@ -30,6 +30,7 @@
         {
             this.components = new System.ComponentModel.Container();
             this.panelContainer = new System.Windows.Forms.Panel();
+            this.gridContainer = new Gw2Launcher.UI.Controls.AccountGridButtonContainer();
             this.contextMenu = new System.Windows.Forms.ContextMenuStrip(this.components);
             this.cancelPendingLaunchesToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.toolStripMenuItemCancelSep = new System.Windows.Forms.ToolStripSeparator();
@@ -44,6 +45,8 @@
             this.launchSelectedToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.updateLocaldatSelectedToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.updateSelectedToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.toolStripMenuItem11 = new System.Windows.Forms.ToolStripSeparator();
+            this.applyWindowedBoundsToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.toolStripMenuItem8 = new System.Windows.Forms.ToolStripSeparator();
             this.clearSelectionToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.toolStripMenuItem2 = new System.Windows.Forms.ToolStripSeparator();
@@ -54,9 +57,19 @@
             this.toolStripMenuItem7 = new System.Windows.Forms.ToolStripSeparator();
             this.ascendingToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.descendingToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
-            this.toolStripMenuItem6 = new System.Windows.Forms.ToolStripSeparator();
+            this.toolStripMenuItem16 = new System.Windows.Forms.ToolStripSeparator();
             this.newToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.settingsToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.toolsToolStripMenuItem1 = new System.Windows.Forms.ToolStripMenuItem();
+            this.deleteCacheFoldersToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.hideUserAccountsToolStripMenuItem1 = new System.Windows.Forms.ToolStripMenuItem();
+            this.toolStripMenuItem10 = new System.Windows.Forms.ToolStripSeparator();
+            this.killAllActiveProcessesToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.killMutexToolStripMenuItem1 = new System.Windows.Forms.ToolStripMenuItem();
+            this.toolStripMenuItem12 = new System.Windows.Forms.ToolStripSeparator();
+            this.assetProxyServerToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.toolStripMenuItem14 = new System.Windows.Forms.ToolStripSeparator();
+            this.supportToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.contextNotify = new System.Windows.Forms.ContextMenuStrip(this.components);
             this.showToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.toolStripMenuItem9 = new System.Windows.Forms.ToolStripSeparator();
@@ -68,6 +81,10 @@
             this.toolStripMenuItem5 = new System.Windows.Forms.ToolStripSeparator();
             this.killAllGW2ProcessesToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.killMutexToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.toolStripMenuItem13 = new System.Windows.Forms.ToolStripSeparator();
+            this.assetServerInterceptToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.toolStripMenuItem15 = new System.Windows.Forms.ToolStripSeparator();
+            this.supportToolStripMenuItem1 = new System.Windows.Forms.ToolStripMenuItem();
             this.toolStripMenuItem4 = new System.Windows.Forms.ToolStripSeparator();
             this.allToolStripMenuItem1 = new System.Windows.Forms.ToolStripMenuItem();
             this.launchToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
@@ -75,13 +92,6 @@
             this.updateToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.toolStripMenuItem1 = new System.Windows.Forms.ToolStripSeparator();
             this.exitToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
-            this.toolsToolStripMenuItem1 = new System.Windows.Forms.ToolStripMenuItem();
-            this.deleteCacheFoldersToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
-            this.hideUserAccountsToolStripMenuItem1 = new System.Windows.Forms.ToolStripMenuItem();
-            this.toolStripMenuItem10 = new System.Windows.Forms.ToolStripSeparator();
-            this.killAllActiveProcessesToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
-            this.killMutexToolStripMenuItem1 = new System.Windows.Forms.ToolStripMenuItem();
-            this.gridContainer = new Gw2Launcher.UI.Controls.AccountGridButtonContainer();
             this.panelContainer.SuspendLayout();
             this.contextMenu.SuspendLayout();
             this.contextNotify.SuspendLayout();
@@ -100,6 +110,19 @@
             this.panelContainer.Size = new System.Drawing.Size(455, 415);
             this.panelContainer.TabIndex = 0;
             // 
+            // gridContainer
+            // 
+            this.gridContainer.Anchor = ((System.Windows.Forms.AnchorStyles)((((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom) 
+            | System.Windows.Forms.AnchorStyles.Left) 
+            | System.Windows.Forms.AnchorStyles.Right)));
+            this.gridContainer.BackColor = System.Drawing.Color.White;
+            this.gridContainer.GridSize = new System.Drawing.Size(200, 67);
+            this.gridContainer.Location = new System.Drawing.Point(5, 5);
+            this.gridContainer.Margin = new System.Windows.Forms.Padding(5);
+            this.gridContainer.Name = "gridContainer";
+            this.gridContainer.Size = new System.Drawing.Size(443, 403);
+            this.gridContainer.TabIndex = 0;
+            // 
             // contextMenu
             // 
             this.contextMenu.Items.AddRange(new System.Windows.Forms.ToolStripItem[] {
@@ -112,7 +135,7 @@
             this.selectedToolStripMenuItem,
             this.toolStripMenuItem2,
             this.sortByToolStripMenuItem,
-            this.toolStripMenuItem6,
+            this.toolStripMenuItem16,
             this.newToolStripMenuItem,
             this.settingsToolStripMenuItem,
             this.toolsToolStripMenuItem1});
@@ -189,6 +212,8 @@
             this.launchSelectedToolStripMenuItem,
             this.updateLocaldatSelectedToolStripMenuItem,
             this.updateSelectedToolStripMenuItem,
+            this.toolStripMenuItem11,
+            this.applyWindowedBoundsToolStripMenuItem,
             this.toolStripMenuItem8,
             this.clearSelectionToolStripMenuItem});
             this.selectedToolStripMenuItem.Name = "selectedToolStripMenuItem";
@@ -198,33 +223,45 @@
             // launchSelectedToolStripMenuItem
             // 
             this.launchSelectedToolStripMenuItem.Name = "launchSelectedToolStripMenuItem";
-            this.launchSelectedToolStripMenuItem.Size = new System.Drawing.Size(162, 22);
+            this.launchSelectedToolStripMenuItem.Size = new System.Drawing.Size(206, 22);
             this.launchSelectedToolStripMenuItem.Text = "Launch";
             this.launchSelectedToolStripMenuItem.Click += new System.EventHandler(this.launchSelectedToolStripMenuItem_Click);
             // 
             // updateLocaldatSelectedToolStripMenuItem
             // 
             this.updateLocaldatSelectedToolStripMenuItem.Name = "updateLocaldatSelectedToolStripMenuItem";
-            this.updateLocaldatSelectedToolStripMenuItem.Size = new System.Drawing.Size(162, 22);
+            this.updateLocaldatSelectedToolStripMenuItem.Size = new System.Drawing.Size(206, 22);
             this.updateLocaldatSelectedToolStripMenuItem.Text = "Launch (normal)";
             this.updateLocaldatSelectedToolStripMenuItem.Click += new System.EventHandler(this.updateLocaldatSelectedToolStripMenuItem_Click);
             // 
             // updateSelectedToolStripMenuItem
             // 
             this.updateSelectedToolStripMenuItem.Name = "updateSelectedToolStripMenuItem";
-            this.updateSelectedToolStripMenuItem.Size = new System.Drawing.Size(162, 22);
+            this.updateSelectedToolStripMenuItem.Size = new System.Drawing.Size(206, 22);
             this.updateSelectedToolStripMenuItem.Text = "Update";
             this.updateSelectedToolStripMenuItem.Click += new System.EventHandler(this.updateSelectedToolStripMenuItem_Click);
+            // 
+            // toolStripMenuItem11
+            // 
+            this.toolStripMenuItem11.Name = "toolStripMenuItem11";
+            this.toolStripMenuItem11.Size = new System.Drawing.Size(203, 6);
+            // 
+            // applyWindowedBoundsToolStripMenuItem
+            // 
+            this.applyWindowedBoundsToolStripMenuItem.Name = "applyWindowedBoundsToolStripMenuItem";
+            this.applyWindowedBoundsToolStripMenuItem.Size = new System.Drawing.Size(206, 22);
+            this.applyWindowedBoundsToolStripMenuItem.Text = "Apply windowed bounds";
+            this.applyWindowedBoundsToolStripMenuItem.Click += new System.EventHandler(this.applyWindowedBoundsToolStripMenuItem_Click);
             // 
             // toolStripMenuItem8
             // 
             this.toolStripMenuItem8.Name = "toolStripMenuItem8";
-            this.toolStripMenuItem8.Size = new System.Drawing.Size(159, 6);
+            this.toolStripMenuItem8.Size = new System.Drawing.Size(203, 6);
             // 
             // clearSelectionToolStripMenuItem
             // 
             this.clearSelectionToolStripMenuItem.Name = "clearSelectionToolStripMenuItem";
-            this.clearSelectionToolStripMenuItem.Size = new System.Drawing.Size(162, 22);
+            this.clearSelectionToolStripMenuItem.Size = new System.Drawing.Size(206, 22);
             this.clearSelectionToolStripMenuItem.Text = "Clear selection";
             this.clearSelectionToolStripMenuItem.Click += new System.EventHandler(this.clearSelectionToolStripMenuItem_Click);
             // 
@@ -288,10 +325,10 @@
             this.descendingToolStripMenuItem.Text = "Descending";
             this.descendingToolStripMenuItem.Click += new System.EventHandler(this.descendingToolStripMenuItem_Click);
             // 
-            // toolStripMenuItem6
+            // toolStripMenuItem16
             // 
-            this.toolStripMenuItem6.Name = "toolStripMenuItem6";
-            this.toolStripMenuItem6.Size = new System.Drawing.Size(204, 6);
+            this.toolStripMenuItem16.Name = "toolStripMenuItem16";
+            this.toolStripMenuItem16.Size = new System.Drawing.Size(204, 6);
             // 
             // newToolStripMenuItem
             // 
@@ -306,6 +343,79 @@
             this.settingsToolStripMenuItem.Size = new System.Drawing.Size(207, 22);
             this.settingsToolStripMenuItem.Text = "Settings";
             this.settingsToolStripMenuItem.Click += new System.EventHandler(this.settingsToolStripMenuItem_Click);
+            // 
+            // toolsToolStripMenuItem1
+            // 
+            this.toolsToolStripMenuItem1.DropDownItems.AddRange(new System.Windows.Forms.ToolStripItem[] {
+            this.deleteCacheFoldersToolStripMenuItem,
+            this.hideUserAccountsToolStripMenuItem1,
+            this.toolStripMenuItem10,
+            this.killAllActiveProcessesToolStripMenuItem,
+            this.killMutexToolStripMenuItem1,
+            this.toolStripMenuItem12,
+            this.assetProxyServerToolStripMenuItem,
+            this.toolStripMenuItem14,
+            this.supportToolStripMenuItem});
+            this.toolsToolStripMenuItem1.Name = "toolsToolStripMenuItem1";
+            this.toolsToolStripMenuItem1.Size = new System.Drawing.Size(207, 22);
+            this.toolsToolStripMenuItem1.Text = "Tools";
+            // 
+            // deleteCacheFoldersToolStripMenuItem
+            // 
+            this.deleteCacheFoldersToolStripMenuItem.Name = "deleteCacheFoldersToolStripMenuItem";
+            this.deleteCacheFoldersToolStripMenuItem.Size = new System.Drawing.Size(193, 22);
+            this.deleteCacheFoldersToolStripMenuItem.Text = "Delete cache folders";
+            this.deleteCacheFoldersToolStripMenuItem.Click += new System.EventHandler(this.deleteCacheFoldersToolStripMenuItem_Click);
+            // 
+            // hideUserAccountsToolStripMenuItem1
+            // 
+            this.hideUserAccountsToolStripMenuItem1.Name = "hideUserAccountsToolStripMenuItem1";
+            this.hideUserAccountsToolStripMenuItem1.Size = new System.Drawing.Size(193, 22);
+            this.hideUserAccountsToolStripMenuItem1.Text = "Hide user accounts";
+            this.hideUserAccountsToolStripMenuItem1.Click += new System.EventHandler(this.hideUserAccountsToolStripMenuItem1_Click);
+            // 
+            // toolStripMenuItem10
+            // 
+            this.toolStripMenuItem10.Name = "toolStripMenuItem10";
+            this.toolStripMenuItem10.Size = new System.Drawing.Size(190, 6);
+            // 
+            // killAllActiveProcessesToolStripMenuItem
+            // 
+            this.killAllActiveProcessesToolStripMenuItem.Name = "killAllActiveProcessesToolStripMenuItem";
+            this.killAllActiveProcessesToolStripMenuItem.Size = new System.Drawing.Size(193, 22);
+            this.killAllActiveProcessesToolStripMenuItem.Text = "Kill all active processes";
+            this.killAllActiveProcessesToolStripMenuItem.Click += new System.EventHandler(this.killAllActiveProcessesToolStripMenuItem_Click);
+            // 
+            // killMutexToolStripMenuItem1
+            // 
+            this.killMutexToolStripMenuItem1.Name = "killMutexToolStripMenuItem1";
+            this.killMutexToolStripMenuItem1.Size = new System.Drawing.Size(193, 22);
+            this.killMutexToolStripMenuItem1.Text = "Kill mutex";
+            this.killMutexToolStripMenuItem1.Click += new System.EventHandler(this.killMutexToolStripMenuItem1_Click);
+            // 
+            // toolStripMenuItem12
+            // 
+            this.toolStripMenuItem12.Name = "toolStripMenuItem12";
+            this.toolStripMenuItem12.Size = new System.Drawing.Size(190, 6);
+            // 
+            // assetProxyServerToolStripMenuItem
+            // 
+            this.assetProxyServerToolStripMenuItem.Name = "assetProxyServerToolStripMenuItem";
+            this.assetProxyServerToolStripMenuItem.Size = new System.Drawing.Size(193, 22);
+            this.assetProxyServerToolStripMenuItem.Text = "Asset server proxy";
+            this.assetProxyServerToolStripMenuItem.Click += new System.EventHandler(this.assetProxyServerToolStripMenuItem_Click);
+            // 
+            // toolStripMenuItem14
+            // 
+            this.toolStripMenuItem14.Name = "toolStripMenuItem14";
+            this.toolStripMenuItem14.Size = new System.Drawing.Size(190, 6);
+            // 
+            // supportToolStripMenuItem
+            // 
+            this.supportToolStripMenuItem.Name = "supportToolStripMenuItem";
+            this.supportToolStripMenuItem.Size = new System.Drawing.Size(193, 22);
+            this.supportToolStripMenuItem.Text = "Support";
+            this.supportToolStripMenuItem.Click += new System.EventHandler(this.supportToolStripMenuItem_Click);
             // 
             // contextNotify
             // 
@@ -355,7 +465,11 @@
             this.hideUserAccountsToolStripMenuItem,
             this.toolStripMenuItem5,
             this.killAllGW2ProcessesToolStripMenuItem,
-            this.killMutexToolStripMenuItem});
+            this.killMutexToolStripMenuItem,
+            this.toolStripMenuItem13,
+            this.assetServerInterceptToolStripMenuItem,
+            this.toolStripMenuItem15,
+            this.supportToolStripMenuItem1});
             this.toolsToolStripMenuItem.Name = "toolsToolStripMenuItem";
             this.toolsToolStripMenuItem.Size = new System.Drawing.Size(188, 22);
             this.toolsToolStripMenuItem.Text = "Tools";
@@ -392,6 +506,30 @@
             this.killMutexToolStripMenuItem.Size = new System.Drawing.Size(193, 22);
             this.killMutexToolStripMenuItem.Text = "Kill mutex";
             this.killMutexToolStripMenuItem.Click += new System.EventHandler(this.killMutexToolStripMenuItem_Click);
+            // 
+            // toolStripMenuItem13
+            // 
+            this.toolStripMenuItem13.Name = "toolStripMenuItem13";
+            this.toolStripMenuItem13.Size = new System.Drawing.Size(190, 6);
+            // 
+            // assetServerInterceptToolStripMenuItem
+            // 
+            this.assetServerInterceptToolStripMenuItem.Name = "assetServerInterceptToolStripMenuItem";
+            this.assetServerInterceptToolStripMenuItem.Size = new System.Drawing.Size(193, 22);
+            this.assetServerInterceptToolStripMenuItem.Text = "Asset server proxy";
+            this.assetServerInterceptToolStripMenuItem.Click += new System.EventHandler(this.assetServerInterceptToolStripMenuItem_Click);
+            // 
+            // toolStripMenuItem15
+            // 
+            this.toolStripMenuItem15.Name = "toolStripMenuItem15";
+            this.toolStripMenuItem15.Size = new System.Drawing.Size(190, 6);
+            // 
+            // supportToolStripMenuItem1
+            // 
+            this.supportToolStripMenuItem1.Name = "supportToolStripMenuItem1";
+            this.supportToolStripMenuItem1.Size = new System.Drawing.Size(193, 22);
+            this.supportToolStripMenuItem1.Text = "Support";
+            this.supportToolStripMenuItem1.Click += new System.EventHandler(this.supportToolStripMenuItem_Click);
             // 
             // toolStripMenuItem4
             // 
@@ -440,64 +578,6 @@
             this.exitToolStripMenuItem.Size = new System.Drawing.Size(188, 22);
             this.exitToolStripMenuItem.Text = "Exit";
             this.exitToolStripMenuItem.Click += new System.EventHandler(this.exitToolStripMenuItem_Click);
-            // 
-            // toolsToolStripMenuItem1
-            // 
-            this.toolsToolStripMenuItem1.DropDownItems.AddRange(new System.Windows.Forms.ToolStripItem[] {
-            this.deleteCacheFoldersToolStripMenuItem,
-            this.hideUserAccountsToolStripMenuItem1,
-            this.toolStripMenuItem10,
-            this.killAllActiveProcessesToolStripMenuItem,
-            this.killMutexToolStripMenuItem1});
-            this.toolsToolStripMenuItem1.Name = "toolsToolStripMenuItem1";
-            this.toolsToolStripMenuItem1.Size = new System.Drawing.Size(207, 22);
-            this.toolsToolStripMenuItem1.Text = "Tools";
-            // 
-            // deleteCacheFoldersToolStripMenuItem
-            // 
-            this.deleteCacheFoldersToolStripMenuItem.Name = "deleteCacheFoldersToolStripMenuItem";
-            this.deleteCacheFoldersToolStripMenuItem.Size = new System.Drawing.Size(193, 22);
-            this.deleteCacheFoldersToolStripMenuItem.Text = "Delete cache folders";
-            this.deleteCacheFoldersToolStripMenuItem.Click += new System.EventHandler(this.deleteCacheFoldersToolStripMenuItem_Click);
-            // 
-            // hideUserAccountsToolStripMenuItem1
-            // 
-            this.hideUserAccountsToolStripMenuItem1.Name = "hideUserAccountsToolStripMenuItem1";
-            this.hideUserAccountsToolStripMenuItem1.Size = new System.Drawing.Size(193, 22);
-            this.hideUserAccountsToolStripMenuItem1.Text = "Hide user accounts";
-            this.hideUserAccountsToolStripMenuItem1.Click += new System.EventHandler(this.hideUserAccountsToolStripMenuItem1_Click);
-            // 
-            // toolStripMenuItem10
-            // 
-            this.toolStripMenuItem10.Name = "toolStripMenuItem10";
-            this.toolStripMenuItem10.Size = new System.Drawing.Size(190, 6);
-            // 
-            // killAllActiveProcessesToolStripMenuItem
-            // 
-            this.killAllActiveProcessesToolStripMenuItem.Name = "killAllActiveProcessesToolStripMenuItem";
-            this.killAllActiveProcessesToolStripMenuItem.Size = new System.Drawing.Size(193, 22);
-            this.killAllActiveProcessesToolStripMenuItem.Text = "Kill all active processes";
-            this.killAllActiveProcessesToolStripMenuItem.Click += new System.EventHandler(this.killAllActiveProcessesToolStripMenuItem_Click);
-            // 
-            // killMutexToolStripMenuItem1
-            // 
-            this.killMutexToolStripMenuItem1.Name = "killMutexToolStripMenuItem1";
-            this.killMutexToolStripMenuItem1.Size = new System.Drawing.Size(193, 22);
-            this.killMutexToolStripMenuItem1.Text = "Kill mutex";
-            this.killMutexToolStripMenuItem1.Click += new System.EventHandler(this.killMutexToolStripMenuItem1_Click);
-            // 
-            // gridContainer
-            // 
-            this.gridContainer.Anchor = ((System.Windows.Forms.AnchorStyles)((((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom) 
-            | System.Windows.Forms.AnchorStyles.Left) 
-            | System.Windows.Forms.AnchorStyles.Right)));
-            this.gridContainer.BackColor = System.Drawing.Color.White;
-            this.gridContainer.GridSize = new System.Drawing.Size(200, 67);
-            this.gridContainer.Location = new System.Drawing.Point(5, 5);
-            this.gridContainer.Margin = new System.Windows.Forms.Padding(5);
-            this.gridContainer.Name = "gridContainer";
-            this.gridContainer.Size = new System.Drawing.Size(443, 403);
-            this.gridContainer.TabIndex = 0;
             // 
             // formMain
             // 
@@ -548,7 +628,6 @@
         private System.Windows.Forms.ToolStripSeparator toolStripMenuItem7;
         private System.Windows.Forms.ToolStripMenuItem ascendingToolStripMenuItem;
         private System.Windows.Forms.ToolStripMenuItem descendingToolStripMenuItem;
-        private System.Windows.Forms.ToolStripSeparator toolStripMenuItem6;
         private System.Windows.Forms.ToolStripSeparator toolStripMenuItem8;
         private System.Windows.Forms.ToolStripMenuItem clearSelectionToolStripMenuItem;
         private System.Windows.Forms.ToolStripMenuItem allToolStripMenuItem1;
@@ -574,5 +653,16 @@
         private System.Windows.Forms.ToolStripSeparator toolStripMenuItem10;
         private System.Windows.Forms.ToolStripMenuItem killAllActiveProcessesToolStripMenuItem;
         private System.Windows.Forms.ToolStripMenuItem killMutexToolStripMenuItem1;
+        private System.Windows.Forms.ToolStripSeparator toolStripMenuItem11;
+        private System.Windows.Forms.ToolStripMenuItem applyWindowedBoundsToolStripMenuItem;
+        private System.Windows.Forms.ToolStripSeparator toolStripMenuItem12;
+        private System.Windows.Forms.ToolStripMenuItem supportToolStripMenuItem;
+        private System.Windows.Forms.ToolStripSeparator toolStripMenuItem13;
+        private System.Windows.Forms.ToolStripMenuItem supportToolStripMenuItem1;
+        private System.Windows.Forms.ToolStripMenuItem assetProxyServerToolStripMenuItem;
+        private System.Windows.Forms.ToolStripSeparator toolStripMenuItem14;
+        private System.Windows.Forms.ToolStripMenuItem assetServerInterceptToolStripMenuItem;
+        private System.Windows.Forms.ToolStripSeparator toolStripMenuItem15;
+        private System.Windows.Forms.ToolStripSeparator toolStripMenuItem16;
     }
 }

@@ -188,7 +188,7 @@
             // columnUser
             // 
             dataGridViewCellStyle2.Alignment = System.Windows.Forms.DataGridViewContentAlignment.MiddleRight;
-            dataGridViewCellStyle2.Font = new System.Drawing.Font("Segoe UI Light", 8.25F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+            dataGridViewCellStyle2.Font = new System.Drawing.Font("Segoe UI Semilight", 8.25F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
             dataGridViewCellStyle2.ForeColor = System.Drawing.SystemColors.GrayText;
             this.columnUser.DefaultCellStyle = dataGridViewCellStyle2;
             this.columnUser.HeaderText = "User";
@@ -242,7 +242,7 @@
             // label5
             // 
             this.label5.AutoSize = true;
-            this.label5.Font = new System.Drawing.Font("Segoe UI Light", 8.25F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+            this.label5.Font = new System.Drawing.Font("Segoe UI Semilight", 8.25F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
             this.label5.Location = new System.Drawing.Point(10, 10);
             this.label5.Name = "label5";
             this.label5.Size = new System.Drawing.Size(327, 26);
@@ -269,7 +269,7 @@
             this.Controls.Add(this.label5);
             this.Controls.Add(this.label1);
             this.Controls.Add(this.gridAccounts);
-            this.Font = new System.Drawing.Font("Segoe UI Light", 8.25F);
+            this.Font = new System.Drawing.Font("Segoe UI Semilight", 8.25F);
             this.FormBorderStyle = System.Windows.Forms.FormBorderStyle.FixedDialog;
             this.Icon = global::Gw2Launcher.Properties.Resources.Gw2;
             this.MaximizeBox = false;

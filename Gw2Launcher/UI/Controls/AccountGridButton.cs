@@ -23,7 +23,7 @@ namespace Gw2Launcher.UI.Controls
         protected static readonly Color BACK_COLOR_HOVER = Color.FromArgb(235, 235, 235);
         protected static readonly Color BACK_COLOR_SELECTED = Color.FromArgb(230, 236, 244);
         public static readonly Font FONT_LARGE = new Font("Segoe UI Semibold", 8.25F, FontStyle.Bold, GraphicsUnit.Point, 0);
-        public static readonly Font FONT_SMALL = new Font("Segoe UI Light", 8.25F, FontStyle.Regular, GraphicsUnit.Point, 0);
+        public static readonly Font FONT_SMALL = new Font("Segoe UI Semilight", 8.25F, FontStyle.Regular, GraphicsUnit.Point, 0);
         protected static readonly Point
             POINT_NAME = new Point(10, 10),
             POINT_ACCOUNT = new Point(10, 28),
@@ -209,8 +209,9 @@ namespace Gw2Launcher.UI.Controls
                     else
                         await Task.Delay(millisToNextDay + 1, token);
                 }
-                catch (TaskCanceledException)
+                catch (TaskCanceledException e)
                 {
+                    Util.Logging.Log(e);
                     cancelRefresh = null;
                     return;
                 }

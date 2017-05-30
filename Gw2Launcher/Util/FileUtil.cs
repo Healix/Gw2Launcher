@@ -22,8 +22,9 @@ namespace Gw2Launcher.Util
                 File.SetAccessControl(path, security);
                 return true;
             }
-            catch
+            catch (Exception e)
             {
+                Util.Logging.Log(e);
                 return false;
             }
         }
@@ -38,8 +39,9 @@ namespace Gw2Launcher.Util
                 Directory.SetAccessControl(path, security);
                 return true;
             }
-            catch
+            catch (Exception e)
             {
+                Util.Logging.Log(e);
                 return false;
             }
         }

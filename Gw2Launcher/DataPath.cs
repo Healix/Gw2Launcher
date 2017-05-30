@@ -20,7 +20,10 @@ namespace Gw2Launcher
                     {
                         Directory.CreateDirectory(folder);
                     }
-                    catch { }
+                    catch (Exception ex)
+                    {
+                        Util.Logging.Log(ex);
+                    }
                 }
                 return folder;
             }

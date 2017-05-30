@@ -92,7 +92,7 @@ namespace Gw2Launcher.UI
         {
             const int LIMIT = 20;
 
-            int start = Environment.TickCount;
+            var start = DateTime.UtcNow;
             this.Opacity = from;
 
             while (true)
@@ -101,7 +101,7 @@ namespace Gw2Launcher.UI
 
                 if (duration > 0)
                 {
-                    int remaining = duration - Environment.TickCount + start;
+                    int remaining = duration - (int)DateTime.UtcNow.Subtract(start).TotalMilliseconds;
                     try
                     {
                         if (remaining > LIMIT)
@@ -109,11 +109,12 @@ namespace Gw2Launcher.UI
                         else if (remaining > 0)
                             await Task.Delay(remaining,token);
                     }
-                    catch (TaskCanceledException)
+                    catch (TaskCanceledException ex)
                     {
+                        Util.Logging.Log(ex);
                         return;
                     }
-                    progress = (double)(Environment.TickCount - start) / duration;
+                    progress = DateTime.UtcNow.Subtract(start).TotalMilliseconds / duration;
                 }
                 else
                 {
@@ -148,8 +149,9 @@ namespace Gw2Launcher.UI
                 {
                     await Task.Delay(delay, cancelToken.Token);
                 }
-                catch (TaskCanceledException)
+                catch (TaskCanceledException ex)
                 {
+                    Util.Logging.Log(ex);
                     return;
                 }
             }
@@ -223,8 +225,9 @@ namespace Gw2Launcher.UI
                             OnAttachedLocationChanged();
                         }));
                 }
-                catch 
+                catch  (Exception ex)
                 {
+                    Util.Logging.Log(ex);
                     invoking = false;
                 }
             }
@@ -455,6 +458,7 @@ namespace Gw2Launcher.UI
             }
             catch (Exception ex)
             {
+                Util.Logging.Log(ex);
             }
         }
 

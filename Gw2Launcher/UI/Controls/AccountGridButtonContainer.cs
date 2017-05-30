@@ -283,8 +283,9 @@ namespace Gw2Launcher.UI.Controls
                             {
                                 result = a.AccountData.UID.CompareTo(b.AccountData.UID);
                             }
-                            catch
+                            catch (Exception e)
                             {
+                                Util.Logging.Log(e);
                                 if (a.AccountData == b.AccountData)
                                     result = 0;
                                 else if (a.AccountData == null)

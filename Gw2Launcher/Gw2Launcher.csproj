@@ -11,6 +11,7 @@
     <AssemblyName>Gw2Launcher</AssemblyName>
     <TargetFrameworkVersion>v4.5</TargetFrameworkVersion>
     <FileAlignment>512</FileAlignment>
+    <IsWebBootstrapper>false</IsWebBootstrapper>
     <PublishUrl>publish\</PublishUrl>
     <Install>true</Install>
     <InstallFrom>Disk</InstallFrom>
@@ -23,7 +24,6 @@
     <MapFileExtensions>true</MapFileExtensions>
     <ApplicationRevision>0</ApplicationRevision>
     <ApplicationVersion>1.0.0.%2a</ApplicationVersion>
-    <IsWebBootstrapper>false</IsWebBootstrapper>
     <UseApplicationTrust>false</UseApplicationTrust>
     <BootstrapperEnabled>true</BootstrapperEnabled>
   </PropertyGroup>
@@ -38,13 +38,14 @@
     <WarningLevel>4</WarningLevel>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
-    <PlatformTarget>AnyCPU</PlatformTarget>
-    <DebugType>pdbonly</DebugType>
+    <PlatformTarget>x64</PlatformTarget>
+    <DebugType>none</DebugType>
     <Optimize>true</Optimize>
     <OutputPath>bin\Release\</OutputPath>
     <DefineConstants>TRACE</DefineConstants>
     <ErrorReport>prompt</ErrorReport>
     <WarningLevel>4</WarningLevel>
+    <Prefer32Bit>false</Prefer32Bit>
   </PropertyGroup>
   <PropertyGroup>
     <ApplicationIcon>Resources\Gw2.ico</ApplicationIcon>
@@ -72,12 +73,26 @@
     <Compile Include="Client\Launcher_LinkedProcess.cs" />
     <Compile Include="Client\Launcher_WindowWatcher.cs" />
     <Compile Include="DataPath.cs" />
+    <Compile Include="Net\AssetProxy\IPPool.cs" />
+    <Compile Include="Net\AssetProxy\Cache.cs" />
+    <Compile Include="Net\AssetProxy\Client.cs" />
+    <Compile Include="Net\AssetProxy\HttpStream.cs" />
+    <Compile Include="Net\AssetProxy\ProxyServer.cs" />
+    <Compile Include="Net\AssetProxy\ServerController.cs" />
+    <Compile Include="Net\Dns.cs" />
+    <Compile Include="Net\DnsServers.cs" />
     <Compile Include="Security\Impersonation.cs" />
     <Compile Include="Tools\Gw2Build.cs" />
     <Compile Include="Tools\Gw2Cache.cs" />
     <Compile Include="Tools\Statistics.cs" />
     <Compile Include="UI\Controls\PasswordBox.cs">
       <SubType>Component</SubType>
+    </Compile>
+    <Compile Include="UI\Controls\ProgressGraph.cs">
+      <SubType>UserControl</SubType>
+    </Compile>
+    <Compile Include="UI\Controls\ProgressGraph.Designer.cs">
+      <DependentUpon>ProgressGraph.cs</DependentUpon>
     </Compile>
     <Compile Include="UI\Controls\SidebarButton.cs">
       <SubType>UserControl</SubType>
@@ -94,17 +109,47 @@
     <Compile Include="UI\formAccount.Designer.cs">
       <DependentUpon>formAccount.cs</DependentUpon>
     </Compile>
+    <Compile Include="UI\formAccountSelect.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="UI\formAccountSelect.designer.cs">
+      <DependentUpon>formAccountSelect.cs</DependentUpon>
+    </Compile>
     <Compile Include="UI\formAccountTooltip.cs">
       <SubType>Form</SubType>
     </Compile>
     <Compile Include="UI\formAccountTooltip.Designer.cs">
       <DependentUpon>formAccountTooltip.cs</DependentUpon>
     </Compile>
+    <Compile Include="UI\formAssetProxy.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="UI\formAssetProxy.Designer.cs">
+      <DependentUpon>formAssetProxy.cs</DependentUpon>
+    </Compile>
     <Compile Include="UI\formBrowseLocalDat.cs">
       <SubType>Form</SubType>
     </Compile>
     <Compile Include="UI\formBrowseLocalDat.Designer.cs">
       <DependentUpon>formBrowseLocalDat.cs</DependentUpon>
+    </Compile>
+    <Compile Include="UI\formCleanup.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="UI\formCleanup.Designer.cs">
+      <DependentUpon>formCleanup.cs</DependentUpon>
+    </Compile>
+    <Compile Include="UI\formDnsDialog.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="UI\formDnsDialog.Designer.cs">
+      <DependentUpon>formDnsDialog.cs</DependentUpon>
+    </Compile>
+    <Compile Include="UI\formFileScan.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="UI\formFileScan.Designer.cs">
+      <DependentUpon>formFileScan.cs</DependentUpon>
     </Compile>
     <Compile Include="UI\formGw2Cache.cs">
       <SubType>Form</SubType>
@@ -130,11 +175,23 @@
     <Compile Include="UI\formSettings.Designer.cs">
       <DependentUpon>formSettings.cs</DependentUpon>
     </Compile>
+    <Compile Include="UI\formSupport.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="UI\formSupport.Designer.cs">
+      <DependentUpon>formSupport.cs</DependentUpon>
+    </Compile>
     <Compile Include="UI\formUpdating.cs">
       <SubType>Form</SubType>
     </Compile>
     <Compile Include="UI\formUpdating.Designer.cs">
       <DependentUpon>formUpdating.cs</DependentUpon>
+    </Compile>
+    <Compile Include="UI\formWaiting.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="UI\formWaiting.Designer.cs">
+      <DependentUpon>formWaiting.cs</DependentUpon>
     </Compile>
     <Compile Include="UI\formWindowsAccount.cs">
       <SubType>Form</SubType>
@@ -154,9 +211,14 @@
     <Compile Include="UI\formWindowSizeOverlay.Designer.cs">
       <DependentUpon>formWindowSizeOverlay.cs</DependentUpon>
     </Compile>
+    <Compile Include="Util\Args.cs" />
+    <Compile Include="Util\Bits.cs" />
     <Compile Include="Util\DatFiles.cs" />
     <Compile Include="Util\FileUtil.cs" />
+    <Compile Include="Util\IPEndPoint.cs" />
+    <Compile Include="Util\Logging.cs" />
     <Compile Include="Util\ShowInExplorer.cs" />
+    <Compile Include="Util\Text.cs" />
     <Compile Include="Util\Users.cs" />
     <Compile Include="Windows\FindWindow.cs" />
     <Compile Include="Util\ProcessUtil.cs" />
@@ -190,6 +252,7 @@
     </Compile>
     <Compile Include="Util\RectangleConstraint.cs" />
     <Compile Include="Util\ScreenUtil.cs" />
+    <Compile Include="Windows\Symlink.cs" />
     <Compile Include="Windows\Win32Handles.cs" />
     <Compile Include="Windows\WindowSize.cs" />
     <EmbeddedResource Include="UI\Controls\AccountGridButton.resx">
@@ -211,17 +274,35 @@
     <EmbeddedResource Include="UI\Controls\NewAccountGridButton.resx">
       <DependentUpon>NewAccountGridButton.cs</DependentUpon>
     </EmbeddedResource>
+    <EmbeddedResource Include="UI\Controls\ProgressGraph.resx">
+      <DependentUpon>ProgressGraph.cs</DependentUpon>
+    </EmbeddedResource>
     <EmbeddedResource Include="UI\Controls\SidebarButton.resx">
       <DependentUpon>SidebarButton.cs</DependentUpon>
     </EmbeddedResource>
     <EmbeddedResource Include="UI\formAccount.resx">
       <DependentUpon>formAccount.cs</DependentUpon>
     </EmbeddedResource>
+    <EmbeddedResource Include="UI\formAccountSelect.resx">
+      <DependentUpon>formAccountSelect.cs</DependentUpon>
+    </EmbeddedResource>
     <EmbeddedResource Include="UI\formAccountTooltip.resx">
       <DependentUpon>formAccountTooltip.cs</DependentUpon>
     </EmbeddedResource>
+    <EmbeddedResource Include="UI\formAssetProxy.resx">
+      <DependentUpon>formAssetProxy.cs</DependentUpon>
+    </EmbeddedResource>
     <EmbeddedResource Include="UI\formBrowseLocalDat.resx">
       <DependentUpon>formBrowseLocalDat.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="UI\formCleanup.resx">
+      <DependentUpon>formCleanup.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="UI\formDnsDialog.resx">
+      <DependentUpon>formDnsDialog.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="UI\formFileScan.resx">
+      <DependentUpon>formFileScan.cs</DependentUpon>
     </EmbeddedResource>
     <EmbeddedResource Include="UI\formGw2Cache.resx">
       <DependentUpon>formGw2Cache.cs</DependentUpon>
@@ -238,8 +319,14 @@
     <EmbeddedResource Include="UI\formSettings.resx">
       <DependentUpon>formSettings.cs</DependentUpon>
     </EmbeddedResource>
+    <EmbeddedResource Include="UI\formSupport.resx">
+      <DependentUpon>formSupport.cs</DependentUpon>
+    </EmbeddedResource>
     <EmbeddedResource Include="UI\formUpdating.resx">
       <DependentUpon>formUpdating.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="UI\formWaiting.resx">
+      <DependentUpon>formWaiting.cs</DependentUpon>
     </EmbeddedResource>
     <EmbeddedResource Include="UI\formWindowsAccount.resx">
       <DependentUpon>formWindowsAccount.cs</DependentUpon>
@@ -265,9 +352,6 @@
   </ItemGroup>
   <ItemGroup>
     <None Include="Resources\Gw2.ico" />
-  </ItemGroup>
-  <ItemGroup>
-    <EmbeddedResource Include="Resources\ProcessUtil.exe" />
   </ItemGroup>
   <ItemGroup>
     <None Include="Resources\daily.png" />

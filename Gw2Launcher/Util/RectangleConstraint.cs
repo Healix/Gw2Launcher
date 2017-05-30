@@ -25,12 +25,12 @@ namespace Gw2Launcher.Util
             return bounds;
         }
 
-        public static Rectangle ConstainToScreen(Control from, Rectangle bounds)
+        public static Rectangle ConstrainToScreen(Control from, Rectangle bounds)
         {
             return Constrain(Screen.FromControl(from).Bounds, bounds);
         }
 
-        public static Rectangle ConstainToScreen(Control from, Point location, Size size)
+        public static Rectangle ConstrainToScreen(Control from, Point location, Size size)
         {
             return Constrain(Screen.FromControl(from).Bounds, new Rectangle(location, size));
         }

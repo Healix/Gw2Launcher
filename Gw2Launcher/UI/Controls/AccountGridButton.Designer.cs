@@ -42,7 +42,7 @@
             | System.Windows.Forms.AnchorStyles.Right)));
             this.labelAccount.AutoSize = true;
             this.labelAccount.BackColor = System.Drawing.Color.Transparent;
-            this.labelAccount.Font = new System.Drawing.Font("Segoe UI Light", 8.25F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+            this.labelAccount.Font = new System.Drawing.Font("Segoe UI Semilight", 8.25F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
             this.labelAccount.ForeColor = System.Drawing.Color.Gray;
             this.labelAccount.Location = new System.Drawing.Point(10, 28);
             this.labelAccount.Name = "labelAccount";
@@ -75,7 +75,7 @@
             | System.Windows.Forms.AnchorStyles.Right)));
             this.labelLastUsedValue.AutoSize = true;
             this.labelLastUsedValue.BackColor = System.Drawing.Color.Transparent;
-            this.labelLastUsedValue.Font = new System.Drawing.Font("Segoe UI Light", 8.25F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+            this.labelLastUsedValue.Font = new System.Drawing.Font("Segoe UI Semilight", 8.25F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
             this.labelLastUsedValue.ForeColor = System.Drawing.Color.Gray;
             this.labelLastUsedValue.Location = new System.Drawing.Point(62, 44);
             this.labelLastUsedValue.Name = "labelLastUsedValue";
@@ -92,7 +92,7 @@
             | System.Windows.Forms.AnchorStyles.Right)));
             this.labelLastUsed.AutoSize = true;
             this.labelLastUsed.BackColor = System.Drawing.Color.Transparent;
-            this.labelLastUsed.Font = new System.Drawing.Font("Segoe UI Light", 8.25F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+            this.labelLastUsed.Font = new System.Drawing.Font("Segoe UI Semilight", 8.25F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
             this.labelLastUsed.ForeColor = System.Drawing.Color.Gray;
             this.labelLastUsed.Location = new System.Drawing.Point(10, 44);
             this.labelLastUsed.Name = "labelLastUsed";
@@ -109,7 +109,7 @@
             | System.Windows.Forms.AnchorStyles.Right)));
             this.labelAccountValue.AutoSize = true;
             this.labelAccountValue.BackColor = System.Drawing.Color.Transparent;
-            this.labelAccountValue.Font = new System.Drawing.Font("Segoe UI Light", 8.25F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+            this.labelAccountValue.Font = new System.Drawing.Font("Segoe UI Semilight", 8.25F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
             this.labelAccountValue.ForeColor = System.Drawing.Color.Gray;
             this.labelAccountValue.Location = new System.Drawing.Point(62, 28);
             this.labelAccountValue.Name = "labelAccountValue";

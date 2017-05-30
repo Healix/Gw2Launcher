@@ -112,6 +112,8 @@ namespace Gw2Launcher.Windows
 
         #endregion
 
+        private static readonly bool IS_64;
+
         public interface IObjectHandle
         {
             void Kill();
@@ -155,9 +157,10 @@ namespace Gw2Launcher.Windows
 
         static Win32Handles()
         {
+            IS_64 = Marshal.SizeOf(typeof(IntPtr)) == 8 ? true : false;
         }
 
-        private static string GetObjectName(SYSTEM_HANDLE_TABLE_ENTRY_INFO_EX handle)
+        public static string GetObjectName(SYSTEM_HANDLE_TABLE_ENTRY_INFO_EX handle)
         {
             IntPtr _processHandle = OpenProcess(ProcessAccessFlags.All, false, handle.UniqueProcessId);
             IntPtr _handle = IntPtr.Zero;
@@ -205,30 +208,30 @@ namespace Gw2Launcher.Windows
                 finally
                 {
                     Marshal.FreeHGlobal(_objectName);
-                    CloseHandle(_handle);
                 }
 
                 try
                 {
                     return Marshal.PtrToStringUni(nameInfo.Name.Buffer, nameInfo.Name.Length >> 1);
                 }
-                catch
+                catch (Exception e)
                 {
-
+                    Util.Logging.Log(e);
                 }
 
                 return null;
             }
             finally
             {
+                if (_handle != IntPtr.Zero) //moved from Marshal.FreeHGlobal(_objectName);
+                    CloseHandle(_handle);
                 if (_processHandle != IntPtr.Zero)
                     CloseHandle(_processHandle);
             }
         }
 
-        public static IObjectHandle GetHandle(Process process, string objectName, bool exactMatch)
+        public static IObjectHandle GetHandle(int processId, string objectName, bool exactMatch)
         {
-            bool is64 = Marshal.SizeOf(typeof(IntPtr)) == 8 ? true : false;
             int infoLength = 0x10000;
             int length = 0;
             IntPtr _info = Marshal.AllocHGlobal(infoLength);
@@ -237,6 +240,7 @@ namespace Gw2Launcher.Windows
 
             try
             {
+                //CNST_SYSTEM_HANDLE_INFORMATION is limited to 16-bit process IDs
                 while ((NtQuerySystemInformation(CNST_SYSTEM_EXTENDED_HANDLE_INFORMATION, _info, infoLength, ref length)) == STATUS_INFO_LENGTH_MISMATCH)
                 {
                     infoLength = length;
@@ -244,7 +248,7 @@ namespace Gw2Launcher.Windows
                     _info = Marshal.AllocHGlobal(infoLength);
                 }
 
-                if (is64)
+                if (IS_64)
                 {
                     handleCount = Marshal.ReadInt64(_info);
                     _handle = new IntPtr(_info.ToInt64() + 16);
@@ -264,7 +268,7 @@ namespace Gw2Launcher.Windows
 
                 for (long i = 0; i < handleCount; i++)
                 {
-                    if (is64)
+                    if (IS_64)
                     {
                         handleInfo = (SYSTEM_HANDLE_TABLE_ENTRY_INFO_EX)Marshal.PtrToStructure(_handle, infoType);
                         _handle = new IntPtr(_handle.ToInt64() + infoSize);
@@ -275,7 +279,7 @@ namespace Gw2Launcher.Windows
                         _handle = new IntPtr(_handle.ToInt32() + infoSize);
                     }
 
-                    if (handleInfo.UniqueProcessId.ToUInt32() != process.Id)
+                    if (processId > 0 && handleInfo.UniqueProcessId.ToUInt32() != processId)
                         continue;
 
                     string name = GetObjectName(handleInfo);
@@ -299,6 +303,11 @@ namespace Gw2Launcher.Windows
             }
 
             return null;
+        }
+
+        public static bool Is64Bit()
+        {
+            return IS_64;
         }
     }
 }
