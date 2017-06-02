@@ -268,7 +268,9 @@ namespace Gw2Launcher.Net.AssetProxy
                             throw ex;
                         }
 
-                        if (writeCache)
+                        var response = (HttpStream.HttpResponseHeader)header;
+
+                        if (writeCache && response.StatusCode == HttpStatusCode.OK)
                         {
                             if (request.Location.StartsWith("/latest", StringComparison.OrdinalIgnoreCase))
                                 cache.Expires = DateTime.UtcNow.AddMinutes(1);
@@ -283,7 +285,7 @@ namespace Gw2Launcher.Net.AssetProxy
                             double ms = DateTime.UtcNow.Subtract(startTime).TotalMilliseconds;
                             if (ms > 0)
                             {
-                                if (((HttpStream.HttpResponseHeader)header).StatusCode == HttpStatusCode.OK)
+                                if (response.StatusCode == HttpStatusCode.OK)
                                     ipPool.AddSample(remoteEP.Address, bytes / ms);
                                 else
                                     ipPool.AddSample(remoteEP.Address, bytes / ms * 2);
