@@ -7,7 +7,7 @@ using System.Net;
 
 namespace Gw2Launcher.Net
 {
-    static class DnsServers
+    public static class DnsServers
     {
         public struct DnsServer
         {

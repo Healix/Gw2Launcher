@@ -23,7 +23,7 @@ namespace Gw2Launcher.Util
             {
                 get
                 {
-                    return System.IO.Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location);
+                    return Assembly.GetExecutingAssembly().Location;
                 }
             }
 

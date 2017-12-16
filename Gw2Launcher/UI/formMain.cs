@@ -15,15 +15,20 @@ namespace Gw2Launcher.UI
     {
         private bool autoSizeGrid;
         private NotifyIcon notifyIcon;
+        private bool canShow, initialized;
+        private DateTime lastCacheDelete;
 
         private Dictionary<ushort, AccountGridButton> buttons;
         private formAccountTooltip tooltip;
         private formUpdating updatingWindow;
         private formAssetProxy assetProxyWindow;
+        private formBackgroundPatcher bpWindow;
 
         private byte activeWindows;
         private List<Form> windows;
         private FormWindowState windowState;
+        
+        private Windows.DragHelper.DragHelperInstance dragHelper;
 
         private event EventHandler ActiveWindowChanged;
 
@@ -53,6 +58,10 @@ namespace Gw2Launcher.UI
 
             windows = new List<Form>();
             buttons = new Dictionary<ushort, AccountGridButton>();
+            canShow = true;
+
+            disableAutomaticLoginsToolStripMenuItem1.Tag = 0;
+            applyWindowedBoundsToolStripMenuItem1.Tag = 0;
 
             Client.Launcher.AccountStateChanged += Launcher_AccountStateChanged;
             Client.Launcher.LaunchException += Launcher_LaunchException;
@@ -62,15 +71,18 @@ namespace Gw2Launcher.UI
             Client.Launcher.BuildUpdated += Launcher_BuildUpdated;
             Client.Launcher.AccountQueued += Launcher_AccountQueued;
 
+            contextNotify.Opening += contextNotify_Opening;
+
             notifyIcon = new NotifyIcon();
             notifyIcon.Icon = new System.Drawing.Icon(Properties.Resources.Gw2, SystemInformation.SmallIconSize);
             notifyIcon.Visible = !Settings.ShowTray.HasValue || Settings.ShowTray.Value;
-            notifyIcon.Text = "Gw2 Launcher";
+            notifyIcon.Text = "Gw2Launcher";
             notifyIcon.ContextMenuStrip = contextNotify;
             notifyIcon.DoubleClick += notifyIcon_DoubleClick;
             
             gridContainer.AddAccountClick += gridContainer_AddAccountClick;
             gridContainer.AccountMouseClick += gridContainer_AccountMouseClick;
+            gridContainer.AccountBeginDrag += gridContainer_AccountBeginDrag;
 
             contextMenu.Closed += contextMenu_Closed;
 
@@ -79,8 +91,13 @@ namespace Gw2Launcher.UI
             Settings.ShowAccount.ValueChanged += ShowAccount_ValueChanged;
             Settings.FontLarge.ValueChanged += FontLarge_ValueChanged;
             Settings.FontSmall.ValueChanged += FontSmall_ValueChanged;
-
-            windowState = this.WindowState;
+            Settings.BackgroundPatchingEnabled.ValueChanged += BackgroundPatchingEnabled_ValueChanged;
+            
+            Tools.BackgroundPatcher.Instance.PatchReady += bp_PatchReady;
+            Tools.BackgroundPatcher.Instance.PatchBeginning += bp_PatchBeginning;
+            Tools.BackgroundPatcher.Instance.DownloadManifestsComplete += bp_DownloadManifestsComplete;
+            Tools.BackgroundPatcher.Instance.Error += bp_Error;
+            Tools.AutoUpdate.NewBuildAvailable += AutoUpdate_NewBuildAvailable;
 
             this.Resize += formMain_Resize;
             this.Shown += formMain_Shown;
@@ -89,6 +106,30 @@ namespace Gw2Launcher.UI
             LoadSettings();
 
             Client.Launcher.Scan();
+
+            var h = this.Handle; //force creation
+        }
+
+        void contextNotify_Opening(object sender, CancelEventArgs e)
+        {
+            disableAutomaticLoginsToolStripMenuItem2.Enabled = (int)disableAutomaticLoginsToolStripMenuItem1.Tag > 0;
+            applyWindowedBoundsToolStripMenuItem2.Enabled = (int)applyWindowedBoundsToolStripMenuItem1.Tag > 0;
+        }
+
+        private void Initialize()
+        {
+            windowState = this.WindowState;
+            Tools.AutoUpdate.Initialize();
+
+            if (Settings.Silent)
+            {
+                if (Settings.LastProgramVersion.HasValue)
+                {
+                    var v = Settings.LastProgramVersion.Value;
+                    if (Math.Abs(DateTime.UtcNow.Subtract(Settings.LastProgramVersion.Value.lastCheck).TotalDays) > 30)
+                        CheckVersion();
+                }
+            }
         }
 
         public void ShowPatchProxy()
@@ -131,7 +172,81 @@ namespace Gw2Launcher.UI
                     assetProxyWindow = null;
                 };
 
-                System.Threading.Thread t = new System.Threading.Thread(new System.Threading.ThreadStart(
+                var t = new System.Threading.Thread(new System.Threading.ThreadStart(
+                    delegate
+                    {
+                        Application.Run(f);
+                    }));
+
+                t.IsBackground = true;
+                t.SetApartmentState(System.Threading.ApartmentState.STA);
+                t.Start();
+            }
+            else
+            {
+                try
+                {
+
+                    f.Invoke(new MethodInvoker(
+                        delegate
+                        {
+                            var h = f.Handle;
+                            if (h != IntPtr.Zero)
+                            {
+                                Windows.FindWindow.ShowWindow(h, 1);
+                                Windows.FindWindow.SetForegroundWindow(h);
+                                Windows.FindWindow.BringWindowToTop(h);
+                            }
+                        }));
+                }
+                catch (Exception ex)
+                {
+                    Util.Logging.Log(ex);
+                }
+            }
+        }
+
+        public void ShowBackgroundPatcher()
+        {
+            if (this.InvokeRequired)
+            {
+                try
+                {
+                    this.Invoke(new MethodInvoker(ShowBackgroundPatcher));
+                }
+                catch (Exception e)
+                {
+                    Util.Logging.Log(e);
+                }
+
+                return;
+            }
+
+            var f = bpWindow;
+
+            if (f == null || f.IsDisposed)
+            {
+                bpWindow = f = new formBackgroundPatcher();
+
+                if (this.WindowState != FormWindowState.Minimized)
+                {
+                    f.StartPosition = FormStartPosition.Manual;
+                    var screen = Screen.FromControl(this);
+                    int x = this.Location.X + this.Width + 5;
+                    if (x >= screen.WorkingArea.Width / 2)
+                        x = this.Location.X - f.Width - 5;
+                    f.Location = new Point(x, this.Location.Y + this.Height / 2 - f.Height / 2);
+                    f.DesktopBounds = Util.RectangleConstraint.ConstrainToScreen(f.DesktopBounds);
+                }
+                else
+                    f.StartPosition = FormStartPosition.CenterScreen;
+
+                f.FormClosing += delegate
+                {
+                    bpWindow = null;
+                };
+
+                var t = new System.Threading.Thread(new System.Threading.ThreadStart(
                     delegate
                     {
                         Application.Run(f);
@@ -201,7 +316,11 @@ namespace Gw2Launcher.UI
                                                 if (cancel != null)
                                                     cancel.Cancel();
                                             };
-                                            f.ShowDialog(this);
+                                            if (f.ShowDialog(this) == System.Windows.Forms.DialogResult.OK)
+                                            {
+                                                if (Settings.CheckForNewBuilds.Value || Tools.AutoUpdate.IsEnabled())
+                                                    UpdateLastKnownBuild();
+                                            }
                                             updatingWindow = null;
                                         }
                                     }
@@ -222,7 +341,7 @@ namespace Gw2Launcher.UI
         {
             HashSet<Settings.IDatFile> dats = new HashSet<Settings.IDatFile>();
             List<Settings.IAccount> accounts = new List<Settings.IAccount>();
-
+            
             //only accounts with a unique dat file need to be updated
 
             foreach (ushort uid in Settings.Accounts.GetKeys())
@@ -310,16 +429,140 @@ namespace Gw2Launcher.UI
         {
             this.Shown -= formMain_Shown;
 
-            if (Settings.CheckForNewBuilds)
+            if (!Settings.Silent)
             {
-                CheckBuild();
+                if (Settings.CheckForNewBuilds.Value && !Settings.AutoUpdate.Value)
+                {
+                    CheckBuild();
+                }
+
+                if (Settings.LastProgramVersion.HasValue)
+                {
+                    var v = Settings.LastProgramVersion.Value;
+                    if (Math.Abs(DateTime.UtcNow.Subtract(Settings.LastProgramVersion.Value.lastCheck).TotalDays) > 30) //v.version <= Program.RELEASE_VERSION && 
+                        CheckVersion();
+                }
             }
+        }
+
+        protected override void Dispose(bool disposing)
+        {
+            if (disposing && (components != null))
+            {
+                components.Dispose();
+                notifyIcon.Dispose();
+            }
+            base.Dispose(disposing);
+        }
+
+        protected override void SetVisibleCore(bool value)
+        {
+            if (!initialized)
+            {
+                initialized = true;
+                Initialize();
+            }
+
+            if (canShow)
+                base.SetVisibleCore(value);
+            else
+            {
+                base.SetVisibleCore(false);
+                canShow = true;
+            }
+        }
+
+        public bool DisableNextVisibilityChange
+        {
+            get
+            {
+                return !canShow;
+            }
+            set
+            {
+                canShow = !value;
+            }
+        }
+
+        void AutoUpdate_NewBuildAvailable(object sender, int build)
+        {
+            if (Settings.AutoUpdate.Value)
+            {
+                if (Settings.BackgroundPatchingEnabled.Value && Settings.LocalAssetServerEnabled.Value)
+                    Tools.BackgroundPatcher.Instance.Start();
+                else
+                    DoAutoUpdate(build);
+            }
+            else if (Settings.BackgroundPatchingEnabled.Value)
+            {
+                Tools.BackgroundPatcher.Instance.Start();
+            }
+        }
+
+        private void DoAutoUpdate(int build)
+        {
+            //autoupdate will be ignored if the game is already running -- assuming the user is active and will update when they want to
+
+            if (activeWindows == 0 && Client.Launcher.GetPendingLaunchCount() == 0 && Client.Launcher.GetActiveProcessCount() == 0)
+            {
+                HashSet<Settings.IDatFile> dats = new HashSet<Settings.IDatFile>();
+                List<Settings.IAccount> accounts = new List<Settings.IAccount>();
+
+                //only accounts with a unique dat file need to be updated
+
+                foreach (ushort uid in Settings.Accounts.GetKeys())
+                {
+                    var a = Settings.Accounts[uid];
+                    if (a.HasValue && (a.Value.DatFile == null || dats.Add(a.Value.DatFile)))
+                    {
+                        accounts.Add(a.Value);
+                    }
+                }
+
+                Action launch = delegate
+                {
+                    bool first = true;
+                    foreach (var account in accounts)
+                    {
+                        Client.Launcher.LaunchMode mode;
+                        if (first)
+                        {
+                            mode = Client.Launcher.LaunchMode.UpdateVisible;
+                            first = false;
+                        }
+                        else
+                            mode = Client.Launcher.LaunchMode.Update;
+                        Client.Launcher.Launch(account, mode);
+                    }
+                };
+
+                if (updatingWindow == null || updatingWindow.IsDisposed)
+                {
+                    using (formUpdating f = updatingWindow = (formUpdating)AddWindow(new formUpdating(null, true, true)))
+                    {
+                        f.Shown += delegate
+                        {
+                            launch();
+                        };
+                        if (f.ShowDialog(this) == DialogResult.OK)
+                            Settings.LastKnownBuild.Value = build;
+                        updatingWindow = null;
+                    }
+                }
+            }
+        }
+
+        private async void UpdateLastKnownBuild()
+        {
+            int build = await Tools.Gw2Build.GetBuildAsync();
+            if (build > 0)
+                Settings.LastKnownBuild.Value = build;
         }
 
         private async void CheckBuild()
         {
             int build = await Tools.Gw2Build.GetBuildAsync();
-            if (build > 0 && Settings.CheckForNewBuilds && Settings.LastKnownBuild.Value != build)
+            if (build > 0 && Settings.CheckForNewBuilds.Value && Settings.LastKnownBuild.Value != build)
             {
                 //ask to update if nothing else is happening
                 if (activeWindows == 0 && Client.Launcher.GetPendingLaunchCount() == 0 && Client.Launcher.GetActiveProcessCount() == 0)
@@ -374,8 +617,7 @@ namespace Gw2Launcher.UI
 
                                                             try
                                                             {
-                                                                Client.Launcher.CancelPendingLaunches();
-                                                                Client.Launcher.KillAllActiveProcesses();
+                                                                Client.Launcher.CancelAndKillActiveLaunches();
                                                                 System.Threading.Thread.Sleep(1000);
                                                             }
                                                             catch (Exception ex)
@@ -444,7 +686,7 @@ namespace Gw2Launcher.UI
 
         void Launcher_ActiveProcessCountChanged(object sender, int e)
         {
-            if (e == 0 && Settings.BringToFrontOnExit.Value)
+            if (e == 0 && Settings.BringToFrontOnExit.Value && !Settings.Silent)
             {
                 try
                 {
@@ -508,8 +750,7 @@ namespace Gw2Launcher.UI
             await Task.Delay(10);
 
             this.WindowState = FormWindowState.Normal;
-            this.BringToFront();
-            this.Focus();
+            Windows.FindWindow.SetForegroundWindow(this.Handle);
         }
 
         void Launcher_AccountExited(Settings.IAccount account)
@@ -531,18 +772,23 @@ namespace Gw2Launcher.UI
 
             if (Settings.DeleteCacheOnLaunch.Value)
             {
-                Task.Factory.StartNew(new Action(
-                   delegate
-                   {
-                       try
+                if (DateTime.UtcNow.Subtract(lastCacheDelete).TotalMinutes > 1)
+                {
+                    lastCacheDelete = DateTime.UtcNow;
+
+                    Task.Factory.StartNew(new Action(
+                       delegate
                        {
-                           Tools.Gw2Cache.Delete(Util.Users.GetUserName(account.WindowsAccount));
-                       }
-                       catch (Exception ex)
-                       {
-                           Util.Logging.Log(ex);
-                       }
-                   }));
+                           try
+                           {
+                               Tools.Gw2Cache.Delete(Util.Users.GetUserName(account.WindowsAccount));
+                           }
+                           catch (Exception ex)
+                           {
+                               Util.Logging.Log(ex);
+                           }
+                       }));
+                }
             }
         }
 
@@ -784,6 +1030,15 @@ namespace Gw2Launcher.UI
             }
         }
 
+        void OnButtonsLoaded()
+        {
+
+        }
+
+        void OnAccountDataChanged(Settings.IAccount account)
+        {
+        }
+
         void SettingsShowTray_ValueChanged(object sender, EventArgs e)
         {
             try
@@ -841,6 +1096,119 @@ namespace Gw2Launcher.UI
             }
         }
 
+        void BackgroundPatchingEnabled_ValueChanged(object sender, EventArgs e)
+        {
+            var setting = sender as Settings.ISettingValue<bool>;
+            if (!setting.HasValue || !setting.Value)
+            {
+                Tools.BackgroundPatcher.Instance.Stop(false);
+            }
+        }
+
+        void bp_Error(object sender, string message, Exception exception)
+        {
+            if (this.InvokeRequired)
+            {
+                try
+                {
+                    this.BeginInvoke(new MethodInvoker(
+                        delegate
+                        {
+                            bp_Error(sender, message, exception);
+                        }));
+                }
+                catch (Exception ex)
+                {
+                    Util.Logging.Log(ex);
+                }
+                return;
+            }
+
+            if (Settings.BackgroundPatchingNotifications.HasValue)
+            {
+                var v = Settings.BackgroundPatchingNotifications.Value;
+                formBuildNotify.Show(formBuildNotify.NotifyType.Error, v.screen, v.anchor, new Tools.BackgroundPatcher.PatchEventArgs());
+            }
+        }
+
+        void bp_DownloadManifestsComplete(object sender, Tools.BackgroundPatcher.DownloadProgressEventArgs e)
+        {
+            //if (this.InvokeRequired)
+            //{
+            //    try
+            //    {
+            //        this.BeginInvoke(new MethodInvoker(
+            //            delegate
+            //            {
+            //                bp_DownloadManifestsComplete(sender, e);
+            //            }));
+            //    }
+            //    catch (Exception ex)
+            //    {
+            //        Util.Logging.Log(ex);
+            //    }
+            //    return;
+            //}
+
+            //if (Settings.BackgroundPatchingNotifications.Value)
+            //    formBuildNotify.Show(formBuildNotify.NotifyType.DownloadingFiles, e);
+        }
+
+        void bp_PatchBeginning(object sender, Tools.BackgroundPatcher.PatchEventArgs e)
+        {
+            if (this.InvokeRequired)
+            {
+                try
+                {
+                    this.BeginInvoke(new MethodInvoker(
+                        delegate
+                        {
+                            bp_PatchBeginning(sender, e);
+                        }));
+                }
+                catch (Exception ex)
+                {
+                    Util.Logging.Log(ex);
+                }
+                return;
+            }
+
+            if (Settings.BackgroundPatchingNotifications.HasValue)
+            {
+                var v = Settings.BackgroundPatchingNotifications.Value;
+                formBuildNotify.Show(formBuildNotify.NotifyType.DownloadingManifests, v.screen, v.anchor, e);
+            }
+        }
+
+        void bp_PatchReady(object sender, Tools.BackgroundPatcher.PatchEventArgs e)
+        {
+            if (this.InvokeRequired)
+            {
+                try
+                {
+                    this.BeginInvoke(new MethodInvoker(
+                        delegate
+                        {
+                            bp_PatchReady(sender, e);
+                        }));
+                }
+                catch (Exception ex)
+                {
+                    Util.Logging.Log(ex);
+                }
+                return;
+            }
+
+            if (Settings.BackgroundPatchingNotifications.HasValue)
+            {
+                var v = Settings.BackgroundPatchingNotifications.Value;
+                formBuildNotify.Show(formBuildNotify.NotifyType.PatchReady, v.screen, v.anchor, e);
+            }
+
+            if (Settings.AutoUpdate.Value && Settings.LocalAssetServerEnabled.Value)
+                DoAutoUpdate(e.Build);
+        }
+
         private void LoadSettings()
         {
             OnStyleChanged();
@@ -861,6 +1229,8 @@ namespace Gw2Launcher.UI
                     AddAccount(account.Value, false);
                 }
             }
+
+            OnButtonsLoaded();
         }
 
         public bool AutoSizeGrid
@@ -954,17 +1324,90 @@ namespace Gw2Launcher.UI
         protected override void OnFormClosing(FormClosingEventArgs e)
         {
             base.OnFormClosing(e);
+        }
+
+        void gridContainer_AddAccountClick(object sender, EventArgs e)
+        {
+            AddAccount();
+        }
+
+        void gridContainer_AccountBeginDrag(object sender, MouseEventArgs e)
+        {
+            var button = (AccountGridButton)sender;
 
             try
             {
-                //if any recorded accounts are still active, add a record for exiting the program (ID 0)
-                var active = Client.Launcher.GetActiveProcesses();
-                foreach (var account in active)
+                if (dragHelper == null)
+                    dragHelper = Windows.DragHelper.Initialize(this);
+
+                using (var icon = new Icon(global::Gw2Launcher.Properties.Resources.Gw2, 64, 64))
                 {
-                    if (account.RecordLaunches)
+                    using (var image = new Bitmap(icon.Width, icon.Height, System.Drawing.Imaging.PixelFormat.Format32bppArgb))
                     {
-                        Tools.Statistics.Record(Tools.Statistics.RecordType.Exited, 0);
-                        break;
+                        using (var g = Graphics.FromImage(image))
+                        {
+                            g.DrawIcon(icon, 0, 0);
+                        }
+
+                        Color key = Color.Magenta;
+                        Point offset = new Point(image.Width / 2, image.Height / 2);
+
+                        Util.Bitmap.ReplaceTransparentPixels(image, key);
+
+                        Settings.IAccount[] accounts;
+                        var buttons = gridContainer.GetSelected();
+                        var count = 0;
+                        if (!button.Selected && button.AccountData != null)
+                        {
+                            accounts = new Settings.IAccount[buttons.Count + 1];
+                            accounts[count++] = button.AccountData;
+                        }
+                        else
+                            accounts = new Settings.IAccount[buttons.Count];
+
+                        foreach (var b in buttons)
+                        {
+                            if (b.AccountData != null)
+                                accounts[count++] = b.AccountData;
+                        }
+
+                        var path = System.Reflection.Assembly.GetExecutingAssembly().Location;
+                        var files = new Windows.DragHelper.FileDescriptor[count];
+
+                        var invalid = System.IO.Path.GetInvalidFileNameChars();
+                        Func<string, string> getName = delegate(string name)
+                        {
+                            StringBuilder sb = new StringBuilder(name);
+                            foreach (var c in invalid)
+                                sb.Replace(c, '_');
+                            return sb.ToString();
+                        };
+
+                        Func<Windows.DragHelper.FileDescriptor, System.IO.Stream> getContent = delegate(Windows.DragHelper.FileDescriptor file)
+                        {
+                            var account = accounts[file.Index];
+                            var stream = new System.IO.MemoryStream(1500);
+                            Windows.Shortcut.Create(stream, path, "-l:silent -l:uid:" + account.UID, "Launch " + account.Name);
+                            stream.Position = 0;
+                            return stream;
+                        };
+
+                        for (var i = 0; i < count; i++)
+                        {
+                            var account = accounts[i];
+
+                            var f = files[i] = new Windows.DragHelper.FileDescriptor()
+                            {
+                                Name = getName(account.Name) + ".lnk",
+                                Length = -1,
+                                GetContent = getContent
+                            };
+                        }
+
+                        using (var data = Windows.DragHelper.CreateVirtualFileDropDataObject(files))
+                        {
+                            var result = Windows.DragHelper.DoDragDrop(button, data, DragDropEffects.Copy, false, image, offset, key);
+                        }
                     }
                 }
             }
@@ -972,16 +1415,6 @@ namespace Gw2Launcher.UI
             {
                 Util.Logging.Log(ex);
             }
-
-            notifyIcon.Dispose();
-
-            Settings.Save();
-            Tools.Statistics.Save();
-        }
-
-        void gridContainer_AddAccountClick(object sender, EventArgs e)
-        {
-            AddAccount();
         }
 
         void gridContainer_AccountMouseClick(object sender, MouseEventArgs e)
@@ -1033,6 +1466,8 @@ namespace Gw2Launcher.UI
 
                 cancelPendingLaunchesToolStripMenuItem.Visible = pending > 0;
                 toolStripMenuItemCancelSep.Visible = pending > 0;
+                disableAutomaticLoginsToolStripMenuItem1.Enabled = (int)disableAutomaticLoginsToolStripMenuItem1.Tag > 0;
+                applyWindowedBoundsToolStripMenuItem1.Enabled = (int)applyWindowedBoundsToolStripMenuItem1.Tag > 0;
 
                 contextMenu.Tag = button;
 
@@ -1047,6 +1482,86 @@ namespace Gw2Launcher.UI
 
         private void formMain_Load(object sender, EventArgs e)
         {
+        }
+
+        private Task<int> GetVersion()
+        {
+            return Task.Run<int>(new Func<int>(
+                delegate
+                {
+                    var request = System.Net.HttpWebRequest.CreateHttp("https://raw.githubusercontent.com/Healix/Gw2Launcher/master/Gw2Launcher/update/version");
+                    request.Timeout = 5000;
+                    request.AutomaticDecompression = System.Net.DecompressionMethods.Deflate | System.Net.DecompressionMethods.GZip;
+
+                    try
+                    {
+                        using (var response = request.GetResponse())
+                        {
+                            using (var r = new System.IO.StreamReader(response.GetResponseStream()))
+                            {
+                                return Int32.Parse(r.ReadLine());
+                            }
+                        }
+                    }
+                    catch (System.Net.WebException e)
+                    {
+                        Util.Logging.Log(e);
+                        if (e.Response != null)
+                        {
+                            using (e.Response) { }
+                            return -2;
+                        }
+                    }
+                    catch (Exception e)
+                    {
+                        Util.Logging.Log(e);
+                    }
+
+                    return -1;
+                }));
+        }
+
+        private async void CheckVersion()
+        {
+            var v = await GetVersion();
+            if (v > 0)
+            {
+                Settings.LastProgramVersion.Value = new Settings.LastCheckedVersion()
+                {
+                    lastCheck = DateTime.UtcNow,
+                    version = (ushort)v
+                };
+
+                if (v > Program.RELEASE_VERSION)
+                {
+                    await Task.Delay(1000);
+
+                    while (activeWindows > 0)
+                        await Task.Delay(5000);
+
+                    using (BeforeShowDialog())
+                    {
+                        using (var parent = AddMessageBox(this))
+                        {
+                            if (MessageBox.Show(parent, "A new version of Gw2Launcher is available.\n\nWould you like to update now?", "Update available", MessageBoxButtons.YesNo, MessageBoxIcon.Question) == DialogResult.Yes)
+                            {
+                                using (formVersionUpdate f = (formVersionUpdate)AddWindow(new formVersionUpdate()))
+                                {
+                                    f.ShowDialog(this);
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+            else if (v == -2)
+            {
+                Settings.LastProgramVersion.Value = new Settings.LastCheckedVersion()
+                {
+                    lastCheck = DateTime.UtcNow,
+                    version = 0
+                };
+            }
         }
 
         private void settingsToolStripMenuItem_Click(object sender, EventArgs e)
@@ -1120,7 +1635,7 @@ namespace Gw2Launcher.UI
             OnActiveWindowChanged();
         }
 
-        private Form AddWindow(Form form)
+        public Form AddWindow(Form form)
         {
             form.VisibleChanged += OnWindowVisibleChanged;
 
@@ -1202,6 +1717,8 @@ namespace Gw2Launcher.UI
             {
                 buttons.Remove(account.UID);
                 gridContainer.Remove(button);
+
+                OnAccountRemoved(account);
             }
 
             Settings.Accounts[account.UID].Clear();
@@ -1237,6 +1754,34 @@ namespace Gw2Launcher.UI
 
             if (sort && !(Settings.SortingMode.Value == Settings.SortMode.None && Settings.SortingOrder.Value == Settings.SortOrder.Ascending))
                 gridContainer.Sort(Settings.SortingMode.Value, Settings.SortingOrder.Value);
+
+            OnAccountAdded(account);
+        }
+
+        void OnAccountAdded(Settings.IAccount account)
+        {
+            if (account.Windowed)
+                applyWindowedBoundsToolStripMenuItem1.Tag = (int)applyWindowedBoundsToolStripMenuItem1.Tag + 1;
+            if (account.AutomaticLogin)
+                disableAutomaticLoginsToolStripMenuItem1.Tag = (int)disableAutomaticLoginsToolStripMenuItem1.Tag + 1;
+        }
+
+        void OnAccountRemoved(Settings.IAccount account)
+        {
+            if (account.Windowed)
+                applyWindowedBoundsToolStripMenuItem1.Tag = (int)applyWindowedBoundsToolStripMenuItem1.Tag - 1;
+            if (account.AutomaticLogin)
+                disableAutomaticLoginsToolStripMenuItem1.Tag = (int)disableAutomaticLoginsToolStripMenuItem1.Tag - 1;
+        }
+
+        void OnBeforeAccountSettingsUpdated(Settings.IAccount account)
+        {
+            OnAccountRemoved(account);
+        }
+
+        void OnAccountSettingsUpdated(Settings.IAccount account, bool cancelled)
+        {
+            OnAccountAdded(account);
         }
 
         void button_MouseLeave(object sender, EventArgs e)
@@ -1352,6 +1897,8 @@ namespace Gw2Launcher.UI
                     {
                         var datBefore = account.DatFile;
 
+                        OnBeforeAccountSettingsUpdated(account);
+
                         if (f.ShowDialog(this) == DialogResult.OK)
                         {
                             if (datBefore != null && datBefore != account.DatFile && !string.IsNullOrEmpty(datBefore.Path) && System.IO.File.Exists(datBefore.Path))
@@ -1380,6 +1927,12 @@ namespace Gw2Launcher.UI
                             button.AccountData = account;
                             if (string.IsNullOrEmpty(account.WindowsAccount))
                                 button.AccountName = "(current user)";
+
+                            OnAccountSettingsUpdated(account, false);
+                        }
+                        else
+                        {
+                            OnAccountSettingsUpdated(account, true);
                         }
                     }
                 }
@@ -1488,8 +2041,7 @@ namespace Gw2Launcher.UI
 
                                                     try
                                                     {
-                                                        Client.Launcher.CancelPendingLaunches();
-                                                        Client.Launcher.KillAllActiveProcesses();
+                                                        Client.Launcher.CancelAndKillActiveLaunches();
                                                         System.Threading.Thread.Sleep(1000);
                                                     }
                                                     catch (Exception ex)
@@ -1540,7 +2092,11 @@ namespace Gw2Launcher.UI
                         {
                             launch();
                         };
-                        f.ShowDialog(this);
+                        if (f.ShowDialog(this) == System.Windows.Forms.DialogResult.OK)
+                        {
+                            if (Settings.CheckForNewBuilds.Value || Tools.AutoUpdate.IsEnabled())
+                                UpdateLastKnownBuild();
+                        }
                         updatingWindow = null;
                     }
                 }
@@ -1730,9 +2286,12 @@ namespace Gw2Launcher.UI
 
         private async void applyWindowedBoundsToolStripMenuItem_Click(object sender, EventArgs e)
         {
-            var selected = GetSelected();
+            await ApplyWindowedBounds(GetSelected());
+        }
 
-            await Task.Factory.StartNew(new Action(
+        private Task ApplyWindowedBounds(IEnumerable<AccountGridButton> selected)
+        {
+            return Task.Factory.StartNew(new Action(
                 delegate
                 {
                     try
@@ -1772,6 +2331,136 @@ namespace Gw2Launcher.UI
         private void assetServerInterceptToolStripMenuItem_Click(object sender, EventArgs e)
         {
             ShowPatchProxy();
+        }
+
+        private void backgroundPatchingToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            ShowBackgroundPatcher();
+        }
+
+        private void backgroundPatchingToolStripMenuItem1_Click(object sender, EventArgs e)
+        {
+            ShowBackgroundPatcher();
+        }
+
+        private void createShortcutAllToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            CreateShortcut(buttons.Values);
+        }
+
+        private void createShortcutSelectedToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            CreateShortcut(GetSelected());
+        }
+
+        private void CreateShortcut(IEnumerable<AccountGridButton> selected)
+        {
+            List<Settings.IAccount> accounts = new List<Settings.IAccount>();
+
+            foreach (var button in selected)
+            {
+                var account = button.AccountData;
+                if (account != null)
+                    accounts.Add(account);
+            }
+
+            var path = System.Reflection.Assembly.GetExecutingAssembly().Location;
+            var invalid = System.IO.Path.GetInvalidFileNameChars();
+            Func<string, string> getName = delegate(string name)
+            {
+                StringBuilder sb = new StringBuilder(name);
+                foreach (var c in invalid)
+                    sb.Replace(c, '_');
+                return sb.ToString();
+            };
+
+            try
+            {
+                foreach (var account in accounts)
+                {
+                    var output = System.IO.Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.DesktopDirectory), getName(account.Name) + ".lnk");
+                    if (!System.IO.File.Exists(output))
+                        Windows.Shortcut.Create(output, path, "-l:silent -l:uid:" + account.UID, "Launch " + account.Name);
+                }
+            }
+            catch (Exception e)
+            {
+                using (BeforeShowDialog())
+                {
+                    using (var parent = AddMessageBox(this))
+                    {
+                        MessageBox.Show(this, "Unable to create shortcuts\n\n" + e.Message, "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                    }
+                }
+            }
+        }
+
+        protected override void WndProc(ref Message m)
+        {
+            base.WndProc(ref m);
+
+            if (m.Msg == Messaging.Messager.WM_GW2LAUNCHER)
+            {
+                switch ((Messaging.Messager.MessageType)m.WParam)
+                {
+                    case Messaging.Messager.MessageType.Show:
+
+                        ShowToFront();
+
+                        break;
+                    case Messaging.Messager.MessageType.Launch:
+
+                        try
+                        {
+                            ushort uid = (ushort)m.LParam;
+
+                            this.BeginInvoke(new MethodInvoker(
+                                delegate
+                                {
+                                    var v = Settings.Accounts[uid];
+                                    if (v.HasValue)
+                                        Client.Launcher.Launch(v.Value, Client.Launcher.LaunchMode.Launch);
+                                }));
+                        }
+                        catch { }
+
+                        break;
+                    case Messaging.Messager.MessageType.LaunchMap:
+                        
+                        try
+                        {
+                            var launch = Messaging.LaunchMessage.FromMap((int)m.LParam);
+
+                            this.BeginInvoke(new MethodInvoker(
+                                delegate
+                                {
+                                    foreach (var uid in launch.accounts)
+                                    {
+                                        var v = Settings.Accounts[uid];
+                                        if (v.HasValue)
+                                            Client.Launcher.Launch(v.Value, Client.Launcher.LaunchMode.Launch, launch.args);
+                                    }
+                                }));
+                        }
+                        catch { }
+
+                        break;
+                }
+            }
+        }
+
+        private void disableAutomaticLoginsToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            disableAutomaticLoginsToolStripMenuItem.Checked = !disableAutomaticLoginsToolStripMenuItem.Checked;
+            disableAutomaticLoginsToolStripMenuItem1.Checked = disableAutomaticLoginsToolStripMenuItem.Checked;
+            disableAutomaticLoginsToolStripMenuItem2.Checked = disableAutomaticLoginsToolStripMenuItem.Checked;
+
+            Settings.DisableAutomaticLogins = disableAutomaticLoginsToolStripMenuItem.Checked;
+        }
+
+        private async void applyWindowedBoundsToolStripMenuItem1_Click(object sender, EventArgs e)
+        {
+            await ApplyWindowedBounds(buttons.Values);
         }
     }
 }

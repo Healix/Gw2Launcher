@@ -89,6 +89,18 @@ namespace Gw2Launcher.UI
             parent.SizeChanged += parent_SizeChanged;
         }
 
+        protected override void Dispose(bool disposing)
+        {
+            if (disposing)
+            {
+                pen.Dispose();
+                brush.Dispose();
+                if (components != null)
+                    components.Dispose();
+            }
+            base.Dispose(disposing);
+        }
+
         void parent_SizeChanged(object sender, EventArgs e)
         {
             this.Bounds = parent.Bounds;
@@ -112,7 +124,7 @@ namespace Gw2Launcher.UI
             int w = this.Width;
             int h = this.Height;
 
-            g.DrawRectangle(new Pen(new SolidBrush(Color.Black)), 0, 0, w - 1, h - 1);
+            g.DrawRectangle(Pens.Black, 0, 0, w - 1, h - 1);
 
             if (_size == null)
             {

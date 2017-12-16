@@ -15,12 +15,45 @@ namespace Gw2Launcher
 {
     static class Program
     {
+        public const byte RELEASE_VERSION = 1;
+
         /// <summary>
         /// The main entry point for the application.
         /// </summary>
         [STAThread]
         static int Main(string[] args)
         {
+            #region Updated: -updated [pid] ["oldfilename"]
+
+            if (args.Length > 2 && args[0] == "-updated")
+            {
+                int pid;
+                if (Int32.TryParse(args[1], out pid))
+                {
+                    string filename = args[2];
+
+                    try
+                    {
+                        using (var p = Process.GetProcessById(pid))
+                        {
+                            p.WaitForExit();
+                        }
+                    }
+                    catch
+                    {
+                    }
+
+                    try
+                    {
+                        if (File.Exists(filename))
+                            File.Delete(filename);
+                    }
+                    catch { }
+                }
+            }
+
+            #endregion
+
             #region ProcessUtil
 
             if (args.Length > 1 && args[0] == "-pu")
@@ -376,6 +409,7 @@ namespace Gw2Launcher
 
                     try
                     {
+                        Settings.Load();
                         string[] users = Settings.HiddenUserAccounts.GetKeys();
                         if (users.Length > 0)
                             Util.ProcessUtil.ActivateUsers(users, activate);
@@ -388,59 +422,152 @@ namespace Gw2Launcher
 
             #endregion
 
+            #region Launch from args
+
+            Messaging.LaunchMessage launch = null;
+            if (args.Length > 0)
+            {
+                bool hasArgs = false;
+
+                foreach (var arg in args)
+                {
+                    if (arg == "-l:silent")
+                        Settings.Silent = true;
+                    else if (arg.StartsWith("-l:uid:"))
+                    {
+                        ushort uid;
+                        if (UInt16.TryParse(arg.Substring(7), out uid))
+                        {
+                            if (launch == null)
+                                launch = new Messaging.LaunchMessage(1);
+                            launch.accounts.Add(uid);
+                        }
+                    }
+                    else
+                        hasArgs = true;
+                }
+
+                if (launch != null)
+                {
+                    if (hasArgs)
+                    {
+                        var _args = Environment.CommandLine;
+                        foreach (var a in args)
+                            _args += a + " ";
+                        int i;
+                        if (_args[0] == '"')
+                            i = _args.IndexOf('"', 1);
+                        else
+                            i = _args.IndexOf(' ');
+                        if (i != -1 && i + 1 < _args.Length)
+                        {
+                            if (_args[i + 1] == ' ')
+                                i++;
+
+                            _args = _args.Substring(i + 1);
+
+                            var sb = new System.Text.StringBuilder(_args.Length);
+                            var last = 0;
+                            i = -1;
+
+                            do
+                            {
+                                i = _args.IndexOf("-l:", i + 1);
+                                if (i == -1)
+                                {
+                                    if ((sb.Length == 0 || sb[sb.Length - 1] == ' ') && _args[last] == ' ')
+                                        last++;
+                                    sb.Append(_args.Substring(last, _args.Length - last));
+                                    break;
+                                }
+                                var j = _args.IndexOf(' ', i);
+                                if (j == -1)
+                                    j = _args.Length;
+
+                                if (i - last > 1)
+                                {
+                                    if ((sb.Length == 0 || sb[sb.Length - 1] == ' ') && _args[last] == ' ')
+                                        last++;
+                                    sb.Append(_args.Substring(last, i - last));
+                                }
+                                last = i = j;
+                            }
+                            while (i + 1 < _args.Length);
+
+                            if (sb.Length > 0 && sb[sb.Length - 1] == ' ')
+                                sb.Length--;
+                            launch.args = sb.ToString();
+                        }
+                    }
+                }
+            }
+
+            #endregion
+
             #region Allow only 1 process
 
             Mutex mutex = new Mutex(true, "Gw2Launcher_Mutex");
             if (!mutex.WaitOne(TimeSpan.Zero, true))
             {
-                try
-                {
-                    using (Process current = Process.GetCurrentProcess())
-                    {
-                        FileInfo fi = new FileInfo(current.MainModule.FileName);
-                        Process[] ps = Process.GetProcessesByName(fi.Name.Substring(0, fi.Name.Length - fi.Extension.Length));
-                        foreach (Process p in ps)
-                        {
-                            using (p)
-                            {
-                                if (p.Id != current.Id && !p.HasExited)
-                                {
-                                    try
-                                    {
-                                        if (string.Equals(p.MainModule.FileName, fi.FullName, StringComparison.OrdinalIgnoreCase))
-                                        {
-                                            IntPtr ptr = IntPtr.Zero;
-                                            try
-                                            {
-                                                ptr =  Windows.FindWindow.Find(p.Id, null);
+                if (!Settings.Silent)
+                    Messaging.Messager.Post(Messaging.Messager.MessageType.Show, 0);
 
-                                                if (ptr != IntPtr.Zero)
-                                                {
-                                                    Windows.FindWindow.ShowWindow(ptr, 1);
-                                                    Windows.FindWindow.SetForegroundWindow(ptr);
-                                                    Windows.FindWindow.BringWindowToTop(ptr);
-                                                }
+                if (launch != null)
+                    launch.Send();
 
-                                                //var placement = Windows.WindowSize.GetWindowPlacement(ptr);
+                #region Old method / no messages
 
-                                                //if (placement.showCmd == (int)Windows.WindowSize.WindowState.SW_SHOWMINIMIZED)
-                                                //    Windows.WindowSize.SetWindowPlacement(ptr, Rectangle.FromLTRB(placement.rcNormalPosition.left, placement.rcNormalPosition.top, placement.rcNormalPosition.right, placement.rcNormalPosition.bottom), Windows.WindowSize.WindowState.SW_RESTORE);
+                //try
+                //{
+                //    using (Process current = Process.GetCurrentProcess())
+                //    {
+                //        FileInfo fi = new FileInfo(current.MainModule.FileName);
+                //        Process[] ps = Process.GetProcessesByName(fi.Name.Substring(0, fi.Name.Length - fi.Extension.Length));
+                //        foreach (Process p in ps)
+                //        {
+                //            using (p)
+                //            {
+                //                if (p.Id != current.Id && !p.HasExited)
+                //                {
+                //                    try
+                //                    {
+                //                        if (string.Equals(p.MainModule.FileName, fi.FullName, StringComparison.OrdinalIgnoreCase))
+                //                        {
+                //                            IntPtr ptr = IntPtr.Zero;
+                //                            try
+                //                            {
+                //                                ptr =  Windows.FindWindow.Find(p.Id, null);
 
-                                                //SetForegroundWindow(ptr);
-                                            }
-                                            catch { }
+                //                                if (ptr != IntPtr.Zero)
+                //                                {
+                //                                    Windows.FindWindow.ShowWindow(ptr, 1);
+                //                                    Windows.FindWindow.BringWindowToTop(ptr);
+                //                                    Windows.FindWindow.SetForegroundWindow(ptr);
+                //                                }
 
-                                            return 0;
-                                        }
-                                    }
-                                    catch { }
-                                }
-                            }
-                        }
-                    }
-                }
-                catch { }
+                //                                //var placement = Windows.WindowSize.GetWindowPlacement(ptr);
 
+                //                                //if (placement.showCmd == (int)Windows.WindowSize.WindowState.SW_SHOWMINIMIZED)
+                //                                //    Windows.WindowSize.SetWindowPlacement(ptr, Rectangle.FromLTRB(placement.rcNormalPosition.left, placement.rcNormalPosition.top, placement.rcNormalPosition.right, placement.rcNormalPosition.bottom), Windows.WindowSize.WindowState.SW_RESTORE);
+
+                //                                //SetForegroundWindow(ptr);
+                //                            }
+                //                            catch { }
+
+                //                            return 0;
+                //                        }
+                //                    }
+                //                    catch { }
+                //                }
+                //            }
+                //        }
+                //    }
+                //}
+                //catch { }
+
+                #endregion
+
+                mutex.Dispose();
                 return 0;
             }
 
@@ -452,6 +579,8 @@ namespace Gw2Launcher
                 {
                     //init
                 }
+
+                Settings.Load();
 
                 var store = Settings.StoreCredentials;
                 store.ValueChanged += StoredCredentials_ValueChanged;
@@ -479,78 +608,56 @@ namespace Gw2Launcher
                     f.Location = Point.Add(bounds.Location, new Size(bounds.Width / 2 - f.Size.Width / 2, bounds.Height / 3));
                 }
 
-                f.FormClosed += FormClosed;
-
                 Util.Users.Activate(true);
 
+                if (Settings.Silent)
+                {
+                    f.WindowState = FormWindowState.Minimized;
+                    if (Settings.ShowTray.Value && Settings.MinimizeToTray.Value)
+                        f.DisableNextVisibilityChange = true;
+                }
+
+                if (launch != null)
+                {
+                    launch.Send();
+                    launch = null;
+                }
+
                 Application.Run(f);
+
+                OnExit();
             }
             finally
             {
                 mutex.ReleaseMutex();
+                mutex.Dispose();
             }
 
             return 0;
         }
 
-        private static string GetInstanceName(int processId)
+        private static void OnExit()
         {
-            string instanceName = Process.GetProcessById(processId).ProcessName;
-            bool found = false;
-            if (!string.IsNullOrEmpty(instanceName))
+            try
             {
-                Process[] processes = Process.GetProcessesByName(instanceName);
-                if (processes.Length > 0)
+                //if any recorded accounts are still active, add a record for exiting the program (ID 0)
+                var active = Client.Launcher.GetActiveProcesses();
+                foreach (var account in active)
                 {
-                    int i = 0;
-                    foreach (Process p in processes)
+                    if (account.RecordLaunches)
                     {
-                        instanceName = FormatInstanceName(p.ProcessName, i);
-                        if (PerformanceCounterCategory.CounterExists("ID Process", "Process"))
-                        {
-                            PerformanceCounter counter = new PerformanceCounter("Process", "ID Process", instanceName);
-
-                            if (processId == counter.RawValue)
-                            {
-                                found = true;
-                                break;
-                            }
-                        }
-                        i++;
+                        Tools.Statistics.Record(Tools.Statistics.RecordType.Exited, 0);
+                        break;
                     }
                 }
             }
-
-            if (!found)
-                instanceName = string.Empty;
-
-            return instanceName;
-        }
-
-        private static string FormatInstanceName(string processName, int count)
-        {
-            string instanceName = string.Empty;
-            if (count == 0)
-                instanceName = processName;
-            else
-                instanceName = string.Format("{0}#{1}", processName, count);
-            return instanceName;
-        } 
-
-        static void FormClosed(object sender, FormClosedEventArgs e)
-        {
-            Form f = sender as Form;
-            if (f != null)
+            catch (Exception ex)
             {
-                try
-                {
-                    f.Visible = false;
-                }
-                catch (Exception ex)
-                {
-                    Util.Logging.Log(ex);
-                }
+                Util.Logging.Log(ex);
             }
+
+            Settings.Save();
+            Tools.Statistics.Save();
 
             Util.Users.Activate(false);
         }
@@ -558,6 +665,72 @@ namespace Gw2Launcher
         static void StoredCredentials_ValueChanged(object sender, EventArgs e)
         {
             Security.Credentials.StoreCredentials = ((Settings.ISettingValue<bool>)sender).Value;
+        }
+
+        private class PassedLaunch
+        {
+            public PassedLaunch()
+            {
+                accounts = new List<ushort>();
+            }
+
+            public List<ushort> accounts;
+            public string args;
+
+            public IntPtr ToPointer()
+            {
+                byte[] _args;
+                if (!string.IsNullOrEmpty(args))
+                    _args = System.Text.Encoding.UTF8.GetBytes(args);
+                else
+                    _args = new byte[0];
+
+                byte count;
+                if (accounts.Count > byte.MaxValue)
+                    count = byte.MaxValue;
+                else
+                    count = (byte)accounts.Count;
+
+                var ptr = Marshal.AllocHGlobal(3 + count * 2 + _args.Length);
+
+                Marshal.WriteByte(ptr, count);
+
+                var i = 1;
+                for (var j = 0; j < count; j++, i += 2)
+                    Marshal.WriteInt16(ptr, i, (short)accounts[j]);
+
+                Marshal.WriteInt16(ptr, i, (short)_args.Length);
+                i += 2;
+
+                Marshal.Copy(_args, 0, (IntPtr)(ptr + i), _args.Length);
+
+                return ptr;
+            }
+
+            public static PassedLaunch FromPointer(IntPtr ptr, bool free)
+            {
+                PassedLaunch l = new PassedLaunch();
+
+                var count = Marshal.ReadByte(ptr);
+                
+                var i = 1;
+                for (var j = 0; j < count; j++, i += 2)
+                    l.accounts.Add((ushort)Marshal.ReadInt16(ptr, i));
+
+                byte[] args = new byte[(ushort)Marshal.ReadInt16(ptr, i)];
+                i += 2;
+
+                if (args.Length > 0)
+                {
+                    Marshal.Copy((IntPtr)(ptr + i), args, 0, args.Length);
+                    l.args = System.Text.Encoding.UTF8.GetString(args);
+                }
+
+                if (free)
+                    Marshal.FreeHGlobal(ptr);
+
+                return l;
+            }
         }
     }
 }

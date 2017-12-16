@@ -18,6 +18,7 @@ namespace Gw2Launcher.Client
                 this.Process = new LinkedProcess(this);
             }
 
+            public byte isRelaunch;
             public byte inQueueCount;
             public byte errors;
 

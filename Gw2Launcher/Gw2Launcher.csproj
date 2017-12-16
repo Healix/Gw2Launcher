@@ -36,6 +36,7 @@
     <DefineConstants>DEBUG;TRACE</DefineConstants>
     <ErrorReport>prompt</ErrorReport>
     <WarningLevel>4</WarningLevel>
+    <Prefer32Bit>false</Prefer32Bit>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
     <PlatformTarget>x64</PlatformTarget>
@@ -73,18 +74,44 @@
     <Compile Include="Client\Launcher_LinkedProcess.cs" />
     <Compile Include="Client\Launcher_WindowWatcher.cs" />
     <Compile Include="DataPath.cs" />
+    <Compile Include="Messaging\LaunchMessage.cs" />
+    <Compile Include="Messaging\MappedMessage.cs" />
+    <Compile Include="Net\AssetDownloader.cs" />
     <Compile Include="Net\AssetProxy\IPPool.cs" />
     <Compile Include="Net\AssetProxy\Cache.cs" />
     <Compile Include="Net\AssetProxy\Client.cs" />
     <Compile Include="Net\AssetProxy\HttpStream.cs" />
     <Compile Include="Net\AssetProxy\ProxyServer.cs" />
     <Compile Include="Net\AssetProxy\ServerController.cs" />
+    <Compile Include="Net\BpsLimiter.cs" />
     <Compile Include="Net\Dns.cs" />
     <Compile Include="Net\DnsServers.cs" />
     <Compile Include="Security\Impersonation.cs" />
+    <Compile Include="Tools\AutoUpdate.cs" />
+    <Compile Include="Tools\Dat\DatFile.cs" />
+    <Compile Include="Tools\Dat\Manifest.cs" />
     <Compile Include="Tools\Gw2Build.cs" />
     <Compile Include="Tools\Gw2Cache.cs" />
+    <Compile Include="Tools\BackgroundPatcher.cs" />
     <Compile Include="Tools\Statistics.cs" />
+    <Compile Include="UI\Controls\ArrowButton.cs">
+      <SubType>Component</SubType>
+    </Compile>
+    <Compile Include="UI\Controls\CopyButton.cs">
+      <SubType>Component</SubType>
+    </Compile>
+    <Compile Include="UI\Controls\ExtendableTextBox.cs">
+      <SubType>Component</SubType>
+    </Compile>
+    <Compile Include="UI\Controls\FlatSlider.cs">
+      <SubType>Component</SubType>
+    </Compile>
+    <Compile Include="UI\Controls\FlatVScrollBar.cs">
+      <SubType>Component</SubType>
+    </Compile>
+    <Compile Include="UI\Controls\LabelButton.cs">
+      <SubType>Component</SubType>
+    </Compile>
     <Compile Include="UI\Controls\PasswordBox.cs">
       <SubType>Component</SubType>
     </Compile>
@@ -94,6 +121,12 @@
     <Compile Include="UI\Controls\ProgressGraph.Designer.cs">
       <DependentUpon>ProgressGraph.cs</DependentUpon>
     </Compile>
+    <Compile Include="UI\Controls\ScrollablePanelContainer.cs">
+      <SubType>UserControl</SubType>
+    </Compile>
+    <Compile Include="UI\Controls\ScrollablePanelContainer.Designer.cs">
+      <DependentUpon>ScrollablePanelContainer.cs</DependentUpon>
+    </Compile>
     <Compile Include="UI\Controls\SidebarButton.cs">
       <SubType>UserControl</SubType>
     </Compile>
@@ -101,6 +134,15 @@
       <DependentUpon>SidebarButton.cs</DependentUpon>
     </Compile>
     <Compile Include="UI\Controls\SidebarPanel.cs">
+      <SubType>Component</SubType>
+    </Compile>
+    <Compile Include="UI\Controls\SizeDragButton.cs">
+      <SubType>Component</SubType>
+    </Compile>
+    <Compile Include="UI\Controls\SizeDragButton.Designer.cs">
+      <DependentUpon>SizeDragButton.cs</DependentUpon>
+    </Compile>
+    <Compile Include="UI\Controls\ToolStripMenuItemStayOpenOnClick.cs">
       <SubType>Component</SubType>
     </Compile>
     <Compile Include="UI\formAccount.cs">
@@ -127,11 +169,23 @@
     <Compile Include="UI\formAssetProxy.Designer.cs">
       <DependentUpon>formAssetProxy.cs</DependentUpon>
     </Compile>
+    <Compile Include="UI\formBackgroundPatcher.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="UI\formBackgroundPatcher.Designer.cs">
+      <DependentUpon>formBackgroundPatcher.cs</DependentUpon>
+    </Compile>
     <Compile Include="UI\formBrowseLocalDat.cs">
       <SubType>Form</SubType>
     </Compile>
     <Compile Include="UI\formBrowseLocalDat.Designer.cs">
       <DependentUpon>formBrowseLocalDat.cs</DependentUpon>
+    </Compile>
+    <Compile Include="UI\formBuildNotify.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="UI\formBuildNotify.Designer.cs">
+      <DependentUpon>formBuildNotify.cs</DependentUpon>
     </Compile>
     <Compile Include="UI\formCleanup.cs">
       <SubType>Form</SubType>
@@ -144,6 +198,12 @@
     </Compile>
     <Compile Include="UI\formDnsDialog.Designer.cs">
       <DependentUpon>formDnsDialog.cs</DependentUpon>
+    </Compile>
+    <Compile Include="UI\formExtendedTextBox.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="UI\formExtendedTextBox.Designer.cs">
+      <DependentUpon>formExtendedTextBox.cs</DependentUpon>
     </Compile>
     <Compile Include="UI\formFileScan.cs">
       <SubType>Form</SubType>
@@ -169,6 +229,12 @@
     <Compile Include="UI\formPassword.designer.cs">
       <DependentUpon>formPassword.cs</DependentUpon>
     </Compile>
+    <Compile Include="UI\formScreenPosition.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="UI\formScreenPosition.Designer.cs">
+      <DependentUpon>formScreenPosition.cs</DependentUpon>
+    </Compile>
     <Compile Include="UI\formSettings.cs">
       <SubType>Form</SubType>
     </Compile>
@@ -186,6 +252,12 @@
     </Compile>
     <Compile Include="UI\formUpdating.Designer.cs">
       <DependentUpon>formUpdating.cs</DependentUpon>
+    </Compile>
+    <Compile Include="UI\formVersionUpdate.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="UI\formVersionUpdate.Designer.cs">
+      <DependentUpon>formVersionUpdate.cs</DependentUpon>
     </Compile>
     <Compile Include="UI\formWaiting.cs">
       <SubType>Form</SubType>
@@ -212,14 +284,18 @@
       <DependentUpon>formWindowSizeOverlay.cs</DependentUpon>
     </Compile>
     <Compile Include="Util\Args.cs" />
+    <Compile Include="Util\BinaryType.cs" />
+    <Compile Include="Util\Bitmap.cs" />
     <Compile Include="Util\Bits.cs" />
     <Compile Include="Util\DatFiles.cs" />
+    <Compile Include="Util\Explorer.cs" />
     <Compile Include="Util\FileUtil.cs" />
     <Compile Include="Util\IPEndPoint.cs" />
     <Compile Include="Util\Logging.cs" />
-    <Compile Include="Util\ShowInExplorer.cs" />
+    <Compile Include="Messaging\Messaging.cs" />
     <Compile Include="Util\Text.cs" />
     <Compile Include="Util\Users.cs" />
+    <Compile Include="Windows\DragHelper.cs" />
     <Compile Include="Windows\FindWindow.cs" />
     <Compile Include="Util\ProcessUtil.cs" />
     <Compile Include="Security\Credentials.cs" />
@@ -252,7 +328,10 @@
     </Compile>
     <Compile Include="Util\RectangleConstraint.cs" />
     <Compile Include="Util\ScreenUtil.cs" />
+    <Compile Include="Windows\Shortcut.cs" />
     <Compile Include="Windows\Symlink.cs" />
+    <Compile Include="Windows\TaskBar.cs" />
+    <Compile Include="Windows\Volume.cs" />
     <Compile Include="Windows\Win32Handles.cs" />
     <Compile Include="Windows\WindowSize.cs" />
     <EmbeddedResource Include="UI\Controls\AccountGridButton.resx">
@@ -280,6 +359,9 @@
     <EmbeddedResource Include="UI\Controls\SidebarButton.resx">
       <DependentUpon>SidebarButton.cs</DependentUpon>
     </EmbeddedResource>
+    <EmbeddedResource Include="UI\Controls\SizeDragButton.resx">
+      <DependentUpon>SizeDragButton.cs</DependentUpon>
+    </EmbeddedResource>
     <EmbeddedResource Include="UI\formAccount.resx">
       <DependentUpon>formAccount.cs</DependentUpon>
     </EmbeddedResource>
@@ -292,14 +374,23 @@
     <EmbeddedResource Include="UI\formAssetProxy.resx">
       <DependentUpon>formAssetProxy.cs</DependentUpon>
     </EmbeddedResource>
+    <EmbeddedResource Include="UI\formBackgroundPatcher.resx">
+      <DependentUpon>formBackgroundPatcher.cs</DependentUpon>
+    </EmbeddedResource>
     <EmbeddedResource Include="UI\formBrowseLocalDat.resx">
       <DependentUpon>formBrowseLocalDat.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="UI\formBuildNotify.resx">
+      <DependentUpon>formBuildNotify.cs</DependentUpon>
     </EmbeddedResource>
     <EmbeddedResource Include="UI\formCleanup.resx">
       <DependentUpon>formCleanup.cs</DependentUpon>
     </EmbeddedResource>
     <EmbeddedResource Include="UI\formDnsDialog.resx">
       <DependentUpon>formDnsDialog.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="UI\formExtendedTextBox.resx">
+      <DependentUpon>formExtendedTextBox.cs</DependentUpon>
     </EmbeddedResource>
     <EmbeddedResource Include="UI\formFileScan.resx">
       <DependentUpon>formFileScan.cs</DependentUpon>
@@ -316,6 +407,9 @@
     <EmbeddedResource Include="UI\formPassword.resx">
       <DependentUpon>formPassword.cs</DependentUpon>
     </EmbeddedResource>
+    <EmbeddedResource Include="UI\formScreenPosition.resx">
+      <DependentUpon>formScreenPosition.cs</DependentUpon>
+    </EmbeddedResource>
     <EmbeddedResource Include="UI\formSettings.resx">
       <DependentUpon>formSettings.cs</DependentUpon>
     </EmbeddedResource>
@@ -324,6 +418,9 @@
     </EmbeddedResource>
     <EmbeddedResource Include="UI\formUpdating.resx">
       <DependentUpon>formUpdating.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="UI\formVersionUpdate.resx">
+      <DependentUpon>formVersionUpdate.cs</DependentUpon>
     </EmbeddedResource>
     <EmbeddedResource Include="UI\formWaiting.resx">
       <DependentUpon>formWaiting.cs</DependentUpon>
@@ -376,7 +473,11 @@
       <Install>false</Install>
     </BootstrapperPackage>
   </ItemGroup>
+  <ItemGroup />
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
+  <PropertyGroup>
+    <PostBuildEvent></PostBuildEvent>
+  </PropertyGroup>
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
        Other similar extension points exist, see Microsoft.Common.targets.
   <Target Name="BeforeBuild">

@@ -7,14 +7,19 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using System.Windows.Forms;
+using System.Runtime.InteropServices;
 
 namespace Gw2Launcher.UI.Controls
 {
     public partial class AccountGridButtonContainer : UserControl, IMessageFilter
     {
+        [DllImport("user32.dll")]
+        private static extern IntPtr GetFocus();
+
         public event EventHandler AddAccountClick;
         public event MouseEventHandler AccountMouseClick;
         public event EventHandler ContentHeightChanged;
+        public event MouseEventHandler AccountBeginDrag;
 
         private List<AccountGridButton> buttons;
         private Size gridSize;
@@ -26,6 +31,9 @@ namespace Gw2Launcher.UI.Controls
 
         private Font fontLarge, fontSmall;
         private bool showAccount;
+
+        private Rectangle dragBounds;
+        private bool dragging;
 
         public AccountGridButtonContainer()
         {
@@ -44,6 +52,9 @@ namespace Gw2Launcher.UI.Controls
             buttonNewAccount = new NewAccountGridButton();
             buttonNewAccount.Visible = false;
             buttonNewAccount.Click += buttonNewAccount_Click;
+            buttonNewAccount.VisibleChanged += buttonNewAccount_VisibleChanged;
+            buttonNewAccount.LostFocus += buttonNewAccount_LostFocus;
+
             panelContents.Controls.Add(buttonNewAccount);
             isNewAccountVisible = false;
 
@@ -52,6 +63,25 @@ namespace Gw2Launcher.UI.Controls
             
             isDirty = true;
             this.Invalidate();
+        }
+
+        void buttonNewAccount_LostFocus(object sender, EventArgs e)
+        {
+            if (this.ParentForm.ContainsFocus)
+            {
+                if (isNewAccountVisible)
+                    buttonNewAccount.Focus();
+            }
+            else
+            {
+                ShowNewAccountButton(false);
+            }
+        }
+
+        void buttonNewAccount_VisibleChanged(object sender, EventArgs e)
+        {
+            if (buttonNewAccount.Visible)
+                buttonNewAccount.Focus();
         }
 
         void buttonNewAccount_Click(object sender, EventArgs e)
@@ -126,7 +156,7 @@ namespace Gw2Launcher.UI.Controls
         {
             if (visible)
             {
-                if (!isNewAccountVisible)
+                if (!isNewAccountVisible && this.ParentForm.ContainsFocus)
                 {
                     isNewAccountVisible = true;
                     isDirty = true;
@@ -169,6 +199,7 @@ namespace Gw2Launcher.UI.Controls
                     if (value > max)
                         value = max;
                 }
+                ((HandledMouseEventArgs)e).Handled = true;
                 if (verticalScroll.Value != value)
                     verticalScroll.Value = value;
             }
@@ -327,6 +358,45 @@ namespace Gw2Launcher.UI.Controls
             this.Invalidate();
 
             button.MouseClick += button_MouseClick;
+            button.MouseDown += button_MouseDown;
+            button.MouseUp += button_MouseUp;
+        }
+
+        void button_MouseDown(object sender, MouseEventArgs e)
+        {
+            dragging = false;
+
+            if (e.Button == System.Windows.Forms.MouseButtons.Left)
+            {
+                var c = (Control)sender;
+                c.MouseMove += button_MouseMove;
+                c.MouseUp += button_MouseUp;
+
+                var size = SystemInformation.DragSize;
+                dragBounds = new Rectangle(e.X - size.Width / 2, e.Y - size.Height / 2, size.Width, size.Height);
+            }
+        }
+
+        void button_MouseUp(object sender, MouseEventArgs e)
+        {
+            var c = (Control)sender;
+            c.MouseMove -= button_MouseMove;
+            c.MouseUp -= button_MouseUp;
+        }
+
+        void button_MouseMove(object sender, MouseEventArgs e)
+        {
+            if (!dragBounds.Contains(e.Location))
+            {
+                var c = (Control)sender;
+                c.MouseMove -= button_MouseMove;
+                c.MouseUp -= button_MouseUp;
+
+                dragging = true;
+
+                if (AccountBeginDrag != null)
+                    AccountBeginDrag(sender, e);
+            }
         }
 
         void button_MouseClick(object sender, MouseEventArgs e)
@@ -334,7 +404,11 @@ namespace Gw2Launcher.UI.Controls
             var button = (AccountGridButton)sender;
             int index = button.Index;
 
-            if (ModifierKeys.HasFlag(Keys.Control))
+            if (dragging)
+            {
+
+            }
+            else if (ModifierKeys.HasFlag(Keys.Control))
             {
                 button.Selected = !button.Selected;
                 lastSelected = index;

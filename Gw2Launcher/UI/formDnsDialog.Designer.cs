@@ -32,9 +32,9 @@
             this.gridServers = new System.Windows.Forms.DataGridView();
             this.buttonCancel = new System.Windows.Forms.Button();
             this.buttonOK = new System.Windows.Forms.Button();
+            this.label5 = new System.Windows.Forms.Label();
             this.columnCheck = new System.Windows.Forms.DataGridViewCheckBoxColumn();
             this.columnServer = new System.Windows.Forms.DataGridViewTextBoxColumn();
-            this.label5 = new System.Windows.Forms.Label();
             ((System.ComponentModel.ISupportInitialize)(this.gridServers)).BeginInit();
             this.SuspendLayout();
             // 
@@ -96,20 +96,6 @@
             this.buttonOK.UseVisualStyleBackColor = true;
             this.buttonOK.Click += new System.EventHandler(this.buttonOK_Click);
             // 
-            // columnCheck
-            // 
-            this.columnCheck.HeaderText = "Check";
-            this.columnCheck.Name = "columnCheck";
-            this.columnCheck.ReadOnly = true;
-            this.columnCheck.Width = 25;
-            // 
-            // columnServer
-            // 
-            this.columnServer.AutoSizeMode = System.Windows.Forms.DataGridViewAutoSizeColumnMode.Fill;
-            this.columnServer.HeaderText = "Server";
-            this.columnServer.Name = "columnServer";
-            this.columnServer.ReadOnly = true;
-            // 
             // label5
             // 
             this.label5.AutoSize = true;
@@ -119,6 +105,21 @@
             this.label5.Size = new System.Drawing.Size(157, 13);
             this.label5.TabIndex = 34;
             this.label5.Text = "Select which DNS servers to use";
+            // 
+            // columnCheck
+            // 
+            this.columnCheck.HeaderText = "Check";
+            this.columnCheck.Name = "columnCheck";
+            this.columnCheck.ReadOnly = true;
+            this.columnCheck.ThreeState = true;
+            this.columnCheck.Width = 25;
+            // 
+            // columnServer
+            // 
+            this.columnServer.AutoSizeMode = System.Windows.Forms.DataGridViewAutoSizeColumnMode.Fill;
+            this.columnServer.HeaderText = "Server";
+            this.columnServer.Name = "columnServer";
+            this.columnServer.ReadOnly = true;
             // 
             // formDnsDialog
             // 
@@ -150,8 +151,8 @@
         private System.Windows.Forms.DataGridView gridServers;
         private System.Windows.Forms.Button buttonCancel;
         private System.Windows.Forms.Button buttonOK;
+        private System.Windows.Forms.Label label5;
         private System.Windows.Forms.DataGridViewCheckBoxColumn columnCheck;
         private System.Windows.Forms.DataGridViewTextBoxColumn columnServer;
-        private System.Windows.Forms.Label label5;
     }
 }

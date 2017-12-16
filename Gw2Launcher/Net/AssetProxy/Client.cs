@@ -12,11 +12,14 @@ namespace Gw2Launcher.Net.AssetProxy
 {
     class Client
     {
-        private const int BUFFER_LENGTH = 65536;
-        private const int TIMEOUT = 5000;
+        private const int BUFFER_LENGTH = 16384;
+        private const string ASSET_HOST = Settings.ASSET_HOST;
+        protected const byte CONNECTION_TIMEOUT_SECONDS = 5;
+        protected const byte CONNECTION_TRANSFER_TIMEOUT_SECONDS = 180;
 
         private static ushort nextId;
         private static readonly object _lock;
+        private static BpsLimiter bpsLimiter;
 
         private TcpClient clientIn, clientOut, clientSwap;
         private IPEndPoint remoteEP;
@@ -47,6 +50,24 @@ namespace Gw2Launcher.Net.AssetProxy
         {
             nextId = 1;
             _lock = new object();
+
+            PatchingSpeedLimit_ValueChanged(Settings.PatchingSpeedLimit, null);
+            Settings.PatchingSpeedLimit.ValueChanged += PatchingSpeedLimit_ValueChanged;
+        }
+
+        static void PatchingSpeedLimit_ValueChanged(object sender, EventArgs e)
+        {
+            var v = (Settings.ISettingValue<int>)sender;
+            if (v.HasValue)
+            {
+                if (bpsLimiter == null)
+                    bpsLimiter = new BpsLimiter();
+                bpsLimiter.BpsLimit = v.Value;
+            }
+            else if (bpsLimiter != null)
+            {
+                bpsLimiter.Enabled = false;
+            }
         }
 
         public static void Reset()
@@ -65,14 +86,13 @@ namespace Gw2Launcher.Net.AssetProxy
             {
                 doIPPool = true;
                 this.ipPool = ipPool;
-                remote = new IPEndPoint(ipPool.GetIP(), 80);
+                remote = new IPEndPoint(ipPool.GetIP(), Settings.PatchingUseHttps.Value ? 443 : 80);
             }
 
             remoteEP = remote;
 
             clientIn = client;
-            clientIn.ReceiveTimeout = TIMEOUT;
-            clientIn.SendTimeout = TIMEOUT;
+            clientIn.ReceiveTimeout = clientIn.SendTimeout = CONNECTION_TIMEOUT_SECONDS * 1000;
         }
 
         public IPEndPoint RemoteEP
@@ -108,12 +128,19 @@ namespace Gw2Launcher.Net.AssetProxy
         {
             int count = 0;
 
+            BpsLimiter.BpsShare bpsShare;
+            if (bpsLimiter != null)
+                bpsShare = bpsLimiter.GetShare();
+            else
+                bpsShare = null;
+
             try
             {
                 var buffer = new byte[BUFFER_LENGTH];
                 int read;
 
-                HttpStream httpIn = new HttpStream(clientIn.GetStream());
+                Stream stream;
+                HttpStream httpIn = new HttpStream(stream = clientIn.GetStream());
                 HttpStream httpOut = null;
                 bool doSwap = false;
                 Task<IPAddress> taskSwap = null;
@@ -184,7 +211,11 @@ namespace Gw2Launcher.Net.AssetProxy
                                     clientOut = clientSwap;
                                     clientSwap = null;
                                     remoteEP = (IPEndPoint)clientOut.Client.RemoteEndPoint;
-                                    httpOut.BaseStream = clientOut.GetStream();
+
+                                    if (remoteEP.Port == 443)
+                                        httpOut.SetBaseStream(clientOut.GetStream(), true, ASSET_HOST, false);
+                                    else
+                                        httpOut.SetBaseStream(clientOut.GetStream(), true);
                                 }
 
                                 doSwap = false;
@@ -195,32 +226,39 @@ namespace Gw2Launcher.Net.AssetProxy
 
                         if (clientOut == null || !clientOut.Connected)
                         {
-                            clientOut = new TcpClient();
-                            clientOut.ReceiveTimeout = TIMEOUT;
-                            clientOut.SendTimeout = TIMEOUT;
+                            clientOut = new TcpClient()
+                            {
+                                ReceiveTimeout = CONNECTION_TIMEOUT_SECONDS * 1000,
+                                SendTimeout = CONNECTION_TIMEOUT_SECONDS * 1000
+                            };
 
                             try
                             {
-                                if (!clientOut.ConnectAsync(remoteEP.Address, remoteEP.Port).Wait(TIMEOUT))
+                                if (!clientOut.ConnectAsync(remoteEP.Address, remoteEP.Port).Wait(CONNECTION_TIMEOUT_SECONDS * 1000))
                                 {
                                     throw new TimeoutException("Unable to connect to " + remoteEP.ToString());
                                 }
                             }
-                            catch (Exception ex)
+                            catch
                             {
                                 if (doIPPool)
                                     ipPool.AddSample(remoteEP.Address, double.MaxValue);
 
-                                throw ex;
+                                throw;
                             }
 
-                            httpOut = new HttpStream(clientOut.GetStream());
+                            if (remoteEP.Port == 443)
+                                httpOut = new HttpStream(clientOut.GetStream(), ASSET_HOST, false);
+                            else
+                                httpOut = new HttpStream(clientOut.GetStream());
                         }
 
                         #endregion
 
                         if (read > 0 && RequestDataReceived != null)
                             RequestDataReceived(this, new ArraySegment<byte>(buffer, 0, read));
+
+                        clientOut.ReceiveTimeout = clientOut.SendTimeout = CONNECTION_TIMEOUT_SECONDS * 1000;
 
                         do
                         {
@@ -241,9 +279,11 @@ namespace Gw2Launcher.Net.AssetProxy
                         if (read > 0 && ResponseDataReceived != null)
                             ResponseDataReceived(this, new ArraySegment<byte>(buffer, 0, read));
 
+                        clientOut.ReceiveTimeout = clientOut.SendTimeout = CONNECTION_TRANSFER_TIMEOUT_SECONDS * 1000;
+
                         DateTime startTime = DateTime.UtcNow;
                         long bytes = 0;
-
+                        
                         try
                         {
                             do
@@ -252,7 +292,15 @@ namespace Gw2Launcher.Net.AssetProxy
                                     cache.Write(buffer, 0, read);
 
                                 httpIn.Write(buffer, 0, read);
-                                read = httpOut.Read(buffer, 0, BUFFER_LENGTH);
+
+                                if (bpsShare != null)
+                                {
+                                    read = httpOut.Read(buffer, 0, bpsShare.GetLimit(BUFFER_LENGTH));
+                                    bpsShare.Used(read);
+                                }
+                                else
+                                    read = httpOut.Read(buffer, 0, BUFFER_LENGTH);
+
                                 bytes += read;
 
                                 if (read > 0 && ResponseDataReceived != null)
@@ -260,23 +308,18 @@ namespace Gw2Launcher.Net.AssetProxy
                             }
                             while (read > 0);
                         }
-                        catch (Exception ex)
+                        catch
                         {
                             if (doIPPool)
                                 ipPool.AddSample(remoteEP.Address, double.MaxValue);
 
-                            throw ex;
+                            throw;
                         }
 
                         var response = (HttpStream.HttpResponseHeader)header;
 
                         if (writeCache && response.StatusCode == HttpStatusCode.OK)
                         {
-                            if (request.Location.StartsWith("/latest", StringComparison.OrdinalIgnoreCase))
-                                cache.Expires = DateTime.UtcNow.AddMinutes(1);
-                            else
-                                cache.Expires = DateTime.UtcNow.AddHours(12);
-
                             cache.Commit();
                         }
 
@@ -307,10 +350,10 @@ namespace Gw2Launcher.Net.AssetProxy
                                         delegate
                                         {
                                             var clientSwap = this.clientSwap = new TcpClient();
-                                            clientSwap.ReceiveTimeout = clientSwap.SendTimeout = TIMEOUT;
+                                            clientSwap.ReceiveTimeout = clientSwap.SendTimeout = CONNECTION_TIMEOUT_SECONDS * 1000;
                                             try
                                             {
-                                                if (!clientSwap.ConnectAsync(ip, 80).Wait(TIMEOUT))
+                                                if (!clientSwap.ConnectAsync(ip, Settings.PatchingUseHttps.Value ? 443 : 80).Wait(CONNECTION_TIMEOUT_SECONDS * 1000))
                                                 {
                                                     throw new TimeoutException();
                                                 }
@@ -359,6 +402,9 @@ namespace Gw2Launcher.Net.AssetProxy
             }
             finally
             {
+                if (bpsShare != null)
+                    bpsShare.Dispose();
+
                 if (clientIn != null)
                     clientIn.Close();
                 if (clientOut != null)

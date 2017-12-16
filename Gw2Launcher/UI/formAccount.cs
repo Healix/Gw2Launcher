@@ -42,6 +42,7 @@ namespace Gw2Launcher.UI
             buttonArguments.Tag = panelArguments;
             buttonLocalDat.Tag = panelLocalDat;
             buttonStatistics.Tag = panelStatistics;
+            buttonLaunchOptions.Tag = panelLaunchOptions;
 
             foreach (Control c in sidebarPanel1.Controls)
             {
@@ -120,6 +121,15 @@ namespace Gw2Launcher.UI
             }
             else
                 textLocalDat.Text = "";
+
+            if (account.VolumeEnabled)
+            {
+                checkVolume.Checked = true;
+                sliderVolume.Value = account.Volume;
+            }
+
+            if (!string.IsNullOrEmpty(account.RunAfterLaunching))
+                textRunAfterLaunch.Text = account.RunAfterLaunching;
         }
 
         public Settings.IAccount Account
@@ -305,7 +315,7 @@ namespace Gw2Launcher.UI
                             catch (Exception e)
                             {
                                 Util.Logging.Log(e);
-                                throw e;
+                                throw;
                             }
                         }
                     }
@@ -416,6 +426,16 @@ namespace Gw2Launcher.UI
                 this.account.AutomaticLoginEmail = null;
                 this.account.AutomaticLoginPassword = null;
             }
+
+            if (checkVolume.Checked)
+                this.account.Volume = sliderVolume.Value;
+            else
+                this.account.VolumeEnabled = false;
+
+            if (!string.IsNullOrEmpty(textRunAfterLaunch.Text))
+                this.account.RunAfterLaunching = textRunAfterLaunch.Text;
+            else
+                this.account.RunAfterLaunching = null;
 
             this.DialogResult = System.Windows.Forms.DialogResult.OK;
         }
@@ -604,6 +624,21 @@ namespace Gw2Launcher.UI
         private void labelViewRecordedLaunch_Click(object sender, EventArgs e)
         {
 
+        }
+
+        private void label30_Click(object sender, EventArgs e)
+        {
+            textRunAfterLaunch.SelectedText = ((Label)sender).Text;
+        }
+
+        private void checkVolume_CheckedChanged(object sender, EventArgs e)
+        {
+            sliderVolume.Enabled = checkVolume.Checked;
+        }
+
+        private void sliderVolume_ValueChanged(object sender, float e)
+        {
+            labelVolume.Text = (int)(e * 100 + 0.5f) + "%";
         }
 
     }

@@ -13,6 +13,8 @@ namespace Gw2Launcher.UI
 {
     public partial class formDnsDialog : Form
     {
+        private int selectedCount;
+
         static formDnsDialog()
         {
         }
@@ -31,17 +33,36 @@ namespace Gw2Launcher.UI
 
             bool defaultSelect = selected == null;
             HashSet<IPAddress> ips = defaultSelect ? null : new HashSet<IPAddress>(selected);
-            
+
+            var row = (DataGridViewRow)gridServers.RowTemplate.Clone();
+            row.CreateCells(gridServers);
+            row.Cells[columnCheck.Index].Value = CheckState.Checked;
+            row.Cells[columnServer.Index].Value = "";
+            gridServers.Rows.Add(row);
+
             foreach (var server in Net.DnsServers.Servers)
             {
-                var row = (DataGridViewRow)gridServers.RowTemplate.Clone();
+                row = (DataGridViewRow)gridServers.RowTemplate.Clone();
                 row.CreateCells(gridServers);
 
-                row.Cells[columnCheck.Index].Value = defaultSelect || ips.Contains(server.IP[0]);
+                bool isChecked = defaultSelect || ips.Contains(server.IP[0]);
+                row.Cells[columnCheck.Index].Value = isChecked ? CheckState.Checked : CheckState.Unchecked;
                 row.Cells[columnServer.Index].Value = server;
+
+                if (isChecked)
+                    selectedCount++;
 
                 gridServers.Rows.Add(row);
             }
+
+            var count = gridServers.Rows.Count - 1;
+            var c = (DataGridViewCheckBoxCell)gridServers.Rows[0].Cells[columnCheck.Index];
+            if (count == selectedCount)
+                c.Value = CheckState.Checked;
+            else if (selectedCount == 0)
+                c.Value = CheckState.Unchecked;
+            else
+                c.Value = CheckState.Indeterminate;
         }
 
         public List<IPAddress> IPs
@@ -65,7 +86,10 @@ namespace Gw2Launcher.UI
             var ips = IPs = new List<IPAddress>();
             foreach (DataGridViewRow row in gridServers.Rows)
             {
-                if ((bool)row.Cells[columnCheck.Index].Value == true)
+                if (row.Index == 0)
+                    continue;
+
+                if ((CheckState)row.Cells[columnCheck.Index].Value == CheckState.Checked)
                 {
                     var dns = (Net.DnsServers.DnsServer)row.Cells[columnServer.Index].Value;
                     ips.AddRange(dns.IP);
@@ -83,8 +107,38 @@ namespace Gw2Launcher.UI
         {
             if (e.RowIndex >= 0)
             {
-                var c = gridServers.Rows[e.RowIndex].Cells[columnCheck.Index];
-                c.Value = !(bool)c.Value;
+                var c = (DataGridViewCheckBoxCell)gridServers.Rows[e.RowIndex].Cells[columnCheck.Index];
+                bool isChecked = (CheckState)c.Value != CheckState.Checked;
+                c.Value = isChecked ? CheckState.Checked : CheckState.Unchecked;
+
+                if (e.RowIndex == 0)
+                {
+                    foreach (DataGridViewRow row in gridServers.Rows)
+                    {
+                        row.Cells[columnCheck.Index].Value = c.Value;
+                    }
+
+                    if (isChecked)
+                        selectedCount = gridServers.Rows.Count - 1;
+                    else
+                        selectedCount = 0;
+                }
+                else
+                {
+                    if (isChecked)
+                        selectedCount++;
+                    else
+                        selectedCount--;
+
+                    var count = gridServers.Rows.Count - 1;
+                    c = (DataGridViewCheckBoxCell)gridServers.Rows[0].Cells[columnCheck.Index];
+                    if (count == selectedCount)
+                        c.Value = CheckState.Checked;
+                    else if (selectedCount == 0)
+                        c.Value = CheckState.Unchecked;
+                    else
+                        c.Value = CheckState.Indeterminate;
+                }
             }
         }
     }

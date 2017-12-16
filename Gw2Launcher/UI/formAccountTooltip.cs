@@ -54,6 +54,18 @@ namespace Gw2Launcher.UI
             arrowAnchor = AnchorStyles.Left;
         }
 
+        protected override void Dispose(bool disposing)
+        {
+            if (disposing)
+            {
+                pen.Dispose();
+                brush.Dispose();
+                if (components != null)
+                    components.Dispose();
+            }
+            base.Dispose(disposing);
+        }
+
         /// <summary>
         /// Attaches this window to the specified control. This window will move as it does.
         /// </summary>

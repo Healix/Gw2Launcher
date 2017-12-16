@@ -278,7 +278,7 @@ namespace Gw2Launcher.UI
 
             try
             {
-                Util.ShowInExplorer.SelectFiles(folders[0].Parent.FullName, f);
+                Util.Explorer.OpenFolderAndSelect(folders[0].Parent.FullName, f);
             }
             catch (Exception ex)
             {

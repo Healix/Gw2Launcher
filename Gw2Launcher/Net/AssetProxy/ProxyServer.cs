@@ -12,7 +12,7 @@ namespace Gw2Launcher.Net.AssetProxy
 {
     class ProxyServer
     {
-        public const string PATCH_SERVER = "assetcdn.101.arenanetworks.com"; //direct: origincdn.101.arenanetworks.com
+        public const string PATCH_SERVER = Settings.ASSET_HOST; //direct: origincdn.101.arenanetworks.com
 
         public event EventHandler<Client> ClientConnected;
         public event EventHandler<Exception> ClientError;

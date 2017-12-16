@@ -30,11 +30,6 @@
         {
             this.buttonCancel = new System.Windows.Forms.Button();
             this.buttonOK = new System.Windows.Forms.Button();
-            this.sidebarPanel1 = new Gw2Launcher.UI.Controls.SidebarPanel();
-            this.buttonStyle = new Gw2Launcher.UI.Controls.SidebarButton();
-            this.buttonPasswords = new Gw2Launcher.UI.Controls.SidebarButton();
-            this.buttonArguments = new Gw2Launcher.UI.Controls.SidebarButton();
-            this.buttonGeneral = new Gw2Launcher.UI.Controls.SidebarButton();
             this.panelGeneral = new System.Windows.Forms.Panel();
             this.label13 = new System.Windows.Forms.Label();
             this.label14 = new System.Windows.Forms.Label();
@@ -49,12 +44,20 @@
             this.label2 = new System.Windows.Forms.Label();
             this.buttonGW2Path = new System.Windows.Forms.Button();
             this.panelArguments = new System.Windows.Forms.Panel();
-            this.label1 = new System.Windows.Forms.Label();
-            this.label4 = new System.Windows.Forms.Label();
-            this.checkCheckBuildOnLaunch = new System.Windows.Forms.CheckBox();
+            this.label31 = new System.Windows.Forms.Label();
+            this.label30 = new System.Windows.Forms.Label();
+            this.label29 = new System.Windows.Forms.Label();
+            this.label27 = new System.Windows.Forms.Label();
+            this.textRunAfterLaunch = new Gw2Launcher.UI.Controls.ExtendableTextBox();
+            this.label28 = new System.Windows.Forms.Label();
+            this.labelVolume = new System.Windows.Forms.Label();
+            this.label20 = new System.Windows.Forms.Label();
+            this.label21 = new System.Windows.Forms.Label();
+            this.checkVolume = new System.Windows.Forms.CheckBox();
             this.label7 = new System.Windows.Forms.Label();
             this.textArguments = new System.Windows.Forms.TextBox();
             this.label3 = new System.Windows.Forms.Label();
+            this.sliderVolume = new Gw2Launcher.UI.Controls.FlatSlider();
             this.panelPasswords = new System.Windows.Forms.Panel();
             this.buttonClearPasswords = new System.Windows.Forms.Button();
             this.label11 = new System.Windows.Forms.Label();
@@ -73,11 +76,34 @@
             this.label15 = new System.Windows.Forms.Label();
             this.label17 = new System.Windows.Forms.Label();
             this.label18 = new System.Windows.Forms.Label();
-            this.sidebarPanel1.SuspendLayout();
+            this.panelUpdates = new System.Windows.Forms.Panel();
+            this.labelAutoUpdateDownloadNotificationsConfig = new System.Windows.Forms.Label();
+            this.checkAutoUpdateDownloadNotifications = new System.Windows.Forms.CheckBox();
+            this.labelVersionUpdate = new System.Windows.Forms.Label();
+            this.label25 = new System.Windows.Forms.Label();
+            this.label24 = new System.Windows.Forms.Label();
+            this.label23 = new System.Windows.Forms.Label();
+            this.numericUpdateInterval = new System.Windows.Forms.NumericUpDown();
+            this.label1 = new System.Windows.Forms.Label();
+            this.checkAutoUpdateDownload = new System.Windows.Forms.CheckBox();
+            this.checkAutoUpdate = new System.Windows.Forms.CheckBox();
+            this.label4 = new System.Windows.Forms.Label();
+            this.checkCheckBuildOnLaunch = new System.Windows.Forms.CheckBox();
+            this.checkCheckVersionOnStart = new System.Windows.Forms.CheckBox();
+            this.label26 = new System.Windows.Forms.Label();
+            this.sidebarPanel1 = new Gw2Launcher.UI.Controls.SidebarPanel();
+            this.buttonUpdates = new Gw2Launcher.UI.Controls.SidebarButton();
+            this.buttonStyle = new Gw2Launcher.UI.Controls.SidebarButton();
+            this.buttonPasswords = new Gw2Launcher.UI.Controls.SidebarButton();
+            this.buttonArguments = new Gw2Launcher.UI.Controls.SidebarButton();
+            this.buttonGeneral = new Gw2Launcher.UI.Controls.SidebarButton();
             this.panelGeneral.SuspendLayout();
             this.panelArguments.SuspendLayout();
             this.panelPasswords.SuspendLayout();
             this.panelStyle.SuspendLayout();
+            this.panelUpdates.SuspendLayout();
+            ((System.ComponentModel.ISupportInitialize)(this.numericUpdateInterval)).BeginInit();
+            this.sidebarPanel1.SuspendLayout();
             this.SuspendLayout();
             // 
             // buttonCancel
@@ -103,94 +129,6 @@
             this.buttonOK.Text = "OK";
             this.buttonOK.UseVisualStyleBackColor = true;
             this.buttonOK.Click += new System.EventHandler(this.buttonOK_Click);
-            // 
-            // sidebarPanel1
-            // 
-            this.sidebarPanel1.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom) 
-            | System.Windows.Forms.AnchorStyles.Left)));
-            this.sidebarPanel1.BackColor = System.Drawing.Color.White;
-            this.sidebarPanel1.BorderColor = System.Drawing.SystemColors.ControlDark;
-            this.sidebarPanel1.Controls.Add(this.buttonStyle);
-            this.sidebarPanel1.Controls.Add(this.buttonPasswords);
-            this.sidebarPanel1.Controls.Add(this.buttonArguments);
-            this.sidebarPanel1.Controls.Add(this.buttonGeneral);
-            this.sidebarPanel1.Location = new System.Drawing.Point(0, 0);
-            this.sidebarPanel1.Margin = new System.Windows.Forms.Padding(0);
-            this.sidebarPanel1.Name = "sidebarPanel1";
-            this.sidebarPanel1.Size = new System.Drawing.Size(180, 370);
-            this.sidebarPanel1.TabIndex = 25;
-            // 
-            // buttonStyle
-            // 
-            this.buttonStyle.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left) 
-            | System.Windows.Forms.AnchorStyles.Right)));
-            this.buttonStyle.ArrowColor = System.Drawing.SystemColors.Control;
-            this.buttonStyle.BackColor = System.Drawing.Color.White;
-            this.buttonStyle.BorderColor = System.Drawing.SystemColors.ControlDark;
-            this.buttonStyle.Cursor = System.Windows.Forms.Cursors.Hand;
-            this.buttonStyle.Font = new System.Drawing.Font("Segoe UI", 8.25F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            this.buttonStyle.Location = new System.Drawing.Point(0, 160);
-            this.buttonStyle.Margin = new System.Windows.Forms.Padding(0);
-            this.buttonStyle.Name = "buttonStyle";
-            this.buttonStyle.Selected = false;
-            this.buttonStyle.SelectedColor = System.Drawing.SystemColors.Control;
-            this.buttonStyle.Size = new System.Drawing.Size(180, 40);
-            this.buttonStyle.TabIndex = 6;
-            this.buttonStyle.Text = "Style";
-            // 
-            // buttonPasswords
-            // 
-            this.buttonPasswords.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left) 
-            | System.Windows.Forms.AnchorStyles.Right)));
-            this.buttonPasswords.ArrowColor = System.Drawing.SystemColors.Control;
-            this.buttonPasswords.BackColor = System.Drawing.Color.White;
-            this.buttonPasswords.BorderColor = System.Drawing.SystemColors.ControlDark;
-            this.buttonPasswords.Cursor = System.Windows.Forms.Cursors.Hand;
-            this.buttonPasswords.Font = new System.Drawing.Font("Segoe UI", 8.25F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            this.buttonPasswords.Location = new System.Drawing.Point(0, 120);
-            this.buttonPasswords.Margin = new System.Windows.Forms.Padding(0);
-            this.buttonPasswords.Name = "buttonPasswords";
-            this.buttonPasswords.Selected = false;
-            this.buttonPasswords.SelectedColor = System.Drawing.SystemColors.Control;
-            this.buttonPasswords.Size = new System.Drawing.Size(180, 40);
-            this.buttonPasswords.TabIndex = 5;
-            this.buttonPasswords.Text = "Passwords";
-            // 
-            // buttonArguments
-            // 
-            this.buttonArguments.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left) 
-            | System.Windows.Forms.AnchorStyles.Right)));
-            this.buttonArguments.ArrowColor = System.Drawing.SystemColors.Control;
-            this.buttonArguments.BackColor = System.Drawing.Color.White;
-            this.buttonArguments.BorderColor = System.Drawing.SystemColors.ControlDark;
-            this.buttonArguments.Cursor = System.Windows.Forms.Cursors.Hand;
-            this.buttonArguments.Font = new System.Drawing.Font("Segoe UI", 8.25F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            this.buttonArguments.Location = new System.Drawing.Point(0, 80);
-            this.buttonArguments.Margin = new System.Windows.Forms.Padding(0);
-            this.buttonArguments.Name = "buttonArguments";
-            this.buttonArguments.Selected = false;
-            this.buttonArguments.SelectedColor = System.Drawing.SystemColors.Control;
-            this.buttonArguments.Size = new System.Drawing.Size(180, 40);
-            this.buttonArguments.TabIndex = 4;
-            this.buttonArguments.Text = "Launch arguments";
-            // 
-            // buttonGeneral
-            // 
-            this.buttonGeneral.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left) 
-            | System.Windows.Forms.AnchorStyles.Right)));
-            this.buttonGeneral.ArrowColor = System.Drawing.SystemColors.Control;
-            this.buttonGeneral.BackColor = System.Drawing.Color.White;
-            this.buttonGeneral.BorderColor = System.Drawing.SystemColors.ControlDark;
-            this.buttonGeneral.Cursor = System.Windows.Forms.Cursors.Hand;
-            this.buttonGeneral.Font = new System.Drawing.Font("Segoe UI", 8.25F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            this.buttonGeneral.Location = new System.Drawing.Point(0, 40);
-            this.buttonGeneral.Margin = new System.Windows.Forms.Padding(0);
-            this.buttonGeneral.Name = "buttonGeneral";
-            this.buttonGeneral.Selected = false;
-            this.buttonGeneral.SelectedColor = System.Drawing.SystemColors.Control;
-            this.buttonGeneral.Size = new System.Drawing.Size(180, 40);
-            this.buttonGeneral.TabIndex = 3;
-            this.buttonGeneral.Text = "General";
             // 
             // panelGeneral
             // 
@@ -342,48 +280,132 @@
             // 
             this.panelArguments.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left) 
             | System.Windows.Forms.AnchorStyles.Right)));
-            this.panelArguments.Controls.Add(this.label1);
-            this.panelArguments.Controls.Add(this.label4);
-            this.panelArguments.Controls.Add(this.checkCheckBuildOnLaunch);
+            this.panelArguments.Controls.Add(this.label31);
+            this.panelArguments.Controls.Add(this.label30);
+            this.panelArguments.Controls.Add(this.label29);
+            this.panelArguments.Controls.Add(this.label27);
+            this.panelArguments.Controls.Add(this.textRunAfterLaunch);
+            this.panelArguments.Controls.Add(this.label28);
+            this.panelArguments.Controls.Add(this.labelVolume);
+            this.panelArguments.Controls.Add(this.label20);
+            this.panelArguments.Controls.Add(this.label21);
+            this.panelArguments.Controls.Add(this.checkVolume);
             this.panelArguments.Controls.Add(this.label7);
             this.panelArguments.Controls.Add(this.textArguments);
             this.panelArguments.Controls.Add(this.label3);
+            this.panelArguments.Controls.Add(this.sliderVolume);
             this.panelArguments.Location = new System.Drawing.Point(183, 12);
             this.panelArguments.Name = "panelArguments";
             this.panelArguments.Size = new System.Drawing.Size(373, 302);
             this.panelArguments.TabIndex = 35;
             this.panelArguments.Visible = false;
             // 
-            // label1
+            // label31
             // 
-            this.label1.AutoSize = true;
-            this.label1.Font = new System.Drawing.Font("Segoe UI Semilight", 8.25F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            this.label1.Location = new System.Drawing.Point(14, 98);
-            this.label1.Name = "label1";
-            this.label1.Size = new System.Drawing.Size(319, 13);
-            this.label1.TabIndex = 37;
-            this.label1.Text = "Lookup the current build and automatically update when launching";
+            this.label31.AutoSize = true;
+            this.label31.Cursor = System.Windows.Forms.Cursors.Hand;
+            this.label31.Font = new System.Drawing.Font("Segoe UI Semibold", 8.25F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+            this.label31.Location = new System.Drawing.Point(149, 180);
+            this.label31.Name = "label31";
+            this.label31.Size = new System.Drawing.Size(74, 13);
+            this.label31.TabIndex = 49;
+            this.label31.Text = "%accountid%";
+            this.label31.Click += new System.EventHandler(this.label30_Click);
             // 
-            // label4
+            // label30
             // 
-            this.label4.AutoSize = true;
-            this.label4.Font = new System.Drawing.Font("Segoe UI Semibold", 9F, System.Drawing.FontStyle.Bold);
-            this.label4.Location = new System.Drawing.Point(13, 82);
-            this.label4.Name = "label4";
-            this.label4.Size = new System.Drawing.Size(187, 15);
-            this.label4.TabIndex = 36;
-            this.label4.Text = "Check for updates to Guild Wars 2";
+            this.label30.AutoSize = true;
+            this.label30.Cursor = System.Windows.Forms.Cursors.Hand;
+            this.label30.Font = new System.Drawing.Font("Segoe UI Semibold", 8.25F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+            this.label30.Location = new System.Drawing.Point(69, 180);
+            this.label30.Name = "label30";
+            this.label30.Size = new System.Drawing.Size(74, 13);
+            this.label30.TabIndex = 48;
+            this.label30.Text = "%processid%";
+            this.label30.Click += new System.EventHandler(this.label30_Click);
             // 
-            // checkCheckBuildOnLaunch
+            // label29
             // 
-            this.checkCheckBuildOnLaunch.AutoSize = true;
-            this.checkCheckBuildOnLaunch.Font = new System.Drawing.Font("Segoe UI", 8.25F);
-            this.checkCheckBuildOnLaunch.Location = new System.Drawing.Point(21, 119);
-            this.checkCheckBuildOnLaunch.Name = "checkCheckBuildOnLaunch";
-            this.checkCheckBuildOnLaunch.Size = new System.Drawing.Size(207, 17);
-            this.checkCheckBuildOnLaunch.TabIndex = 35;
-            this.checkCheckBuildOnLaunch.Text = "Check for updates when launching";
-            this.checkCheckBuildOnLaunch.UseVisualStyleBackColor = true;
+            this.label29.AutoSize = true;
+            this.label29.Font = new System.Drawing.Font("Segoe UI Semilight", 8.25F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+            this.label29.Location = new System.Drawing.Point(14, 180);
+            this.label29.Name = "label29";
+            this.label29.Size = new System.Drawing.Size(49, 13);
+            this.label29.TabIndex = 47;
+            this.label29.Text = "Variables";
+            // 
+            // label27
+            // 
+            this.label27.AutoSize = true;
+            this.label27.Font = new System.Drawing.Font("Segoe UI Semilight", 8.25F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+            this.label27.Location = new System.Drawing.Point(14, 165);
+            this.label27.Name = "label27";
+            this.label27.Size = new System.Drawing.Size(216, 13);
+            this.label27.TabIndex = 46;
+            this.label27.Text = "Executes the shell commands after launching";
+            // 
+            // textRunAfterLaunch
+            // 
+            this.textRunAfterLaunch.ExtendedSize = new System.Drawing.Size(0, 0);
+            this.textRunAfterLaunch.Font = new System.Drawing.Font("Segoe UI", 8.25F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+            this.textRunAfterLaunch.Location = new System.Drawing.Point(20, 201);
+            this.textRunAfterLaunch.MaximumExtendedSize = new System.Drawing.Size(0, 0);
+            this.textRunAfterLaunch.Multiline = true;
+            this.textRunAfterLaunch.Name = "textRunAfterLaunch";
+            this.textRunAfterLaunch.Size = new System.Drawing.Size(335, 51);
+            this.textRunAfterLaunch.TabIndex = 44;
+            this.textRunAfterLaunch.WordWrap = false;
+            // 
+            // label28
+            // 
+            this.label28.AutoSize = true;
+            this.label28.Font = new System.Drawing.Font("Segoe UI Semibold", 9F, System.Drawing.FontStyle.Bold);
+            this.label28.Location = new System.Drawing.Point(13, 149);
+            this.label28.Name = "label28";
+            this.label28.Size = new System.Drawing.Size(111, 15);
+            this.label28.TabIndex = 45;
+            this.label28.Text = "Run after launching";
+            // 
+            // labelVolume
+            // 
+            this.labelVolume.AutoSize = true;
+            this.labelVolume.Font = new System.Drawing.Font("Segoe UI Semilight", 8.25F);
+            this.labelVolume.Location = new System.Drawing.Point(199, 119);
+            this.labelVolume.Name = "labelVolume";
+            this.labelVolume.Size = new System.Drawing.Size(32, 13);
+            this.labelVolume.TabIndex = 43;
+            this.labelVolume.Text = "100%";
+            // 
+            // label20
+            // 
+            this.label20.AutoSize = true;
+            this.label20.Font = new System.Drawing.Font("Segoe UI Semilight", 8.25F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+            this.label20.Location = new System.Drawing.Point(14, 97);
+            this.label20.Name = "label20";
+            this.label20.Size = new System.Drawing.Size(209, 13);
+            this.label20.TabIndex = 40;
+            this.label20.Text = "Sets the volume in Windows for the process";
+            // 
+            // label21
+            // 
+            this.label21.AutoSize = true;
+            this.label21.Font = new System.Drawing.Font("Segoe UI Semibold", 9F, System.Drawing.FontStyle.Bold);
+            this.label21.Location = new System.Drawing.Point(13, 81);
+            this.label21.Name = "label21";
+            this.label21.Size = new System.Drawing.Size(48, 15);
+            this.label21.TabIndex = 39;
+            this.label21.Text = "Volume";
+            // 
+            // checkVolume
+            // 
+            this.checkVolume.AutoSize = true;
+            this.checkVolume.Font = new System.Drawing.Font("Segoe UI", 8.25F);
+            this.checkVolume.Location = new System.Drawing.Point(21, 119);
+            this.checkVolume.Name = "checkVolume";
+            this.checkVolume.Size = new System.Drawing.Size(15, 14);
+            this.checkVolume.TabIndex = 38;
+            this.checkVolume.UseVisualStyleBackColor = true;
+            this.checkVolume.CheckedChanged += new System.EventHandler(this.checkVolume_CheckedChanged);
             // 
             // label7
             // 
@@ -413,6 +435,17 @@
             this.label3.Size = new System.Drawing.Size(66, 15);
             this.label3.TabIndex = 20;
             this.label3.Text = "Arguments";
+            // 
+            // sliderVolume
+            // 
+            this.sliderVolume.Enabled = false;
+            this.sliderVolume.Location = new System.Drawing.Point(43, 116);
+            this.sliderVolume.Name = "sliderVolume";
+            this.sliderVolume.Size = new System.Drawing.Size(150, 20);
+            this.sliderVolume.TabIndex = 51;
+            this.sliderVolume.TabStop = false;
+            this.sliderVolume.Value = 1F;
+            this.sliderVolume.ValueChanged += new System.EventHandler<float>(this.sliderVolume_ValueChanged);
             // 
             // panelPasswords
             // 
@@ -632,6 +665,301 @@
             this.label18.TabIndex = 30;
             this.label18.Text = "Font";
             // 
+            // panelUpdates
+            // 
+            this.panelUpdates.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left) 
+            | System.Windows.Forms.AnchorStyles.Right)));
+            this.panelUpdates.Controls.Add(this.labelAutoUpdateDownloadNotificationsConfig);
+            this.panelUpdates.Controls.Add(this.checkAutoUpdateDownloadNotifications);
+            this.panelUpdates.Controls.Add(this.labelVersionUpdate);
+            this.panelUpdates.Controls.Add(this.label25);
+            this.panelUpdates.Controls.Add(this.label24);
+            this.panelUpdates.Controls.Add(this.label23);
+            this.panelUpdates.Controls.Add(this.numericUpdateInterval);
+            this.panelUpdates.Controls.Add(this.label1);
+            this.panelUpdates.Controls.Add(this.checkAutoUpdateDownload);
+            this.panelUpdates.Controls.Add(this.checkAutoUpdate);
+            this.panelUpdates.Controls.Add(this.label4);
+            this.panelUpdates.Controls.Add(this.checkCheckBuildOnLaunch);
+            this.panelUpdates.Controls.Add(this.checkCheckVersionOnStart);
+            this.panelUpdates.Controls.Add(this.label26);
+            this.panelUpdates.Location = new System.Drawing.Point(183, 12);
+            this.panelUpdates.Name = "panelUpdates";
+            this.panelUpdates.Size = new System.Drawing.Size(373, 302);
+            this.panelUpdates.TabIndex = 38;
+            this.panelUpdates.Visible = false;
+            // 
+            // labelAutoUpdateDownloadNotificationsConfig
+            // 
+            this.labelAutoUpdateDownloadNotificationsConfig.AutoSize = true;
+            this.labelAutoUpdateDownloadNotificationsConfig.Cursor = System.Windows.Forms.Cursors.Hand;
+            this.labelAutoUpdateDownloadNotificationsConfig.ForeColor = System.Drawing.Color.FromArgb(((int)(((byte)(49)))), ((int)(((byte)(121)))), ((int)(((byte)(242)))));
+            this.labelAutoUpdateDownloadNotificationsConfig.Location = new System.Drawing.Point(148, 176);
+            this.labelAutoUpdateDownloadNotificationsConfig.Name = "labelAutoUpdateDownloadNotificationsConfig";
+            this.labelAutoUpdateDownloadNotificationsConfig.Size = new System.Drawing.Size(57, 13);
+            this.labelAutoUpdateDownloadNotificationsConfig.TabIndex = 72;
+            this.labelAutoUpdateDownloadNotificationsConfig.Text = "configure";
+            this.labelAutoUpdateDownloadNotificationsConfig.Click += new System.EventHandler(this.labelAutoUpdateDownloadNotificationsConfig_Click);
+            // 
+            // checkAutoUpdateDownloadNotifications
+            // 
+            this.checkAutoUpdateDownloadNotifications.AutoSize = true;
+            this.checkAutoUpdateDownloadNotifications.Enabled = false;
+            this.checkAutoUpdateDownloadNotifications.Location = new System.Drawing.Point(21, 175);
+            this.checkAutoUpdateDownloadNotifications.Name = "checkAutoUpdateDownloadNotifications";
+            this.checkAutoUpdateDownloadNotifications.Size = new System.Drawing.Size(123, 17);
+            this.checkAutoUpdateDownloadNotifications.TabIndex = 71;
+            this.checkAutoUpdateDownloadNotifications.Text = "Show notifications";
+            this.checkAutoUpdateDownloadNotifications.UseVisualStyleBackColor = true;
+            // 
+            // labelVersionUpdate
+            // 
+            this.labelVersionUpdate.AutoSize = true;
+            this.labelVersionUpdate.Cursor = System.Windows.Forms.Cursors.Hand;
+            this.labelVersionUpdate.ForeColor = System.Drawing.Color.FromArgb(((int)(((byte)(49)))), ((int)(((byte)(121)))), ((int)(((byte)(242)))));
+            this.labelVersionUpdate.Location = new System.Drawing.Point(127, 230);
+            this.labelVersionUpdate.Name = "labelVersionUpdate";
+            this.labelVersionUpdate.Size = new System.Drawing.Size(70, 13);
+            this.labelVersionUpdate.TabIndex = 56;
+            this.labelVersionUpdate.Text = "update now";
+            this.labelVersionUpdate.Visible = false;
+            this.labelVersionUpdate.Click += new System.EventHandler(this.labelVersionUpdate_Click);
+            // 
+            // label25
+            // 
+            this.label25.AutoSize = true;
+            this.label25.Font = new System.Drawing.Font("Segoe UI Semilight", 8.25F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+            this.label25.ForeColor = System.Drawing.SystemColors.GrayText;
+            this.label25.Location = new System.Drawing.Point(171, 156);
+            this.label25.Name = "label25";
+            this.label25.Size = new System.Drawing.Size(106, 13);
+            this.label25.TabIndex = 47;
+            this.label25.Text = "(requires asset proxy)";
+            // 
+            // label24
+            // 
+            this.label24.AutoSize = true;
+            this.label24.Font = new System.Drawing.Font("Segoe UI Semilight", 8.25F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+            this.label24.Location = new System.Drawing.Point(14, 80);
+            this.label24.Name = "label24";
+            this.label24.Size = new System.Drawing.Size(240, 13);
+            this.label24.TabIndex = 46;
+            this.label24.Text = "Periodically check for updates at the given interval";
+            // 
+            // label23
+            // 
+            this.label23.AutoSize = true;
+            this.label23.Font = new System.Drawing.Font("Segoe UI", 8.25F);
+            this.label23.Location = new System.Drawing.Point(78, 105);
+            this.label23.Name = "label23";
+            this.label23.Size = new System.Drawing.Size(48, 13);
+            this.label23.TabIndex = 45;
+            this.label23.Text = "minutes";
+            // 
+            // numericUpdateInterval
+            // 
+            this.numericUpdateInterval.Location = new System.Drawing.Point(21, 101);
+            this.numericUpdateInterval.Maximum = new decimal(new int[] {
+            1440,
+            0,
+            0,
+            0});
+            this.numericUpdateInterval.Minimum = new decimal(new int[] {
+            5,
+            0,
+            0,
+            0});
+            this.numericUpdateInterval.Name = "numericUpdateInterval";
+            this.numericUpdateInterval.Size = new System.Drawing.Size(51, 22);
+            this.numericUpdateInterval.TabIndex = 44;
+            this.numericUpdateInterval.Value = new decimal(new int[] {
+            30,
+            0,
+            0,
+            0});
+            // 
+            // label1
+            // 
+            this.label1.AutoSize = true;
+            this.label1.Font = new System.Drawing.Font("Segoe UI Semibold", 9F, System.Drawing.FontStyle.Bold);
+            this.label1.Location = new System.Drawing.Point(13, 64);
+            this.label1.Name = "label1";
+            this.label1.Size = new System.Drawing.Size(236, 15);
+            this.label1.TabIndex = 43;
+            this.label1.Text = "Periodically check for Guild Wars 2 updates";
+            // 
+            // checkAutoUpdateDownload
+            // 
+            this.checkAutoUpdateDownload.AutoSize = true;
+            this.checkAutoUpdateDownload.Font = new System.Drawing.Font("Segoe UI", 8.25F);
+            this.checkAutoUpdateDownload.Location = new System.Drawing.Point(21, 155);
+            this.checkAutoUpdateDownload.Name = "checkAutoUpdateDownload";
+            this.checkAutoUpdateDownload.Size = new System.Drawing.Size(144, 17);
+            this.checkAutoUpdateDownload.TabIndex = 42;
+            this.checkAutoUpdateDownload.Text = "Pre-download updates";
+            this.checkAutoUpdateDownload.UseVisualStyleBackColor = true;
+            this.checkAutoUpdateDownload.CheckedChanged += new System.EventHandler(this.checkAutoUpdateDownload_CheckedChanged);
+            // 
+            // checkAutoUpdate
+            // 
+            this.checkAutoUpdate.AutoSize = true;
+            this.checkAutoUpdate.Font = new System.Drawing.Font("Segoe UI", 8.25F);
+            this.checkAutoUpdate.Location = new System.Drawing.Point(21, 135);
+            this.checkAutoUpdate.Name = "checkAutoUpdate";
+            this.checkAutoUpdate.Size = new System.Drawing.Size(283, 17);
+            this.checkAutoUpdate.TabIndex = 41;
+            this.checkAutoUpdate.Text = "Automatically launch and update when not in use";
+            this.checkAutoUpdate.UseVisualStyleBackColor = true;
+            // 
+            // label4
+            // 
+            this.label4.AutoSize = true;
+            this.label4.Font = new System.Drawing.Font("Segoe UI Semibold", 9F, System.Drawing.FontStyle.Bold);
+            this.label4.Location = new System.Drawing.Point(13, 10);
+            this.label4.Name = "label4";
+            this.label4.Size = new System.Drawing.Size(229, 15);
+            this.label4.TabIndex = 39;
+            this.label4.Text = "Check for Guild Wars 2 updates on launch";
+            // 
+            // checkCheckBuildOnLaunch
+            // 
+            this.checkCheckBuildOnLaunch.AutoSize = true;
+            this.checkCheckBuildOnLaunch.Font = new System.Drawing.Font("Segoe UI", 8.25F);
+            this.checkCheckBuildOnLaunch.Location = new System.Drawing.Point(21, 34);
+            this.checkCheckBuildOnLaunch.Name = "checkCheckBuildOnLaunch";
+            this.checkCheckBuildOnLaunch.Size = new System.Drawing.Size(149, 17);
+            this.checkCheckBuildOnLaunch.TabIndex = 38;
+            this.checkCheckBuildOnLaunch.Text = "Check before launching";
+            this.checkCheckBuildOnLaunch.UseVisualStyleBackColor = true;
+            // 
+            // checkCheckVersionOnStart
+            // 
+            this.checkCheckVersionOnStart.AutoSize = true;
+            this.checkCheckVersionOnStart.Font = new System.Drawing.Font("Segoe UI", 8.25F);
+            this.checkCheckVersionOnStart.Location = new System.Drawing.Point(21, 229);
+            this.checkCheckVersionOnStart.Name = "checkCheckVersionOnStart";
+            this.checkCheckVersionOnStart.Size = new System.Drawing.Size(100, 17);
+            this.checkCheckVersionOnStart.TabIndex = 29;
+            this.checkCheckVersionOnStart.Text = "Check on start";
+            this.checkCheckVersionOnStart.UseVisualStyleBackColor = true;
+            // 
+            // label26
+            // 
+            this.label26.AutoSize = true;
+            this.label26.Font = new System.Drawing.Font("Segoe UI Semibold", 9F, System.Drawing.FontStyle.Bold);
+            this.label26.Location = new System.Drawing.Point(13, 205);
+            this.label26.Name = "label26";
+            this.label26.Size = new System.Drawing.Size(213, 15);
+            this.label26.TabIndex = 30;
+            this.label26.Text = "Periodically check for software updates";
+            // 
+            // sidebarPanel1
+            // 
+            this.sidebarPanel1.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom) 
+            | System.Windows.Forms.AnchorStyles.Left)));
+            this.sidebarPanel1.BackColor = System.Drawing.Color.White;
+            this.sidebarPanel1.BorderColor = System.Drawing.SystemColors.ControlDark;
+            this.sidebarPanel1.Controls.Add(this.buttonUpdates);
+            this.sidebarPanel1.Controls.Add(this.buttonStyle);
+            this.sidebarPanel1.Controls.Add(this.buttonPasswords);
+            this.sidebarPanel1.Controls.Add(this.buttonArguments);
+            this.sidebarPanel1.Controls.Add(this.buttonGeneral);
+            this.sidebarPanel1.Location = new System.Drawing.Point(0, 0);
+            this.sidebarPanel1.Margin = new System.Windows.Forms.Padding(0);
+            this.sidebarPanel1.Name = "sidebarPanel1";
+            this.sidebarPanel1.Size = new System.Drawing.Size(180, 370);
+            this.sidebarPanel1.TabIndex = 25;
+            // 
+            // buttonUpdates
+            // 
+            this.buttonUpdates.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left) 
+            | System.Windows.Forms.AnchorStyles.Right)));
+            this.buttonUpdates.ArrowColor = System.Drawing.SystemColors.Control;
+            this.buttonUpdates.BackColor = System.Drawing.Color.White;
+            this.buttonUpdates.BorderColor = System.Drawing.SystemColors.ControlDark;
+            this.buttonUpdates.Cursor = System.Windows.Forms.Cursors.Hand;
+            this.buttonUpdates.Font = new System.Drawing.Font("Segoe UI", 8.25F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+            this.buttonUpdates.Location = new System.Drawing.Point(0, 200);
+            this.buttonUpdates.Margin = new System.Windows.Forms.Padding(0);
+            this.buttonUpdates.Name = "buttonUpdates";
+            this.buttonUpdates.Selected = false;
+            this.buttonUpdates.SelectedColor = System.Drawing.SystemColors.Control;
+            this.buttonUpdates.Size = new System.Drawing.Size(180, 40);
+            this.buttonUpdates.TabIndex = 7;
+            this.buttonUpdates.Text = "Updates";
+            // 
+            // buttonStyle
+            // 
+            this.buttonStyle.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left) 
+            | System.Windows.Forms.AnchorStyles.Right)));
+            this.buttonStyle.ArrowColor = System.Drawing.SystemColors.Control;
+            this.buttonStyle.BackColor = System.Drawing.Color.White;
+            this.buttonStyle.BorderColor = System.Drawing.SystemColors.ControlDark;
+            this.buttonStyle.Cursor = System.Windows.Forms.Cursors.Hand;
+            this.buttonStyle.Font = new System.Drawing.Font("Segoe UI", 8.25F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+            this.buttonStyle.Location = new System.Drawing.Point(0, 160);
+            this.buttonStyle.Margin = new System.Windows.Forms.Padding(0);
+            this.buttonStyle.Name = "buttonStyle";
+            this.buttonStyle.Selected = false;
+            this.buttonStyle.SelectedColor = System.Drawing.SystemColors.Control;
+            this.buttonStyle.Size = new System.Drawing.Size(180, 40);
+            this.buttonStyle.TabIndex = 6;
+            this.buttonStyle.Text = "Style";
+            // 
+            // buttonPasswords
+            // 
+            this.buttonPasswords.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left) 
+            | System.Windows.Forms.AnchorStyles.Right)));
+            this.buttonPasswords.ArrowColor = System.Drawing.SystemColors.Control;
+            this.buttonPasswords.BackColor = System.Drawing.Color.White;
+            this.buttonPasswords.BorderColor = System.Drawing.SystemColors.ControlDark;
+            this.buttonPasswords.Cursor = System.Windows.Forms.Cursors.Hand;
+            this.buttonPasswords.Font = new System.Drawing.Font("Segoe UI", 8.25F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+            this.buttonPasswords.Location = new System.Drawing.Point(0, 120);
+            this.buttonPasswords.Margin = new System.Windows.Forms.Padding(0);
+            this.buttonPasswords.Name = "buttonPasswords";
+            this.buttonPasswords.Selected = false;
+            this.buttonPasswords.SelectedColor = System.Drawing.SystemColors.Control;
+            this.buttonPasswords.Size = new System.Drawing.Size(180, 40);
+            this.buttonPasswords.TabIndex = 5;
+            this.buttonPasswords.Text = "Passwords";
+            // 
+            // buttonArguments
+            // 
+            this.buttonArguments.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left) 
+            | System.Windows.Forms.AnchorStyles.Right)));
+            this.buttonArguments.ArrowColor = System.Drawing.SystemColors.Control;
+            this.buttonArguments.BackColor = System.Drawing.Color.White;
+            this.buttonArguments.BorderColor = System.Drawing.SystemColors.ControlDark;
+            this.buttonArguments.Cursor = System.Windows.Forms.Cursors.Hand;
+            this.buttonArguments.Font = new System.Drawing.Font("Segoe UI", 8.25F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+            this.buttonArguments.Location = new System.Drawing.Point(0, 80);
+            this.buttonArguments.Margin = new System.Windows.Forms.Padding(0);
+            this.buttonArguments.Name = "buttonArguments";
+            this.buttonArguments.Selected = false;
+            this.buttonArguments.SelectedColor = System.Drawing.SystemColors.Control;
+            this.buttonArguments.Size = new System.Drawing.Size(180, 40);
+            this.buttonArguments.TabIndex = 4;
+            this.buttonArguments.Text = "Launch options";
+            // 
+            // buttonGeneral
+            // 
+            this.buttonGeneral.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left) 
+            | System.Windows.Forms.AnchorStyles.Right)));
+            this.buttonGeneral.ArrowColor = System.Drawing.SystemColors.Control;
+            this.buttonGeneral.BackColor = System.Drawing.Color.White;
+            this.buttonGeneral.BorderColor = System.Drawing.SystemColors.ControlDark;
+            this.buttonGeneral.Cursor = System.Windows.Forms.Cursors.Hand;
+            this.buttonGeneral.Font = new System.Drawing.Font("Segoe UI", 8.25F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+            this.buttonGeneral.Location = new System.Drawing.Point(0, 40);
+            this.buttonGeneral.Margin = new System.Windows.Forms.Padding(0);
+            this.buttonGeneral.Name = "buttonGeneral";
+            this.buttonGeneral.Selected = false;
+            this.buttonGeneral.SelectedColor = System.Drawing.SystemColors.Control;
+            this.buttonGeneral.Size = new System.Drawing.Size(180, 40);
+            this.buttonGeneral.TabIndex = 3;
+            this.buttonGeneral.Text = "General";
+            // 
             // formSettings
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
@@ -640,10 +968,11 @@
             this.Controls.Add(this.buttonCancel);
             this.Controls.Add(this.buttonOK);
             this.Controls.Add(this.sidebarPanel1);
-            this.Controls.Add(this.panelGeneral);
-            this.Controls.Add(this.panelStyle);
+            this.Controls.Add(this.panelUpdates);
             this.Controls.Add(this.panelPasswords);
             this.Controls.Add(this.panelArguments);
+            this.Controls.Add(this.panelGeneral);
+            this.Controls.Add(this.panelStyle);
             this.Font = new System.Drawing.Font("Segoe UI", 8.25F);
             this.FormBorderStyle = System.Windows.Forms.FormBorderStyle.FixedDialog;
             this.Icon = global::Gw2Launcher.Properties.Resources.Gw2;
@@ -654,7 +983,6 @@
             this.ShowInTaskbar = false;
             this.StartPosition = System.Windows.Forms.FormStartPosition.CenterParent;
             this.Load += new System.EventHandler(this.formSettings_Load);
-            this.sidebarPanel1.ResumeLayout(false);
             this.panelGeneral.ResumeLayout(false);
             this.panelGeneral.PerformLayout();
             this.panelArguments.ResumeLayout(false);
@@ -663,6 +991,10 @@
             this.panelPasswords.PerformLayout();
             this.panelStyle.ResumeLayout(false);
             this.panelStyle.PerformLayout();
+            this.panelUpdates.ResumeLayout(false);
+            this.panelUpdates.PerformLayout();
+            ((System.ComponentModel.ISupportInitialize)(this.numericUpdateInterval)).EndInit();
+            this.sidebarPanel1.ResumeLayout(false);
             this.ResumeLayout(false);
 
         }
@@ -687,9 +1019,6 @@
         private System.Windows.Forms.Label label10;
         private System.Windows.Forms.Panel panelArguments;
         private System.Windows.Forms.Panel panelPasswords;
-        private System.Windows.Forms.Label label1;
-        private System.Windows.Forms.Label label4;
-        private System.Windows.Forms.CheckBox checkCheckBuildOnLaunch;
         private System.Windows.Forms.Label label7;
         private System.Windows.Forms.TextBox textArguments;
         private System.Windows.Forms.Label label3;
@@ -714,5 +1043,32 @@
         private System.Windows.Forms.Button buttonFontDescriptors;
         private System.Windows.Forms.Button buttonFontTitle;
         private System.Windows.Forms.Label labelFontRestoreDefaults;
+        private System.Windows.Forms.Label label20;
+        private System.Windows.Forms.Label label21;
+        private System.Windows.Forms.CheckBox checkVolume;
+        private System.Windows.Forms.Label labelVolume;
+        private Controls.SidebarButton buttonUpdates;
+        private System.Windows.Forms.Panel panelUpdates;
+        private System.Windows.Forms.Label label25;
+        private System.Windows.Forms.Label label24;
+        private System.Windows.Forms.Label label23;
+        private System.Windows.Forms.NumericUpDown numericUpdateInterval;
+        private System.Windows.Forms.Label label1;
+        private System.Windows.Forms.CheckBox checkAutoUpdateDownload;
+        private System.Windows.Forms.CheckBox checkAutoUpdate;
+        private System.Windows.Forms.Label label4;
+        private System.Windows.Forms.CheckBox checkCheckBuildOnLaunch;
+        private System.Windows.Forms.CheckBox checkCheckVersionOnStart;
+        private System.Windows.Forms.Label label26;
+        private System.Windows.Forms.Label label31;
+        private System.Windows.Forms.Label label30;
+        private System.Windows.Forms.Label label29;
+        private System.Windows.Forms.Label label27;
+        private System.Windows.Forms.Label label28;
+        private System.Windows.Forms.Label labelVersionUpdate;
+        private Controls.FlatSlider sliderVolume;
+        private System.Windows.Forms.CheckBox checkAutoUpdateDownloadNotifications;
+        private System.Windows.Forms.Label labelAutoUpdateDownloadNotificationsConfig;
+        private Controls.ExtendableTextBox textRunAfterLaunch;
     }
 }

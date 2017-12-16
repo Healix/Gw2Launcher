@@ -70,6 +70,18 @@ namespace Gw2Launcher.UI.Controls
             this.Disposed += AccountGridButton_Disposed;
         }
 
+        protected override void Dispose(bool disposing)
+        {
+            if (disposing)
+            {
+                pen.Dispose();
+                brush.Dispose();
+                if (components != null)
+                    components.Dispose();
+            }
+            base.Dispose(disposing);
+        }
+
         protected void ResizeLabels(Graphics g)
         {
             fontSmallHeight = (ushort)(fontSmall.GetHeight(g) + 0.5f);
@@ -216,10 +228,13 @@ namespace Gw2Launcher.UI.Controls
                     return;
                 }
 
-                if (!this.IsDisposed && this.Visible)
+                if (this.IsDisposed)
                 {
-                    this.Invalidate();
+                    cancelRefresh = null;
+                    return;
                 }
+                else if (this.Visible)
+                    this.Invalidate();
             }
             while (true);
         }

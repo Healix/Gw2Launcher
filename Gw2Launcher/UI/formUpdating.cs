@@ -742,9 +742,10 @@ namespace Gw2Launcher.UI
             if (!isComplete && remaining != 0)
             {
                 result = DialogResult.Abort;
-                Client.Launcher.CancelPendingLaunches();
                 if (remaining != total)
-                    Client.Launcher.KillActiveLaunches();
+                    Client.Launcher.CancelAndKillActiveLaunches();
+                else
+                    Client.Launcher.CancelPendingLaunches();
             }
 
             this.DialogResult = result;
@@ -755,8 +756,9 @@ namespace Gw2Launcher.UI
             labelAbort.Enabled = false;
             labelAbort.ForeColor = SystemColors.GrayText;
             this.result = DialogResult.Abort;
-            Client.Launcher.CancelPendingLaunches();
-            Client.Launcher.KillActiveLaunches();
+            //Client.Launcher.CancelPendingLaunches();
+            //Client.Launcher.KillActiveLaunches();
+            Client.Launcher.CancelAndKillActiveLaunches();
         }
 
         private void formUpdating_Load(object sender, EventArgs e)

@@ -55,17 +55,18 @@ namespace Gw2Launcher.Client
             /// <summary>
             /// Watches the process and reports when the DX window is created
             /// </summary>
-            public WindowWatcher(Account account, Process p, bool watchBounds)
+            public WindowWatcher(Account account, Process p, bool watchBounds, string args)
             {
                 this.process = p;
                 this.Account = account;
                 this.watchBounds = watchBounds;
+                this.Args = args;
             }
 
             public void Start()
             {
                 if (watcher == null)
-                    watcher = Task.Factory.StartNew(WatchWindow, TaskCreationOptions.LongRunning);
+                    watcher = Task.Factory.StartNew(WatchWindow2, TaskCreationOptions.LongRunning);
             }
 
             public Process Process
@@ -77,6 +78,12 @@ namespace Gw2Launcher.Client
             }
 
             public Account Account
+            {
+                get;
+                private set;
+            }
+
+            public string Args
             {
                 get;
                 private set;
@@ -96,6 +103,18 @@ namespace Gw2Launcher.Client
                 }
 
                 return null;
+            }
+
+            private void WatchWindow2()
+            {
+                try
+                {
+                    WatchWindow();
+                }
+                catch (Exception e)
+                {
+                    Util.Logging.Log(e);
+                }
             }
 
             private void WatchWindow()
@@ -155,6 +174,7 @@ namespace Gw2Launcher.Client
                     catch (Exception e) 
                     {
                         Util.Logging.Log(e);
+                        return;
                     }
 
                     if (handle != IntPtr.Zero)
@@ -177,6 +197,8 @@ namespace Gw2Launcher.Client
 
                                     if (watchBounds)
                                     {
+                                        //hooking location changed event
+
                                         bool hasMessage = false;
                                         NativeMessage message = new NativeMessage();
                                         HandleRef href = new HandleRef();
@@ -185,12 +207,14 @@ namespace Gw2Launcher.Client
                                             delegate(IntPtr hWinEventHook, uint eventType, IntPtr hwnd, int idObject, int idChild, uint dwEventThread, uint dwmsEventTime)
                                             {
                                                 if (idObject == 0)
+                                                {
                                                     hasMessage = true;
+                                                }
                                             });
 
                                         try
                                         {
-                                            _hook = SetWinEventHook(0x800b, 0x800b, IntPtr.Zero, _callback, (uint)process.Id, 0, 0); //0x8004
+                                            _hook = SetWinEventHook(0x800b, 0x800b, IntPtr.Zero, _callback, (uint)process.Id, 0, 0);
                                             var t = DateTime.UtcNow.AddSeconds(30);
                                             do
                                             {
@@ -198,6 +222,7 @@ namespace Gw2Launcher.Client
                                                 Thread.Sleep(100);
                                             }
                                             while (!hasMessage && DateTime.UtcNow < t && !this.process.HasExited);
+
                                             Thread.Sleep(1000);
                                         }
                                         catch (Exception e)
@@ -245,124 +270,54 @@ namespace Gw2Launcher.Client
                         }
                     }
 
-                    Thread.Sleep(100);
+                    Thread.Sleep(500);
                 }
+            }
 
+            /// <summary>
+            /// Attempts to set the volume once available
+            /// </summary>
+            public async void SetVolume(float percent)
+            {
+                DateTime t = DateTime.UtcNow.AddMilliseconds(30000);
+                bool first = false;
 
-                //if (ptr != IntPtr.Zero)
-                //{
-                //    if (!watchBounds)
-                //        return;
+                do
+                {
+                    if (first)
+                        await Task.Delay(1000);
+                    else
+                        first = true;
 
-                //    //GW2 will resize itself to the last saved position while loading
-                //    //attempt to wait for the UI to initialize
+                    int processId;
+                    try
+                    {
+                        processId = this.process.Id;
+                        if (this.process.HasExited)
+                            return;
+                    }
+                    catch
+                    {
+                        return;
+                    }
 
-                //    bool hasMessage = false;
-                //    NativeMessage message = new NativeMessage();
-                //    HandleRef href = new HandleRef();
-                //    IntPtr _hook = IntPtr.Zero;
-                //    WinEventDelegate _callback = new WinEventDelegate(
-                //        delegate(IntPtr hWinEventHook, uint eventType, IntPtr hwnd, int idObject, int idChild, uint dwEventThread, uint dwmsEventTime)
-                //        {
-                //            if (idObject == 0)
-                //                hasMessage = true;
-                //            //Console.WriteLine(eventType.ToString("x") + ", " + idObject.ToString("x") + ", " + idChild.ToString("x"));
-                //        });
+                    var r = await Task.Run<bool>(
+                        delegate
+                        {
+                            try
+                            {
+                                return Windows.Volume.SetVolume(processId, percent);
+                            }
+                            catch
+                            {
+                                return false;
+                            }
+                        });
 
-                //    try
-                //    {
-                //        Console.WriteLine("WindowWatcher: hook message");
-                //        _hook = SetWinEventHook(0x800b, 0x800b, IntPtr.Zero, _callback, (uint)process.Id, 0, 0); //0x8004
-                //        var t = DateTime.UtcNow.AddSeconds(30);
-                //        do
-                //        {
-                //            PeekMessage(out message, href, 0, 0, 0);
-                //            Thread.Sleep(100);
-                //        }
-                //        while (!hasMessage && DateTime.UtcNow < t && !this.process.HasExited);
-                //        Console.WriteLine("WindowWatcher: hasMessage? " + hasMessage + ", exited? " + this.process.HasExited);
-                //        Thread.Sleep(1000);
-                //    }
-                //    catch { }
-                //    finally
-                //    {
-                //        if (_hook != IntPtr.Zero)
-                //            UnhookWinEvent(_hook);
-                //    }
-
-                //    //already exists
-                //    if (WindowChanged != null && !this.process.HasExited)
-                //        WindowChanged(this, ptr);
-                //    return;
-                //}
-
-                //bool hasLaunched = false;
-                //byte count = 0;
-
-                //while (this.watcher != null)
-                //{
-                //    Console.WriteLine("WindowWatcher: watching");
-
-                //    try
-                //    {
-                //        if (this.process.HasExited)
-                //            break;
-                //    }
-                //    catch { }
-
-                //    try
-                //    {
-                //        if (!hasLaunched)
-                //        {
-                //            try
-                //            {
-                //                if (!Windows.WindowSize.IsWindow(handle))
-                //                {
-                //                    //waiting for the launcher window to close
-                //                    hasLaunched = true;
-                //                }
-                //                else if (count == 10)
-                //                {
-                //                    //occassionally test to see if it was missed
-                //                    if (Check(process, classCallback, textCallback, out ptr))
-                //                        return;
-                //                    //ptr = Windows.FindWindow.Find(this.process.Id, WINDOW_CLASSNAME);
-                //                    if (ptr != IntPtr.Zero)
-                //                    {
-                //                        if (WindowChanged != null)
-                //                            WindowChanged(this, ptr);
-                //                        return;
-                //                    }
-                //                    count = 0;
-                //                }
-                //                else
-                //                    count++;
-                //            }
-                //            catch
-                //            {
-                //            }
-
-                //            Thread.Sleep(1000);
-                //        }
-                //        else
-                //        {
-                //            if (Check(process, classCallback, textCallback, out ptr))
-                //                return;
-                //            //ptr = Windows.FindWindow.Find(this.process.Id, WINDOW_CLASSNAME);
-                //            if (ptr != IntPtr.Zero)
-                //            {
-                //                if (WindowChanged != null)
-                //                    WindowChanged(this, ptr);
-                //                return;
-                //            }
-                //            Thread.Sleep(1000);
-                //        }
-                //    }
-                //    catch (Exception e)
-                //    {
-                //        Console.WriteLine(e.Message);
-                //    }
-                //}
+                    if (r)
+                        break;
+                }
+                while (DateTime.UtcNow < t);
             }
 
             /// <summary>

@@ -639,5 +639,39 @@ namespace Gw2Launcher.Net
 
             return ips.ToArray();
         }
+
+        public static HashSet<IPAddress> GetHostAddresses(string host, IEnumerable<IPAddress> servers)
+        {
+            HashSet<IPAddress> ips = new HashSet<IPAddress>();
+            ParallelOptions po = new ParallelOptions()
+            {
+                MaxDegreeOfParallelism = 3
+            };
+
+            Parallel.ForEach<IPAddress>(servers, po,
+                delegate(IPAddress ip)
+                {
+                    try
+                    {
+                        IPAddress[] _ips;
+                        if (IPAddress.IsLoopback(ip))
+                            _ips = GetHostAddresses(host);
+                        else
+                            _ips = GetHostAddresses(host, ip);
+
+                        lock (ips)
+                        {
+                            foreach (var _ip in _ips)
+                                ips.Add(_ip);
+                        }
+                    }
+                    catch (Exception e)
+                    {
+                        Util.Logging.Log(e);
+                    }
+                });
+
+            return ips;
+        }
     }
 }

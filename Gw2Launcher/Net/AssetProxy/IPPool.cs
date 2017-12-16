@@ -22,7 +22,7 @@ namespace Gw2Launcher.Net.AssetProxy
         private Dictionary<IPAddress, Sample> samples;
         private Sample[] sorted;
         private DateTime reset;
-        
+
         public IPPool(IPAddress[] ips)
         {
             this.samples = new Dictionary<IPAddress, Sample>(ips.Length);

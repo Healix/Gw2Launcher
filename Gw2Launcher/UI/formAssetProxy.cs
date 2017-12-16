@@ -14,6 +14,11 @@ namespace Gw2Launcher.UI
 {
     public partial class formAssetProxy : Form
     {
+        private const int SPEED_LIMIT_MIN_0 = 102400;
+        private const int SPEED_LIMIT_MAX_0 = 1048576 - SPEED_LIMIT_MIN_0;
+        private const int SPEED_LIMIT_MIN_1 = 1048576;
+        private const int SPEED_LIMIT_MAX_1 = 10485760 - SPEED_LIMIT_MIN_1;
+
         private static Thread threadDelete;
 
         private readonly string PATH_TEMP;
@@ -24,6 +29,7 @@ namespace Gw2Launcher.UI
         private string lastRequest;
         private CancellationTokenSource cancelToken;
         private long cacheStorage;
+        private Net.AssetProxy.Cache.PurgeProgressEventArgs purgeProgress;
 
         private class DataRecord
         {
@@ -71,10 +77,13 @@ namespace Gw2Launcher.UI
 
             bool isEnabled = Net.AssetProxy.ServerController.Enabled;
 
-            UpdateStatus();
-
             checkEnabled.Checked = isEnabled;
             checkEnabled.CheckedChanged += checkEnabled_CheckedChanged;
+
+            PatchingSpeedLimit_ValueChanged(Settings.PatchingSpeedLimit, null);
+            PatchingUseHttps_ValueChanged(Settings.PatchingUseHttps, null);
+
+            UpdateStatus();
 
             this.Shown += formAssetProxy_Shown;
         }
@@ -90,9 +99,29 @@ namespace Gw2Launcher.UI
 
             cacheStorage = Net.AssetProxy.Cache.Bytes;
             Net.AssetProxy.Cache.CacheStorage += Cache_CacheStorage;
+            Net.AssetProxy.Cache.CachePurged += Cache_CachePurged;
+            Net.AssetProxy.Cache.PurgeProgress += Cache_PurgeProgress;
+
+            Settings.PatchingSpeedLimit.ValueChanged += PatchingSpeedLimit_ValueChanged;
+            Settings.PatchingUseHttps.ValueChanged += PatchingUseHttps_ValueChanged;
 
             cancelToken = new CancellationTokenSource();
             UpdateStats(cancelToken.Token);
+        }
+
+        void Cache_PurgeProgress(object sender, Net.AssetProxy.Cache.PurgeProgressEventArgs e)
+        {
+            purgeProgress = e;
+        }
+
+        void Cache_CachePurged(object sender, EventArgs e)
+        {
+            this.Invoke(new MethodInvoker(
+                delegate
+                {
+                    labelCached.Text = Util.Text.FormatBytes(cacheStorage);
+                    labelCached.Enabled = true;
+                }));
         }
 
         void Cache_CacheStorage(long bytes)
@@ -114,6 +143,7 @@ namespace Gw2Launcher.UI
             DateTime nextUpdate = DateTime.UtcNow.AddSeconds(3);
             string dcache = Util.Text.FormatBytes(0), ucache = Util.Text.FormatBytes(0), dscache = "";
             long cacheStorage = -1;
+            int lastPurge = 0;
 
             while (true)
             {
@@ -151,7 +181,28 @@ namespace Gw2Launcher.UI
                     update = true;
                 }
 
-                if (cacheStorage != this.cacheStorage)
+                if (purgeProgress != null)
+                {
+                    if (purgeProgress.purged == purgeProgress.total)
+                    {
+                        lastPurge = 0;
+                        purgeProgress = null;
+                    }
+                    else
+                    {
+                        if (labelCached.Enabled)
+                            labelCached.Enabled = false;
+                        if (lastPurge != 0 || (float)purgeProgress.purged / purgeProgress.total < 0.25f) //only show progress if it'll take more than a few seconds to complete
+                        {
+                            if (lastPurge != purgeProgress.purged)
+                            {
+                                lastPurge = purgeProgress.purged;
+                                labelCached.Text = string.Format("{0:#,##0} of {1:#,##0}", lastPurge, purgeProgress.total);
+                            }
+                        }
+                    }
+                }
+                else if (cacheStorage != this.cacheStorage)
                 {
                     cacheStorage = this.cacheStorage;
                     labelCached.Text = Util.Text.FormatBytes(cacheStorage);
@@ -621,8 +672,59 @@ namespace Gw2Launcher.UI
             checkRecordData.Enabled = checkRecord.Checked;
         }
 
+        void PatchingUseHttps_ValueChanged(object sender, EventArgs e)
+        {
+            if (this.InvokeRequired)
+            {
+                try
+                {
+                    this.Invoke(new MethodInvoker(
+                        delegate
+                        {
+                            PatchingUseHttps_ValueChanged(sender, e);
+                        }));
+                }
+                catch { }
+                return;
+            }
+
+            checkUseHttps.Checked = ((Settings.ISettingValue<bool>)sender).Value;
+        }
+
+        void PatchingSpeedLimit_ValueChanged(object sender, EventArgs e)
+        {
+            if (this.InvokeRequired)
+            {
+                try
+                {
+                    this.Invoke(new MethodInvoker(
+                        delegate
+                        {
+                            PatchingSpeedLimit_ValueChanged(sender, e);
+                        }));
+                }
+                catch { }
+                return;
+            }
+
+            var v = ((Settings.ISettingValue<int>)sender);
+            if (v.HasValue)
+            {
+                checkSpeedLimit.Checked = true;
+                if (v.Value >= SPEED_LIMIT_MIN_1)
+                    sliderSpeedLimit.Value = (float)(v.Value - SPEED_LIMIT_MIN_1) / SPEED_LIMIT_MAX_1 * 0.5f + 0.5f;
+                else
+                    sliderSpeedLimit.Value = (float)(v.Value - SPEED_LIMIT_MIN_0) / SPEED_LIMIT_MAX_0 * 0.5f;
+            }
+            else
+                checkSpeedLimit.Checked = false;
+        }
+
         private void formAssetProxy_FormClosing(object sender, FormClosingEventArgs e)
         {
+            Settings.PatchingSpeedLimit.ValueChanged -= PatchingSpeedLimit_ValueChanged;
+            Settings.PatchingUseHttps.ValueChanged -= PatchingUseHttps_ValueChanged;
+
             if (cancelToken != null)
                 cancelToken.Cancel();
 
@@ -641,6 +743,8 @@ namespace Gw2Launcher.UI
             Net.AssetProxy.ServerController.EnabledChanged -= ServerController_EnabledChanged;
             Net.AssetProxy.ServerController.Created -= ServerController_Created;
             Net.AssetProxy.Cache.CacheStorage -= Cache_CacheStorage;
+            Net.AssetProxy.Cache.CachePurged -= Cache_CachePurged;
+            Net.AssetProxy.Cache.PurgeProgress -= Cache_PurgeProgress;
 
             var t = threadDelete = new Thread(new ThreadStart(DeleteTemp));
             t.Start();
@@ -747,7 +851,90 @@ namespace Gw2Launcher.UI
 
         private void labelCached_Click(object sender, EventArgs e)
         {
+            labelCached.Enabled = false;
             Net.AssetProxy.Cache.Clear();
+        }
+
+        private async Task ShowPanel(Label label, Control panel)
+        {
+            panel.BringToFront();
+            panel.Visible = true;
+            label.Visible = false;
+            panel.Focus();
+
+            var cancel = new System.Threading.CancellationTokenSource();
+            var token = cancel.Token;
+
+            EventHandler visibleChanged = null;
+            visibleChanged = delegate
+            {
+                cancel.Cancel();
+            };
+
+            panel.VisibleChanged += visibleChanged;
+
+            var r = this.RectangleToScreen(panel.Bounds);
+            do
+            {
+                try
+                {
+                    await Task.Delay(500, token);
+                }
+                catch (TaskCanceledException)
+                {
+                    break;
+                }
+            }
+            while (r.Contains(Cursor.Position) || Control.MouseButtons.HasFlag(MouseButtons.Left));
+
+            panel.VisibleChanged -= visibleChanged;
+
+            if (!cancel.IsCancellationRequested)
+            {
+                panel.Visible = false;
+                label.Visible = true;
+            }
+
+            cancel.Dispose();
+        }
+
+        private async void labelAdvanced_Click(object sender, EventArgs e)
+        {
+            await ShowPanel(labelAdvanced, panelAdvanced);
+
+            if (checkSpeedLimit.Checked)
+            {
+                var value = sliderSpeedLimit.Value;
+                if (value >= 0.5f)
+                    Settings.PatchingSpeedLimit.Value = SPEED_LIMIT_MIN_1 + (int)(SPEED_LIMIT_MAX_1 * (value - 0.5f) / 0.5f + 0.5f);
+                else
+                    Settings.PatchingSpeedLimit.Value = SPEED_LIMIT_MIN_0 + (int)(SPEED_LIMIT_MAX_0 * value / 0.5f + 0.5f);
+            }
+            else
+                Settings.PatchingSpeedLimit.Clear();
+
+            Settings.PatchingUseHttps.Value = checkUseHttps.Checked;
+        }
+
+        private void checkUseHttps_Click(object sender, EventArgs e)
+        {
+            if (checkUseHttps.Checked)
+            {
+                MessageBox.Show(this, "Downloading patches over an encrypted connection is not officially supported.\n\nAvailability will vary by server.", "Warning", MessageBoxButtons.OK, MessageBoxIcon.Exclamation);
+            }
+        }
+
+        private void sliderSpeedLimit_ValueChanged(object sender, float e)
+        {
+            if (e >= 0.5f)
+                labelSpeedLimit.Text = Util.Text.FormatBytes(SPEED_LIMIT_MIN_1 + (int)(SPEED_LIMIT_MAX_1 * (e - 0.5f) / 0.5f + 0.5f)) + "/s";
+            else
+                labelSpeedLimit.Text = Util.Text.FormatBytes(SPEED_LIMIT_MIN_0 + (int)(SPEED_LIMIT_MAX_0 * e / 0.5f + 0.5f)) + "/s";
+        }
+
+        private void checkSpeedLimit_CheckedChanged(object sender, EventArgs e)
+        {
+            sliderSpeedLimit.Enabled = checkSpeedLimit.Checked;
         }
     }
 }

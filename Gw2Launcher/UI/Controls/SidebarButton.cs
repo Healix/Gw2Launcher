@@ -35,6 +35,17 @@ namespace Gw2Launcher.UI.Controls
             penBorder = new Pen(new SolidBrush(SystemColors.WindowFrame));
         }
 
+        protected override void Dispose(bool disposing)
+        {
+            if (disposing)
+            {
+                penBorder.Dispose();
+                if (components != null)
+                    components.Dispose();
+            }
+            base.Dispose(disposing);
+        }
+
         public Color ArrowColor
         {
             get

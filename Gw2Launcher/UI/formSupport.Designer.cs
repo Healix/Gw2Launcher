@@ -28,12 +28,13 @@
         /// </summary>
         private void InitializeComponent()
         {
-            System.Windows.Forms.DataGridViewCellStyle dataGridViewCellStyle3 = new System.Windows.Forms.DataGridViewCellStyle();
-            System.Windows.Forms.DataGridViewCellStyle dataGridViewCellStyle1 = new System.Windows.Forms.DataGridViewCellStyle();
-            System.Windows.Forms.DataGridViewCellStyle dataGridViewCellStyle2 = new System.Windows.Forms.DataGridViewCellStyle();
-            System.Windows.Forms.DataGridViewCellStyle dataGridViewCellStyle6 = new System.Windows.Forms.DataGridViewCellStyle();
-            System.Windows.Forms.DataGridViewCellStyle dataGridViewCellStyle4 = new System.Windows.Forms.DataGridViewCellStyle();
-            System.Windows.Forms.DataGridViewCellStyle dataGridViewCellStyle5 = new System.Windows.Forms.DataGridViewCellStyle();
+            System.Windows.Forms.DataGridViewCellStyle dataGridViewCellStyle11 = new System.Windows.Forms.DataGridViewCellStyle();
+            System.Windows.Forms.DataGridViewCellStyle dataGridViewCellStyle8 = new System.Windows.Forms.DataGridViewCellStyle();
+            System.Windows.Forms.DataGridViewCellStyle dataGridViewCellStyle9 = new System.Windows.Forms.DataGridViewCellStyle();
+            System.Windows.Forms.DataGridViewCellStyle dataGridViewCellStyle10 = new System.Windows.Forms.DataGridViewCellStyle();
+            System.Windows.Forms.DataGridViewCellStyle dataGridViewCellStyle14 = new System.Windows.Forms.DataGridViewCellStyle();
+            System.Windows.Forms.DataGridViewCellStyle dataGridViewCellStyle12 = new System.Windows.Forms.DataGridViewCellStyle();
+            System.Windows.Forms.DataGridViewCellStyle dataGridViewCellStyle13 = new System.Windows.Forms.DataGridViewCellStyle();
             this.buttonCancel = new System.Windows.Forms.Button();
             this.buttonOK = new System.Windows.Forms.Button();
             this.panelDiagnostics = new System.Windows.Forms.Panel();
@@ -61,6 +62,9 @@
             this.checkCleanBin = new System.Windows.Forms.CheckBox();
             this.checkCleanEverything = new System.Windows.Forms.CheckBox();
             this.panelAuthentication = new System.Windows.Forms.Panel();
+            this.copyLogin = new Gw2Launcher.UI.Controls.CopyButton();
+            this.arrowLoginExpand = new Gw2Launcher.UI.Controls.ArrowButton();
+            this.labelLoginServerDns = new System.Windows.Forms.Label();
             this.labelLoginServerNoIPs = new System.Windows.Forms.Label();
             this.progressLoginServer = new System.Windows.Forms.ProgressBar();
             this.buttonLoginServerLookup = new System.Windows.Forms.Button();
@@ -68,11 +72,14 @@
             this.columnLoginServerEnable = new System.Windows.Forms.DataGridViewCheckBoxColumn();
             this.columnLoginServer = new System.Windows.Forms.DataGridViewTextBoxColumn();
             this.columnLoginServerRegion = new System.Windows.Forms.DataGridViewTextBoxColumn();
+            this.columnLoginServerResponseTime = new System.Windows.Forms.DataGridViewTextBoxColumn();
             this.columnLoginServerPing = new System.Windows.Forms.DataGridViewTextBoxColumn();
             this.columnLoginServerFill = new System.Windows.Forms.DataGridViewTextBoxColumn();
             this.label6 = new System.Windows.Forms.Label();
             this.label8 = new System.Windows.Forms.Label();
             this.panelPatching = new System.Windows.Forms.Panel();
+            this.copyAsset = new Gw2Launcher.UI.Controls.CopyButton();
+            this.arrowAssetExpand = new Gw2Launcher.UI.Controls.ArrowButton();
             this.labelPatchServerNoIPs = new System.Windows.Forms.Label();
             this.labelPatchServerDns = new System.Windows.Forms.Label();
             this.buttonPatchServerLookup = new System.Windows.Forms.Button();
@@ -412,6 +419,9 @@
             // 
             this.panelAuthentication.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left) 
             | System.Windows.Forms.AnchorStyles.Right)));
+            this.panelAuthentication.Controls.Add(this.copyLogin);
+            this.panelAuthentication.Controls.Add(this.arrowLoginExpand);
+            this.panelAuthentication.Controls.Add(this.labelLoginServerDns);
             this.panelAuthentication.Controls.Add(this.labelLoginServerNoIPs);
             this.panelAuthentication.Controls.Add(this.progressLoginServer);
             this.panelAuthentication.Controls.Add(this.buttonLoginServerLookup);
@@ -424,10 +434,44 @@
             this.panelAuthentication.TabIndex = 36;
             this.panelAuthentication.Visible = false;
             // 
+            // copyLogin
+            // 
+            this.copyLogin.Cursor = System.Windows.Forms.Cursors.Hand;
+            this.copyLogin.Location = new System.Drawing.Point(349, 122);
+            this.copyLogin.Name = "copyLogin";
+            this.copyLogin.Size = new System.Drawing.Size(16, 16);
+            this.copyLogin.TabIndex = 58;
+            this.copyLogin.Tooltip = "Copy to clipboard";
+            this.copyLogin.Visible = false;
+            this.copyLogin.Click += new System.EventHandler(this.copyLogin_Click);
+            // 
+            // arrowLoginExpand
+            // 
+            this.arrowLoginExpand.Cursor = System.Windows.Forms.Cursors.Hand;
+            this.arrowLoginExpand.Direction = Gw2Launcher.UI.Controls.ArrowButton.ArrowDirection.Right;
+            this.arrowLoginExpand.Location = new System.Drawing.Point(353, 102);
+            this.arrowLoginExpand.Name = "arrowLoginExpand";
+            this.arrowLoginExpand.Size = new System.Drawing.Size(6, 11);
+            this.arrowLoginExpand.TabIndex = 57;
+            this.arrowLoginExpand.Visible = false;
+            this.arrowLoginExpand.Click += new System.EventHandler(this.arrowLoginExpand_Click);
+            // 
+            // labelLoginServerDns
+            // 
+            this.labelLoginServerDns.AutoSize = true;
+            this.labelLoginServerDns.Cursor = System.Windows.Forms.Cursors.Hand;
+            this.labelLoginServerDns.ForeColor = System.Drawing.Color.FromArgb(((int)(((byte)(49)))), ((int)(((byte)(121)))), ((int)(((byte)(242)))));
+            this.labelLoginServerDns.Location = new System.Drawing.Point(105, 64);
+            this.labelLoginServerDns.Name = "labelLoginServerDns";
+            this.labelLoginServerDns.Size = new System.Drawing.Size(82, 13);
+            this.labelLoginServerDns.TabIndex = 55;
+            this.labelLoginServerDns.Text = "configure DNS";
+            this.labelLoginServerDns.Click += new System.EventHandler(this.labelLoginServerDns_Click);
+            // 
             // labelLoginServerNoIPs
             // 
             this.labelLoginServerNoIPs.AutoSize = true;
-            this.labelLoginServerNoIPs.Location = new System.Drawing.Point(129, 161);
+            this.labelLoginServerNoIPs.Location = new System.Drawing.Point(129, 174);
             this.labelLoginServerNoIPs.Name = "labelLoginServerNoIPs";
             this.labelLoginServerNoIPs.Size = new System.Drawing.Size(120, 13);
             this.labelLoginServerNoIPs.TabIndex = 54;
@@ -436,17 +480,18 @@
             // 
             // progressLoginServer
             // 
-            this.progressLoginServer.Location = new System.Drawing.Point(110, 47);
+            this.progressLoginServer.Location = new System.Drawing.Point(110, 60);
             this.progressLoginServer.Name = "progressLoginServer";
             this.progressLoginServer.Size = new System.Drawing.Size(144, 21);
             this.progressLoginServer.Style = System.Windows.Forms.ProgressBarStyle.Continuous;
             this.progressLoginServer.TabIndex = 53;
             this.progressLoginServer.Visible = false;
+            this.progressLoginServer.VisibleChanged += new System.EventHandler(this.progressLoginServer_VisibleChanged);
             // 
             // buttonLoginServerLookup
             // 
             this.buttonLoginServerLookup.Font = new System.Drawing.Font("Segoe UI", 8.25F);
-            this.buttonLoginServerLookup.Location = new System.Drawing.Point(20, 46);
+            this.buttonLoginServerLookup.Location = new System.Drawing.Point(20, 59);
             this.buttonLoginServerLookup.Name = "buttonLoginServerLookup";
             this.buttonLoginServerLookup.Size = new System.Drawing.Size(74, 23);
             this.buttonLoginServerLookup.TabIndex = 51;
@@ -469,25 +514,26 @@
             this.columnLoginServerEnable,
             this.columnLoginServer,
             this.columnLoginServerRegion,
+            this.columnLoginServerResponseTime,
             this.columnLoginServerPing,
             this.columnLoginServerFill});
-            dataGridViewCellStyle3.Alignment = System.Windows.Forms.DataGridViewContentAlignment.MiddleLeft;
-            dataGridViewCellStyle3.BackColor = System.Drawing.SystemColors.Control;
-            dataGridViewCellStyle3.Font = new System.Drawing.Font("Segoe UI", 8.25F);
-            dataGridViewCellStyle3.ForeColor = System.Drawing.SystemColors.ControlText;
-            dataGridViewCellStyle3.SelectionBackColor = System.Drawing.SystemColors.Highlight;
-            dataGridViewCellStyle3.SelectionForeColor = System.Drawing.SystemColors.HighlightText;
-            dataGridViewCellStyle3.WrapMode = System.Windows.Forms.DataGridViewTriState.False;
-            this.gridLoginServers.DefaultCellStyle = dataGridViewCellStyle3;
+            dataGridViewCellStyle11.Alignment = System.Windows.Forms.DataGridViewContentAlignment.MiddleLeft;
+            dataGridViewCellStyle11.BackColor = System.Drawing.SystemColors.Control;
+            dataGridViewCellStyle11.Font = new System.Drawing.Font("Segoe UI", 8.25F);
+            dataGridViewCellStyle11.ForeColor = System.Drawing.SystemColors.ControlText;
+            dataGridViewCellStyle11.SelectionBackColor = System.Drawing.SystemColors.Highlight;
+            dataGridViewCellStyle11.SelectionForeColor = System.Drawing.SystemColors.HighlightText;
+            dataGridViewCellStyle11.WrapMode = System.Windows.Forms.DataGridViewTriState.False;
+            this.gridLoginServers.DefaultCellStyle = dataGridViewCellStyle11;
             this.gridLoginServers.EditMode = System.Windows.Forms.DataGridViewEditMode.EditProgrammatically;
-            this.gridLoginServers.Location = new System.Drawing.Point(21, 85);
+            this.gridLoginServers.Location = new System.Drawing.Point(21, 98);
             this.gridLoginServers.MultiSelect = false;
             this.gridLoginServers.Name = "gridLoginServers";
             this.gridLoginServers.ReadOnly = true;
             this.gridLoginServers.RowHeadersVisible = false;
             this.gridLoginServers.ScrollBars = System.Windows.Forms.ScrollBars.Vertical;
             this.gridLoginServers.SelectionMode = System.Windows.Forms.DataGridViewSelectionMode.FullRowSelect;
-            this.gridLoginServers.Size = new System.Drawing.Size(326, 196);
+            this.gridLoginServers.Size = new System.Drawing.Size(326, 183);
             this.gridLoginServers.TabIndex = 52;
             this.gridLoginServers.Visible = false;
             this.gridLoginServers.CellContentClick += new System.Windows.Forms.DataGridViewCellEventHandler(this.gridLoginServers_CellContentClick);
@@ -510,17 +556,28 @@
             // 
             // columnLoginServerRegion
             // 
-            dataGridViewCellStyle1.Alignment = System.Windows.Forms.DataGridViewContentAlignment.MiddleCenter;
-            this.columnLoginServerRegion.DefaultCellStyle = dataGridViewCellStyle1;
-            this.columnLoginServerRegion.HeaderText = "Region";
+            dataGridViewCellStyle8.Alignment = System.Windows.Forms.DataGridViewContentAlignment.MiddleCenter;
+            this.columnLoginServerRegion.DefaultCellStyle = dataGridViewCellStyle8;
+            this.columnLoginServerRegion.HeaderText = "";
             this.columnLoginServerRegion.Name = "columnLoginServerRegion";
             this.columnLoginServerRegion.ReadOnly = true;
-            this.columnLoginServerRegion.Width = 70;
+            this.columnLoginServerRegion.ToolTipText = "Region";
+            this.columnLoginServerRegion.Width = 40;
+            // 
+            // columnLoginServerResponseTime
+            // 
+            dataGridViewCellStyle9.Alignment = System.Windows.Forms.DataGridViewContentAlignment.MiddleCenter;
+            this.columnLoginServerResponseTime.DefaultCellStyle = dataGridViewCellStyle9;
+            this.columnLoginServerResponseTime.HeaderText = "Response";
+            this.columnLoginServerResponseTime.Name = "columnLoginServerResponseTime";
+            this.columnLoginServerResponseTime.ReadOnly = true;
+            this.columnLoginServerResponseTime.ToolTipText = "Time to connect";
+            this.columnLoginServerResponseTime.Width = 70;
             // 
             // columnLoginServerPing
             // 
-            dataGridViewCellStyle2.Alignment = System.Windows.Forms.DataGridViewContentAlignment.MiddleCenter;
-            this.columnLoginServerPing.DefaultCellStyle = dataGridViewCellStyle2;
+            dataGridViewCellStyle10.Alignment = System.Windows.Forms.DataGridViewContentAlignment.MiddleCenter;
+            this.columnLoginServerPing.DefaultCellStyle = dataGridViewCellStyle10;
             this.columnLoginServerPing.HeaderText = "Ping";
             this.columnLoginServerPing.Name = "columnLoginServerPing";
             this.columnLoginServerPing.ReadOnly = true;
@@ -541,9 +598,10 @@
             this.label6.Font = new System.Drawing.Font("Segoe UI Semilight", 8.25F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
             this.label6.Location = new System.Drawing.Point(14, 26);
             this.label6.Name = "label6";
-            this.label6.Size = new System.Drawing.Size(198, 13);
+            this.label6.Size = new System.Drawing.Size(331, 26);
             this.label6.TabIndex = 31;
-            this.label6.Text = "Force the use of the selected login server";
+            this.label6.Text = "Force the use of the selected login server. The region must match the \r\nregistrat" +
+    "ion of the account";
             // 
             // label8
             // 
@@ -551,14 +609,16 @@
             this.label8.Font = new System.Drawing.Font("Segoe UI Semibold", 9F, System.Drawing.FontStyle.Bold);
             this.label8.Location = new System.Drawing.Point(13, 10);
             this.label8.Name = "label8";
-            this.label8.Size = new System.Drawing.Size(119, 15);
+            this.label8.Size = new System.Drawing.Size(125, 15);
             this.label8.TabIndex = 30;
-            this.label8.Text = "Authorization servers";
+            this.label8.Text = "Authentication servers";
             // 
             // panelPatching
             // 
             this.panelPatching.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left) 
             | System.Windows.Forms.AnchorStyles.Right)));
+            this.panelPatching.Controls.Add(this.copyAsset);
+            this.panelPatching.Controls.Add(this.arrowAssetExpand);
             this.panelPatching.Controls.Add(this.labelPatchServerNoIPs);
             this.panelPatching.Controls.Add(this.labelPatchServerDns);
             this.panelPatching.Controls.Add(this.buttonPatchServerLookup);
@@ -571,6 +631,28 @@
             this.panelPatching.Size = new System.Drawing.Size(373, 302);
             this.panelPatching.TabIndex = 37;
             this.panelPatching.Visible = false;
+            // 
+            // copyAsset
+            // 
+            this.copyAsset.Cursor = System.Windows.Forms.Cursors.Hand;
+            this.copyAsset.Location = new System.Drawing.Point(349, 122);
+            this.copyAsset.Name = "copyAsset";
+            this.copyAsset.Size = new System.Drawing.Size(16, 16);
+            this.copyAsset.TabIndex = 59;
+            this.copyAsset.Tooltip = "Copy to clipboard";
+            this.copyAsset.Visible = false;
+            this.copyAsset.Click += new System.EventHandler(this.copyAsset_Click);
+            // 
+            // arrowAssetExpand
+            // 
+            this.arrowAssetExpand.Cursor = System.Windows.Forms.Cursors.Hand;
+            this.arrowAssetExpand.Direction = Gw2Launcher.UI.Controls.ArrowButton.ArrowDirection.Right;
+            this.arrowAssetExpand.Location = new System.Drawing.Point(353, 102);
+            this.arrowAssetExpand.Name = "arrowAssetExpand";
+            this.arrowAssetExpand.Size = new System.Drawing.Size(6, 11);
+            this.arrowAssetExpand.TabIndex = 58;
+            this.arrowAssetExpand.Visible = false;
+            this.arrowAssetExpand.Click += new System.EventHandler(this.arrowAssetExpand_Click);
             // 
             // labelPatchServerNoIPs
             // 
@@ -611,10 +693,10 @@
             this.label17.Font = new System.Drawing.Font("Segoe UI Semilight", 8.25F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
             this.label17.Location = new System.Drawing.Point(14, 26);
             this.label17.Name = "label17";
-            this.label17.Size = new System.Drawing.Size(333, 26);
+            this.label17.Size = new System.Drawing.Size(324, 26);
             this.label17.TabIndex = 31;
-            this.label17.Text = "Force the use of the selected server when updating the client. Servers\r\nare not g" +
-    "uaranteed to be available, causing a connection error if used";
+            this.label17.Text = "Force the use of the selected server when updating the client. These\r\nservers are" +
+    " not guaranteed to always be available";
             // 
             // label18
             // 
@@ -644,14 +726,14 @@
             this.columnPatchServerPing,
             this.columnPatchServerStatus,
             this.columnPatchServerFill});
-            dataGridViewCellStyle6.Alignment = System.Windows.Forms.DataGridViewContentAlignment.MiddleLeft;
-            dataGridViewCellStyle6.BackColor = System.Drawing.SystemColors.Control;
-            dataGridViewCellStyle6.Font = new System.Drawing.Font("Segoe UI", 8.25F);
-            dataGridViewCellStyle6.ForeColor = System.Drawing.SystemColors.ControlText;
-            dataGridViewCellStyle6.SelectionBackColor = System.Drawing.SystemColors.Highlight;
-            dataGridViewCellStyle6.SelectionForeColor = System.Drawing.SystemColors.HighlightText;
-            dataGridViewCellStyle6.WrapMode = System.Windows.Forms.DataGridViewTriState.False;
-            this.gridPatchServers.DefaultCellStyle = dataGridViewCellStyle6;
+            dataGridViewCellStyle14.Alignment = System.Windows.Forms.DataGridViewContentAlignment.MiddleLeft;
+            dataGridViewCellStyle14.BackColor = System.Drawing.SystemColors.Control;
+            dataGridViewCellStyle14.Font = new System.Drawing.Font("Segoe UI", 8.25F);
+            dataGridViewCellStyle14.ForeColor = System.Drawing.SystemColors.ControlText;
+            dataGridViewCellStyle14.SelectionBackColor = System.Drawing.SystemColors.Highlight;
+            dataGridViewCellStyle14.SelectionForeColor = System.Drawing.SystemColors.HighlightText;
+            dataGridViewCellStyle14.WrapMode = System.Windows.Forms.DataGridViewTriState.False;
+            this.gridPatchServers.DefaultCellStyle = dataGridViewCellStyle14;
             this.gridPatchServers.EditMode = System.Windows.Forms.DataGridViewEditMode.EditProgrammatically;
             this.gridPatchServers.Location = new System.Drawing.Point(21, 98);
             this.gridPatchServers.MultiSelect = false;
@@ -683,18 +765,18 @@
             // 
             // columnPatchServerResponseTime
             // 
-            dataGridViewCellStyle4.Alignment = System.Windows.Forms.DataGridViewContentAlignment.MiddleCenter;
-            this.columnPatchServerResponseTime.DefaultCellStyle = dataGridViewCellStyle4;
+            dataGridViewCellStyle12.Alignment = System.Windows.Forms.DataGridViewContentAlignment.MiddleCenter;
+            this.columnPatchServerResponseTime.DefaultCellStyle = dataGridViewCellStyle12;
             this.columnPatchServerResponseTime.HeaderText = "Response";
             this.columnPatchServerResponseTime.Name = "columnPatchServerResponseTime";
             this.columnPatchServerResponseTime.ReadOnly = true;
-            this.columnPatchServerResponseTime.ToolTipText = "Web request response time";
+            this.columnPatchServerResponseTime.ToolTipText = "HTTP response time";
             this.columnPatchServerResponseTime.Width = 70;
             // 
             // columnPatchServerPing
             // 
-            dataGridViewCellStyle5.Alignment = System.Windows.Forms.DataGridViewContentAlignment.MiddleCenter;
-            this.columnPatchServerPing.DefaultCellStyle = dataGridViewCellStyle5;
+            dataGridViewCellStyle13.Alignment = System.Windows.Forms.DataGridViewContentAlignment.MiddleCenter;
+            this.columnPatchServerPing.DefaultCellStyle = dataGridViewCellStyle13;
             this.columnPatchServerPing.HeaderText = "Ping";
             this.columnPatchServerPing.Name = "columnPatchServerPing";
             this.columnPatchServerPing.ReadOnly = true;
@@ -901,11 +983,11 @@
             this.Controls.Add(this.buttonCancel);
             this.Controls.Add(this.buttonOK);
             this.Controls.Add(this.sidebarPanel1);
+            this.Controls.Add(this.panelAuthentication);
+            this.Controls.Add(this.panelRepair);
             this.Controls.Add(this.panelDiagnostics);
             this.Controls.Add(this.panelPatchIntercept);
             this.Controls.Add(this.panelPatching);
-            this.Controls.Add(this.panelAuthentication);
-            this.Controls.Add(this.panelRepair);
             this.Font = new System.Drawing.Font("Segoe UI", 8.25F);
             this.FormBorderStyle = System.Windows.Forms.FormBorderStyle.FixedDialog;
             this.Icon = global::Gw2Launcher.Properties.Resources.Gw2;
@@ -915,7 +997,6 @@
             this.ShowIcon = false;
             this.ShowInTaskbar = false;
             this.StartPosition = System.Windows.Forms.FormStartPosition.CenterParent;
-            this.FormClosing += new System.Windows.Forms.FormClosingEventHandler(this.formSupport_FormClosing);
             this.Load += new System.EventHandler(this.formSupport_Load);
             this.panelDiagnostics.ResumeLayout(false);
             this.panelDiagnostics.PerformLayout();
@@ -988,16 +1069,22 @@
         private System.Windows.Forms.Label labelPatchInterceptShowServer;
         private System.Windows.Forms.Label label19;
         private System.Windows.Forms.Label label20;
-        private System.Windows.Forms.DataGridViewCheckBoxColumn columnLoginServerEnable;
-        private System.Windows.Forms.DataGridViewTextBoxColumn columnLoginServer;
-        private System.Windows.Forms.DataGridViewTextBoxColumn columnLoginServerRegion;
-        private System.Windows.Forms.DataGridViewTextBoxColumn columnLoginServerPing;
-        private System.Windows.Forms.DataGridViewTextBoxColumn columnLoginServerFill;
         private System.Windows.Forms.DataGridViewCheckBoxColumn columnPatchServerEnable;
         private System.Windows.Forms.DataGridViewTextBoxColumn columnPatchServer;
         private System.Windows.Forms.DataGridViewTextBoxColumn columnPatchServerResponseTime;
         private System.Windows.Forms.DataGridViewTextBoxColumn columnPatchServerPing;
         private System.Windows.Forms.DataGridViewTextBoxColumn columnPatchServerStatus;
         private System.Windows.Forms.DataGridViewTextBoxColumn columnPatchServerFill;
+        private System.Windows.Forms.Label labelLoginServerDns;
+        private Controls.ArrowButton arrowLoginExpand;
+        private Controls.ArrowButton arrowAssetExpand;
+        private System.Windows.Forms.DataGridViewCheckBoxColumn columnLoginServerEnable;
+        private System.Windows.Forms.DataGridViewTextBoxColumn columnLoginServer;
+        private System.Windows.Forms.DataGridViewTextBoxColumn columnLoginServerRegion;
+        private System.Windows.Forms.DataGridViewTextBoxColumn columnLoginServerResponseTime;
+        private System.Windows.Forms.DataGridViewTextBoxColumn columnLoginServerPing;
+        private System.Windows.Forms.DataGridViewTextBoxColumn columnLoginServerFill;
+        private Controls.CopyButton copyLogin;
+        private Controls.CopyButton copyAsset;
     }
 }

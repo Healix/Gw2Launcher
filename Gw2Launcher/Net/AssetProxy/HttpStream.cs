@@ -25,6 +25,7 @@ namespace Gw2Launcher.Net.AssetProxy
         protected bool isContentChunked;
         protected int chunkLength;
         protected int chunkBytesRemaining;
+        protected int headerLength;
 
         protected Stream inner;
 
@@ -74,9 +75,9 @@ namespace Gw2Launcher.Net.AssetProxy
                     else
                         return HttpRequestHeader.Create(command, headers);
                 }
-                catch (Exception e)
+                catch
                 {
-                    throw e;
+                    throw;
                 }
                 finally
                 {
@@ -327,12 +328,311 @@ namespace Gw2Launcher.Net.AssetProxy
 
         #endregion HttpHeader
 
+        private class ContentStream : Stream
+        {
+            private HttpStream inner;
+            private long positionStart, position, length;
+
+            public ContentStream(HttpStream stream)
+                : base()
+            {
+                this.inner = stream;
+                this.positionStart = stream.CanSeek ? stream.Position : 0;
+                this.position = 0;
+
+                if (stream.contentLength != -1)
+                    this.length = stream.contentLength;
+                else if (stream.CanSeek)
+                    SeekLength();
+                else
+                    this.length = -1;
+            }
+
+            public override bool CanRead
+            {
+                get 
+                {
+                    return inner.CanRead;
+                }
+            }
+
+            public override bool CanSeek
+            {
+                get 
+                {
+                    return inner.CanSeek;
+                }
+            }
+
+            public override bool CanWrite
+            {
+                get 
+                {
+                    return false;
+                }
+            }
+
+            public override void Flush()
+            {
+                inner.Flush();
+            }
+
+            public override long Length
+            {
+                get 
+                {
+                    return this.length;
+                }
+            }
+
+            public override long Position
+            {
+                get
+                {
+                    return position;
+                }
+                set
+                {
+                    if (position > length || position < 0)
+                        throw new EndOfStreamException();
+                    position = value;
+
+                    if (inner.isContentChunked)
+                    {
+                        SeekToPosition(value);
+                    }
+                    else
+                    {
+                        inner.Position = positionStart + position;
+                        inner.contentBytesRead = position;
+                    }
+                }
+            }
+
+            private void SeekToPosition(long position)
+            {
+                //seek through the chunk headers to find the content position
+
+                inner.Position = positionStart;
+                this.position = 0;
+
+                long contentBytes = 0;
+                byte[] buffer = new byte[20];
+                int read;
+
+                do
+                {
+                    int chunk;
+                    read = inner.ReadChunkHeader(buffer, 0, out chunk);
+                    if (read > 0)
+                    {
+                        inner.chunkBytesRemaining = chunk;
+                        inner.chunkLength = chunk;
+                        if (chunk == 0)
+                            throw new EndOfStreamException();
+
+                        if (position < contentBytes + chunk)
+                        {
+                            int offset = (int)(position - contentBytes);
+                            inner.chunkBytesRemaining -= offset;
+                            inner.Position += offset;
+                            this.position += offset;
+
+                            break;
+                        }
+                        else
+                        {
+                            contentBytes += chunk;
+                            inner.Position += chunk;
+                            this.position += chunk;
+                        }
+                    }
+                    else
+                        throw new EndOfStreamException();
+                }
+                while (true);
+            }
+
+            private void SeekLength()
+            {
+                //seek through the chunk headers to find the content length
+
+                inner.Position = positionStart;
+                this.position = 0;
+
+                long contentBytes = 0;
+                byte[] buffer = new byte[20];
+                int read;
+
+                do
+                {
+                    int chunk;
+                    read = inner.ReadChunkHeader(buffer, 0, out chunk);
+                    if (read > 0)
+                    {
+                        inner.chunkBytesRemaining = chunk;
+                        inner.chunkLength = chunk;
+                        if (chunk == 0)
+                        {
+                            break;
+                        }
+
+                        contentBytes += chunk;
+                        inner.Position += chunk;
+                        this.position += chunk;
+                    }
+                    else
+                        throw new EndOfStreamException();
+                }
+                while (true);
+
+                this.length = contentBytes;
+
+                inner.Position = positionStart;
+                this.position = 0;
+                inner.chunkBytesRemaining = 0;
+            }
+
+            public override int Read(byte[] buffer, int offset, int count)
+            {
+                int read;
+                if (inner.isContentChunked)
+                {
+                    if (inner.chunkBytesRemaining == -1)
+                        return 0;
+
+                    if (inner.chunkBytesRemaining == 0)
+                    {
+                        int chunk;
+                        read = inner.ReadChunkHeader(buffer, offset, out chunk);
+                        if (read > 0)
+                        {
+                            inner.chunkBytesRemaining = chunk;
+                            inner.chunkLength = chunk;
+                            if (chunk == 0)
+                            {
+                                inner.chunkBytesRemaining = -1;
+                                return 0;
+                            }
+                        }
+                        else
+                            return read;
+                    }
+
+                    if (inner.chunkBytesRemaining < count)
+                        count = inner.chunkBytesRemaining;
+                    read = inner.Read(buffer, offset, count);
+
+                    if (position == length && inner.chunkBytesRemaining == 0)
+                    {
+                        //read final chunk
+                        int chunk;
+                        if (inner.ReadChunkHeader(new byte[20], 0, out chunk) > 0)
+                        {
+                            inner.chunkBytesRemaining = chunk;
+                            inner.chunkLength = chunk;
+                            if (chunk == 0)
+                                inner.chunkBytesRemaining = -1;
+                        }
+                    }
+                }
+                else
+                {
+                    read = inner.Read(buffer,offset,count);
+                }
+                
+                this.position += read;
+
+                return read;
+            }
+
+            public override long Seek(long offset, SeekOrigin origin)
+            {
+                long p;
+                switch (origin)
+                {
+                    case SeekOrigin.Begin:
+                        p = offset;
+                        break;
+                    case SeekOrigin.End:
+                        p = length + offset;
+                        break;
+                    case SeekOrigin.Current:
+                        p = position + offset;
+                        break;
+                    default:
+                        throw new NotSupportedException();
+                }
+
+                if (p < 0 || p > length)
+                    throw new EndOfStreamException();
+
+                this.Position = p;
+
+                return p;
+            }
+
+            public override void SetLength(long value)
+            {
+                throw new NotSupportedException();
+            }
+
+            public override void Write(byte[] buffer, int offset, int count)
+            {
+                throw new NotSupportedException();
+            }
+        }
+
+        /// <summary>
+        /// Processes the stream as HTTP
+        /// </summary>
         public HttpStream(Stream inner)
             : base()
         {
             this.inner = inner;
-
             this.Encoding = System.Text.Encoding.UTF8;
+        }
+
+        /// <summary>
+        /// Processes the stream as HTTPS
+        /// </summary>
+        public HttpStream(Stream inner, string hostname, bool validateCertificates)
+            : base()
+        {
+            SetBaseStream(inner, false, hostname, validateCertificates);
+            this.Encoding = System.Text.Encoding.UTF8;
+        }
+
+        public void SetBaseStream(Stream stream, bool closeExisting)
+        {
+            if (closeExisting && this.inner != null)
+                this.inner.Dispose();
+            this.inner = stream;
+        }
+
+        public void SetBaseStream(Stream stream, bool closeExisting, string hostname, bool validateCertificates)
+        {
+            SslStream ssl = new SslStream(stream, false,
+                new RemoteCertificateValidationCallback(
+                    delegate(object sender, X509Certificate certificate, X509Chain chain, SslPolicyErrors errors)
+                    {
+                        if (errors == SslPolicyErrors.None)
+                            return true;
+                        else
+                            return !validateCertificates;
+                    }));
+
+            try
+            {
+                ssl.AuthenticateAsClient(hostname);
+            }
+            catch
+            {
+                ssl.Dispose();
+                throw;
+            }
+
+            SetBaseStream(ssl, closeExisting);
         }
 
         public Stream BaseStream
@@ -341,16 +641,20 @@ namespace Gw2Launcher.Net.AssetProxy
             {
                 return inner;
             }
-            set
-            {
-                inner = value;
-            }
         }
 
         public Encoding Encoding
         {
             get;
             set;
+        }
+
+        public long ContentLengthProcessed
+        {
+            get
+            {
+                return contentBytesRead;
+            }
         }
 
         private void ResetContentStream()
@@ -385,6 +689,19 @@ namespace Gw2Launcher.Net.AssetProxy
                                 break;
                             case 10: //\n
                                 newLine++;
+
+                                if (newLine == 2)
+                                {
+                                    offset++;
+
+                                    header = this.header = HttpHeader.Create(this.Encoding.GetString(buffer, 0, offset));
+
+                                    ProcessHeader(this.header);
+
+                                    headerLength = offset - start;
+                                    return offset - start;
+                                }
+
                                 break;
                             case 0:  //\0
                                 newLine = 0;
@@ -395,22 +712,6 @@ namespace Gw2Launcher.Net.AssetProxy
                         }
 
                         offset++;
-
-                        if (newLine == 2)
-                        {
-                            header = this.header = HttpHeader.Create(this.Encoding.GetString(buffer, 0, offset));
-
-                            ProcessHeader(this.header);
-
-                            return offset - start;
-                        }
-                        //else if (offset == count)
-                        //{
-                        //    byte[] _buffer = new byte[count + HEADER_BUFFER_LENGTH];
-                        //    Array.Copy(buffer, _buffer, count);
-                        //    buffer = _buffer;
-                        //    count += HEADER_BUFFER_LENGTH;
-                        //}
                     }
                     else
                         break;
@@ -534,9 +835,9 @@ namespace Gw2Launcher.Net.AssetProxy
                     total += read = inner.Read(buffer, offset, count);
                     chunkBytesRemaining -= read;
                 }
-                catch (Exception e)
+                catch
                 {
-                    throw e;
+                    throw;
                 }
             }
             else
@@ -558,9 +859,9 @@ namespace Gw2Launcher.Net.AssetProxy
                 {
                     total = read = inner.Read(buffer, offset, count);
                 }
-                catch (Exception e)
+                catch
                 {
-                    throw e;
+                    throw;
                 }
             }
 
@@ -698,6 +999,15 @@ namespace Gw2Launcher.Net.AssetProxy
         public override void SetLength(long value)
         {
             inner.SetLength(value);
+        }
+
+        /// <summary>
+        /// Returns a stream bound to the response content and allows for seeking within the
+        /// stream if applicable
+        /// </summary>
+        public Stream GetContentStream()
+        {
+            return new ContentStream(this);
         }
     }
 }

@@ -91,59 +91,75 @@ namespace Gw2Launcher.Tools
 
         private static void Delete(DirectoryInfo[] folders)
         {
-            DirectoryInfo newest = null;
-            DateTime utc = DateTime.MinValue;
-            DateTime limit = DateTime.UtcNow.Subtract(new TimeSpan(6, 0, 0));
+            //a cache folder will be created for every launch and again once the game starts
+            //previously, only older folders were being deleted, but GW2 doesn't really reuse these
+            //now, all folders are simply deleted, except those in use
+
+            //DirectoryInfo newest = null;
+            //DateTime utc = DateTime.MinValue;
+            //DateTime limit = DateTime.UtcNow.Subtract(new TimeSpan(6, 0, 0));
 
             foreach (var d in folders)
             {
-                DateTime lastWrite = DateTime.MinValue;
-
                 try
                 {
-                    foreach (var f in d.GetFiles("*", SearchOption.AllDirectories))
-                    {
-                        if (f.LastWriteTimeUtc > lastWrite)
-                        {
-                            lastWrite = f.LastWriteTimeUtc;
-                            if (lastWrite > utc)
-                                break;
-                        }
-                    }
+                    var index = new FileInfo(Path.Combine(d.FullName, "user", "Cache", "index"));
+                    if (index.Exists)
+                        index.Delete();
+                    d.Delete(true);
                 }
                 catch (Exception e)
                 {
                     Util.Logging.Log(e);
                 }
 
-                if (lastWrite > utc)
-                {
-                    if (newest != null && utc < limit)
-                    {
-                        try
-                        {
-                            newest.Delete(true);
-                        }
-                        catch (Exception ex)
-                        {
-                            Util.Logging.Log(ex);
-                        }
-                    }
 
-                    utc = lastWrite;
-                    newest = d;
-                }
-                else if (utc < limit)
-                {
-                    try
-                    {
-                        d.Delete(true);
-                    }
-                    catch (Exception ex)
-                    {
-                        Util.Logging.Log(ex);
-                    }
-                }
+                //DateTime lastWrite = DateTime.MinValue;
+                //try
+                //{
+                //    foreach (var f in d.GetFiles("*", SearchOption.AllDirectories))
+                //    {
+                //        if (f.LastWriteTimeUtc > lastWrite)
+                //        {
+                //            lastWrite = f.LastWriteTimeUtc;
+                //            if (lastWrite > utc)
+                //                break;
+                //        }
+                //    }
+                //}
+                //catch (Exception e)
+                //{
+                //    Util.Logging.Log(e);
+                //}
+
+                //if (lastWrite > utc)
+                //{
+                //    if (newest != null && utc < limit)
+                //    {
+                //        try
+                //        {
+                //            newest.Delete(true);
+                //        }
+                //        catch (Exception ex)
+                //        {
+                //            Util.Logging.Log(ex);
+                //        }
+                //    }
+
+                //    utc = lastWrite;
+                //    newest = d;
+                //}
+                //else if (utc < limit)
+                //{
+                //    try
+                //    {
+                //        d.Delete(true);
+                //    }
+                //    catch (Exception ex)
+                //    {
+                //        Util.Logging.Log(ex);
+                //    }
+                //}
             }
         }
     }

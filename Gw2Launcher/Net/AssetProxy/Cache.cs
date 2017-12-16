@@ -5,6 +5,7 @@ using System.Text;
 using System.Threading.Tasks;
 using System.Threading;
 using System.IO;
+using System.Runtime.InteropServices;
 
 namespace Gw2Launcher.Net.AssetProxy
 {
@@ -13,10 +14,16 @@ namespace Gw2Launcher.Net.AssetProxy
         public delegate void CacheStorageEventHandler(long bytes);
 
         public static event CacheStorageEventHandler CacheStorage;
+        public static event EventHandler CachePurged;
+        public static event EventHandler<PurgeProgressEventArgs> PurgeProgress;
+
+        public class PurgeProgressEventArgs
+        {
+            public int total, purged;
+        }
 
         private static bool isEnabled;
         private static Dictionary<string, CacheRecord> cache;
-        private static int counter;
         public static readonly string PATH;
         private static Thread threadDelete;
         private static long totalBytes;
@@ -26,8 +33,18 @@ namespace Gw2Launcher.Net.AssetProxy
             PATH = Path.Combine(Path.GetTempPath(), "assetcache");
             cache = new Dictionary<string, CacheRecord>();
 
-            var t = threadDelete = new Thread(new ThreadStart(Purge));
-            t.Start();
+            try
+            {
+                var di = new DirectoryInfo(PATH);
+                if (!di.Exists)
+                    di.Create();
+            }
+            catch (Exception e)
+            {
+                Util.Logging.Log(e);
+            }
+
+            DoPurge();
         }
 
         public static bool Enabled
@@ -50,98 +67,181 @@ namespace Gw2Launcher.Net.AssetProxy
             }
         }
 
+        static async void DoPurge()
+        {
+            while (true)
+            {
+                if (threadDelete == null)
+                {
+                    var t = threadDelete = new Thread(new ThreadStart(
+                        delegate
+                        {
+                            Purge(false);
+                            threadDelete = null;
+
+                            if (CachePurged != null)
+                                CachePurged(null, null);
+                        }));
+                    t.Start();
+                }
+
+                await Task.Delay(new TimeSpan(1, 0, 0, 0, 0));
+            }
+        }
+
         public static CacheStream GetCache(string request)
         {
             if (!isEnabled)
                 return null;
 
-            RecordStream stream;
+            string filename;
+            if (request.StartsWith("/program/101/1/"))
+                filename = request.Substring(14);
+            else
+                filename = request;
+            filename = filename.Replace('/', '_').Replace('\\', '_').Trim('_');
+
+            CacheRecord record;
+            bool isNew;
 
             lock(cache)
             {
-                var now = DateTime.UtcNow;
-
-                if (threadDelete != null)
+                if (isNew = !cache.TryGetValue(filename, out record))
                 {
-                    if (threadDelete.IsAlive)
-                    {
-                        try
-                        {
-                            threadDelete.Abort();
-                            threadDelete = null;
-                        }
-                        catch (Exception e)
-                        {
-                            Util.Logging.Log(e);
-                        }
-                    }
-                    else
-                        threadDelete = null;
+                    cache[filename] = record = new CacheRecord(filename);
+                    record.initialized = false;
                 }
+            }
 
-                CacheRecord record;
-                if (!cache.TryGetValue(request, out record) || now > record.Expires || !File.Exists(record.path))
+            if (isNew)
+            {
+                Monitor.Enter(record);
+
+                record.FileSizeChanged += record_FileSizeChanged;
+                record.Unused += record_Unused;
+
+                try
                 {
-                    try
+                    var fi = new FileInfo(Path.Combine(PATH, filename));
+                    if (fi.Exists)
                     {
-                        var di = new DirectoryInfo(PATH);
-                        if (!di.Exists)
-                            di.Create();
-                    }
-                    catch (Exception e)
-                    {
-                        Util.Logging.Log(e);
-                    }
+                        bool useExisting = false;
 
-                    if (record != null)
-                        record.Delete();
+                        if (fi.Name.StartsWith("latest"))
+                        {
+                            //latest files contain build info and shouldn't be cached. However, if another client
+                            //is already running, the game can't update anyways, so using a cached build will allow
+                            //it to login without patching
+                            if (DateTime.UtcNow.Subtract(fi.LastWriteTimeUtc).TotalSeconds < 60 || Gw2Launcher.Client.Launcher.GetActiveStates().Count > 1)
+                            {
+                                useExisting = true;
+                            }
+                        }
+                        else
+                        {
+                            useExisting = true;
+                        }
 
-                    byte retry = 10;
-                    string path;
-                    do
-                    {
-                        path = Path.Combine(PATH, counter++.ToString());
-                        if (File.Exists(path))
+                        if (useExisting)
+                        {
+                            record.stored = true;
+                            record.length = fi.Length;
+                        }
+                        else
                         {
                             try
                             {
-                                File.Delete(path);
+                                long length = fi.Length;
 
-                                break;
+                                fi.Delete();
+
+                                if (Monitor.TryEnter(cache, 1000))
+                                {
+                                    try
+                                    {
+                                        totalBytes -= length;
+                                        if (totalBytes < 0)
+                                            totalBytes = 0;
+                                        if (CacheStorage != null)
+                                            CacheStorage(totalBytes);
+                                    }
+                                    finally
+                                    {
+                                        Monitor.Exit(cache);
+                                    }
+                                }
                             }
                             catch (Exception e)
                             {
                                 Util.Logging.Log(e);
-                                if (--retry == 0)
-                                    break;
                             }
                         }
-                        else
-                            break;
                     }
-                    while (true);
-
-                    cache[request] = record = new CacheRecord(path);
-                    record.Expires = now.AddMinutes(30);
-
-                    record.FileSizeChanged += record_FileSizeChanged;
                 }
-
-                stream = new RecordStream(record);
+                catch (Exception e)
+                {
+                    Util.Logging.Log(e);
+                }
+                finally
+                {
+                    record.initialized = true;
+                    Monitor.PulseAll(record);
+                    Monitor.Exit(record);
+                }
+            }
+            else if (!record.initialized)
+            {
+                Monitor.Enter(record);
+                try
+                {
+                    while (!record.initialized)
+                    {
+                        Monitor.Wait(record);
+                    }
+                }
+                finally
+                {
+                    Monitor.Exit(record);
+                }
             }
 
-            return stream;
+            return new RecordStream(record);
+        }
+
+        static void record_Unused(object sender, EventArgs e)
+        {
+            CacheRecord r = (CacheRecord)sender;
+
+            if (Monitor.TryEnter(cache, 100))
+            {
+                try
+                {
+                    if (cache.ContainsKey(r.fileId))
+                        cache.Remove(r.fileId);
+                }
+                finally
+                {
+                    Monitor.Exit(cache);
+                }
+            }
         }
 
         static void record_FileSizeChanged(Cache.CacheRecord record, long difference)
         {
-            lock (cache)
+            if (Monitor.TryEnter(cache, 100))
             {
-                totalBytes += difference;
-                if (totalBytes < 0)
-                    totalBytes = 0; //out of sync
-                if (CacheStorage != null)
-                    CacheStorage(totalBytes);
+                try
+                {
+                    totalBytes += difference;
+                    if (totalBytes < 0)
+                        totalBytes = 0;
+                    if (CacheStorage != null)
+                        CacheStorage(totalBytes);
+                }
+                finally
+                {
+                    Monitor.Exit(cache);
+                }
             }
         }
 
@@ -151,107 +251,84 @@ namespace Gw2Launcher.Net.AssetProxy
             var length = stream.Length;
         }
 
-        public static int Count
-        {
-            get
-            {
-                return cache.Count;
-            }
-        }
-
         public static void Clear()
         {
-            lock (cache)
-            {
-                if (cache.Count == 0)
-                    return;
+            if (threadDelete != null)
+                return;
 
-                var deleted = cache.Values.ToArray();
+            var t = threadDelete = new Thread(new ThreadStart(
+                delegate
+                {
+                    Purge(true);
+                    threadDelete = null;
 
-                cache.Clear();
-
-                var t = new Thread(new ThreadStart(
-                    delegate
-                    {
-                        Purge(deleted);
-                    }));
-                t.Start();
-            }
+                    if (CachePurged != null)
+                        CachePurged(null, null);
+                }));
+            t.Start();
         }
 
-        private static void Purge()
+        private static void Purge(bool all)
         {
+            var d = DateTime.UtcNow.Subtract(new TimeSpan(3,0,0,0,0));
+            long bytes;
+            long total = 0;
+            FileInfo[] files;
+
             try
             {
-                new DirectoryInfo(PATH).Delete(true);
+                files = new DirectoryInfo(PATH).GetFiles();
             }
             catch (Exception e)
             {
                 Util.Logging.Log(e);
+                return;
+            }
+
+            PurgeProgressEventArgs progress = new PurgeProgressEventArgs()
+            {
+                total = files.Length
+            };
+
+            //not handling files in cache, since it only contains files in use
+
+            HashSet<string> keys;
+            lock(cache)
+            {
+                bytes = totalBytes;
+                keys = new HashSet<string>(cache.Keys);
+            }
+
+            foreach (var fi in files)
+            {
+                try
+                {
+                    if (!keys.Contains(fi.Name) && (all || fi.LastWriteTimeUtc < d))
+                    {
+                        fi.Delete();
+                    }
+                    else
+                    {
+                        total += fi.Length;
+                    }
+                }
+                catch (Exception e)
+                {
+                    Util.Logging.Log(e);
+                }
+
+                progress.purged++;
+
+                if (PurgeProgress != null)
+                    PurgeProgress(null, progress);
             }
 
             lock (cache)
             {
-                if (totalBytes == 0)
-                    return;
-                totalBytes = 0;
-                if (CacheStorage != null)
-                    CacheStorage(totalBytes);
-            }
-        }
-
-        private static void Purge(IEnumerable<CacheRecord> records)
-        {
-            long deleted = 0;
-            foreach (var r in records)
-            {
-                deleted += r.length;
-                try
+                total = total + totalBytes - bytes;
+                if (totalBytes != total)
                 {
-                    File.Delete(r.path);
-                }
-                catch { }
-            }
-
-            //try
-            //{
-            //    var di = new DirectoryInfo(PATH);
-            //    if (di.Exists)
-            //    {
-            //        foreach (var f in di.GetFiles())
-            //        {
-            //            try
-            //            {
-            //                int i;
-            //                if (Int32.TryParse(f.Name, out i) && i < limit)
-            //                {
-            //                    var length = f.Length;
-            //                    f.Delete();
-            //                    deleted += length;
-            //                }
-            //            }
-            //            catch (Exception ex)
-            //            {
-            //                Util.Logging.Log(ex);
-            //            }
-            //        }
-            //    }
-            //    else
-            //        return;
-            //}
-            //catch (Exception e)
-            //{
-            //    Util.Logging.Log(e);
-            //}
-
-            if (deleted > 0)
-            {
-                lock (cache)
-                {
-                    totalBytes -= deleted;
-                    if (totalBytes < 0)
-                        totalBytes = 0; //out of sync
-
+                    totalBytes = total;
                     if (CacheStorage != null)
                         CacheStorage(totalBytes);
                 }
@@ -260,27 +337,29 @@ namespace Gw2Launcher.Net.AssetProxy
 
         public abstract class CacheStream : Stream
         {
-            public abstract DateTime Expires
-            {
-                get;
-                set;
-            }
-
             public abstract bool HasData
             {
                 get;
             }
 
+            /// <summary>
+            /// Saves the file, otherwise it be deleted once closed
+            /// </summary>
             public abstract void Commit();
+
+            /// <summary>
+            /// Sets the position to the content, skipping the header
+            /// </summary>
+            public abstract void SetPositionToContent();
         }
 
         private class RecordStream : CacheStream
         {
             private CacheRecord record;
             private Stream stream;
-            private bool hasLock;
+
+            private bool canWrite;
             private bool inUse;
-            private bool written;
             private bool commit;
 
             public RecordStream(CacheRecord record)
@@ -289,21 +368,24 @@ namespace Gw2Launcher.Net.AssetProxy
 
                 lock (record)
                 {
-                    hasLock = record.owner == null;
-                    record.locks++;
+                    var isEmpty = record.length == 0;
+                    canWrite = record.locks++ == 0 && isEmpty;
 
                     try
                     {
-                        if (hasLock)
+                        var path = record.Path;
+                        if (canWrite)
                         {
-                            record.owner = this;
-                            stream = File.Open(record.path, record.hasData ? FileMode.OpenOrCreate : FileMode.Create, FileAccess.ReadWrite, FileShare.ReadWrite | FileShare.Delete);
+                            stream = File.Open(path, FileMode.Create, FileAccess.ReadWrite, FileShare.ReadWrite | FileShare.Delete);
                         }
                         else
                         {
-                            record.Released += record_Released;
-                            stream = File.Open(record.path, FileMode.Open, FileAccess.Read, FileShare.ReadWrite | FileShare.Delete);
-                            inUse = true;
+                            if (isEmpty)
+                            {
+                                inUse = true;
+                                record.Released += record_Released;
+                            }
+                            stream = File.Open(path, FileMode.Open, FileAccess.Read, FileShare.ReadWrite | FileShare.Delete);
                         }
                     }
                     catch (Exception e)
@@ -323,25 +405,87 @@ namespace Gw2Launcher.Net.AssetProxy
             {
                 get 
                 {
-                    return stream != null && (record.hasData || inUse);
-                }
-            }
-
-            public override DateTime Expires
-            {
-                get
-                {
-                    return record.Expires;
-                }
-                set
-                {
-                    record.Expires = value;
+                    return stream != null && (record.length > 0 || inUse);
                 }
             }
 
             public override void Commit()
             {
                 commit = true;
+            }
+
+            public override void SetPositionToContent()
+            {
+                this.Position = 0;
+
+                var buffer = new byte[1024];
+                int read;
+                int offset = 0;
+                int newLine = 0;
+
+                while ((read = Read(buffer, 0, buffer.Length)) > 0)
+                {
+                    if (offset == 0)
+                    {
+                        while (read < 4)
+                        {
+                            var r = Read(buffer, read, buffer.Length - read);
+                            if (r == 0)
+                                break;
+                            read += r;
+                        }
+
+                        if (read >= 4)
+                        {
+                            uint h = BitConverter.ToUInt32(buffer, 0);
+                            if (h != 1347703880 && h != 1886680168)
+                            {
+                                //not a http header
+                                this.Position = 0;
+                                return;
+                            }
+                        }
+                        else
+                        {
+                            //not enough data and end of file
+                            this.Position = 0;
+                            return;
+                        }
+                    }
+                    else if (offset > 16384)
+                    {
+                        //header too large / not a header
+                        this.Position = 0;
+                        return;
+                    }
+
+                    for (var i = 0; i < read; i++)
+                    {
+                        switch (buffer[i])
+                        {
+                            case 13: //\r
+                                break;
+                            case 10: //\n
+                                newLine++;
+
+                                if (newLine == 2)
+                                {
+                                    this.Position = offset + i + 1;
+                                    return;
+                                }
+
+                                break;
+                            case 0:  //\0
+                                newLine = 0;
+                                break;
+                            default:
+                                newLine = 0;
+                                break;
+                        }
+                    }
+
+                    offset += read;
+                }
             }
 
             protected override void Dispose(bool disposing)
@@ -353,16 +497,12 @@ namespace Gw2Launcher.Net.AssetProxy
                     if (stream != null)
                         stream.Dispose();
 
-                    if (hasLock)
+                    if (canWrite && !commit)
                     {
-                        if (written)
-                        {
-                            if (!commit)
-                                record.Delete();
-                        }
+                        record.Delete();
                     }
 
-                    record.Release(hasLock);
+                    record.Release(canWrite);
                 }
             }
 
@@ -386,7 +526,7 @@ namespace Gw2Launcher.Net.AssetProxy
             {
                 get
                 {
-                    return hasLock && stream != null && stream.CanWrite;
+                    return canWrite && stream != null && stream.CanWrite;
                 }
             }
 
@@ -412,7 +552,20 @@ namespace Gw2Launcher.Net.AssetProxy
                 }
                 set
                 {
-                    stream.Position = value;
+                    if (value < stream.Length)
+                        stream.Position = value;
+                    else
+                    {
+                        if (!canWrite)
+                        {
+                            while (value > stream.Position && inUse)
+                            {
+                                System.Threading.Thread.Sleep(500);
+                            }
+                        }
+
+                        stream.Position = value;
+                    }
                 }
             }
 
@@ -420,11 +573,14 @@ namespace Gw2Launcher.Net.AssetProxy
             {
                 int read = stream.Read(buffer, offset, count);
 
-                while (!hasLock && read == 0 && inUse)
+                if (!canWrite)
                 {
-                    System.Threading.Thread.Sleep(500);
+                    while (read == 0 && inUse)
+                    {
+                        System.Threading.Thread.Sleep(500);
 
-                    read = stream.Read(buffer, offset, count);
+                        read = stream.Read(buffer, offset, count);
+                    }
                 }
 
                 return read;
@@ -437,7 +593,7 @@ namespace Gw2Launcher.Net.AssetProxy
 
             public override void SetLength(long value)
             {
-                if (hasLock)
+                if (canWrite)
                     stream.SetLength(value);
                 else
                     throw new NotSupportedException();
@@ -445,13 +601,8 @@ namespace Gw2Launcher.Net.AssetProxy
 
             public override void Write(byte[] buffer, int offset, int count)
             {
-                if (hasLock)
-                {
+                if (canWrite)
                     stream.Write(buffer, offset, count);
-
-                    record.hasData = true;
-                    written = true;
-                }
                 else
                     throw new NotSupportedException();
             }
@@ -463,74 +614,111 @@ namespace Gw2Launcher.Net.AssetProxy
 
             public event EventHandler Released;
             public event FileSizeChangedEventHandler FileSizeChanged;
+            public event EventHandler Unused;
 
-            public string path;
-            public CacheStream owner;
+            public string fileId;
             public ushort locks;
+            public bool stored;
             public bool delete;
             public long length;
-            public bool hasData;
+            public bool initialized;
 
-            public CacheRecord(string path)
+            public CacheRecord(string id)
             {
-                this.path = path;
+                this.fileId = id;
             }
 
-            public DateTime Expires
+            public string Path
             {
-                get;
-                set;
+                get
+                {
+                    if (stored)
+                        return System.IO.Path.Combine(PATH, fileId);
+                    else
+                        return System.IO.Path.Combine(PATH, fileId) + ".tmp";
+                }
             }
 
             public void Release(bool hasLock)
             {
-                if (hasLock)
+                lock (this)
                 {
-                    this.owner = null;
-
-                    if (Released != null)
-                        Released(this, EventArgs.Empty);
-
-                    var fi = new FileInfo(path);
-                    if (fi.Exists)
+                    if (hasLock)
                     {
-                        long l = length;
                         try
                         {
-                            length = fi.Length;
+                            var fi = new FileInfo(this.Path);
+                            if (fi.Exists)
+                            {
+                                long l = length;
+                                length = fi.Length;
+
+                                if (l != length && FileSizeChanged != null)
+                                    FileSizeChanged(this, length - l);
+                            }
                         }
                         catch (Exception e)
                         {
                             Util.Logging.Log(e);
-                            length = 0;
                         }
 
-                        if (l != length && FileSizeChanged != null)
-                            FileSizeChanged(this, length - l);
+                        if (Released != null)
+                            Released(this, EventArgs.Empty);
                     }
-                }
 
-                lock(this)
-                {
-                    if (--locks == 0 && (delete || !hasData))
+                    if (--locks == 0)
                     {
-                        hasData = false;
-                        delete = false;
-                        long l = length;
-                        length = 0;
-
-                        if (l != length && FileSizeChanged != null)
-                            FileSizeChanged(this, length - l);
-
-                        try
+                        if (delete || length == 0)
                         {
-                            if (File.Exists(path))
-                                File.Delete(path);
+                            delete = false;
+
+                            if (length != 0 && FileSizeChanged != null)
+                                FileSizeChanged(this, -length);
+                            length = 0;
+
+                            try
+                            {
+                                var path = this.Path;
+                                if (File.Exists(path))
+                                    File.Delete(path);
+                                stored = false;
+                            }
+                            catch (Exception e)
+                            {
+                                Util.Logging.Log(e);
+                            }
                         }
-                        catch (Exception e)
+                        else if (!stored)
                         {
-                            Util.Logging.Log(e);
+                            var retry = 2;
+                            while (retry-- > 0)
+                            {
+                                try
+                                {
+                                    var from = this.Path;
+                                    var to = from.Substring(0, from.Length - 4);
+
+                                    File.Move(from, to);
+
+                                    stored = true;
+                                    break;
+                                }
+                                catch (Exception e)
+                                {
+                                    Util.Logging.Log(e);
+
+                                    try
+                                    {
+                                        if (File.Exists(this.Path))
+                                            File.Delete(this.Path);
+                                    }
+                                    catch { }
+                                }
+                            }
                         }
+
+                        if (Unused != null)
+                            Unused(this, EventArgs.Empty);
                     }
                 }
             }
@@ -541,18 +729,18 @@ namespace Gw2Launcher.Net.AssetProxy
                 {
                     if (locks == 0)
                     {
-                        hasData = false;
                         delete = false;
-                        long l = length;
-                        length = 0;
 
-                        if (l != length && FileSizeChanged != null)
-                            FileSizeChanged(this, length - l);
+                        if (length != 0 && FileSizeChanged != null)
+                            FileSizeChanged(this, -length);
+                        length = 0;
 
                         try
                         {
+                            var path = this.Path;
                             if (File.Exists(path))
                                 File.Delete(path);
+                            stored = false;
                         }
                         catch (Exception e)
                         {

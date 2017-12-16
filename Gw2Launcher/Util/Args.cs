@@ -71,6 +71,7 @@ namespace Gw2Launcher.Util
                 {
                     case '-':
                     case '/':
+                        to = i - 1;
                         return args.Substring(from + 2 + kl, i - from - 2 - kl);
                 }
             }

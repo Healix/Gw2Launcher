@@ -17,8 +17,9 @@ namespace Gw2Launcher.Util
             {
                 StackTrace stackTrace = new StackTrace();
                 MethodBase methodBase = stackTrace.GetFrame(1).GetMethod();
+                var now = DateTime.Now;
 
-                Debug.WriteLine(e.Message + "\n----------------------------->\n" + e.StackTrace + "\n==============================", "[" + methodBase.ReflectedType.Name + "." + methodBase.Name + "]");
+                Debug.WriteLine(e.Message + "\n----------------------------->\n" + e.StackTrace + "\n==============================", "[" + now.ToShortDateString() + " " + now.ToLongTimeString() +  "][" + methodBase.ReflectedType.Name + "." + methodBase.Name + "]");
             }
             catch (Exception ex)
             {
@@ -34,8 +35,9 @@ namespace Gw2Launcher.Util
             {
                 StackTrace stackTrace = new StackTrace();
                 MethodBase methodBase = stackTrace.GetFrame(1).GetMethod();
+                var now = DateTime.Now;
 
-                Debug.WriteLine(message, "[" + methodBase.ReflectedType.Name + "." + methodBase.Name + "]");
+                Debug.WriteLine(message, "[" + now.ToShortDateString() + " " + now.ToShortTimeString() + "][" + methodBase.ReflectedType.Name + "." + methodBase.Name + "]");
             }
             catch (Exception ex)
             {

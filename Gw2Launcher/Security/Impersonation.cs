@@ -38,7 +38,7 @@ namespace Gw2Launcher.Security
                 {
                     Util.Logging.Log(e);
                     this.Dispose();
-                    throw e;
+                    throw;
                 }
             }
 
@@ -127,7 +127,7 @@ namespace Gw2Launcher.Security
                 if (((System.ComponentModel.Win32Exception)e).NativeErrorCode == 1326)
                     throw new BadUsernameOrPasswordException();
                 else
-                    throw e;
+                    throw;
             }
             finally
             {
@@ -141,7 +141,7 @@ namespace Gw2Launcher.Security
             catch (Exception e)
             {
                 Util.Logging.Log(e);
-                throw e;
+                throw;
             }
         }
     }

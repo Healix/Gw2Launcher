@@ -18,43 +18,26 @@ namespace Gw2Launcher.Net.AssetProxy
 
         static ServerController()
         {
+            Settings.LocalAssetServerEnabled.ValueChanged += LocalAssetServerEnabled_ValueChanged;
             Settings.GW2Arguments.ValueChanged += GW2Arguments_ValueChanged;
-            GW2Arguments_ValueChanged(Settings.GW2Arguments, null);
+
+            LocalAssetServerEnabled_ValueChanged(Settings.LocalAssetServerEnabled, null);
         }
 
-        static void GW2Arguments_ValueChanged(object sender, EventArgs e)
+        static void LocalAssetServerEnabled_ValueChanged(object sender, EventArgs e)
         {
-            string args = ((Settings.ISettingValue<string>)sender).Value;
+            bool isEnabled = ((Settings.ISettingValue<bool>)sender).Value;
 
-            bool isEnabled;
-            if (!string.IsNullOrEmpty(args))
+            if (isEnabled)
             {
-                isEnabled = args.IndexOf("-l:assetsrv") != -1;
-
-                if (isEnabled)
+                if (server == null)
                 {
-                    if (server == null)
-                    {
-                        server = new ProxyServer();
-                        if (Created != null)
-                            Created(null, server);
-                    }
-
-                    IPEndPoint remoteEp;
-                    string assetsrv = Util.Args.GetValue(args, "assetsrv");
-                    if (!string.IsNullOrEmpty(assetsrv))
-                    {
-                        Util.IPEndPoint.TryParse(assetsrv, 80, out remoteEp);
-                    }
-                    else
-                        remoteEp = null;
-
-                    server.RemoteEP = remoteEp;
+                    server = new ProxyServer();
+                    if (Created != null)
+                        Created(null, server);
                 }
-            }
-            else
-            {
-                isEnabled = false;
+
+                GW2Arguments_ValueChanged(Settings.GW2Arguments, null);
             }
 
             if (server != null && !isEnabled && isEnabled != ServerController.isEnabled)
@@ -72,6 +55,25 @@ namespace Gw2Launcher.Net.AssetProxy
             }
         }
 
+        static void GW2Arguments_ValueChanged(object sender, EventArgs e)
+        {
+            string args = ((Settings.ISettingValue<string>)sender).Value;
+
+            if (!string.IsNullOrEmpty(args) && server != null)
+            {
+                IPEndPoint remoteEp;
+                string assetsrv = Util.Args.GetValue(args, "assetsrv");
+                if (!string.IsNullOrEmpty(assetsrv))
+                {
+                    Util.IPEndPoint.TryParse(assetsrv, 80, out remoteEp);
+                }
+                else
+                    remoteEp = null;
+
+                server.RemoteEP = remoteEp;
+            }
+        }
+
         public static bool Enabled
         {
             get
@@ -82,17 +84,19 @@ namespace Gw2Launcher.Net.AssetProxy
             {
                 if (isEnabled != value)
                 {
-                    string args;
-                    if (Settings.GW2Arguments.HasValue)
-                    {
-                        args = Settings.GW2Arguments.Value;
-                        if (args==null)
-                            args="";
-                    }
-                    else
-                        args="";
+                    //string args;
+                    //if (Settings.GW2Arguments.HasValue)
+                    //{
+                    //    args = Settings.GW2Arguments.Value;
+                    //    if (args==null)
+                    //        args="";
+                    //}
+                    //else
+                    //    args="";
 
-                    Settings.GW2Arguments.Value = Util.Args.AddOrReplace(args, "l:assetsrv", value ? "-l:assetsrv" : "");
+                    //Settings.GW2Arguments.Value = Util.Args.AddOrReplace(args, "l:assetsrv", value ? "-l:assetsrv" : "");
+
+                    Settings.LocalAssetServerEnabled.Value = value;
 
                     //isEnabled = value;
                 }

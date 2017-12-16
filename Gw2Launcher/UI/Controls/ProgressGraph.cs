@@ -50,6 +50,21 @@ namespace Gw2Launcher.UI.Controls
             penLine.DashPattern = new float[] { 3, 5 };
         }
 
+        protected override void Dispose(bool disposing)
+        {
+            if (disposing)
+            {
+                penGraph.Dispose();
+                penLine.Dispose();
+                brushGraph.Dispose();
+                brushText.Dispose();
+                pathGraph.Dispose();
+                if (components != null)
+                    components.Dispose();
+            }
+            base.Dispose(disposing);
+        }
+
         private void ProgressGraph_Load(object sender, EventArgs e)
         {
 

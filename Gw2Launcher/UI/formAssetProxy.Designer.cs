@@ -28,9 +28,9 @@
         /// </summary>
         private void InitializeComponent()
         {
-            System.Windows.Forms.DataGridViewCellStyle dataGridViewCellStyle6 = new System.Windows.Forms.DataGridViewCellStyle();
-            System.Windows.Forms.DataGridViewCellStyle dataGridViewCellStyle4 = new System.Windows.Forms.DataGridViewCellStyle();
-            System.Windows.Forms.DataGridViewCellStyle dataGridViewCellStyle5 = new System.Windows.Forms.DataGridViewCellStyle();
+            System.Windows.Forms.DataGridViewCellStyle dataGridViewCellStyle3 = new System.Windows.Forms.DataGridViewCellStyle();
+            System.Windows.Forms.DataGridViewCellStyle dataGridViewCellStyle1 = new System.Windows.Forms.DataGridViewCellStyle();
+            System.Windows.Forms.DataGridViewCellStyle dataGridViewCellStyle2 = new System.Windows.Forms.DataGridViewCellStyle();
             this.labelLastRequest = new System.Windows.Forms.Label();
             this.label3 = new System.Windows.Forms.Label();
             this.label1 = new System.Windows.Forms.Label();
@@ -48,7 +48,16 @@
             this.labelClear = new System.Windows.Forms.Label();
             this.labelCached = new System.Windows.Forms.Label();
             this.label5 = new System.Windows.Forms.Label();
+            this.panelAdvanced = new System.Windows.Forms.Panel();
+            this.label2 = new System.Windows.Forms.Label();
+            this.checkUseHttps = new System.Windows.Forms.CheckBox();
+            this.label7 = new System.Windows.Forms.Label();
+            this.labelSpeedLimit = new System.Windows.Forms.Label();
+            this.sliderSpeedLimit = new Gw2Launcher.UI.Controls.FlatSlider();
+            this.checkSpeedLimit = new System.Windows.Forms.CheckBox();
+            this.labelAdvanced = new Gw2Launcher.UI.Controls.LabelButton();
             ((System.ComponentModel.ISupportInitialize)(this.gridRecord)).BeginInit();
+            this.panelAdvanced.SuspendLayout();
             this.SuspendLayout();
             // 
             // labelLastRequest
@@ -121,14 +130,14 @@
             this.columnUrl,
             this.columnResponseCode,
             this.columnResponse});
-            dataGridViewCellStyle6.Alignment = System.Windows.Forms.DataGridViewContentAlignment.MiddleLeft;
-            dataGridViewCellStyle6.BackColor = System.Drawing.SystemColors.Control;
-            dataGridViewCellStyle6.Font = new System.Drawing.Font("Segoe UI", 8.25F);
-            dataGridViewCellStyle6.ForeColor = System.Drawing.SystemColors.ControlText;
-            dataGridViewCellStyle6.SelectionBackColor = System.Drawing.SystemColors.Highlight;
-            dataGridViewCellStyle6.SelectionForeColor = System.Drawing.SystemColors.HighlightText;
-            dataGridViewCellStyle6.WrapMode = System.Windows.Forms.DataGridViewTriState.False;
-            this.gridRecord.DefaultCellStyle = dataGridViewCellStyle6;
+            dataGridViewCellStyle3.Alignment = System.Windows.Forms.DataGridViewContentAlignment.MiddleLeft;
+            dataGridViewCellStyle3.BackColor = System.Drawing.SystemColors.Control;
+            dataGridViewCellStyle3.Font = new System.Drawing.Font("Segoe UI", 8.25F);
+            dataGridViewCellStyle3.ForeColor = System.Drawing.SystemColors.ControlText;
+            dataGridViewCellStyle3.SelectionBackColor = System.Drawing.SystemColors.Highlight;
+            dataGridViewCellStyle3.SelectionForeColor = System.Drawing.SystemColors.HighlightText;
+            dataGridViewCellStyle3.WrapMode = System.Windows.Forms.DataGridViewTriState.False;
+            this.gridRecord.DefaultCellStyle = dataGridViewCellStyle3;
             this.gridRecord.EditMode = System.Windows.Forms.DataGridViewEditMode.EditProgrammatically;
             this.gridRecord.Location = new System.Drawing.Point(12, 138);
             this.gridRecord.MultiSelect = false;
@@ -161,8 +170,8 @@
             // 
             // columnResponseCode
             // 
-            dataGridViewCellStyle4.Alignment = System.Windows.Forms.DataGridViewContentAlignment.MiddleCenter;
-            this.columnResponseCode.DefaultCellStyle = dataGridViewCellStyle4;
+            dataGridViewCellStyle1.Alignment = System.Windows.Forms.DataGridViewContentAlignment.MiddleCenter;
+            this.columnResponseCode.DefaultCellStyle = dataGridViewCellStyle1;
             this.columnResponseCode.HeaderText = "Code";
             this.columnResponseCode.Name = "columnResponseCode";
             this.columnResponseCode.ReadOnly = true;
@@ -173,8 +182,8 @@
             // columnResponse
             // 
             this.columnResponse.ActiveLinkColor = System.Drawing.Color.FromArgb(((int)(((byte)(49)))), ((int)(((byte)(121)))), ((int)(((byte)(242)))));
-            dataGridViewCellStyle5.Alignment = System.Windows.Forms.DataGridViewContentAlignment.MiddleRight;
-            this.columnResponse.DefaultCellStyle = dataGridViewCellStyle5;
+            dataGridViewCellStyle2.Alignment = System.Windows.Forms.DataGridViewContentAlignment.MiddleRight;
+            this.columnResponse.DefaultCellStyle = dataGridViewCellStyle2;
             this.columnResponse.HeaderText = "Content";
             this.columnResponse.LinkBehavior = System.Windows.Forms.LinkBehavior.HoverUnderline;
             this.columnResponse.LinkColor = System.Drawing.Color.FromArgb(((int)(((byte)(49)))), ((int)(((byte)(121)))), ((int)(((byte)(242)))));
@@ -227,6 +236,7 @@
             // 
             // labelClear
             // 
+            this.labelClear.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
             this.labelClear.AutoSize = true;
             this.labelClear.Cursor = System.Windows.Forms.Cursors.Hand;
             this.labelClear.ForeColor = System.Drawing.Color.FromArgb(((int)(((byte)(49)))), ((int)(((byte)(121)))), ((int)(((byte)(242)))));
@@ -261,11 +271,106 @@
             this.label5.TabIndex = 58;
             this.label5.Text = "Cache";
             // 
+            // panelAdvanced
+            // 
+            this.panelAdvanced.BorderStyle = System.Windows.Forms.BorderStyle.FixedSingle;
+            this.panelAdvanced.Controls.Add(this.label2);
+            this.panelAdvanced.Controls.Add(this.checkUseHttps);
+            this.panelAdvanced.Controls.Add(this.label7);
+            this.panelAdvanced.Controls.Add(this.labelSpeedLimit);
+            this.panelAdvanced.Controls.Add(this.sliderSpeedLimit);
+            this.panelAdvanced.Controls.Add(this.checkSpeedLimit);
+            this.panelAdvanced.Location = new System.Drawing.Point(197, 8);
+            this.panelAdvanced.Name = "panelAdvanced";
+            this.panelAdvanced.Size = new System.Drawing.Size(261, 107);
+            this.panelAdvanced.TabIndex = 78;
+            this.panelAdvanced.Visible = false;
+            // 
+            // label2
+            // 
+            this.label2.AutoSize = true;
+            this.label2.Font = new System.Drawing.Font("Segoe UI Semilight", 8.25F);
+            this.label2.Location = new System.Drawing.Point(10, 59);
+            this.label2.Name = "label2";
+            this.label2.Size = new System.Drawing.Size(56, 13);
+            this.label2.TabIndex = 68;
+            this.label2.Text = "Encryption";
+            // 
+            // checkUseHttps
+            // 
+            this.checkUseHttps.AutoSize = true;
+            this.checkUseHttps.Font = new System.Drawing.Font("Segoe UI Semilight", 8.25F);
+            this.checkUseHttps.Location = new System.Drawing.Point(17, 78);
+            this.checkUseHttps.Name = "checkUseHttps";
+            this.checkUseHttps.Size = new System.Drawing.Size(78, 17);
+            this.checkUseHttps.TabIndex = 67;
+            this.checkUseHttps.Text = "Use HTTPS";
+            this.checkUseHttps.UseVisualStyleBackColor = true;
+            this.checkUseHttps.Click += new System.EventHandler(this.checkUseHttps_Click);
+            // 
+            // label7
+            // 
+            this.label7.AutoSize = true;
+            this.label7.Font = new System.Drawing.Font("Segoe UI Semilight", 8.25F);
+            this.label7.Location = new System.Drawing.Point(10, 10);
+            this.label7.Name = "label7";
+            this.label7.Size = new System.Drawing.Size(107, 13);
+            this.label7.TabIndex = 56;
+            this.label7.Text = "Download speed limit";
+            // 
+            // labelSpeedLimit
+            // 
+            this.labelSpeedLimit.AutoSize = true;
+            this.labelSpeedLimit.Font = new System.Drawing.Font("Segoe UI Semilight", 8.25F);
+            this.labelSpeedLimit.Location = new System.Drawing.Point(190, 32);
+            this.labelSpeedLimit.Name = "labelSpeedLimit";
+            this.labelSpeedLimit.Size = new System.Drawing.Size(44, 13);
+            this.labelSpeedLimit.TabIndex = 58;
+            this.labelSpeedLimit.Text = "10 MB/s";
+            // 
+            // sliderSpeedLimit
+            // 
+            this.sliderSpeedLimit.Enabled = false;
+            this.sliderSpeedLimit.Location = new System.Drawing.Point(39, 29);
+            this.sliderSpeedLimit.Name = "sliderSpeedLimit";
+            this.sliderSpeedLimit.Size = new System.Drawing.Size(145, 20);
+            this.sliderSpeedLimit.TabIndex = 59;
+            this.sliderSpeedLimit.TabStop = false;
+            this.sliderSpeedLimit.Value = 1F;
+            this.sliderSpeedLimit.ValueChanged += new System.EventHandler<float>(this.sliderSpeedLimit_ValueChanged);
+            // 
+            // checkSpeedLimit
+            // 
+            this.checkSpeedLimit.AutoSize = true;
+            this.checkSpeedLimit.Font = new System.Drawing.Font("Segoe UI", 8.25F);
+            this.checkSpeedLimit.Location = new System.Drawing.Point(17, 32);
+            this.checkSpeedLimit.Name = "checkSpeedLimit";
+            this.checkSpeedLimit.Size = new System.Drawing.Size(15, 14);
+            this.checkSpeedLimit.TabIndex = 57;
+            this.checkSpeedLimit.UseVisualStyleBackColor = true;
+            this.checkSpeedLimit.CheckedChanged += new System.EventHandler(this.checkSpeedLimit_CheckedChanged);
+            // 
+            // labelAdvanced
+            // 
+            this.labelAdvanced.AutoSize = true;
+            this.labelAdvanced.Cursor = System.Windows.Forms.Cursors.Hand;
+            this.labelAdvanced.Font = new System.Drawing.Font("Segoe UI Semilight", 8.25F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+            this.labelAdvanced.ForeColor = System.Drawing.Color.FromArgb(((int)(((byte)(49)))), ((int)(((byte)(121)))), ((int)(((byte)(242)))));
+            this.labelAdvanced.Location = new System.Drawing.Point(197, 12);
+            this.labelAdvanced.Name = "labelAdvanced";
+            this.labelAdvanced.Padding = new System.Windows.Forms.Padding(6, 0, 6, 0);
+            this.labelAdvanced.Size = new System.Drawing.Size(65, 13);
+            this.labelAdvanced.TabIndex = 72;
+            this.labelAdvanced.Text = "advanced";
+            this.labelAdvanced.Click += new System.EventHandler(this.labelAdvanced_Click);
+            // 
             // formAssetProxy
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.ClientSize = new System.Drawing.Size(505, 319);
+            this.Controls.Add(this.panelAdvanced);
+            this.Controls.Add(this.labelAdvanced);
             this.Controls.Add(this.labelClear);
             this.Controls.Add(this.labelStatus);
             this.Controls.Add(this.label4);
@@ -288,6 +393,8 @@
             this.FormClosing += new System.Windows.Forms.FormClosingEventHandler(this.formAssetProxy_FormClosing);
             this.Load += new System.EventHandler(this.formAssetProxy_Load);
             ((System.ComponentModel.ISupportInitialize)(this.gridRecord)).EndInit();
+            this.panelAdvanced.ResumeLayout(false);
+            this.panelAdvanced.PerformLayout();
             this.ResumeLayout(false);
             this.PerformLayout();
 
@@ -312,5 +419,13 @@
         private System.Windows.Forms.DataGridViewLinkColumn columnResponse;
         private System.Windows.Forms.Label labelCached;
         private System.Windows.Forms.Label label5;
+        private Controls.LabelButton labelAdvanced;
+        private System.Windows.Forms.Panel panelAdvanced;
+        private System.Windows.Forms.Label label2;
+        private System.Windows.Forms.CheckBox checkUseHttps;
+        private System.Windows.Forms.Label label7;
+        private System.Windows.Forms.Label labelSpeedLimit;
+        private Controls.FlatSlider sliderSpeedLimit;
+        private System.Windows.Forms.CheckBox checkSpeedLimit;
     }
 }

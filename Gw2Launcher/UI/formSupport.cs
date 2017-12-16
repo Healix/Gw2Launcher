@@ -18,10 +18,19 @@ namespace Gw2Launcher.UI
 {
     public partial class formSupport : Form
     {
-        private const string PATCH_SERVER = Net.AssetProxy.ProxyServer.PATCH_SERVER; // "assetcdn.101.arenanetworks.com";
+        private const string PATCH_SERVER = Net.AssetProxy.ProxyServer.PATCH_SERVER;
         private const string AUTH_NA_SERVER = "auth1.101.ArenaNetworks.com";
         private const string AUTH_EU_SERVER = "auth2.101.ArenaNetworks.com";
         private const byte LOOKUP_CONNECTION_LIMIT = 10;
+
+        protected enum GridType
+        {
+            None,
+            Login,
+            Asset
+        }
+
+        private GridType inGridView;
 
         private SidebarButton selectedButton;
         private Process activeProcess;
@@ -71,6 +80,8 @@ namespace Gw2Launcher.UI
 
             cancelToken = new CancellationTokenSource();
 
+            this.FormClosing += new System.Windows.Forms.FormClosingEventHandler(this.formSupport_FormClosing);
+
             buttonDiagnostics.Tag = panelDiagnostics;
             buttonRepair.Tag = panelRepair;
             buttonAuthentication.Tag = panelAuthentication;
@@ -110,8 +121,153 @@ namespace Gw2Launcher.UI
                     IPAddress.TryParse(existing, out existingLogin);
             }
 
+            //buttonPatchServerLookup.Tag = Settings.GetDnsServers();
+
             checkPatchInterceptEnable.Checked = Net.AssetProxy.ServerController.Enabled;
             Net.AssetProxy.ServerController.EnabledChanged += ServerController_EnabledChanged;
+        }
+
+        protected formSupport(GridType t, DataGridView grid, Form parent)
+        {
+            InitializeComponent();
+
+            this.FormBorderStyle = System.Windows.Forms.FormBorderStyle.Sizable;
+
+            inGridView = t;
+            DataGridView grid1;
+
+            if (t == GridType.Asset)
+            {
+                grid1 = this.gridPatchServers;
+                this.Text = "Asset Servers";
+            }
+            else //GridType.Login;
+            {
+                grid1 = this.gridLoginServers;
+                this.Text = "Authentication Servers";
+            }
+
+            Settings.GW2Arguments.ValueChanged += GW2Arguments_ValueChanged;
+
+            grid1.AdvancedCellBorderStyle.All = DataGridViewAdvancedCellBorderStyle.None;
+
+            this.Controls.Clear();
+            this.Controls.Add(grid1);
+
+            var padding = new Size(this.Width - this.ClientSize.Width,  this.Height - this.ClientSize.Height);
+            grid1.Location = new Point(10, 10);
+            grid1.Size = new Size(grid1.Width, this.ClientSize.Height * 3 / 4 - grid1.Location.Y * 2);
+            grid1.Visible = true;
+
+            this.Size = new System.Drawing.Size(grid1.Location.X * 2 + grid1.Width + padding.Width, grid1.Location.Y * 2 + grid1.Height + padding.Height);
+            this.MaximumSize = new System.Drawing.Size(this.Width, Int32.MaxValue);
+
+            grid1.Anchor = AnchorStyles.Left | AnchorStyles.Right | AnchorStyles.Bottom | AnchorStyles.Top;
+
+            var rows = new DataGridViewRow[grid.Rows.Count];
+            var r = 0;
+            int indexEnabled;
+
+            if (inGridView == GridType.Asset)
+                indexEnabled = columnPatchServerEnable.Index;
+            else
+                indexEnabled = columnLoginServerEnable.Index;
+
+            foreach (DataGridViewRow row in grid.Rows)
+            {
+                var _row = rows[r++] = (DataGridViewRow)grid1.RowTemplate.Clone();
+                _row.CreateCells(grid1);
+
+                foreach (DataGridViewCell cell in row.Cells)
+                {
+                    var _cell = _row.Cells[cell.ColumnIndex];
+                    _cell.Value = cell.Value;
+                    if (cell.HasStyle)
+                        _cell.Style = cell.Style;
+                }
+
+                if ((bool)row.Cells[indexEnabled].Value)
+                {
+                    if (inGridView == GridType.Asset)
+                        rowSelectedPatchServer = _row;
+                    else
+                        rowSelectedLoginServer = _row;
+                }
+            }
+
+            grid1.Rows.AddRange(rows);
+
+            this.StartPosition = FormStartPosition.Manual;
+            var screen = Screen.FromControl(parent).WorkingArea;
+            var y = parent.Location.Y + parent.Height / 2 - this.Height / 2;
+            var x = parent.Location.X + parent.Width + 5;
+            if (x + this.Width > screen.Width)
+                x = screen.X + screen.Width - this.Width;
+            this.Location = new Point(x, y);
+        }
+
+        void GW2Arguments_ValueChanged(object sender, EventArgs e)
+        {
+            var v = (Settings.ISettingValue<string>)sender;
+            DataGridView grid;
+            DataGridViewRow selected;
+            int indexEnable, indexValue;
+            string _ip;
+            if (inGridView == GridType.Asset)
+            {
+                _ip = Util.Args.GetValue(v.Value, "assetsrv");
+                grid = this.gridPatchServers;
+                selected = rowSelectedPatchServer;
+                indexEnable = columnPatchServerEnable.Index;
+                indexValue = columnPatchServer.Index;
+            }
+            else
+            {
+                _ip = Util.Args.GetValue(v.Value, "authsrv");
+                grid = this.gridLoginServers;
+                selected = rowSelectedLoginServer;
+                indexEnable = columnLoginServerEnable.Index;
+                indexValue=columnLoginServer.Index;
+            }
+
+            IPAddress ip = null;
+            if (!string.IsNullOrEmpty(_ip))
+            {
+                int i;
+                if ((i = _ip.IndexOf(':')) == -1)
+                    IPAddress.TryParse(_ip, out ip);
+                else
+                    IPAddress.TryParse(_ip.Substring(0, i), out ip);
+            }
+
+            if (selected != null)
+            {
+                if ((IPAddress)selected.Cells[indexValue].Value == ip)
+                    return;
+                selected.Cells[indexEnable].Value = false;
+                selected = null;
+            }
+            else if (ip == null)
+                return;
+
+            if (ip != null)
+            {
+                foreach (DataGridViewRow row in grid.Rows)
+                {
+                    var ip2 = (IPAddress)row.Cells[indexValue].Value;
+                    if (ip2.Equals(ip))
+                    {
+                        selected = row;
+                        row.Cells[indexEnable].Value = true;
+                        break;
+                    }
+                }
+            }
+
+            if (inGridView == GridType.Asset)
+                rowSelectedPatchServer = selected;
+            else
+                rowSelectedLoginServer = selected;
         }
 
         void ServerController_EnabledChanged(object sender, bool e)
@@ -416,47 +572,7 @@ namespace Gw2Launcher.UI
                 return;
             }
 
-            OpenFolderAndSelect(fi.FullName);
-        }
-
-        private void OpenFolderAndSelect(string path)
-        {
-            try
-            {
-                using (Process p = new Process())
-                {
-                    p.StartInfo.UseShellExecute = true;
-                    p.StartInfo.FileName = "explorer.exe";
-                    p.StartInfo.Arguments = "/select, \"" + path + '"';
-
-                    if (p.Start())
-                        return;
-                }
-            }
-            catch (Exception ex)
-            {
-                Util.Logging.Log(ex);
-            }
-        }
-
-        private void OpenFolder(string path)
-        {
-            try
-            {
-                using (Process p = new Process())
-                {
-                    p.StartInfo.UseShellExecute = true;
-                    p.StartInfo.FileName = "explorer.exe";
-                    p.StartInfo.Arguments = "\"" + path + '"';
-
-                    if (p.Start())
-                        return;
-                }
-            }
-            catch (Exception ex)
-            {
-                Util.Logging.Log(ex);
-            }
+            Util.Explorer.OpenFolderAndSelect(fi.FullName);
         }
 
         private void buttonClean_Click(object sender, EventArgs e)
@@ -598,6 +714,8 @@ namespace Gw2Launcher.UI
         {
             buttonPatchServerLookup.Enabled = false;
             gridPatchServers.Visible = false;
+            arrowAssetExpand.Visible = false;
+            copyAsset.Visible = false;
             labelPatchServerNoIPs.Visible = false;
             progressPatchServer.Visible = false;
             gridPatchServers.Rows.Clear();
@@ -611,45 +729,19 @@ namespace Gw2Launcher.UI
 
         private HashSet<IPAddress> GetIPs(string address, IEnumerable<IPAddress> dns)
         {
-            HashSet<IPAddress> ips = new HashSet<IPAddress>();
-            ParallelOptions po = new ParallelOptions()
-            {
-                MaxDegreeOfParallelism = 3
-            };
-
-            Parallel.ForEach<IPAddress>(dns, po,
-                delegate(IPAddress ip)
-                {
-                    try
-                    {
-                        IPAddress[] _ips;
-                        if (IPAddress.IsLoopback(ip))
-                            _ips = Net.Dns.GetHostAddresses(address);
-                        else
-                            _ips = Net.Dns.GetHostAddresses(address, ip);
-
-                        lock (ips)
-                        {
-                            foreach (var _ip in _ips)
-                                ips.Add(_ip);
-                        }
-                    }
-                    catch (Exception e)
-                    {
-                        Util.Logging.Log(e);
-                    }
-                });
-
-            return ips;
+            return Net.Dns.GetHostAddresses(address, dns);
         }
 
-        private int DoHttpPing(IPAddress ip)
+        private int DoHttpAssetPing(IPAddress ip)
         {
-            HttpWebRequest request = HttpWebRequest.CreateHttp(string.Format("http://{0}/latest/101", ip.ToString()));
+            HttpWebRequest request = HttpWebRequest.CreateHttp(string.Format("http://{0}/latest64/101", ip.ToString()));
             request.Host = PATCH_SERVER;
             request.AllowAutoRedirect = false;
             request.Proxy = null;
             request.Timeout = 3000;
+
+            //CDNetworks servers will reject the request if the md5 isn't supplied
+            request.Headers.Add(HttpRequestHeader.Cookie, Settings.ASSET_COOKIE);
 
             var startTime = DateTime.UtcNow;
 
@@ -664,6 +756,82 @@ namespace Gw2Launcher.UI
                 }
 
                 return (int)(DateTime.UtcNow.Subtract(startTime).TotalMilliseconds + 0.5);
+            }
+            catch (Exception e)
+            {
+                if (e is WebException)
+                    using (((WebException)e).Response) { }
+                Util.Logging.Log(e);
+                return -1;
+            }
+        }
+
+        private int DoHttpLoginPing(IPAddress ip)
+        {
+            //Login servers running from Amazon's cloud don't support pings
+            //Original ArenaNet authserver: 64.25.38.54
+
+            HttpWebRequest request = HttpWebRequest.CreateHttp(string.Format("http://{0}/", ip.ToString()));
+            request.Host = PATCH_SERVER;
+            request.AllowAutoRedirect = false;
+            request.Proxy = null;
+            request.Timeout = 3000;
+
+            var startTime = DateTime.UtcNow;
+
+            HttpWebResponse response;
+            try
+            {
+                response = (HttpWebResponse)request.GetResponse();
+            }
+            catch (WebException e)
+            {
+                response = e.Response as HttpWebResponse;
+                if (response == null)
+                    return -1;
+            }
+            catch (Exception e)
+            {
+                Util.Logging.Log(e);
+                return -1;
+            }
+
+            try
+            {
+                using (response)
+                {
+                    using (StreamReader reader = new StreamReader(response.GetResponseStream()))
+                    {
+                        var data = reader.ReadToEnd();
+                    }
+                }
+
+                return (int)(DateTime.UtcNow.Subtract(startTime).TotalMilliseconds + 0.5);
+            }
+            catch (Exception e)
+            {
+                Util.Logging.Log(e);
+                return -1;
+            }
+        }
+
+        private int DoTcpLoginPing(IPAddress ip)
+        {
+            try
+            {
+                using (var socket = new System.Net.Sockets.Socket(System.Net.Sockets.AddressFamily.InterNetwork, System.Net.Sockets.SocketType.Stream, System.Net.Sockets.ProtocolType.Tcp))
+                {
+                    var startTime = DateTime.UtcNow;
+                    var ia = socket.BeginConnect(ip, 80, null, null);
+                    ia.AsyncWaitHandle.WaitOne(3000);
+
+                    var elapsed = (int)(DateTime.UtcNow.Subtract(startTime).TotalMilliseconds + 0.5);
+                    if (!socket.Connected)
+                        elapsed = -1;
+
+                    socket.Close();
+                    return elapsed;
+                }
             }
             catch (Exception e)
             {
@@ -688,6 +856,8 @@ namespace Gw2Launcher.UI
                         total += reply.RoundtripTime;
                         count++;
                     }
+                    else if (i > 0 && count == 0)
+                        break;
                 }
                 catch (Exception e)
                 {
@@ -721,6 +891,12 @@ namespace Gw2Launcher.UI
 
             if (cancel.IsCancellationRequested)
                 return;
+
+            ////the original ArenaNet login servers, which may eventually stop working - GW2 switched to using Amazon -- original servers taken down on November 9, 2017
+            //foreach (var ip in new string[] { "64.25.38.54", "64.25.38.171", "64.25.38.185", "64.25.38.51", "64.25.38.172" })
+            //    na.Add(IPAddress.Parse(ip));
+            //foreach (var ip in new string[] { "206.127.159.109", "206.127.146.73", "206.127.159.107", "206.127.146.67", "206.127.146.74" })
+            //    eu.Add(IPAddress.Parse(ip));
 
             IPAddress selected;
             if (rowSelectedLoginServer != null)
@@ -767,18 +943,23 @@ namespace Gw2Launcher.UI
                         var c = row.Cells[columnLoginServerPing.Index];
                         c.Style.ForeColor = Color.Gray;
                         c.Value = "...";
+
+                        c = row.Cells[columnLoginServerResponseTime.Index];
+                        c.Style.ForeColor = Color.Gray;
+                        c.Value = "...";
                     }
                 }
 
                 gridLoginServers.Rows.AddRange(rows);
                 gridLoginServers.Visible = true;
 
-                Func<IPAddress, DataGridViewRow, TaskPingResult> doPing =
-                    delegate(IPAddress ip, DataGridViewRow row)
+                Func<IPAddress, DataGridViewRow, bool, TaskPingResult> doPing =
+                    delegate(IPAddress ip, DataGridViewRow row, bool doPings)
                     {
                         return new TaskPingResult()
                         {
-                            ping = DoPing(ip, pingData, options),
+                            ping = doPings ? DoPing(ip, pingData, options) : -1,
+                            http = DoTcpLoginPing(ip),
                             row = row
                         };
                     };
@@ -788,6 +969,7 @@ namespace Gw2Launcher.UI
                     limit = ipCount;
                 int queued = 0;
                 int i = 0;
+                int failedPings = 0;
 
                 Task<TaskPingResult>[] tasks = new Task<TaskPingResult>[limit];
 
@@ -832,17 +1014,33 @@ namespace Gw2Launcher.UI
                         var t = tasks[k];
                         var result = t.Result;
 
+                        if (result.http >= 0)
+                        {
+                            var c = result.row.Cells[columnLoginServerResponseTime.Index];
+                            c.Value = new MillisCell(result.http);
+                            c.Style.ForeColor = Color.Empty;
+                        }
+                        else
+                        {
+                            var c = result.row.Cells[columnLoginServerResponseTime.Index];
+                            c.Value = "failed";
+                            c.Style.ForeColor = Color.Maroon;
+                        }
+
                         if (result.ping >= 0)
                         {
                             var c = result.row.Cells[columnLoginServerPing.Index];
                             c.Value = new MillisCell(result.ping);
                             c.Style.ForeColor = Color.Empty;
+                            failedPings = -1;
                         }
                         else
                         {
                             var c = result.row.Cells[columnLoginServerPing.Index];
-                            c.Value = "failed";
+                            c.Value = result.http >= 0 ? "---" : "failed";
                             c.Style.ForeColor = Color.Maroon;
+                            if (failedPings != -1 && result.http >= 0)
+                                failedPings++;
                         }
 
                         SortRow(gridLoginServers, result.row, RowComparisonLogin, gridLoginServers.SortOrder);
@@ -868,7 +1066,7 @@ namespace Gw2Launcher.UI
                             var t = tasks[k++] = new Task<TaskPingResult>(
                                 delegate
                                 {
-                                    return doPing(ip, row);
+                                    return doPing(ip, row, failedPings <= 3);
                                 });
                             t.Start();
                         }
@@ -878,6 +1076,9 @@ namespace Gw2Launcher.UI
                         tasks[k] = null;
                     }
                 }
+
+                arrowLoginExpand.Visible = true;
+                copyLogin.Visible = true;
             }
             else
             {
@@ -957,13 +1158,13 @@ namespace Gw2Launcher.UI
                 gridPatchServers.Rows.AddRange(rows);
                 gridPatchServers.Visible = true;
 
-                Func<IPAddress, DataGridViewRow, TaskPingResult> doPing =
-                    delegate(IPAddress ip, DataGridViewRow row)
+                Func<IPAddress, DataGridViewRow, bool, TaskPingResult> doPing =
+                    delegate(IPAddress ip, DataGridViewRow row, bool doPings)
                     {
                         return new TaskPingResult()
                         {
-                            ping = DoPing(ip, pingData, options),
-                            http = DoHttpPing(ip),
+                            ping = doPings ? DoPing(ip, pingData, options) : -1,
+                            http = DoHttpAssetPing(ip),
                             row = row
                         };
                     };
@@ -973,6 +1174,7 @@ namespace Gw2Launcher.UI
                     limit = ipCount;
                 int queued = 0;
                 int i = 0;
+                int failedPings = 0;
 
                 Task<TaskPingResult>[] tasks = new Task<TaskPingResult>[limit];
 
@@ -1017,7 +1219,7 @@ namespace Gw2Launcher.UI
                         var t = tasks[k];
                         var result = t.Result;
 
-                        if (result.http > 0)
+                        if (result.http >= 0)
                         {
                             var c = result.row.Cells[columnPatchServerResponseTime.Index];
                             c.Value = new MillisCell(result.http);
@@ -1035,12 +1237,15 @@ namespace Gw2Launcher.UI
                             var c = result.row.Cells[columnPatchServerPing.Index];
                             c.Value = new MillisCell(result.ping);
                             c.Style.ForeColor = Color.Empty;
+                            failedPings = -1;
                         }
                         else
                         {
                             var c = result.row.Cells[columnPatchServerPing.Index];
-                            c.Value = "failed";
+                            c.Value = result.http >= 0 ? "---" : "failed";
                             c.Style.ForeColor = Color.Maroon;
+                            if (failedPings != -1 && result.http >= 0)
+                                failedPings++;
                         }
 
                         SortRow(gridPatchServers, result.row, RowComparisonPatch, gridPatchServers.SortOrder);
@@ -1066,7 +1271,7 @@ namespace Gw2Launcher.UI
                             var t = tasks[k++] = new Task<TaskPingResult>(
                                 delegate
                                 {
-                                    return doPing(ip, row);
+                                    return doPing(ip, row, failedPings <= 3);
                                 });
                             t.Start();
                         }
@@ -1076,6 +1281,9 @@ namespace Gw2Launcher.UI
                         tasks[k] = null;
                     }
                 }
+
+                arrowAssetExpand.Visible = true;
+                copyAsset.Visible = true;
             }
             else
             {
@@ -1118,14 +1326,58 @@ namespace Gw2Launcher.UI
 
         private int RowComparisonLogin(DataGridViewRow a, DataGridViewRow b)
         {
+
             var c = gridLoginServers.SortedColumn;
             if (c == null)
-                c = columnLoginServerPing;
+                c = columnLoginServerResponseTime;
 
+            int result;
             var c1 = a.Cells[c.Index].Value as IComparable;
+            var v2 = b.Cells[c.Index].Value;
+
             if (c1 != null)
-                return c1.CompareTo(b.Cells[c.Index].Value);
-            return 0;
+            {
+                if (c1.GetType() == v2.GetType())
+                    result = c1.CompareTo(v2);
+                else if (c1 is MillisCell)
+                    result = -1;
+                else if (v2 is MillisCell)
+                    result = 1;
+                else
+                    result = 0;
+            }
+            else
+                result = 0;
+
+            if (c == columnLoginServerResponseTime && result == 0 && c1 is MillisCell)
+                result = ((IComparable)a.Cells[columnLoginServerPing.Index].Value).CompareTo(b.Cells[columnLoginServerPing.Index].Value);
+
+            return result;
+
+
+            //var c = gridLoginServers.SortedColumn;
+            //if (c == null)
+            //    c = columnLoginServerPing;
+
+            //int result;
+            //var c1 = a.Cells[c.Index].Value as IComparable;
+            //var v2 = b.Cells[c.Index].Value;
+
+            //if (c1 != null)
+            //{
+            //    if (c1.GetType() == v2.GetType())
+            //        result = c1.CompareTo(v2);
+            //    else if (c1 is string)
+            //        result = 1;
+            //    else if (v2 is string)
+            //        result = -1;
+            //    else
+            //        result = 0;
+            //}
+            //else
+            //    result = 0;
+
+            //return result;
         }
 
         private void gridPatchServers_SortCompare(object sender, DataGridViewSortCompareEventArgs e)
@@ -1135,34 +1387,6 @@ namespace Gw2Launcher.UI
                 e.Handled = true;
 
                 e.SortResult = RowComparisonPatch(gridPatchServers.Rows[e.RowIndex1], gridPatchServers.Rows[e.RowIndex2]);
-                return;
-
-                if (e.CellValue1.GetType() == e.CellValue2.GetType())
-                {
-                    if (e.CellValue1 is string)
-                        e.SortResult = 0;
-                    else
-                    {
-                        int v1 = (int)(((MillisCell)e.CellValue1).value + 0.5f);
-                        int v2 = (int)(((MillisCell)e.CellValue2).value + 0.5f);
-                        int r = v1.CompareTo(v2);
-                        
-                        if (r == 0)
-                        {
-                            int c = e.Column == columnPatchServerPing ? columnPatchServerResponseTime.Index : columnPatchServerPing.Index;
-                            v1 = (int)(((MillisCell)gridPatchServers.Rows[e.RowIndex1].Cells[c].Value).value + 0.5f);
-                            v2 = (int)(((MillisCell)gridPatchServers.Rows[e.RowIndex2].Cells[c].Value).value + 0.5f);
-                            r = v1.CompareTo(v2);
-                        }
-
-                        e.SortResult = r;
-                    }
-                }
-                else
-                {
-                    if (e.CellValue1 is string)
-                        e.SortResult = 1;
-                }
             }
         }
 
@@ -1185,6 +1409,21 @@ namespace Gw2Launcher.UI
                 else if (!v)
                 {
                     rowSelectedPatchServer = null;
+                }
+
+                if (inGridView == GridType.Asset)
+                {
+                    var s = Settings.GW2Arguments;
+                    string args = s.Value;
+                    if (args == null)
+                        args = "";
+
+                    if (rowSelectedPatchServer != null && (bool)rowSelectedPatchServer.Cells[columnPatchServerEnable.Index].Value)
+                        args = Util.Args.AddOrReplace(args, "assetsrv", "-assetsrv " + ((IPAddress)rowSelectedPatchServer.Cells[columnPatchServer.Index].Value).ToString());
+                    else
+                        args = Util.Args.AddOrReplace(args, "assetsrv", "");
+
+                    s.Value = args;
                 }
             }
         }
@@ -1287,13 +1526,13 @@ namespace Gw2Launcher.UI
 
                 foreach (var l in logs)
                 {
-                    OpenFolderAndSelect(l.data.FullName);
+                    Util.Explorer.OpenFolderAndSelect(l.data.FullName);
                 }
             }
             else
             {
                 var path = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData), "Guild Wars 2");
-                OpenFolder(path);
+                Util.Explorer.OpenFolder(path);
             }
         }
 
@@ -1343,11 +1582,17 @@ namespace Gw2Launcher.UI
         {
             buttonLoginServerLookup.Enabled = false;
             gridLoginServers.Visible = false;
+            arrowLoginExpand.Visible = false;
+            copyLogin.Visible = false;
             labelLoginServerNoIPs.Visible = false;
             progressLoginServer.Visible = false;
             gridLoginServers.Rows.Clear();
 
-            LookupLoginServers(new IPAddress[] { IPAddress.Loopback }, cancelToken.Token);
+            var ips = buttonPatchServerLookup.Tag as List<IPAddress>;
+            if (ips == null)
+                ips = Net.DnsServers.GetIPs();
+
+            LookupLoginServers(ips, cancelToken.Token);
         }
 
         private void gridLoginServers_CellContentClick(object sender, DataGridViewCellEventArgs e)
@@ -1370,6 +1615,21 @@ namespace Gw2Launcher.UI
                 {
                     rowSelectedLoginServer = null;
                 }
+
+                if (inGridView == GridType.Login)
+                {
+                    var s = Settings.GW2Arguments;
+                    string args = s.Value;
+                    if (args == null)
+                        args = "";
+
+                    if (rowSelectedLoginServer != null && (bool)rowSelectedLoginServer.Cells[columnLoginServerEnable.Index].Value)
+                        args = Util.Args.AddOrReplace(args, "authsrv", "-authsrv " + ((IPAddress)rowSelectedLoginServer.Cells[columnLoginServer.Index].Value).ToString());
+                    else
+                        args = Util.Args.AddOrReplace(args, "authsrv", "");
+
+                    s.Value = args;
+                }
             }
         }
 
@@ -1383,24 +1643,8 @@ namespace Gw2Launcher.UI
             if (e.Column == columnLoginServerPing)
             {
                 e.Handled = true;
-                if (e.CellValue1.GetType() == e.CellValue2.GetType())
-                {
-                    if (e.CellValue1 is string)
-                        e.SortResult = 0;
-                    else
-                    {
-                        int v1 = (int)(((MillisCell)e.CellValue1).value + 0.5f);
-                        int v2 = (int)(((MillisCell)e.CellValue2).value + 0.5f);
-                        int r = v1.CompareTo(v2);
-                        
-                        e.SortResult = r;
-                    }
-                }
-                else
-                {
-                    if (e.CellValue1 is string)
-                        e.SortResult = 1;
-                }
+
+                e.SortResult = RowComparisonLogin(gridLoginServers.Rows[e.RowIndex1], gridLoginServers.Rows[e.RowIndex2]);
             }
         }
 
@@ -1458,21 +1702,27 @@ namespace Gw2Launcher.UI
             int from, 
                 to = grid.Rows.Count - 1;
 
-            if (to < 1)
-            {
-                if (to == -1)
-                    grid.Rows.Add(row);
-                else
+            Func<DataGridViewRow, DataGridViewRow, int> doComparison =
+                delegate(DataGridViewRow a, DataGridViewRow b)
                 {
-                    var c = comparison(row, grid.Rows[0]);
+                    var _c = comparison(a, b);
                     if (order == SortOrder.Descending)
-                        c = -c;
+                        _c = -_c;
+                    return _c;
+                };
 
-                    if (c < 0)
-                        grid.Rows.Insert(0, row);
-                    else
-                        grid.Rows.Add(row);
-                }
+            if (to == -1)
+            {
+                grid.Rows.Add(row);
+            }
+            else if (to == 0)
+            {
+                var c = doComparison(row, grid.Rows[0]);
+
+                if (c < 0)
+                    grid.Rows.Insert(0, row);
+                else
+                    grid.Rows.Add(row);
             }
             else
             {
@@ -1485,16 +1735,14 @@ namespace Gw2Launcher.UI
 
                     DataGridViewRow mid = grid.Rows[index];
 
-                    c = comparison(row, mid);
-                    if (order == SortOrder.Descending)
-                        c = -c;
+                    c = doComparison(row, mid);
 
                     if (c == 0)
                     {
                         grid.Rows.Insert(index, row);
                         return;
                     }
-                    else if (from == index)
+                    else if ((from == index && c < 0) || (to == index && c > 0))
                     {
                         if (c < 0)
                             grid.Rows.Insert(index, row);
@@ -1503,9 +1751,9 @@ namespace Gw2Launcher.UI
                         return;
                     }
                     else if (c > 0)
-                        from = index;
+                        from = index + 1;
                     else if (c < 0)
-                        to = index;
+                        to = index - 1;
                 }
             }
         }
@@ -1527,6 +1775,90 @@ namespace Gw2Launcher.UI
             {
                 parent.ShowPatchProxy();
             }
+        }
+
+        private void labelLoginServerDns_Click(object sender, EventArgs e)
+        {
+            using (formDnsDialog f = new formDnsDialog((List<IPAddress>)buttonPatchServerLookup.Tag))
+            {
+                if (f.ShowDialog(this) == DialogResult.OK)
+                {
+                    buttonPatchServerLookup.Tag = f.IPs;
+                }
+            }
+        }
+
+        private void progressLoginServer_VisibleChanged(object sender, EventArgs e)
+        {
+            labelLoginServerDns.Visible = !progressLoginServer.Visible;
+        }
+
+        private void arrowLoginExpand_Click(object sender, EventArgs e)
+        {
+            var _f = arrowLoginExpand.Tag as formSupport;
+            if (_f != null && !_f.IsDisposed)
+                _f.Close();
+            
+            formMain owner = this.Owner as formMain;
+            if (owner != null)
+            {
+                owner.Invoke(new MethodInvoker(
+                    delegate
+                    {
+                        formSupport f = new formSupport(GridType.Login, gridLoginServers, this);
+                        owner.AddWindow(f).Show(owner);
+                        arrowLoginExpand.Tag = f;
+                    }));
+            }
+        }
+
+        private void arrowAssetExpand_Click(object sender, EventArgs e)
+        {
+            var _f = arrowAssetExpand.Tag as formSupport;
+            if (_f != null && !_f.IsDisposed)
+                _f.Close();
+
+            formMain owner = this.Owner as formMain;
+            if (owner != null)
+            {
+                owner.Invoke(new MethodInvoker(
+                    delegate
+                    {
+                        formSupport f = new formSupport(GridType.Asset, gridPatchServers, this);
+                        owner.AddWindow(f).Show(owner);
+                        arrowAssetExpand.Tag = f;
+                    }));
+            }
+        }
+
+        private string GridToString(DataGridView grid)
+        {
+            StringBuilder sb = new StringBuilder();
+
+            foreach (DataGridViewRow row in grid.Rows)
+            {
+                foreach (DataGridViewCell cell in row.Cells)
+                {
+                    if (cell is DataGridViewCheckBoxCell || cell.Value == null)
+                        continue;
+                    sb.Append(cell.Value.ToString());
+                    sb.Append('\t');
+                }
+                sb.Length--;
+                sb.AppendLine();
+            }
+
+            return sb.ToString();
+        }
+
+        private void copyAsset_Click(object sender, EventArgs e)
+        {
+            Clipboard.SetData(DataFormats.Text, GridToString(gridPatchServers));
+        }
+
+        private void copyLogin_Click(object sender, EventArgs e)
+        {
+            Clipboard.SetData(DataFormats.Text, GridToString(gridLoginServers));
         }
     }
 }

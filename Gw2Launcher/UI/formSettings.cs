@@ -14,6 +14,7 @@ namespace Gw2Launcher.UI
     public partial class formSettings : Form
     {
         private SidebarButton selectedButton;
+        private Form activeWindow;
 
         public formSettings()
         {
@@ -23,6 +24,7 @@ namespace Gw2Launcher.UI
             buttonArguments.Tag = panelArguments;
             buttonPasswords.Tag = panelPasswords;
             buttonStyle.Tag = panelStyle;
+            buttonUpdates.Tag = panelUpdates;
 
             foreach (Control c in sidebarPanel1.Controls)
             {
@@ -52,7 +54,6 @@ namespace Gw2Launcher.UI
             checkShowTrayIcon.Checked = !Settings.ShowTray.HasValue || Settings.ShowTray.Value;
             checkBringToFrontOnExit.Checked = Settings.BringToFrontOnExit.Value;
             checkStoreCredentials.Checked = Settings.StoreCredentials.Value;
-            checkCheckBuildOnLaunch.Checked = Settings.CheckForNewBuilds;
             checkShowUser.Checked = !Settings.ShowAccount.HasValue || Settings.ShowAccount.Value;
 
             buttonSample.ShowAccount = checkShowUser.Checked;
@@ -62,6 +63,38 @@ namespace Gw2Launcher.UI
                 buttonSample.FontSmall = Settings.FontSmall.Value;
 
             labelFontRestoreDefaults.Visible = Settings.FontLarge.HasValue || Settings.FontSmall.HasValue;
+
+            checkCheckBuildOnLaunch.Checked = Settings.CheckForNewBuilds.Value;
+            checkAutoUpdate.Checked = Settings.AutoUpdate.Value;
+            checkAutoUpdateDownload.Checked = Settings.BackgroundPatchingEnabled.Value;
+            if (Settings.BackgroundPatchingNotifications.HasValue)
+            {
+                checkAutoUpdateDownloadNotifications.Checked = true;
+                checkAutoUpdateDownloadNotifications.Tag = Settings.BackgroundPatchingNotifications.Value;
+            }
+            else
+            {
+                checkAutoUpdateDownloadNotifications.Tag = new Settings.ScreenAttachment()
+                {
+                    screen = 0,
+                    anchor = Settings.ScreenAnchor.BottomRight
+                };
+            }
+            if (Settings.AutoUpdateInterval.HasValue)
+                numericUpdateInterval.Value = Settings.AutoUpdateInterval.Value;
+            checkVolume.Checked = Settings.Volume.HasValue;
+            if (Settings.Volume.HasValue)
+                sliderVolume.Value = Settings.Volume.Value;
+            if (Settings.RunAfterLaunching.HasValue)
+                textRunAfterLaunch.Text = Settings.RunAfterLaunching.Value;
+            else
+                textRunAfterLaunch.Text = "";
+
+            if (Settings.LastProgramVersion.HasValue)
+            {
+                checkCheckVersionOnStart.Checked = true;
+                labelVersionUpdate.Visible = Settings.LastProgramVersion.Value.version > Program.RELEASE_VERSION;
+            }
         }
 
         void sidebarButton_SelectedChanged(object sender, EventArgs e)
@@ -127,20 +160,16 @@ namespace Gw2Launcher.UI
 
         private void buttonOK_Click(object sender, EventArgs e)
         {
+            if (activeWindow != null && !activeWindow.IsDisposed)
+                activeWindow.Close();
+
             Settings.GW2Path.Value = textGW2Path.Text;
             Settings.GW2Arguments.Value = textArguments.Text;
             Settings.MinimizeToTray.Value = checkMinimizeToTray.Checked;
             Settings.ShowTray.Value = checkShowTrayIcon.Checked;
             Settings.BringToFrontOnExit.Value = checkBringToFrontOnExit.Checked;
             Settings.StoreCredentials.Value = checkStoreCredentials.Checked;
-
-            if (checkCheckBuildOnLaunch.Checked != Settings.CheckForNewBuilds)
-            {
-                if (checkCheckBuildOnLaunch.Checked)
-                    Settings.LastKnownBuild.Value = 0;
-                else
-                    Settings.LastKnownBuild.Clear();
-            }
+            Settings.CheckForNewBuilds.Value = checkCheckBuildOnLaunch.Checked;
 
             Settings.ShowAccount.Value = checkShowUser.Checked;
 
@@ -153,6 +182,31 @@ namespace Gw2Launcher.UI
                 Settings.FontSmall.Clear();
             else
                 Settings.FontSmall.Value = buttonSample.FontSmall;
+
+            if (checkVolume.Checked)
+                Settings.Volume.Value = sliderVolume.Value;
+            else
+                Settings.Volume.Clear();
+
+            Settings.AutoUpdateInterval.Value = (ushort)numericUpdateInterval.Value;
+            Settings.AutoUpdate.Value = checkAutoUpdate.Checked;
+            Settings.BackgroundPatchingEnabled.Value = checkAutoUpdateDownload.Checked;
+            if (checkAutoUpdateDownloadNotifications.Checked)
+                Settings.BackgroundPatchingNotifications.Value = (Settings.ScreenAttachment)checkAutoUpdateDownloadNotifications.Tag;
+            else
+                Settings.BackgroundPatchingNotifications.Clear();
+            if (!string.IsNullOrEmpty(textRunAfterLaunch.Text))
+                Settings.RunAfterLaunching.Value = textRunAfterLaunch.Text;
+            else
+                Settings.RunAfterLaunching.Clear();
+
+            if (checkCheckVersionOnStart.Checked)
+            {
+                if (!Settings.LastProgramVersion.HasValue)
+                    Settings.LastProgramVersion.Value = new Settings.LastCheckedVersion();
+            }
+            else
+                Settings.LastProgramVersion.Clear();
 
             this.DialogResult = System.Windows.Forms.DialogResult.OK;
         }
@@ -228,6 +282,66 @@ namespace Gw2Launcher.UI
             labelFontRestoreDefaults.Visible = false;
             buttonSample.FontLarge = UI.Controls.AccountGridButton.FONT_LARGE;
             buttonSample.FontSmall = UI.Controls.AccountGridButton.FONT_SMALL;
+        }
+
+        private void checkVolume_CheckedChanged(object sender, EventArgs e)
+        {
+            sliderVolume.Enabled = checkVolume.Checked;
+        }
+
+        private void label30_Click(object sender, EventArgs e)
+        {
+            textRunAfterLaunch.SelectedText = ((Label)sender).Text;
+        }
+
+        private void labelVersionUpdate_Click(object sender, EventArgs e)
+        {
+            using (formVersionUpdate f = new formVersionUpdate())
+            {
+                f.ShowDialog(this);
+            }
+        }
+
+        private void sliderVolume_ValueChanged(object sender, float e)
+        {
+            labelVolume.Text = (int)(e * 100 + 0.5f) + "%";
+        }
+
+        private void checkAutoUpdateDownload_CheckedChanged(object sender, EventArgs e)
+        {
+            checkAutoUpdateDownloadNotifications.Enabled = checkAutoUpdateDownload.Checked;
+        }
+
+        private Form SetActive(Form form)
+        {
+            if (activeWindow != null && !activeWindow.IsDisposed)
+                activeWindow.Close();
+            activeWindow = form;
+            return form;
+        }
+
+        private void labelAutoUpdateDownloadNotificationsConfig_Click(object sender, EventArgs e)
+        {
+            var v = (Settings.ScreenAttachment)checkAutoUpdateDownloadNotifications.Tag;
+            var f = SetActive(new formScreenPosition(v.screen, v.anchor));
+            f.FormClosing += screenPosition_FormClosing;
+            f.StartPosition = FormStartPosition.Manual;
+            var source = labelAutoUpdateDownloadNotificationsConfig;
+            f.Location = Point.Add(source.Parent.PointToScreen(Point.Empty), new Size(source.Location.X - f.Width / 2, source.Location.Y - f.Height / 2));
+            f.Show();
+        }
+
+        void screenPosition_FormClosing(object sender, FormClosingEventArgs e)
+        {
+            var f = sender as formScreenPosition;
+            if (f != null)
+            {
+                checkAutoUpdateDownloadNotifications.Tag = new Settings.ScreenAttachment()
+                {
+                    screen = (byte)f.SelectedScreen,
+                    anchor = f.SelectedAnchor
+                };
+            }
         }
     }
 }

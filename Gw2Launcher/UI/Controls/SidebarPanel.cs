@@ -11,21 +11,30 @@ namespace Gw2Launcher.UI.Controls
     class SidebarPanel : Panel
     {
         private Color colorBorder;
+        private Pen penBorder;
 
         public SidebarPanel():base()
         {
             colorBorder = SystemColors.WindowFrame;
+            penBorder = new Pen(Color.Black);
+
+            base.Disposed += SidebarPanel_Disposed;
+        }
+
+        void SidebarPanel_Disposed(object sender, EventArgs e)
+        {
+            penBorder.Dispose();
         }
 
         public Color BorderColor
         {
             get
             {
-                return colorBorder;
+                return penBorder.Color;
             }
             set
             {
-                colorBorder = value;
+                penBorder.Color = value;
                 this.Invalidate();
             }
         }
@@ -35,7 +44,7 @@ namespace Gw2Launcher.UI.Controls
             base.OnPaintBackground(e);
 
             var g = e.Graphics;
-            g.DrawLine(new Pen(new SolidBrush(colorBorder)), this.Width - 1, 0, this.Width - 1, this.Height - 1);
+            g.DrawLine(penBorder, this.Width - 1, 0, this.Width - 1, this.Height - 1);
         }
     }
 }

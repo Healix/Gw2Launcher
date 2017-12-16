@@ -45,6 +45,15 @@ namespace Gw2Launcher.UI
             parent.LocationChanged += parent_LocationChanged;
             parent.VisibleChanged += parent_VisibleChanged;
             label8.SizeChanged += label8_SizeChanged;
+
+            this.Disposed += formWaiting_Disposed;
+        }
+
+        void formWaiting_Disposed(object sender, EventArgs e)
+        {
+            parent.SizeChanged -= parent_SizeChanged;
+            parent.LocationChanged -= parent_LocationChanged;
+            parent.VisibleChanged -= parent_VisibleChanged;
         }
 
         void label8_SizeChanged(object sender, EventArgs e)
@@ -89,10 +98,6 @@ namespace Gw2Launcher.UI
         protected override void OnFormClosing(FormClosingEventArgs e)
         {
             base.OnFormClosing(e);
-
-            parent.SizeChanged -= parent_SizeChanged;
-            parent.LocationChanged -= parent_LocationChanged;
-            parent.VisibleChanged -= parent_VisibleChanged;
         }
 
         void formWaiting_SizeChanged(object sender, EventArgs e)
