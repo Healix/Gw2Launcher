@@ -5,11 +5,27 @@ using System.Text;
 using System.Threading.Tasks;
 using System.Reflection;
 using System.Diagnostics;
+using System.IO;
 
 namespace Gw2Launcher.Util
 {
     static class Logging
     {
+        public static readonly string PATH;
+
+        static Logging()
+        {
+            PATH = Path.Combine(DataPath.AppData, "Gw2Launcher.log");
+
+            try
+            {
+                var fi = new FileInfo(PATH);
+                if (fi.Exists && fi.Length > 5120000)
+                    fi.Delete();
+            }
+            catch { }
+        }
+
         public static void Log(Exception e)
         {
             #if DEBUG
@@ -44,6 +60,36 @@ namespace Gw2Launcher.Util
                 Console.WriteLine(ex.Message + "\n" + ex.StackTrace);
             }
             #endif
+        }
+
+        public static void Crash(Exception e)
+        {
+            Write(e.GetType().ToString() + ": " + e.Message + "\r\n" + new StackTrace(1).ToString());
+        }
+
+        public static void Crash(string message)
+        {
+            Write(message + "\r\n" + new StackTrace(1).ToString());
+        }
+
+        public static void Write(string message)
+        {
+            try
+            {
+                lock (PATH)
+                {
+                    var now = DateTime.Now;
+
+                    using (var writer = new StreamWriter(File.Open(PATH, FileMode.Append, FileAccess.Write, FileShare.Read)))
+                    {
+                        writer.WriteLine("[" + now.ToString("MM/dd/yyyy HH:mm:ss.fff") + "] " + message);
+                    }
+                }
+            }
+            catch
+            {
+
+            }
         }
     }
 }

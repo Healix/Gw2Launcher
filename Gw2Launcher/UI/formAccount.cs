@@ -538,6 +538,8 @@ namespace Gw2Launcher.UI
                 f.SetBounds(r.X, r.Y, r.Width, r.Height);
                 if (f.ShowDialog(this) == DialogResult.OK)
                     textWindowed.Text = ToString(f.Bounds);
+
+                this.Focus();
             }
         }
 

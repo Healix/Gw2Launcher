@@ -32,6 +32,7 @@ namespace Gw2Launcher.UI.Controls
 
             sliderY = 0;
             barX = 0;
+            barY = 0;
             barH = 100;
             sliderW = 6;
             sliderH = 80;

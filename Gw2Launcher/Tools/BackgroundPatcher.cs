@@ -61,8 +61,8 @@ namespace Gw2Launcher.Tools
         }
 
         private const ushort MANIFEST_BASE_ID = 4101;
-        private const float AVG_COMPRESSION = 0.565204517123359f; //average compression ratio of files in Gw2.dat
-        private const float AVG_PATCH_COMPRESSION = 0.227189296144413f; //average difference between patches and full uncompressed files
+        private const float AVG_COMPRESSION = 0.575152368070167f; //0.565204517123359f; //0.627114534f; //average compression ratio of files in Gw2.dat
+        private const float AVG_PATCH_COMPRESSION = 0.185207611983736f; //0.227189296144413f; //0.0724870563f; //average difference between patches and full uncompressed files
 
         private Net.AssetDownloader downloader;
         private Dictionary<int, int> baseIds;

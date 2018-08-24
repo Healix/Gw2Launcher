@@ -35,8 +35,8 @@ namespace Gw2Launcher.UI
             this.showContextMenu = showContextMenu;
 
             overlay = new formWindowSizeOverlay(this);
-            overlay.Show(this);
 
+            this.Shown += formWindowSize_Shown;
             this.GotFocus += new EventHandler(formWindowSize_GotFocus);
             this.LostFocus += new EventHandler(formWindowSize_LostFocus);
 
@@ -44,6 +44,11 @@ namespace Gw2Launcher.UI
 
             //resizeThread = new Thread(new ThreadStart(ResizeWindow));
             //resizeThread.Start();
+        }
+
+        void formWindowSize_Shown(object sender, EventArgs e)
+        {
+            overlay.Show(this);
         }
 
         private void formWindowSize_LostFocus(object sender, EventArgs e)
@@ -237,6 +242,7 @@ namespace Gw2Launcher.UI
         private void formWindowSize_FormClosing(object sender, FormClosingEventArgs e)
         {
             formClosing = true;
+            overlay.Dispose();
         }
 
         private void saveToolStripMenuItem_Click(object sender, EventArgs e)

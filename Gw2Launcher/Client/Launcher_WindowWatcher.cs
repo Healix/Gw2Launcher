@@ -13,10 +13,20 @@ namespace Gw2Launcher.Client
     {
         private class WindowWatcher
         {
-            [DllImport("user32.dll")]
+            [DllImport("User32.dll", CharSet = CharSet.Auto, SetLastError = true)]
             [return: MarshalAs(UnmanagedType.Bool)]
-            static extern bool PeekMessage(out NativeMessage lpMsg, HandleRef hWnd, uint wMsgFilterMin,
-               uint wMsgFilterMax, uint wRemoveMsg);
+            static extern bool PeekMessage(ref NativeMessage message, IntPtr handle, uint filterMin, uint filterMax, uint flags);
+
+            [DllImport("User32.dll", CharSet = CharSet.Auto, SetLastError = true)]
+            [return: MarshalAs(UnmanagedType.Bool)]
+            static extern bool GetMessage(ref NativeMessage message, IntPtr handle, uint filterMin, uint filterMax);
+
+            [DllImport("user32.dll")]
+            static extern IntPtr DispatchMessage([In] ref NativeMessage lpmsg);
+
+            [DllImport("user32.dll")]
+            static extern bool TranslateMessage([In] ref NativeMessage lpMsg);
+
             [StructLayout(LayoutKind.Sequential)]
             public struct NativeMessage
             {
@@ -28,7 +38,7 @@ namespace Gw2Launcher.Client
                 public System.Drawing.Point p;
             }
 
-            delegate void WinEventDelegate(IntPtr hWinEventHook, uint eventType, IntPtr hwnd, int idObject, int idChild, uint dwEventThread, uint dwmsEventTime);
+            private delegate void WinEventDelegate(IntPtr hWinEventHook, uint eventType, IntPtr hwnd, int idObject, int idChild, uint dwEventThread, uint dwmsEventTime);
 
             [DllImport("user32.dll")]
             static extern IntPtr SetWinEventHook(uint eventMin, uint eventMax, IntPtr hmodWinEventProc, WinEventDelegate lpfnWinEventProc, uint idProcess, uint idThread, uint dwFlags);
@@ -57,6 +67,8 @@ namespace Gw2Launcher.Client
             /// </summary>
             public WindowWatcher(Account account, Process p, bool watchBounds, string args)
             {
+                this.Account = account;
+
                 this.process = p;
                 this.Account = account;
                 this.watchBounds = watchBounds;
@@ -66,7 +78,10 @@ namespace Gw2Launcher.Client
             public void Start()
             {
                 if (watcher == null)
-                    watcher = Task.Factory.StartNew(WatchWindow2, TaskCreationOptions.LongRunning);
+                {
+                    watcher = new Task(WatchWindow2, TaskCreationOptions.LongRunning);
+                    watcher.Start();
+                }
             }
 
             public Process Process
@@ -169,9 +184,11 @@ namespace Gw2Launcher.Client
                     try
                     {
                         if (this.process.HasExited)
+                        {
                             break;
+                        }
                     }
-                    catch (Exception e) 
+                    catch (Exception e)
                     {
                         Util.Logging.Log(e);
                         return;
@@ -197,33 +214,30 @@ namespace Gw2Launcher.Client
 
                                     if (watchBounds)
                                     {
-                                        //hooking location changed event
+                                        var hasMessage = false;
+                                        var message = new NativeMessage();
 
-                                        bool hasMessage = false;
-                                        NativeMessage message = new NativeMessage();
-                                        HandleRef href = new HandleRef();
-                                        IntPtr _hook = IntPtr.Zero;
-                                        WinEventDelegate _callback = new WinEventDelegate(
+                                        WinEventDelegate callback =
                                             delegate(IntPtr hWinEventHook, uint eventType, IntPtr hwnd, int idObject, int idChild, uint dwEventThread, uint dwmsEventTime)
                                             {
-                                                if (idObject == 0)
-                                                {
-                                                    hasMessage = true;
-                                                }
-                                            });
+                                                hasMessage = true;
+                                            };
 
+                                        var _message = GCHandle.Alloc(message);
+                                        var _callback = GCHandle.Alloc(callback);
+                                        var _hook = IntPtr.Zero;
+                                        
                                         try
                                         {
-                                            _hook = SetWinEventHook(0x800b, 0x800b, IntPtr.Zero, _callback, (uint)process.Id, 0, 0);
+                                            _hook = SetWinEventHook(0, uint.MaxValue, IntPtr.Zero, callback, (uint)process.Id, 0, 0); //0x800b
+
                                             var t = DateTime.UtcNow.AddSeconds(30);
                                             do
                                             {
-                                                PeekMessage(out message, href, 0, 0, 0);
+                                                PeekMessage(ref message, IntPtr.Zero, 0, 0, 0);
                                                 Thread.Sleep(100);
                                             }
                                             while (!hasMessage && DateTime.UtcNow < t && !this.process.HasExited);
-
-                                            Thread.Sleep(1000);
                                         }
                                         catch (Exception e)
                                         {
@@ -233,6 +247,9 @@ namespace Gw2Launcher.Client
                                         {
                                             if (_hook != IntPtr.Zero)
                                                 UnhookWinEvent(_hook);
+
+                                            _message.Free();
+                                            _callback.Free();
                                         }
 
                                         //already exists

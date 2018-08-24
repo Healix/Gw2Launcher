@@ -301,10 +301,9 @@ namespace Gw2Launcher.Client
         {
             if (account.Windowed && !account.WindowBounds.IsEmpty)
             {
-                var p = GetAccount(account).Process.Process;
-
                 try
                 {
+                    var p = GetAccount(account).Process.Process;
                     if (p != null && !p.HasExited)
                     {
                         WindowWatcher.SetBounds(p, account.WindowBounds);
@@ -314,6 +313,25 @@ namespace Gw2Launcher.Client
                 {
                     Util.Logging.Log(e);
                 }
+            }
+        }
+
+        public static void Kill(Settings.IAccount account)
+        {
+            Process p;
+            lock (accounts)
+            {
+                var _account = GetAccount(account);
+                p = _account.Process.Process;
+            }
+
+            if (p != null)
+            {
+                try
+                {
+                    p.Kill();
+                }
+                catch { }
             }
         }
 
@@ -375,11 +393,12 @@ namespace Gw2Launcher.Client
                     cancelQueue = new CancellationTokenSource();
                     var cancel = cancelQueue.Token;
 
-                    taskQueue = Task.Factory.StartNew(
+                    taskQueue = new Task(
                         delegate
                         {
                             DoQueue(cancel);
                         }, cancel);
+                    taskQueue.Start();
                 }
             }
         }
@@ -424,7 +443,10 @@ namespace Gw2Launcher.Client
             {
                 t = taskScan;
                 if (t == null || t.IsCompleted)
-                    t = taskScan = Task.Factory.StartNew(DoScan);
+                {
+                    t = taskScan = new Task(DoScan);
+                    t.Start();
+                }
             }
 
             return t;
@@ -1249,8 +1271,7 @@ namespace Gw2Launcher.Client
 
                         if (!IsUpdate(mode))
                         {
-
-                            WindowWatcher watcher = new WindowWatcher(account, gw2, isWindowed, args);
+                            WindowWatcher watcher = account.watcher = new WindowWatcher(account, gw2, isWindowed, args);
                             if (isWindowed)
                                 watcher.WindowChanged += OnWatchedWindowChanged;
                             watcher.WindowCrashed += OnWatchedWindowCrashed;
@@ -1436,11 +1457,12 @@ namespace Gw2Launcher.Client
                     t = taskScan;
                     if (t == null || t.IsCompleted)
                     {
-                        t = taskScan = Task.Factory.StartNew(
+                        t = taskScan = new Task(
                             delegate
                             {
                                 DoScan(ScanOptions.KillLinked);
                             });
+                        t.Start();
 
                         break;
                     }
@@ -1451,6 +1473,15 @@ namespace Gw2Launcher.Client
             while (true);
 
             await t;
+
+            //KillActiveLaunches();
+
+            //do
+            //{
+            //    //ensure there's nothing waiting to be rehooked and kill it again
+            //    await WaitForScannerTask();
+            //} 
+            //while (KillActiveLaunches() > 0);
         }
 
         public static int KillActiveLaunches()
@@ -1907,7 +1938,7 @@ namespace Gw2Launcher.Client
                                             default:
 
                                                 bool isWindowed = IsWindowed(account.Settings);
-                                                WindowWatcher watcher = new WindowWatcher(account, p, isWindowed, null);
+                                                WindowWatcher watcher = account.watcher = new WindowWatcher(account, p, isWindowed, null);
                                                 if (isWindowed)
                                                     watcher.WindowChanged += OnWatchedWindowChanged;
                                                 watcher.WindowCrashed += OnWatchedWindowCrashed;
@@ -1947,7 +1978,10 @@ namespace Gw2Launcher.Client
                                 {
                                     unknownProcesses.Add(p.Id, p);
                                     if (taskWatchUnknowns == null || taskWatchUnknowns.IsCompleted)
-                                        taskWatchUnknowns = Task.Factory.StartNew(DoWatch, TaskCreationOptions.LongRunning);
+                                    {
+                                        taskWatchUnknowns = new Task(DoWatch, TaskCreationOptions.LongRunning);
+                                        taskWatchUnknowns.Start();
+                                    }
                                 }
                                 else
                                     p.Dispose();
@@ -2070,7 +2104,10 @@ namespace Gw2Launcher.Client
                             lastExit = DateTime.UtcNow;
 
                             if (taskScan == null || taskScan.IsCompleted)
-                                taskScan = Task.Factory.StartNew(DoScan);
+                            {
+                                taskScan = new Task(DoScan);
+                                taskScan.Start();
+                            }
                         }
 
                         return;
@@ -2227,7 +2264,10 @@ namespace Gw2Launcher.Client
                 queueExit.Enqueue(new QueuedExit(account, lastExit = DateTime.UtcNow, process));
 
                 if (taskScan == null || taskScan.IsCompleted)
-                    taskScan = Task.Factory.StartNew(DoScan);
+                {
+                    taskScan = new Task(DoScan);
+                    taskScan.Start();
+                }
             }
         }
 
@@ -2363,11 +2403,12 @@ namespace Gw2Launcher.Client
                                 cancelQueue = new CancellationTokenSource();
                                 var cancel = cancelQueue.Token;
 
-                                taskQueue = Task.Factory.StartNew(
+                                taskQueue = new Task(
                                     delegate
                                     {
                                         DoQueue(cancel);
                                     }, cancel);
+                                taskQueue.Start();
                             }
                         }
                     }
@@ -2377,46 +2418,6 @@ namespace Gw2Launcher.Client
                     Util.Logging.Log(ex);
                 }
             }
-        }
-
-        private static string[] GetProcessDetails(Process p)
-        {
-            string query = string.Format("SELECT ExecutablePath, CommandLine FROM Win32_Process WHERE ProcessId={0}", p.Id);
-
-            using (ManagementObjectSearcher searcher = new ManagementObjectSearcher(query))
-            {
-                using (ManagementObjectCollection results = searcher.Get())
-                {
-                    foreach (ManagementObject o in results)
-                    {
-                        return new string[]
-                        {
-                            o["ExecutablePath"] as string,
-                            o["CommandLine"] as string
-                        };
-                    }
-                }
-            }
-
-            return null;
-        }
-
-        private static string GetProcessCommandLine(Process p)
-        {
-            string query = string.Format("SELECT CommandLine FROM Win32_Process WHERE ProcessId={0}", p.Id);
-
-            using (ManagementObjectSearcher searcher = new ManagementObjectSearcher(query))
-            {
-                using (ManagementObjectCollection results = searcher.Get())
-                {
-                    foreach (ManagementObject o in results)
-                    {
-                        return o["CommandLine"] as string;
-                    }
-                }
-            }
-
-            return null;
         }
 
         private static int GetUIDFromCommandLine(string commandLine)

@@ -102,8 +102,8 @@ namespace Gw2Launcher.UI.Controls
                 case 0x20a:
 
                     var pos = new Point(m.LParam.ToInt32());
-                    var wParam = m.WParam.ToInt32();
-                    Func<int, MouseButtons, MouseButtons> getButton =
+                    var wParam = (int)m.WParam.ToInt64();
+                    Func<long, MouseButtons, MouseButtons> getButton =
                         (flag, button) => ((wParam & flag) == flag) ? button : MouseButtons.None;
 
                     var buttons = getButton(wParam & 0x0001, MouseButtons.Left)

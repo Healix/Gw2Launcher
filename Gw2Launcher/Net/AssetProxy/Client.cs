@@ -346,7 +346,7 @@ namespace Gw2Launcher.Net.AssetProxy
                                 {
                                     doSwap = true;
 
-                                    taskSwap = Task.Run<IPAddress>(
+                                    taskSwap = new Task<IPAddress>(
                                         delegate
                                         {
                                             var clientSwap = this.clientSwap = new TcpClient();
@@ -368,6 +368,7 @@ namespace Gw2Launcher.Net.AssetProxy
                                                 return ip;
                                             }
                                         });
+                                    taskSwap.Start();
                                 }
                             }
                         }

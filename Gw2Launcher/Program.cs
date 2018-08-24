@@ -15,7 +15,7 @@ namespace Gw2Launcher
 {
     static class Program
     {
-        public const byte RELEASE_VERSION = 1;
+        public const byte RELEASE_VERSION = 2;
 
         /// <summary>
         /// The main entry point for the application.
@@ -510,68 +510,88 @@ namespace Gw2Launcher
             if (!mutex.WaitOne(TimeSpan.Zero, true))
             {
                 if (!Settings.Silent)
-                    Messaging.Messager.Post(Messaging.Messager.MessageType.Show, 0);
+                {
+                    Messaging.Messager.SendCallback(Messaging.Messager.MessageType.Show, 0, 1000,
+                        delegate(IntPtr hWnd, uint uMsg, IntPtr lResult)
+                        {
+                            if (lResult != IntPtr.Zero && lResult == hWnd)
+                            {
+                                Windows.FindWindow.ShowWindow(hWnd, 5);
+                                Windows.FindWindow.BringWindowToTop(hWnd);
+                                Windows.FindWindow.SetForegroundWindow(hWnd);
+
+                                return true;
+                            }
+                            return false;
+                        });
+
+                    #region By process
+
+                    //required for some situations
+
+                    //try
+                    //{
+                    //    using (Process current = Process.GetCurrentProcess())
+                    //    {
+                    //        FileInfo fi = new FileInfo(current.MainModule.FileName);
+                    //        Process[] ps = Process.GetProcessesByName(fi.Name.Substring(0, fi.Name.Length - fi.Extension.Length));
+                    //        foreach (Process p in ps)
+                    //        {
+                    //            using (p)
+                    //            {
+                    //                try
+                    //                {
+                    //                    if (p.Id != current.Id && !p.HasExited)
+                    //                    {
+                    //                        if (string.Equals(p.MainModule.FileName, fi.FullName, StringComparison.OrdinalIgnoreCase))
+                    //                        {
+                    //                            IntPtr ptr = Windows.FindWindow.Find(p.Id, null);
+
+                    //                            if (ptr != IntPtr.Zero)
+                    //                            {
+                    //                                Windows.FindWindow.ShowWindow(ptr, 5);
+                    //                                Windows.FindWindow.BringWindowToTop(ptr);
+                    //                                Windows.FindWindow.SetForegroundWindow(ptr);
+                    //                            }
+
+                    //                            //var placement = Windows.WindowSize.GetWindowPlacement(ptr);
+
+                    //                            //if (placement.showCmd == (int)Windows.WindowSize.WindowState.SW_SHOWMINIMIZED)
+                    //                            //    Windows.WindowSize.SetWindowPlacement(ptr, Rectangle.FromLTRB(placement.rcNormalPosition.left, placement.rcNormalPosition.top, placement.rcNormalPosition.right, placement.rcNormalPosition.bottom), Windows.WindowSize.WindowState.SW_RESTORE);
+
+                    //                            //SetForegroundWindow(ptr);
+
+                    //                            break;
+                    //                        }
+                    //                    }
+                    //                }
+                    //                catch { }
+                    //            }
+                    //        }
+                    //    }
+                    //}
+                    //catch { }
+
+                    #endregion
+                }
 
                 if (launch != null)
                     launch.Send();
-
-                #region Old method / no messages
-
-                //try
-                //{
-                //    using (Process current = Process.GetCurrentProcess())
-                //    {
-                //        FileInfo fi = new FileInfo(current.MainModule.FileName);
-                //        Process[] ps = Process.GetProcessesByName(fi.Name.Substring(0, fi.Name.Length - fi.Extension.Length));
-                //        foreach (Process p in ps)
-                //        {
-                //            using (p)
-                //            {
-                //                if (p.Id != current.Id && !p.HasExited)
-                //                {
-                //                    try
-                //                    {
-                //                        if (string.Equals(p.MainModule.FileName, fi.FullName, StringComparison.OrdinalIgnoreCase))
-                //                        {
-                //                            IntPtr ptr = IntPtr.Zero;
-                //                            try
-                //                            {
-                //                                ptr =  Windows.FindWindow.Find(p.Id, null);
-
-                //                                if (ptr != IntPtr.Zero)
-                //                                {
-                //                                    Windows.FindWindow.ShowWindow(ptr, 1);
-                //                                    Windows.FindWindow.BringWindowToTop(ptr);
-                //                                    Windows.FindWindow.SetForegroundWindow(ptr);
-                //                                }
-
-                //                                //var placement = Windows.WindowSize.GetWindowPlacement(ptr);
-
-                //                                //if (placement.showCmd == (int)Windows.WindowSize.WindowState.SW_SHOWMINIMIZED)
-                //                                //    Windows.WindowSize.SetWindowPlacement(ptr, Rectangle.FromLTRB(placement.rcNormalPosition.left, placement.rcNormalPosition.top, placement.rcNormalPosition.right, placement.rcNormalPosition.bottom), Windows.WindowSize.WindowState.SW_RESTORE);
-
-                //                                //SetForegroundWindow(ptr);
-                //                            }
-                //                            catch { }
-
-                //                            return 0;
-                //                        }
-                //                    }
-                //                    catch { }
-                //                }
-                //            }
-                //        }
-                //    }
-                //}
-                //catch { }
-
-                #endregion
 
                 mutex.Dispose();
                 return 0;
             }
 
             #endregion
+
+#if DEBUG
+            if (!Debugger.IsAttached)
+                Debugger.Launch();
+#endif
+
+            System.Windows.Forms.Application.SetUnhandledExceptionMode(System.Windows.Forms.UnhandledExceptionMode.ThrowException);
+            AppDomain.CurrentDomain.UnhandledException += new UnhandledExceptionEventHandler(CurrentDomain_UnhandledException);
+            System.Windows.Forms.Application.ThreadException += new System.Threading.ThreadExceptionEventHandler(Application_ThreadException);
 
             try
             {
@@ -662,9 +682,72 @@ namespace Gw2Launcher
             Util.Users.Activate(false);
         }
 
+        //private static string GetInstanceName(int processId)
+        //{
+        //    string instanceName = Process.GetProcessById(processId).ProcessName;
+        //    bool found = false;
+        //    if (!string.IsNullOrEmpty(instanceName))
+        //    {
+        //        Process[] processes = Process.GetProcessesByName(instanceName);
+        //        if (processes.Length > 0)
+        //        {
+        //            int i = 0;
+        //            foreach (Process p in processes)
+        //            {
+        //                instanceName = FormatInstanceName(p.ProcessName, i);
+        //                if (PerformanceCounterCategory.CounterExists("ID Process", "Process"))
+        //                {
+        //                    PerformanceCounter counter = new PerformanceCounter("Process", "ID Process", instanceName);
+
+        //                    if (processId == counter.RawValue)
+        //                    {
+        //                        found = true;
+        //                        break;
+        //                    }
+        //                }
+        //                i++;
+        //            }
+        //        }
+        //    }
+
+        //    if (!found)
+        //        instanceName = string.Empty;
+
+        //    return instanceName;
+        //}
+
+        //private static string FormatInstanceName(string processName, int count)
+        //{
+        //    string instanceName = string.Empty;
+        //    if (count == 0)
+        //        instanceName = processName;
+        //    else
+        //        instanceName = string.Format("{0}#{1}", processName, count);
+        //    return instanceName;
+        //} 
+
         static void StoredCredentials_ValueChanged(object sender, EventArgs e)
         {
             Security.Credentials.StoreCredentials = ((Settings.ISettingValue<bool>)sender).Value;
+        }
+
+        static void CurrentDomain_UnhandledException(object sender, UnhandledExceptionEventArgs e)
+        {
+            var ex = e.ExceptionObject as Exception;
+
+            if (ex != null)
+                Util.Logging.Crash(ex);
+            else if (e.ExceptionObject != null)
+                Util.Logging.Crash(e.ExceptionObject.ToString());
+
+            System.Environment.Exit(-1);
+        }
+
+        static void Application_ThreadException(object sender, System.Threading.ThreadExceptionEventArgs e)
+        {
+            Util.Logging.Crash(e.Exception);
+
+            System.Environment.Exit(-1);
         }
 
         private class PassedLaunch

@@ -17,33 +17,12 @@
         {
             this.components = new System.ComponentModel.Container();
             this.panelContainer = new System.Windows.Forms.Panel();
-            this.gridContainer = new Gw2Launcher.UI.Controls.AccountGridButtonContainer();
             this.contextMenu = new System.Windows.Forms.ContextMenuStrip(this.components);
             this.cancelPendingLaunchesToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.toolStripMenuItemCancelSep = new System.Windows.Forms.ToolStripSeparator();
             this.editToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.deleteToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.toolStripMenuItem3 = new System.Windows.Forms.ToolStripSeparator();
-            this.allToolStripMenuItem = new Gw2Launcher.UI.Controls.ToolStripMenuItemStayOpenOnClick();
-            this.launchAllToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
-            this.updateLocaldatToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
-            this.updateAllToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
-            this.toolStripMenuItem6 = new System.Windows.Forms.ToolStripSeparator();
-            this.createShortcutAllToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
-            this.toolStripMenuItem19 = new System.Windows.Forms.ToolStripSeparator();
-            this.disableAutomaticLoginsToolStripMenuItem1 = new Gw2Launcher.UI.Controls.ToolStripMenuItemStayOpenOnClick();
-            this.applyWindowedBoundsToolStripMenuItem1 = new System.Windows.Forms.ToolStripMenuItem();
-            this.selectedToolStripMenuItem = new Gw2Launcher.UI.Controls.ToolStripMenuItemStayOpenOnClick();
-            this.launchSelectedToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
-            this.updateLocaldatSelectedToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
-            this.updateSelectedToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
-            this.toolStripMenuItem17 = new System.Windows.Forms.ToolStripSeparator();
-            this.createShortcutSelectedToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
-            this.toolStripMenuItem11 = new System.Windows.Forms.ToolStripSeparator();
-            this.disableAutomaticLoginsToolStripMenuItem = new Gw2Launcher.UI.Controls.ToolStripMenuItemStayOpenOnClick();
-            this.applyWindowedBoundsToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
-            this.toolStripMenuItem8 = new System.Windows.Forms.ToolStripSeparator();
-            this.clearSelectionToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.toolStripMenuItem2 = new System.Windows.Forms.ToolStripSeparator();
             this.sortByToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.nameToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
@@ -83,17 +62,42 @@
             this.toolStripMenuItem15 = new System.Windows.Forms.ToolStripSeparator();
             this.supportToolStripMenuItem1 = new System.Windows.Forms.ToolStripMenuItem();
             this.toolStripMenuItem4 = new System.Windows.Forms.ToolStripSeparator();
-            this.allToolStripMenuItem1 = new Controls.ToolStripMenuItemStayOpenOnClick();
+            this.toolStripMenuItem1 = new System.Windows.Forms.ToolStripSeparator();
+            this.exitToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.gridContainer = new Gw2Launcher.UI.Controls.AccountGridButtonContainer();
+            this.allToolStripMenuItem = new Gw2Launcher.UI.Controls.ToolStripMenuItemStayOpenOnClick();
+            this.launchAllToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.updateLocaldatToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.updateAllToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.toolStripMenuItem21 = new System.Windows.Forms.ToolStripSeparator();
+            this.killProcessAllToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.toolStripMenuItem6 = new System.Windows.Forms.ToolStripSeparator();
+            this.createShortcutAllToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.toolStripMenuItem19 = new System.Windows.Forms.ToolStripSeparator();
+            this.disableAutomaticLoginsToolStripMenuItem1 = new Gw2Launcher.UI.Controls.ToolStripMenuItemStayOpenOnClick();
+            this.applyWindowedBoundsToolStripMenuItem1 = new System.Windows.Forms.ToolStripMenuItem();
+            this.selectedToolStripMenuItem = new Gw2Launcher.UI.Controls.ToolStripMenuItemStayOpenOnClick();
+            this.launchSelectedToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.updateLocaldatSelectedToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.updateSelectedToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.toolStripMenuItem22 = new System.Windows.Forms.ToolStripSeparator();
+            this.killProcessSelectedToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.toolStripMenuItem17 = new System.Windows.Forms.ToolStripSeparator();
+            this.createShortcutSelectedToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.toolStripMenuItem11 = new System.Windows.Forms.ToolStripSeparator();
+            this.disableAutomaticLoginsToolStripMenuItem = new Gw2Launcher.UI.Controls.ToolStripMenuItemStayOpenOnClick();
+            this.applyWindowedBoundsToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.toolStripMenuItem8 = new System.Windows.Forms.ToolStripSeparator();
+            this.clearSelectionToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.allToolStripMenuItem1 = new Gw2Launcher.UI.Controls.ToolStripMenuItemStayOpenOnClick();
             this.launchToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.updateLocaldatToolStripMenuItem1 = new System.Windows.Forms.ToolStripMenuItem();
             this.updateToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.toolStripMenuItem18 = new System.Windows.Forms.ToolStripSeparator();
             this.createDesktopShortcutToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.toolStripMenuItem20 = new System.Windows.Forms.ToolStripSeparator();
-            this.disableAutomaticLoginsToolStripMenuItem2 = new Controls.ToolStripMenuItemStayOpenOnClick();
+            this.disableAutomaticLoginsToolStripMenuItem2 = new Gw2Launcher.UI.Controls.ToolStripMenuItemStayOpenOnClick();
             this.applyWindowedBoundsToolStripMenuItem2 = new System.Windows.Forms.ToolStripMenuItem();
-            this.toolStripMenuItem1 = new System.Windows.Forms.ToolStripSeparator();
-            this.exitToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.panelContainer.SuspendLayout();
             this.contextMenu.SuspendLayout();
             this.contextNotify.SuspendLayout();
@@ -112,19 +116,6 @@
             this.panelContainer.Size = new System.Drawing.Size(455, 415);
             this.panelContainer.TabIndex = 0;
             // 
-            // gridContainer
-            // 
-            this.gridContainer.Anchor = ((System.Windows.Forms.AnchorStyles)((((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom) 
-            | System.Windows.Forms.AnchorStyles.Left) 
-            | System.Windows.Forms.AnchorStyles.Right)));
-            this.gridContainer.BackColor = System.Drawing.Color.White;
-            this.gridContainer.GridSize = new System.Drawing.Size(200, 67);
-            this.gridContainer.Location = new System.Drawing.Point(5, 5);
-            this.gridContainer.Margin = new System.Windows.Forms.Padding(5);
-            this.gridContainer.Name = "gridContainer";
-            this.gridContainer.Size = new System.Drawing.Size(443, 403);
-            this.gridContainer.TabIndex = 0;
-            // 
             // contextMenu
             // 
             this.contextMenu.Items.AddRange(new System.Windows.Forms.ToolStripItem[] {
@@ -142,7 +133,7 @@
             this.settingsToolStripMenuItem,
             this.toolsToolStripMenuItem1});
             this.contextMenu.Name = "contextMenu";
-            this.contextMenu.Size = new System.Drawing.Size(208, 226);
+            this.contextMenu.Size = new System.Drawing.Size(208, 270);
             // 
             // cancelPendingLaunchesToolStripMenuItem
             // 
@@ -176,158 +167,6 @@
             // 
             this.toolStripMenuItem3.Name = "toolStripMenuItem3";
             this.toolStripMenuItem3.Size = new System.Drawing.Size(204, 6);
-            // 
-            // allToolStripMenuItem
-            // 
-            this.allToolStripMenuItem.DropDownItems.AddRange(new System.Windows.Forms.ToolStripItem[] {
-            this.launchAllToolStripMenuItem,
-            this.updateLocaldatToolStripMenuItem,
-            this.updateAllToolStripMenuItem,
-            this.toolStripMenuItem6,
-            this.createShortcutAllToolStripMenuItem,
-            this.toolStripMenuItem19,
-            this.disableAutomaticLoginsToolStripMenuItem1,
-            this.applyWindowedBoundsToolStripMenuItem1});
-            this.allToolStripMenuItem.Name = "allToolStripMenuItem";
-            this.allToolStripMenuItem.Size = new System.Drawing.Size(207, 22);
-            this.allToolStripMenuItem.StayOpenOnClick = false;
-            this.allToolStripMenuItem.Text = "All";
-            // 
-            // launchAllToolStripMenuItem
-            // 
-            this.launchAllToolStripMenuItem.Name = "launchAllToolStripMenuItem";
-            this.launchAllToolStripMenuItem.Size = new System.Drawing.Size(206, 22);
-            this.launchAllToolStripMenuItem.Text = "Launch";
-            this.launchAllToolStripMenuItem.Click += new System.EventHandler(this.launchAllToolStripMenuItem_Click);
-            // 
-            // updateLocaldatToolStripMenuItem
-            // 
-            this.updateLocaldatToolStripMenuItem.Name = "updateLocaldatToolStripMenuItem";
-            this.updateLocaldatToolStripMenuItem.Size = new System.Drawing.Size(206, 22);
-            this.updateLocaldatToolStripMenuItem.Text = "Launch (normal)";
-            this.updateLocaldatToolStripMenuItem.Click += new System.EventHandler(this.updateLocaldatToolStripMenuItem_Click);
-            // 
-            // updateAllToolStripMenuItem
-            // 
-            this.updateAllToolStripMenuItem.Name = "updateAllToolStripMenuItem";
-            this.updateAllToolStripMenuItem.Size = new System.Drawing.Size(206, 22);
-            this.updateAllToolStripMenuItem.Text = "Update";
-            this.updateAllToolStripMenuItem.Click += new System.EventHandler(this.updateAllToolStripMenuItem_Click);
-            // 
-            // toolStripMenuItem6
-            // 
-            this.toolStripMenuItem6.Name = "toolStripMenuItem6";
-            this.toolStripMenuItem6.Size = new System.Drawing.Size(203, 6);
-            // 
-            // createShortcutAllToolStripMenuItem
-            // 
-            this.createShortcutAllToolStripMenuItem.Name = "createShortcutAllToolStripMenuItem";
-            this.createShortcutAllToolStripMenuItem.Size = new System.Drawing.Size(206, 22);
-            this.createShortcutAllToolStripMenuItem.Text = "Create desktop shortcut";
-            this.createShortcutAllToolStripMenuItem.Click += new System.EventHandler(this.createShortcutAllToolStripMenuItem_Click);
-            // 
-            // toolStripMenuItem19
-            // 
-            this.toolStripMenuItem19.Name = "toolStripMenuItem19";
-            this.toolStripMenuItem19.Size = new System.Drawing.Size(203, 6);
-            // 
-            // disableAutomaticLoginsToolStripMenuItem1
-            // 
-            this.disableAutomaticLoginsToolStripMenuItem1.Name = "disableAutomaticLoginsToolStripMenuItem1";
-            this.disableAutomaticLoginsToolStripMenuItem1.Size = new System.Drawing.Size(206, 22);
-            this.disableAutomaticLoginsToolStripMenuItem1.StayOpenOnClick = true;
-            this.disableAutomaticLoginsToolStripMenuItem1.Text = "Disable automatic logins";
-            this.disableAutomaticLoginsToolStripMenuItem1.Click += new System.EventHandler(this.disableAutomaticLoginsToolStripMenuItem_Click);
-            // 
-            // applyWindowedBoundsToolStripMenuItem1
-            // 
-            this.applyWindowedBoundsToolStripMenuItem1.Name = "applyWindowedBoundsToolStripMenuItem1";
-            this.applyWindowedBoundsToolStripMenuItem1.Size = new System.Drawing.Size(206, 22);
-            this.applyWindowedBoundsToolStripMenuItem1.Text = "Apply windowed bounds";
-            this.applyWindowedBoundsToolStripMenuItem1.Click += new System.EventHandler(this.applyWindowedBoundsToolStripMenuItem1_Click);
-            // 
-            // selectedToolStripMenuItem
-            // 
-            this.selectedToolStripMenuItem.DropDownItems.AddRange(new System.Windows.Forms.ToolStripItem[] {
-            this.launchSelectedToolStripMenuItem,
-            this.updateLocaldatSelectedToolStripMenuItem,
-            this.updateSelectedToolStripMenuItem,
-            this.toolStripMenuItem17,
-            this.createShortcutSelectedToolStripMenuItem,
-            this.toolStripMenuItem11,
-            this.disableAutomaticLoginsToolStripMenuItem,
-            this.applyWindowedBoundsToolStripMenuItem,
-            this.toolStripMenuItem8,
-            this.clearSelectionToolStripMenuItem});
-            this.selectedToolStripMenuItem.Name = "selectedToolStripMenuItem";
-            this.selectedToolStripMenuItem.Size = new System.Drawing.Size(207, 22);
-            this.selectedToolStripMenuItem.StayOpenOnClick = false;
-            this.selectedToolStripMenuItem.Text = "Selected";
-            // 
-            // launchSelectedToolStripMenuItem
-            // 
-            this.launchSelectedToolStripMenuItem.Name = "launchSelectedToolStripMenuItem";
-            this.launchSelectedToolStripMenuItem.Size = new System.Drawing.Size(206, 22);
-            this.launchSelectedToolStripMenuItem.Text = "Launch";
-            this.launchSelectedToolStripMenuItem.Click += new System.EventHandler(this.launchSelectedToolStripMenuItem_Click);
-            // 
-            // updateLocaldatSelectedToolStripMenuItem
-            // 
-            this.updateLocaldatSelectedToolStripMenuItem.Name = "updateLocaldatSelectedToolStripMenuItem";
-            this.updateLocaldatSelectedToolStripMenuItem.Size = new System.Drawing.Size(206, 22);
-            this.updateLocaldatSelectedToolStripMenuItem.Text = "Launch (normal)";
-            this.updateLocaldatSelectedToolStripMenuItem.Click += new System.EventHandler(this.updateLocaldatSelectedToolStripMenuItem_Click);
-            // 
-            // updateSelectedToolStripMenuItem
-            // 
-            this.updateSelectedToolStripMenuItem.Name = "updateSelectedToolStripMenuItem";
-            this.updateSelectedToolStripMenuItem.Size = new System.Drawing.Size(206, 22);
-            this.updateSelectedToolStripMenuItem.Text = "Update";
-            this.updateSelectedToolStripMenuItem.Click += new System.EventHandler(this.updateSelectedToolStripMenuItem_Click);
-            // 
-            // toolStripMenuItem17
-            // 
-            this.toolStripMenuItem17.Name = "toolStripMenuItem17";
-            this.toolStripMenuItem17.Size = new System.Drawing.Size(203, 6);
-            // 
-            // createShortcutSelectedToolStripMenuItem
-            // 
-            this.createShortcutSelectedToolStripMenuItem.Name = "createShortcutSelectedToolStripMenuItem";
-            this.createShortcutSelectedToolStripMenuItem.Size = new System.Drawing.Size(206, 22);
-            this.createShortcutSelectedToolStripMenuItem.Text = "Create desktop shortcut";
-            this.createShortcutSelectedToolStripMenuItem.Click += new System.EventHandler(this.createShortcutSelectedToolStripMenuItem_Click);
-            // 
-            // toolStripMenuItem11
-            // 
-            this.toolStripMenuItem11.Name = "toolStripMenuItem11";
-            this.toolStripMenuItem11.Size = new System.Drawing.Size(203, 6);
-            // 
-            // disableAutomaticLoginsToolStripMenuItem
-            // 
-            this.disableAutomaticLoginsToolStripMenuItem.Name = "disableAutomaticLoginsToolStripMenuItem";
-            this.disableAutomaticLoginsToolStripMenuItem.Size = new System.Drawing.Size(206, 22);
-            this.disableAutomaticLoginsToolStripMenuItem.StayOpenOnClick = true;
-            this.disableAutomaticLoginsToolStripMenuItem.Text = "Disable automatic logins";
-            this.disableAutomaticLoginsToolStripMenuItem.Click += new System.EventHandler(this.disableAutomaticLoginsToolStripMenuItem_Click);
-            // 
-            // applyWindowedBoundsToolStripMenuItem
-            // 
-            this.applyWindowedBoundsToolStripMenuItem.Name = "applyWindowedBoundsToolStripMenuItem";
-            this.applyWindowedBoundsToolStripMenuItem.Size = new System.Drawing.Size(206, 22);
-            this.applyWindowedBoundsToolStripMenuItem.Text = "Apply windowed bounds";
-            this.applyWindowedBoundsToolStripMenuItem.Click += new System.EventHandler(this.applyWindowedBoundsToolStripMenuItem_Click);
-            // 
-            // toolStripMenuItem8
-            // 
-            this.toolStripMenuItem8.Name = "toolStripMenuItem8";
-            this.toolStripMenuItem8.Size = new System.Drawing.Size(203, 6);
-            // 
-            // clearSelectionToolStripMenuItem
-            // 
-            this.clearSelectionToolStripMenuItem.Name = "clearSelectionToolStripMenuItem";
-            this.clearSelectionToolStripMenuItem.Size = new System.Drawing.Size(206, 22);
-            this.clearSelectionToolStripMenuItem.Text = "Clear selection";
-            this.clearSelectionToolStripMenuItem.Click += new System.EventHandler(this.clearSelectionToolStripMenuItem_Click);
             // 
             // toolStripMenuItem2
             // 
@@ -502,7 +341,7 @@
             this.toolStripMenuItem1,
             this.exitToolStripMenuItem});
             this.contextNotify.Name = "contextNotify";
-            this.contextNotify.Size = new System.Drawing.Size(189, 176);
+            this.contextNotify.Size = new System.Drawing.Size(189, 154);
             // 
             // showToolStripMenuItem
             // 
@@ -616,6 +455,211 @@
             this.toolStripMenuItem4.Name = "toolStripMenuItem4";
             this.toolStripMenuItem4.Size = new System.Drawing.Size(185, 6);
             // 
+            // toolStripMenuItem1
+            // 
+            this.toolStripMenuItem1.Name = "toolStripMenuItem1";
+            this.toolStripMenuItem1.Size = new System.Drawing.Size(185, 6);
+            // 
+            // exitToolStripMenuItem
+            // 
+            this.exitToolStripMenuItem.Name = "exitToolStripMenuItem";
+            this.exitToolStripMenuItem.Size = new System.Drawing.Size(188, 22);
+            this.exitToolStripMenuItem.Text = "Exit";
+            this.exitToolStripMenuItem.Click += new System.EventHandler(this.exitToolStripMenuItem_Click);
+            // 
+            // gridContainer
+            // 
+            this.gridContainer.Anchor = ((System.Windows.Forms.AnchorStyles)((((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom) 
+            | System.Windows.Forms.AnchorStyles.Left) 
+            | System.Windows.Forms.AnchorStyles.Right)));
+            this.gridContainer.BackColor = System.Drawing.Color.White;
+            this.gridContainer.GridSize = new System.Drawing.Size(200, 67);
+            this.gridContainer.Location = new System.Drawing.Point(5, 5);
+            this.gridContainer.Margin = new System.Windows.Forms.Padding(5);
+            this.gridContainer.Name = "gridContainer";
+            this.gridContainer.Size = new System.Drawing.Size(443, 403);
+            this.gridContainer.TabIndex = 0;
+            // 
+            // allToolStripMenuItem
+            // 
+            this.allToolStripMenuItem.DropDownItems.AddRange(new System.Windows.Forms.ToolStripItem[] {
+            this.launchAllToolStripMenuItem,
+            this.updateLocaldatToolStripMenuItem,
+            this.updateAllToolStripMenuItem,
+            this.toolStripMenuItem21,
+            this.killProcessAllToolStripMenuItem,
+            this.toolStripMenuItem6,
+            this.createShortcutAllToolStripMenuItem,
+            this.toolStripMenuItem19,
+            this.disableAutomaticLoginsToolStripMenuItem1,
+            this.applyWindowedBoundsToolStripMenuItem1});
+            this.allToolStripMenuItem.Name = "allToolStripMenuItem";
+            this.allToolStripMenuItem.Size = new System.Drawing.Size(207, 22);
+            this.allToolStripMenuItem.StayOpenOnClick = false;
+            this.allToolStripMenuItem.Text = "All";
+            // 
+            // launchAllToolStripMenuItem
+            // 
+            this.launchAllToolStripMenuItem.Name = "launchAllToolStripMenuItem";
+            this.launchAllToolStripMenuItem.Size = new System.Drawing.Size(206, 22);
+            this.launchAllToolStripMenuItem.Text = "Launch";
+            this.launchAllToolStripMenuItem.Click += new System.EventHandler(this.launchAllToolStripMenuItem_Click);
+            // 
+            // updateLocaldatToolStripMenuItem
+            // 
+            this.updateLocaldatToolStripMenuItem.Name = "updateLocaldatToolStripMenuItem";
+            this.updateLocaldatToolStripMenuItem.Size = new System.Drawing.Size(206, 22);
+            this.updateLocaldatToolStripMenuItem.Text = "Launch (normal)";
+            this.updateLocaldatToolStripMenuItem.Click += new System.EventHandler(this.updateLocaldatToolStripMenuItem_Click);
+            // 
+            // updateAllToolStripMenuItem
+            // 
+            this.updateAllToolStripMenuItem.Name = "updateAllToolStripMenuItem";
+            this.updateAllToolStripMenuItem.Size = new System.Drawing.Size(206, 22);
+            this.updateAllToolStripMenuItem.Text = "Update";
+            this.updateAllToolStripMenuItem.Click += new System.EventHandler(this.updateAllToolStripMenuItem_Click);
+            // 
+            // toolStripMenuItem21
+            // 
+            this.toolStripMenuItem21.Name = "toolStripMenuItem21";
+            this.toolStripMenuItem21.Size = new System.Drawing.Size(203, 6);
+            // 
+            // killProcessAllToolStripMenuItem
+            // 
+            this.killProcessAllToolStripMenuItem.Name = "killProcessAllToolStripMenuItem";
+            this.killProcessAllToolStripMenuItem.Size = new System.Drawing.Size(206, 22);
+            this.killProcessAllToolStripMenuItem.Text = "Kill process";
+            this.killProcessAllToolStripMenuItem.Click += new System.EventHandler(this.killProcessAllToolStripMenuItem_Click);
+            // 
+            // toolStripMenuItem6
+            // 
+            this.toolStripMenuItem6.Name = "toolStripMenuItem6";
+            this.toolStripMenuItem6.Size = new System.Drawing.Size(203, 6);
+            // 
+            // createShortcutAllToolStripMenuItem
+            // 
+            this.createShortcutAllToolStripMenuItem.Name = "createShortcutAllToolStripMenuItem";
+            this.createShortcutAllToolStripMenuItem.Size = new System.Drawing.Size(206, 22);
+            this.createShortcutAllToolStripMenuItem.Text = "Create desktop shortcut";
+            this.createShortcutAllToolStripMenuItem.Click += new System.EventHandler(this.createShortcutAllToolStripMenuItem_Click);
+            // 
+            // toolStripMenuItem19
+            // 
+            this.toolStripMenuItem19.Name = "toolStripMenuItem19";
+            this.toolStripMenuItem19.Size = new System.Drawing.Size(203, 6);
+            // 
+            // disableAutomaticLoginsToolStripMenuItem1
+            // 
+            this.disableAutomaticLoginsToolStripMenuItem1.Name = "disableAutomaticLoginsToolStripMenuItem1";
+            this.disableAutomaticLoginsToolStripMenuItem1.Size = new System.Drawing.Size(206, 22);
+            this.disableAutomaticLoginsToolStripMenuItem1.StayOpenOnClick = true;
+            this.disableAutomaticLoginsToolStripMenuItem1.Text = "Disable automatic logins";
+            this.disableAutomaticLoginsToolStripMenuItem1.Click += new System.EventHandler(this.disableAutomaticLoginsToolStripMenuItem_Click);
+            // 
+            // applyWindowedBoundsToolStripMenuItem1
+            // 
+            this.applyWindowedBoundsToolStripMenuItem1.Name = "applyWindowedBoundsToolStripMenuItem1";
+            this.applyWindowedBoundsToolStripMenuItem1.Size = new System.Drawing.Size(206, 22);
+            this.applyWindowedBoundsToolStripMenuItem1.Text = "Apply windowed bounds";
+            this.applyWindowedBoundsToolStripMenuItem1.Click += new System.EventHandler(this.applyWindowedBoundsToolStripMenuItem1_Click);
+            // 
+            // selectedToolStripMenuItem
+            // 
+            this.selectedToolStripMenuItem.DropDownItems.AddRange(new System.Windows.Forms.ToolStripItem[] {
+            this.launchSelectedToolStripMenuItem,
+            this.updateLocaldatSelectedToolStripMenuItem,
+            this.updateSelectedToolStripMenuItem,
+            this.toolStripMenuItem22,
+            this.killProcessSelectedToolStripMenuItem,
+            this.toolStripMenuItem17,
+            this.createShortcutSelectedToolStripMenuItem,
+            this.toolStripMenuItem11,
+            this.disableAutomaticLoginsToolStripMenuItem,
+            this.applyWindowedBoundsToolStripMenuItem,
+            this.toolStripMenuItem8,
+            this.clearSelectionToolStripMenuItem});
+            this.selectedToolStripMenuItem.Name = "selectedToolStripMenuItem";
+            this.selectedToolStripMenuItem.Size = new System.Drawing.Size(207, 22);
+            this.selectedToolStripMenuItem.StayOpenOnClick = false;
+            this.selectedToolStripMenuItem.Text = "Selected";
+            // 
+            // launchSelectedToolStripMenuItem
+            // 
+            this.launchSelectedToolStripMenuItem.Name = "launchSelectedToolStripMenuItem";
+            this.launchSelectedToolStripMenuItem.Size = new System.Drawing.Size(206, 22);
+            this.launchSelectedToolStripMenuItem.Text = "Launch";
+            this.launchSelectedToolStripMenuItem.Click += new System.EventHandler(this.launchSelectedToolStripMenuItem_Click);
+            // 
+            // updateLocaldatSelectedToolStripMenuItem
+            // 
+            this.updateLocaldatSelectedToolStripMenuItem.Name = "updateLocaldatSelectedToolStripMenuItem";
+            this.updateLocaldatSelectedToolStripMenuItem.Size = new System.Drawing.Size(206, 22);
+            this.updateLocaldatSelectedToolStripMenuItem.Text = "Launch (normal)";
+            this.updateLocaldatSelectedToolStripMenuItem.Click += new System.EventHandler(this.updateLocaldatSelectedToolStripMenuItem_Click);
+            // 
+            // updateSelectedToolStripMenuItem
+            // 
+            this.updateSelectedToolStripMenuItem.Name = "updateSelectedToolStripMenuItem";
+            this.updateSelectedToolStripMenuItem.Size = new System.Drawing.Size(206, 22);
+            this.updateSelectedToolStripMenuItem.Text = "Update";
+            this.updateSelectedToolStripMenuItem.Click += new System.EventHandler(this.updateSelectedToolStripMenuItem_Click);
+            // 
+            // toolStripMenuItem22
+            // 
+            this.toolStripMenuItem22.Name = "toolStripMenuItem22";
+            this.toolStripMenuItem22.Size = new System.Drawing.Size(203, 6);
+            // 
+            // killProcessSelectedToolStripMenuItem
+            // 
+            this.killProcessSelectedToolStripMenuItem.Name = "killProcessSelectedToolStripMenuItem";
+            this.killProcessSelectedToolStripMenuItem.Size = new System.Drawing.Size(206, 22);
+            this.killProcessSelectedToolStripMenuItem.Text = "Kill process";
+            this.killProcessSelectedToolStripMenuItem.Click += new System.EventHandler(this.killProcessSelectedToolStripMenuItem_Click);
+            // 
+            // toolStripMenuItem17
+            // 
+            this.toolStripMenuItem17.Name = "toolStripMenuItem17";
+            this.toolStripMenuItem17.Size = new System.Drawing.Size(203, 6);
+            // 
+            // createShortcutSelectedToolStripMenuItem
+            // 
+            this.createShortcutSelectedToolStripMenuItem.Name = "createShortcutSelectedToolStripMenuItem";
+            this.createShortcutSelectedToolStripMenuItem.Size = new System.Drawing.Size(206, 22);
+            this.createShortcutSelectedToolStripMenuItem.Text = "Create desktop shortcut";
+            this.createShortcutSelectedToolStripMenuItem.Click += new System.EventHandler(this.createShortcutSelectedToolStripMenuItem_Click);
+            // 
+            // toolStripMenuItem11
+            // 
+            this.toolStripMenuItem11.Name = "toolStripMenuItem11";
+            this.toolStripMenuItem11.Size = new System.Drawing.Size(203, 6);
+            // 
+            // disableAutomaticLoginsToolStripMenuItem
+            // 
+            this.disableAutomaticLoginsToolStripMenuItem.Name = "disableAutomaticLoginsToolStripMenuItem";
+            this.disableAutomaticLoginsToolStripMenuItem.Size = new System.Drawing.Size(206, 22);
+            this.disableAutomaticLoginsToolStripMenuItem.StayOpenOnClick = true;
+            this.disableAutomaticLoginsToolStripMenuItem.Text = "Disable automatic logins";
+            this.disableAutomaticLoginsToolStripMenuItem.Click += new System.EventHandler(this.disableAutomaticLoginsToolStripMenuItem_Click);
+            // 
+            // applyWindowedBoundsToolStripMenuItem
+            // 
+            this.applyWindowedBoundsToolStripMenuItem.Name = "applyWindowedBoundsToolStripMenuItem";
+            this.applyWindowedBoundsToolStripMenuItem.Size = new System.Drawing.Size(206, 22);
+            this.applyWindowedBoundsToolStripMenuItem.Text = "Apply windowed bounds";
+            this.applyWindowedBoundsToolStripMenuItem.Click += new System.EventHandler(this.applyWindowedBoundsToolStripMenuItem_Click);
+            // 
+            // toolStripMenuItem8
+            // 
+            this.toolStripMenuItem8.Name = "toolStripMenuItem8";
+            this.toolStripMenuItem8.Size = new System.Drawing.Size(203, 6);
+            // 
+            // clearSelectionToolStripMenuItem
+            // 
+            this.clearSelectionToolStripMenuItem.Name = "clearSelectionToolStripMenuItem";
+            this.clearSelectionToolStripMenuItem.Size = new System.Drawing.Size(206, 22);
+            this.clearSelectionToolStripMenuItem.Text = "Clear selection";
+            this.clearSelectionToolStripMenuItem.Click += new System.EventHandler(this.clearSelectionToolStripMenuItem_Click);
+            // 
             // allToolStripMenuItem1
             // 
             this.allToolStripMenuItem1.DropDownItems.AddRange(new System.Windows.Forms.ToolStripItem[] {
@@ -629,6 +673,7 @@
             this.applyWindowedBoundsToolStripMenuItem2});
             this.allToolStripMenuItem1.Name = "allToolStripMenuItem1";
             this.allToolStripMenuItem1.Size = new System.Drawing.Size(188, 22);
+            this.allToolStripMenuItem1.StayOpenOnClick = false;
             this.allToolStripMenuItem1.Text = "All";
             // 
             // launchToolStripMenuItem
@@ -673,8 +718,8 @@
             // 
             this.disableAutomaticLoginsToolStripMenuItem2.Name = "disableAutomaticLoginsToolStripMenuItem2";
             this.disableAutomaticLoginsToolStripMenuItem2.Size = new System.Drawing.Size(206, 22);
-            this.disableAutomaticLoginsToolStripMenuItem2.Text = "Disable automatic logins";
             this.disableAutomaticLoginsToolStripMenuItem2.StayOpenOnClick = true;
+            this.disableAutomaticLoginsToolStripMenuItem2.Text = "Disable automatic logins";
             this.disableAutomaticLoginsToolStripMenuItem2.Click += new System.EventHandler(this.disableAutomaticLoginsToolStripMenuItem_Click);
             // 
             // applyWindowedBoundsToolStripMenuItem2
@@ -683,18 +728,6 @@
             this.applyWindowedBoundsToolStripMenuItem2.Size = new System.Drawing.Size(206, 22);
             this.applyWindowedBoundsToolStripMenuItem2.Text = "Apply windowed bounds";
             this.applyWindowedBoundsToolStripMenuItem2.Click += new System.EventHandler(this.applyWindowedBoundsToolStripMenuItem1_Click);
-            // 
-            // toolStripMenuItem1
-            // 
-            this.toolStripMenuItem1.Name = "toolStripMenuItem1";
-            this.toolStripMenuItem1.Size = new System.Drawing.Size(185, 6);
-            // 
-            // exitToolStripMenuItem
-            // 
-            this.exitToolStripMenuItem.Name = "exitToolStripMenuItem";
-            this.exitToolStripMenuItem.Size = new System.Drawing.Size(188, 22);
-            this.exitToolStripMenuItem.Text = "Exit";
-            this.exitToolStripMenuItem.Click += new System.EventHandler(this.exitToolStripMenuItem_Click);
             // 
             // formMain
             // 
@@ -746,7 +779,6 @@
         private System.Windows.Forms.ToolStripMenuItem descendingToolStripMenuItem;
         private System.Windows.Forms.ToolStripSeparator toolStripMenuItem8;
         private System.Windows.Forms.ToolStripMenuItem clearSelectionToolStripMenuItem;
-        private System.Windows.Forms.ToolStripMenuItem allToolStripMenuItem1;
         private System.Windows.Forms.ToolStripMenuItem launchToolStripMenuItem;
         private System.Windows.Forms.ToolStripMenuItem updateToolStripMenuItem;
         private System.Windows.Forms.ToolStripMenuItem updateLocaldatToolStripMenuItem;
@@ -797,5 +829,10 @@
         private System.Windows.Forms.ToolStripMenuItem applyWindowedBoundsToolStripMenuItem2;
         private Controls.ToolStripMenuItemStayOpenOnClick allToolStripMenuItem;
         private Controls.ToolStripMenuItemStayOpenOnClick selectedToolStripMenuItem;
+        private System.Windows.Forms.ToolStripSeparator toolStripMenuItem21;
+        private System.Windows.Forms.ToolStripMenuItem killProcessAllToolStripMenuItem;
+        private System.Windows.Forms.ToolStripSeparator toolStripMenuItem22;
+        private System.Windows.Forms.ToolStripMenuItem killProcessSelectedToolStripMenuItem;
+        private Controls.ToolStripMenuItemStayOpenOnClick allToolStripMenuItem1;
     }
 }

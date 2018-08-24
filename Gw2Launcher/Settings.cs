@@ -1159,11 +1159,12 @@ namespace Gw2Launcher
                 {
                     var cancel = cancelWrite.Token;
 
-                    task = Task.Factory.StartNew(new Action(
+                    task = new Task(
                         delegate
                         {
                             DelayedWrite(cancel);
-                        }));
+                        });
+                    task.Start();
                 }
             }
         }

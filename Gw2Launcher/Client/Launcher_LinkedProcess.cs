@@ -29,7 +29,8 @@ namespace Gw2Launcher.Client
                 public ProcessWatcher(Process p)
                 {
                     this.process = p;
-                    this.waiter = Task.Factory.StartNew(WaitForExit, TaskCreationOptions.LongRunning);
+                    this.waiter = new Task(WaitForExit, TaskCreationOptions.LongRunning);
+                    this.waiter.Start();
                 }
 
                 private void WaitForExit()

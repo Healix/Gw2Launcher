@@ -283,6 +283,9 @@
     <Compile Include="UI\formWindowSizeOverlay.Designer.cs">
       <DependentUpon>formWindowSizeOverlay.cs</DependentUpon>
     </Compile>
+    <Compile Include="UI\ShowWithoutActivation.cs">
+      <SubType>Form</SubType>
+    </Compile>
     <Compile Include="Util\Args.cs" />
     <Compile Include="Util\BinaryType.cs" />
     <Compile Include="Util\Bitmap.cs" />

@@ -22,28 +22,8 @@ namespace Gw2Launcher.Client
             public byte inQueueCount;
             public byte errors;
 
-            //public bool InUse
-            //{
-            //    get
-            //    {
-            //        return InUseCount > 0;
-            //    }
-            //    set
-            //    {
-            //        if (value)
-            //        {
-            //            InUseCount++;
-            //        }
-            //        else if (InUseCount > 0)
-            //            InUseCount--;
-            //    }
-            //}
-
-            //public byte InUseCount
-            //{
-            //    get;
-            //    set;
-            //}
+            public WindowWatcher watcher;
+            public EventHandler<string> watcherCallback;
 
             public Settings.IAccount Settings
             {
@@ -92,11 +72,12 @@ namespace Gw2Launcher.Client
                             queueAnnounce.Enqueue(new QueuedAnnounce(this.Settings.UID, state, previousState, data));
                             if (taskAnnounce == null || taskAnnounce.IsCompleted)
                             {
-                                taskAnnounce = Task.Factory.StartNew(
+                                taskAnnounce = new Task(
                                     delegate
                                     {
                                         DoAnnounce();
                                     });
+                                taskAnnounce.Start();
                             }
                         }
                     }

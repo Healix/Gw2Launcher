@@ -52,7 +52,22 @@ namespace Gw2Launcher.UI.Controls
             extendedBox = extendedWindow.GetTextBox();
             handleText = extendedBox.Handle;
 
-            this.Visible = false;
+            EventHandler onShown = null;
+            onShown = delegate
+            {
+                extendedWindow.Shown -= onShown;
+
+                PaintEventHandler onPaint = null;
+                onPaint = delegate
+                {
+                    extendedWindow.Paint -= onPaint;
+                    this.Visible = false;
+                };
+
+                extendedWindow.Paint += onPaint;
+            };
+
+            extendedWindow.Shown += onShown;
 
             extendedWindow.Show(this.FindForm(), focus);
         }

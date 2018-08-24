@@ -54,12 +54,12 @@ namespace Gw2Launcher.Tools
                 if (task == null || task.IsCompleted)
                 {
                     var cancel = cancelToken.Token;
-                    task = Task.Factory.StartNew(
-                        new Action(
+                    task = new Task(
                             delegate
                             {
                                 DoQueue(cancel);
-                            }));
+                            });
+                    task.Start();
                 }
             }
         }

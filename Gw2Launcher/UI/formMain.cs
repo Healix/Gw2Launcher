@@ -355,43 +355,6 @@ namespace Gw2Launcher.UI
 
             if (accounts.Count > 0)
             {
-                //System.Threading.CancellationTokenSource cancel = new System.Threading.CancellationTokenSource(3000);
-
-                //try
-                //{
-                //    this.BeginInvoke(new MethodInvoker(
-                //        delegate
-                //        {
-                //            BeforeShowDialog();
-                //            try
-                //            {
-                //                activeWindows++;
-                //                using (formUpdating f = new formUpdating(accounts, true, true))
-                //                {
-                //                    f.Shown += delegate
-                //                    {
-                //                        cancel.Cancel();
-                //                    };
-                //                    f.ShowDialog(this);
-                //                }
-                //            }
-                //            finally
-                //            {
-                //                activeWindows--;
-                //            }
-                //        }));
-                //}
-                //catch { }
-
-                //try
-                //{
-                //    cancel.Token.WaitHandle.WaitOne();
-                //}
-                //catch (Exception ex)
-                //{
-                //    Console.WriteLine(ex.Message);
-                //}
-
                 e.Update(accounts);
             }
         }
@@ -750,7 +713,13 @@ namespace Gw2Launcher.UI
             await Task.Delay(10);
 
             this.WindowState = FormWindowState.Normal;
+
+            //SetWindowPos(this.Handle, (IntPtr)WindowZOrder.HWND_TOPMOST, 0, 0, 0, 0, SetWindowPosFlags.SWP_FRAMECHANGED | SetWindowPosFlags.SWP_NOSIZE | SetWindowPosFlags.SWP_NOMOVE);
+            //SetWindowPos(this.Handle, (IntPtr)WindowZOrder.HWND_NOTOPMOST, 0, 0, 0, 0, SetWindowPosFlags.SWP_FRAMECHANGED | SetWindowPosFlags.SWP_NOSIZE | SetWindowPosFlags.SWP_NOMOVE);
+
+            Windows.FindWindow.ShowWindow(this.Handle, 5);
             Windows.FindWindow.SetForegroundWindow(this.Handle);
+            Windows.FindWindow.BringWindowToTop(this.Handle);
         }
 
         void Launcher_AccountExited(Settings.IAccount account)
@@ -2405,6 +2374,7 @@ namespace Gw2Launcher.UI
                 {
                     case Messaging.Messager.MessageType.Show:
 
+                        m.Result = this.Handle;
                         ShowToFront();
 
                         break;
@@ -2461,6 +2431,48 @@ namespace Gw2Launcher.UI
         private async void applyWindowedBoundsToolStripMenuItem1_Click(object sender, EventArgs e)
         {
             await ApplyWindowedBounds(buttons.Values);
+        }
+
+        private void killProcessSelectedToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            using (BeforeShowDialog())
+            {
+                using (var f = AddMessageBox(this))
+                {
+                    if (MessageBox.Show(f, "Are you sure want to kill all processes associated with the selected accounts?", "Confirm", MessageBoxButtons.YesNo, MessageBoxIcon.Exclamation) == DialogResult.Yes)
+                    {
+                        foreach (var button in GetSelected())
+                        {
+                            var account = button.AccountData;
+                            if (account != null)
+                            {
+                                Client.Launcher.Kill(account);
+                            }
+                        }
+                    }
+                }
+            }
+        }
+
+        private void killProcessAllToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            using (BeforeShowDialog())
+            {
+                using (var f = AddMessageBox(this))
+                {
+                    if (MessageBox.Show(f, "Are you sure want to kill all associated processes?", "Confirm", MessageBoxButtons.YesNo, MessageBoxIcon.Exclamation) == DialogResult.Yes)
+                    {
+                        foreach (var button in buttons.Values)
+                        {
+                            var account = button.AccountData;
+                            if (account != null)
+                            {
+                                Client.Launcher.Kill(account);
+                            }
+                        }
+                    }
+                }
+            }
         }
     }
 }

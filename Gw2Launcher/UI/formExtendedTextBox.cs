@@ -49,7 +49,7 @@ namespace Gw2Launcher.UI
 
             protected override bool ProcessCmdKey(ref Message msg, Keys keyData)
             {
-                var keyCode = (Keys)(msg.WParam.ToInt32() & Convert.ToInt32(Keys.KeyCode));
+                var keyCode = (Keys)((int)msg.WParam.ToInt64() & Convert.ToInt32(Keys.KeyCode));
                 if ((msg.Msg == WM_KEYDOWN && keyCode == Keys.A) && (ModifierKeys == Keys.Control) && this.Focused)
                 {
                     this.SelectAll();
@@ -100,7 +100,8 @@ namespace Gw2Launcher.UI
         {
             base.OnFormClosing(e);
 
-            this.Owner.LocationChanged -= parent_LocationChanged;
+            if (this.Owner != null)
+                this.Owner.LocationChanged -= parent_LocationChanged;
             source.Text = textText.Text;
             source.SelectionStart = textText.SelectionStart;
             source.SelectionLength = textText.SelectionLength;
@@ -145,19 +146,28 @@ namespace Gw2Launcher.UI
 
         void textText_MouseLeave(object sender, EventArgs e)
         {
-            if (!this.ContainsFocus && !this.Owner.ContainsFocus)
+            if (this.Owner == null || !this.ContainsFocus && !this.Owner.ContainsFocus)
                 this.Close();
         }
 
         public void Show(Form parent, bool focus)
         {
             this.Owner = parent;
+            //this.Opacity = 0;
+            //this.VisibleChanged += formExtendedTextBox_VisibleChanged;
             this.Show();
 
             parent.LocationChanged += parent_LocationChanged;
 
             if (focus)
                 textText.Focus();
+        }
+
+        async void formExtendedTextBox_VisibleChanged(object sender, EventArgs e)
+        {
+            this.VisibleChanged -= formExtendedTextBox_VisibleChanged;
+            await Task.Delay(1);
+            this.Opacity = 1;
         }
 
         void parent_LocationChanged(object sender, EventArgs e)
