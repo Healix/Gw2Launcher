@@ -15,7 +15,7 @@ namespace Gw2Launcher
 {
     static class Program
     {
-        public const byte RELEASE_VERSION = 2;
+        public const byte RELEASE_VERSION = 3;
 
         /// <summary>
         /// The main entry point for the application.
@@ -587,11 +587,13 @@ namespace Gw2Launcher
 #if DEBUG
             if (!Debugger.IsAttached)
                 Debugger.Launch();
-#endif
+#else
 
             System.Windows.Forms.Application.SetUnhandledExceptionMode(System.Windows.Forms.UnhandledExceptionMode.ThrowException);
             AppDomain.CurrentDomain.UnhandledException += new UnhandledExceptionEventHandler(CurrentDomain_UnhandledException);
             System.Windows.Forms.Application.ThreadException += new System.Threading.ThreadExceptionEventHandler(Application_ThreadException);
+
+#endif
 
             try
             {
@@ -681,50 +683,6 @@ namespace Gw2Launcher
 
             Util.Users.Activate(false);
         }
-
-        //private static string GetInstanceName(int processId)
-        //{
-        //    string instanceName = Process.GetProcessById(processId).ProcessName;
-        //    bool found = false;
-        //    if (!string.IsNullOrEmpty(instanceName))
-        //    {
-        //        Process[] processes = Process.GetProcessesByName(instanceName);
-        //        if (processes.Length > 0)
-        //        {
-        //            int i = 0;
-        //            foreach (Process p in processes)
-        //            {
-        //                instanceName = FormatInstanceName(p.ProcessName, i);
-        //                if (PerformanceCounterCategory.CounterExists("ID Process", "Process"))
-        //                {
-        //                    PerformanceCounter counter = new PerformanceCounter("Process", "ID Process", instanceName);
-
-        //                    if (processId == counter.RawValue)
-        //                    {
-        //                        found = true;
-        //                        break;
-        //                    }
-        //                }
-        //                i++;
-        //            }
-        //        }
-        //    }
-
-        //    if (!found)
-        //        instanceName = string.Empty;
-
-        //    return instanceName;
-        //}
-
-        //private static string FormatInstanceName(string processName, int count)
-        //{
-        //    string instanceName = string.Empty;
-        //    if (count == 0)
-        //        instanceName = processName;
-        //    else
-        //        instanceName = string.Format("{0}#{1}", processName, count);
-        //    return instanceName;
-        //} 
 
         static void StoredCredentials_ValueChanged(object sender, EventArgs e)
         {

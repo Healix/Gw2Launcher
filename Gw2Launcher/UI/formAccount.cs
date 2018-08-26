@@ -531,7 +531,7 @@ namespace Gw2Launcher.UI
 
         private void buttonWindowed_Click(object sender, EventArgs e)
         {
-            using (formWindowSize f = new formWindowSize(true))
+            using (formWindowSize f = new formWindowSize(true, account))
             {
                 Rectangle r = FixSize(ParseWindowSize(textWindowed.Text));
 

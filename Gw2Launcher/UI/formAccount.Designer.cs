@@ -932,11 +932,11 @@
             this.Controls.Add(this.buttonCancel);
             this.Controls.Add(this.buttonOK);
             this.Controls.Add(this.sidebarPanel1);
+            this.Controls.Add(this.panelArguments);
             this.Controls.Add(this.panelStatistics);
             this.Controls.Add(this.panelGeneral);
             this.Controls.Add(this.panelLocalDat);
             this.Controls.Add(this.panelLaunchOptions);
-            this.Controls.Add(this.panelArguments);
             this.Font = new System.Drawing.Font("Segoe UI", 8.25F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
             this.FormBorderStyle = System.Windows.Forms.FormBorderStyle.FixedDialog;
             this.Icon = global::Gw2Launcher.Properties.Resources.Gw2;

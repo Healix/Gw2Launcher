@@ -1,4 +1,4 @@
-**Last release:** August 24, 2018
+**Last release:** August 26, 2018
 
 See the [wiki](https://github.com/Healix/Gw2Launcher/wiki) for more information. Simply download the [64-bit](https://github.com/Healix/Gw2Launcher/blob/master/Gw2Launcher/bin64/Release/Gw2Launcher.exe?raw=true) or [32-bit](https://github.com/Healix/Gw2Launcher/blob/master/Gw2Launcher/bin/Release/Gw2Launcher.exe?raw=true) version and place the executable wherever you'd like to use this program.
 

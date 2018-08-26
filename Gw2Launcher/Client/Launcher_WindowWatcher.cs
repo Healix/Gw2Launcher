@@ -67,8 +67,6 @@ namespace Gw2Launcher.Client
             /// </summary>
             public WindowWatcher(Account account, Process p, bool watchBounds, string args)
             {
-                this.Account = account;
-
                 this.process = p;
                 this.Account = account;
                 this.watchBounds = watchBounds;
@@ -214,47 +212,72 @@ namespace Gw2Launcher.Client
 
                                     if (watchBounds)
                                     {
-                                        var hasMessage = false;
-                                        var message = new NativeMessage();
-
-                                        WinEventDelegate callback =
-                                            delegate(IntPtr hWinEventHook, uint eventType, IntPtr hwnd, int idObject, int idChild, uint dwEventThread, uint dwmsEventTime)
-                                            {
-                                                hasMessage = true;
-                                            };
-
-                                        var _message = GCHandle.Alloc(message);
-                                        var _callback = GCHandle.Alloc(callback);
-                                        var _hook = IntPtr.Zero;
-                                        
-                                        try
+                                        using (var volumeControl = new Windows.Volume.VolumeControl(process.Id))
                                         {
-                                            _hook = SetWinEventHook(0, uint.MaxValue, IntPtr.Zero, callback, (uint)process.Id, 0, 0); //0x800b
+                                            //already loaded if audio is initialized (only checks default playback device)
+                                            var hasVolume = volumeControl.Query();
 
-                                            var t = DateTime.UtcNow.AddSeconds(30);
-                                            do
+                                            if (hasVolume)
                                             {
-                                                PeekMessage(ref message, IntPtr.Zero, 0, 0, 0);
-                                                Thread.Sleep(100);
+                                                if (WindowChanged != null && !this.process.HasExited)
+                                                    WindowChanged(this, handle);
+
+                                                return;
                                             }
-                                            while (!hasMessage && DateTime.UtcNow < t && !this.process.HasExited);
-                                        }
-                                        catch (Exception e)
-                                        {
-                                            Util.Logging.Log(e);
-                                        }
-                                        finally
-                                        {
-                                            if (_hook != IntPtr.Zero)
-                                                UnhookWinEvent(_hook);
 
-                                            _message.Free();
-                                            _callback.Free();
-                                        }
+                                            var hasMessage = false;
+                                            var message = new NativeMessage();
 
-                                        //already exists
-                                        if (WindowChanged != null && !this.process.HasExited)
-                                            WindowChanged(this, handle);
+                                            WinEventDelegate callback =
+                                                delegate(IntPtr hWinEventHook, uint eventType, IntPtr hwnd, int idObject, int idChild, uint dwEventThread, uint dwmsEventTime)
+                                                {
+                                                    hasMessage = true;
+                                                };
+
+                                            var _message = GCHandle.Alloc(message);
+                                            var _callback = GCHandle.Alloc(callback);
+                                            var _hook = IntPtr.Zero;
+
+                                            try
+                                            {
+                                                _hook = SetWinEventHook(0, uint.MaxValue, IntPtr.Zero, callback, (uint)process.Id, 0, 0);
+
+                                                var t = DateTime.UtcNow.AddSeconds(30);
+                                                var c = 0;
+                                                do
+                                                {
+                                                    Thread.Sleep(100);
+
+                                                    if (c++ > 3)
+                                                    {
+                                                        if (volumeControl.Query())
+                                                        {
+                                                            break;
+                                                        }
+                                                        c = 0;
+                                                    }
+
+                                                    PeekMessage(ref message, IntPtr.Zero, 0, 0, 0);
+                                                }
+                                                while (!hasMessage && DateTime.UtcNow < t && !this.process.HasExited);
+                                            }
+                                            catch (Exception e)
+                                            {
+                                                Util.Logging.Log(e);
+                                            }
+                                            finally
+                                            {
+                                                if (_hook != IntPtr.Zero)
+                                                    UnhookWinEvent(_hook);
+
+                                                _message.Free();
+                                                _callback.Free();
+                                            }
+
+                                            //already exists
+                                            if (WindowChanged != null && !this.process.HasExited)
+                                                WindowChanged(this, handle);
+                                        }
                                     }
 
                                     return;
@@ -288,6 +311,19 @@ namespace Gw2Launcher.Client
                     }
 
                     Thread.Sleep(500);
+                }
+            }
+
+            private bool HasVolume(int processId)
+            {
+                try
+                {
+                    float v;
+                    return Windows.Volume.GetVolume(processId, out v);
+                }
+                catch
+                {
+                    return false;
                 }
             }
 
@@ -386,7 +422,7 @@ namespace Gw2Launcher.Client
                     return;
                 }
 
-                var retry = true;
+                var attempts = 3;
 
                 Windows.WindowSize.SetWindowPlacement(window, bounds, Windows.WindowSize.WindowState.SW_SHOWNORMAL);
 
@@ -408,13 +444,20 @@ namespace Gw2Launcher.Client
                         }
                         else if (placement.rcNormalPosition.Equals(_placement.rcNormalPosition))
                         {
-                            Windows.WindowSize.SetWindowPlacement(window, bounds, Windows.WindowSize.WindowState.SW_SHOWNORMAL);
+                            if (--attempts > 0) //not all bounds are accepted; gw2 will do a best fit
+                            {
+                                Windows.WindowSize.SetWindowPlacement(window, bounds, Windows.WindowSize.WindowState.SW_SHOWNORMAL);
+                            }
+                            else
+                            {
+                                break;
+                            }
                         }
                         else
                         {
-                            if (retry)
+                            if (attempts > 0)
                             {
-                                retry = false;
+                                attempts = 0;
 
                                 //retry once, assuming the original placement was changed
                                 _placement = Windows.WindowSize.GetWindowPlacement(window);

@@ -23,7 +23,6 @@ namespace Gw2Launcher.Client
             public byte errors;
 
             public WindowWatcher watcher;
-            public EventHandler<string> watcherCallback;
 
             public Settings.IAccount Settings
             {

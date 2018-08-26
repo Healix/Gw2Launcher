@@ -95,6 +95,25 @@ namespace Gw2Launcher.UI.Controls
             Application.RemoveMessageFilter(this);
         }
 
+        private MouseButtons GetMouseButtons(int wParam)
+        {
+            MouseButtons buttons = MouseButtons.None;
+
+            if (HasFlag(wParam, 0x0001)) buttons |= MouseButtons.Left;
+            if (HasFlag(wParam, 0x0010)) buttons |= MouseButtons.Middle;
+            if (HasFlag(wParam, 0x0002)) buttons |= MouseButtons.Right;
+            if (HasFlag(wParam, 0x0020)) buttons |= MouseButtons.XButton1;
+            if (HasFlag(wParam, 0x0040)) buttons |= MouseButtons.XButton2;
+            /*MK_SHIFT=0x0004;MK_CONTROL=0x0008*/
+
+            return buttons;
+        }
+
+        private bool HasFlag(int value, int flag)
+        {
+            return (value & flag) == flag;
+        }
+
         public bool PreFilterMessage(ref Message m)
         {
             switch (m.Msg)
@@ -103,18 +122,9 @@ namespace Gw2Launcher.UI.Controls
 
                     var pos = new Point(m.LParam.ToInt32());
                     var wParam = (int)m.WParam.ToInt64();
-                    Func<long, MouseButtons, MouseButtons> getButton =
-                        (flag, button) => ((wParam & flag) == flag) ? button : MouseButtons.None;
-
-                    var buttons = getButton(wParam & 0x0001, MouseButtons.Left)
-                                | getButton(wParam & 0x0010, MouseButtons.Middle)
-                                | getButton(wParam & 0x0002, MouseButtons.Right)
-                                | getButton(wParam & 0x0020, MouseButtons.XButton1)
-                                | getButton(wParam & 0x0040, MouseButtons.XButton2)
-                                ; // Not matching for these /*MK_SHIFT=0x0004;MK_CONTROL=0x0008*/
-
                     var delta = wParam >> 16;
-                    var e = new MouseEventArgs(buttons, 0, pos.X, pos.Y, delta);
+                    var e = new MouseEventArgs(GetMouseButtons(wParam), 0, pos.X, pos.Y, delta);
+
                     OnMsgMouseWheel(e);
 
                     break;
@@ -199,7 +209,9 @@ namespace Gw2Launcher.UI.Controls
                     if (value > max)
                         value = max;
                 }
-                ((HandledMouseEventArgs)e).Handled = true;
+
+                //((HandledMouseEventArgs)e).Handled = true;
+                
                 if (verticalScroll.Value != value)
                     verticalScroll.Value = value;
             }

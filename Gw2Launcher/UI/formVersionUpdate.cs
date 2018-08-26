@@ -17,6 +17,8 @@ namespace Gw2Launcher.UI
 {
     public partial class formVersionUpdate : Form
     {
+        public const string UPDATE_BASE_URL = "https://raw.githubusercontent.com/Healix/Gw2Launcher/master/Gw2Launcher/update/";
+
         private const byte PAK_VERSION = 1;
         private const byte KEY_LENGTH = 16;
 
@@ -139,7 +141,7 @@ namespace Gw2Launcher.UI
             var current = Assembly.GetExecutingAssembly().Location;
             var path = Path.GetDirectoryName(current);
             var temp = GetTempName(Path.Combine(path, "update"));
-            var url = "https://raw.githubusercontent.com/Healix/Gw2Launcher/master/Gw2Launcher/update/core-" + (v64 ? "64" : "32") + ".pak";
+            var url = UPDATE_BASE_URL + "core-" + (v64 ? "64" : "32") + ".pak";
 
             if (temp == null)
             {

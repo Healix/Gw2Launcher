@@ -1458,7 +1458,7 @@ namespace Gw2Launcher.UI
             return Task.Run<int>(new Func<int>(
                 delegate
                 {
-                    var request = System.Net.HttpWebRequest.CreateHttp("https://raw.githubusercontent.com/Healix/Gw2Launcher/master/Gw2Launcher/update/version");
+                    var request = System.Net.HttpWebRequest.CreateHttp(formVersionUpdate.UPDATE_BASE_URL + "version");
                     request.Timeout = 5000;
                     request.AutomaticDecompression = System.Net.DecompressionMethods.Deflate | System.Net.DecompressionMethods.GZip;
 

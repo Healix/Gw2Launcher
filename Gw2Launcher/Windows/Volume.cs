@@ -131,6 +131,134 @@ namespace Gw2Launcher.Windows
             ERole_enum_count
         }
 
+        public class VolumeControl : IDisposable
+        {
+            private int processId;
+            private IMMDeviceEnumerator deviceEnumerator;
+            private IMMDevice speakers;
+            private IAudioSessionManager2 mgr;
+            private ISimpleAudioVolume volume;
+            private bool isSupported;
+
+            public VolumeControl(int processId)
+            {
+                this.processId = processId;
+
+                try
+                {
+                    Initialize();
+                    isSupported = true;
+                }
+                catch
+                {
+                    isSupported = false;
+                }
+            }
+
+            private void Initialize()
+            {
+                if (deviceEnumerator == null)
+                {
+                    deviceEnumerator = (IMMDeviceEnumerator)(new MMDeviceEnumerator());
+                    deviceEnumerator.GetDefaultAudioEndpoint(EDataFlow.eRender, ERole.eMultimedia, out speakers);
+                    Guid IID_IAudioSessionManager2 = typeof(IAudioSessionManager2).GUID;
+                    object o;
+                    speakers.Activate(ref IID_IAudioSessionManager2, 0, IntPtr.Zero, out o);
+                    mgr = (IAudioSessionManager2)o;
+                }
+            }
+
+            /// <summary>
+            /// Queries the volume controller for the process
+            /// </summary>
+            /// <returns>True if found</returns>
+            public bool Query()
+            {
+                if (!isSupported)
+                    return false;
+
+                IAudioSessionEnumerator sessionEnumerator = null;
+
+                try
+                {
+                    mgr.GetSessionEnumerator(out sessionEnumerator);
+                    int count;
+                    sessionEnumerator.GetCount(out count);
+
+                    for (int i = 0; i < count; i++)
+                    {
+                        IAudioSessionControl2 ctl;
+                        sessionEnumerator.GetSession(i, out ctl);
+                        int cpid;
+                        ctl.GetProcessId(out cpid);
+
+                        if (cpid == processId)
+                        {
+                            volume = ctl as ISimpleAudioVolume;
+                            return true;
+                        }
+
+                        Marshal.ReleaseComObject(ctl);
+                    }
+                }
+                finally
+                {
+                    if (sessionEnumerator != null)
+                        Marshal.ReleaseComObject(sessionEnumerator);
+                }
+
+                return false;
+            }
+
+            public float Volume
+            {
+                get
+                {
+                    if (volume != null)
+                    {
+                        float percent;
+                        volume.GetMasterVolume(out percent);
+                        return percent;
+                    }
+
+                    return 0;
+                }
+                set
+                {
+                    if (volume != null)
+                    {
+                        Guid guid = Guid.Empty;
+                        volume.SetMasterVolume(value, ref guid);
+                    }
+                }
+            }
+
+            public bool IsSupported
+            {
+                get
+                {
+                    return isSupported;
+                }
+            }
+
+            public void Dispose()
+            {
+                if (deviceEnumerator != null)
+                {
+                    deviceEnumerator = null;
+
+                    if (mgr != null)
+                        Marshal.ReleaseComObject(mgr);
+                    if (speakers != null)
+                        Marshal.ReleaseComObject(speakers);
+                    if (deviceEnumerator != null)
+                        Marshal.ReleaseComObject(deviceEnumerator);
+                    if (volume != null)
+                        Marshal.ReleaseComObject(volume);
+                }
+            }
+        }
+
         public static bool GetVolume(int processId, out float percent)
         {
             ISimpleAudioVolume volume;
@@ -152,7 +280,6 @@ namespace Gw2Launcher.Windows
 
             try
             {
-                Guid guid = Guid.Empty;
                 volume.GetMasterVolume(out percent);
             }
             catch (Exception e)

@@ -54,16 +54,19 @@ namespace Gw2Launcher.UI
         [DllImport("user32.dll", SetLastError = true)]
         static extern bool SetWindowPos(IntPtr hWnd, IntPtr hWndInsertAfter, int X, int Y, int cx, int cy, SetWindowPosFlags uFlags);
 
-        private const string TEXT_INFO = "(right click to continue)";
+        private const string TEXT_INFO = "(right click for options)";
 
         private formWindowSize parent;
         private Pen pen;
         private Brush brush;
+        private bool showInfo;
 
         private string _location, _size;
         private Size sizeLocation, sizeSize, sizeInfo;
 
-        public formWindowSizeOverlay(formWindowSize parent)
+        private int captionHeight, borderSize;
+
+        public formWindowSizeOverlay(formWindowSize parent, bool showInfo, int captionHeight, int borderSize)
         {
             InitializeComponent();
 
@@ -72,6 +75,10 @@ namespace Gw2Launcher.UI
             SetStyle(ControlStyles.OptimizedDoubleBuffer, true);
 
             this.parent = parent;
+
+            this.captionHeight = captionHeight;
+            this.borderSize = borderSize;
+            this.showInfo = showInfo;
 
             pen = new Pen(brush = new SolidBrush(parent.ForeColor));
 
@@ -124,7 +131,7 @@ namespace Gw2Launcher.UI
             int w = this.Width;
             int h = this.Height;
 
-            g.DrawRectangle(Pens.Black, 0, 0, w - 1, h - 1);
+            //g.DrawRectangle(Pens.Black, 0, 0, w - 1, h - 1);
 
             if (_size == null)
             {
@@ -138,20 +145,20 @@ namespace Gw2Launcher.UI
                 sizeLocation = TextRenderer.MeasureText(_location, this.Font);
             }
 
-            var rSize = new Rectangle(w - sizeSize.Width - 5, h - sizeSize.Height - 5, sizeSize.Width, sizeSize.Height);
-            var rLocation = new Rectangle(5, h - sizeLocation.Height - 5, sizeLocation.Width, sizeLocation.Height);
-            var rInfo = new Rectangle(w / 2 - sizeInfo.Width / 2, h / 2 - sizeInfo.Height / 2, sizeInfo.Width, sizeInfo.Height);
+            var rSize = new Rectangle(w - sizeSize.Width - 5 - borderSize, h - sizeSize.Height - 5 - borderSize, sizeSize.Width, sizeSize.Height);
+            var rLocation = new Rectangle(5 + borderSize, h - sizeLocation.Height - 5 - borderSize, sizeLocation.Width, sizeLocation.Height);
+            var rInfo = new Rectangle(w / 2 - sizeInfo.Width / 2, h / 2 - sizeInfo.Height / 2 , sizeInfo.Width, sizeInfo.Height);
 
             if (rSize.Y > rInfo.Bottom)
             {
                 if (rSize.X >= 0)
-                    TextRenderer.DrawText(g, _size, this.Font, rSize.Location, Color.Black);
+                    TextRenderer.DrawText(g, _size, this.Font, rSize.Location, this.ForeColor);
                 if (rSize.X > rLocation.Right)
-                    TextRenderer.DrawText(g, _location, this.Font, rLocation.Location, Color.Black);
+                    TextRenderer.DrawText(g, _location, this.Font, rLocation.Location, this.ForeColor);
             }
 
-            if (rInfo.Bottom < h && rInfo.Right < w)
-                TextRenderer.DrawText(g, TEXT_INFO, this.Font, rInfo.Location, Color.Black);
+            if (showInfo && rInfo.Bottom < h && rInfo.Right < w)
+                TextRenderer.DrawText(g, TEXT_INFO, this.Font, rInfo.Location, this.ForeColor);
         }
 
         private void formWindowSizeOverlay_Load(object sender, EventArgs e)
