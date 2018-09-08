@@ -4,6 +4,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using System.IO.MemoryMappedFiles;
+using System.IO;
 
 namespace Gw2Launcher.Messaging
 {
@@ -18,6 +19,16 @@ namespace Gw2Launcher.Messaging
         {
             this.id = id;
             this.mf = mf;
+        }
+
+        public BinaryWriter GetWriter()
+        {
+            return new BinaryWriter(mf.CreateViewStream(), Encoding.UTF8);
+        }
+
+        public BinaryReader GetReader()
+        {
+            return new BinaryReader(mf.CreateViewStream(), Encoding.UTF8);
         }
 
         public int ID

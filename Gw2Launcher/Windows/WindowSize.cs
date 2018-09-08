@@ -117,12 +117,6 @@ namespace Gw2Launcher.Windows
             SW_FORCEMINIMIZE = 11
         }
 
-        public static int GWL_STYLE = -16;
-        public static int WS_CHILD = 0x40000000; //child window 
-        public static int WS_BORDER = 0x00800000; //window with border 
-        public static int WS_DLGFRAME = 0x00400000; //window with double border but no title 
-        public static int WS_CAPTION = WS_BORDER | WS_DLGFRAME; //window with a title bar 
-
         public static System.Drawing.Rectangle GetWindowRect(Process p)
         {
             return GetWindowRect(p.MainWindowHandle);

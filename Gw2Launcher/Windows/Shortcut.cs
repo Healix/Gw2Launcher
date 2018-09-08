@@ -8,7 +8,7 @@ using System.IO;
 
 namespace Gw2Launcher.Windows
 {
-    static class Shortcut
+    class Shortcut
     {
         [ComImport]
         [Guid("00021401-0000-0000-C000-000000000046")]
@@ -154,6 +154,101 @@ namespace Gw2Launcher.Windows
                     return this.stream;
                 }
             }
+        }
+
+        public Shortcut(string target, string args)
+        {
+            this.Target = target;
+            this.Arguments = args;
+            this.WorkingDirectory = Path.GetDirectoryName(target);
+        }
+
+        public Shortcut(string target, string args, string comment)
+            : this(target, args)
+        {
+            this.Description = comment;
+        }
+
+        public string Target
+        {
+            get;
+            set;
+        }
+
+        public string Arguments
+        {
+            get;
+            set;
+        }
+
+        public string WorkingDirectory
+        {
+            get;
+            set;
+        }
+
+        public string Description
+        {
+            get;
+            set;
+        }
+
+        public string AppUserModelID
+        {
+            get;
+            set;
+        }
+
+        public bool PreventPinning
+        {
+            get;
+            set;
+        }
+
+        private IShellLink Create()
+        {
+            var l = Create(this.Target, this.Arguments, this.Description);
+
+            try
+            {
+                var ps = (WindowProperties.IPropertyStore)l;
+
+                if (this.PreventPinning)
+                {
+                    using (var pv = new WindowProperties.PropVariant(true))
+                    {
+                        var pk = WindowProperties.PropertyKey.AppUserModel_PreventPinning;
+                        ps.SetValue(ref pk, pv);
+                    }
+                }
+
+                if (!string.IsNullOrEmpty(this.AppUserModelID))
+                {
+                    using (var pv = new WindowProperties.PropVariant(this.AppUserModelID))
+                    {
+                        var pk = WindowProperties.PropertyKey.AppUserModel_ID;
+                        ps.SetValue(ref pk, pv);
+                    }
+                }
+            }
+            catch (Exception e)
+            {
+                Util.Logging.Log(e);
+            }
+
+            return l;
+        }
+
+        public void Save(Stream output)
+        {
+            var stream = (IPersistStream)Create();
+            stream.Save(new IStreamContainer(output), true);
+        }
+
+        public void Save(string output)
+        {
+            var file = (System.Runtime.InteropServices.ComTypes.IPersistFile)Create();
+            file.Save(output, false);
         }
 
         private static IShellLink Create(string target, string args, string comment)

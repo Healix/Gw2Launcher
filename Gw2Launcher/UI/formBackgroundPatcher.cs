@@ -29,7 +29,7 @@ namespace Gw2Launcher.UI
         private bool manifestsComplete;
         private ToolTip tooltip;
         private Label[] lang;
-        private Windows.TaskBar taskBar;
+        private Windows.Taskbar taskBar;
         private DateTime nextAutoUpdate;
         private CancellationTokenSource cancelTime;
 
@@ -37,7 +37,7 @@ namespace Gw2Launcher.UI
         {
             InitializeComponent();
 
-            taskBar = new Windows.TaskBar();
+            taskBar = new Windows.Taskbar();
 
             lang = new Label[] { labelLang1, labelLang2, labelLang3, labelLang4 };
 
@@ -363,7 +363,7 @@ namespace Gw2Launcher.UI
             downloadRate = 0;
             bytesDownloaded = estimatedBytesRemaining = contentBytesTotal = contentBytesCore = 0;
 
-            taskBar.SetState(this.Handle, Windows.TaskBar.TaskbarStates.Indeterminate);
+            taskBar.SetState(this.Handle, Windows.Taskbar.TaskbarStates.Indeterminate);
         }
 
         void bp_Complete(object sender, EventArgs e)
@@ -405,7 +405,7 @@ namespace Gw2Launcher.UI
 
 
             if (filesDownloaded == 0 || filesTotal != filesDownloaded)
-                taskBar.SetState(this.Handle, Windows.TaskBar.TaskbarStates.NoProgress);
+                taskBar.SetState(this.Handle, Windows.Taskbar.TaskbarStates.NoProgress);
         }
 
         void bp_Error(object sender, string e, Exception ex)
@@ -432,7 +432,7 @@ namespace Gw2Launcher.UI
             labelFiles.Tag = ex;
             errored = true;
 
-            taskBar.SetState(this.Handle, Windows.TaskBar.TaskbarStates.Error);
+            taskBar.SetState(this.Handle, Windows.Taskbar.TaskbarStates.Error);
         }
 
         void bp_DownloadProgress(object sender, Tools.BackgroundPatcher.DownloadProgressEventArgs e)
@@ -498,7 +498,7 @@ namespace Gw2Launcher.UI
                 {
                     manifestsComplete = true;
                     labelSizeEstimated.Visible = true;
-                    taskBar.SetState(this.Handle, Windows.TaskBar.TaskbarStates.Normal);
+                    taskBar.SetState(this.Handle, Windows.Taskbar.TaskbarStates.Normal);
                 }
 
                 if (manifestsComplete)

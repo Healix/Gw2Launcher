@@ -23,6 +23,81 @@ namespace Gw2Launcher
         [STAThread]
         static int Main(string[] args)
         {
+            #region Launcher proxy
+
+            if (args.Length > 1 && args[0] == "-pl")
+            {
+                //launches an account through a secondary instance, which takes on the environment changes so that GW2 can be launched by the shell
+
+                int pid;
+                if (!Int32.TryParse(args[1], out pid))
+                    return -1;
+
+                try
+                {
+                    using (var mf = MemoryMappedFile.OpenExisting(Messaging.MappedMessage.BASE_ID + "PL:" + pid))
+                    {
+                        using (var stream = mf.CreateViewStream())
+                        {
+                            var po = Client.ProxyLauncher.ProxyOptions.FromStream(stream);
+                            var options = po.Options;
+                            stream.Position = 0;
+
+                            try
+                            {
+                                var startInfo = new ProcessStartInfo(options.FileName, options.Arguments);
+                                startInfo.UseShellExecute = true;
+                                startInfo.WorkingDirectory = options.WorkingDirectory;
+
+                                if (!string.IsNullOrEmpty(options.UserProfile))
+                                    System.Environment.SetEnvironmentVariable("USERPROFILE", options.UserProfile);
+                                if (!string.IsNullOrEmpty(options.AppData))
+                                    System.Environment.SetEnvironmentVariable("APPDATA", options.AppData);
+
+                                using (var p = new Process())
+                                {
+                                    p.StartInfo = startInfo;
+                                    if (p.Start())
+                                    {
+                                        pid = p.Id;
+
+                                        using (var writer = new BinaryWriter(stream, System.Text.Encoding.UTF8, true))
+                                        {
+                                            writer.Write((byte)Client.ProxyLauncher.LaunchResult.Success);
+                                            writer.Write(pid);
+                                        }
+                                    }
+                                    else
+                                        throw new Exception("Failed to launch");
+                                }
+                            }
+                            catch (Exception ex)
+                            {
+                                Util.Logging.Log(ex);
+
+                                using (var writer = new BinaryWriter(stream, System.Text.Encoding.UTF8, true))
+                                {
+                                    writer.Write((byte)Client.ProxyLauncher.LaunchResult.Failed);
+                                    writer.Write(ex.Message);
+                                }
+
+                                return -1;
+                            }
+
+                        }
+                    }
+                }
+                catch (Exception e)
+                {
+                    Util.Logging.Log(e);
+                    return -1;
+                }
+
+                return 0;
+            }
+
+            #endregion
+
             #region Updated: -updated [pid] ["oldfilename"]
 
             if (args.Length > 2 && args[0] == "-updated")

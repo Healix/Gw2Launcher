@@ -3,7 +3,7 @@ using System.Runtime.InteropServices;
 
 namespace Gw2Launcher.Windows
 {
-    public class TaskBar
+    public class Taskbar
     {
         public enum TaskbarStates
         {
@@ -52,7 +52,7 @@ namespace Gw2Launcher.Windows
         private ITaskbarList3 instance;
         private static bool isSupported = Environment.OSVersion.Version >= new Version(6, 1);
 
-        public TaskBar()
+        public Taskbar()
         {
             instance = (ITaskbarList3)new TaskbarInstance();
         }

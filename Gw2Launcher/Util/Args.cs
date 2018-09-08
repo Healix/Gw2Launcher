@@ -135,5 +135,47 @@ namespace Gw2Launcher.Util
 
             return a + (a.Length > 0 && a[a.Length - 1] != ' ' ? " " + keyAndValue : keyAndValue) + (b.Length > 0 && b[0] != ' ' ? " " : "") + b;
         }
+
+        /// <summary>
+        /// Returns if the key was found
+        /// </summary>
+        /// <param name="key">The name of the key without the switch character. For example, -key would be "key"</param>
+        public static bool Contains(string args, string key)
+        {
+            if (string.IsNullOrEmpty(args))
+                return false;
+
+            var i = -1;
+            while ((i = args.IndexOf(key, i + 1, StringComparison.OrdinalIgnoreCase)) != -1)
+            {
+                if (i > 0)
+                {
+                    var c = args[i - 1];
+                    switch (c)
+                    {
+                        case '-':
+                            if (i > 1)
+                            {
+                                c = args[i - 2];
+                                if (c != ' ')
+                                    return false;
+                            }
+                            break;
+                        case '/':
+                            break;
+                        default:
+                            return false;
+                    }
+
+                    i += key.Length;
+
+                    if (i == args.Length || args[i] == ' ')
+                        return true;
+
+                }
+            }
+
+            return false;
+        }
     }
 }

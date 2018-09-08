@@ -17,7 +17,7 @@ namespace Gw2Launcher
         private const ushort WRITE_DELAY = 10000;
         private const string FILE_NAME = "settings.dat";
         private static readonly byte[] HEADER;
-        private const ushort VERSION = 2;
+        private const ushort VERSION = 3;
         private static readonly Type[] FORMS;
 
         public enum SortMode
@@ -1091,6 +1091,8 @@ namespace Gw2Launcher
             _AutoUpdateInterval = new SettingValue<ushort>();
             _LastProgramVersion = new SettingValue<LastCheckedVersion>();
             _CheckForNewBuilds = new SettingValue<bool>();
+            _PreventTaskbarGrouping = new SettingValue<bool>();
+            _WindowCaption = new SettingValue<string>();
 
             FORMS = new Type[]
             {
@@ -1268,6 +1270,9 @@ namespace Gw2Launcher
 
         private static Exception Write()
         {
+            if (ReadOnly)
+                return null;
+
             try
             {
                 string path = Path.Combine(DataPath.AppData, FILE_NAME);
@@ -1358,7 +1363,13 @@ namespace Gw2Launcher
                         _AutoUpdate.Value,
                         _BackgroundPatchingEnabled.Value,
                         _LocalAssetServerEnabled.Value,
-                        _PatchingUseHttps.Value
+                        _PatchingUseHttps.Value,
+
+                        //v3-HasValue from:37
+                        _WindowCaption.HasValue && !string.IsNullOrWhiteSpace(_WindowCaption.Value),
+                        _PreventTaskbarGrouping.HasValue,
+
+                        _PreventTaskbarGrouping.Value,
                     };
 
                     byte[] b = CompressBooleans(booleans);
@@ -1426,6 +1437,10 @@ namespace Gw2Launcher
                         writer.Write(_RunAfterLaunching.Value);
                     if (booleans[30])
                         writer.Write((byte)(_Volume.Value * 255));
+
+                    //v3
+                    if (booleans[37])
+                        writer.Write(_WindowCaption.Value);
 
                     lock(_DatFiles)
                     {
@@ -1783,6 +1798,19 @@ namespace Gw2Launcher
                         _LocalAssetServerEnabled.SetValue(booleans[35]);
                     else
                         _LocalAssetServerEnabled.Clear();
+                }
+
+                if (version >= 3)
+                {
+                    if (booleans[37])
+                        _WindowCaption.SetValue(reader.ReadString());
+                    else
+                        _WindowCaption.Clear();
+
+                    if (booleans[38])
+                        _PreventTaskbarGrouping.SetValue(booleans[39]);
+                    else
+                        _PreventTaskbarGrouping.Clear();
                 }
 
                 _datUID = 0;
@@ -2660,37 +2688,37 @@ namespace Gw2Launcher
             }
         }
 
+        private static SettingValue<bool> _PreventTaskbarGrouping;
+        public static ISettingValue<bool> PreventTaskbarGrouping
+        {
+            get
+            {
+                return _PreventTaskbarGrouping;
+            }
+        }
+
+        private static SettingValue<string> _WindowCaption;
+        public static ISettingValue<string> WindowCaption
+        {
+            get
+            {
+                return _WindowCaption;
+            }
+        }
+
         public static bool DisableAutomaticLogins
         {
             get;
             set;
         }
 
-        //public static List<System.Net.IPAddress> GetDnsServers()
-        //{
-        //    int count = _DnsServers.Count;
-        //    List<System.Net.IPAddress> servers = new List<System.Net.IPAddress>(count == 0 ? 1 : count * 2);
-
-        //    if (count > 0)
-        //    {
-        //        foreach (var server in Net.DnsServers.Servers)
-        //        {
-        //            if (_DnsServers.Contains(server.id))
-        //            {
-        //                servers.AddRange(server.IP);
-        //                if (--count == 0)
-        //                    break;
-        //            }
-        //        }
-        //    }
-
-        //    if (servers.Count == 0)
-        //        servers.AddRange(Net.DnsServers.Servers[0].IP);
-
-        //    return servers;
-        //}
-
         public static bool Silent
+        {
+            get;
+            set;
+        }
+
+        public static bool ReadOnly
         {
             get;
             set;

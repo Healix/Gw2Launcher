@@ -394,6 +394,9 @@ namespace Gw2Launcher.UI
 
             if (!Settings.Silent)
             {
+                Windows.FindWindow.SetForegroundWindow(this.Handle);
+                Windows.FindWindow.BringWindowToTop(this.Handle);
+
                 if (Settings.CheckForNewBuilds.Value && !Settings.AutoUpdate.Value)
                 {
                     CheckBuild();

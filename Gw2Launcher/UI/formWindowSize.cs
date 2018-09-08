@@ -16,6 +16,7 @@ namespace Gw2Launcher.UI
 
         private enum ResizeMode { Move, Left, Right, Top, Bottom, TopLeft, TopRight, BottomLeft, BottomRight };
 
+        //private Thread resizeThread;
         private bool formClosing;
 
         private ResizeMode resizeMode;
@@ -217,7 +218,7 @@ namespace Gw2Launcher.UI
                             handle = IntPtr.Zero;
                     }
                 }
-                catch
+                catch 
                 {
                     handle = IntPtr.Zero;
                 }

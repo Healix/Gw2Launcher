@@ -174,7 +174,7 @@ namespace Gw2Launcher.UI
 
         private void labelLaunchCount_SizeChanged(object sender, EventArgs e)
         {
-            labelLaunchCountEnd.Location = new Point(labelLaunchCount.Location.X + labelLaunchCount.Width + 1, labelLaunchCountEnd.Location.Y);
+            labelLaunchCountEnd.Location = new Point(labelLaunchCount.Location.X + labelLaunchCount.Width + 6, labelLaunchCountEnd.Location.Y);
         }
 
         protected override void OnFormClosing(FormClosingEventArgs e)

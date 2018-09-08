@@ -92,11 +92,23 @@
             this.checkCheckVersionOnStart = new System.Windows.Forms.CheckBox();
             this.label26 = new System.Windows.Forms.Label();
             this.sidebarPanel1 = new Gw2Launcher.UI.Controls.SidebarPanel();
+            this.buttonWindows = new Gw2Launcher.UI.Controls.SidebarButton();
             this.buttonUpdates = new Gw2Launcher.UI.Controls.SidebarButton();
             this.buttonStyle = new Gw2Launcher.UI.Controls.SidebarButton();
             this.buttonPasswords = new Gw2Launcher.UI.Controls.SidebarButton();
             this.buttonArguments = new Gw2Launcher.UI.Controls.SidebarButton();
             this.buttonGeneral = new Gw2Launcher.UI.Controls.SidebarButton();
+            this.panelWindows = new System.Windows.Forms.Panel();
+            this.label36 = new System.Windows.Forms.Label();
+            this.label37 = new System.Windows.Forms.Label();
+            this.checkPreventTaskbarGrouping = new System.Windows.Forms.CheckBox();
+            this.checkWindowCaption = new System.Windows.Forms.CheckBox();
+            this.textWindowCaption = new System.Windows.Forms.TextBox();
+            this.label22 = new System.Windows.Forms.Label();
+            this.label32 = new System.Windows.Forms.Label();
+            this.label33 = new System.Windows.Forms.Label();
+            this.label34 = new System.Windows.Forms.Label();
+            this.label35 = new System.Windows.Forms.Label();
             this.panelGeneral.SuspendLayout();
             this.panelArguments.SuspendLayout();
             this.panelPasswords.SuspendLayout();
@@ -104,6 +116,7 @@
             this.panelUpdates.SuspendLayout();
             ((System.ComponentModel.ISupportInitialize)(this.numericUpdateInterval)).BeginInit();
             this.sidebarPanel1.SuspendLayout();
+            this.panelWindows.SuspendLayout();
             this.SuspendLayout();
             // 
             // buttonCancel
@@ -859,6 +872,7 @@
             | System.Windows.Forms.AnchorStyles.Left)));
             this.sidebarPanel1.BackColor = System.Drawing.Color.White;
             this.sidebarPanel1.BorderColor = System.Drawing.SystemColors.ControlDark;
+            this.sidebarPanel1.Controls.Add(this.buttonWindows);
             this.sidebarPanel1.Controls.Add(this.buttonUpdates);
             this.sidebarPanel1.Controls.Add(this.buttonStyle);
             this.sidebarPanel1.Controls.Add(this.buttonPasswords);
@@ -869,6 +883,24 @@
             this.sidebarPanel1.Name = "sidebarPanel1";
             this.sidebarPanel1.Size = new System.Drawing.Size(180, 370);
             this.sidebarPanel1.TabIndex = 25;
+            // 
+            // buttonWindows
+            // 
+            this.buttonWindows.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left) 
+            | System.Windows.Forms.AnchorStyles.Right)));
+            this.buttonWindows.ArrowColor = System.Drawing.SystemColors.Control;
+            this.buttonWindows.BackColor = System.Drawing.Color.White;
+            this.buttonWindows.BorderColor = System.Drawing.SystemColors.ControlDark;
+            this.buttonWindows.Cursor = System.Windows.Forms.Cursors.Hand;
+            this.buttonWindows.Font = new System.Drawing.Font("Segoe UI", 8.25F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+            this.buttonWindows.Location = new System.Drawing.Point(0, 240);
+            this.buttonWindows.Margin = new System.Windows.Forms.Padding(0);
+            this.buttonWindows.Name = "buttonWindows";
+            this.buttonWindows.Selected = false;
+            this.buttonWindows.SelectedColor = System.Drawing.SystemColors.Control;
+            this.buttonWindows.Size = new System.Drawing.Size(180, 40);
+            this.buttonWindows.TabIndex = 8;
+            this.buttonWindows.Text = "Windows";
             // 
             // buttonUpdates
             // 
@@ -960,6 +992,132 @@
             this.buttonGeneral.TabIndex = 3;
             this.buttonGeneral.Text = "General";
             // 
+            // panelWindows
+            // 
+            this.panelWindows.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left) 
+            | System.Windows.Forms.AnchorStyles.Right)));
+            this.panelWindows.Controls.Add(this.label36);
+            this.panelWindows.Controls.Add(this.label37);
+            this.panelWindows.Controls.Add(this.checkPreventTaskbarGrouping);
+            this.panelWindows.Controls.Add(this.checkWindowCaption);
+            this.panelWindows.Controls.Add(this.textWindowCaption);
+            this.panelWindows.Controls.Add(this.label22);
+            this.panelWindows.Controls.Add(this.label32);
+            this.panelWindows.Controls.Add(this.label33);
+            this.panelWindows.Controls.Add(this.label34);
+            this.panelWindows.Controls.Add(this.label35);
+            this.panelWindows.Location = new System.Drawing.Point(183, 12);
+            this.panelWindows.Name = "panelWindows";
+            this.panelWindows.Size = new System.Drawing.Size(373, 302);
+            this.panelWindows.TabIndex = 37;
+            this.panelWindows.Visible = false;
+            // 
+            // label36
+            // 
+            this.label36.AutoSize = true;
+            this.label36.Font = new System.Drawing.Font("Segoe UI Semilight", 8.25F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+            this.label36.Location = new System.Drawing.Point(14, 113);
+            this.label36.Name = "label36";
+            this.label36.Size = new System.Drawing.Size(284, 13);
+            this.label36.TabIndex = 72;
+            this.label36.Text = "Prevents multiple clients from being grouped on the taskbar";
+            // 
+            // label37
+            // 
+            this.label37.AutoSize = true;
+            this.label37.Font = new System.Drawing.Font("Segoe UI Semibold", 9F, System.Drawing.FontStyle.Bold);
+            this.label37.Location = new System.Drawing.Point(13, 97);
+            this.label37.Name = "label37";
+            this.label37.Size = new System.Drawing.Size(140, 15);
+            this.label37.TabIndex = 71;
+            this.label37.Text = "Prevent taskbar grouping";
+            // 
+            // checkPreventTaskbarGrouping
+            // 
+            this.checkPreventTaskbarGrouping.AutoSize = true;
+            this.checkPreventTaskbarGrouping.Font = new System.Drawing.Font("Segoe UI", 8.25F);
+            this.checkPreventTaskbarGrouping.Location = new System.Drawing.Point(21, 135);
+            this.checkPreventTaskbarGrouping.Name = "checkPreventTaskbarGrouping";
+            this.checkPreventTaskbarGrouping.Size = new System.Drawing.Size(116, 17);
+            this.checkPreventTaskbarGrouping.TabIndex = 70;
+            this.checkPreventTaskbarGrouping.Text = "Prevent grouping";
+            this.checkPreventTaskbarGrouping.UseVisualStyleBackColor = true;
+            // 
+            // checkWindowCaption
+            // 
+            this.checkWindowCaption.AutoSize = true;
+            this.checkWindowCaption.Font = new System.Drawing.Font("Segoe UI", 8.25F);
+            this.checkWindowCaption.Location = new System.Drawing.Point(21, 65);
+            this.checkWindowCaption.Name = "checkWindowCaption";
+            this.checkWindowCaption.Size = new System.Drawing.Size(15, 14);
+            this.checkWindowCaption.TabIndex = 69;
+            this.checkWindowCaption.UseVisualStyleBackColor = true;
+            this.checkWindowCaption.CheckedChanged += new System.EventHandler(this.checkWindowCaption_CheckedChanged);
+            // 
+            // textWindowCaption
+            // 
+            this.textWindowCaption.Enabled = false;
+            this.textWindowCaption.Font = new System.Drawing.Font("Segoe UI", 8.25F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+            this.textWindowCaption.Location = new System.Drawing.Point(43, 62);
+            this.textWindowCaption.Name = "textWindowCaption";
+            this.textWindowCaption.Size = new System.Drawing.Size(312, 22);
+            this.textWindowCaption.TabIndex = 68;
+            this.textWindowCaption.Text = "%accountname%";
+            // 
+            // label22
+            // 
+            this.label22.AutoSize = true;
+            this.label22.Cursor = System.Windows.Forms.Cursors.Hand;
+            this.label22.Font = new System.Drawing.Font("Segoe UI Semibold", 8.25F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+            this.label22.Location = new System.Drawing.Point(167, 41);
+            this.label22.Name = "label22";
+            this.label22.Size = new System.Drawing.Size(74, 13);
+            this.label22.TabIndex = 67;
+            this.label22.Text = "%accountid%";
+            this.label22.Click += new System.EventHandler(this.label32_Click);
+            // 
+            // label32
+            // 
+            this.label32.AutoSize = true;
+            this.label32.Cursor = System.Windows.Forms.Cursors.Hand;
+            this.label32.Font = new System.Drawing.Font("Segoe UI Semibold", 8.25F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+            this.label32.Location = new System.Drawing.Point(69, 41);
+            this.label32.Name = "label32";
+            this.label32.Size = new System.Drawing.Size(92, 13);
+            this.label32.TabIndex = 66;
+            this.label32.Text = "%accountname%";
+            this.label32.Click += new System.EventHandler(this.label32_Click);
+            // 
+            // label33
+            // 
+            this.label33.AutoSize = true;
+            this.label33.Font = new System.Drawing.Font("Segoe UI Semilight", 8.25F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+            this.label33.Location = new System.Drawing.Point(14, 41);
+            this.label33.Name = "label33";
+            this.label33.Size = new System.Drawing.Size(49, 13);
+            this.label33.TabIndex = 65;
+            this.label33.Text = "Variables";
+            // 
+            // label34
+            // 
+            this.label34.AutoSize = true;
+            this.label34.Font = new System.Drawing.Font("Segoe UI Semilight", 8.25F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+            this.label34.Location = new System.Drawing.Point(14, 26);
+            this.label34.Name = "label34";
+            this.label34.Size = new System.Drawing.Size(255, 13);
+            this.label34.TabIndex = 64;
+            this.label34.Text = "Changes the caption displayed in the title and taskbar";
+            // 
+            // label35
+            // 
+            this.label35.AutoSize = true;
+            this.label35.Font = new System.Drawing.Font("Segoe UI Semibold", 9F, System.Drawing.FontStyle.Bold);
+            this.label35.Location = new System.Drawing.Point(13, 10);
+            this.label35.Name = "label35";
+            this.label35.Size = new System.Drawing.Size(136, 15);
+            this.label35.TabIndex = 63;
+            this.label35.Text = "Custom window caption";
+            // 
             // formSettings
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
@@ -968,11 +1126,12 @@
             this.Controls.Add(this.buttonCancel);
             this.Controls.Add(this.buttonOK);
             this.Controls.Add(this.sidebarPanel1);
-            this.Controls.Add(this.panelUpdates);
+            this.Controls.Add(this.panelWindows);
             this.Controls.Add(this.panelPasswords);
-            this.Controls.Add(this.panelArguments);
             this.Controls.Add(this.panelGeneral);
             this.Controls.Add(this.panelStyle);
+            this.Controls.Add(this.panelUpdates);
+            this.Controls.Add(this.panelArguments);
             this.Font = new System.Drawing.Font("Segoe UI", 8.25F);
             this.FormBorderStyle = System.Windows.Forms.FormBorderStyle.FixedDialog;
             this.Icon = global::Gw2Launcher.Properties.Resources.Gw2;
@@ -995,6 +1154,8 @@
             this.panelUpdates.PerformLayout();
             ((System.ComponentModel.ISupportInitialize)(this.numericUpdateInterval)).EndInit();
             this.sidebarPanel1.ResumeLayout(false);
+            this.panelWindows.ResumeLayout(false);
+            this.panelWindows.PerformLayout();
             this.ResumeLayout(false);
 
         }
@@ -1070,5 +1231,17 @@
         private System.Windows.Forms.CheckBox checkAutoUpdateDownloadNotifications;
         private System.Windows.Forms.Label labelAutoUpdateDownloadNotificationsConfig;
         private Controls.ExtendableTextBox textRunAfterLaunch;
+        private Controls.SidebarButton buttonWindows;
+        private System.Windows.Forms.Panel panelWindows;
+        private System.Windows.Forms.Label label36;
+        private System.Windows.Forms.Label label37;
+        private System.Windows.Forms.CheckBox checkPreventTaskbarGrouping;
+        private System.Windows.Forms.CheckBox checkWindowCaption;
+        private System.Windows.Forms.TextBox textWindowCaption;
+        private System.Windows.Forms.Label label22;
+        private System.Windows.Forms.Label label32;
+        private System.Windows.Forms.Label label33;
+        private System.Windows.Forms.Label label34;
+        private System.Windows.Forms.Label label35;
     }
 }

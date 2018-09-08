@@ -25,6 +25,7 @@ namespace Gw2Launcher.UI
             buttonPasswords.Tag = panelPasswords;
             buttonStyle.Tag = panelStyle;
             buttonUpdates.Tag = panelUpdates;
+            buttonWindows.Tag = panelWindows;
 
             foreach (Control c in sidebarPanel1.Controls)
             {
@@ -95,6 +96,14 @@ namespace Gw2Launcher.UI
                 checkCheckVersionOnStart.Checked = true;
                 labelVersionUpdate.Visible = Settings.LastProgramVersion.Value.version > Program.RELEASE_VERSION;
             }
+
+            if (Settings.WindowCaption.HasValue)
+            {
+                textWindowCaption.Text = Settings.WindowCaption.Value;
+                checkWindowCaption.Checked = true;
+            }
+
+            checkPreventTaskbarGrouping.Checked = Settings.PreventTaskbarGrouping.Value;
         }
 
         void sidebarButton_SelectedChanged(object sender, EventArgs e)
@@ -207,6 +216,15 @@ namespace Gw2Launcher.UI
             }
             else
                 Settings.LastProgramVersion.Clear();
+
+            Settings.PreventTaskbarGrouping.Value = checkPreventTaskbarGrouping.Checked;
+
+            if (checkWindowCaption.Checked)
+                Settings.WindowCaption.Value = textWindowCaption.Text;
+            else
+                Settings.WindowCaption.Clear();
+
+            checkPreventTaskbarGrouping.Checked = Settings.PreventTaskbarGrouping.Value;
 
             this.DialogResult = System.Windows.Forms.DialogResult.OK;
         }
@@ -342,6 +360,16 @@ namespace Gw2Launcher.UI
                     anchor = f.SelectedAnchor
                 };
             }
+        }
+
+        private void checkWindowCaption_CheckedChanged(object sender, EventArgs e)
+        {
+            textWindowCaption.Enabled = checkWindowCaption.Checked;
+        }
+
+        private void label32_Click(object sender, EventArgs e)
+        {
+            textWindowCaption.SelectedText = ((Label)sender).Text;
         }
     }
 }

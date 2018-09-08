@@ -13,6 +13,12 @@ namespace Gw2Launcher.Client
     {
         private class WindowWatcher
         {
+            [DllImport("user32.dll", CharSet = CharSet.Auto, SetLastError = true)]
+            static extern int GetWindowText(IntPtr hWnd, StringBuilder lpString, int nMaxCount);
+
+            [DllImport("user32.dll", SetLastError = true, CharSet = System.Runtime.InteropServices.CharSet.Auto)]
+            static extern bool SetWindowText(IntPtr hwnd, String lpString);
+
             [DllImport("User32.dll", CharSet = CharSet.Auto, SetLastError = true)]
             [return: MarshalAs(UnmanagedType.Bool)]
             static extern bool PeekMessage(ref NativeMessage message, IntPtr handle, uint filterMin, uint filterMax, uint flags);
@@ -28,7 +34,7 @@ namespace Gw2Launcher.Client
             static extern bool TranslateMessage([In] ref NativeMessage lpMsg);
 
             [StructLayout(LayoutKind.Sequential)]
-            public struct NativeMessage
+            struct NativeMessage
             {
                 public IntPtr handle;
                 public uint msg;
@@ -45,17 +51,43 @@ namespace Gw2Launcher.Client
             [DllImport("user32.dll")]
             static extern bool UnhookWinEvent(IntPtr hWinEventHook);
 
-            public event EventHandler<IntPtr> WindowChanged;
-            public event EventHandler<CrashReason> WindowCrashed;
-            public event EventHandler WindowCreated;
+            public class WindowChangedEventArgs : EventArgs
+            {
+                public enum EventType
+                {
+                    TitleChanged,
+                    HandleChanged,
+                    DxWindowCreated,
+                    DxWindowReady,
 
-            private const string WINDOW_CLASSNAME = "ArenaNet_Dx_Window_Class";
+                    WatcherExited
+                }
+
+                public EventType Type
+                {
+                    get;
+                    set;
+                }
+
+                public IntPtr Handle
+                {
+                    get;
+                    set;
+                }
+            }
+
+            public event EventHandler<WindowChangedEventArgs> WindowChanged;
+            public event EventHandler<CrashReason> WindowCrashed;
+
+            private const string DX_WINDOW_CLASSNAME = "ArenaNet_Dx_Window_Class";
+            private const string LAUNCHER_WINDOW_CLASSNAME = "ArenaNet";
             private const string EDIT_CLASSNAME = "Edit";
 
             public enum CrashReason
             {
                 Unknown,
-                PatchRequired
+                PatchRequired,
+                NoPatchUI
             }
 
             private Process process;
@@ -128,6 +160,14 @@ namespace Gw2Launcher.Client
                 {
                     Util.Logging.Log(e);
                 }
+
+                if (WindowChanged != null)
+                {
+                    WindowChanged(this, new WindowChangedEventArgs()
+                        {
+                            Type = WindowChangedEventArgs.EventType.WatcherExited
+                        });
+                }
             }
 
             private void WatchWindow()
@@ -164,8 +204,13 @@ namespace Gw2Launcher.Client
                         return true;
                     });
 
-                StringBuilder buffer = new StringBuilder(WINDOW_CLASSNAME.Length);
+                StringBuilder buffer = new StringBuilder(DX_WINDOW_CLASSNAME.Length);
                 int length = 0;
+
+                var wce = new WindowChangedEventArgs();
+                var _handle = IntPtr.Zero;
+
+                //watched for windowed mode process exit with no handle -- likely an invisible crash due to outdated Local.dat
 
                 while (this.watcher != null)
                 {
@@ -183,6 +228,13 @@ namespace Gw2Launcher.Client
                     {
                         if (this.process.HasExited)
                         {
+                            if (handle == IntPtr.Zero && (IsAutomaticLogin(this.Account.Settings) || Util.Args.Contains(this.Args, "nopatchui")))
+                            {
+                                var elapsed = this.process.ExitTime.Subtract(this.process.StartTime).TotalSeconds;
+                                if (elapsed < 60 && WindowCrashed != null)
+                                    WindowCrashed(this, CrashReason.NoPatchUI);
+                            }
+
                             break;
                         }
                     }
@@ -194,6 +246,18 @@ namespace Gw2Launcher.Client
 
                     if (handle != IntPtr.Zero)
                     {
+                        if (_handle != handle)
+                        {
+                            _handle = handle;
+                            wce.Handle = handle;
+
+                            if (WindowChanged != null)
+                            {
+                                wce.Type = WindowChangedEventArgs.EventType.HandleChanged;
+                                WindowChanged(this, wce);
+                            }
+                        }
+
                         buffer.Length = 0;
                         Windows.FindWindow.GetClassName(handle, buffer, buffer.Capacity + 1);
 
@@ -205,10 +269,40 @@ namespace Gw2Launcher.Client
                             if (l > 0)
                             {
                                 string className = buffer.ToString();
-                                if (className.Equals(WINDOW_CLASSNAME))
+                                if (className.Equals(DX_WINDOW_CLASSNAME))
                                 {
-                                    if (WindowCreated != null)
-                                        WindowCreated(this, EventArgs.Empty);
+                                    if (WindowChanged != null)
+                                    {
+                                        wce.Type = WindowChangedEventArgs.EventType.DxWindowCreated;
+                                        WindowChanged(this, wce);
+                                    }
+
+                                    try
+                                    {
+                                        var t = DateTime.UtcNow.AddSeconds(30);
+
+                                        do
+                                        {
+                                            Thread.Sleep(100);
+
+                                            buffer.Length = 0;
+                                            if (GetWindowText(handle, buffer, 2) > 0 && buffer[0] != 'U') //window text is initially Untitled
+                                            {
+                                                if (WindowChanged != null)
+                                                {
+                                                    wce.Type = WindowChangedEventArgs.EventType.TitleChanged;
+                                                    WindowChanged(this, wce);
+                                                }
+
+                                                break;
+                                            }
+                                        }
+                                        while (DateTime.UtcNow < t);
+                                    }
+                                    catch (Exception e)
+                                    {
+                                        Util.Logging.Log(e);
+                                    }
 
                                     if (watchBounds)
                                     {
@@ -220,7 +314,10 @@ namespace Gw2Launcher.Client
                                             if (hasVolume)
                                             {
                                                 if (WindowChanged != null && !this.process.HasExited)
-                                                    WindowChanged(this, handle);
+                                                {
+                                                    wce.Type = WindowChangedEventArgs.EventType.DxWindowReady;
+                                                    WindowChanged(this, wce);
+                                                }
 
                                                 return;
                                             }
@@ -276,7 +373,10 @@ namespace Gw2Launcher.Client
 
                                             //already exists
                                             if (WindowChanged != null && !this.process.HasExited)
-                                                WindowChanged(this, handle);
+                                            {
+                                                wce.Type = WindowChangedEventArgs.EventType.DxWindowReady;
+                                                WindowChanged(this, wce);
+                                            }
                                         }
                                     }
 
@@ -306,24 +406,19 @@ namespace Gw2Launcher.Client
                                     }
                                     return;
                                 }
+                                else if (className.Equals(LAUNCHER_WINDOW_CLASSNAME))
+                                {
+                                    if (WindowChanged != null)
+                                    {
+                                        wce.Type = WindowChangedEventArgs.EventType.TitleChanged;
+                                        WindowChanged(this, wce);
+                                    }
+                                }
                             }
                         }
                     }
 
                     Thread.Sleep(500);
-                }
-            }
-
-            private bool HasVolume(int processId)
-            {
-                try
-                {
-                    float v;
-                    return Windows.Volume.GetVolume(processId, out v);
-                }
-                catch
-                {
-                    return false;
                 }
             }
 
@@ -373,6 +468,20 @@ namespace Gw2Launcher.Client
                 while (DateTime.UtcNow < t);
             }
 
+            public static bool SetText(IntPtr window, string text)
+            {
+                try
+                {
+                    return SetWindowText(window, text);
+                }
+                catch (Exception e)
+                {
+                    Util.Logging.Log(e);
+                }
+
+                return false;
+            }
+
             /// <summary>
             /// Sets the bounds of the window and watches for it to revert back to its original bounds.
             /// If reverted, the bounds are set again.
@@ -399,7 +508,7 @@ namespace Gw2Launcher.Client
                 try
                 {
                     handle = process.MainWindowHandle;
-                    IntPtr ptr = Windows.FindWindow.Find(process.Id, WINDOW_CLASSNAME);
+                    IntPtr ptr = Windows.FindWindow.Find(process.Id, DX_WINDOW_CLASSNAME);
                     if (ptr != IntPtr.Zero)
                     {
                         Windows.WindowSize.SetWindowPlacement(ptr, bounds, Windows.WindowSize.WindowState.SW_SHOWNORMAL);

@@ -73,6 +73,7 @@
     <Compile Include="Client\Launcher_Account.cs" />
     <Compile Include="Client\Launcher_LinkedProcess.cs" />
     <Compile Include="Client\Launcher_WindowWatcher.cs" />
+    <Compile Include="Client\ProxyLauncher.cs" />
     <Compile Include="DataPath.cs" />
     <Compile Include="Messaging\LaunchMessage.cs" />
     <Compile Include="Messaging\MappedMessage.cs" />
@@ -331,9 +332,10 @@
     </Compile>
     <Compile Include="Util\RectangleConstraint.cs" />
     <Compile Include="Util\ScreenUtil.cs" />
+    <Compile Include="Windows\WindowProperties.cs" />
     <Compile Include="Windows\Shortcut.cs" />
     <Compile Include="Windows\Symlink.cs" />
-    <Compile Include="Windows\TaskBar.cs" />
+    <Compile Include="Windows\Taskbar.cs" />
     <Compile Include="Windows\Volume.cs" />
     <Compile Include="Windows\Win32Handles.cs" />
     <Compile Include="Windows\WindowSize.cs" />
