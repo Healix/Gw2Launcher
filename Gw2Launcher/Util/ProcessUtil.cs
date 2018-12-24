@@ -244,6 +244,27 @@ namespace Gw2Launcher.Util
         }
 
         /// <summary>
+        /// Finds all processes under the directory and attempts to kill "AN-Mutex-Window-Guild Wars 2"
+        /// Runs as an administrator
+        /// </summary>
+        /// <param name="gw2Path"></param>
+        public static void KillMutexWindowByDirectory(string gw2Path)
+        {
+            using (ApplicationObject a = new ApplicationObject())
+            {
+                ProcessStartInfo p = new ProcessStartInfo(a.Path, "-pu -handle -d \"" + gw2Path + "\" \"AN-Mutex-Window-Guild Wars 2\" 0");
+                p.UseShellExecute = true;
+                p.Verb = "runas";
+
+                Process proc = Process.Start(p);
+                if (proc != null)
+                {
+                    proc.WaitForExit();
+                }
+            }
+        }
+
+        /// <summary>
         /// Finds all processes that match the name and attempts to kill "AN-Mutex-Window-Guild Wars 2"
         /// Runs as an administrator
         /// </summary>
@@ -506,6 +527,40 @@ namespace Gw2Launcher.Util
                 if (proc != null)
                 {
                     proc.WaitForExit();
+                }
+            }
+        }
+
+        /// <summary>
+        /// Creates the folder with all users modifiy rights
+        /// </summary>
+        /// <param name="path"></param>
+        public static bool CreateJunction(string link, string target)
+        {
+            using (ApplicationObject a = new ApplicationObject())
+            {
+                StringBuilder args = new StringBuilder(512);
+
+                args.Append("-pu -junction \"");
+                args.Append(link);
+                args.Append("\" \"");
+                args.Append(target);
+                args.Append('"');
+
+                ProcessStartInfo p = new ProcessStartInfo(a.Path, args.ToString());
+                p.UseShellExecute = true;
+                p.Verb = "runas";
+
+                Process proc = Process.Start(p);
+                if (proc != null)
+                {
+                    proc.WaitForExit();
+
+                    return proc.ExitCode == 0;
+                }
+                else
+                {
+                    return false;
                 }
             }
         }

@@ -15,7 +15,7 @@ namespace Gw2Launcher
 {
     static class Program
     {
-        public const byte RELEASE_VERSION = 3;
+        public const byte RELEASE_VERSION = 5;
 
         /// <summary>
         /// The main entry point for the application.
@@ -49,10 +49,12 @@ namespace Gw2Launcher
                                 startInfo.UseShellExecute = true;
                                 startInfo.WorkingDirectory = options.WorkingDirectory;
 
-                                if (!string.IsNullOrEmpty(options.UserProfile))
-                                    System.Environment.SetEnvironmentVariable("USERPROFILE", options.UserProfile);
-                                if (!string.IsNullOrEmpty(options.AppData))
-                                    System.Environment.SetEnvironmentVariable("APPDATA", options.AppData);
+                                foreach (var key in options.Variables.Keys)
+                                {
+                                    var value = options.Variables[key];
+                                    if (!string.IsNullOrEmpty(value))
+                                        System.Environment.SetEnvironmentVariable(key, value, EnvironmentVariableTarget.Process);
+                                }
 
                                 using (var p = new Process())
                                 {
@@ -135,31 +137,46 @@ namespace Gw2Launcher
             {
                 if (args[1] == "-handle")
                 {
-                    #region -handle [-pid|-p|-n] [processId|"path to exe"|"process name"] "objectName" [exactMatch (0|1)]
+                    #region -handle [-pid|-p|-n|-d] [processId|"path to exe"|"process name"|"directory of exe"] "objectName" [exactMatch (0|1)]
 
-                    if (args.Length != 6 || args[2] != "-pid" && args[2] != "-p" && args[2] != "-n")
+                    if (args.Length != 6 || args[2] != "-pid" && args[2] != "-p" && args[2] != "-n" && args[2] != "-d")
                         return new ArgumentException().HResult;
 
                     bool isId = args[2] == "-pid";
                     bool isName = args[2] == "-n";
+                    bool isDir = args[2] == "-d";
                     string path = args[3];
                     string name = args[4];
                     bool exactMatch = args[5] == "1";
-
-                    Process gw2 = null;
+                    int pid = -1;
 
                     if (!isId)
                     {
                         FileInfo fi;
+                        DirectoryInfo di;
                         if (isName)
+                        {
                             fi = null;
+                            di = null;
+                        }
                         else
                         {
                             try
                             {
-                                fi = new FileInfo(path);
-                                if (!fi.Exists)
-                                    return new FileNotFoundException().HResult;
+                                if (isDir)
+                                {
+                                    di = new DirectoryInfo(path);
+                                    if (!di.Exists)
+                                        return new DirectoryNotFoundException().HResult;
+                                    fi = null;
+                                }
+                                else
+                                {
+                                    fi = new FileInfo(path);
+                                    if (!fi.Exists)
+                                        return new FileNotFoundException().HResult;
+                                    di = null;
+                                }
                             }
                             catch (Exception e)
                             {
@@ -167,22 +184,35 @@ namespace Gw2Launcher
                             }
                         }
 
-                        Process[] ps = Process.GetProcessesByName(isName ? path : fi.Name.Substring(0, fi.Name.Length - fi.Extension.Length));
+                        Process[] ps;
+                        if (isDir)
+                            ps = Process.GetProcesses();
+                        else
+                            ps = Process.GetProcessesByName(isName ? path : fi.Name.Substring(0, fi.Name.Length - fi.Extension.Length));
                         DateTime newest = DateTime.MinValue;
 
                         foreach (Process p in ps)
                         {
-                            try
+                            using (p)
                             {
-                                if (!p.HasExited && (isName || string.Equals(p.MainModule.FileName, fi.FullName, StringComparison.OrdinalIgnoreCase)))
+                                try
                                 {
-                                    if (p.StartTime > newest)
-                                        gw2 = p;
+                                    if (!p.HasExited)
+                                    {
+                                        if ((isName || string.Equals(p.MainModule.FileName, fi.FullName, StringComparison.OrdinalIgnoreCase)) || (isDir && Path.GetDirectoryName(p.MainModule.FileName).Equals(di.FullName, StringComparison.OrdinalIgnoreCase)))
+                                        {
+                                            if (p.StartTime > newest)
+                                            {
+                                                pid = p.Id;
+                                                newest = p.StartTime;
+                                            }
+                                        }
+                                    }
                                 }
-                            }
-                            catch (Exception e)
-                            {
-                                Console.WriteLine(e.Message);
+                                catch (Exception e)
+                                {
+                                    Console.WriteLine(e.Message);
+                                }
                             }
                         }
                     }
@@ -190,7 +220,7 @@ namespace Gw2Launcher
                     {
                         try
                         {
-                            gw2 = Process.GetProcessById(Int32.Parse(path));
+                            pid = Int32.Parse(path);
                         }
                         catch (Exception e)
                         {
@@ -198,11 +228,11 @@ namespace Gw2Launcher
                         }
                     }
 
-                    if (gw2 != null)
+                    if (pid != -1)
                     {
                         try
                         {
-                            Win32Handles.IObjectHandle handle = Win32Handles.GetHandle(gw2.Id, name, exactMatch);
+                            Win32Handles.IObjectHandle handle = Win32Handles.GetHandle(pid, name, exactMatch);
                             if (handle != null)
                             {
                                 handle.Kill();
@@ -468,6 +498,37 @@ namespace Gw2Launcher
 
                     #endregion
                 }
+                else if (args[1] == "-junction")
+                {
+                    #region -junction "link" "target"
+
+                    if (args.Length < 4)
+                        return new ArgumentException().HResult;
+
+                    var link = args[2];
+                    var target = args[3];
+
+                    try
+                    {
+                        var di = new DirectoryInfo(link);
+                        if (di.Exists && di.Attributes.HasFlag(FileAttributes.ReparsePoint))
+                            di.Delete();
+
+                        if (!Directory.Exists(target))
+                            throw new DirectoryNotFoundException();
+
+                        Windows.Symlink.CreateJunction(link, target);
+
+                        Util.FileUtil.AllowFolderAccess(link, System.Security.AccessControl.FileSystemRights.Modify);
+                    }
+                    catch (Exception e)
+                    {
+                        return e.HResult;
+                    }
+
+
+                    #endregion
+                }
 
                 return 0;
             }
@@ -591,9 +652,14 @@ namespace Gw2Launcher
                         {
                             if (lResult != IntPtr.Zero && lResult == hWnd)
                             {
-                                Windows.FindWindow.ShowWindow(hWnd, 5);
-                                Windows.FindWindow.BringWindowToTop(hWnd);
-                                Windows.FindWindow.SetForegroundWindow(hWnd);
+                                try
+                                {
+                                    Windows.FindWindow.FocusWindow(hWnd);
+                                }
+                                catch (Exception ex)
+                                {
+                                    Util.Logging.Log(ex);
+                                }
 
                                 return true;
                             }
@@ -687,23 +753,6 @@ namespace Gw2Launcher
                 Application.SetCompatibleTextRenderingDefault(false);
 
                 var f = new UI.formMain();
-                var s = Settings.WindowBounds[typeof(UI.formMain)];
-
-                if (s.HasValue && !s.Value.Size.IsEmpty)
-                {
-                    f.AutoSizeGrid = false;
-                    f.Size = s.Value.Size;
-                }
-                else
-                    f.AutoSizeGrid = true;
-
-                if (s.HasValue && !s.Value.Location.Equals(new Point(int.MinValue, int.MinValue)))
-                    f.Location = Util.ScreenUtil.Constrain(s.Value.Location, f.Size);
-                else
-                {
-                    var bounds = Screen.PrimaryScreen.WorkingArea;
-                    f.Location = Point.Add(bounds.Location, new Size(bounds.Width / 2 - f.Size.Width / 2, bounds.Height / 3));
-                }
 
                 Util.Users.Activate(true);
 

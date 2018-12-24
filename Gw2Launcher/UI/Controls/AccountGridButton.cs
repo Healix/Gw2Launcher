@@ -8,12 +8,12 @@ using System.Text;
 using System.Threading.Tasks;
 using System.Threading;
 using System.Windows.Forms;
+using System.Drawing.Imaging;
 
 namespace Gw2Launcher.UI.Controls
 {
     public partial class AccountGridButton : UserControl
     {
-        protected const long TICKS_PER_DAY = 864000000000;
         protected const string 
             TEXT_ACCOUNT= "Account",
             TEXT_LAST_USED = "Last used",
@@ -31,17 +31,110 @@ namespace Gw2Launcher.UI.Controls
             POINT_LAST_USED = new Point(10, 44),
             POINT_LAST_USED_VALUE = new Point(62, 44);
 
-        protected Rectangle rectName, rectAccountValue, rectLastUsedValue;
+        protected const byte INDEX_ICON_MAIN = 0;
+        protected const byte INDEX_ICON_NOTE = 1;
+
+        public event EventHandler<bool> EndPressed;
+        public event EventHandler Pressed;
+        public event EventHandler<float> PressedProgress;
+        public event EventHandler NoteClicked;
+
+        protected class DisplayedIcon
+        {
+            public enum IconType : byte
+            {
+                None,
+                Login,
+                Daily,
+                Note
+            }
+
+            [Flags]
+            public enum IconOptions : byte
+            {
+                None = 0,
+                Hovered = 1,
+                Activated = 2,
+            };
+
+            public DisplayedIcon(IconType type)
+            {
+                this.type = type;
+            }
+
+            public Rectangle bounds;
+            public IconType type;
+            public IconOptions options;
+
+            public bool Hovered
+            {
+                get
+                {
+                    return options.HasFlag(IconOptions.Hovered);
+                }
+                set
+                {
+                    SetOption(IconOptions.Hovered, value);
+                }
+            }
+
+            public bool Activated
+            {
+                get
+                {
+                    return options.HasFlag(IconOptions.Activated);
+                }
+                set
+                {
+                    SetOption(IconOptions.Activated, value);
+                }
+            }
+
+            public bool CanClick
+            {
+                get
+                {
+                    switch (type)
+                    {
+                        case IconType.Daily:
+                        case IconType.Note:
+                            return true;
+                    }
+
+                    return false;
+                }
+            }
+
+            public void SetOption(IconOptions state, bool value)
+            {
+                if (value)
+                    this.options |= state;
+                else
+                    this.options &= ~state;
+            }
+
+            public void ClearState()
+            {
+                options &= ~(IconOptions)3;
+            }
+        }
+
+        protected Rectangle rectName, rectAccountValue, rectLastUsedValue, rectIcon;
         protected SolidBrush brush;
         protected Pen pen;
 
-        protected bool isHovered, isSelected;
-        protected CancellationTokenSource cancelRefresh;
+        protected bool isHovered, isSelected, isPressed;
+        protected float pressedProgress;
+        protected byte pressedState;
+        protected DisplayedIcon[] icons;
+        protected DisplayedIcon activeIcon;
 
         protected ushort fontLargeHeight, fontSmallHeight;
         protected Font fontLarge, fontSmall;
         protected Point pointName, pointAccount, pointAccountValue, pointLastUsed, pointLastUsedValue;
-        protected bool isDirty;
+        protected bool resize, redraw;
+
+        protected BufferedGraphics buffer;
 
         public AccountGridButton()
         {
@@ -49,13 +142,19 @@ namespace Gw2Launcher.UI.Controls
 
             SetStyle(ControlStyles.AllPaintingInWmPaint, true);
             SetStyle(ControlStyles.UserPaint, true);
-            SetStyle(ControlStyles.OptimizedDoubleBuffer, true);
+
+            icons = new DisplayedIcon[]
+            {
+                new DisplayedIcon(DisplayedIcon.IconType.None),
+                new DisplayedIcon(DisplayedIcon.IconType.None),
+            };
 
             fontLarge = FONT_LARGE;
             fontSmall = FONT_SMALL;
 
             brush = new SolidBrush(Color.LightGray);
             pen = new Pen(brush);
+            redraw = true;
 
             _AccountName = "Example";
             _DisplayName = "example@example.com";
@@ -66,8 +165,6 @@ namespace Gw2Launcher.UI.Controls
             {
                 ResizeLabels(g);
             }
-
-            this.Disposed += AccountGridButton_Disposed;
         }
 
         protected override void Dispose(bool disposing)
@@ -76,6 +173,8 @@ namespace Gw2Launcher.UI.Controls
             {
                 pen.Dispose();
                 brush.Dispose();
+                if (buffer != null)
+                    buffer.Dispose();
                 if (components != null)
                     components.Dispose();
             }
@@ -134,7 +233,8 @@ namespace Gw2Launcher.UI.Controls
                 if (fontSmall != value)
                 {
                     fontSmall = value;
-                    isDirty = true;
+                    resize = true;
+                    redraw = true;
                     this.Invalidate();
                 }
             }
@@ -154,23 +254,123 @@ namespace Gw2Launcher.UI.Controls
                 if (fontLarge != value)
                 {
                     fontLarge = value;
-                    isDirty = true;
+                    resize = true;
+                    redraw = true;
                     this.Invalidate();
                 }
             }
         }
 
-        void AccountGridButton_Disposed(object sender, EventArgs e)
+        public async void BeginPressed(int state, CancellationToken cancel, AccountGridButtonContainer.MousePressedEventArgs e)
         {
-            if (cancelRefresh != null)
+            isPressed = true;
+            pressedProgress = 0;
+
+            var start = DateTime.UtcNow.Ticks;
+            const int LIMIT = 10;
+            int duration;
+
+            switch (state)
             {
-                cancelRefresh.Cancel();
+                case 1:
+                    pressedState = 1;
+                    duration = 500;
+                    brush.Color = e.FlashColor;
+                    break;
+                case 0:
+                default:
+                    pressedState = 0;
+                    duration = 500;
+                    brush.Color = e.FillColor;
+                    break;
+            }
+
+            try
+            {
+                while (true)
+                {
+                    int remaining = duration - (int)((DateTime.UtcNow.Ticks - start) / 10000);
+                    if (remaining > LIMIT)
+                        await Task.Delay(LIMIT, cancel);
+                    else if (remaining > 0)
+                        await Task.Delay(remaining, cancel);
+
+                    if (cancel.IsCancellationRequested)
+                    {
+                        throw new TaskCanceledException();
+                    }
+                    else
+                    {
+                        pressedProgress = (float)((DateTime.UtcNow.Ticks - start) / 10000) / duration;
+
+                        redraw = true;
+                        this.Invalidate();
+
+                        if (pressedProgress >= 1)
+                        {
+                            pressedProgress = 1;
+
+                            if (pressedState == 0)
+                            {
+                                if (PressedProgress != null)
+                                    PressedProgress(this, pressedProgress);
+
+                                await Task.Delay(50, cancel);
+
+                                if (cancel.IsCancellationRequested)
+                                    throw new TaskCanceledException();
+
+                                pressedState = 1;
+                                pressedProgress = 0;
+                                duration = 500;
+                                start = DateTime.UtcNow.Ticks;
+                                brush.Color = e.FlashColor;
+
+                                redraw = true;
+                                this.Invalidate();
+
+                                if (Pressed != null)
+                                    Pressed(this, EventArgs.Empty);
+                            }
+                            else
+                            {
+                                isPressed = false;
+
+                                break;
+                            }
+                        }
+                        else if (pressedState == 1)
+                        {
+                            brush.Color = Color.FromArgb(255 - (int)(255 * pressedProgress), e.FlashColor);
+                        }
+                        else if (PressedProgress != null)
+                            PressedProgress(this, pressedProgress);
+                    }
+                }
+            }
+            catch
+            {
+                isPressed = false;
+                redraw = true;
+                this.Invalidate();
+            }
+            finally
+            {
+                if (EndPressed != null)
+                    EndPressed(this, cancel.IsCancellationRequested);
             }
         }
 
         protected override void OnSizeChanged(EventArgs e)
         {
             base.OnSizeChanged(e);
+
+            if (buffer != null)
+            {
+                buffer.Dispose();
+                buffer = null;
+            }
+
             OnSizeChanged();
         }
 
@@ -180,63 +380,59 @@ namespace Gw2Launcher.UI.Controls
             rectAccountValue = new Rectangle(pointAccountValue, new Size(this.Width - pointAccount.X - pointAccountValue.X, fontSmallHeight + 1));
             rectLastUsedValue = new Rectangle(pointLastUsedValue, new Size(this.Width - pointLastUsed.X - pointLastUsedValue.X, fontSmallHeight + 1));
 
+            if (icons != null)
+            {
+                foreach (var icon in icons)
+                    icon.type = DisplayedIcon.IconType.None;
+            }
+
+            redraw = true;
+            if (!resize)
+                this.Invalidate();
+        }
+
+        public void Redraw()
+        {
+            redraw = true;
             this.Invalidate();
         }
 
-        protected override void OnVisibleChanged(EventArgs e)
+        private int OnDelayedRefresh()
         {
-            base.OnVisibleChanged(e);
+            if (this.IsDisposed)
+                return -1;
 
-            if (this.Visible)
-            {
-                DelayedRefresh();
-            }
-            else if (cancelRefresh != null)
-            {
-                cancelRefresh.Cancel();
-            }
+            redraw = true;
+            Invalidate();
+
+            return GetNextRefresh();
         }
 
-        private async void DelayedRefresh()
+        private int GetNextRefresh()
         {
-            if (cancelRefresh != null)
-                return;
-            else if (DateTime.UtcNow.Subtract(_LastUsed).TotalDays > 1)
-                return;
+            var ms = (int)DateTime.UtcNow.Subtract(_LastUsed).TotalMilliseconds;
+            //displayed time is rounded, so refreshes need to occur at 30s (1m), 90s (2m), etc
 
-            cancelRefresh = new CancellationTokenSource();
-            var token = cancelRefresh.Token;
-
-            do
+            if (ms < 0)
             {
-                try
-                {
-                    int millisToNextDay = (int)(((_LastUsed.Ticks / TICKS_PER_DAY + 1) * TICKS_PER_DAY - DateTime.UtcNow.Ticks) / 10000);
-                    if (millisToNextDay > 60000 || millisToNextDay < 0)
-                    {
-                        if (millisToNextDay < -TICKS_PER_DAY / 10000)
-                            throw new TaskCanceledException();
-                        await Task.Delay(60000, token);
-                    }
-                    else
-                        await Task.Delay(millisToNextDay + 1, token);
-                }
-                catch (TaskCanceledException e)
-                {
-                    Util.Logging.Log(e);
-                    cancelRefresh = null;
-                    return;
-                }
-
-                if (this.IsDisposed)
-                {
-                    cancelRefresh = null;
-                    return;
-                }
-                else if (this.Visible)
-                    this.Invalidate();
             }
-            while (true);
+            else if (ms < 3600000)
+            {
+                return 60000 - (ms + 30000) % 60000;
+            }
+            else if (ms < 86400000)
+            {
+                return 3600000 - (ms + 1800000) % 3600000;
+            }
+
+            return -1;
+        }
+
+        private void DelayedRefresh()
+        {
+            var refresh = GetNextRefresh();
+            if (refresh != -1)
+                Util.ScheduledEvents.Register(OnDelayedRefresh, refresh);
         }
 
         protected override void OnMouseEnter(EventArgs e)
@@ -244,6 +440,7 @@ namespace Gw2Launcher.UI.Controls
             base.OnMouseEnter(e);
 
             isHovered = true;
+            redraw = true;
             this.Invalidate();
         }
 
@@ -251,8 +448,119 @@ namespace Gw2Launcher.UI.Controls
         {
             base.OnMouseLeave(e);
 
+            if (activeIcon != null)
+            {
+                activeIcon.ClearState();
+                activeIcon = null;
+            }
             isHovered = false;
+            redraw = true;
             this.Invalidate();
+        }
+
+        protected override void OnMouseMove(MouseEventArgs e)
+        {
+            base.OnMouseMove(e);
+
+            for (var i = icons.Length - 1; i >= 0;i--)
+            {
+                var icon = icons[i];
+
+                if (icon.type != DisplayedIcon.IconType.None && icon.bounds.Contains(e.Location))
+                {
+                    bool redraw;
+
+                    if (activeIcon != null)
+                    {
+                        if (activeIcon == icon)
+                            return;
+                        else
+                        {
+                            redraw = activeIcon.CanClick || icon.CanClick;
+                            activeIcon.ClearState();
+                        }
+                    }
+                    else
+                        redraw = icon.CanClick;
+
+                    activeIcon = icon;
+                    icon.Hovered = true;
+
+                    if (redraw)
+                    {
+                        this.redraw = true;
+                        this.Invalidate();
+                    }
+
+                    return;
+                }
+            }
+
+            if (activeIcon != null)
+            {
+                activeIcon.ClearState();
+
+                if (activeIcon.CanClick)
+                {
+                    this.redraw = true;
+                    this.Invalidate();
+                }
+
+                activeIcon = null;
+            }
+        }
+
+        protected override void OnMouseDown(MouseEventArgs e)
+        {
+            if (activeIcon != null && activeIcon.CanClick && activeIcon.Hovered && e.Button == System.Windows.Forms.MouseButtons.Left)
+            {
+                activeIcon.Activated = true;
+                return;
+            }
+
+            base.OnMouseDown(e);
+        }
+
+        protected override void OnMouseUp(MouseEventArgs e)
+        {
+            if (activeIcon != null && activeIcon.CanClick && activeIcon.Activated)
+            {
+                activeIcon.Activated = false;
+                return;
+            }
+            
+            base.OnMouseUp(e);
+        }
+
+        protected override void OnMouseClick(MouseEventArgs e)
+        {
+            if (activeIcon != null && activeIcon.Activated)
+            {
+                if (activeIcon.Hovered)
+                {
+                    switch (activeIcon.type)
+                    {
+                        case DisplayedIcon.IconType.Daily:
+                            
+                            var a = this._AccountData;
+                            if (a != null)
+                                a.LastDailyCompletionUtc = this._LastDailyCompletion = DateTime.UtcNow;
+                            redraw = true;
+                            this.Invalidate();
+
+                            break;
+                        case DisplayedIcon.IconType.Note:
+
+                            if (NoteClicked != null)
+                                NoteClicked(this, e);
+
+                            break;
+                    }
+                }
+                return;
+            }
+
+            base.OnMouseClick(e);
         }
 
         private string FormatLastUsed()
@@ -293,68 +601,221 @@ namespace Gw2Launcher.UI.Controls
 
         }
 
-        protected override void OnPaintBackground(PaintEventArgs e)
+        protected void OnPaintIcon(Graphics g, DisplayedIcon.IconType type, Image image, int offsetX, int offsetY, bool grayscale, byte opacity)
         {
-            var g = e.Graphics;
+            DisplayedIcon icon;
 
-            if (isSelected)
-                g.Clear(BACK_COLOR_SELECTED);
-            else if (isHovered)
-                g.Clear(BACK_COLOR_HOVER);
-            else
-                g.Clear(BACK_COLOR);
+            int w = image.Width;
+            int h = image.Height;
 
-            if (this._ShowDaily && this._LastUsed != DateTime.MinValue && this._LastUsed.Day != DateTime.UtcNow.Day)
+            if (type == DisplayedIcon.IconType.Note)
             {
-                var daily = Properties.Resources.daily;
-                int w = daily.Width;
-                int h = daily.Height;
+                icon = icons[INDEX_ICON_NOTE];
 
-                if (h > this.Height * 0.8)
+                if (icon.type != type)
                 {
-                    int rh = (int)(this.Height * 0.8);
-                    int rw = rh * w / h;
-                    g.DrawImage(daily, new Rectangle(this.Width - rw / 2 - 2, this.Height / 2 - rh / 2, rw/2 + 1, rh), new Rectangle(0, 0, w / 2, h), GraphicsUnit.Pixel);
+                    icon.type = type;
+                    icon.bounds = new Rectangle(this.Width - w - 15, this.Height / 2 - h / 2, w, h);
+
+                    var iconMain = icons[INDEX_ICON_MAIN];
+                    if (iconMain != null && iconMain.type != DisplayedIcon.IconType.None)
+                    {
+                        var x = iconMain.bounds.X - w / 3;
+                        if (x < icon.bounds.X)
+                            icon.bounds.X = x;
+                        icon.bounds.Y = this.Height - h - 10;
+                    }
                 }
-                else
-                    g.DrawImageUnscaledAndClipped(daily, new Rectangle(this.Width - w / 2 - 1, this.Height / 2 - h / 2, w / 2 + 1, h));
+            }
+            else
+            {
+                icon = icons[INDEX_ICON_MAIN];
+
+                if (icon.type != type)
+                {
+                    icon.type = type;
+                    icons[INDEX_ICON_NOTE].type = DisplayedIcon.IconType.None;
+
+                    if (h > this.Height * 0.8)
+                    {
+                        int rh = (int)(this.Height * 0.8);
+                        int rw = rh * w / h;
+
+                        icon.bounds = new Rectangle(this.Width - rw / 2 + offsetX, this.Height / 2 - rh / 2 + offsetY, rw / 2 - offsetX, rh);
+                    }
+                    else
+                    {
+                        icon.bounds = new Rectangle(this.Width - w / 2 + offsetX, this.Height / 2 - h / 2 + offsetY, w / 2 - offsetX, h);
+                    }
+                }
+
+                w = w / 2 - offsetX;
             }
 
-            g.DrawRectangle(pen, 0, 0, this.Width - 1, this.Height - 1);
+            if (grayscale)
+            {
+                using (var ia = new ImageAttributes())
+                {
+                    ia.SetColorMatrix(new ColorMatrix(new float[][] 
+                        {
+                            new float[] {.3f, .3f, .3f, 0, 0},
+                            new float[] {.6f, .6f, .6f, 0, 0},
+                            new float[] {.1f, .1f, .1f, 0, 0},
+                            new float[] {0, 0, 0, opacity / 255f, 0},
+                            new float[] {0, 0, 0, 0, 1}
+                        }));
+
+                    g.DrawImage(image, icon.bounds, 0, 0, w, h, GraphicsUnit.Pixel, ia);
+                }
+            }
+            else if (opacity != 255)
+            {
+                using (var ia = new ImageAttributes())
+                {
+                    ia.SetColorMatrix(new ColorMatrix()
+                        {
+                            Matrix33 = opacity / 255f,
+                        });
+
+                    g.DrawImage(image, icon.bounds, 0, 0, w, h, GraphicsUnit.Pixel, ia);
+                }
+            }
+            else
+            {
+                g.DrawImage(image, icon.bounds, 0, 0, w, h, GraphicsUnit.Pixel);
+            }
+        }
+
+        protected void DrawIcon(Graphics g)
+        {
+
+            if (this._ShowDailyLogin || this._ShowDailyCompletion)
+            {
+                var date = DateTime.UtcNow.Date;
+
+                if (this._ShowDailyLogin && this._LastUsed < date)
+                {
+                    OnPaintIcon(g, DisplayedIcon.IconType.Login, Properties.Resources.login, -1, 2, false, 255);
+
+                    return;
+                }
+                if (this._ShowDailyCompletion && this._LastDailyCompletion < date)
+                {
+                    var hovered = activeIcon != null && activeIcon.type == DisplayedIcon.IconType.Daily && activeIcon.Hovered;
+                    
+                    OnPaintIcon(g, DisplayedIcon.IconType.Daily, Properties.Resources.daily, -2, 0, hovered, 255);
+
+                    return;
+                }
+                if (this._ShowDailyLogin && this._LastDailyLogin < date)
+                {
+                    OnPaintIcon(g, DisplayedIcon.IconType.Login, Properties.Resources.login, -1, 2, true, 127);
+
+                    return;
+                }
+            }
+
+            if (icons[INDEX_ICON_MAIN].type != DisplayedIcon.IconType.None)
+            {
+                icons[INDEX_ICON_MAIN].type = DisplayedIcon.IconType.None;
+                icons[INDEX_ICON_NOTE].type = DisplayedIcon.IconType.None;
+            }
+        }
+
+        protected override void OnPaintBackground(PaintEventArgs e)
+        {
+            if (resize)
+            {
+                ResizeLabels(e.Graphics);
+                resize = false;
+            }
+
+            if (redraw)
+            {
+                if (buffer == null)
+                    buffer = BufferedGraphicsManager.Current.Allocate(e.Graphics, this.DisplayRectangle);
+
+                var g = buffer.Graphics;
+
+                if (isSelected)
+                    g.Clear(BACK_COLOR_SELECTED);
+                else if (isHovered)
+                    g.Clear(BACK_COLOR_HOVER);
+                else
+                    g.Clear(BACK_COLOR);
+
+                if (isPressed)
+                {
+                    int w = this.Width - 1;
+                    int h = this.Height - 1;
+
+                    if (pressedState == 1)
+                    {
+                        g.FillRectangle(brush, 0, 0, w, h);
+                    }
+                    else
+                    {
+                        g.FillRectangle(brush, 0, 0, (int)(w * pressedProgress), h);
+                    }
+                }
+
+                DrawIcon(g);
+
+                if (DateTime.UtcNow < _LastNote)
+                {
+                    var hovered = activeIcon != null && activeIcon.type == DisplayedIcon.IconType.Note && activeIcon.Hovered;
+
+                    OnPaintIcon(g, DisplayedIcon.IconType.Note, Properties.Resources.mailfull, 0, 0, hovered, 255);
+                }
+                else
+                {
+                    icons[INDEX_ICON_NOTE].type = DisplayedIcon.IconType.None;
+                }
+
+                g.DrawRectangle(pen, 0, 0, this.Width - 1, this.Height - 1);
+            }
+        }
+
+        protected virtual void OnPrePaint(PaintEventArgs e)
+        {
+            if (redraw)
+            {
+                redraw = false;
+
+                var g = buffer.Graphics;
+
+                TextRenderer.DrawText(g, _DisplayName, fontLarge, rectName, Color.Black, TextFormatFlags.EndEllipsis);
+
+                if (_ShowAccount)
+                {
+                    TextRenderer.DrawText(g, TEXT_ACCOUNT, fontSmall, pointAccount, Color.Gray);
+                    TextRenderer.DrawText(g, _AccountName, fontSmall, rectAccountValue, Color.Gray, TextFormatFlags.EndEllipsis);
+                }
+
+                TextRenderer.DrawText(g, TEXT_LAST_USED, fontSmall, pointLastUsed, Color.Gray);
+
+                if (_Status != null)
+                {
+                    TextRenderer.DrawText(g, _Status, fontSmall, rectLastUsedValue, _StatusColor, TextFormatFlags.EndEllipsis);
+                }
+                else if (this._LastUsed == DateTime.MinValue)
+                {
+                    TextRenderer.DrawText(g, TEXT_STATUS_NEVER, fontSmall, rectLastUsedValue, Color.DarkRed, TextFormatFlags.EndEllipsis);
+                }
+                else
+                {
+                    TextRenderer.DrawText(g, FormatLastUsed(), fontSmall, rectLastUsedValue, Color.Gray, TextFormatFlags.EndEllipsis);
+                }
+            }
         }
 
         protected override void OnPaint(PaintEventArgs e)
         {
-            var g = e.Graphics;
+            OnPrePaint(e);
 
-            if (isDirty)
-            {
-                isDirty = false;
-                ResizeLabels(g);
-            }
+            buffer.Render(e.Graphics);
 
-            TextRenderer.DrawText(g, _DisplayName, fontLarge, rectName, Color.Black, TextFormatFlags.EndEllipsis);
-
-            if (_ShowAccount)
-            {
-                TextRenderer.DrawText(g, TEXT_ACCOUNT, fontSmall, pointAccount, Color.Gray);
-                TextRenderer.DrawText(g, _AccountName, fontSmall, rectAccountValue, Color.Gray, TextFormatFlags.EndEllipsis);
-            }
-
-            TextRenderer.DrawText(g, TEXT_LAST_USED, fontSmall, pointLastUsed, Color.Gray);
-
-            if (_Status != null)
-            {
-                TextRenderer.DrawText(g, _Status, fontSmall, rectLastUsedValue, _StatusColor, TextFormatFlags.EndEllipsis);
-            }
-            else if (this._LastUsed == DateTime.MinValue)
-            {
-                TextRenderer.DrawText(g, TEXT_STATUS_NEVER, fontSmall, rectLastUsedValue, Color.DarkRed, TextFormatFlags.EndEllipsis);
-            }
-            else
-            {
-                TextRenderer.DrawText(g, FormatLastUsed(), fontSmall, rectLastUsedValue, Color.Gray, TextFormatFlags.EndEllipsis);
-            }
+            base.OnPaint(e);
         }
 
         private void AccountButtonGrid_Load(object sender, EventArgs e)
@@ -366,6 +827,7 @@ namespace Gw2Launcher.UI.Controls
         {
             _Status = status;
             _StatusColor = color;
+            redraw = true;
             this.Invalidate();
         }
 
@@ -387,6 +849,7 @@ namespace Gw2Launcher.UI.Controls
                 if (_Status != value)
                 {
                     _Status = value;
+                    redraw = true;
                     this.Invalidate();
                 }
             }
@@ -404,6 +867,7 @@ namespace Gw2Launcher.UI.Controls
                 if (_StatusColor != value)
                 {
                     _StatusColor = value;
+                    redraw = true;
                     this.Invalidate();
                 }
             }
@@ -421,7 +885,8 @@ namespace Gw2Launcher.UI.Controls
                 if (_ShowAccount != value)
                 {
                     _ShowAccount = value;
-                    isDirty = true;
+                    resize = true;
+                    redraw = true;
                     this.Invalidate();
                 }
             }
@@ -436,13 +901,25 @@ namespace Gw2Launcher.UI.Controls
             }
             set
             {
+                var changed = _AccountData != value;
+
                 _AccountData = value;
+
                 if (value != null)
                 {
                     this.DisplayName = value.Name;
                     this.AccountName = value.WindowsAccount;
-                    this.LastUsedUtc = value.LastUsedUtc;
-                    this.ShowDaily = value.ShowDaily;
+                    if (changed || value.LastUsedUtc > _LastUsed)
+                        this.LastUsedUtc = value.LastUsedUtc;
+                    this.ShowDailyLogin = value.ShowDailyLogin;
+                    this.ShowDailyCompletion = value.ShowDailyCompletion;
+                    this.LastDailyCompletionUtc = value.LastDailyCompletionUtc;
+                    if (value.ApiData != null && value.ApiData.Played != null)
+                        this.LastDailyLoginUtc = value.ApiData.Played.LastChange;
+                    else
+                        this.LastDailyLoginUtc = value.LastUsedUtc;
+                    if (value.Notes != null)
+                        this.LastNoteUtc = value.Notes.ExpiresLast;
                 }
             }
         }
@@ -459,6 +936,7 @@ namespace Gw2Launcher.UI.Controls
                 if (_AccountName != value)
                 {
                     _AccountName = value;
+                    redraw = true;
                     this.Invalidate();
                 }
             }
@@ -476,6 +954,7 @@ namespace Gw2Launcher.UI.Controls
                 if (_DisplayName != value)
                 {
                     _DisplayName = value;
+                    redraw = true;
                     this.Invalidate();
                 }
             }
@@ -492,25 +971,101 @@ namespace Gw2Launcher.UI.Controls
             {
                 if (_LastUsed != value)
                 {
+                    if (_AccountData == null || _AccountData.ApiData == null || _AccountData.ApiData.Played == null)
+                        _LastDailyLogin = value;
                     _LastUsed = value;
                     DelayedRefresh();
+                    redraw = true;
                     this.Invalidate();
                 }
             }
         }
 
-        private bool _ShowDaily;
-        public bool ShowDaily
+        private bool _ShowDailyLogin;
+        public bool ShowDailyLogin
         {
             get
             {
-                return _ShowDaily;
+                return _ShowDailyLogin;
             }
             set
             {
-                if (_ShowDaily != value)
+                if (_ShowDailyLogin != value)
                 {
-                    _ShowDaily = value;
+                    _ShowDailyLogin = value;
+                    redraw = true;
+                    this.Invalidate();
+                }
+            }
+        }
+
+        private bool _ShowDailyCompletion;
+        public bool ShowDailyCompletion
+        {
+            get
+            {
+                return _ShowDailyCompletion;
+            }
+            set
+            {
+                if (_ShowDailyCompletion != value)
+                {
+                    _ShowDailyCompletion = value;
+                    redraw = true;
+                    this.Invalidate();
+                }
+            }
+        }
+
+        private DateTime _LastNote;
+        public DateTime LastNoteUtc
+        {
+            get
+            {
+                return _LastNote;
+            }
+            set
+            {
+                if (_LastNote != value)
+                {
+                    _LastNote = value;
+                    redraw = true;
+                    this.Invalidate();
+                }
+            }
+        }
+
+        private DateTime _LastDailyCompletion;
+        public DateTime LastDailyCompletionUtc
+        {
+            get
+            {
+                return _LastDailyCompletion;
+            }
+            set
+            {
+                if (_LastDailyCompletion != value)
+                {
+                    _LastDailyCompletion = value;
+                    redraw = true;
+                    this.Invalidate();
+                }
+            }
+        }
+
+        private DateTime _LastDailyLogin;
+        public DateTime LastDailyLoginUtc
+        {
+            get
+            {
+                return _LastDailyLogin;
+            }
+            set
+            {
+                if (_LastDailyLogin != value)
+                {
+                    _LastDailyLogin = value;
+                    redraw = true;
                     this.Invalidate();
                 }
             }
@@ -535,6 +1090,7 @@ namespace Gw2Launcher.UI.Controls
                 if (isSelected != value)
                 {
                     isSelected = value;
+                    redraw = true;
                     this.Invalidate();
                 }
             }

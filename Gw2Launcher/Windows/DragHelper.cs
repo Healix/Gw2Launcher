@@ -8,6 +8,7 @@ using System.Runtime.InteropServices.ComTypes;
 using System.Drawing;
 using System.IO;
 using DataFormats = System.Windows.Forms.DataFormats;
+using Gw2Launcher.Windows.Native;
 
 namespace Gw2Launcher.Windows
 {
@@ -16,37 +17,6 @@ namespace Gw2Launcher.Windows
         //References:
         //https://blogs.msdn.microsoft.com/adamroot/2008/02/19/shell-style-drag-and-drop-in-net-part-3/
         //https://dlaa.me/blog/post/9923072
-
-        [DllImport("urlmon.dll")]
-        private static extern int CopyStgMedium(ref STGMEDIUM pcstgmedSrc, ref STGMEDIUM pstgmedDest);
-
-        [DllImport("ole32.dll")]
-        private static extern void ReleaseStgMedium(ref STGMEDIUM pmedium);
-
-        [DllImport("user32.dll")]
-        private static extern uint RegisterClipboardFormat(string lpszFormatName);
-
-        [return: MarshalAs(UnmanagedType.Bool)]
-        [DllImport("user32.dll", SetLastError = true, CharSet = CharSet.Auto)]
-        private static extern bool PostMessage(IntPtr hWnd, uint Msg, IntPtr wParam, IntPtr lParam);
-
-        [DllImport("gdi32.dll")]
-        private static extern bool DeleteObject(IntPtr hObject);
-
-        [DllImport("shell32.dll", CharSet = CharSet.Auto)]
-        private static extern IntPtr ILCreateFromPath(string path);
-
-        [DllImport("shell32.dll", CharSet = CharSet.None)]
-        private static extern void ILFree(IntPtr pidl);
-
-        [DllImport("shell32.dll", CharSet = CharSet.None)]
-        private static extern int ILGetSize(IntPtr pidl);
-
-        [DllImport("shell32.dll")]
-        private static extern int SHDoDragDrop([In] IntPtr hwnd, [In] IDataObject data, [In] IntPtr drop, [In] int dwEffect, out int pdwEffect);
-
-        [DllImport("kernel32.dll", EntryPoint = "CopyMemory", SetLastError = false)]
-        private static extern void CopyMemory(IntPtr dest, IntPtr src, uint count);
 
         private const string CFSTR_DROPDESCRIPTION = "DropDescription";
         private const string CFSTR_ISSHOWINGLAYERED = "IsShowingLayered";
@@ -60,8 +30,6 @@ namespace Gw2Launcher.Windows
         private static readonly short CF_PERFORMEDDROPEFFECT = (short)(DataFormats.GetFormat(CFSTR_PERFORMEDDROPEFFECT).Id);
         private static readonly short CF_FILECONTENTS = (short)(DataFormats.GetFormat(CFSTR_FILECONTENTS).Id);
         
-        private const uint WM_INVALIDATEDRAGIMAGE = 0x403;
-
         [ComImport, Guid("4657278A-411B-11d2-839A-00C04FD918D0")]
         private class DragDropHelper { }
 
@@ -136,7 +104,8 @@ namespace Gw2Launcher.Windows
             Move = (int)System.Windows.Forms.DragDropEffects.Move,
             Link = (int)System.Windows.Forms.DragDropEffects.Link,
             Label = 6,
-            Warning = 7
+            Warning = 7,
+            NoImage = 8
         }
 
         [StructLayout(LayoutKind.Sequential)]
@@ -254,7 +223,7 @@ namespace Gw2Launcher.Windows
             }
         }
 
-        public class DragHelperInstance
+        public class DragHelperInstance : IDisposable
         {
             private IDropTargetHelper instance;
 
@@ -289,6 +258,15 @@ namespace Gw2Launcher.Windows
             {
                 var p = new Point(e.X, e.Y);
                 instance.Drop((IDataObject)e.Data, ref p, e.Effect);
+            }
+
+            public void Dispose()
+            {
+                if (instance != null)
+                {
+                    Marshal.ReleaseComObject(instance);
+                    instance = null;
+                }
             }
         }
 
@@ -456,9 +434,6 @@ namespace Gw2Launcher.Windows
             {
                 if (this.handle != IntPtr.Zero)
                 {
-                    var c1 = Marshal.AddRef(this.handle);
-                    var c2 = Marshal.Release(this.handle);
-
                     Marshal.Release(this.handle);
                     this.handle = IntPtr.Zero;
 
@@ -549,13 +524,14 @@ namespace Gw2Launcher.Windows
                     {
                         STGMEDIUM medium;
                         data.GetData(ref formatETC, out medium);
+
                         try
                         {
                             return (DropDescription)Marshal.PtrToStructure(medium.unionmember, typeof(DropDescription));
                         }
                         finally
                         {
-                            ReleaseStgMedium(ref medium);
+                            NativeMethods.ReleaseStgMedium(ref medium);
                         }
                     }
 
@@ -639,7 +615,7 @@ namespace Gw2Launcher.Windows
 
             protected void FillFormatETC(string format, TYMED tymed, out FORMATETC formatETC)
             {
-                formatETC.cfFormat = (short)RegisterClipboardFormat(format);
+                formatETC.cfFormat = (short)NativeMethods.RegisterClipboardFormat(format);
                 formatETC.dwAspect = DVASPECT.DVASPECT_CONTENT;
                 formatETC.lindex = -1;
                 formatETC.ptd = IntPtr.Zero;
@@ -691,9 +667,11 @@ namespace Gw2Launcher.Windows
                     try
                     {
                         IntPtr hwnd = GetIntPtr(base.GetData(CFSTR_DRAGWINDOW));
-                        PostMessage(hwnd, WM_INVALIDATEDRAGIMAGE, IntPtr.Zero, IntPtr.Zero);
+                        NativeMethods.PostMessage(hwnd, (uint)WindowMessages.WM_INVALIDATEDRAGIMAGE, IntPtr.Zero, IntPtr.Zero);
                     }
-                    catch { }
+                    catch 
+                    {
+                    }
                 }
             }
 
@@ -897,7 +875,7 @@ namespace Gw2Launcher.Windows
                 {
                     if (release)
                     {
-                        ReleaseStgMedium(ref medium);
+                        NativeMethods.ReleaseStgMedium(ref medium);
                         release = false;
                     }
                 }
@@ -981,13 +959,14 @@ namespace Gw2Launcher.Windows
                     }
 
                     medium = new STGMEDIUM();
-                    int hr = CopyStgMedium(ref data.medium, ref medium);
+                    int hr = NativeMethods.CopyStgMedium(ref data.medium, ref medium);
                     if (hr != 0)
                         throw Marshal.GetExceptionForHR(hr);
                 }
                 else
                 {
-                    throw Marshal.GetExceptionForHR(DV_E_FORMATETC);
+                    Marshal.ThrowExceptionForHR(DV_E_FORMATETC);
+                    medium = new STGMEDIUM();
                 }
             }
 
@@ -1007,7 +986,7 @@ namespace Gw2Launcher.Windows
                             BeginGetContent(this, format.lindex);
                     }
 
-                    int hr = CopyStgMedium(ref data.medium, ref medium);
+                    int hr = NativeMethods.CopyStgMedium(ref data.medium, ref medium);
                     if (hr != 0)
                         throw Marshal.GetExceptionForHR(hr);
                 }
@@ -1122,7 +1101,9 @@ namespace Gw2Launcher.Windows
             private void Dispose(bool disposing)
             {
                 if (disposing)
+                {
                     GC.SuppressFinalize(this);
+                }
 
                 Clear();
             }
@@ -1324,8 +1305,8 @@ namespace Gw2Launcher.Windows
 
             foreach (var path in paths)
             {
-                var pidl = ptrs[i] = ILCreateFromPath(path);
-                var size = sizes[i] = (ushort)ILGetSize(pidl);
+                var pidl = ptrs[i] = NativeMethods.ILCreateFromPath(path);
+                var size = sizes[i] = (ushort)NativeMethods.ILGetSize(pidl);
 
                 Marshal.WriteInt32(ptr + position, offset);
                 position += 4;
@@ -1352,10 +1333,10 @@ namespace Gw2Launcher.Windows
                     ptr = Marshal.ReAllocHGlobal(ptr, (IntPtr)(length = length + c));
                 }
 
-                CopyMemory(ptr + position, pidl, size);
+                NativeMethods.CopyMemory(ptr + position, pidl, size);
                 position += size;
 
-                ILFree(pidl);
+                NativeMethods.ILFree(pidl);
             }
 
             if (position != length)
@@ -1404,6 +1385,7 @@ namespace Gw2Launcher.Windows
         {
             IDragSourceHelper2 sourceHelper = (IDragSourceHelper2)new DragDropHelper();
             sourceHelper.SetFlags(allow ? 1 : 0);
+            Marshal.ReleaseComObject(sourceHelper);
         }
 
         public static System.Windows.Forms.DragDropEffects DoDragDrop(System.Windows.Forms.Control sender, DataObject data, System.Windows.Forms.DragDropEffects allowedEffects, bool allowDescriptions, Bitmap image, Point imageOffset, Color imageColorKey)
@@ -1425,9 +1407,10 @@ namespace Gw2Launcher.Windows
                 hbmpDragImage = image.GetHbitmap()
             };
 
+            IDragSourceHelper sourceHelper = null;
             try
             {
-                IDragSourceHelper sourceHelper = (IDragSourceHelper)new DragDropHelper();
+                sourceHelper = (IDragSourceHelper)new DragDropHelper();
                 sourceHelper.InitializeFromBitmap(ref _image, container);
 
                 var result = sender.DoDragDrop(container, allowedEffects);
@@ -1441,7 +1424,9 @@ namespace Gw2Launcher.Windows
             }
             finally
             {
-                DeleteObject(_image.hbmpDragImage);
+                if (sourceHelper != null)
+                    Marshal.ReleaseComObject(sourceHelper);
+                NativeMethods.DeleteObject(_image.hbmpDragImage);
             }
         }
 

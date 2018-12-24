@@ -4,12 +4,13 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using System.Runtime.InteropServices;
+using Gw2Launcher.Windows.Native;
 
 namespace Gw2Launcher.Windows
 {
     class WindowProperties
     {
-        [DllImport("shell32.dll")]
+        [DllImport(NativeMethods.DLL.SHELL32)]
         private static extern int SHGetPropertyStoreForWindow(
             IntPtr hwnd,
             ref Guid iid,
@@ -25,8 +26,8 @@ namespace Gw2Launcher.Windows
             void Commit();
         }
 
-        [DllImport("Ole32.dll", PreserveSig = false)] // returns hresult
-        extern static void PropVariantClear([In, Out] PropVariant pvar);
+        [DllImport(NativeMethods.DLL.OLE32, PreserveSig = false)] // returns hresult
+        private extern static void PropVariantClear([In, Out] PropVariant pvar);
 
         public enum StartPinOptions
         {
@@ -95,51 +96,6 @@ namespace Gw2Launcher.Windows
             ~PropVariant()
             {
                 Dispose();
-            }
-        }
-
-        static void SetWindowProperty(IntPtr hwnd, ref PropertyKey pk, PropVariant pv)
-        {
-            IPropertyStore propStore = GetWindowPropertyStore(hwnd);
-
-            try
-            {
-                propStore.SetValue(ref pk, pv);
-                propStore.Commit();
-            }
-            finally
-            {
-                Marshal.ReleaseComObject(propStore);
-            }
-        }
-
-        static IPropertyStore GetWindowPropertyStore(IntPtr hwnd)
-        {
-            IPropertyStore propStore;
-            var guid = new Guid("886D8EEB-8CF2-4446-8D02-CDBA1DBDCF99");
-            int rc = SHGetPropertyStoreForWindow(hwnd, ref guid, out propStore);
-            if (rc != 0)
-            {
-                throw Marshal.GetExceptionForHR(rc);
-            }
-            return propStore;
-        }
-
-        public static void SetAppUserModelID(IntPtr window, string appId)
-        {
-            using (var pv = new PropVariant(appId))
-            {
-                var pk = PropertyKey.AppUserModel_ID;
-                SetWindowProperty(window, ref pk, pv);
-            }
-        }
-
-        public static void SetPinning(IntPtr window, bool allow)
-        {
-            using (var pv = new PropVariant(!allow))
-            {
-                var pk = PropertyKey.AppUserModel_PreventPinning;
-                SetWindowProperty(window, ref pk, pv);
             }
         }
     }

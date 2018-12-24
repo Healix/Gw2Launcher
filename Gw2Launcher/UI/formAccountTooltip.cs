@@ -8,6 +8,7 @@ using System.Text;
 using System.Threading.Tasks;
 using System.Threading;
 using System.Windows.Forms;
+using Gw2Launcher.Windows.Native;
 
 namespace Gw2Launcher.UI
 {
@@ -52,6 +53,26 @@ namespace Gw2Launcher.UI
             this.TransparencyKey = Color.Red;
 
             arrowAnchor = AnchorStyles.Left;
+        }
+
+        protected override CreateParams CreateParams
+        {
+            get
+            {
+                var cp = base.CreateParams;
+
+                cp.ExStyle |= (int)(WindowStyle.WS_EX_NOACTIVATE | WindowStyle.WS_EX_TOOLWINDOW | WindowStyle.WS_EX_TRANSPARENT);
+
+                return base.CreateParams;
+            }
+        }
+
+        protected override bool ShowWithoutActivation
+        {
+            get
+            {
+                return true;
+            }
         }
 
         protected override void Dispose(bool disposing)
@@ -577,14 +598,6 @@ namespace Gw2Launcher.UI
 
             pen.Color = Color.Gray;
             g.DrawPolygon(pen, background);
-        }
-
-        protected override bool ShowWithoutActivation
-        {
-            get
-            {
-                return true;
-            }
         }
 
         private void formAccountTooltip_Load(object sender, EventArgs e)

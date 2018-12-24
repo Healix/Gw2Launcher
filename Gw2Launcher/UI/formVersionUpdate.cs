@@ -72,6 +72,28 @@ namespace Gw2Launcher.UI
             this.Close();
         }
 
+        private async void ShowChangelog()
+        {
+            var f = new formChangelog();
+            if (await f.LoadChangelog())
+            {
+                var p = new Point(this.Right + 5, this.Top - this.Height / 2 - f.Height / 2);
+                var screen = Screen.FromControl(this).WorkingArea;
+
+                if (p.X + f.Width > screen.Right)
+                    p.X = this.Left - f.Width - 5;
+                if (p.Y < screen.Top)
+                    p.Y = screen.Top;
+                else if (p.Y + f.Height > screen.Bottom)
+                    p.Y = screen.Bottom - f.Height;
+
+                f.Location = p;
+                f.Show(this);
+            }
+            else
+                f.Dispose();
+        }
+
         private async Task Decompress(byte[] data, string to)
         {
             if (data[0] != PAK_VERSION)
@@ -304,7 +326,14 @@ namespace Gw2Launcher.UI
                     if (Util.Explorer.OpenFolderAndSelect(temp))
                     {
                         await Task.Delay(1000);
-                        Windows.FindWindow.SetForegroundWindow(this.Handle);
+                        try
+                        {
+                            Windows.FindWindow.FocusWindow(this.Handle);
+                        }
+                        catch (Exception ex)
+                        {
+                            Util.Logging.Log(ex);
+                        }
                     }
 
                     ShowError("Unable to complete the update. Manually finish by overwriting:\n\n" + Path.GetFileName(current) + " with " + Path.GetFileName(temp));
@@ -329,6 +358,7 @@ namespace Gw2Launcher.UI
         {
             this.Shown -= formVersionUpdate_Shown;
 
+            ShowChangelog();
             DoUpdate();
         }
 

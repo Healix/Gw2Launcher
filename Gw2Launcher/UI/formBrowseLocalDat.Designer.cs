@@ -69,7 +69,7 @@
             this.radioAccountShare.AutoSize = true;
             this.radioAccountShare.Location = new System.Drawing.Point(108, 69);
             this.radioAccountShare.Name = "radioAccountShare";
-            this.radioAccountShare.Size = new System.Drawing.Size(72, 17);
+            this.radioAccountShare.Size = new System.Drawing.Size(75, 17);
             this.radioAccountShare.TabIndex = 16;
             this.radioAccountShare.Text = "Share with";
             this.radioAccountShare.UseVisualStyleBackColor = true;
@@ -212,7 +212,7 @@
             this.radioFileMove.AutoSize = true;
             this.radioFileMove.Location = new System.Drawing.Point(108, 226);
             this.radioFileMove.Name = "radioFileMove";
-            this.radioFileMove.Size = new System.Drawing.Size(76, 17);
+            this.radioFileMove.Size = new System.Drawing.Size(77, 17);
             this.radioFileMove.TabIndex = 26;
             this.radioFileMove.Text = "Move from";
             this.radioFileMove.UseVisualStyleBackColor = true;
@@ -223,9 +223,9 @@
             this.radioCreateNew.AutoSize = true;
             this.radioCreateNew.Location = new System.Drawing.Point(18, 310);
             this.radioCreateNew.Name = "radioCreateNew";
-            this.radioCreateNew.Size = new System.Drawing.Size(233, 17);
+            this.radioCreateNew.Size = new System.Drawing.Size(120, 17);
             this.radioCreateNew.TabIndex = 29;
-            this.radioCreateNew.Text = "Create a new Local.dat file on the next launch";
+            this.radioCreateNew.Text = "Create a new {0} file";
             this.radioCreateNew.UseVisualStyleBackColor = true;
             this.radioCreateNew.CheckedChanged += new System.EventHandler(this.radio_CheckedChanged);
             // 
@@ -245,10 +245,9 @@
             this.label5.Font = new System.Drawing.Font("Segoe UI Semilight", 8.25F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
             this.label5.Location = new System.Drawing.Point(10, 10);
             this.label5.Name = "label5";
-            this.label5.Size = new System.Drawing.Size(327, 26);
+            this.label5.Size = new System.Drawing.Size(108, 13);
             this.label5.TabIndex = 14;
-            this.label5.Text = "Select a Local.dat file to use. Shared accounts will be able to launch on \r\nthe s" +
-    "ame Windows user account at the same time.";
+            this.label5.Text = "Select a {0} file to use.";
             // 
             // formBrowseLocalDat
             // 

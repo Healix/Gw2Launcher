@@ -10,7 +10,7 @@ using System.IO;
 
 namespace Gw2Launcher.Net.AssetProxy
 {
-    class ProxyServer
+    class ProxyServer : IDisposable
     {
         public const string PATCH_SERVER = Settings.ASSET_HOST; //direct: origincdn.101.arenanetworks.com
 
@@ -25,19 +25,29 @@ namespace Gw2Launcher.Net.AssetProxy
         public event EventHandler<ArraySegment<byte>> RequestDataReceived;
 
         private TcpListener listener;
+        private Task taskListener;
         private IPEndPoint remoteEP;
         private bool isActive;
-        private int clients;
         private int port;
         private CancellationTokenSource cancelToken;
         private bool dynamicEP;
         private IPPool ipPool;
+        //private int clients;
+        private HashSet<Client> clients;
 
         public ProxyServer()
         {
             dynamicEP = true;
+            clients = new HashSet<Client>();
 
             Gw2Launcher.Client.Launcher.ActiveProcessCountChanged += Launcher_ActiveProcessCountChanged;
+        }
+
+        public void Dispose()
+        {
+            Gw2Launcher.Client.Launcher.ActiveProcessCountChanged -= Launcher_ActiveProcessCountChanged;
+
+            Stop();
         }
 
         void Launcher_ActiveProcessCountChanged(object sender, int e)
@@ -52,9 +62,11 @@ namespace Gw2Launcher.Net.AssetProxy
             }
             else if (cancelToken != null)
             {
-                cancelToken.Cancel();
-                cancelToken.Dispose();
-                cancelToken = null;
+                using (cancelToken)
+                {
+                    cancelToken.Cancel();
+                    cancelToken = null;
+                }
             }
         }
 
@@ -153,7 +165,9 @@ namespace Gw2Launcher.Net.AssetProxy
             if (ServerStarted != null)
                 ServerStarted(this, EventArgs.Empty);
 
-            Task.Factory.StartNew(DoListener, TaskCreationOptions.LongRunning);
+            if (taskListener != null && taskListener.IsCompleted)
+                taskListener.Dispose();
+            taskListener = Task.Factory.StartNew(DoListener, TaskCreationOptions.LongRunning);
         }
 
         private async void DoListener()
@@ -189,13 +203,16 @@ namespace Gw2Launcher.Net.AssetProxy
 
                     lock (this)
                     {
-                        clients++;
+                        //clients++;
+                        clients.Add(client);
 
                         if (cancelToken != null)
                         {
-                            cancelToken.Cancel();
-                            cancelToken.Dispose();
-                            cancelToken = null;
+                            using (cancelToken)
+                            {
+                                cancelToken.Cancel();
+                                cancelToken = null;
+                            }
                         }
                     }
 
@@ -289,9 +306,12 @@ namespace Gw2Launcher.Net.AssetProxy
 
         void client_Closed(object sender, EventArgs e)
         {
+            var client = (Client)sender;
+
             lock (this)
             {
-                clients--;
+                //clients--;
+                clients.Remove(client);
 
                 //if (clients == 0 && cancelToken == null)
                 //{
@@ -301,7 +321,9 @@ namespace Gw2Launcher.Net.AssetProxy
             }
 
             if (ClientClosed != null)
-                ClientClosed(this, (Client)sender);
+                ClientClosed(this, client);
+
+            client.Dispose();
         }
 
         public void Stop()
@@ -314,11 +336,21 @@ namespace Gw2Launcher.Net.AssetProxy
 
                     listener.Stop();
 
+                    foreach (var client in clients)
+                    {
+                        client.Close();
+                    }
+
+                    if (taskListener != null && taskListener.IsCompleted)
+                        taskListener.Dispose();
+
                     if (cancelToken != null)
                     {
-                        cancelToken.Cancel();
-                        cancelToken.Dispose();
-                        cancelToken = null;
+                        using (cancelToken)
+                        {
+                            cancelToken.Cancel();
+                            cancelToken = null;
+                        }
                     }
                 }
                 else

@@ -9,7 +9,7 @@ namespace Gw2Launcher.Util
 {
     static class Bitmap
     {
-        public static void ReplaceTransparentPixels(System.Drawing.Bitmap image, Color transparencyKey)
+        public static void ReplaceTransparentPixels(System.Drawing.Bitmap image, System.Drawing.Color transparencyKey)
         {
             var data = image.LockBits(new Rectangle(0, 0, image.Width, image.Height), System.Drawing.Imaging.ImageLockMode.ReadWrite, image.PixelFormat);
             

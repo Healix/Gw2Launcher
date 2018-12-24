@@ -8,10 +8,11 @@ using Gw2Launcher.Net.AssetProxy;
 
 namespace Gw2Launcher.Tools
 {
-    public class BackgroundPatcher
+    public class BackgroundPatcher : IDisposable
     {
         public delegate void ErrorEventHandler(object sender, string message, Exception exception);
 
+        public event EventHandler<float> ProgressChanged;
         public event EventHandler<DownloadProgressEventArgs> DownloadProgress;
         public event EventHandler<DownloadProgressEventArgs> DownloadManifestsComplete;
         public event ErrorEventHandler Error;
@@ -25,7 +26,7 @@ namespace Gw2Launcher.Tools
         {
             public int filesTotal, filesDownloaded, manifestsTotal, manifestsDownloaded;
             public uint downloadRate;
-            public long contentBytesTotal, estimatedBytesRemaining, bytesDownloaded;
+            public long contentBytesTotal, estimatedBytesRemaining, bytesDownloaded, estimatedTotalBytes, estimatedBytesDownloaded;
             public long contentBytesCore; //exe and manifests
             public bool errored;
             public DateTime startTime;
@@ -69,6 +70,7 @@ namespace Gw2Launcher.Tools
         private bool isActive;
         private DownloadProgressEventArgs progress;
         private DateTime initializationTime;
+        private int progressValue;
 
         private struct LatestData
         {
@@ -93,6 +95,12 @@ namespace Gw2Launcher.Tools
             {
                 return _instance;
             }
+        }
+
+        public void Dispose()
+        {
+            Settings.BackgroundPatchingMaximumThreads.ValueChanged -= BackgroundPatchingMaximumThreads_ValueChanged;
+            Settings.PatchingSpeedLimit.ValueChanged -= BackgroundPatchingSpeedLimit_ValueChanged;
         }
 
         void BackgroundPatchingMaximumThreads_ValueChanged(object sender, EventArgs e)
@@ -318,17 +326,17 @@ namespace Gw2Launcher.Tools
                                     {
                                         Build = latest.buildId
                                     });
-                            }
 
-                            if (!progress.rescan)
-                            {
                                 lock (baseIds)
                                     progress.filesTotal++;
 
                                 var asset = new Net.AssetDownloader.Asset(latest.exeId, true, (int)(latest.exeSize * AVG_COMPRESSION + 0.5f));
 
                                 lock (this)
+                                {
                                     progress.estimatedBytesRemaining += asset.size;
+                                    progress.estimatedTotalBytes += asset.size;
+                                }
 
                                 asset.Cancelled += file_Cancelled;
                                 asset.Complete += file_Complete;
@@ -379,6 +387,15 @@ namespace Gw2Launcher.Tools
             lock (this)
             {
                 progress.estimatedBytesRemaining -= e.sizeChange;
+                progress.estimatedBytesDownloaded += e.sizeChange;
+
+                var v = (int)((double)progress.estimatedBytesDownloaded / progress.estimatedTotalBytes * 10000);
+                if (v != progressValue)
+                {
+                    progressValue = v;
+                    if (ProgressChanged != null)
+                        ProgressChanged(this, v / 10000f);
+                }
             }
         }
 
@@ -444,7 +461,7 @@ namespace Gw2Launcher.Tools
             if (is64 = Environment.Is64BitOperatingSystem)
             {
                 //check if the 32-bit executable is being used with the -32 option
-                if (!string.IsNullOrEmpty(Settings.GW2Arguments.Value) && Settings.GW2Arguments.Value.IndexOf("-32") != -1 && File.Exists(Settings.GW2Path.Value) && !Util.BinaryType.Is64(Settings.GW2Path.Value))
+                if (!string.IsNullOrEmpty(Settings.GW2Arguments.Value) && Settings.GW2Arguments.Value.IndexOf("-32") != -1 && File.Exists(Settings.GW2Path.Value) && Util.FileUtil.Is32BitExecutable(Settings.GW2Path.Value))
                     is64 = false;
             }
 
@@ -491,7 +508,10 @@ namespace Gw2Launcher.Tools
             if (assets.Count > 0)
             {
                 lock (this)
+                {
                     progress.estimatedBytesRemaining += size;
+                    progress.estimatedTotalBytes += size;
+                }
                 downloader.Add(assets);
             }
         }
@@ -619,6 +639,7 @@ namespace Gw2Launcher.Tools
 
             progress.manifestsTotal++;
             progress.estimatedBytesRemaining += manifestSize;
+            progress.estimatedTotalBytes += manifestSize;
 
             int language;
             switch (Settings.BackgroundPatchingLang.Value)
@@ -705,6 +726,7 @@ namespace Gw2Launcher.Tools
                     progress.manifestsTotal += assets.Count;
                     progress.manifestsDownloaded++;
                     progress.estimatedBytesRemaining += size;
+                    progress.estimatedTotalBytes += size;
 
                     downloader.Add(assets);
 

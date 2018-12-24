@@ -4,13 +4,12 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using System.Windows.Forms;
+using Gw2Launcher.Windows.Native;
 
 namespace Gw2Launcher.UI
 {
     public class ShowWithoutActivationForm : Form
     {
-        private const int WS_EX_TOPMOST = 0x00000008;
-
         protected override bool ShowWithoutActivation
         {
             get
@@ -24,7 +23,7 @@ namespace Gw2Launcher.UI
             get
             {
                 CreateParams createParams = base.CreateParams;
-                createParams.ExStyle |= WS_EX_TOPMOST;
+                createParams.ExStyle |= (int)(WindowStyle.WS_EX_TOPMOST | WindowStyle.WS_EX_TOOLWINDOW | WindowStyle.WS_EX_NOACTIVATE);
                 return createParams;
             }
         }

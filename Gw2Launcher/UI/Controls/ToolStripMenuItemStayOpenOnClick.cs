@@ -31,7 +31,7 @@ namespace Gw2Launcher.UI.Controls
         {
             if (e.ClickedItem is ToolStripMenuItemStayOpenOnClick)
                 disableClose = ((ToolStripMenuItemStayOpenOnClick)e.ClickedItem).StayOpenOnClick;
-
+            
             base.OnDropDownItemClicked(e);
         }
 

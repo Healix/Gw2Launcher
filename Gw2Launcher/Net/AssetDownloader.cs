@@ -585,7 +585,8 @@ namespace Gw2Launcher.Net
                                         if (progress.total <= 0)
                                         {
                                             progress.total = progress.downloaded = stream.ContentLengthProcessed;
-                                            progress.sizeChange = progress.processed = asset.size;
+                                            progress.sizeChange = asset.size - progress.processed;
+                                            progress.processed = asset.size;
                                             asset.OnProgress(progress);
                                         }
                                         else
@@ -767,9 +768,10 @@ namespace Gw2Launcher.Net
 
             public void Dispose()
             {
+                Close();
+
                 try
                 {
-                    Close();
 
                     if (thread != null)
                     {

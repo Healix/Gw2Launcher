@@ -12,14 +12,14 @@ namespace Gw2Launcher.Windows
     {
         [ComImport]
         [Guid("00021401-0000-0000-C000-000000000046")]
-        internal class ShellLink
+        private class ShellLink
         {
         }
 
         [ComImport]
         [InterfaceType(ComInterfaceType.InterfaceIsIUnknown)]
         [Guid("000214F9-0000-0000-C000-000000000046")]
-        internal interface IShellLink
+        private interface IShellLink
         {
             void GetPath([Out, MarshalAs(UnmanagedType.LPWStr)] StringBuilder pszFile, int cchMaxPath, out IntPtr pfd, int fFlags);
             void GetIDList(out IntPtr ppidl);
@@ -44,7 +44,7 @@ namespace Gw2Launcher.Windows
         [ComImport]
         [InterfaceType(ComInterfaceType.InterfaceIsIUnknown)]
         [Guid("0000010c-0000-0000-C000-000000000046")]
-        public interface IPersist
+        private interface IPersist
         {
             void GetClassID(out Guid pClassID);
         };
@@ -52,7 +52,7 @@ namespace Gw2Launcher.Windows
         [ComImport]
         [InterfaceType(ComInterfaceType.InterfaceIsIUnknown)]
         [Guid("00000109-0000-0000-C000-000000000046")]
-        public interface IPersistStream
+        private interface IPersistStream
         {
             void GetClassID(out Guid pClassID);
 
@@ -242,13 +242,27 @@ namespace Gw2Launcher.Windows
         public void Save(Stream output)
         {
             var stream = (IPersistStream)Create();
-            stream.Save(new IStreamContainer(output), true);
+            try
+            {
+                stream.Save(new IStreamContainer(output), true);
+            }
+            finally
+            {
+                Marshal.ReleaseComObject(stream);
+            }
         }
 
         public void Save(string output)
         {
             var file = (System.Runtime.InteropServices.ComTypes.IPersistFile)Create();
-            file.Save(output, false);
+            try
+            {
+                file.Save(output, false);
+            }
+            finally
+            {
+                Marshal.ReleaseComObject(file);
+            }
         }
 
         private static IShellLink Create(string target, string args, string comment)
@@ -266,13 +280,28 @@ namespace Gw2Launcher.Windows
         public static void Create(string output, string target, string args, string comment)
         {
             var file = (System.Runtime.InteropServices.ComTypes.IPersistFile)Create(target, args, comment);
-            file.Save(output, false);
+            try
+            {
+                file.Save(output, false);
+            }
+            finally
+            {
+                Marshal.ReleaseComObject(file);
+            }
         }
 
         public static void Create(Stream output, string target, string args, string comment)
         {
             var stream = (IPersistStream)Create(target, args, comment);
-            stream.Save(new IStreamContainer(output), true);
+
+            try
+            {
+                stream.Save(new IStreamContainer(output), true);
+            }
+            finally
+            {
+                Marshal.ReleaseComObject(stream);
+            }
         }
     }
 }

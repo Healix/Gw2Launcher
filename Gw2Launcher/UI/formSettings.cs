@@ -7,41 +7,84 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using System.Windows.Forms;
+using System.IO;
 using Gw2Launcher.UI.Controls;
 
 namespace Gw2Launcher.UI
 {
     public partial class formSettings : Form
     {
-        private SidebarButton selectedButton;
+        private enum ArgsState : byte
+        {
+            Changed,
+            Loading,
+            Loaded,
+            Active
+        }
+
         private Form activeWindow;
+        private CheckBox[] checkArgs;
+        private ArgsState argsState;
+        private CheckBox[] checkProcessorAffinity;
+        private AutoScrollContainerPanel containerGeneral, containerTools, containerWindows, containerLaunchOptions, containerLaunchOptionsAdvanced,
+            containerPasswords, containerStyle, containerActions, containerUpdates, containerSecurity, containerScreenshots,containerLaunchOptionsProcess;
 
         public formSettings()
         {
             InitializeComponent();
 
-            buttonGeneral.Tag = panelGeneral;
-            buttonArguments.Tag = panelArguments;
-            buttonPasswords.Tag = panelPasswords;
-            buttonStyle.Tag = panelStyle;
-            buttonUpdates.Tag = panelUpdates;
-            buttonWindows.Tag = panelWindows;
+            checkArgs = InitializeArguments(panelLaunchOptionsAdvancedContainer, labelArgsTemplateHeader, checkArgsTemplate, labelArgsTemplateSwitch, labelArgsTemplateDesc, checkArgs_CheckedChanged);
 
-            foreach (Control c in sidebarPanel1.Controls)
-            {
-                SidebarButton b = c as SidebarButton;
-                if (b != null)
+            containerGeneral = CreateContainer(panelGeneral);
+            containerTools = CreateContainer(panelTools);
+            containerWindows = CreateContainer(panelWindows);
+            containerLaunchOptions = CreateContainer(panelLaunchOptions);
+            containerLaunchOptionsAdvanced = CreateContainer(panelLaunchOptionsAdvanced);
+            containerPasswords = CreateContainer(panelPasswords);
+            containerStyle = CreateContainer(panelStyle);
+            containerActions = CreateContainer(panelActions);
+            containerUpdates = CreateContainer(panelUpdates);
+            containerSecurity = CreateContainer(panelSecurity);
+            containerScreenshots = CreateContainer(panelScreenshots);
+            containerLaunchOptionsProcess = CreateContainer(panelLaunchOptionsProcess);
+
+            buttonGeneral.Panels = new Panel[] { containerGeneral, containerWindows };
+            buttonGeneral.SubItems = new string[] { "Windows" };
+
+            buttonLaunchOptions.Panels = new Panel[] { containerLaunchOptions, containerLaunchOptionsAdvanced, containerLaunchOptionsProcess };
+            buttonLaunchOptions.SubItems = new string[] { "Advanced", "Processor" };
+
+            buttonSecurity.Panels = new Panel[] { containerSecurity, containerPasswords };
+            buttonSecurity.SubItems = new string[] { "Windows" };
+
+            buttonStyle.Panels = new Panel[] { containerStyle, containerActions };
+            buttonStyle.SubItems = new string[] { "Actions" };
+
+            buttonTools.Panels = new Panel[] { containerTools, containerScreenshots };
+            buttonTools.SubItems = new string[] { "Screenshots" };
+
+            buttonUpdates.Panels = new Panel[] { containerUpdates };
+
+            sidebarPanel1.Initialize(new SidebarButton[]
                 {
-                    b.SelectedChanged += sidebarButton_SelectedChanged;
-                    b.Click += sidebarButton_Click;
-                }
-            }
+                    buttonGeneral,
+                    buttonLaunchOptions,
+                    buttonSecurity,
+                    buttonStyle,
+                    buttonTools,
+                    buttonUpdates
+                });
 
             buttonGeneral.Selected = true;
 
+            InitializeActions();
+
             var path = Settings.GW2Path;
             if (path.HasValue)
+            {
                 textGW2Path.Text = path.Value;
+                textGW2Path.Select(textGW2Path.TextLength, 0);
+            }
             else
                 textGW2Path.Text = "";
 
@@ -75,14 +118,10 @@ namespace Gw2Launcher.UI
             }
             else
             {
-                checkAutoUpdateDownloadNotifications.Tag = new Settings.ScreenAttachment()
-                {
-                    screen = 0,
-                    anchor = Settings.ScreenAnchor.BottomRight
-                };
+                checkAutoUpdateDownloadNotifications.Tag = new Settings.ScreenAttachment(0, Settings.ScreenAnchor.BottomRight);
             }
             if (Settings.AutoUpdateInterval.HasValue)
-                numericUpdateInterval.Value = Settings.AutoUpdateInterval.Value;
+                Util.NumericUpDown.SetValue(numericUpdateInterval, Settings.AutoUpdateInterval.Value);
             checkVolume.Checked = Settings.Volume.HasValue;
             if (Settings.Volume.HasValue)
                 sliderVolume.Value = Settings.Volume.Value;
@@ -94,7 +133,7 @@ namespace Gw2Launcher.UI
             if (Settings.LastProgramVersion.HasValue)
             {
                 checkCheckVersionOnStart.Checked = true;
-                labelVersionUpdate.Visible = Settings.LastProgramVersion.Value.version > Program.RELEASE_VERSION;
+                labelVersionUpdate.Visible = Settings.LastProgramVersion.Value.Version > Program.RELEASE_VERSION;
             }
 
             if (Settings.WindowCaption.HasValue)
@@ -104,27 +143,462 @@ namespace Gw2Launcher.UI
             }
 
             checkPreventTaskbarGrouping.Checked = Settings.PreventTaskbarGrouping.Value;
+            checkTopMost.Checked = Settings.TopMost.Value;
+
+            if (Client.FileManager.IsLinkingSupported)
+            {
+                if (Settings.VirtualUserPath.HasValue)
+                {
+                    checkCustomUsername.Checked = true;
+                    textCustomUsername.Text = Settings.VirtualUserPath.Value;
+                    textCustomUsername.Select(textCustomUsername.TextLength, 0);
+                }
+                else
+                {
+                    var n = Settings.VirtualUserPath.ValueCommit;
+                    if (!string.IsNullOrEmpty(n))
+                        textCustomUsername.Text = n;
+                }
+            }
+            else
+            {
+                checkCustomUsername.Enabled = false;
+                buttonCustomUsername.Enabled = false;
+            }
+
+            if (Settings.ActionActiveLClick.HasValue)
+                Util.ComboItem<Settings.ButtonAction>.Select(comboActionActiveLClick, Settings.ActionActiveLClick.Value);
+            else
+                Util.ComboItem<Settings.ButtonAction>.Select(comboActionActiveLClick, Settings.ButtonAction.Focus);
+
+            if (Settings.ActionActiveLPress.HasValue)
+                Util.ComboItem<Settings.ButtonAction>.Select(comboActionActiveLPress, Settings.ActionActiveLPress.Value);
+            else
+                Util.ComboItem<Settings.ButtonAction>.Select(comboActionActiveLPress, Settings.ButtonAction.Close);
+
+            checkAutomaticLauncherLogin.Checked = Settings.AutomaticRememberedLogin.Value;
+            if (Settings.Mute.HasValue)
+            {
+                var v = Settings.Mute.Value;
+                checkMuteAll.Checked = v.HasFlag(Settings.MuteOptions.All);
+                checkMuteMusic.Checked = v.HasFlag(Settings.MuteOptions.Music);
+                checkMuteVoices.Checked = v.HasFlag(Settings.MuteOptions.Voices);
+            }
+
+            checkPort80.Checked = Settings.ClientPort.Value == 80;
+            checkPort443.Checked = Settings.ClientPort.Value == 443;
+            checkScreenshotsBmp.Checked = Settings.ScreenshotsFormat.Value == Settings.ScreenshotFormat.Bitmap;
+
+            if (Client.FileManager.IsLinkingSupported)
+            {
+                if (checkScreenshotsLocation.Checked = Settings.ScreenshotsLocation.HasValue)
+                {
+                    textScreenshotsLocation.Text = Settings.ScreenshotsLocation.Value;
+                    textScreenshotsLocation.Select(textScreenshotsLocation.TextLength, 0);
+                }
+            }
+            else
+            {
+                checkScreenshotsLocation.Enabled = false;
+                buttonScreenshotsLocation.Enabled = false;
+            }
+
+            checkDeleteCacheOnLaunch.Checked = Settings.DeleteCacheOnLaunch.Value;
+            checkShowDailies.Checked = Settings.ShowDailies.Value.HasFlag(Settings.DailiesMode.Show);
+            checkShowDailiesAuto.Checked = Settings.ShowDailies.Value.HasFlag(Settings.DailiesMode.AutoLoad);
+
+            if (Settings.BackgroundPatchingProgress.HasValue)
+            {
+                checkAutoUpdateDownloadProgress.Checked = true;
+                checkAutoUpdateDownloadProgress.Tag = Settings.BackgroundPatchingProgress.Value;
+            }
+            else
+            {
+                var screen = Screen.PrimaryScreen.Bounds;
+                checkAutoUpdateDownloadProgress.Tag = new Rectangle(screen.Right - 210, 10, 200, 9);
+            }
+
+            if (Settings.NetworkAuthorization.HasValue)
+            {
+                checkEnableNetworkAuthorization.Checked = true;
+                var v = Settings.NetworkAuthorization.Value;
+                switch (v & Settings.NetworkAuthorizationFlags.VerificationModes)
+                {
+                    case Settings.NetworkAuthorizationFlags.Manual:
+                        radioNetworkVerifyManual.Checked = true;
+                        break;
+                    case Settings.NetworkAuthorizationFlags.Automatic:
+                    default:
+                        radioNetworkVerifyAutomatic.Checked = true;
+                        break;
+                }
+                checkRemovePreviousNetworks.Checked = v.HasFlag(Settings.NetworkAuthorizationFlags.RemovePreviouslyAuthorized);
+                checkNetworkAbortOnCancel.Checked = v.HasFlag(Settings.NetworkAuthorizationFlags.AbortLaunchingOnFail);
+            }
+
+            if (Settings.ScreenshotNaming.HasValue)
+            {
+                checkScreenshotNameFormat.Checked = true;
+                comboScreenshotNameFormat.Text = Settings.ScreenshotNaming.Value;
+            }
+            else
+                comboScreenshotNameFormat.SelectedIndex = 0;
+
+            comboScreenshotImageFormat.Items.AddRange(new object[]
+                {
+                    new Util.ComboItem<Settings.ScreenshotConversionOptions.ImageFormat>(Settings.ScreenshotConversionOptions.ImageFormat.Jpg,"JPEG (*.jpg)"),
+                    new Util.ComboItem<Settings.ScreenshotConversionOptions.ImageFormat>(Settings.ScreenshotConversionOptions.ImageFormat.Png,"PNG (*.png)"),
+                });
+
+            if (Settings.ScreenshotConversion.HasValue)
+            {
+                checkScreenshotImageFormat.Checked = true;
+
+                var v = Settings.ScreenshotConversion.Value;
+                switch (v.Format)
+                {
+                    case Settings.ScreenshotConversionOptions.ImageFormat.Jpg:
+                        comboScreenshotImageFormat.SelectedIndex = 0;
+                        Util.NumericUpDown.SetValue(numericScreenshotImageFormatJpgQuality, v.Options);
+                        break;
+                    case Settings.ScreenshotConversionOptions.ImageFormat.Png:
+                        comboScreenshotImageFormat.SelectedIndex = 1;
+                        if (v.Options == 16)
+                            radioScreenshotImageFormat16.Checked = true;
+                        else
+                            radioScreenshotImageFormat24.Checked = true;
+                        break;
+                    default:
+                        comboScreenshotImageFormat.SelectedIndex = 0;
+                        break;
+                }
+                checkScreenshotDeleteOriginal.Checked = v.DeleteOriginal;
+            }
+            else
+                comboScreenshotImageFormat.SelectedIndex = 0;
+
+            checkDeleteCrashLogsOnLaunch.Checked = Settings.DeleteCrashLogsOnLaunch.Value;
+
+            comboProcessPriority.Items.AddRange(new object[]
+                {
+                    new Util.ComboItem<Settings.ProcessPriorityClass>(Settings.ProcessPriorityClass.High, "High"),
+                    new Util.ComboItem<Settings.ProcessPriorityClass>(Settings.ProcessPriorityClass.AboveNormal, "Above normal"),
+                    new Util.ComboItem<Settings.ProcessPriorityClass>(Settings.ProcessPriorityClass.Normal, "Normal"),
+                    new Util.ComboItem<Settings.ProcessPriorityClass>(Settings.ProcessPriorityClass.BelowNormal, "Below normal"),
+                    new Util.ComboItem<Settings.ProcessPriorityClass>(Settings.ProcessPriorityClass.Low, "Low"),
+                });
+
+            if (Settings.ProcessPriority.HasValue && Settings.ProcessPriority.Value != Settings.ProcessPriorityClass.None)
+            {
+                Util.ComboItem<Settings.ProcessPriorityClass>.Select(comboProcessPriority, Settings.ProcessPriority.Value);
+                checkProcessPriority.Checked = true;
+            }
+            else
+                Util.ComboItem<Settings.ProcessPriorityClass>.Select(comboProcessPriority, Settings.ProcessPriorityClass.Normal);
+
+            checkProcessorAffinity = InitializeProcessorAffinity(panelProcessAffinity, checkProcessAffinityAll, label76);
+
+            if (Settings.ProcessAffinity.HasValue)
+            {
+                var bits = Settings.ProcessAffinity.Value;
+                var isSet = false;
+                var count = checkProcessorAffinity.Length;
+                if (count > 64)
+                    count = 64;
+
+                for (var i = 0; i < count; i++)
+                {
+                    if (checkProcessorAffinity[i].Checked = (bits & 1) == 1)
+                        isSet = true;
+                    bits >>= 1;
+                }
+                checkProcessAffinityAll.Checked = !isSet;
+            }
+            else
+                checkProcessAffinityAll.Checked = true;
+
+            checkProcessBoostBrowser.Checked = Settings.PrioritizeCoherentUI.Value;
+
+            if (Settings.NotesNotifications.HasValue)
+            {
+                var v = Settings.NotesNotifications.Value;
+                checkNoteNotifications.Tag = v;
+                checkNoteNotifications.Checked = true;
+                checkNoteNotificationsOnlyWhileActive.Checked = v.OnlyWhileActive;
+            }
+            else
+            {
+                checkNoteNotifications.Tag = new Settings.NotificationScreenAttachment(0, Settings.ScreenAnchor.BottomRight, false);
+            }
+
+            if (Settings.MaxPatchConnections.HasValue)
+            {
+                checkMaxPatchConnections.Checked = true;
+                Util.NumericUpDown.SetValue(numericMaxPatchConnections, Settings.MaxPatchConnections.Value);
+            }
+
+            argsState = ArgsState.Changed;
+            containerLaunchOptionsAdvanced.PreVisiblePropertyChanged += containerLaunchOptionsAdvanced_PreVisiblePropertyChanged;
         }
 
-        void sidebarButton_SelectedChanged(object sender, EventArgs e)
+        private void InitializeActions()
         {
-            SidebarButton button = (SidebarButton)sender;
-            if (button.Selected)
-            {
-                if (selectedButton != null)
+            var none = new Util.ComboItem<Settings.ButtonAction>(Settings.ButtonAction.None, "None");
+            var focus = new Util.ComboItem<Settings.ButtonAction>(Settings.ButtonAction.Focus, "Focus");
+            var close = new Util.ComboItem<Settings.ButtonAction>(Settings.ButtonAction.Close, "Terminate");
+            
+            comboActionActiveLClick.Items.AddRange(new object[]
                 {
-                    ((Panel)selectedButton.Tag).Visible = false;
-                    selectedButton.Selected = false;
+                    none,
+                    focus,
+                    close
+                });
+
+            comboActionActiveLPress.Items.AddRange(new object[]
+                {
+                    none,
+                    close
+                });
+        }
+
+        private AutoScrollContainerPanel CreateContainer(Panel panel)
+        {
+            var container = new AutoScrollContainerPanel(panel);
+
+            this.Controls.Add(container);
+
+            return container;
+        }
+
+        public static CheckBox[] InitializeProcessorAffinity(Panel container, CheckBox templateCheck, Label templateLabel)
+        {
+            var count = Environment.ProcessorCount;
+            var controls = new CheckBox[count];
+            int x = 0,
+                y = 0,
+                columnW = container.Width / 6,
+                columnH = templateCheck.Height;
+            var format = new string('0', (count - 1).ToString().Length);
+            container.Controls.Add(new Label()
+                {
+                    Font = templateLabel.Font,
+                    AutoSize = true,
+                    Location = new Point(0, 0),
+                    Text = "Select which processors to use"
+                });
+
+            y += templateLabel.Height + 8;
+            x = 7;
+
+            for (var i = 0; i < count; i++)
+            {
+                if (i % 6 == 0 && i > 0)
+                {
+                    x = 7;
+                    y += columnH + 6;
                 }
-                selectedButton = button;
-                ((Panel)button.Tag).Visible = true;
+
+                CheckBox check;
+                controls[i] = check = new CheckBox()
+                {
+                    Text = i.ToString(format),
+                    Font = templateCheck.Font,
+                    Location = new Point(x, y),
+                    AutoSize = true,
+                    Enabled = i < 64,
+                };
+
+                x += columnW;
+            }
+
+            container.Height = y + columnH;
+
+            container.Controls.AddRange(controls);
+
+            return controls;
+        }
+
+        public static CheckBox[] InitializeArguments(Panel container, Label templateHeader, CheckBox templateCheck, Label templateSwitch, Label templateDescription, EventHandler onCheckChanged)
+        {
+            var categories =  new string[]
+            {
+                "Graphics",
+                "User Interface",
+                "Compatibility",
+                "General"
+            };
+
+            var args = new string[][][]
+            {
+                new string[][] //graphics
+                {
+                    new string[] { "-dx9single", "Single renderer mode", "" },
+                    new string[] { "-forwardrenderer", "Use forward rendering", "Primarily affects how lighting is applied and limits the maximum number of light sources" },
+                    new string[] { "-useoldfov", "Revert to the original field-of-view", ""},
+                    new string[] { "-umbra gpu", "Enable Umbra's GPU accelerated culling", "" },
+                },
+                new string[][] //ui
+                {
+                    new string[] { "-noui", "Launch with the UI hidden", "" },
+                    new string[] { "-uispanallmonitors", "Spread the UI across all monitors", "For use with widescreen multi-panel displays"},
+                },
+                new string[][] //compatibility
+                {
+                    new string[] { "-32", "Disable switching to 64-bit", "Used with the 32-bit client to prevent it from automatically switching to the 64-bit client on a 64-bit OS" },
+                    new string[] { "-mce", "Enable Windows Media Center compatibility", "" },
+                    new string[] { "-nodelta", "Disable delta patching", "Updated files will be downloaded in full rather than only downloading the part that has been changed" },
+                },
+                new string[][] //other
+                {
+                    new string[] { "-maploadinfo", "Show extra details while loading maps", "Shows additional information such as the progress, elapsed time and server IP"},
+                    new string[] { "-prefreset", "Restore default settings", "Resets all in-game options to their default settings"}
+                },
+            };
+
+            int count = categories.Length;
+            int checks = 0;
+
+            foreach (var items in args)
+            {
+                foreach (var item in items)
+                {
+                    count += item.Length;
+
+                    if (string.IsNullOrEmpty(item[2]))
+                        count--;
+                }
+
+                checks += items.Length;
+            }
+
+            var controls = new Control[count];
+            var _checks = new CheckBox[checks];
+            int i = 0, c = 0, _c = 0;
+            var headerY = templateHeader.Top;
+            var maxSize = new Size(container.Width - templateDescription.Left * 2, int.MaxValue);
+            var headerYspacing = templateCheck.Top - templateHeader.Bottom;
+            var switchXspacing = templateSwitch.Left - templateCheck.Right;
+            var switchYspacing = templateSwitch.Top - templateCheck.Top;
+            var descYspacing = templateDescription.Top - templateCheck.Bottom;
+
+            foreach (var items in args)
+            {
+                controls[i++] = new Label()
+                {
+                    Text = categories[c],
+                    Font = templateHeader.Font,
+                    Location = new Point(templateHeader.Left, headerY),
+                    AutoSize = true,
+                };
+
+                var itemY = headerY + templateHeader.Height + headerYspacing;
+
+                foreach (var item in items)
+                {
+                    CheckBox check;
+                    controls[i++] = check = new CheckBox()
+                    {
+                        Text = item[1],
+                        Font = templateCheck.Font,
+                        Location = new Point(templateCheck.Left, itemY),
+                        AutoSize = true,
+                        Tag = item[0]
+                    };
+
+                    check.CheckedChanged += onCheckChanged;
+
+                    _checks[_c++] = check;
+
+                    var size = check.GetPreferredSize(Size.Empty);
+
+                    controls[i++] = new Label()
+                    {
+                        Text = item[0],
+                        Font = templateSwitch.Font,
+                        ForeColor = templateSwitch.ForeColor,
+                        Location = new Point(check.Left + size.Width + switchXspacing, check.Top + switchYspacing),
+                        AutoSize = true,
+                    };
+
+                    if (!string.IsNullOrEmpty(item[2]))
+                    {
+                        var label = controls[i++] = new Label()
+                        {
+                            Text = item[2],
+                            Font = templateDescription.Font,
+                            Location = new Point(templateDescription.Left, check.Top + size.Height + descYspacing),
+                            AutoSize = true,
+                            MaximumSize = maxSize,
+                        };
+
+                        size = label.GetPreferredSize(Size.Empty);
+                        itemY = label.Top + size.Height + 10;
+                    }
+                    else
+                    {
+                        itemY = check.Top + size.Height + 10;
+                    }
+                }
+
+                headerY = itemY + 5;
+
+                c++;
+            }
+
+            container.Controls.Clear();
+            container.Controls.AddRange(controls);
+
+            return _checks;
+        }
+
+        void containerLaunchOptionsAdvanced_PreVisiblePropertyChanged(object sender, bool e)
+        {
+            if (e)
+            {
+                if (argsState == ArgsState.Changed)
+                {
+                    argsState = ArgsState.Loading;
+
+                    foreach (var check in checkArgs)
+                    {
+                        var arg = check.Tag as string;
+                        if (arg != null)
+                            check.Checked = Util.Args.Contains(textArguments.Text, arg.Substring(1));
+                    }
+
+                    argsState = ArgsState.Active;
+                }
+            }
+            else if (argsState == ArgsState.Active)
+            {
+                argsState = ArgsState.Loaded;
+                textArguments.TextChanged += textArguments_TextChanged;
             }
         }
 
-        private void sidebarButton_Click(object sender, EventArgs e)
+        void textArguments_TextChanged(object sender, EventArgs e)
         {
-            SidebarButton button = (SidebarButton)sender;
-            button.Selected = true;
+            textArguments.TextChanged -= textArguments_TextChanged;
+            argsState = ArgsState.Changed;
+        }
+
+        void checkArgs_CheckedChanged(object sender, EventArgs e)
+        {
+            if (argsState == ArgsState.Loading)
+                return;
+
+            var check = (CheckBox)sender;
+            var arg = check.Tag as string;
+
+            if (arg != null)
+            {
+                string _arg;
+                if (check.Checked)
+                    _arg = arg;
+                else
+                    _arg = string.Empty;
+                textArguments.Text = Util.Args.AddOrReplace(textArguments.Text, arg.Substring(1), _arg);
+            }
         }
 
         private void buttonClearPasswords_Click(object sender, EventArgs e)
@@ -163,7 +637,22 @@ namespace Gw2Launcher.UI
 
             if (f.ShowDialog(this) == System.Windows.Forms.DialogResult.OK)
             {
+                var bits = Util.FileUtil.GetExecutableBits(f.FileName);
+                if (Environment.Is64BitOperatingSystem && bits == 32)
+                {
+                    if (!Util.Args.Contains(textArguments.Text, "32"))
+                    {
+                        if (MessageBox.Show(this, "You've selected to use the 32-bit version of Guild Wars 2 on a 64-bit system.\n\nAre you sure?", "32-bit?", MessageBoxButtons.YesNo, MessageBoxIcon.Exclamation) != System.Windows.Forms.DialogResult.Yes)
+                            return;
+                        textArguments.Text = Util.Args.AddOrReplace(textArguments.Text, "32", "-32");
+                    }
+                }
+                else if (bits == 64 && Util.Args.Contains(textArguments.Text, "32"))
+                {
+                    textArguments.Text = Util.Args.AddOrReplace(textArguments.Text, "32", "");
+                }
                 textGW2Path.Text = f.FileName;
+                textGW2Path.Select(textGW2Path.TextLength, 0);
             }
         }
 
@@ -212,7 +701,7 @@ namespace Gw2Launcher.UI
             if (checkCheckVersionOnStart.Checked)
             {
                 if (!Settings.LastProgramVersion.HasValue)
-                    Settings.LastProgramVersion.Value = new Settings.LastCheckedVersion();
+                    Settings.LastProgramVersion.Value = new Settings.LastCheckedVersion(DateTime.MinValue, 0);
             }
             else
                 Settings.LastProgramVersion.Clear();
@@ -224,7 +713,199 @@ namespace Gw2Launcher.UI
             else
                 Settings.WindowCaption.Clear();
 
-            checkPreventTaskbarGrouping.Checked = Settings.PreventTaskbarGrouping.Value;
+            Settings.TopMost.Value = checkTopMost.Checked;
+
+            if (checkCustomUsername.Checked && !string.IsNullOrWhiteSpace(textCustomUsername.Text))
+            {
+                string displayUsername;
+                if (Path.IsPathRooted(textCustomUsername.Text))
+                    displayUsername = Util.FileUtil.GetTrimmedDirectoryPath(textCustomUsername.Text);
+                else
+                    displayUsername = Util.FileUtil.ReplaceInvalidFileNameChars(textCustomUsername.Text, '_');
+                if (string.IsNullOrEmpty(displayUsername))
+                    Settings.VirtualUserPath.Clear();
+                else
+                    Settings.VirtualUserPath.Value = displayUsername;
+            }
+            else
+                Settings.VirtualUserPath.Clear();
+
+            Settings.ActionActiveLClick.Value = Util.ComboItem<Settings.ButtonAction>.SelectedValue(comboActionActiveLClick, Settings.ButtonAction.None);
+            Settings.ActionActiveLPress.Value = Util.ComboItem<Settings.ButtonAction>.SelectedValue(comboActionActiveLPress, Settings.ButtonAction.None);
+
+            Settings.AutomaticRememberedLogin.Value = checkAutomaticLauncherLogin.Checked;
+
+            if (checkMuteAll.Checked || checkMuteMusic.Checked || checkMuteVoices.Checked)
+            {
+                var mute = Settings.MuteOptions.None;
+                if (checkMuteAll.Checked)
+                    mute |= Settings.MuteOptions.All;
+                if (checkMuteMusic.Checked)
+                    mute |= Settings.MuteOptions.Music;
+                if (checkMuteVoices.Checked)
+                    mute |= Settings.MuteOptions.Voices;
+                Settings.Mute.Value = mute;
+            }
+            else
+                Settings.Mute.Clear();
+
+            if (checkPort80.Checked)
+                Settings.ClientPort.Value = 80;
+            else if (checkPort443.Checked)
+                Settings.ClientPort.Value = 443;
+            else
+                Settings.ClientPort.Clear();
+            if (checkScreenshotsBmp.Checked)
+                Settings.ScreenshotsFormat.Value = Settings.ScreenshotFormat.Bitmap;
+            else
+                Settings.ScreenshotsFormat.Clear();
+            if (checkScreenshotsLocation.Checked && !string.IsNullOrEmpty(textScreenshotsLocation.Text))
+            {
+                var path = Util.FileUtil.GetTrimmedDirectoryPath(textScreenshotsLocation.Text);
+                if (string.IsNullOrEmpty(path))
+                    Settings.ScreenshotsLocation.Clear();
+                else
+                    Settings.ScreenshotsLocation.Value = path;
+            }
+            else
+                Settings.ScreenshotsLocation.Clear();
+
+            Settings.DeleteCacheOnLaunch.Value = checkDeleteCacheOnLaunch.Checked;
+            if (checkShowDailies.Checked)
+            {
+                Settings.DailiesMode showDailies = Settings.ShowDailies.Value;
+
+                showDailies |= Settings.DailiesMode.Show;
+                if (checkShowDailiesAuto.Checked)
+                    showDailies |= Settings.DailiesMode.AutoLoad;
+                else
+                    showDailies &= ~Settings.DailiesMode.AutoLoad;
+
+                Settings.ShowDailies.Value = showDailies;
+            }
+            else
+            {
+                Settings.ShowDailies.Clear();
+                if (Settings.WindowBounds.Contains(typeof(formDailies)))
+                    Settings.WindowBounds[typeof(formDailies)].Clear();
+            }
+
+            if (checkAutoUpdateDownloadProgress.Checked)
+                Settings.BackgroundPatchingProgress.Value = (Rectangle)checkAutoUpdateDownloadProgress.Tag;
+            else
+                Settings.BackgroundPatchingProgress.Clear();
+
+            if (checkEnableNetworkAuthorization.Checked)
+            {
+                Settings.NetworkAuthorizationFlags v;
+                if (radioNetworkVerifyManual.Checked)
+                    v = Settings.NetworkAuthorizationFlags.Manual;
+                else
+                    v = Settings.NetworkAuthorizationFlags.Automatic;
+
+                if (checkRemovePreviousNetworks.Checked)
+                    v |= Settings.NetworkAuthorizationFlags.RemovePreviouslyAuthorized;
+
+                if (checkNetworkAbortOnCancel.Checked)
+                    v |= Settings.NetworkAuthorizationFlags.AbortLaunchingOnFail;
+
+                Settings.NetworkAuthorization.Value = v;
+            }
+            else
+                Settings.NetworkAuthorization.Clear();
+
+            if (checkScreenshotNameFormat.Checked && !string.IsNullOrEmpty(comboScreenshotNameFormat.Text))
+            {
+                Tools.Screenshots.Formatter formatter = null;
+                try
+                {
+                    formatter = Tools.Screenshots.Formatter.Convert(comboScreenshotNameFormat.Text);
+                    if (formatter != null && formatter.ToString(0, DateTime.MinValue).Equals("gw000"))
+                        formatter = null;
+                }
+                catch
+                {
+                    formatter = null;
+                }
+
+                if (formatter != null)
+                    Settings.ScreenshotNaming.Value = comboScreenshotNameFormat.Text;
+                else
+                    Settings.ScreenshotNaming.Clear();
+            }
+            else
+                Settings.ScreenshotNaming.Clear();
+
+            if (checkScreenshotImageFormat.Checked && comboScreenshotImageFormat.SelectedIndex >= 0)
+            {
+                var conversion = new Settings.ScreenshotConversionOptions()
+                {
+                    DeleteOriginal = checkScreenshotDeleteOriginal.Checked,
+                };
+
+                switch (Util.ComboItem<Settings.ScreenshotConversionOptions.ImageFormat>.SelectedValue(comboScreenshotImageFormat))
+                {
+                    case Settings.ScreenshotConversionOptions.ImageFormat.Jpg:
+                        conversion.Format = Settings.ScreenshotConversionOptions.ImageFormat.Jpg;
+                        conversion.Options = (byte)numericScreenshotImageFormatJpgQuality.Value;
+                        break;
+                    case Settings.ScreenshotConversionOptions.ImageFormat.Png:
+                        conversion.Format = Settings.ScreenshotConversionOptions.ImageFormat.Png;
+                        if (radioScreenshotImageFormat16.Checked)
+                            conversion.Options = 16;
+                        else
+                            conversion.Options = 24;
+                        break;
+                }
+
+                Settings.ScreenshotConversion.Value = conversion;
+            }
+            else
+                Settings.ScreenshotConversion.Clear();
+
+            Settings.DeleteCrashLogsOnLaunch.Value = checkDeleteCrashLogsOnLaunch.Checked;
+
+            if (checkProcessPriority.Checked && comboProcessPriority.SelectedIndex >= 0)
+                Settings.ProcessPriority.Value = Util.ComboItem<Settings.ProcessPriorityClass>.SelectedValue(comboProcessPriority);
+            else
+                Settings.ProcessPriority.Clear();
+
+            if (!checkProcessAffinityAll.Checked)
+            {
+                long bits = 0;
+                var count = checkProcessorAffinity.Length;
+                if (count > 64)
+                    count = 64;
+                for (int i = 0; i < count; i++)
+                {
+                    if (checkProcessorAffinity[i].Checked)
+                        bits |= ((long)1 << i);
+                }
+
+                if (bits == 0)
+                    Settings.ProcessAffinity.Clear();
+                else
+                    Settings.ProcessAffinity.Value = bits;
+            }
+            else
+                Settings.ProcessAffinity.Clear();
+
+            Settings.PrioritizeCoherentUI.Value = checkProcessBoostBrowser.Checked;
+
+            if (checkNoteNotifications.Checked)
+            {
+                var v = (Settings.NotificationScreenAttachment)checkNoteNotifications.Tag;
+                if (v.OnlyWhileActive != checkNoteNotificationsOnlyWhileActive.Checked)
+                    v = new Settings.NotificationScreenAttachment(v.Screen, v.Anchor, !v.OnlyWhileActive);
+                Settings.NotesNotifications.Value = v;
+            }
+            else
+                Settings.NotesNotifications.Clear();
+
+            if (checkMaxPatchConnections.Checked)
+                Settings.MaxPatchConnections.Value = (byte)numericMaxPatchConnections.Value;
+            else
+                Settings.MaxPatchConnections.Clear();
 
             this.DialogResult = System.Windows.Forms.DialogResult.OK;
         }
@@ -328,6 +1009,7 @@ namespace Gw2Launcher.UI
         private void checkAutoUpdateDownload_CheckedChanged(object sender, EventArgs e)
         {
             checkAutoUpdateDownloadNotifications.Enabled = checkAutoUpdateDownload.Checked;
+            checkAutoUpdateDownloadProgress.Enabled = checkAutoUpdateDownload.Checked;
         }
 
         private Form SetActive(Form form)
@@ -341,25 +1023,16 @@ namespace Gw2Launcher.UI
         private void labelAutoUpdateDownloadNotificationsConfig_Click(object sender, EventArgs e)
         {
             var v = (Settings.ScreenAttachment)checkAutoUpdateDownloadNotifications.Tag;
-            var f = SetActive(new formScreenPosition(v.screen, v.anchor));
-            f.FormClosing += screenPosition_FormClosing;
+            var f = (formScreenPosition)SetActive(new formScreenPosition(formScreenPosition.NotificationType.Patch, v.Screen, v.Anchor));
+            f.FormClosing += delegate
+            {
+                checkAutoUpdateDownloadNotifications.Tag = new Settings.ScreenAttachment((byte)f.SelectedScreen, f.SelectedAnchor);
+                f.Dispose();
+            };
             f.StartPosition = FormStartPosition.Manual;
             var source = labelAutoUpdateDownloadNotificationsConfig;
             f.Location = Point.Add(source.Parent.PointToScreen(Point.Empty), new Size(source.Location.X - f.Width / 2, source.Location.Y - f.Height / 2));
-            f.Show();
-        }
-
-        void screenPosition_FormClosing(object sender, FormClosingEventArgs e)
-        {
-            var f = sender as formScreenPosition;
-            if (f != null)
-            {
-                checkAutoUpdateDownloadNotifications.Tag = new Settings.ScreenAttachment()
-                {
-                    screen = (byte)f.SelectedScreen,
-                    anchor = f.SelectedAnchor
-                };
-            }
+            f.Show(this);
         }
 
         private void checkWindowCaption_CheckedChanged(object sender, EventArgs e)
@@ -370,6 +1043,366 @@ namespace Gw2Launcher.UI
         private void label32_Click(object sender, EventArgs e)
         {
             textWindowCaption.SelectedText = ((Label)sender).Text;
+        }
+
+        private void checkCustomUsername_CheckedChanged(object sender, EventArgs e)
+        {
+            textCustomUsername.Enabled = buttonCustomUsername.Enabled =checkCustomUsername.Checked;
+        }
+
+        private void checkScreenshotsLocation_CheckedChanged(object sender, EventArgs e)
+        {
+            textScreenshotsLocation.Enabled = buttonScreenshotsLocation.Enabled = checkScreenshotsLocation.Checked;
+        }
+
+        private void checkPort80_CheckedChanged(object sender, EventArgs e)
+        {
+            if (((CheckBox)sender).Checked)
+                checkPort443.Checked = false;
+        }
+
+        private void checkPort443_CheckedChanged(object sender, EventArgs e)
+        {
+            if (((CheckBox)sender).Checked)
+                checkPort80.Checked = false;
+        }
+
+        private void checkShowDailies_CheckedChanged(object sender, EventArgs e)
+        {
+            checkShowDailiesAuto.Enabled = checkShowDailies.Checked;
+        }
+
+        private void buttonCustomUsername_Click(object sender, EventArgs e)
+        {
+            var f = new Windows.Dialogs.SaveFolderDialog();
+            var filename = textCustomUsername.Text;
+            var userprofile = Path.GetDirectoryName(Environment.GetFolderPath(Environment.SpecialFolder.UserProfile));
+
+            f.InitialDirectory = userprofile;
+
+            if (string.IsNullOrWhiteSpace(filename))
+            {
+                f.FileName = "Gw2Launcher";
+            }
+            else
+            {
+                if (Path.IsPathRooted(filename))
+                {
+                    f.SetPath(filename, false);
+                }
+                else
+                {
+                    f.FileName = filename;
+                }
+            }
+
+            try
+            {
+                if (f.ShowDialog(this) == System.Windows.Forms.DialogResult.OK)
+                {
+                    if (f.FileName.StartsWith(userprofile, StringComparison.OrdinalIgnoreCase) && f.FileName.IndexOf(Path.DirectorySeparatorChar, userprofile.Length + 1) == -1)
+                        textCustomUsername.Text = Path.GetFileName(f.FileName);
+                    else
+                        textCustomUsername.Text = f.FileName;
+                    textCustomUsername.Select(textCustomUsername.TextLength, 0);
+                }
+            }
+            catch (Exception ex)
+            {
+                Util.Logging.Log(ex);
+            }
+        }
+
+        private void buttonScreenshotsLocation_Click(object sender, EventArgs e)
+        {
+            var f = new Windows.Dialogs.OpenFolderDialog();
+            
+            if (textScreenshotsLocation.Text.Length > 0)
+            {
+                f.SetPath(textScreenshotsLocation.Text, false);
+            }
+
+            try
+            {
+                if (f.ShowDialog(this) == System.Windows.Forms.DialogResult.OK)
+                {
+                    textScreenshotsLocation.Text = f.FileName;
+                    textScreenshotsLocation.Select(textScreenshotsLocation.TextLength, 0);
+                }
+            }
+            catch (Exception ex)
+            {
+                Util.Logging.Log(ex);
+            }
+        }
+
+        private void labelAutoUpdateDownloadProgressConfig_Click(object sender, EventArgs e)
+        {
+            var v = (Rectangle)checkAutoUpdateDownloadProgress.Tag;
+            var f = (formProgressOverlay)SetActive(new formProgressOverlay());
+            f.MinimumSize = new Size(50, 1);
+            f.MaximumSize = new Size(ushort.MaxValue, 50);
+            f.Bounds = Util.ScreenUtil.Constrain(v);
+            f.Disposed += progress_Disposed;
+
+            EventHandler onActivate = null;
+            onActivate = delegate
+            {
+                this.Activated -= onActivate;
+                f.Dispose();
+            };
+            this.Activated += onActivate;
+
+            var o = new formSizingBox(f);
+            o.Show(f);
+            f.Show();
+
+            AnimateProgress(f);
+        }
+
+        async void AnimateProgress(formProgressOverlay progress)
+        {
+            var p = progress.Progress;
+            p.Animated = false;
+            p.Maximum = 100;
+
+            //var start = DateTime.UtcNow.Ticks;
+
+            while (!progress.IsDisposed)
+            {
+                if (p.Value == p.Maximum)
+                    p.Value = 0;
+                else
+                    p.Value += 1;
+                //p.Value = 50 + (int)(Math.Sin((DateTime.UtcNow.Ticks - start) / 10000 / 500d / 4) * 50);
+
+                await Task.Delay(50);
+            }
+        }
+        
+        void progress_Disposed(object sender, EventArgs e)
+        {
+            var f = sender as formProgressOverlay;
+            if (f != null)
+            {
+                checkAutoUpdateDownloadProgress.Tag = f.Bounds;
+            }
+        }
+
+        private void checkEnableNetworkAuthorization_CheckedChanged(object sender, EventArgs e)
+        {
+            checkRemovePreviousNetworks.Enabled = checkEnableNetworkAuthorization.Checked;
+            checkNetworkAbortOnCancel.Enabled = checkEnableNetworkAuthorization.Checked;
+        }
+
+        private void checkScreenshotNameFormat_CheckedChanged(object sender, EventArgs e)
+        {
+            comboScreenshotNameFormat.Enabled = checkScreenshotNameFormat.Checked;
+            buttonScreenshotsExistingApply.Enabled = checkScreenshotNameFormat.Checked || checkScreenshotImageFormat.Checked;
+        }
+
+        private void comboScreenshotNameFormat_TextChanged(object sender, EventArgs e)
+        {
+            if (comboScreenshotNameFormat.SelectedIndex == -1)
+                Util.ScheduledEvents.Register(OnScreenshotNameFormatChangedCallback, 500);
+            else
+                OnScreenshotNameFormatChangedCallback();
+        }
+
+        private int OnScreenshotNameFormatChangedCallback()
+        {
+            try
+            {
+                var format = Tools.Screenshots.Formatter.Convert(comboScreenshotNameFormat.Text);
+                if (format != null)
+                {
+                    labelScreenshotNameFormatSample.Text = format.ToString(1, DateTime.Now);
+                    return -1;
+                }
+            }
+            catch { }
+
+            labelScreenshotNameFormatSample.Text = "invalid";
+
+            return -1;
+        }
+
+        protected override void Dispose(bool disposing)
+        {
+            if (disposing)
+            {
+                Util.ScheduledEvents.Unregister(OnScreenshotNameFormatChangedCallback);
+
+                if (components != null)
+                    components.Dispose();
+            }
+            base.Dispose(disposing);
+        }
+
+        private void checkScreenshotImageFormat_CheckedChanged(object sender, EventArgs e)
+        {
+            comboScreenshotImageFormat.Enabled = checkScreenshotImageFormat.Checked;
+            buttonScreenshotsExistingApply.Enabled = checkScreenshotNameFormat.Checked || checkScreenshotImageFormat.Checked;
+        }
+
+        private void comboScreenshotImageFormat_SelectedIndexChanged(object sender, EventArgs e)
+        {
+            panelScreenshotImageFormatJpg.Visible = comboScreenshotImageFormat.SelectedIndex == 0;
+            panelScreenshotImageFormatPng.Visible = comboScreenshotImageFormat.SelectedIndex == 1;
+        }
+
+        private async void buttonScreenshotsExistingApply_Click(object sender, EventArgs e)
+        {
+            var f = new Windows.Dialogs.OpenFolderDialog();
+            if (buttonScreenshotsExistingApply.Tag != null)
+            {
+                f.InitialDirectory = (string)buttonScreenshotsExistingApply.Tag;
+            }
+            else
+            {
+                if (checkScreenshotsLocation.Checked && string.IsNullOrEmpty(textScreenshotsLocation.Text) && Directory.Exists(textScreenshotsLocation.Text))
+                    f.InitialDirectory = textScreenshotsLocation.Text;
+                else
+                    f.InitialDirectory = Client.FileManager.GetPath(Client.FileManager.SpecialPath.Screens);
+            }
+            f.Title = "Open screenshots folder";
+            if (f.ShowDialog(this) != System.Windows.Forms.DialogResult.OK)
+                return;
+
+            buttonScreenshotsExistingApply.Enabled = false;
+
+            var path = f.FileName;
+            buttonScreenshotsExistingApply.Tag = path;
+
+            Tools.Screenshots.Formatter formatter = null;
+
+            if (checkScreenshotNameFormat.Checked)
+            {
+                try
+                {
+                    formatter = Tools.Screenshots.Formatter.Convert(comboScreenshotNameFormat.Text);
+                    if (formatter != null && checkScreenshotsExistingApplyOnlyToDefault.Checked && formatter.ToString(0, DateTime.MinValue).Equals("gw000"))
+                        formatter = null;
+                }
+                catch
+                {
+                    formatter = null;
+                }
+            }
+
+            var conversion = new Settings.ScreenshotConversionOptions();
+            bool convert;
+
+            if (convert = checkScreenshotImageFormat.Checked)
+            {
+                switch (comboScreenshotImageFormat.SelectedIndex)
+                {
+                    case 0:
+                        conversion.Format = Settings.ScreenshotConversionOptions.ImageFormat.Jpg;
+                        conversion.Options = (byte)numericScreenshotImageFormatJpgQuality.Value;
+                        break;
+                    case 1:
+                        conversion.Format = Settings.ScreenshotConversionOptions.ImageFormat.Png;
+                        if (radioScreenshotImageFormat16.Checked)
+                            conversion.Options = 16;
+                        else
+                            conversion.Options = 24;
+                        break;
+                }
+
+                conversion.DeleteOriginal = checkScreenshotDeleteOriginal.Checked;
+            }
+
+            await Task.Run(new Action(
+                delegate
+                {
+                    string[] files;
+
+                    if (checkScreenshotsExistingApplyOnlyToDefault.Checked)
+                    {
+                        files = Directory.GetFiles(path, "gw*.*");
+                        var length = files.Length;
+                        var files2 = new string[length];
+                        var count = 0;
+
+                        for (var i = 0; i < length; i++)
+                        {
+                            var file = files[i];
+
+                            if (Path.GetFileName(file).Length == 9)
+                            {
+                                var ext = Path.GetExtension(file);
+                                if (ext.Equals(".bmp", StringComparison.OrdinalIgnoreCase) || ext.Equals(".jpg", StringComparison.OrdinalIgnoreCase))
+                                    files2[count++] = file;
+                            }
+                        }
+
+                        if (count != length)
+                        {
+                            files = new string[count];
+                            Array.Copy(files2, files, count);
+                        }
+                    }
+                    else
+                    {
+                        files = Directory.GetFiles(path);
+                    }
+
+                    if (files.Length > 0)
+                        Tools.Screenshots.ConvertRename(path, files, formatter != null, convert, formatter, conversion);
+                }));
+
+            buttonScreenshotsExistingApply.Enabled = true;
+        }
+
+        private void checkProcessPriority_CheckedChanged(object sender, EventArgs e)
+        {
+            comboProcessPriority.Enabled = checkProcessPriority.Checked;
+        }
+
+        private void panelProcessAffinity_SizeChanged(object sender, EventArgs e)
+        {
+            int b;
+            if (panelProcessAffinity.Visible)
+                b = panelProcessAffinity.Bottom;
+            else
+                b = checkProcessAffinityAll.Bottom;
+            panelLaunchOptionsProcessContent.Top = b + 13;
+        }
+
+        private void panelProcessAffinity_VisibleChanged(object sender, EventArgs e)
+        {
+            panelProcessAffinity_SizeChanged(sender, e);
+        }
+
+        private void checkProcessAffinityAll_CheckedChanged(object sender, EventArgs e)
+        {
+            panelProcessAffinity.Visible = !checkProcessAffinityAll.Checked;
+        }
+
+        private void checkNoteNotifications_CheckedChanged(object sender, EventArgs e)
+        {
+            checkNoteNotificationsOnlyWhileActive.Enabled = checkNoteNotifications.Checked;
+        }
+
+        private void labelNoteNotifications_Click(object sender, EventArgs e)
+        {
+            var v = (Settings.NotificationScreenAttachment)checkNoteNotifications.Tag;
+            var f = (formScreenPosition)SetActive(new formScreenPosition(formScreenPosition.NotificationType.Note, v.Screen, v.Anchor));
+            f.FormClosing += delegate
+            {
+                checkNoteNotifications.Tag = new Settings.NotificationScreenAttachment((byte)f.SelectedScreen, f.SelectedAnchor, checkNoteNotificationsOnlyWhileActive.Checked);
+                f.Dispose();
+            };
+            f.StartPosition = FormStartPosition.Manual;
+            var source = labelNoteNotifications;
+            f.Location = Point.Add(source.Parent.PointToScreen(Point.Empty), new Size(source.Location.X - f.Width / 2, source.Location.Y - f.Height / 2));
+            f.Show(this);
+        }
+
+        private void checkMaxPatchConnections_CheckedChanged(object sender, EventArgs e)
+        {
+            numericMaxPatchConnections.Enabled = checkMaxPatchConnections.Checked;
         }
     }
 }

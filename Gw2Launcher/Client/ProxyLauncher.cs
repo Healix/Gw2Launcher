@@ -66,8 +66,13 @@ namespace Gw2Launcher.Client
                     options.Arguments = reader.ReadString();
                     options.WorkingDirectory = reader.ReadString();
                     options.UserName = reader.ReadString();
-                    options.AppData = reader.ReadString();
-                    options.UserProfile = reader.ReadString();
+
+                    var variables = reader.ReadByte();
+                    while (variables > 0)
+                    {
+                        options.Variables[reader.ReadString()] = reader.ReadString();
+                        variables--;
+                    }
 
                     return po;
                 }
@@ -91,8 +96,13 @@ namespace Gw2Launcher.Client
                     Write(writer, options.Arguments);
                     Write(writer, options.WorkingDirectory);
                     Write(writer, options.UserName);
-                    Write(writer, options.AppData);
-                    Write(writer, options.UserProfile);
+
+                    writer.Write((byte)options.Variables.Count);
+                    foreach (var key in options.Variables.Keys)
+                    {
+                        Write(writer, key);
+                        Write(writer, options.Variables[key]);
+                    }
                 }
             }
         }
@@ -116,7 +126,7 @@ namespace Gw2Launcher.Client
 
             try
             {
-                var di = new DirectoryInfo(Path.Combine(DataPath.AppData, "PL"));
+                var di = new DirectoryInfo(Path.Combine(DataPath.AppDataAccountData, "pl"));
                 if (di.Exists)
                 {
                     foreach (var d in di.GetDirectories())
@@ -131,8 +141,6 @@ namespace Gw2Launcher.Client
                 else
                 {
                     di.Create();
-
-                    Util.FileUtil.AllowFolderAccess(di.FullName, System.Security.AccessControl.FileSystemRights.Modify);
                 }
             }
             catch (Exception e)
@@ -143,7 +151,7 @@ namespace Gw2Launcher.Client
 
         private static FileInfo GetLink(Settings.IAccount account, Launcher.ProcessOptions options)
         {
-            var path = Path.Combine(DataPath.AppData, "PL", account.UID.ToString());
+            var path = Path.Combine(DataPath.AppDataAccountData, "pl", account.UID.ToString());
 
             string name;
             if ((name = _fileDescription) == null)

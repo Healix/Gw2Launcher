@@ -30,11 +30,11 @@
         {
             System.Windows.Forms.DataGridViewCellStyle dataGridViewCellStyle1 = new System.Windows.Forms.DataGridViewCellStyle();
             this.gridServers = new System.Windows.Forms.DataGridView();
+            this.columnCheck = new System.Windows.Forms.DataGridViewCheckBoxColumn();
+            this.columnServer = new System.Windows.Forms.DataGridViewTextBoxColumn();
             this.buttonCancel = new System.Windows.Forms.Button();
             this.buttonOK = new System.Windows.Forms.Button();
             this.label5 = new System.Windows.Forms.Label();
-            this.columnCheck = new System.Windows.Forms.DataGridViewCheckBoxColumn();
-            this.columnServer = new System.Windows.Forms.DataGridViewTextBoxColumn();
             ((System.ComponentModel.ISupportInitialize)(this.gridServers)).BeginInit();
             this.SuspendLayout();
             // 
@@ -44,6 +44,9 @@
             this.gridServers.AllowUserToDeleteRows = false;
             this.gridServers.AllowUserToResizeColumns = false;
             this.gridServers.AllowUserToResizeRows = false;
+            this.gridServers.Anchor = ((System.Windows.Forms.AnchorStyles)((((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom) 
+            | System.Windows.Forms.AnchorStyles.Left) 
+            | System.Windows.Forms.AnchorStyles.Right)));
             this.gridServers.BackgroundColor = System.Drawing.SystemColors.Control;
             this.gridServers.BorderStyle = System.Windows.Forms.BorderStyle.None;
             this.gridServers.ColumnHeadersHeightSizeMode = System.Windows.Forms.DataGridViewColumnHeadersHeightSizeMode.AutoSize;
@@ -67,16 +70,31 @@
             this.gridServers.RowHeadersVisible = false;
             this.gridServers.ScrollBars = System.Windows.Forms.ScrollBars.Vertical;
             this.gridServers.SelectionMode = System.Windows.Forms.DataGridViewSelectionMode.CellSelect;
-            this.gridServers.Size = new System.Drawing.Size(261, 190);
+            this.gridServers.Size = new System.Drawing.Size(261, 222);
             this.gridServers.TabIndex = 0;
             this.gridServers.CellContentClick += new System.Windows.Forms.DataGridViewCellEventHandler(this.gridServers_CellContentClick);
             this.gridServers.SelectionChanged += new System.EventHandler(this.gridServers_SelectionChanged);
+            // 
+            // columnCheck
+            // 
+            this.columnCheck.HeaderText = "Check";
+            this.columnCheck.Name = "columnCheck";
+            this.columnCheck.ReadOnly = true;
+            this.columnCheck.ThreeState = true;
+            this.columnCheck.Width = 25;
+            // 
+            // columnServer
+            // 
+            this.columnServer.AutoSizeMode = System.Windows.Forms.DataGridViewAutoSizeColumnMode.Fill;
+            this.columnServer.HeaderText = "Server";
+            this.columnServer.Name = "columnServer";
+            this.columnServer.ReadOnly = true;
             // 
             // buttonCancel
             // 
             this.buttonCancel.Anchor = System.Windows.Forms.AnchorStyles.Bottom;
             this.buttonCancel.Font = new System.Drawing.Font("Segoe UI", 8.25F);
-            this.buttonCancel.Location = new System.Drawing.Point(91, 243);
+            this.buttonCancel.Location = new System.Drawing.Point(91, 275);
             this.buttonCancel.Name = "buttonCancel";
             this.buttonCancel.Size = new System.Drawing.Size(86, 35);
             this.buttonCancel.TabIndex = 32;
@@ -88,7 +106,7 @@
             // 
             this.buttonOK.Anchor = System.Windows.Forms.AnchorStyles.Bottom;
             this.buttonOK.Font = new System.Drawing.Font("Segoe UI", 8.25F);
-            this.buttonOK.Location = new System.Drawing.Point(187, 243);
+            this.buttonOK.Location = new System.Drawing.Point(187, 275);
             this.buttonOK.Name = "buttonOK";
             this.buttonOK.Size = new System.Drawing.Size(86, 35);
             this.buttonOK.TabIndex = 33;
@@ -106,26 +124,11 @@
             this.label5.TabIndex = 34;
             this.label5.Text = "Select which DNS servers to use";
             // 
-            // columnCheck
-            // 
-            this.columnCheck.HeaderText = "Check";
-            this.columnCheck.Name = "columnCheck";
-            this.columnCheck.ReadOnly = true;
-            this.columnCheck.ThreeState = true;
-            this.columnCheck.Width = 25;
-            // 
-            // columnServer
-            // 
-            this.columnServer.AutoSizeMode = System.Windows.Forms.DataGridViewAutoSizeColumnMode.Fill;
-            this.columnServer.HeaderText = "Server";
-            this.columnServer.Name = "columnServer";
-            this.columnServer.ReadOnly = true;
-            // 
             // formDnsDialog
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
-            this.ClientSize = new System.Drawing.Size(285, 290);
+            this.ClientSize = new System.Drawing.Size(285, 322);
             this.Controls.Add(this.label5);
             this.Controls.Add(this.buttonCancel);
             this.Controls.Add(this.buttonOK);

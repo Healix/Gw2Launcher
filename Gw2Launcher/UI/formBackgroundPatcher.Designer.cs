@@ -456,6 +456,7 @@
             this.panelAdvanced.Size = new System.Drawing.Size(261, 153);
             this.panelAdvanced.TabIndex = 78;
             this.panelAdvanced.Visible = false;
+            this.panelAdvanced.ShowBorder = true;
             // 
             // labelAdvanced
             // 

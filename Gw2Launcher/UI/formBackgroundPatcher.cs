@@ -71,6 +71,17 @@ namespace Gw2Launcher.UI
             Settings.PatchingUseHttps.ValueChanged += PatchingUseHttps_ValueChanged;
 
             UpdateStatus();
+
+            this.Disposed += formBackgroundPatcher_Disposed;
+        }
+
+        void formBackgroundPatcher_Disposed(object sender, EventArgs e)
+        {
+            if (taskBar != null)
+            {
+                taskBar.Dispose();
+                taskBar = null;
+            }
         }
 
         protected override void OnShown(EventArgs e)
@@ -363,7 +374,8 @@ namespace Gw2Launcher.UI
             downloadRate = 0;
             bytesDownloaded = estimatedBytesRemaining = contentBytesTotal = contentBytesCore = 0;
 
-            taskBar.SetState(this.Handle, Windows.Taskbar.TaskbarStates.Indeterminate);
+            if (taskBar != null)
+                taskBar.SetState(this.Handle, Windows.Taskbar.TaskbarStates.Indeterminate);
         }
 
         void bp_Complete(object sender, EventArgs e)
@@ -405,7 +417,8 @@ namespace Gw2Launcher.UI
 
 
             if (filesDownloaded == 0 || filesTotal != filesDownloaded)
-                taskBar.SetState(this.Handle, Windows.Taskbar.TaskbarStates.NoProgress);
+                if (taskBar != null)
+                    taskBar.SetState(this.Handle, Windows.Taskbar.TaskbarStates.NoProgress);
         }
 
         void bp_Error(object sender, string e, Exception ex)
@@ -432,7 +445,8 @@ namespace Gw2Launcher.UI
             labelFiles.Tag = ex;
             errored = true;
 
-            taskBar.SetState(this.Handle, Windows.Taskbar.TaskbarStates.Error);
+            if (taskBar != null)
+                taskBar.SetState(this.Handle, Windows.Taskbar.TaskbarStates.Error);
         }
 
         void bp_DownloadProgress(object sender, Tools.BackgroundPatcher.DownloadProgressEventArgs e)
@@ -498,7 +512,8 @@ namespace Gw2Launcher.UI
                 {
                     manifestsComplete = true;
                     labelSizeEstimated.Visible = true;
-                    taskBar.SetState(this.Handle, Windows.Taskbar.TaskbarStates.Normal);
+                    if (taskBar != null)
+                        taskBar.SetState(this.Handle, Windows.Taskbar.TaskbarStates.Normal);
                 }
 
                 if (manifestsComplete)
@@ -511,7 +526,8 @@ namespace Gw2Launcher.UI
                     if (progressDownload.Value != e.filesDownloaded)
                         progressDownload.Value = e.filesDownloaded;
 
-                    taskBar.SetValue(this.Handle, (ulong)e.filesDownloaded, (ulong)e.filesTotal);
+                    if (taskBar != null)
+                        taskBar.SetValue(this.Handle, (ulong)e.filesDownloaded, (ulong)e.filesTotal);
                 }
                 else if (!errored)
                     labelFiles.Text = string.Format("{0:#,##0} of ...", files);

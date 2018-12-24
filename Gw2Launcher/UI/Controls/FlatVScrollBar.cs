@@ -13,6 +13,8 @@ namespace Gw2Launcher.UI.Controls
     {
         public event EventHandler<int> ValueChanged;
 
+        const byte DEFAULT_SLIDER_H = 80;
+
         private int value, maximum;
 
         private int sliderX, sliderY, sliderW, sliderH;
@@ -35,7 +37,7 @@ namespace Gw2Launcher.UI.Controls
             barY = 0;
             barH = 100;
             sliderW = 6;
-            sliderH = 80;
+            sliderH = DEFAULT_SLIDER_H;
             barW = 6;
 
             colorBar = Color.FromArgb(214, 214, 214);
@@ -59,6 +61,19 @@ namespace Gw2Launcher.UI.Controls
             base.Dispose(disposing);
         }
 
+        [System.ComponentModel.Browsable(false)]
+        public override string Text
+        {
+            get
+            {
+                return base.Text;
+            }
+            set
+            {
+                base.Text = value;
+            }
+        }
+
         public int Value
         {
             get
@@ -76,6 +91,9 @@ namespace Gw2Launcher.UI.Controls
                 {
                     this.value = value;
                     OnValueChanged();
+
+                    if (ValueChanged != null)
+                        ValueChanged(this, value);
                 }
             }
         }
@@ -94,32 +112,42 @@ namespace Gw2Launcher.UI.Controls
                 if (maximum != value)
                 {
                     maximum = value;
-                    if (value > maximum)
-                        value = maximum;
-                    OnValueChanged();
+                    if (this.value > maximum)
+                        this.Value = maximum;
+                    else
+                        OnValueChanged();
                 }
             }
         }
 
         protected void OnValueChanged()
         {
-            sliderY = (barH - sliderH) * value / maximum;
+            if (maximum > 0)
+                sliderY = (barH - sliderH) * value / maximum;
+            else
+                sliderY = 0;
 
             this.Invalidate();
-
-            if (ValueChanged != null)
-                ValueChanged(this, value);
         }
 
         protected override void OnSizeChanged(EventArgs e)
         {
             base.OnSizeChanged(e);
 
-            var w = this.Width - 1;
+            var w = this.Width;
 
             barX = w / 2 - barW / 2;
-            barH = this.Height - 1;
-            sliderY = (barH - sliderH) * value / maximum;
+            barH = this.Height;
+
+            if (barH < DEFAULT_SLIDER_H / 0.75f)
+                sliderH = (int)(barH * 0.75f);
+            else
+                sliderH = DEFAULT_SLIDER_H;
+
+            if (maximum > 0)
+                sliderY = (barH - sliderH) * value / maximum;
+            else
+                sliderY = 0;
             sliderX = barX;
 
             this.Invalidate();
@@ -255,7 +283,8 @@ namespace Gw2Launcher.UI.Controls
                 this.Value += barH / 10;
             }
 
-            ((HandledMouseEventArgs)e).Handled = true;
+            if (e is HandledMouseEventArgs)
+                ((HandledMouseEventArgs)e).Handled = true;
         }
 
         protected override void OnPreviewKeyDown(PreviewKeyDownEventArgs e)
@@ -286,12 +315,15 @@ namespace Gw2Launcher.UI.Controls
 
             g.FillRectangle(brush, barX, barY, barW, barH);
 
-            if (highlighted)
-                brush.Color = colorSliderHighlight;
-            else
-                brush.Color = colorSlider;
+            if (maximum > 0)
+            {
+                if (highlighted)
+                    brush.Color = colorSliderHighlight;
+                else
+                    brush.Color = colorSlider;
 
-            g.FillRectangle(brush, sliderX, sliderY, sliderW, sliderH);
+                g.FillRectangle(brush, sliderX, sliderY, sliderW, sliderH);
+            }
         }
     }
 }

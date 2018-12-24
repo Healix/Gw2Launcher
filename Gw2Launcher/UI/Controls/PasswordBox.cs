@@ -5,13 +5,12 @@ using System.Text;
 using System.Threading.Tasks;
 using System.Security;
 using System.Windows.Forms;
+using Gw2Launcher.Windows.Native;
 
 namespace Gw2Launcher.UI.Controls
 {
     public partial class PasswordBox : TextBox
     {
-        private const int WM_PASTE = 0x302;
-
         private SecureString _password;
 
         public PasswordBox()
@@ -29,11 +28,18 @@ namespace Gw2Launcher.UI.Controls
                 p.MakeReadOnly();
                 return p;
             }
+            set
+            {
+                if (_password != null)
+                    _password.Dispose();
+                _password = value.Copy();
+                base.Text = new string(this.PasswordChar, _password.Length);
+            }
         }
 
         protected override void WndProc(ref Message m)
         {
-            if (m.Msg == WM_PASTE)
+            if (m.Msg == (int)WindowMessages.WM_PASTE)
             {
                 if (Clipboard.ContainsText())
                 {

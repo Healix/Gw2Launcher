@@ -8,58 +8,56 @@ using System.Text;
 using System.Threading.Tasks;
 using System.Threading;
 using System.Windows.Forms;
+using System.Runtime.InteropServices;
+using Gw2Launcher.Windows.Native;
 
 namespace Gw2Launcher.UI
 {
     public partial class formExtendedTextBox : Form, IMessageFilter
     {
-        const short WM_NCMOUSEMOVE = 160;
-        const short WM_MOUSEMOVE = 512;
-        const short WM_NCMOUSELEAVE = 674;
-        const short WM_MOUSELEAVE = 675;
-        const short WM_NCLBUTTONDOWN = 161;
-        const short WM_NCRBUTTONDOWN = 164;
-        const short WM_NCMBUTTONDOWN = 167;
-        const short WM_NCXBUTTONDOWN = 171;
-        const short WM_LBUTTONDOWN = 513;
-        const short WM_RBUTTONDOWN = 516;
-        const short WM_MBUTTONDOWN = 519;
-        const short WM_XBUTTONDOWN = 523;
-
         private class TextBoxM : TextBox
         {
-            const short WM_KEYDOWN = 256;
-            //const byte WM_ERASEBKGND = 20;
-
-            //public bool disableErase;
-
             public void CallWndProc(ref Message m)
             {
                 base.WndProc(ref m);
             }
 
-            //protected override void WndProc(ref Message m)
-            //{
-            //    if (m.Msg == WM_ERASEBKGND && disableErase)
-            //        return;
-
-
-            //    base.WndProc(ref m);
-            //}
-
             protected override bool ProcessCmdKey(ref Message msg, Keys keyData)
             {
                 var keyCode = (Keys)((int)msg.WParam.ToInt64() & Convert.ToInt32(Keys.KeyCode));
-                if ((msg.Msg == WM_KEYDOWN && keyCode == Keys.A) && (ModifierKeys == Keys.Control) && this.Focused)
+                if ((msg.Msg == (int)WindowMessages.WM_KEYDOWN && keyCode == Keys.A) && (ModifierKeys == Keys.Control) && this.Focused)
                 {
                     this.SelectAll();
                     return true;
                 }
                 return base.ProcessCmdKey(ref msg, keyData);
             }
+
+            protected override void WndProc(ref Message m)
+            {
+                base.WndProc(ref m);
+
+                switch ((Windows.Native.WindowMessages)m.Msg)
+                {
+                    case Windows.Native.WindowMessages.WM_NCHITTEST:
+
+                        switch ((HitTest)m.Result)
+                        {
+                            case HitTest.GrowBox:
+
+                                m.Result = (IntPtr)HitTest.Transparent;
+
+                                break;
+                        }
+
+                        break;
+                }
+            }
         }
 
-        private Size originSize;
+        public event EventHandler ExtensionOpened;
+        public event EventHandler ExtensionClosing;
+
         private TextBox source;
         private bool messaging;
         private CancellationTokenSource cancel;
@@ -69,13 +67,21 @@ namespace Gw2Launcher.UI
             InitializeComponent();
 
             this.source = source;
-            textText.Text = source.Text;
-            textText.SelectionStart = source.SelectionStart;
-            textText.SelectionLength = source.SelectionLength;
+
+            buttonResize.Enabled = false;
 
             this.Size = source.Size;
             this.MinimumSize = source.Size;
-            this.Location = Point.Add(source.Parent.PointToScreen(Point.Empty), new Size(source.Location.X, source.Location.Y));
+        }
+
+        protected override CreateParams CreateParams
+        {
+            get
+            {
+                CreateParams createParams = base.CreateParams;
+                createParams.ExStyle |= (int)(WindowStyle.WS_EX_TOOLWINDOW | WindowStyle.WS_EX_COMPOSITED);
+                return createParams;
+            }
         }
 
         protected override bool ShowWithoutActivation
@@ -91,22 +97,53 @@ namespace Gw2Launcher.UI
             textText.CallWndProc(ref m);
         }
 
-        void textText_LostFocus(object sender, EventArgs e)
+        private void OnHide()
         {
-            this.Close();
-        }
+            if (!this.Visible)
+                return;
 
-        protected override void OnFormClosing(FormClosingEventArgs e)
-        {
-            base.OnFormClosing(e);
+            EnableMessaging(false);
 
-            if (this.Owner != null)
-                this.Owner.LocationChanged -= parent_LocationChanged;
+            textText.LostFocus -= textText_LostFocus;
+            textText.GotFocus -= textText_GotFocus;
+            textText.MouseLeave -= textText_MouseLeave;
+
+            if (cancel != null)
+            {
+                using (cancel)
+                {
+                    cancel.Cancel();
+                    cancel = null;
+                }
+            }
+
+            Control c = source;
+            do
+            {
+                c.LocationChanged -= source_LocationChanged;
+                c = c.Parent;
+            }
+            while (c != null);
+
+            //source.LocationChanged -= source_LocationChanged;
+
+            //if (this.Owner != null)
+            //    this.Owner.LocationChanged -= parent_LocationChanged;
+
+            if (ExtensionClosing != null)
+                ExtensionClosing(this, EventArgs.Empty);
+
             source.Text = textText.Text;
             source.SelectionStart = textText.SelectionStart;
             source.SelectionLength = textText.SelectionLength;
 
-            EnableMessaging(false);
+            base.Hide();
+        }
+
+        void textText_LostFocus(object sender, EventArgs e)
+        {
+            if (!this.ContainsFocus)
+                OnHide();
         }
 
         private void EnableMessaging(bool enabled)
@@ -116,7 +153,9 @@ namespace Gw2Launcher.UI
             messaging = enabled;
 
             if (enabled)
+            {
                 Application.AddMessageFilter(this);
+            }
             else
             {
                 Application.RemoveMessageFilter(this);
@@ -132,47 +171,89 @@ namespace Gw2Launcher.UI
             }
         }
 
-        protected override void OnShown(EventArgs e)
+        protected override void OnVisibleChanged(EventArgs e)
         {
-            base.OnShown(e);
+            if (this.Visible)
+            {
+                textText.LostFocus += textText_LostFocus;
+                textText.GotFocus += textText_GotFocus;
+                textText.MouseLeave += textText_MouseLeave;
 
-            textText.LostFocus += textText_LostFocus;
-            textText.GotFocus += textText_GotFocus;
-            textText.MouseLeave += textText_MouseLeave;
+                Control c = source;
+                do
+                {
+                    c.LocationChanged += source_LocationChanged;
+                    c = c.Parent;
+                }
+                while (c != null);
 
-            if (!this.ContainsFocus)
-                EnableMessaging(true);
+                //source.LocationChanged += source_LocationChanged;
+
+                //if (this.Owner != null)
+                //    this.Owner.LocationChanged += parent_LocationChanged;
+
+                if (!this.ContainsFocus)
+                    EnableMessaging(true);
+
+                if (ExtensionOpened != null)
+                    ExtensionOpened(this, EventArgs.Empty);
+            }
+            else
+            {
+            }
+
+            base.OnVisibleChanged(e);
         }
 
         void textText_MouseLeave(object sender, EventArgs e)
         {
             if (this.Owner == null || !this.ContainsFocus && !this.Owner.ContainsFocus)
-                this.Close();
+                OnHide();
         }
 
         public void Show(Form parent, bool focus)
         {
+            this.Location = source.Parent.PointToScreen(source.Location);
             this.Owner = parent;
-            //this.Opacity = 0;
-            //this.VisibleChanged += formExtendedTextBox_VisibleChanged;
-            this.Show();
 
-            parent.LocationChanged += parent_LocationChanged;
+            textText.Text = source.Text;
+            textText.SelectionStart = source.SelectionStart;
+            textText.SelectionLength = source.SelectionLength;
+
+            NativeMethods.SetWindowPos(parent.Handle, this.Handle, 0, 0, 0, 0, SetWindowPosFlags.SWP_NOMOVE | SetWindowPosFlags.SWP_NOACTIVATE | SetWindowPosFlags.SWP_NOSIZE);
+
+            this.Show();
 
             if (focus)
                 textText.Focus();
         }
 
-        async void formExtendedTextBox_VisibleChanged(object sender, EventArgs e)
+        void source_LocationChanged(object sender, EventArgs e)
         {
-            this.VisibleChanged -= formExtendedTextBox_VisibleChanged;
-            await Task.Delay(1);
-            this.Opacity = 1;
+            var l = source.Location;
+            Control p, c = source.Parent;
+
+            do
+            {
+                l.Offset(c.Location);
+                p = c;
+                c = c.Parent;
+            }
+            while (c != null && !(c is Form));
+
+            if (p.ClientRectangle.IntersectsWith(new Rectangle(l, source.Size)))
+            {
+                this.Location = source.Parent.PointToScreen(source.Location);
+            }
+            else
+            {
+                OnHide();
+            }
         }
 
         void parent_LocationChanged(object sender, EventArgs e)
         {
-            this.Close();
+            OnHide();
         }
 
         void textText_GotFocus(object sender, EventArgs e)
@@ -190,39 +271,17 @@ namespace Gw2Launcher.UI
             return textText;
         }
 
-        private void buttonResize_DragOffsetChanged(object sender, Point e)
-        {
-            this.Size = new Size(originSize.Width + e.X, originSize.Height + e.Y);
-        }
-
-        protected override void OnSizeChanged(EventArgs e)
-        {
-            base.OnSizeChanged(e);
-            textText.Refresh();
-        }
-
-        private void buttonResize_BeginDrag(object sender, EventArgs e)
-        {
-            originSize = this.Size;
-            //textText.disableErase = true;
-        }
-
-        private void buttonResize_EndDrag(object sender, EventArgs e)
-        {
-            //textText.disableErase = false;
-            //textText.Invalidate();
-        }
-
         async void DelayedMouseLeave()
         {
             cancel = new CancellationTokenSource();
+            var token = cancel.Token;
             byte padding = 10;
 
             do
             {
                 try
                 {
-                    await Task.Delay(500, cancel.Token);
+                    await Task.Delay(500, token);
                 }
                 catch (TaskCanceledException)
                 {
@@ -236,32 +295,33 @@ namespace Gw2Launcher.UI
             }
             while (true);
 
-            using (cancel) 
+            using (cancel)
             {
                 cancel = null;
             }
-            this.Close();
+
+            OnHide();
         }
 
         public bool PreFilterMessage(ref Message m)
         {
-            switch (m.Msg)
+            switch ((WindowMessages)m.Msg)
             {
-                case WM_NCLBUTTONDOWN:
-                case WM_NCRBUTTONDOWN:
-                case WM_NCMBUTTONDOWN:
-                case WM_NCXBUTTONDOWN:
-                case WM_LBUTTONDOWN:
-                case WM_RBUTTONDOWN:
-                case WM_MBUTTONDOWN:
-                case WM_XBUTTONDOWN:
+                case WindowMessages.WM_NCLBUTTONDOWN:
+                case WindowMessages.WM_NCRBUTTONDOWN:
+                case WindowMessages.WM_NCMBUTTONDOWN:
+                case WindowMessages.WM_NCXBUTTONDOWN:
+                case WindowMessages.WM_LBUTTONDOWN:
+                case WindowMessages.WM_RBUTTONDOWN:
+                case WindowMessages.WM_MBUTTONDOWN:
+                case WindowMessages.WM_XBUTTONDOWN:
 
                     if (!this.DesktopBounds.Contains(Cursor.Position))
-                        this.Close();
+                        OnHide();
 
                     break;
-                case WM_MOUSEMOVE:
-                case WM_NCMOUSEMOVE:
+                case WindowMessages.WM_MOUSEMOVE:
+                case WindowMessages.WM_NCMOUSEMOVE:
 
                     if (cancel != null && this.DesktopBounds.Contains(Cursor.Position))
                     {
@@ -273,8 +333,8 @@ namespace Gw2Launcher.UI
                     }
 
                     break;
-                case WM_MOUSELEAVE:
-                case WM_NCMOUSELEAVE:
+                case WindowMessages.WM_MOUSELEAVE:
+                case WindowMessages.WM_NCMOUSELEAVE:
 
                     if (!this.DesktopBounds.Contains(Cursor.Position) && cancel == null)
                         DelayedMouseLeave();
@@ -283,6 +343,51 @@ namespace Gw2Launcher.UI
             }
 
             return false;
+        }
+
+        protected override void WndProc(ref Message m)
+        {
+            switch ((WindowMessages)m.Msg)
+            {
+                case WindowMessages.WM_WINDOWPOSCHANGING:
+
+                    var pos = (WINDOWPOS)Marshal.PtrToStructure(m.LParam, typeof(WINDOWPOS));
+
+                    if (!pos.flags.HasFlag(SetWindowPosFlags.SWP_NOSIZE))
+                    {
+                        pos.flags |= SetWindowPosFlags.SWP_NOREDRAW;
+                        Marshal.StructureToPtr(pos, m.LParam, false);
+                        return;
+                    }
+
+                    break;
+                case Windows.Native.WindowMessages.WM_NCHITTEST:
+
+                    //the only nc area is the corner of the textbox
+                    m.Result = (IntPtr)Windows.Native.HitTest.BottomRight;
+
+                    return;
+            }
+
+            base.WndProc(ref m);
+        }
+
+        protected override void Dispose(bool disposing)
+        {
+            if (disposing)
+            {
+                if (components != null)
+                    components.Dispose();
+                if (cancel != null)
+                {
+                    using (cancel)
+                    {
+                        cancel.Cancel();
+                        cancel = null;
+                    }
+                }
+            }
+            base.Dispose(disposing);
         }
     }
 }

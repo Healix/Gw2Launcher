@@ -12,12 +12,21 @@ namespace Gw2Launcher.UI.Controls
     {
         public event EventHandler<float> ValueChanged;
 
+        private enum MouseWheelState : byte
+        {
+            Disabled,
+            Entered,
+            Enabled
+        }
+
         private int sliderX, sliderY, sliderW, sliderH;
         private int barX, barY, barW, barH;
         private int originX;
         private Color colorBar, colorBarHighlight, colorSlider, colorSliderHighlight, colorDisabled;
         private SolidBrush brush;
+        private Point lastMove;
         private bool highlighted, sliding;
+        private MouseWheelState stateWheel; //prevent the wheel from being used until the mouse has moved within the control to prevent catching it while scrolling
 
         public FlatSlider()
         {
@@ -44,6 +53,19 @@ namespace Gw2Launcher.UI.Controls
             SetStyle(ControlStyles.Selectable, true);
 
             this.TabStop = false;
+        }
+
+        [System.ComponentModel.Browsable(false)]
+        public override string Text
+        {
+            get
+            {
+                return base.Text;
+            }
+            set
+            {
+                base.Text = value;
+            }
         }
 
         public float Value
@@ -175,6 +197,10 @@ namespace Gw2Launcher.UI.Controls
         {
             base.OnMouseMove(e);
 
+            if (lastMove == e.Location)
+                return;
+            lastMove = e.Location;
+
             if (sliding)
                 MoveSlider(e.X - originX);
             else
@@ -194,6 +220,16 @@ namespace Gw2Launcher.UI.Controls
                     this.Invalidate();
                 }
             }
+
+            switch (stateWheel)
+            {
+                case MouseWheelState.Disabled:
+                    stateWheel = MouseWheelState.Entered;
+                    break;
+                case MouseWheelState.Entered:
+                    stateWheel = MouseWheelState.Enabled;
+                    break;
+            }
         }
 
         protected override void OnMouseLeave(EventArgs e)
@@ -205,6 +241,7 @@ namespace Gw2Launcher.UI.Controls
                 highlighted = false;
                 this.Invalidate();
             }
+            stateWheel = MouseWheelState.Disabled;
         }
 
         protected override void OnKeyDown(KeyEventArgs e)
@@ -231,16 +268,20 @@ namespace Gw2Launcher.UI.Controls
         {
             base.OnMouseWheel(e);
 
-            if (e.Delta > 0)
+            if (stateWheel == MouseWheelState.Enabled)
             {
-                this.Value += 0.03f;
+                if (e.Delta > 0)
+                {
+                    this.Value += 0.03f;
+                }
+                else if (e.Delta < 0)
+                {
+                    this.Value -= 0.03f;
+                }
+
+                if (e is HandledMouseEventArgs)
+                    ((HandledMouseEventArgs)e).Handled = true;
             }
-            else if (e.Delta < 0)
-            {
-                this.Value -= 0.03f;
-            }
-            
-            ((HandledMouseEventArgs)e).Handled = true;
         }
 
         protected override void OnPreviewKeyDown(PreviewKeyDownEventArgs e)

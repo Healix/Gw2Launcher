@@ -7,18 +7,6 @@
         /// </summary>
         private System.ComponentModel.IContainer components = null;
 
-        /// <summary>
-        /// Clean up any resources being used.
-        /// </summary>
-        /// <param name="disposing">true if managed resources should be disposed; otherwise, false.</param>
-        protected override void Dispose(bool disposing)
-        {
-            if (disposing && (components != null))
-            {
-                components.Dispose();
-            }
-            base.Dispose(disposing);
-        }
 
         #region Windows Form Designer generated code
 
@@ -50,14 +38,12 @@
             // 
             this.buttonResize.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Right)));
             this.buttonResize.Cursor = System.Windows.Forms.Cursors.SizeNWSE;
+            this.buttonResize.Enabled = false;
             this.buttonResize.Location = new System.Drawing.Point(271, 248);
             this.buttonResize.Name = "buttonResize";
             this.buttonResize.Size = new System.Drawing.Size(12, 12);
             this.buttonResize.TabIndex = 57;
             this.buttonResize.TabStop = false;
-            this.buttonResize.DragOffsetChanged += new System.EventHandler<System.Drawing.Point>(this.buttonResize_DragOffsetChanged);
-            this.buttonResize.BeginDrag += new System.EventHandler(this.buttonResize_BeginDrag);
-            this.buttonResize.EndDrag += new System.EventHandler(this.buttonResize_EndDrag);
             // 
             // formExtendedTextBox
             // 

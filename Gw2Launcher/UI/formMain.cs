@@ -7,26 +7,33 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using System.Windows.Forms;
+using System.IO;
 using Gw2Launcher.UI.Controls;
+using Gw2Launcher.Windows.Native;
 
 namespace Gw2Launcher.UI
 {
     public partial class formMain : Form
     {
+        private event EventHandler<int> ActiveWindowsChanged;
+
         private bool autoSizeGrid;
         private NotifyIcon notifyIcon;
         private bool canShow, initialized;
-        private DateTime lastCacheDelete;
+        private DateTime lastCacheDelete, lastCrashDelete;
 
         private Dictionary<ushort, AccountGridButton> buttons;
         private formAccountTooltip tooltip;
         private formUpdating updatingWindow;
         private formAssetProxy assetProxyWindow;
         private formBackgroundPatcher bpWindow;
+        private formProgressOverlay bpProgress;
+        private Tools.QueuedAccountApi accountApi;
+        private formDailies dailies;
+        private Tools.Screenshots screenshotMonitor;
 
         private byte activeWindows;
         private List<Form> windows;
-        private FormWindowState windowState;
         
         private Windows.DragHelper.DragHelperInstance dragHelper;
 
@@ -70,6 +77,7 @@ namespace Gw2Launcher.UI
             Client.Launcher.ActiveProcessCountChanged += Launcher_ActiveProcessCountChanged;
             Client.Launcher.BuildUpdated += Launcher_BuildUpdated;
             Client.Launcher.AccountQueued += Launcher_AccountQueued;
+            Client.Launcher.NetworkAuthorizationRequired += Launcher_NetworkAuthorizationRequired;
 
             contextNotify.Opening += contextNotify_Opening;
 
@@ -83,7 +91,12 @@ namespace Gw2Launcher.UI
             gridContainer.AddAccountClick += gridContainer_AddAccountClick;
             gridContainer.AccountMouseClick += gridContainer_AccountMouseClick;
             gridContainer.AccountBeginDrag += gridContainer_AccountBeginDrag;
-
+            gridContainer.AccountBeginMousePressed += gridContainer_AccountBeginMousePressed;
+            gridContainer.AccountMousePressed += gridContainer_AccountMousePressed;
+            gridContainer.AccountBeginMouseClick += gridContainer_AccountBeginMouseClick;
+            gridContainer.AccountSelection += gridContainer_AccountSelection;
+            gridContainer.AccountNoteClicked += gridContainer_AccountNoteClicked;
+            
             contextMenu.Closed += contextMenu_Closed;
 
             Settings.ShowTray.ValueChanged += SettingsShowTray_ValueChanged;
@@ -92,18 +105,32 @@ namespace Gw2Launcher.UI
             Settings.FontLarge.ValueChanged += FontLarge_ValueChanged;
             Settings.FontSmall.ValueChanged += FontSmall_ValueChanged;
             Settings.BackgroundPatchingEnabled.ValueChanged += BackgroundPatchingEnabled_ValueChanged;
-            
+            Settings.TopMost.ValueChanged += TopMost_ValueChanged;
+            Settings.ShowDailies.ValueChanged += ShowDailies_ValueChanged;
+            Settings.ScreenshotNaming.ValueChanged += ScreenshotSettings_ValueChanged;
+            Settings.ScreenshotConversion.ValueChanged += ScreenshotSettings_ValueChanged;
+
             Tools.BackgroundPatcher.Instance.PatchReady += bp_PatchReady;
             Tools.BackgroundPatcher.Instance.PatchBeginning += bp_PatchBeginning;
             Tools.BackgroundPatcher.Instance.DownloadManifestsComplete += bp_DownloadManifestsComplete;
             Tools.BackgroundPatcher.Instance.Error += bp_Error;
+            Tools.BackgroundPatcher.Instance.Complete += bp_Complete;
             Tools.AutoUpdate.NewBuildAvailable += AutoUpdate_NewBuildAvailable;
 
-            this.Resize += formMain_Resize;
+            Util.ScheduledEvents.Register(OnDailyResetCallback, GetNextDaily());
+
             this.Shown += formMain_Shown;
 
             LoadAccounts();
             LoadSettings();
+
+            if (Settings.NotesNotifications.HasValue)
+                Settings.NotesNotifications.ValueChanged += NotesNotificationsHasValue_ValueChanged;
+            else
+                Settings.NotesNotifications.ValueChanged += NotesNotificationsNoValue_ValueChanged;
+
+            PurgeTemp();
+            PurgeNotes();
 
             Client.Launcher.Scan();
 
@@ -116,19 +143,90 @@ namespace Gw2Launcher.UI
             applyWindowedBoundsToolStripMenuItem2.Enabled = (int)applyWindowedBoundsToolStripMenuItem1.Tag > 0;
         }
 
-        private void Initialize()
+        private void PurgeTemp()
         {
-            windowState = this.WindowState;
-            Tools.AutoUpdate.Initialize();
+            Task.Factory.StartNew(new Action(
+               delegate
+               {
+                   try
+                   {
+                       var now = DateTime.UtcNow;
+                       var di = new DirectoryInfo(DataPath.AppDataAccountDataTemp);
+                       foreach (var d in di.EnumerateDirectories())
+                       {
+                           try
+                           {
+                               if (now.Subtract(d.LastWriteTimeUtc).TotalDays > 7)
+                                   d.Delete(true);
+                           }
+                           catch { }
+                       }
+                       foreach (var f in di.EnumerateFiles())
+                       {
+                           try
+                           {
+                               if (now.Subtract(f.LastWriteTimeUtc).TotalDays > 7)
+                                   f.Delete();
+                           }
+                           catch { }
+                       }
+                   }
+                   catch (Exception ex)
+                   {
+                       Util.Logging.Log(ex);
+                   }
+               }));
+        }
 
-            if (Settings.Silent)
+        private async void PurgeNotes()
+        {
+            var limit = DateTime.UtcNow.AddDays(-30);
+            Tools.Notes store = null;
+
+            try
             {
-                if (Settings.LastProgramVersion.HasValue)
+                foreach (var uid in Settings.Accounts.GetKeys())
                 {
-                    var v = Settings.LastProgramVersion.Value;
-                    if (Math.Abs(DateTime.UtcNow.Subtract(Settings.LastProgramVersion.Value.lastCheck).TotalDays) > 30)
-                        CheckVersion();
+                    var a = Settings.Accounts[uid];
+                    if (!a.HasValue)
+                        continue;
+
+                    var notes = a.Value.Notes;
+                    if (notes == null || notes.Count == 0)
+                        continue;
+
+                    Settings.Notes.Note n;
+                    while (notes.Count > 0 && limit > (n = notes[0]).Expires)
+                    {
+                        if (notes.Remove(n))
+                        {
+                            try
+                            {
+                                if (store == null)
+                                    store = new Tools.Notes();
+                                await store.RemoveAsync(n.SID);
+                            }
+                            catch (Exception e)
+                            {
+                                Util.Logging.Log(e);
+                                notes.Add(n);
+                                break;
+                            }
+                        }
+                    }
                 }
+
+                if (store != null)
+                    await store.CloseAsync();
+            }
+            catch (Exception ex)
+            {
+                Util.Logging.Log(ex);
+            }
+            finally
+            {
+                if (store != null)
+                    store.Dispose();
             }
         }
 
@@ -193,9 +291,14 @@ namespace Gw2Launcher.UI
                             var h = f.Handle;
                             if (h != IntPtr.Zero)
                             {
-                                Windows.FindWindow.ShowWindow(h, 1);
-                                Windows.FindWindow.SetForegroundWindow(h);
-                                Windows.FindWindow.BringWindowToTop(h);
+                                try
+                                {
+                                    Windows.FindWindow.FocusWindow(h);
+                                }
+                                catch (Exception ex)
+                                {
+                                    Util.Logging.Log(ex);
+                                }
                             }
                         }));
                 }
@@ -267,9 +370,14 @@ namespace Gw2Launcher.UI
                             var h = f.Handle;
                             if (h != IntPtr.Zero)
                             {
-                                Windows.FindWindow.ShowWindow(h, 1);
-                                Windows.FindWindow.SetForegroundWindow(h);
-                                Windows.FindWindow.BringWindowToTop(h);
+                                try
+                                {
+                                    Windows.FindWindow.FocusWindow(h);
+                                }
+                                catch (Exception ex)
+                                {
+                                    Util.Logging.Log(ex);
+                                }
                             }
                         }));
                 }
@@ -277,6 +385,167 @@ namespace Gw2Launcher.UI
                 {
                     Util.Logging.Log(ex);
                 }
+            }
+        }
+
+        private int OnNoteCallback()
+        {
+            var now = DateTime.UtcNow;
+            var min = DateTime.MaxValue;
+            var count = 0;
+            var canShow = true;
+            var checkedActive = false;
+
+            foreach (var b in buttons.Values)
+            {
+                if (b.AccountData == null)
+                    continue;
+
+                if (Settings.NotesNotifications.HasValue)
+                {
+                    var notes = b.AccountData.Notes;
+                    if (notes == null)
+                        continue;
+
+                    foreach (var n in notes)
+                    {
+                        if (n.Notify)
+                        {
+                            if (now < n.Expires)
+                            {
+                                if (n.Expires < min)
+                                    min = n.Expires;
+                                break;
+                            }
+                            else
+                            {
+                                if (!checkedActive && (checkedActive = true) && Settings.NotesNotifications.Value.OnlyWhileActive)
+                                    canShow = Windows.LastInput.IsActive;
+
+                                if (canShow)
+                                {
+                                    n.Notify = false;
+                                    ShowNoteNotification(n, b.AccountData, count++ * 1000);
+                                }
+                            }
+                        }
+                    }
+                }
+
+                if (now >= b.LastNoteUtc)
+                    b.LastNoteUtc = DateTime.MinValue;
+                else if (b.LastNoteUtc < min)
+                    min = b.LastNoteUtc;
+            }
+
+            if (min != DateTime.MaxValue)
+            {
+                var i = min.Subtract(now).TotalMilliseconds + 1;
+
+                if (i > 5000)
+                {
+                    if (!canShow)
+                        return 5000;
+                    else if (i > int.MaxValue)
+                        return int.MaxValue;
+                }
+                else if (i < 1000)
+                {
+                    if (count > 0)
+                        return 1000;
+                    else if (i < 0)
+                        return 0;
+                }
+
+                return (int)i;
+            }
+            else if (!canShow)
+                return 5000;
+
+            return -1;
+        }
+
+        private async void ShowNoteNotification(Settings.Notes.Note note, Settings.IAccount account, int delay)
+        {
+            if (delay > 0)
+                await Task.Delay(delay);
+
+            var v = Settings.NotesNotifications.Value;
+            string text;
+
+            try
+            {
+                var r = await Tools.Notes.GetRange(note.SID);
+                text = r[0];
+            }
+            catch
+            {
+                text = null;
+            }
+
+            if (!string.IsNullOrEmpty(text))
+                formNotify.ShowNote(v.Screen, v.Anchor, text, account.Name);
+        }
+
+        private int GetNextDaily()
+        {
+            var ticks = DateTime.UtcNow.Ticks;
+            const long TICKS_PER_DAY = 864000000000;
+
+            int millisToNextDay = (int)(((ticks / TICKS_PER_DAY + 1) * TICKS_PER_DAY - ticks) / 10000) + 1;
+            if (millisToNextDay < 0)
+                return -1;
+
+            return millisToNextDay;
+        }
+
+        private int OnDailyResetCallback()
+        {
+            foreach (var button in buttons.Values)
+            {
+                var account = button.AccountData;
+                if (account != null)
+                {
+                    //set the last used for active accounts if either the daily or played time is being tracked, so that the login icon doesn't take priority
+                    if ((account.ShowDailyCompletion || account.ApiData != null && account.ApiData.Played != null) && Client.Launcher.GetState(account) == Client.Launcher.AccountState.ActiveGame)
+                    {
+                        if (account.ApiData != null && account.ApiData.Played != null)
+                            QueuedAccountApi.Schedule(account, account.LastUsedUtc.Date, 0);
+                        button.LastUsedUtc = DateTime.UtcNow;
+                    }
+
+                    if (account.ShowDailyLogin || account.ShowDailyCompletion)
+                    {
+                        button.Redraw();
+                    }
+                }
+            }
+
+            if (dailies != null && !dailies.IsDisposed)
+            {
+                var d = Settings.ShowDailies.Value;
+                if (d.HasFlag(Settings.DailiesMode.Show))
+                {
+                    if (d.HasFlag(Settings.DailiesMode.AutoLoad))
+                        dailies.LoadToday();
+                    else
+                        dailies.LoadOnShow = true;
+                }
+            }
+
+            return GetNextDaily();
+        }
+
+        private Tools.QueuedAccountApi QueuedAccountApi
+        {
+            get
+            {
+                if (accountApi == null)
+                {
+                    accountApi = new Tools.QueuedAccountApi();
+                    accountApi.DataReceived += accountApi_DataReceived;
+                }
+                return accountApi;
             }
         }
 
@@ -364,6 +633,8 @@ namespace Gw2Launcher.UI
             formWaiting w = new formWaiting(this);
             w.Owner = this;
 
+            OnChildFormCreated(w);
+
             EventHandler onActiveChange = delegate
             {
                 foreach (var form in windows)
@@ -387,36 +658,121 @@ namespace Gw2Launcher.UI
 
             return w;
         }
-        
+
+        private void Initialize()
+        {
+            var s = Settings.WindowBounds[typeof(UI.formMain)];
+
+            if (s.HasValue && !s.Value.Size.IsEmpty)
+            {
+                this.AutoSizeGrid = false;
+                this.Size = s.Value.Size;
+            }
+            else
+            {
+                this.AutoSizeGrid = true;
+                ResizeAuto();
+            }
+
+            if (s.HasValue && !s.Value.Location.Equals(new Point(int.MinValue, int.MinValue)))
+                this.Location = Util.ScreenUtil.Constrain(s.Value.Location, this.Size);
+            else
+            {
+                var bounds = Screen.PrimaryScreen.WorkingArea;
+                this.Location = Point.Add(bounds.Location, new Size(bounds.Width / 2 - this.Size.Width / 2, bounds.Height / 3));
+            }
+
+            gridContainer.ArrangeGrid();
+
+            Tools.AutoUpdate.Initialize();
+
+            this.TopMost = Settings.TopMost.Value;
+
+            if (Settings.LastProgramVersion.HasValue)
+            {
+                var nextCheck = Settings.LastProgramVersion.Value.LastCheck.AddDays(30);
+                if (DateTime.UtcNow > nextCheck)
+                    CheckVersion();
+                else
+                    Util.ScheduledEvents.Register(OnCheckVersionCallback, nextCheck.Ticks / 10000);
+            }
+
+            Util.ScheduledEvents.Register(OnNoteCallback, 0);
+        }
+
         void formMain_Shown(object sender, EventArgs e)
         {
             this.Shown -= formMain_Shown;
 
+            //note that the form will start minimized when silent, so this may not be called on launch -- use Initialize() instead
+
             if (!Settings.Silent)
             {
-                Windows.FindWindow.SetForegroundWindow(this.Handle);
-                Windows.FindWindow.BringWindowToTop(this.Handle);
+#if DEBUG
+                try
+                {
+                    Windows.FindWindow.FocusWindow(this.Handle);
+                }
+                catch (Exception ex)
+                {
+                    Util.Logging.Log(ex);
+                }
+#endif
 
                 if (Settings.CheckForNewBuilds.Value && !Settings.AutoUpdate.Value)
                 {
                     CheckBuild();
                 }
+            }
 
-                if (Settings.LastProgramVersion.HasValue)
+            ShowDailies_ValueChanged(Settings.ShowDailies, EventArgs.Empty);
+        }
+
+        private int OnCheckVersionCallback()
+        {
+            long remaining = -1;
+
+            if (Settings.LastProgramVersion.HasValue)
+            {
+                var nextCheck = Settings.LastProgramVersion.Value.LastCheck.AddDays(30);
+                remaining = (nextCheck.Ticks - DateTime.UtcNow.Ticks) / 10000;
+
+                if (remaining < 0)
                 {
-                    var v = Settings.LastProgramVersion.Value;
-                    if (Math.Abs(DateTime.UtcNow.Subtract(Settings.LastProgramVersion.Value.lastCheck).TotalDays) > 30) //v.version <= Program.RELEASE_VERSION && 
-                        CheckVersion();
+                    CheckVersion();
+                    remaining = -1;
                 }
             }
+
+            if (remaining > int.MaxValue)
+                return int.MaxValue;
+            return (int)remaining;
+        }
+
+        private async void ShowChangelog()
+        {
+            var f = new formChangelog();
+            if (await f.LoadChangelog())
+            {
+                using (f)
+                {
+                    f.ShowDialog(this);
+                }
+            }
+            else
+                f.Dispose();
         }
 
         protected override void Dispose(bool disposing)
         {
-            if (disposing && (components != null))
+            if (disposing)
             {
-                components.Dispose();
-                notifyIcon.Dispose();
+                if (components != null)
+                    components.Dispose();
+                if (notifyIcon != null)
+                    notifyIcon.Dispose(); 
+                if (screenshotMonitor != null)
+                    screenshotMonitor.Dispose();
             }
             base.Dispose(disposing);
         }
@@ -669,15 +1025,6 @@ namespace Gw2Launcher.UI
             }
         }
 
-        void formMain_Resize(object sender, EventArgs e)
-        {
-            if (windowState != this.WindowState)
-            {
-                windowState = this.WindowState;
-                OnWindowStateChanged();
-            }
-        }
-
         void notifyIcon_DoubleClick(object sender, EventArgs e)
         {
             if (this.Visible)
@@ -690,13 +1037,10 @@ namespace Gw2Launcher.UI
             }
         }
 
-        private void OnWindowStateChanged()
+        private void OnMinimized()
         {
-            if (this.WindowState == FormWindowState.Minimized)
-            {
-                if (Settings.ShowTray.Value && Settings.MinimizeToTray.Value)
-                    MinimizeToTray();
-            }
+            if (Settings.ShowTray.Value && Settings.MinimizeToTray.Value)
+                MinimizeToTray();
         }
 
         private async void MinimizeToTray()
@@ -717,12 +1061,14 @@ namespace Gw2Launcher.UI
 
             this.WindowState = FormWindowState.Normal;
 
-            //SetWindowPos(this.Handle, (IntPtr)WindowZOrder.HWND_TOPMOST, 0, 0, 0, 0, SetWindowPosFlags.SWP_FRAMECHANGED | SetWindowPosFlags.SWP_NOSIZE | SetWindowPosFlags.SWP_NOMOVE);
-            //SetWindowPos(this.Handle, (IntPtr)WindowZOrder.HWND_NOTOPMOST, 0, 0, 0, 0, SetWindowPosFlags.SWP_FRAMECHANGED | SetWindowPosFlags.SWP_NOSIZE | SetWindowPosFlags.SWP_NOMOVE);
-
-            Windows.FindWindow.ShowWindow(this.Handle, 5);
-            Windows.FindWindow.SetForegroundWindow(this.Handle);
-            Windows.FindWindow.BringWindowToTop(this.Handle);
+            try
+            {
+                Windows.FindWindow.FocusWindow(this.Handle);
+            }
+            catch (Exception ex)
+            {
+                Util.Logging.Log(ex);
+            }
         }
 
         void Launcher_AccountExited(Settings.IAccount account)
@@ -742,25 +1088,63 @@ namespace Gw2Launcher.UI
                 Tools.Statistics.Record(Tools.Statistics.RecordType.Launched, account.UID);
             }
 
-            if (Settings.DeleteCacheOnLaunch.Value)
+            if (Settings.DeleteCacheOnLaunch.Value && DateTime.UtcNow.Subtract(lastCacheDelete).TotalMinutes > 1)
             {
-                if (DateTime.UtcNow.Subtract(lastCacheDelete).TotalMinutes > 1)
-                {
-                    lastCacheDelete = DateTime.UtcNow;
+                lastCacheDelete = DateTime.UtcNow;
 
-                    Task.Factory.StartNew(new Action(
-                       delegate
+                Task.Factory.StartNew(new Action(
+                   delegate
+                   {
+                       try
                        {
-                           try
-                           {
-                               Tools.Gw2Cache.Delete(Util.Users.GetUserName(account.WindowsAccount));
-                           }
-                           catch (Exception ex)
-                           {
-                               Util.Logging.Log(ex);
-                           }
-                       }));
+                           Tools.Gw2Cache.Delete(Tools.Gw2Cache.USERNAME_GW2LAUNCHER); //Util.Users.GetUserName(account.WindowsAccount)
+                       }
+                       catch (Exception ex)
+                       {
+                           Util.Logging.Log(ex);
+                       }
+                   }));
+            }
+
+            if (Settings.DeleteCrashLogsOnLaunch.Value && DateTime.UtcNow.Subtract(lastCrashDelete).TotalDays > 1)
+            {
+                lastCrashDelete = DateTime.UtcNow;
+
+                Task.Factory.StartNew(new Action(
+                   delegate
+                   {
+                       try
+                       {
+                           Tools.Gw2Logs.Delete();
+                       }
+                       catch (Exception ex)
+                       {
+                           Util.Logging.Log(ex);
+                       }
+                   }));
+            }
+        }
+
+        void Launcher_NetworkAuthorizationRequired(object sender, Client.Launcher.NetworkAuthorizationRequiredEventsArgs e)
+        {
+            if (this.InvokeRequired)
+            {
+                try
+                {
+                    this.Invoke(new MethodInvoker(
+                        delegate
+                        {
+                            OnNetworkAuthorizationRequired(e);
+                        }));
                 }
+                catch (Exception ex)
+                {
+                    Util.Logging.Log(ex);
+                }
+            }
+            else
+            {
+                OnNetworkAuthorizationRequired(e);
             }
         }
 
@@ -898,6 +1282,17 @@ namespace Gw2Launcher.UI
             }
         }
 
+        private void OnNetworkAuthorizationRequired(Client.Launcher.NetworkAuthorizationRequiredEventsArgs e)
+        {
+            using (BeforeShowDialog())
+            {
+                using (var f = AddWindow(new formNetworkAuthorizationRequired(e)))
+                {
+                    f.ShowDialog(this);
+                }
+            }
+        }
+
         void Launcher_AccountStateChanged(ushort uid, Client.Launcher.AccountState state, Client.Launcher.AccountState previousState, object data)
         {
             if (this.InvokeRequired)
@@ -928,29 +1323,71 @@ namespace Gw2Launcher.UI
 
                 if (button.AccountData != null)
                 {
-                    bool exited = previousState == Client.Launcher.AccountState.ActiveGame;
+                    var account = button.AccountData;
+                    var exited = previousState == Client.Launcher.AccountState.ActiveGame;
 
                     //as a backup in case catching the DX window failed, catch the exit time
                     if (previousState == Client.Launcher.AccountState.Active && state == Client.Launcher.AccountState.Exited && data is TimeSpan)
                     {
                         TimeSpan elapsed = (TimeSpan)data;
-                        if (elapsed != TimeSpan.MinValue)
-                        {
-                            if (elapsed.TotalMinutes > 10)
-                            {
-                                exited = true;
-                            }
-                        }
+                        if (elapsed != TimeSpan.MinValue && elapsed.TotalMinutes > 10)
+                            exited = true;
                     }
 
                     if (exited)
                     {
                         DateTime d = DateTime.UtcNow;
-                        if (button.AccountData != null)
-                            button.AccountData.LastUsedUtc = d;
+                        account.LastUsedUtc = d;
                         button.LastUsedUtc = d;
                         if (Settings.SortingMode.Value == Settings.SortMode.LastUsed)
                             gridContainer.Sort(Settings.SortingMode.Value, Settings.SortingOrder.Value);
+
+                        if (account.ApiData != null)
+                        {
+                            var minutes = data is TimeSpan ? (int)((TimeSpan)data).TotalMinutes : 1;
+
+                            if (minutes >= 1)
+                            {
+                                var points = account.ApiData.DailyPoints;
+                                var played = account.ApiData.Played;
+
+                                if (played != null && played.LastChange.Date != DateTime.UtcNow.Date || points != null && points.Value < Api.Account.MAX_AP && points.LastChange.Date != DateTime.UtcNow.Date)
+                                    QueuedAccountApi.Schedule(account, null, 0);
+                            }
+                        }
+
+                    }
+
+                    if (state == Client.Launcher.AccountState.Active && account.ApiData != null)
+                    {
+                        //note that played time is always checked on the daily launch because what was previously stored on exit is outdated due to the API giving cached responses
+                        //whereas points only need to be checked if the state isn't okay, as it only updates once per day
+
+                        var points = account.ApiData.DailyPoints;
+
+                        var checkPlayed = account.ApiData.Played != null;
+                        var checkPoints = points != null && points.State != Settings.ApiCacheState.OK && points.Value < Api.Account.MAX_AP && points.LastChange.Date != DateTime.UtcNow.Date;
+
+                        if (checkPoints || checkPlayed)
+                        {
+                            if (account.LastUsedUtc.Date != DateTime.UtcNow.Date)
+                            {
+                                QueuedAccountApi.Schedule(account, account.LastUsedUtc.Date, 0);
+                            }
+                            else
+                            {
+                                if (checkPoints)
+                                    account.ApiData.DailyPoints.State = Settings.ApiCacheState.Pending;
+                            }
+                        }
+                    }
+
+                    if (screenshotMonitor != null)
+                    {
+                        if (exited)
+                            screenshotMonitor.Remove(account);
+                        else if (state == Client.Launcher.AccountState.ActiveGame)
+                            screenshotMonitor.Add(account);
                     }
                 }
 
@@ -991,6 +1428,170 @@ namespace Gw2Launcher.UI
             }
         }
 
+        void accountApi_DataReceived(object sender, Tools.QueuedAccountApi.DataEventArgs e)
+        {
+            if (this.InvokeRequired)
+            {
+                try
+                {
+                    this.BeginInvoke(new MethodInvoker(
+                        delegate
+                        {
+                            accountApi_DataReceived(sender, e);
+                        }));
+                }
+                catch (Exception ex)
+                {
+                    Util.Logging.Log(ex);
+                }
+                return;
+            }
+
+            var d = e.Account.ApiData;
+            if (d == null)
+                return;
+
+            var played = d.Played;
+            var points = d.DailyPoints;
+
+            var total = (ushort)(e.Response.DailyAP + e.Response.MonthlyAP);
+            bool updatedPoints = false,
+                 updatedPlayed = false;
+            sbyte _isActive = 0;
+
+            Func<bool> isActive = delegate
+            {
+                if (_isActive == 0)
+                {
+                    switch (Client.Launcher.GetState(e.Account))
+                    {
+                        case Client.Launcher.AccountState.Active:
+                        case Client.Launcher.AccountState.ActiveGame:
+                            _isActive = 1;
+                            break;
+                        default:
+                            _isActive = -1;
+                            break;
+                    }
+                }
+
+                return _isActive == 1;
+            };
+
+            if (e.Data is DateTime)
+            {
+                //this was the first launch of the day, so this data is for the last recorded launch date
+                if (points != null)
+                {
+                    points.LastChange = (DateTime)e.Data;
+                    updatedPoints = true;
+                }
+                if (played != null)
+                {
+                    played.LastChange = (DateTime)e.Data;
+                    updatedPlayed = true;
+                }
+            }
+            else if (e.Date.Date != DateTime.UtcNow.Date)
+            {
+                //the day changed, this data is no longer valid
+                if (points != null && (points.State == Settings.ApiCacheState.None || !isActive()))
+                {
+                    points.LastChange = e.Date;
+                    updatedPoints = true;
+                }
+                if (played != null && (played.State == Settings.ApiCacheState.None || !isActive()))
+                {
+                    played.LastChange = e.Date;
+                    updatedPlayed = true;
+                }
+            }
+            else
+            {
+                bool rescheduled = false;
+
+                if (e.Data is Settings.ApiCacheState)
+                {
+                    //only looking to update those with the specified state
+                    var state = (Settings.ApiCacheState)e.Data;
+                    if (points != null && points.State != state)
+                        points = null;
+                    if (played != null && played.State != state)
+                        played = null;
+                }
+
+                if (points != null)
+                {
+                    if (points.State == Settings.ApiCacheState.None)
+                    {
+                        points.LastChange = DateTime.UtcNow.Subtract(new TimeSpan(1, 0, 0, 0));
+                        updatedPoints = true;
+                    }
+                    else if (points.Value != total)
+                    {
+                        points.LastChange = e.Date;
+                        updatedPoints = true;
+                    }
+                    else if (!rescheduled)
+                    {
+                        //either the daily wasn't completed, or the api hasn't updated yet, which could be 10 minutes behind
+                        //- the api response is cached for 5 minutes and can be another 5 minutes behind
+                        if (rescheduled = e.Attempt == 0 || e.ResponsePreviousAttempt.Age != e.Response.Age && e.Attempt < 2)
+                            e.Reschedule(330000);
+                    }
+                }
+                if (played != null)
+                {
+                    if (played.State == Settings.ApiCacheState.None)
+                    {
+                        played.LastChange = e.Account.LastUsedUtc;
+                        updatedPlayed = true;
+                    }
+                    else if (played.Value != e.Response.Age)
+                    {
+                        played.LastChange = e.Date;
+                        updatedPlayed = true;
+                    }
+                    else if (!rescheduled)
+                    {
+                        if (rescheduled = e.Attempt == 0)
+                            e.Reschedule(330000);
+                    }
+                }
+            }
+
+            if (updatedPoints)
+            {
+                points.Value = total;
+
+                if (points.LastChange.Date != DateTime.UtcNow.Date && isActive())
+                    points.State = Settings.ApiCacheState.Pending;
+                else
+                    points.State = Settings.ApiCacheState.OK;
+
+                if (e.Account.ShowDailyCompletion)
+                {
+                    e.Account.LastDailyCompletionUtc = points.LastChange;
+
+                    AccountGridButton b;
+                    if (buttons.TryGetValue(e.Account.UID, out b))
+                        b.LastDailyCompletionUtc = points.LastChange;
+                }
+            }
+            if (updatedPlayed)
+            {
+                played.Value = e.Response.Age;
+                played.State = Settings.ApiCacheState.Pending; //it's always outdated
+
+                if (e.Account.ShowDailyLogin)
+                {
+                    AccountGridButton b;
+                    if (buttons.TryGetValue(e.Account.UID, out b))
+                        b.LastDailyLoginUtc = played.LastChange;
+                }
+            }
+        }
+
         void OnButtonDataChanged(AccountGridButton button, object data)
         {
             if (button.IsHovered)
@@ -1004,7 +1605,6 @@ namespace Gw2Launcher.UI
 
         void OnButtonsLoaded()
         {
-
         }
 
         void OnAccountDataChanged(Settings.IAccount account)
@@ -1077,6 +1677,93 @@ namespace Gw2Launcher.UI
             }
         }
 
+        void TopMost_ValueChanged(object sender, EventArgs e)
+        {
+            var setting = sender as Settings.ISettingValue<bool>;
+
+            this.TopMost = setting.Value;
+        }
+
+        void ScreenshotSettings_ValueChanged(object sender, EventArgs e)
+        {
+            var enabled = Settings.ScreenshotConversion.HasValue || Settings.ScreenshotNaming.HasValue;
+            if (enabled)
+            {
+                if (screenshotMonitor == null)
+                {
+                    screenshotMonitor = new Tools.Screenshots();
+                    if (Client.Launcher.GetActiveProcessCount() > 0)
+                    {
+                        foreach (var uid in Settings.Accounts.GetKeys())
+                        {
+                            var a = Settings.Accounts[uid];
+                            if (a.HasValue && Client.Launcher.GetState(a.Value) == Client.Launcher.AccountState.ActiveGame)
+                                screenshotMonitor.Add(a.Value);
+                        }
+                    }
+                }
+            }
+            else if (screenshotMonitor != null)
+            {
+                screenshotMonitor.Dispose();
+                screenshotMonitor = null;
+            }
+        }
+
+        void NotesNotificationsHasValue_ValueChanged(object sender, EventArgs e)
+        {
+            var setting = sender as Settings.ISettingValue<Settings.NotificationScreenAttachment>;
+
+            if (!setting.HasValue)
+            {
+                setting.ValueChanged -= NotesNotificationsHasValue_ValueChanged;
+                setting.ValueChanged += NotesNotificationsNoValue_ValueChanged;
+            }
+        }
+
+        void NotesNotificationsNoValue_ValueChanged(object sender, EventArgs e)
+        {
+            var setting = sender as Settings.ISettingValue<Settings.NotificationScreenAttachment>;
+
+            if (setting.HasValue)
+            {
+                setting.ValueChanged -= NotesNotificationsNoValue_ValueChanged;
+                setting.ValueChanged += NotesNotificationsHasValue_ValueChanged;
+
+                Util.ScheduledEvents.Register(OnNoteCallback, 0);
+            }
+        }
+
+        void ShowDailies_ValueChanged(object sender, EventArgs e)
+        {
+            var setting = sender as Settings.ISettingValue<Settings.DailiesMode>;
+
+            if (setting.Value.HasFlag(Settings.DailiesMode.Show))
+            {
+                if (dailies == null || dailies.IsDisposed)
+                {
+                    dailies = new formDailies(this);
+                    OnChildFormCreated(dailies);
+
+                    dailies.VisibleChanged += dailies_VisibleChanged;
+                    dailies.Minimize(false);
+                }
+            }
+            else if (dailies != null)
+            {
+                dailies.Dispose();
+                dailies = null;
+            }
+        }
+
+        void dailies_VisibleChanged(object sender, EventArgs e)
+        {
+            if (dailies.Visible && dailies.LinkedToParent && !this.Visible)
+            {
+                ShowToFront();
+            }
+        }
+
         void bp_Error(object sender, string message, Exception exception)
         {
             if (this.InvokeRequired)
@@ -1099,7 +1786,34 @@ namespace Gw2Launcher.UI
             if (Settings.BackgroundPatchingNotifications.HasValue)
             {
                 var v = Settings.BackgroundPatchingNotifications.Value;
-                formBuildNotify.Show(formBuildNotify.NotifyType.Error, v.screen, v.anchor, new Tools.BackgroundPatcher.PatchEventArgs());
+                formNotify.Show(formNotify.NotifyType.Error, v.Screen, v.Anchor, new Tools.BackgroundPatcher.PatchEventArgs());
+            }
+        }
+
+        void bp_Complete(object sender, EventArgs e)
+        {
+            if (this.InvokeRequired)
+            {
+                try
+                {
+                    this.BeginInvoke(new MethodInvoker(
+                        delegate
+                        {
+                            bp_Complete(sender, e);
+                        }));
+                }
+                catch (Exception ex)
+                {
+                    Util.Logging.Log(ex);
+                }
+                return;
+            }
+
+            if (bpProgress != null)
+            {
+                Tools.BackgroundPatcher.Instance.ProgressChanged -= bp_ProgressChanged;
+                bpProgress.Dispose();
+                bpProgress = null;
             }
         }
 
@@ -1123,7 +1837,7 @@ namespace Gw2Launcher.UI
             //}
 
             //if (Settings.BackgroundPatchingNotifications.Value)
-            //    formBuildNotify.Show(formBuildNotify.NotifyType.DownloadingFiles, e);
+            //    formNotify.Show(formNotify.NotifyType.DownloadingFiles, e);
         }
 
         void bp_PatchBeginning(object sender, Tools.BackgroundPatcher.PatchEventArgs e)
@@ -1132,7 +1846,7 @@ namespace Gw2Launcher.UI
             {
                 try
                 {
-                    this.BeginInvoke(new MethodInvoker(
+                    this.Invoke(new MethodInvoker(
                         delegate
                         {
                             bp_PatchBeginning(sender, e);
@@ -1148,8 +1862,32 @@ namespace Gw2Launcher.UI
             if (Settings.BackgroundPatchingNotifications.HasValue)
             {
                 var v = Settings.BackgroundPatchingNotifications.Value;
-                formBuildNotify.Show(formBuildNotify.NotifyType.DownloadingManifests, v.screen, v.anchor, e);
+                formNotify.Show(formNotify.NotifyType.DownloadingManifests, v.Screen, v.Anchor, e);
             }
+
+            if (bpProgress != null)
+            {
+                Tools.BackgroundPatcher.Instance.ProgressChanged -= bp_ProgressChanged;
+                bpProgress.Dispose();
+                bpProgress = null;
+            }
+
+            if (Settings.BackgroundPatchingProgress.HasValue)
+            {
+                bpProgress = new formProgressOverlay()
+                {
+                    Bounds = Settings.BackgroundPatchingProgress.Value,
+                };
+                bpProgress.Progress.Maximum = 1000;
+                bpProgress.Show();
+                Tools.BackgroundPatcher.Instance.ProgressChanged += bp_ProgressChanged;
+            }
+        }
+
+        void bp_ProgressChanged(object sender, float e)
+        {
+            var p = bpProgress.Progress;
+            p.Value = (int)(e * p.Maximum);
         }
 
         void bp_PatchReady(object sender, Tools.BackgroundPatcher.PatchEventArgs e)
@@ -1174,7 +1912,7 @@ namespace Gw2Launcher.UI
             if (Settings.BackgroundPatchingNotifications.HasValue)
             {
                 var v = Settings.BackgroundPatchingNotifications.Value;
-                formBuildNotify.Show(formBuildNotify.NotifyType.PatchReady, v.screen, v.anchor, e);
+                formNotify.Show(formNotify.NotifyType.PatchReady, v.Screen, v.Anchor, e);
             }
 
             if (Settings.AutoUpdate.Value && Settings.LocalAssetServerEnabled.Value)
@@ -1189,6 +1927,8 @@ namespace Gw2Launcher.UI
             {
                 SetSorting(Settings.SortingMode.Value, Settings.SortingOrder.Value, true);
             }
+
+            ScreenshotSettings_ValueChanged(Settings.ScreenshotConversion, EventArgs.Empty);
         }
 
         private void LoadAccounts()
@@ -1303,7 +2043,125 @@ namespace Gw2Launcher.UI
             AddAccount();
         }
 
-        void gridContainer_AccountBeginDrag(object sender, MouseEventArgs e)
+        void gridContainer_AccountMousePressed(object sender, EventArgs e)
+        {
+            var button = (AccountGridButton)sender;
+
+            try
+            {
+                switch (Client.Launcher.GetState(button.AccountData))
+                {
+                    case Client.Launcher.AccountState.Active:
+                    case Client.Launcher.AccountState.ActiveGame:
+
+                        Client.Launcher.Kill(button.AccountData);
+
+                        break;
+                }
+            }
+            catch (Exception ex)
+            {
+                Util.Logging.Log(ex);
+            }
+        }
+
+        void gridContainer_AccountNoteClicked(object sender, EventArgs e)
+        {
+            ShowNotesDialog((AccountGridButton)sender);
+        }
+
+        void gridContainer_AccountBeginMouseClick(object sender, AccountGridButtonContainer.MousePressedEventArgs e)
+        {
+            var button = (AccountGridButton)sender;
+            if (e.Button != System.Windows.Forms.MouseButtons.Left)
+                return;
+
+            gridContainer.ClearSelected();
+
+            Client.Launcher.AccountState state;
+
+            try
+            {
+                state = Client.Launcher.GetState(button.AccountData);
+            }
+            catch (Exception ex)
+            {
+                Util.Logging.Log(ex);
+                state = Client.Launcher.AccountState.None;
+            }
+
+            switch (state)
+            {
+                case Client.Launcher.AccountState.Active:
+                case Client.Launcher.AccountState.ActiveGame:
+
+                    var setting = Settings.ActionActiveLClick;
+                    var action = Settings.ButtonAction.Focus;
+                    if (setting.HasValue)
+                        action= setting.Value;
+
+                    switch (action)
+                    {
+                        case Settings.ButtonAction.Focus:
+                            
+                            var p = Client.Launcher.GetProcess(button.AccountData);
+                            if (p != null)
+                            {
+                                e.Handled = true;
+                                e.FlashColor = Color.FromArgb(221, 224, 255);
+
+                                FocusWindowAsync(p.MainWindowHandle);
+                            }
+
+                            break;
+                        case Settings.ButtonAction.Close:
+                            
+                            e.Handled = true;
+                            e.FlashColor = Color.FromArgb(255, 207, 212);
+
+                            Client.Launcher.Kill(button.AccountData);
+
+                            break;
+                    }
+
+                    break;
+                default:
+
+                    Client.Launcher.Launch(button.AccountData, Client.Launcher.LaunchMode.Launch);
+
+                    break;
+            }
+        }
+
+        void gridContainer_AccountBeginMousePressed(object sender, AccountGridButtonContainer.MousePressedEventArgs e)
+        {
+            var button = (AccountGridButton)sender;
+            var setting = Settings.ActionActiveLPress;
+
+            try
+            {
+                switch (Client.Launcher.GetState(button.AccountData))
+                {
+                    case Client.Launcher.AccountState.Active:
+                    case Client.Launcher.AccountState.ActiveGame:
+
+                        if (setting.Value == Settings.ButtonAction.Close || !setting.HasValue)
+                        {
+                            e.Handled = true;
+                            e.FlashColor = Color.FromArgb(255, 207, 212);
+                            e.FillColor = Color.FromArgb(244, 225, 230);
+                        }
+
+                        break;
+                }
+            }
+            catch (Exception ex)
+            {
+                Util.Logging.Log(ex);
+            }
+        }
+
+        void gridContainer_AccountBeginDrag(object sender, HandledMouseEventArgs e)
         {
             var button = (AccountGridButton)sender;
 
@@ -1379,6 +2237,7 @@ namespace Gw2Launcher.UI
                         using (var data = Windows.DragHelper.CreateVirtualFileDropDataObject(files))
                         {
                             var result = Windows.DragHelper.DoDragDrop(button, data, DragDropEffects.Copy, false, image, offset, key);
+                            e.Handled = true;
                         }
                     }
                 }
@@ -1386,6 +2245,43 @@ namespace Gw2Launcher.UI
             catch (Exception ex)
             {
                 Util.Logging.Log(ex);
+            }
+        }
+
+        void gridContainer_AccountSelection(object sender, MouseEventArgs e)
+        {
+            if (e.Button == MouseButtons.Right)
+            {
+                var selected = gridContainer.GetSelected();
+                clearSelectionToolStripMenuItem.Enabled = true;
+                selectedToolStripMenuItem.Tag = selected;
+
+                applyWindowedBoundsToolStripMenuItem.Enabled = false;
+                foreach (var b in selected)
+                {
+                    var a = b.AccountData;
+                    if (a != null && a.Windowed && !a.WindowBounds.IsEmpty)
+                    {
+                        var state = Client.Launcher.GetState(a);
+                        if (state == Client.Launcher.AccountState.Active || state == Client.Launcher.AccountState.ActiveGame)
+                        {
+                            applyWindowedBoundsToolStripMenuItem.Enabled = true;
+                            break;
+                        }
+                    }
+                }
+
+                disableAutomaticLoginsToolStripMenuItem1.Enabled = (int)disableAutomaticLoginsToolStripMenuItem1.Tag > 0;
+                applyWindowedBoundsToolStripMenuItem1.Enabled = (int)applyWindowedBoundsToolStripMenuItem1.Tag > 0;
+
+                contextMenu.Tag = null;
+
+                var items = selectedToolStripMenuItem.DropDownItems;
+                var _items = new ToolStripItem[items.Count];
+                items.CopyTo(_items, 0);
+                contextSelection.Items.AddRange(_items);
+
+                contextSelection.Show(Cursor.Position);
             }
         }
 
@@ -1447,8 +2343,26 @@ namespace Gw2Launcher.UI
             }
             else if (e.Button == MouseButtons.Left)
             {
-                gridContainer.ClearSelected();
-                Client.Launcher.Launch(button.AccountData, Client.Launcher.LaunchMode.Launch);
+
+            }
+        }
+
+        private async void FocusWindowAsync(IntPtr handle)
+        {
+            if (handle == IntPtr.Zero)
+                return;
+
+            try
+            {
+                await Task.Run(
+                    delegate
+                    {
+                        Windows.FindWindow.FocusWindow(handle);
+                    });
+            }
+            catch (Exception ex)
+            {
+                Util.Logging.Log(ex);
             }
         }
 
@@ -1480,8 +2394,16 @@ namespace Gw2Launcher.UI
                         Util.Logging.Log(e);
                         if (e.Response != null)
                         {
-                            using (e.Response) { }
-                            return -2;
+                            using (e.Response)
+                            {
+                                switch (((System.Net.HttpWebResponse)e.Response).StatusCode)
+                                {
+                                    case System.Net.HttpStatusCode.NotFound:
+                                    case System.Net.HttpStatusCode.Moved:
+                                    case System.Net.HttpStatusCode.Redirect:
+                                        return -2;
+                                }
+                            }
                         }
                     }
                     catch (Exception e)
@@ -1496,43 +2418,93 @@ namespace Gw2Launcher.UI
         private async void CheckVersion()
         {
             var v = await GetVersion();
+
             if (v > 0)
             {
-                Settings.LastProgramVersion.Value = new Settings.LastCheckedVersion()
-                {
-                    lastCheck = DateTime.UtcNow,
-                    version = (ushort)v
-                };
+                Settings.LastProgramVersion.Value = new Settings.LastCheckedVersion(DateTime.UtcNow, (ushort)v);
 
                 if (v > Program.RELEASE_VERSION)
                 {
-                    await Task.Delay(1000);
+                    var fc = new formChangelog();
 
-                    while (activeWindows > 0)
-                        await Task.Delay(5000);
-
-                    using (BeforeShowDialog())
+                    if (!await fc.LoadChangelog())
                     {
-                        using (var parent = AddMessageBox(this))
+                        fc.Dispose();
+                        fc = null;
+                    }
+
+                    if (!this.Visible || !this.ContainsFocus)
+                    {
+                        EventHandler onActivated = null;
+                        onActivated = delegate
                         {
-                            if (MessageBox.Show(parent, "A new version of Gw2Launcher is available.\n\nWould you like to update now?", "Update available", MessageBoxButtons.YesNo, MessageBoxIcon.Question) == DialogResult.Yes)
+                            this.Activated -= onActivated;
+                            ShowNewVersion(fc);
+                        };
+                        this.Activated += onActivated;
+                    }
+                    else
+                    {
+                        ShowNewVersion(fc);
+                    }
+                }
+                else
+                {
+                    Util.ScheduledEvents.Register(OnCheckVersionCallback, int.MaxValue);
+                }
+            }
+            else if (v == -2) //no longer exists
+            {
+                Settings.LastProgramVersion.Value = new Settings.LastCheckedVersion(DateTime.UtcNow, 0);
+            }
+            else
+            {
+                //failed, retry in 12 hours
+                Util.ScheduledEvents.Register(OnCheckVersionCallback, 43200000);
+            }
+        }
+
+        private async void ShowNewVersion(formChangelog fc)
+        {
+            await Task.Delay(1000);
+
+            if (activeWindows > 0)
+            {
+                EventHandler<int> onChanged = null;
+                onChanged = delegate(object o, int count)
+                {
+                    if (count == 0)
+                    {
+                        ActiveWindowsChanged -= onChanged;
+                        ShowNewVersion(fc);
+                    }
+                };
+                ActiveWindowsChanged += onChanged;
+                return;
+            }
+
+            using (BeforeShowDialog())
+            {
+                if (fc != null && fc.IsDisposed)
+                    fc = null;
+                using (var parent = fc == null ? AddMessageBox(this) : null)
+                {
+                    using (fc)
+                    {
+                        if (fc != null && fc.ShowDialog(this) == System.Windows.Forms.DialogResult.Yes ||
+                            fc == null && MessageBox.Show(parent, "A new version of Gw2Launcher is available.\n\nWould you like to update now?", "Update available", MessageBoxButtons.YesNo, MessageBoxIcon.Question) == DialogResult.Yes)
+                        {
+                            using (formVersionUpdate f = (formVersionUpdate)AddWindow(new formVersionUpdate()))
                             {
-                                using (formVersionUpdate f = (formVersionUpdate)AddWindow(new formVersionUpdate()))
-                                {
-                                    f.ShowDialog(this);
-                                }
+                                f.ShowDialog(this);
                             }
+                        }
+                        else
+                        {
+                            Util.ScheduledEvents.Register(OnCheckVersionCallback, int.MaxValue);
                         }
                     }
                 }
-            }
-            else if (v == -2)
-            {
-                Settings.LastProgramVersion.Value = new Settings.LastCheckedVersion()
-                {
-                    lastCheck = DateTime.UtcNow,
-                    version = 0
-                };
             }
         }
 
@@ -1551,6 +2523,7 @@ namespace Gw2Launcher.UI
         {
             Form form = new Form();
             form.Owner = owner;
+            form.TopMost = owner.TopMost;
 
             form.Disposed += OnWindowHidden;
 
@@ -1653,6 +2626,9 @@ namespace Gw2Launcher.UI
             newAccountToolStripMenuItem.Enabled = isFree;
             toolsToolStripMenuItem.Enabled = isFree;
             settingsToolStripMenuItem1.Enabled = isFree;
+
+            if (ActiveWindowsChanged != null)
+                ActiveWindowsChanged(this, activeWindows);
         }
 
         private void settingsToolStripMenuItem1_Click(object sender, EventArgs e)
@@ -1736,6 +2712,12 @@ namespace Gw2Launcher.UI
                 applyWindowedBoundsToolStripMenuItem1.Tag = (int)applyWindowedBoundsToolStripMenuItem1.Tag + 1;
             if (account.AutomaticLogin)
                 disableAutomaticLoginsToolStripMenuItem1.Tag = (int)disableAutomaticLoginsToolStripMenuItem1.Tag + 1;
+
+            var d = account.ApiData;
+            if (d != null && (d.Played != null && d.Played.State == Settings.ApiCacheState.None || d.DailyPoints != null && d.DailyPoints.State == Settings.ApiCacheState.None))
+            {
+                QueuedAccountApi.Schedule(account, Settings.ApiCacheState.None, 0);
+            }
         }
 
         void OnAccountRemoved(Settings.IAccount account)
@@ -1756,6 +2738,19 @@ namespace Gw2Launcher.UI
             OnAccountAdded(account);
         }
 
+        void OnChildFormCreated(Form form)
+        {
+            form.Shown += OnChildFormShown;
+        }
+
+        void OnChildFormShown(object sender, EventArgs e)
+        {
+            var form = (Form)sender;
+            form.Shown -= OnChildFormShown;
+
+            this.TopMost = Settings.TopMost.Value; //trigger zorder update
+        }
+
         void button_MouseLeave(object sender, EventArgs e)
         {
             var button = (AccountGridButton)sender;
@@ -1769,7 +2764,12 @@ namespace Gw2Launcher.UI
         private void ShowTooltip(Control control, string message)
         {
             if (tooltip == null)
+            {
                 tooltip = new formAccountTooltip();
+                OnChildFormCreated(tooltip);
+            }
+
+            NativeMethods.SetWindowPos(tooltip.Handle, (IntPtr)0, 0, 0, 0, 0, SetWindowPosFlags.SWP_NOACTIVATE | SetWindowPosFlags.SWP_NOMOVE | SetWindowPosFlags.SWP_NOSIZE | SetWindowPosFlags.SWP_NOOWNERZORDER);
 
             tooltip.AttachTo(control, null, -8);
             tooltip.Show(this, message, 1000);
@@ -1857,6 +2857,176 @@ namespace Gw2Launcher.UI
             gridContainer.ClearSelected();
         }
 
+        private bool OnAccountFileChanged(Settings.IAccount account, Client.FileManager.FileType type, Settings.IFile fileBefore, Settings.IFile fileAfter)
+        {
+            //replace the old file instead of creating a new one if possible
+            var replace = false;
+
+            if (fileBefore != null && fileAfter != null && fileBefore.References == 0 && fileAfter.References == 1 && fileBefore.UID != fileAfter.UID)
+            {
+                string existing = null;
+
+                if (!string.IsNullOrEmpty(fileBefore.Path) && File.Exists(fileBefore.Path))
+                {
+                    try
+                    {
+                        File.Delete(fileBefore.Path);
+                        existing = fileBefore.Path;
+                        fileBefore.Path = null;
+                    }
+                    catch (Exception ex)
+                    {
+                        Util.Logging.Log(ex);
+                    }
+                }
+
+                if (!string.IsNullOrEmpty(fileAfter.Path) && File.Exists(fileAfter.Path))
+                {
+                    string path;
+                    if (existing == null)
+                    {
+                        try
+                        {
+                            path = Path.GetTempFileName();
+                        }
+                        catch (Exception ex)
+                        {
+                            Util.Logging.Log(ex);
+                            path = Util.FileUtil.GetTemporaryFileName(DataPath.AppDataAccountDataTemp);
+                        }
+                    }
+                    else
+                        path = existing;
+
+                    if (path != null)
+                    {
+                        try
+                        {
+                            if (File.Exists(path))
+                                File.Delete(path);
+                            File.Move(fileAfter.Path, path);
+
+                            fileAfter.Path = path;
+                            replace = true;
+                        }
+                        catch (Exception ex)
+                        {
+                            Util.Logging.Log(ex);
+                        }
+                    }
+                }
+                else
+                {
+                    fileBefore.Path = fileAfter.Path;
+                    replace = true;
+                }
+            }
+
+            if (replace)
+            {
+                fileBefore.Path = fileAfter.Path;
+                fileAfter.Path = null;
+                
+                switch (type)
+                {
+                    case Client.FileManager.FileType.Dat:
+                        account.DatFile = (Settings.IDatFile)fileBefore;
+                        Settings.RemoveDatFile((Settings.IDatFile)fileAfter);
+                        break;
+                    case Client.FileManager.FileType.Gfx:
+                        account.GfxFile = (Settings.IGfxFile)fileBefore;
+                        Settings.RemoveGfxFile((Settings.IGfxFile)fileAfter);
+                        break;
+                }
+            }
+
+            return replace;
+        }
+
+        private void CheckAccountFiles(Settings.IAccount account, Settings.IDatFile datBefore, Settings.IGfxFile gfxBefore)
+        {
+            int count = 0;
+
+            if (datBefore != account.DatFile && OnAccountFileChanged(account, Client.FileManager.FileType.Dat, datBefore, account.DatFile))
+                datBefore = null;
+            if (gfxBefore != account.GfxFile && OnAccountFileChanged(account, Client.FileManager.FileType.Gfx, gfxBefore, account.GfxFile))
+                gfxBefore = null;
+
+            if (datBefore != null && datBefore.References == 0 && datBefore != account.DatFile && !string.IsNullOrEmpty(datBefore.Path) && File.Exists(datBefore.Path))
+            {
+                if (datBefore.Path.StartsWith(DataPath.AppDataAccountData, StringComparison.OrdinalIgnoreCase))
+                {
+                    try
+                    {
+                        Client.FileManager.Delete(datBefore);
+                    }
+                    catch (Exception ex)
+                    {
+                        Util.Logging.Log(ex);
+                    }
+
+                    Settings.DatFiles[datBefore.UID].Clear();
+                    datBefore = null;
+                }
+                else if (!datBefore.Path.Equals(Client.FileManager.GetDefaultPath(Client.FileManager.FileType.Dat), StringComparison.OrdinalIgnoreCase))
+                {
+                    count++;
+                }
+            }
+            else
+                datBefore = null;
+
+            if (gfxBefore != null && gfxBefore.References == 0 && gfxBefore != account.GfxFile && !string.IsNullOrEmpty(gfxBefore.Path) && File.Exists(gfxBefore.Path))
+            {
+                if (gfxBefore.Path.StartsWith(DataPath.AppDataAccountData, StringComparison.OrdinalIgnoreCase))
+                {
+                    try
+                    {
+                        Client.FileManager.Delete(gfxBefore);
+                    }
+                    catch (Exception ex)
+                    {
+                        Util.Logging.Log(ex);
+                    }
+
+                    Settings.GfxFiles[gfxBefore.UID].Clear();
+                    gfxBefore = null;
+                }
+                else if (!gfxBefore.Path.Equals(Client.FileManager.GetDefaultPath(Client.FileManager.FileType.Gfx), StringComparison.OrdinalIgnoreCase))
+                {
+                    count++;
+                }
+            }
+            else
+                gfxBefore = null;
+
+            if (count > 0)
+            {
+                using (var parent = AddMessageBox(this))
+                {
+                    if (MessageBox.Show(parent, "The following file" + (count == 1 ? " is" : "s are") + " no longer being used:\n" + (datBefore != null ? "\n" + datBefore.Path : "") + (gfxBefore != null ? "\n" + gfxBefore.Path : "") + "\n\nWould you like to delete " + (count == 1 ? "it?" : "them?"), "Delete?", MessageBoxButtons.YesNo, MessageBoxIcon.Exclamation, MessageBoxDefaultButton.Button2) == DialogResult.Yes)
+                    {
+                        try
+                        {
+                            if (datBefore != null)
+                                Client.FileManager.Delete(datBefore);
+                            if (gfxBefore != null)
+                                Client.FileManager.Delete(gfxBefore);
+                        }
+                        catch (Exception ex)
+                        {
+                            Util.Logging.Log(ex);
+                        }
+                    }
+                }
+
+                if (datBefore != null)
+                    Settings.DatFiles[datBefore.UID].Clear();
+                if (gfxBefore != null)
+                    Settings.GfxFiles[gfxBefore.UID].Clear();
+            }
+        }
+
         private void editToolStripMenuItem_Click(object sender, EventArgs e)
         {
             AccountGridButton button = contextMenu.Tag as AccountGridButton;
@@ -1868,33 +3038,13 @@ namespace Gw2Launcher.UI
                     using (formAccount f = (formAccount)AddWindow(new formAccount(account)))
                     {
                         var datBefore = account.DatFile;
+                        var gfxBefore = account.GfxFile;
 
                         OnBeforeAccountSettingsUpdated(account);
 
                         if (f.ShowDialog(this) == DialogResult.OK)
                         {
-                            if (datBefore != null && datBefore != account.DatFile && !string.IsNullOrEmpty(datBefore.Path) && System.IO.File.Exists(datBefore.Path))
-                            {
-                                if (Util.DatFiles.GetAccounts(datBefore).Count == 0)
-                                {
-                                    using (var parent = AddMessageBox(this))
-                                    {
-                                        if (MessageBox.Show(parent, "The following Local.dat file is no longer being used:\n\n" + datBefore.Path + "\n\nWould you like to delete it?", "Local.dat not used", MessageBoxButtons.YesNo, MessageBoxIcon.Exclamation, MessageBoxDefaultButton.Button2) == DialogResult.Yes)
-                                        {
-                                            try
-                                            {
-                                                Client.DatManager.Delete(datBefore);
-                                            }
-                                            catch (Exception ex)
-                                            {
-                                                Util.Logging.Log(ex);
-                                            }
-                                        }
-                                    }
-
-                                    Settings.DatFiles[datBefore.UID].Clear();
-                                }
-                            }
+                            CheckAccountFiles(account, datBefore, gfxBefore);
 
                             button.AccountData = account;
                             if (string.IsNullOrEmpty(account.WindowsAccount))
@@ -1913,45 +3063,88 @@ namespace Gw2Launcher.UI
 
         private void deleteToolStripMenuItem_Click(object sender, EventArgs e)
         {
-            AccountGridButton button = contextMenu.Tag as AccountGridButton;
-            if (button != null)
-            {
-                var account = button.AccountData;
-                if (account != null)
-                {
-                    using (BeforeShowDialog())
-                    {
-                        using (var parent = AddMessageBox(this))
-                        {
-                            if (MessageBox.Show(parent, "Are you sure you want to delete \"" + account.Name + "\"?", "Are you sure?", MessageBoxButtons.YesNo, MessageBoxIcon.Exclamation, MessageBoxDefaultButton.Button2) == DialogResult.Yes)
-                            {
-                                if (account.DatFile != null && !string.IsNullOrEmpty(account.DatFile.Path) && System.IO.File.Exists(account.DatFile.Path))
-                                {
-                                    if (Util.DatFiles.GetAccounts(account.DatFile).Count == 1)
-                                    {
-                                        if (MessageBox.Show(parent, "The following Local.dat file is no longer being used:\n\n" + account.DatFile.Path + "\n\nWould you like to delete it?", "Local.dat not used", MessageBoxButtons.YesNo, MessageBoxIcon.Exclamation, MessageBoxDefaultButton.Button2) == DialogResult.Yes)
-                                        {
-                                            try
-                                            {
-                                                Client.DatManager.Delete(account.DatFile);
-                                            }
-                                            catch (Exception ex)
-                                            {
-                                                Util.Logging.Log(ex);
-                                            }
-                                        }
+            var selected = GetSelected();
+            if (selected.Count == 0)
+                return;
 
-                                        Settings.DatFiles[account.DatFile.UID].Clear();
-                                    }
-                                }
-                                RemoveAccount(account);
+            int accounts = 0;
+            var names = new StringBuilder();
+
+            foreach (var b in selected)
+            {
+                var account = b.AccountData;
+                if (account == null)
+                {
+                    gridContainer.Remove(b);
+                    continue;
+                }
+
+                names.Append('"');
+                names.Append(account.Name);
+                names.Append("\", ");
+                accounts++;
+            }
+
+            if (accounts == 0)
+                return;
+
+            names.Length -= 2;
+            string message = "Are you sure you want to delete ";
+
+            if (accounts == 1)
+                message += names.ToString() + "?";
+            else
+                message += "the following accounts?\n\n" + names.ToString();
+
+            using (BeforeShowDialog())
+            {
+                using (var parent = AddMessageBox(this))
+                {
+                    if (MessageBox.Show(parent, message, "Are you sure?", MessageBoxButtons.YesNo, MessageBoxIcon.Exclamation, MessageBoxDefaultButton.Button2) != DialogResult.Yes)
+                        return;
+
+                    var sids = new HashSet<ushort>();
+
+                    foreach (var b in selected)
+                    {
+                        var account = b.AccountData;
+                        if (account == null)
+                            continue;
+
+                        try
+                        {
+                            Client.FileManager.Delete(account);
+                        }
+                        catch (Exception ex)
+                        {
+                            Util.Logging.Log(ex);
+                        }
+
+                        if (account.Notes != null)
+                        {
+                            foreach (var n in account.Notes)
+                            {
+                                sids.Add(n.SID);
                             }
                         }
+                        
+                        RemoveAccount(account);
                     }
-                }
-                else
-                {
-                    gridContainer.Remove(button);
+
+                    if (sids.Count > 0)
+                    {
+                        Task.Run(new Action(
+                            delegate
+                            {
+                                using (var store = new Tools.Notes())
+                                {
+                                    foreach (var sid in sids)
+                                    {
+                                        store.Remove(sid);
+                                    }
+                                }
+                            }));
+                    }
                 }
             }
         }
@@ -2084,11 +3277,16 @@ namespace Gw2Launcher.UI
             UpdateAccounts(GetSelected());
         }
 
-        private IEnumerable<Controls.AccountGridButton> GetSelected()
+        private IList<Controls.AccountGridButton> GetSelected()
         {
             var selected = gridContainer.GetSelected();
             if (selected.Count == 0)
-                return new Controls.AccountGridButton[] { contextMenu.Tag as Controls.AccountGridButton };
+            {
+                var button = contextMenu.Tag as Controls.AccountGridButton;
+                if (button != null)
+                    return new Controls.AccountGridButton[] { button };
+                return new Controls.AccountGridButton[0];
+            }
             else
                 return selected;
         }
@@ -2369,8 +3567,6 @@ namespace Gw2Launcher.UI
 
         protected override void WndProc(ref Message m)
         {
-            base.WndProc(ref m);
-
             if (m.Msg == Messaging.Messager.WM_GW2LAUNCHER)
             {
                 switch ((Messaging.Messager.MessageType)m.WParam)
@@ -2399,7 +3595,7 @@ namespace Gw2Launcher.UI
 
                         break;
                     case Messaging.Messager.MessageType.LaunchMap:
-                        
+
                         try
                         {
                             var launch = Messaging.LaunchMessage.FromMap((int)m.LParam);
@@ -2419,7 +3615,23 @@ namespace Gw2Launcher.UI
 
                         break;
                 }
+
+                return;
             }
+
+            switch ((WindowMessages)m.Msg)
+            {
+                case WindowMessages.WM_MOVE:
+
+                    if (this.WindowState == FormWindowState.Minimized)
+                    {
+                        OnMinimized();
+                    }
+
+                    break;
+            }
+
+            base.WndProc(ref m);
         }
 
         private void disableAutomaticLoginsToolStripMenuItem_Click(object sender, EventArgs e)
@@ -2471,6 +3683,144 @@ namespace Gw2Launcher.UI
                             if (account != null)
                             {
                                 Client.Launcher.Kill(account);
+                            }
+                        }
+                    }
+                }
+            }
+        }
+
+        private void authenticateOnNextLaunchToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            foreach (var uid in Settings.Accounts.GetKeys())
+            {
+                var a = Settings.Accounts[uid];
+                if (a.HasValue && a.Value.NetworkAuthorizationState == Settings.NetworkAuthorizationState.OK)
+                    a.Value.NetworkAuthorizationState = Settings.NetworkAuthorizationState.Unknown;
+            }
+        }
+
+        private void contextSelection_Closed(object sender, ToolStripDropDownClosedEventArgs e)
+        {
+            var items = contextSelection.Items;
+            var _items = new ToolStripItem[items.Count];
+            items.CopyTo(_items, 0);
+            selectedToolStripMenuItem.DropDownItems.AddRange(_items);
+        }
+
+        private void ShowNotesDialog(AccountGridButton button)
+        {
+            var account = button.AccountData;
+            if (account == null)
+                return;
+
+            using (BeforeShowDialog())
+            {
+                using (var f = (formNotes)AddWindow(new formNotes(account)))
+                {
+                    f.NoteChanged += delegate(object o, Settings.Notes.Note n)
+                    {
+                        var notes = account.Notes;
+                        if (notes != null)
+                        {
+                            bool used;
+
+                            if (used = n.Expires > button.LastNoteUtc)
+                                button.LastNoteUtc = n.Expires;
+                            else
+                                used = n.Notify && Settings.NotesNotifications.HasValue;
+
+                            if (used && n.Expires < Util.ScheduledEvents.GetDate(OnNoteCallback))
+                            {
+                                var ms = n.Expires.Subtract(DateTime.UtcNow).TotalMilliseconds + 1;
+
+                                int _ms;
+                                if (ms > int.MaxValue)
+                                    _ms = int.MaxValue;
+                                else if (ms < 0)
+                                    _ms = 0;
+                                else
+                                    _ms = (int)ms;
+
+                                Util.ScheduledEvents.Register(OnNoteCallback, _ms);
+                            }
+                        }
+                    };
+
+                    f.ShowDialog(this);
+
+                    if (f.Modified)
+                    {
+                        if (account.Notes != null)
+                            button.LastNoteUtc = account.Notes.ExpiresLast;
+                        else
+                            button.LastNoteUtc = DateTime.MinValue;
+                    }
+                }
+            }
+        }
+
+        private void notesToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            var button = contextMenu.Tag as AccountGridButton;
+            if (button != null)
+                ShowNotesDialog(button);
+        }
+
+        private async void newMessageToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            var button = contextMenu.Tag as AccountGridButton;
+            if (button != null && button.AccountData != null)
+            {
+                var account = button.AccountData;
+
+                using (BeforeShowDialog())
+                {
+                    using (var f = (formNote)AddWindow(new formNote()))
+                    {
+                        if (f.ShowDialog(this) == System.Windows.Forms.DialogResult.OK)
+                        {
+                            ushort sid;
+                            try
+                            {
+                                var sids = await Tools.Notes.AddRange(new string[] { f.Message });
+                                sid = sids[0];
+                            }
+                            catch (Exception ex)
+                            {
+                                Util.Logging.Log(ex);
+                                MessageBox.Show(this, "An error is preventing the note from being created:\n\n" + ex.Message, "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                                return;
+                            }
+
+                            var n = new Settings.Notes.Note(f.Expires, sid, f.NotifyOnExpiry);
+
+                            var notes = account.Notes;
+                            if (notes == null)
+                                account.Notes = notes = new Settings.Notes();
+
+                            notes.Add(n);
+
+                            bool used;
+
+                            if (used = n.Expires > button.LastNoteUtc)
+                                button.LastNoteUtc = n.Expires;
+                            else
+                                used = n.Notify && Settings.NotesNotifications.HasValue;
+
+                            if (used && n.Expires < Util.ScheduledEvents.GetDate(OnNoteCallback))
+                            {
+                                var ms = n.Expires.Subtract(DateTime.UtcNow).TotalMilliseconds + 1;
+
+                                int _ms;
+                                if (ms > int.MaxValue)
+                                    _ms = int.MaxValue;
+                                else if (ms < 0)
+                                    _ms = 0;
+                                else
+                                    _ms = (int)ms;
+
+                                Util.ScheduledEvents.Register(OnNoteCallback, _ms);
                             }
                         }
                     }

@@ -4,46 +4,20 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using System.Runtime.InteropServices;
+using Gw2Launcher.Windows.Native;
 
 namespace Gw2Launcher.Windows
 {
     static class FindWindow
     {
-        [DllImport("user32.dll", SetLastError = true)]
-        static extern uint GetWindowThreadProcessId(IntPtr hWnd, out uint processId);
-
-        [DllImport("user32.dll")]
+        [DllImport(NativeMethods.DLL.USER32)]
         [return: MarshalAs(UnmanagedType.Bool)]
         private static extern bool EnumWindows(EnumWindowsProc lpEnumFunc, ref SearchData data);
 
-        [DllImport("user32.dll", SetLastError = true, CharSet = CharSet.Auto)]
-        public static extern int GetClassName(IntPtr hWnd, StringBuilder lpClassName, int nMaxCount);
-
-        [DllImport("user32.dll", SetLastError = true, CharSet = CharSet.Auto)]
-        static extern int GetWindowTextLength(IntPtr hWnd);
-
-        [DllImport("user32.dll", CharSet = CharSet.Auto, SetLastError = true)]
-        public static extern int GetWindowText(IntPtr hWnd, StringBuilder lpString, int nMaxCount);
-
-        [DllImport("user32.dll")]
+        [DllImport(NativeMethods.DLL.USER32)]
         [return: MarshalAs(UnmanagedType.Bool)]
         public static extern bool EnumChildWindows(IntPtr hwndParent, EnumWindowsProc lpEnumFunc, ref SearchData data);
 
-        public const int WM_GETTEXT = 0x0D;
-        public const int WM_GETTEXTLENGTH = 0x0E;
-
-        [DllImport("user32.dll", SetLastError = true)]
-        public static extern int SendMessage(IntPtr hWnd, int msg, int Param, System.Text.StringBuilder text);
-
-        [DllImport("user32.dll")]
-        public static extern bool SetForegroundWindow(IntPtr hWnd);
-
-        [DllImport("user32.dll")]
-        public static extern bool BringWindowToTop(IntPtr hWnd);
-
-        [DllImport("user32.dll")]
-        public static extern Boolean ShowWindow(IntPtr hWnd, Int32 nCmdShow);
-        
         public delegate bool EnumWindowsProc(IntPtr hWnd, ref SearchData data);
         public delegate bool TextComparer(string name, StringBuilder value);
         
@@ -110,15 +84,15 @@ namespace Gw2Launcher.Windows
                 buffer.Length = 0;
                 buffer.EnsureCapacity(250);
 
-                FindWindow.GetClassName(this.Handle, buffer, buffer.Capacity + 1);
+                NativeMethods.GetClassName(this.Handle, buffer, buffer.Capacity + 1);
             }
 
             public void GetText(StringBuilder buffer)
             {
-                int length = GetWindowTextLength(this.Handle);
+                int length = NativeMethods.GetWindowTextLength(this.Handle);
                 if (length == 0)
                 {
-                    length = SendMessage(this.Handle, WM_GETTEXTLENGTH, 0, null);
+                    length = NativeMethods.SendMessage(this.Handle, (int)WindowMessages.WM_GETTEXTLENGTH, 0, null);
                     if (length == 0)
                         text = "";
                     else
@@ -126,7 +100,7 @@ namespace Gw2Launcher.Windows
                         buffer.Length = 0;
                         buffer.EnsureCapacity(length);
 
-                        SendMessage(this.Handle, WM_GETTEXT, length, buffer);
+                        NativeMethods.SendMessage(this.Handle, (int)WindowMessages.WM_GETTEXT, length, buffer);
                         text = buffer.ToString();
                     }
                 }
@@ -135,7 +109,7 @@ namespace Gw2Launcher.Windows
                     buffer.Length = 0;
                     buffer.EnsureCapacity(length);
 
-                    GetWindowText(this.Handle, buffer, buffer.Capacity + 1);
+                    NativeMethods.GetWindowText(this.Handle, buffer, buffer.Capacity + 1);
                     text = buffer.ToString();
                 }
             }
@@ -194,7 +168,7 @@ namespace Gw2Launcher.Windows
             if (data.processId != 0)
             {
                 uint processId;
-                GetWindowThreadProcessId(hWnd, out processId);
+                NativeMethods.GetWindowThreadProcessId(hWnd, out processId);
                 if (processId != data.processId)
                     return true;
             }
@@ -226,12 +200,12 @@ namespace Gw2Launcher.Windows
 
         public static string GetWindowTitle(IntPtr hwnd)
         {
-            int length = GetWindowTextLength(hwnd);
+            int length = NativeMethods.GetWindowTextLength(hwnd);
             if (length == 0)
                 return "";
 
             StringBuilder buffer = new StringBuilder(length);
-            GetWindowText(hwnd, buffer, length + 1);
+            NativeMethods.GetWindowText(hwnd, buffer, length + 1);
 
             return buffer.ToString();
         }
@@ -255,5 +229,14 @@ namespace Gw2Launcher.Windows
 
         //    return true;
         //}
+
+        public static void FocusWindow(IntPtr handle)
+        {
+            var p = WindowSize.GetWindowPlacement(handle);
+            if (p.showCmd == ShowWindowCommands.ShowMinimized)
+                NativeMethods.ShowWindow(handle, ShowWindowCommands.Restore);
+            if (!NativeMethods.SetForegroundWindow(handle))
+                NativeMethods.BringWindowToTop(handle);
+        }
     }
 }

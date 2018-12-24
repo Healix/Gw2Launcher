@@ -35,11 +35,7 @@ namespace Gw2Launcher.Client
 
                 private void WaitForExit()
                 {
-                    while (!this.process.WaitForExit(1000))
-                    {
-                        if (waiter == null)
-                            return;
-                    }
+                    this.process.WaitForExit();
 
                     if (Exited != null)
                         Exited(this.process, null);
@@ -47,7 +43,12 @@ namespace Gw2Launcher.Client
 
                 public void Dispose()
                 {
-                    waiter = null;
+                    if (waiter != null)
+                    {
+                        if (waiter.IsCompleted)
+                            waiter.Dispose();
+                        waiter = null;
+                    }
                 }
             }
 
@@ -252,9 +253,11 @@ namespace Gw2Launcher.Client
             {
                 Process p = sender as Process;
 
+                var pid = p.Id;
+
                 lock (activeProcesses)
                 {
-                    activeProcesses.Remove(p.Id);
+                    activeProcesses.Remove(pid);
                 }
 
                 bool b;
@@ -265,11 +268,47 @@ namespace Gw2Launcher.Client
                         this.Process = null;
                 }
 
-                if (b && Exited != null)
-                    Exited(this, this.account);
+                if (b)
+                {
+                    //using (var pi = new Windows.ProcessInfo())
+                    //{
+                    //    foreach (var process in Process.GetProcesses())
+                    //    {
+                    //        var dispose = true;
+                    //        if (b)
+                    //        {
+                    //            try
+                    //            {
+                    //                if (pi.Open(process.Id))
+                    //                {
+                    //                    if (pi.GetParent() == pid)
+                    //                    {
+                    //                        b = false;
+                    //                        dispose = false;
 
-                if (b && ProcessExited != null)
-                    ProcessExited(p, this.account);
+                    //                        Attach(process);
+                    //                    }
+                    //                }
+                    //            }
+                    //            catch (Exception ex)
+                    //            {
+                    //                Util.Logging.Log(ex);
+                    //            }
+                    //        }
+                    //        if (dispose)
+                    //            process.Dispose();
+                    //    }
+                    //}
+
+                    if (b)
+                    {
+                        if (Exited != null)
+                            Exited(this, this.account);
+
+                        if (ProcessExited != null)
+                            ProcessExited(p, this.account);
+                    }
+                }
             }
 
             private Process _process;

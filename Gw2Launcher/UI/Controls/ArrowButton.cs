@@ -41,6 +41,19 @@ namespace Gw2Launcher.UI.Controls
             SetStyle(ControlStyles.OptimizedDoubleBuffer, true);
         }
 
+        [System.ComponentModel.Browsable(false)]
+        public override string Text
+        {
+            get
+            {
+                return base.Text;
+            }
+            set
+            {
+                base.Text = value;
+            }
+        }
+
         public ArrowDirection Direction
         {
             get

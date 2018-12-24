@@ -1,6 +1,6 @@
 ﻿namespace Gw2Launcher.UI
 {
-    partial class formBuildNotify
+    partial class formNotify
     {
         /// <summary>
         /// Required designer variable.
@@ -47,6 +47,7 @@
             this.labelTitle.Size = new System.Drawing.Size(23, 17);
             this.labelTitle.TabIndex = 0;
             this.labelTitle.Text = "{0}";
+            this.labelTitle.Visible = false;
             // 
             // labelBuildCaption
             // 
@@ -58,6 +59,7 @@
             this.labelBuildCaption.Size = new System.Drawing.Size(33, 13);
             this.labelBuildCaption.TabIndex = 1;
             this.labelBuildCaption.Text = "Build";
+            this.labelBuildCaption.Visible = false;
             // 
             // labelBuild
             // 
@@ -70,6 +72,7 @@
             this.labelBuild.Size = new System.Drawing.Size(54, 13);
             this.labelBuild.TabIndex = 2;
             this.labelBuild.Text = "{0:#,##0}";
+            this.labelBuild.Visible = false;
             // 
             // labelSize
             // 
@@ -82,6 +85,7 @@
             this.labelSize.Size = new System.Drawing.Size(94, 13);
             this.labelSize.TabIndex = 3;
             this.labelSize.Text = "{1} ({0:#,##0} {2})";
+            this.labelSize.Visible = false;
             // 
             // labelSizeCaption
             // 
@@ -93,6 +97,7 @@
             this.labelSizeCaption.Size = new System.Drawing.Size(27, 13);
             this.labelSizeCaption.TabIndex = 4;
             this.labelSizeCaption.Text = "Size";
+            this.labelSizeCaption.Visible = false;
             // 
             // labelElapsedCaption
             // 
@@ -104,6 +109,7 @@
             this.labelElapsedCaption.Size = new System.Drawing.Size(47, 13);
             this.labelElapsedCaption.TabIndex = 5;
             this.labelElapsedCaption.Text = "Elapsed";
+            this.labelElapsedCaption.Visible = false;
             // 
             // labelElapsed
             // 
@@ -116,8 +122,9 @@
             this.labelElapsed.Size = new System.Drawing.Size(21, 13);
             this.labelElapsed.TabIndex = 6;
             this.labelElapsed.Text = "{0}";
+            this.labelElapsed.Visible = false;
             // 
-            // formBuildNotify
+            // formNotify
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
@@ -134,10 +141,10 @@
             this.ForeColor = System.Drawing.Color.White;
             this.FormBorderStyle = System.Windows.Forms.FormBorderStyle.None;
             this.Icon = global::Gw2Launcher.Properties.Resources.Gw2;
-            this.Name = "formBuildNotify";
+            this.Name = "formNotify";
             this.ShowInTaskbar = false;
             this.StartPosition = System.Windows.Forms.FormStartPosition.Manual;
-            this.Load += new System.EventHandler(this.formBuildNotify_Load);
+            this.Load += new System.EventHandler(this.formNotify_Load);
             this.ResumeLayout(false);
             this.PerformLayout();
 

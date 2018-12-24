@@ -279,6 +279,8 @@ namespace Gw2Launcher.Security
         {
             if (a == null || b == null)
                 return a == b;
+            else if (object.ReferenceEquals(a, b))
+                return true;
 
             int length = a.Length;
             if (b.Length != length)
@@ -291,9 +293,11 @@ namespace Gw2Launcher.Security
                 _a = Marshal.SecureStringToBSTR(a);
                 _b = Marshal.SecureStringToBSTR(b);
 
-                for (int i = 0; i < length; i++)
+                length *= 2;
+
+                for (int i = 0; i < length; i+=2)
                 {
-                    if (Marshal.ReadByte(_a, i) != Marshal.ReadByte(_b, i))
+                    if (Marshal.ReadInt16(_a, i) != Marshal.ReadInt16(_b, i))
                         return false;
                 }
 
@@ -333,6 +337,98 @@ namespace Gw2Launcher.Security
                         Util.Logging.Log(ex);
                     }
                 }
+            }
+        }
+
+        public static SecureString FromString(ref string s)
+        {
+            var ss = new SecureString();
+            foreach (var c in s)
+                ss.AppendChar(c);
+            ss.MakeReadOnly();
+            return ss;
+        }
+
+        public static SecureString FromProtectedByteArray(byte[] data)
+        {
+            byte[] buffer = null;
+            try
+            {
+                buffer = ProtectedData.Unprotect(data, KEY, DataProtectionScope.CurrentUser);
+                var s = new SecureString();
+
+                for (int p = 0; p < buffer.Length; p += 2)
+                {
+                    s.AppendChar(BitConverter.ToChar(buffer, p));
+                }
+
+                s.MakeReadOnly();
+
+                return s;
+            }
+            finally
+            {
+                if (buffer != null)
+                    Array.Clear(buffer, 0, buffer.Length);
+            }
+        }
+
+        public static byte[] ToProtectedByteArray(SecureString s)
+        {
+            if (s.Length == 0)
+                return new byte[0];
+
+            byte[] buffer = new byte[2 * s.Length];
+            IntPtr ptr = Marshal.SecureStringToBSTR(s);
+
+            try
+            {
+                Marshal.Copy(ptr, buffer, 0, buffer.Length);
+            }
+            finally
+            {
+                Marshal.ZeroFreeBSTR(ptr);
+            }
+
+            try
+            {
+                return ProtectedData.Protect(buffer, KEY, DataProtectionScope.CurrentUser);
+            }
+            finally
+            {
+                Array.Clear(buffer, 0, buffer.Length);
+            }
+        }
+
+        public static char[] ToCharArray(SecureString s)
+        {
+            byte[] buffer = new byte[2 * s.Length];
+            IntPtr ptr = Marshal.SecureStringToBSTR(s);
+
+            try
+            {
+                Marshal.Copy(ptr, buffer, 0, buffer.Length);
+            }
+            finally
+            {
+                Marshal.ZeroFreeBSTR(ptr);
+            }
+
+            try
+            {
+                var chars = new char[s.Length];
+                var c = 0;
+
+                for (int p = 0; p < buffer.Length; p += 2)
+                {
+                    chars[c++] = BitConverter.ToChar(buffer, p);
+                }
+
+                return chars;
+            }
+            finally
+            {
+                Array.Clear(buffer, 0, buffer.Length);
             }
         }
     }

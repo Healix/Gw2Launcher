@@ -8,7 +8,7 @@ namespace Gw2Launcher.Client
 {
     static partial class Launcher
     {
-        private class Account
+        private class Account : IDisposable
         {
             public event EventHandler<Account> Exited;
 
@@ -23,6 +23,52 @@ namespace Gw2Launcher.Client
             public byte errors;
 
             public WindowWatcher watcher;
+
+            public WindowWatcher Watcher
+            {
+                get
+                {
+                    return watcher;
+                }
+                set
+                {
+                    if (watcher != value)
+                    {
+                        if (watcher != null)
+                            watcher.Dispose();
+                        watcher = value;
+                    }
+                }
+            }
+
+            public void Dispose()
+            {
+                if (watcher != null)
+                    watcher.Dispose();
+            }
+
+            //public bool InUse
+            //{
+            //    get
+            //    {
+            //        return InUseCount > 0;
+            //    }
+            //    set
+            //    {
+            //        if (value)
+            //        {
+            //            InUseCount++;
+            //        }
+            //        else if (InUseCount > 0)
+            //            InUseCount--;
+            //    }
+            //}
+
+            //public byte InUseCount
+            //{
+            //    get;
+            //    set;
+            //}
 
             public Settings.IAccount Settings
             {

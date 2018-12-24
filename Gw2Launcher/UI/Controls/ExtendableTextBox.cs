@@ -6,22 +6,28 @@ using System.Threading.Tasks;
 using System.Threading;
 using System.Windows.Forms;
 using System.Drawing;
+using Gw2Launcher.Windows.Native;
 
 namespace Gw2Launcher.UI.Controls
 {
     class ExtendableTextBox : TextBox
     {
-        const byte WM_SETFOCUS = 7;
-
         private formExtendedTextBox extendedWindow;
         private TextBox extendedBox;
         private IntPtr handleText;
-        private bool redirect;
 
         protected override void OnEnter(EventArgs e)
         {
             base.OnEnter(e);
-            ShowExtended(true);
+
+            if (!this.Focused)
+            {
+                this.Focus();
+            }
+            else
+            {
+                ShowExtended(true);
+            }
         }
 
         public Size MaximumExtendedSize
@@ -38,110 +44,86 @@ namespace Gw2Launcher.UI.Controls
 
         private void ShowExtended(bool focus)
         {
-            extendedWindow = new formExtendedTextBox(this)
+            if (extendedBox != null)
+                return;
+
+            if (extendedWindow == null || extendedWindow.IsDisposed)
             {
-                MaximumSize = this.MaximumExtendedSize,
-            };
+                extendedWindow = new formExtendedTextBox(this);
+                extendedWindow.ExtensionOpened += extendedWindow_Opened;
+                extendedWindow.ExtensionClosing += extendedWindow_Closing;
+            }
+
+            extendedWindow.MaximumSize = this.MaximumExtendedSize;
 
             if (this.ExtendedSize.IsEmpty)
                 extendedWindow.Height = this.Height * 2;
             else
                 extendedWindow.Size = this.ExtendedSize;
 
-            extendedWindow.FormClosing += extendedBox_FormClosing;
-            extendedBox = extendedWindow.GetTextBox();
-            handleText = extendedBox.Handle;
-
-            EventHandler onShown = null;
-            onShown = delegate
-            {
-                extendedWindow.Shown -= onShown;
-
-                PaintEventHandler onPaint = null;
-                onPaint = delegate
-                {
-                    extendedWindow.Paint -= onPaint;
-                    this.Visible = false;
-                };
-
-                extendedWindow.Paint += onPaint;
-            };
-
-            extendedWindow.Shown += onShown;
-
             extendedWindow.Show(this.FindForm(), focus);
         }
 
-        protected override void OnMouseEnter(EventArgs e)
-        {
-            base.OnMouseEnter(e);
-
-            DelayedOnMouseEnter();
-        }
-
-        async void DelayedOnMouseEnter()
-        {
-            CancellationTokenSource cancel = new CancellationTokenSource();
-
-            EventHandler onLeave = null;
-            onLeave = delegate
-            {
-                this.MouseLeave -= onLeave;
-                using (cancel)
-                {
-                    cancel.Cancel();
-                }
-            };
-            this.MouseLeave += onLeave;
-
-            try
-            {
-                await Task.Delay(500, cancel.Token);
-            }
-            catch (TaskCanceledException)
-            {
-                return;
-            }
-
-            this.MouseLeave -= onLeave;
-            using (cancel) { }
-
-            ShowExtended(false);
-        }
-
-        protected override void OnMouseDown(MouseEventArgs e)
-        {
-            base.OnMouseDown(e);
-            if (extendedWindow != null)
-                redirect = true;
-        }
-
-        void extendedBox_FormClosing(object sender, FormClosingEventArgs e)
+        void extendedWindow_Closing(object sender, EventArgs e)
         {
             var f = sender as Form;
             if (f != null)
             {
-                f.FormClosing -= extendedBox_FormClosing;
-                this.Visible = true;
+                this.TabStop = true;
                 this.ExtendedSize = f.Size;
-                redirect = false;
-                extendedWindow = null;
+
+                var p = this.Parent;
+                while (p != null && p.Parent is Panel)
+                {
+                    p = p.Parent;
+                }
+                p.Focus();
+
                 extendedBox = null;
+                handleText = IntPtr.Zero;
             }
+        }
+
+        void extendedWindow_Opened(object sender, EventArgs e)
+        {
+            this.TabStop = false;
+
+            extendedBox = extendedWindow.GetTextBox();
+            handleText = extendedBox.Handle;
+        }
+
+        protected override void OnMouseHover(EventArgs e)
+        {
+            base.OnMouseHover(e);
+
+            ShowExtended(false);
         }
 
         protected override void WndProc(ref Message m)
         {
-            if (m.Msg == WM_SETFOCUS)
-                return;
+            switch ((WindowMessages)m.Msg)
+            {
+                case WindowMessages.WM_SETFOCUS:
+
+                    base.WndProc(ref m);
+                    ShowExtended(true);
+
+                    return;
+                case WindowMessages.WM_LBUTTONDOWN:
+                case WindowMessages.WM_RBUTTONDOWN:
+
+                    ShowExtended(false);
+
+                    if (handleText != IntPtr.Zero)
+                    {
+                        m.HWnd = handleText;
+                        extendedWindow.CallTextBoxWndProc(ref m);
+                    }
+
+                    return;
+            }
 
             base.WndProc(ref m);
-
-            if (redirect)
-            {
-                m.HWnd = handleText;
-                extendedWindow.CallTextBoxWndProc(ref m);
-            }
         }
 
         public override int TextLength
@@ -184,7 +166,7 @@ namespace Gw2Launcher.UI.Controls
                 if (extendedBox != null)
                     extendedBox.SelectedText = value;
                 else
-                base.SelectedText = value;
+                    base.SelectedText = value;
             }
         }
 
@@ -201,7 +183,7 @@ namespace Gw2Launcher.UI.Controls
                 if (extendedBox != null)
                     extendedBox.SelectionLength = value;
                 else
-                base.SelectionLength = value;
+                    base.SelectionLength = value;
             }
         }
 
@@ -218,7 +200,7 @@ namespace Gw2Launcher.UI.Controls
                 if (extendedBox != null)
                     extendedBox.SelectionStart = value;
                 else
-                base.SelectionStart = value;
+                    base.SelectionStart = value;
             }
         }
 
@@ -228,6 +210,16 @@ namespace Gw2Launcher.UI.Controls
                 extendedBox.Select(start, length);
             else
                 base.Select(start, length);
+        }
+
+        protected override void Dispose(bool disposing)
+        {
+            if (disposing)
+            {
+                if (extendedWindow != null)
+                    extendedWindow.Dispose();
+            }
+            base.Dispose(disposing);
         }
     }
 }

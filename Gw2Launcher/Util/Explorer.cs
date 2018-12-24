@@ -6,17 +6,12 @@ using System.Threading.Tasks;
 using System.Diagnostics;
 using System.Runtime.InteropServices;
 using System.IO;
+using Gw2Launcher.Windows.Native;
 
 namespace Gw2Launcher.Util
 {
     static class Explorer
     {
-        [DllImport("shell32.dll", ExactSpelling = true, SetLastError = true, CharSet = CharSet.Unicode)]
-        static extern int SHParseDisplayName([MarshalAs(UnmanagedType.LPWStr)] string pszName, IntPtr pbc, ref IntPtr ppidl, uint sfgao, ref uint psfgao);
-
-        [DllImport("shell32.dll", EntryPoint = "SHOpenFolderAndSelectItems")]
-        static extern int SHOpenFolderAndSelectItems(IntPtr pidlFolder, uint cidl, [MarshalAs(UnmanagedType.LPArray)] IntPtr[] apidl, int dwFlags);
-
         public static bool OpenFolderAndSelect(string path)
         {
             try
@@ -73,7 +68,7 @@ namespace Gw2Launcher.Util
 
             try
             {
-                if (SHParseDisplayName(folder, IntPtr.Zero, ref pidlFolder, 0, ref psfgao) != 0)
+                if (NativeMethods.SHParseDisplayName(folder, IntPtr.Zero, ref pidlFolder, 0, ref psfgao) != 0)
                     return false;
 
                 IntPtr[] pidlFiles = new IntPtr[filenames.Length];
@@ -82,10 +77,10 @@ namespace Gw2Launcher.Util
                 {
                     for (int i = 0; i < filenames.Length; i++)
                     {
-                        SHParseDisplayName(Path.Combine(folder, filenames[i]), IntPtr.Zero, ref pidlFiles[i], 0, ref psfgao);
+                        NativeMethods.SHParseDisplayName(Path.Combine(folder, filenames[i]), IntPtr.Zero, ref pidlFiles[i], 0, ref psfgao);
                     }
 
-                    if (SHOpenFolderAndSelectItems(pidlFolder, (uint)pidlFiles.Length, pidlFiles, 0) != 0)
+                    if (NativeMethods.SHOpenFolderAndSelectItems(pidlFolder, (uint)pidlFiles.Length, pidlFiles, 0) != 0)
                         return false;
 
                     return true;

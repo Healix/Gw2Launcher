@@ -24,6 +24,16 @@ namespace Gw2Launcher.Util
             return RectangleConstraint.Constrain(screen, bounds).Location;
         }
 
+        public static Rectangle Constrain(Rectangle bounds)
+        {
+            var screen = Screen.FromPoint(bounds.Location).Bounds;
+
+            if (screen.Contains(bounds) || screen.IntersectsWith(bounds))
+                return bounds;
+
+            return RectangleConstraint.Constrain(screen, bounds);
+        }
+
         public static Point CenterScreen(Size size, Screen screen)
         {
             var bounds = screen.Bounds;

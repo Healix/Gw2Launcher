@@ -13,19 +13,62 @@ namespace Gw2Launcher
         {
             get
             {
-                string folder = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData, Environment.SpecialFolderOption.Create), "Gw2Launcher");
-                if (!Directory.Exists(folder))
+                var di = new DirectoryInfo(Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData, Environment.SpecialFolderOption.Create), "Gw2Launcher"));
+                if (!di.Exists)
                 {
                     try
                     {
-                        Directory.CreateDirectory(folder);
+                        di.Create();
                     }
                     catch (Exception ex)
                     {
                         Util.Logging.Log(ex);
                     }
                 }
-                return folder;
+                return di.FullName;
+            }
+        }
+
+        public static string AppDataAccountData
+        {
+            get
+            {
+                var di = new DirectoryInfo(Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData, Environment.SpecialFolderOption.Create), "Gw2Launcher", "data"));
+                if (!di.Exists)
+                {
+                    try
+                    {
+                        di.Create();
+
+                        Util.FileUtil.AllowFolderAccess(di.FullName, System.Security.AccessControl.FileSystemRights.Modify);
+                    }
+                    catch (Exception ex)
+                    {
+                        Util.Logging.Log(ex);
+                    }
+                }
+                return di.FullName;
+            }
+        }
+
+        public static string AppDataAccountDataTemp
+        {
+            get
+            {
+                var path = Path.Combine(AppDataAccountData, "temp");
+                if (!Directory.Exists(path))
+                {
+                    try
+                    {
+                        Directory.CreateDirectory(path);
+                    }
+                    catch (Exception e)
+                    {
+                        Util.Logging.Log(e);
+                    }
+                }
+
+                return path;
             }
         }
     }

@@ -44,6 +44,8 @@ namespace Gw2Launcher.Net.AssetProxy
                 Util.Logging.Log(e);
             }
 
+            Util.ScheduledEvents.Register(DoPurge, 86400000);
+
             DoPurge();
         }
 
@@ -67,26 +69,24 @@ namespace Gw2Launcher.Net.AssetProxy
             }
         }
 
-        static async void DoPurge()
+        static int DoPurge()
         {
-            while (true)
+            if (threadDelete == null)
             {
-                if (threadDelete == null)
-                {
-                    var t = threadDelete = new Thread(new ThreadStart(
-                        delegate
-                        {
-                            Purge(false);
-                            threadDelete = null;
+                var t = threadDelete = new Thread(new ThreadStart(
+                    delegate
+                    {
+                        Purge(false);
+                        threadDelete = null;
 
-                            if (CachePurged != null)
-                                CachePurged(null, null);
-                        }));
-                    t.Start();
-                }
-
-                await Task.Delay(new TimeSpan(1, 0, 0, 0, 0));
+                        if (CachePurged != null)
+                            CachePurged(null, null);
+                    }));
+                t.IsBackground = true;
+                t.Start();
             }
+
+            return 86400000;
         }
 
         public static CacheStream GetCache(string request)
@@ -95,7 +95,7 @@ namespace Gw2Launcher.Net.AssetProxy
                 return null;
 
             string filename;
-            if (request.StartsWith("/program/101/1/"))
+            if (request.StartsWith("/program/101/1/", StringComparison.Ordinal))
                 filename = request.Substring(14);
             else
                 filename = request;
@@ -117,17 +117,17 @@ namespace Gw2Launcher.Net.AssetProxy
             {
                 Monitor.Enter(record);
 
-                record.FileSizeChanged += record_FileSizeChanged;
-                record.Unused += record_Unused;
-
                 try
                 {
+                    record.FileSizeChanged += record_FileSizeChanged;
+                    record.Unused += record_Unused;
+
                     var fi = new FileInfo(Path.Combine(PATH, filename));
                     if (fi.Exists)
                     {
                         bool useExisting = false;
 
-                        if (fi.Name.StartsWith("latest"))
+                        if (fi.Name.StartsWith("latest", StringComparison.Ordinal))
                         {
                             //latest files contain build info and shouldn't be cached. However, if another client
                             //is already running, the game can't update anyways, so using a cached build will allow
@@ -155,7 +155,7 @@ namespace Gw2Launcher.Net.AssetProxy
 
                                 fi.Delete();
 
-                                if (Monitor.TryEnter(cache, 1000))
+                                if (Monitor.TryEnter(cache, 10000))
                                 {
                                     try
                                     {
@@ -212,12 +212,11 @@ namespace Gw2Launcher.Net.AssetProxy
         {
             CacheRecord r = (CacheRecord)sender;
 
-            if (Monitor.TryEnter(cache, 100))
+            if (Monitor.TryEnter(cache, 10000))
             {
                 try
                 {
-                    if (cache.ContainsKey(r.fileId))
-                        cache.Remove(r.fileId);
+                    cache.Remove(r.fileId);
                 }
                 finally
                 {
@@ -228,7 +227,7 @@ namespace Gw2Launcher.Net.AssetProxy
 
         static void record_FileSizeChanged(Cache.CacheRecord record, long difference)
         {
-            if (Monitor.TryEnter(cache, 100))
+            if (Monitor.TryEnter(cache, 10000))
             {
                 try
                 {
@@ -245,12 +244,6 @@ namespace Gw2Launcher.Net.AssetProxy
             }
         }
 
-        static void stream_Committed(object sender, EventArgs e)
-        {
-            RecordStream stream = (RecordStream)sender;
-            var length = stream.Length;
-        }
-
         public static void Clear()
         {
             if (threadDelete != null)
@@ -265,6 +258,7 @@ namespace Gw2Launcher.Net.AssetProxy
                     if (CachePurged != null)
                         CachePurged(null, null);
                 }));
+            t.IsBackground = true;
             t.Start();
         }
 

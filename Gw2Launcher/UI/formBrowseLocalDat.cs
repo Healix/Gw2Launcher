@@ -13,6 +13,8 @@ namespace Gw2Launcher.UI
 {
     public partial class formBrowseLocalDat : Form
     {
+        private Client.FileManager.FileType fileType;
+
         public class SelectedFile
         {
             private string movedFrom;
@@ -27,9 +29,9 @@ namespace Gw2Launcher.UI
                 this.movedFrom = movedFrom;
             }
 
-            public SelectedFile(Settings.IDatFile dat)
+            public SelectedFile(Settings.IFile file)
             {
-                this.DatFile = dat;
+                this.File = file;
             }
 
             public string Path
@@ -38,7 +40,7 @@ namespace Gw2Launcher.UI
                 private set;
             }
 
-            public Settings.IDatFile DatFile
+            public Settings.IFile File
             {
                 get;
                 private set;
@@ -50,7 +52,7 @@ namespace Gw2Launcher.UI
                 {
                     try
                     {
-                        File.Move(this.Path, this.movedFrom);
+                        System.IO.File.Move(this.Path, this.movedFrom);
                     }
                     catch (Exception ex)
                     {
@@ -62,7 +64,7 @@ namespace Gw2Launcher.UI
                 {
                     try
                     {
-                        File.Delete(this.Path);
+                        System.IO.File.Delete(this.Path);
                     }
                     catch (Exception ex)
                     {
@@ -72,27 +74,56 @@ namespace Gw2Launcher.UI
             }
         }
 
-        public formBrowseLocalDat(Settings.IAccount account)
+        public formBrowseLocalDat(Client.FileManager.FileType type, Settings.IAccount account)
         {
             InitializeComponent();
+
+            radioAccountShare.Enabled = Client.FileManager.IsLinkingSupported;
+
+            this.fileType = type;
+
+            string fileName;
+            if (type == Client.FileManager.FileType.Gfx)
+                fileName = "GFXSettings.xml";
+            else
+                fileName = "Local.dat";
+
+            label5.Text = string.Format(label5.Text, fileName);
+            radioCreateNew.Text = string.Format(radioCreateNew.Text, fileName);
 
             int _space = buttonOK.Location.X - buttonCancel.Bounds.Right;
             buttonCancel.Location = new Point(this.ClientSize.Width / 2 - (buttonOK.Bounds.Right - buttonCancel.Bounds.Left) / 2, buttonCancel.Location.Y);
             buttonOK.Location = new Point(buttonCancel.Bounds.Right + _space, buttonCancel.Location.Y);
 
             var shared = new Dictionary<string, KeyValuePair<int, List<DataGridViewRow>>>();
+            var hiddenRows = 0;
 
             foreach (var uid in Settings.Accounts.GetKeys())
             {
-                if (account != null && uid == account.UID)
-                    continue;
-
                 var _account = Settings.Accounts[uid];
                 if (_account.HasValue)
                 {
-                    var dat = _account.Value.DatFile;
+                    Settings.IFile file;
+                    switch (type)
+                    {
+                        case Client.FileManager.FileType.Dat:
 
-                    if (dat != null && !string.IsNullOrEmpty(dat.Path))
+                            file = _account.Value.DatFile;
+
+                            break;
+                        case Client.FileManager.FileType.Gfx:
+
+                            file = _account.Value.GfxFile;
+
+                            break;
+                        default:
+
+                            file = null;
+
+                            break;
+                    }
+
+                    if (file != null && !string.IsNullOrEmpty(file.Path))
                     {
                         var row = gridAccounts.Rows[gridAccounts.Rows.Add()];
                         row.Tag = _account.Value;
@@ -104,7 +135,7 @@ namespace Gw2Launcher.UI
                         row.Cells[columnUser.Index].Value = user;
 
                         KeyValuePair<int, List<DataGridViewRow>> sharedWith;
-                        if (shared.TryGetValue(dat.Path, out sharedWith))
+                        if (shared.TryGetValue(file.Path, out sharedWith))
                         {
                             row.Cells[columnShared.Index].Value = sharedWith.Key;
                             row.Cells[columnShared.Index].Tag = sharedWith.Value;
@@ -117,7 +148,13 @@ namespace Gw2Launcher.UI
                         }
                         else
                         {
-                            shared[dat.Path] = sharedWith = new KeyValuePair<int, List<DataGridViewRow>>(shared.Count + 1, new List<DataGridViewRow>());
+                            shared[file.Path] = sharedWith = new KeyValuePair<int, List<DataGridViewRow>>(shared.Count + 1, new List<DataGridViewRow>());
+                        }
+
+                        if (account != null && uid == account.UID)
+                        {
+                            row.Visible = false;
+                            hiddenRows++;
                         }
 
                         sharedWith.Value.Add(row);
@@ -125,7 +162,7 @@ namespace Gw2Launcher.UI
                 }
             }
 
-            if (gridAccounts.Rows.Count == 0)
+            if (gridAccounts.Rows.Count - hiddenRows == 0)
             {
                 gridAccounts.SelectionChanged += delegate
                 {
@@ -193,7 +230,20 @@ namespace Gw2Launcher.UI
         {
             using (OpenFileDialog f = new OpenFileDialog())
             {
-                f.Filter = "Local.dat|Local.dat|All .dat files|*.dat";
+                switch (fileType)
+                {
+                    case Client.FileManager.FileType.Dat:
+
+                        f.Filter = "Local.dat|Local.dat|All .dat files|*.dat";
+
+                        break;
+                    case Client.FileManager.FileType.Gfx:
+
+                        f.Filter = "GFXSettings.xml|GFXSettings.*.xml|All .xml files|*.xml";
+
+                        break;
+                }
+
                 if (textBrowse.TextLength != 0)
                 {
                     f.InitialDirectory = Path.GetDirectoryName(textBrowse.Text);
@@ -219,17 +269,98 @@ namespace Gw2Launcher.UI
 
             if (radioAccountShare.Checked)
             {
-                this.Result = new SelectedFile(((Settings.IAccount)gridAccounts.SelectedRows[0].Tag).DatFile);
+                var account = ((Settings.IAccount)gridAccounts.SelectedRows[0].Tag);
+                Settings.IFile file;
+
+                switch (fileType)
+                {
+                    case Client.FileManager.FileType.Dat:
+                        file = account.DatFile;
+                        break;
+                    case Client.FileManager.FileType.Gfx:
+                        file = account.GfxFile;
+                        break;
+                    default:
+                        return;
+                }
+
+                this.Result = new SelectedFile(file);
                 this.DialogResult = DialogResult.OK;
                 return;
             }
             else if (radioAccountCopy.Checked)
             {
-                path = ((Settings.IAccount)gridAccounts.SelectedRows[0].Tag).DatFile.Path;
+                var account = ((Settings.IAccount)gridAccounts.SelectedRows[0].Tag);
+                switch (fileType)
+                {
+                    case Client.FileManager.FileType.Dat:
+                        path = account.DatFile.Path;
+                        break;
+                    case Client.FileManager.FileType.Gfx:
+                        path = account.GfxFile.Path;
+                        break;
+                    default:
+                        return;
+                }
             }
             else if (radioCreateNew.Checked)
             {
-                this.Result = new SelectedFile(null, null);
+                try
+                {
+                    path = Path.GetTempFileName();
+                }
+                catch (Exception ex)
+                {
+                    Util.Logging.Log(ex);
+                    path = Util.FileUtil.GetTemporaryFileName(DataPath.AppDataAccountDataTemp);
+                    if (path == null)
+                    {
+                        MessageBox.Show(this, "Unable to create temporary file path", "Failed to create file", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                        return;
+                    }
+                }
+
+                switch (fileType)
+                {
+                    case Client.FileManager.FileType.Dat:
+                        break;
+                    case Client.FileManager.FileType.Gfx:
+
+                        var gfxs = Settings.GfxFiles.GetKeys();
+
+                        for (var i = -1; i < gfxs.Length; i++)
+                        {
+                            string gfx;
+                            if (i == -1)
+                                gfx = Client.FileManager.GetDefaultPath(Client.FileManager.FileType.Gfx);
+                            else
+                            {
+                                var _gfx = Settings.GfxFiles[gfxs[i]];
+                                if (_gfx.HasValue && !string.IsNullOrEmpty(_gfx.Value.Path))
+                                    gfx = _gfx.Value.Path;
+                                else
+                                    continue;
+                            }
+
+                            if (File.Exists(gfx))
+                            {
+                                try
+                                {
+                                    File.Copy(gfx, path, true);
+                                    break;
+                                }
+                                catch (Exception ex)
+                                {
+                                    Util.Logging.Log(ex);
+                                }
+                            }
+                        }
+
+                        break;
+                }
+
+
+                this.Result = new SelectedFile(path);
                 this.DialogResult = DialogResult.OK;
                 return;
             }
@@ -254,6 +385,11 @@ namespace Gw2Launcher.UI
             {
                 Util.Logging.Log(ex);
                 temp = Util.FileUtil.GetTemporaryFileName(Path.GetDirectoryName(path));
+                if (temp == null)
+                {
+                    MessageBox.Show(this, "Unable to create temporary file path", "Failed to create file", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                    return;
+                }
             }
 
             if (radioFileMove.Checked)
@@ -262,7 +398,8 @@ namespace Gw2Launcher.UI
                 {
                     try
                     {
-                        File.Delete(temp);
+                        if (File.Exists(temp))
+                            File.Delete(temp);
                     }
                     catch (Exception ex)
                     {

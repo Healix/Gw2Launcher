@@ -141,9 +141,13 @@ namespace Gw2Launcher.Windows
             private bool isSupported;
 
             public VolumeControl(int processId)
+                : this()
             {
                 this.processId = processId;
+            }
 
+            public VolumeControl()
+            {
                 try
                 {
                     Initialize();
@@ -210,6 +214,41 @@ namespace Gw2Launcher.Windows
                 return false;
             }
 
+            /// <summary>
+            /// Iterates through process IDs that have a volume controller
+            /// </summary>
+            public IEnumerable<int> EnumerateProcesses()
+            {
+                if (!isSupported)
+                    yield break;
+                
+                IAudioSessionEnumerator sessionEnumerator = null;
+
+                try
+                {
+                    mgr.GetSessionEnumerator(out sessionEnumerator);
+                    int count;
+                    sessionEnumerator.GetCount(out count);
+
+                    for (int i = 0; i < count; i++)
+                    {
+                        IAudioSessionControl2 ctl;
+                        sessionEnumerator.GetSession(i, out ctl);
+                        int cpid;
+                        ctl.GetProcessId(out cpid);
+
+                        Marshal.ReleaseComObject(ctl);
+
+                        yield return cpid;
+                    }
+                }
+                finally
+                {
+                    if (sessionEnumerator != null)
+                        Marshal.ReleaseComObject(sessionEnumerator);
+                }
+            }
+
             public float Volume
             {
                 get
@@ -245,14 +284,13 @@ namespace Gw2Launcher.Windows
             {
                 if (deviceEnumerator != null)
                 {
+                    Marshal.ReleaseComObject(deviceEnumerator);
                     deviceEnumerator = null;
 
                     if (mgr != null)
                         Marshal.ReleaseComObject(mgr);
                     if (speakers != null)
                         Marshal.ReleaseComObject(speakers);
-                    if (deviceEnumerator != null)
-                        Marshal.ReleaseComObject(deviceEnumerator);
                     if (volume != null)
                         Marshal.ReleaseComObject(volume);
                 }

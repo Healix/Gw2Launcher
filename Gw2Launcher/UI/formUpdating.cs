@@ -15,9 +15,6 @@ namespace Gw2Launcher.UI
 {
     public partial class formUpdating : Form
     {
-        //[System.Runtime.InteropServices.DllImport("user32.dll")]
-        //static extern int SetWindowLong(IntPtr hWnd, int nIndex, int dwNewLong);
-
         private Dictionary<ushort, AccountItem> accounts;
         private int remaining, total;
 
@@ -249,11 +246,12 @@ namespace Gw2Launcher.UI
 
                         try
                         {
-                            PerformanceCounter counter = new PerformanceCounter("Process", "ID Process", name);
-
-                            if (process.Id == counter.RawValue)
+                            using (var counter = new PerformanceCounter("Process", "ID Process", name))
                             {
-                                return name;
+                                if (process.Id == counter.RawValue)
+                                {
+                                    return name;
+                                }
                             }
                         }
                         catch (Exception ex)

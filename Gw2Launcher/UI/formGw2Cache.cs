@@ -30,6 +30,19 @@ namespace Gw2Launcher.UI
             rows = new Dictionary<string, DataGridViewRow>(StringComparer.OrdinalIgnoreCase);
 
             this.Shown += formGw2Cache_Shown;
+            this.Disposed += formGw2Cache_Disposed;
+
+            Settings.DeleteCacheOnLaunch.ValueChanged += DeleteCacheOnLaunch_ValueChanged;
+        }
+
+        void formGw2Cache_Disposed(object sender, EventArgs e)
+        {
+            Settings.DeleteCacheOnLaunch.ValueChanged -= DeleteCacheOnLaunch_ValueChanged;
+        }
+
+        void DeleteCacheOnLaunch_ValueChanged(object sender, EventArgs e)
+        {
+            checkDeleteCacheOnLaunch.Checked = Settings.DeleteCacheOnLaunch.Value;
         }
 
         void formGw2Cache_Shown(object sender, EventArgs e)
@@ -41,6 +54,26 @@ namespace Gw2Launcher.UI
         private async void Scan()
         {
             this.folders = new List<DirectoryInfo>();
+
+            if (!rows.ContainsKey(Tools.Gw2Cache.USERNAME_GW2LAUNCHER))
+            {
+                DataGridViewRow row = new DataGridViewRow();
+                row.CreateCells(gridCache);
+                row.Height = gridCache.RowTemplate.Height;
+
+                row.Cells[columnUser.Index].Value = "Gw2Launcher Temp";
+                DataGridViewCell cell;
+                cell = row.Cells[columnSize.Index];
+                cell.Value = "...";
+                cell.Style.ForeColor = Color.Gray;
+                cell = row.Cells[columnFolders.Index];
+                cell.Value = "...";
+                cell.Style.ForeColor = Color.Gray;
+
+                gridCache.Rows.Add(row);
+
+                rows.Add(Tools.Gw2Cache.USERNAME_GW2LAUNCHER, row);
+            }
 
             foreach (ushort uid in Settings.Accounts.GetKeys())
             {

@@ -5,19 +5,17 @@ using System.Security.Permissions;
 using Microsoft.Win32.SafeHandles;
 using System.Runtime.ConstrainedExecution;
 using System.Security;
+using Gw2Launcher.Windows.Native;
 
 namespace Gw2Launcher.Security
 {
     static class Impersonation
     {
-        [DllImport("advapi32.dll", SetLastError = true, CharSet = CharSet.Unicode)]
-        private static extern bool LogonUser(String lpszUsername, String lpszDomain, IntPtr lpszPassword, int dwLogonType, int dwLogonProvider, out SafeTokenHandle phToken);
-
-        [DllImport("kernel32.dll", CharSet = CharSet.Auto)]
-        private extern static bool CloseHandle(IntPtr handle);
-
         private const int LOGON32_PROVIDER_DEFAULT = 0;
         private const int LOGON32_LOGON_INTERACTIVE = 2;
+
+        [DllImport(NativeMethods.DLL.ADVAPI32, SetLastError = true, CharSet = CharSet.Unicode)]
+        private static extern bool LogonUser(String lpszUsername, String lpszDomain, IntPtr lpszPassword, int dwLogonType, int dwLogonProvider, out SafeTokenHandle phToken);
 
         public interface IImpersonationToken : IDisposable
         {
@@ -78,7 +76,7 @@ namespace Gw2Launcher.Security
             {
             }
 
-            [DllImport("kernel32.dll")]
+            [DllImport(NativeMethods.DLL.KERNEL32)]
             [ReliabilityContract(Consistency.WillNotCorruptState, Cer.Success)]
             [SuppressUnmanagedCodeSecurity]
             [return: MarshalAs(UnmanagedType.Bool)]

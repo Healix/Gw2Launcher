@@ -28,14 +28,20 @@ namespace Gw2Launcher.UI.Controls
         protected override void OnSizeChanged()
         {
             rectName = new Rectangle(new Point(this.Size.Width / 2 - rectName.Width / 2, this.Size.Height / 2 - rectName.Height / 2), rectName.Size);
+            redraw = true;
             this.Invalidate();
         }
 
-        protected override void OnPaint(PaintEventArgs e)
+        protected override void OnPrePaint(PaintEventArgs e)
         {
-            var g = e.Graphics;
+            if (redraw)
+            {
+                redraw = false;
 
-            TextRenderer.DrawText(g, TEXT_ADD_ACCOUNT, FONT_REGULAR, rectName, COLOR_TEXT);
+                var g = buffer.Graphics;
+
+                TextRenderer.DrawText(g, TEXT_ADD_ACCOUNT, FONT_REGULAR, rectName, COLOR_TEXT);
+            }
         }
 
         private void NewAccountGridButton_Load(object sender, EventArgs e)

@@ -35,24 +35,42 @@ namespace Gw2Launcher.UI
             }
         }
 
+        public enum NotificationType
+        {
+            Patch,
+            Note,
+        }
+
         private ushort focus;
         private Screen[] screens;
         private int currentScreen;
         private Settings.ScreenAnchor currentAnchor;
         private Tools.BackgroundPatcher.DownloadProgressEventArgs pe;
         private bool sample;
+        private NotificationType type;
 
-        public formScreenPosition(int screen, Settings.ScreenAnchor anchor)
+        public formScreenPosition(NotificationType type, int screen, Settings.ScreenAnchor anchor)
         {
             InitializeComponent();
 
-            pe = new Tools.BackgroundPatcher.DownloadProgressEventArgs()
+            this.type = type;
+
+            switch (type)
             {
-                build = 12345,
-                filesTotal = 123,
-                startTime = DateTime.UtcNow,
-                contentBytesTotal = 12345
-            };
+                case NotificationType.Patch:
+
+                    pe = new Tools.BackgroundPatcher.DownloadProgressEventArgs()
+                    {
+                        build = 12345,
+                        filesTotal = 123,
+                        startTime = DateTime.UtcNow,
+                        contentBytesTotal = 12345
+                    };
+
+                    break;
+                case NotificationType.Note:
+                    break;
+            }
 
             screens = Screen.AllScreens;
             currentScreen = screen;
@@ -155,10 +173,27 @@ namespace Gw2Launcher.UI
 
         private void ShowSample()
         {
-            if (sample = !sample)
-                formBuildNotify.Show(formBuildNotify.NotifyType.DownloadingManifests, currentScreen, currentAnchor, pe);   
-            else
-                formBuildNotify.Show(formBuildNotify.NotifyType.PatchReady, currentScreen, currentAnchor, pe);
+            switch (type)
+            {
+                case NotificationType.Patch:
+
+                    if (sample = !sample)
+                        formNotify.Show(formNotify.NotifyType.DownloadingManifests, currentScreen, currentAnchor, pe);
+                    else
+                        formNotify.Show(formNotify.NotifyType.PatchReady, currentScreen, currentAnchor, pe);
+
+                    break;
+                case NotificationType.Note:
+
+                    string message;
+                    if (sample = !sample)
+                        message = "Sample message shown when a note expires";
+                    else
+                        message = "Sample message...\n\n1\n2\n3";
+                    formNotify.ShowNote(currentScreen, currentAnchor, message, "Example");
+
+                    break;
+            }
 
             this.Focus();
         }
@@ -188,6 +223,18 @@ namespace Gw2Launcher.UI
             if (++currentScreen >= screens.Length)
                 currentScreen = 0;
             OnScreenChanged();
+        }
+
+        protected override void Dispose(bool disposing)
+        {
+            if (disposing)
+            {
+                if (components != null)
+                    components.Dispose();
+
+                ScreenPositionChanged = null;
+            }
+            base.Dispose(disposing);
         }
     }
 }

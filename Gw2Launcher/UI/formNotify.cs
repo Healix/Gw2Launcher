@@ -7,17 +7,19 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using System.Windows.Forms;
+using Gw2Launcher.Windows.Native;
 
 namespace Gw2Launcher.UI
 {
-    public partial class formBuildNotify : ShowWithoutActivationForm
+    public partial class formNotify : ShowWithoutActivationForm
     {
         public enum NotifyType
         {
             PatchReady,
             DownloadingFiles,
             DownloadingManifests,
-            Error
+            Error,
+            Note,
         }
 
         private const float BACKGROUND_OPACITY = 0.95f;
@@ -30,12 +32,11 @@ namespace Gw2Launcher.UI
         private Settings.ScreenAnchor anchor;
         //private string formatSize;
 
-        private formBuildNotify(NotifyType t, int screen, Settings.ScreenAnchor anchor, Tools.BackgroundPatcher.PatchEventArgs pe)
+        private formNotify(NotifyType t, int screen, Settings.ScreenAnchor anchor)
         {
             InitializeComponent();
 
             notifyType = t;
-            labelBuild.Text = string.Format(labelBuild.Text, pe.Build);
 
             var screens = Screen.AllScreens;
             if (screens.Length <= screen)
@@ -44,69 +45,145 @@ namespace Gw2Launcher.UI
                 this.screen = screens[screen];
 
             this.anchor = anchor;
+        }
 
-            if (t == NotifyType.PatchReady)
+        private formNotify(NotifyType t, int screen, Settings.ScreenAnchor anchor, string text1, string text2)
+            : this(t, screen, anchor)
+        {
+            var b = this.screen.WorkingArea;
+            var ms = new System.Drawing.Size(b.Width / 4, b.Height / 4);
+            int w, h;
+            var spacing = labelBuildCaption.Top - labelTitle.Bottom;
+            var xpad = labelTitle.Left * 2;
+            var ypad = labelTitle.Top + this.Height - labelElapsedCaption.Bottom;
+
+            labelTitle.MaximumSize = ms;
+            labelBuildCaption.MaximumSize = ms;
+            labelBuildCaption.AutoEllipsis = true;
+            labelTitle.AutoEllipsis = true;
+            labelTitle.Text = text1;
+            labelBuildCaption.Text = text2;
+
+            w = labelTitle.Width;
+            h = labelTitle.Height;
+
+            switch (t)
             {
-                var elapsed = pe.Elapsed;
-                string _elapsed;
-                if (elapsed.TotalMinutes >= 1)
-                {
-                    int m = (int)elapsed.TotalMinutes;
-                    _elapsed = m + "m";
-                    if (elapsed.Seconds > 0)
-                        _elapsed += " " + elapsed.Seconds + "s";
-                }
-                else
-                {
-                    _elapsed = elapsed.Seconds + "s";
-                }
+                default:
+                case NotifyType.Note:
 
-                labelTitle.Text = "Patch ready";
-                labelSize.Text = string.Format(labelSize.Text, pe.Files, Util.Text.FormatBytes(pe.Size), pe.Files != 1 ? "files" : "file");
-                labelElapsed.Text = string.Format(labelElapsed.Text, _elapsed);
+                    if (!string.IsNullOrEmpty(text2))
+                    {
+                        labelBuildCaption.Top = labelTitle.Bottom + labelBuildCaption.Height / 2;
+                        //labelBuild.Location = new Point(labelBuildCaption.Left, labelTitle.Bottom + labelBuild.Height / 2);
+                        h += labelBuildCaption.Bottom - labelTitle.Bottom;
+                        labelBuildCaption.Visible = true;
+                        //labelBuildCaption.ForeColor = Color.FromArgb(115, 115, 115);
+
+                        if (labelBuildCaption.Width > w)
+                            w = labelBuildCaption.Width;
+                    }
+
+                    labelTitle.Visible = true;
+
+                    break;
             }
-            else if (t == NotifyType.DownloadingFiles)
-            {
-                labelTitle.Text = "Downloading";
-                labelElapsedCaption.Visible = false;
-                labelElapsed.Text = "(estimated)";
-                labelElapsed.ForeColor = Color.DimGray;
-                //formatSize = labelSize.Text;
-                //labelSize.Text = "...";
 
-                labelSize.Text = string.Format(labelSize.Text, pe.Files, Util.Text.FormatBytes(pe.Size), pe.Files != 1 ? "files" : "file");
-            }
-            else if (t == NotifyType.DownloadingManifests)
-            {
-                labelTitle.Text = "Downloading build " + labelBuild.Text;
-                labelElapsed.Visible = false;
-                labelElapsedCaption.Visible = false;
-                labelSize.Visible = false;
-                labelSizeCaption.Visible = false;
-                labelBuild.Visible = false;
-                labelBuildCaption.Visible = false;
-                this.Height = labelTitle.Location.Y * 2 + labelTitle.Height;
+            if (w < this.Width)
+                w = this.Width;
 
-                this.SizeChanged += formBuildNotify_SizeChanged;
-            }
-            else if (t == NotifyType.Error)
-            {
-                labelTitle.Text = "Failed to download update";
-                labelElapsed.Visible = false;
-                labelElapsedCaption.Visible = false;
-                labelSize.Visible = false;
-                labelSizeCaption.Visible = false;
-                labelBuild.Visible = false;
-                labelBuildCaption.Visible = false;
-                this.Height = labelTitle.Location.Y * 2 + labelTitle.Height;
+            var _h = this.Handle; //force
 
-                this.SizeChanged += formBuildNotify_SizeChanged;
+            this.Size = new Size(w + xpad, h + ypad);
+
+            Initialize(t);
+        }
+
+        private formNotify(NotifyType t, int screen, Settings.ScreenAnchor anchor, Tools.BackgroundPatcher.PatchEventArgs pe)
+            : this(t,screen,anchor)
+        {
+            labelBuild.Text = string.Format(labelBuild.Text, pe.Build);
+
+            switch (t)
+            {
+                case NotifyType.PatchReady:
+
+                    var elapsed = pe.Elapsed;
+                    string _elapsed;
+                    if (elapsed.TotalMinutes >= 1)
+                    {
+                        int m = (int)elapsed.TotalMinutes;
+                        _elapsed = m + "m";
+                        if (elapsed.Seconds > 0)
+                            _elapsed += " " + elapsed.Seconds + "s";
+                    }
+                    else
+                    {
+                        _elapsed = elapsed.Seconds + "s";
+                    }
+
+                    labelTitle.Text = "Patch ready";
+                    labelSize.Text = string.Format(labelSize.Text, pe.Files, Util.Text.FormatBytes(pe.Size), pe.Files != 1 ? "files" : "file");
+                    labelElapsed.Text = string.Format(labelElapsed.Text, _elapsed);
+
+                    labelBuild.Visible = true;
+                    labelBuildCaption.Visible = true;
+                    labelElapsed.Visible = true;
+                    labelElapsedCaption.Visible = true;
+                    labelSize.Visible = true;
+                    labelSizeCaption.Visible = true;
+                    labelTitle.Visible = true;
+
+                    break;
+                case NotifyType.DownloadingFiles:
+                    
+                    labelTitle.Text = "Downloading";
+                    labelElapsed.Text = "(estimated)";
+                    labelElapsed.ForeColor = Color.DimGray;
+                    labelSize.Text = string.Format(labelSize.Text, pe.Files, Util.Text.FormatBytes(pe.Size), pe.Files != 1 ? "files" : "file");
+
+                    labelBuild.Visible = true;
+                    labelBuildCaption.Visible = true;
+                    labelElapsed.Visible = true;
+                    labelSize.Visible = true;
+                    labelSizeCaption.Visible = true;
+                    labelTitle.Visible = true;
+
+                    break;
+                case NotifyType.DownloadingManifests:
+                    
+                    labelTitle.Text = "Downloading build " + labelBuild.Text;
+                    labelTitle.Visible = true;
+
+                    this.Height = labelTitle.Location.Y * 2 + labelTitle.Height;
+                    this.SizeChanged += formNotify_SizeChanged;
+
+                    break;
+                case NotifyType.Error:
+
+                    labelTitle.Text = "Failed to download update";
+                    labelTitle.Visible = true;
+
+                    this.Height = labelTitle.Location.Y * 2 + labelTitle.Height;
+                    this.SizeChanged += formNotify_SizeChanged;
+
+                    break;
             }
 
             Initialize(t);
         }
 
-        void formBuildNotify_SizeChanged(object sender, EventArgs e)
+        protected override CreateParams CreateParams
+        {
+            get
+            {
+                CreateParams cp = base.CreateParams;
+                cp.ExStyle |= (int)(WindowStyle.WS_EX_LAYERED);
+                return cp;
+            }
+        }
+
+        void formNotify_SizeChanged(object sender, EventArgs e)
         {
             labelTitle.Location = new Point(labelTitle.Location.X, this.Height / 2 - labelTitle.Height / 2);
         }
@@ -138,13 +215,13 @@ namespace Gw2Launcher.UI
             this.TransparencyKey = this.BackColor;
             this.Owner = background;
 
-            this.VisibleChanged += formBuildNotify_VisibleChanged;
-            this.FormClosed += formBuildNotify_FormClosed;
-            this.LocationChanged += formBuildNotify_LocationChanged;
-            this.Shown += formBuildNotify_Shown;
+            this.VisibleChanged += formNotify_VisibleChanged;
+            this.FormClosed += formNotify_FormClosed;
+            this.LocationChanged += formNotify_LocationChanged;
+            this.Shown += formNotify_Shown;
         }
 
-        void formBuildNotify_FormClosing(object sender, FormClosingEventArgs e)
+        void formNotify_FormClosing(object sender, FormClosingEventArgs e)
         {
             Tools.BackgroundPatcher.Instance.DownloadProgress -= bp_DownloadProgress;
         }
@@ -159,10 +236,10 @@ namespace Gw2Launcher.UI
             FadeOut(100);
         }
 
-        private static formBuildNotify _instance;
-        private static void Show(formBuildNotify f)
+        private static formNotify _instance;
+        private static void Show(formNotify f)
         {
-            formBuildNotify existing = null;
+            formNotify existing = null;
             try
             {
                 if (_instance != null && !_instance.IsDisposed)
@@ -250,12 +327,12 @@ namespace Gw2Launcher.UI
 
         public static void Show(NotifyType t, int screen, Settings.ScreenAnchor anchor, Tools.BackgroundPatcher.PatchEventArgs pe)
         {
-            Show(new formBuildNotify(t, screen, anchor, pe));
+            Show(new formNotify(t, screen, anchor, pe));
         }
 
         public static void Show(NotifyType t, int screen, Settings.ScreenAnchor anchor, Tools.BackgroundPatcher.DownloadProgressEventArgs pe)
         {
-            Show(new formBuildNotify(t, screen, anchor, new Tools.BackgroundPatcher.PatchEventArgs()
+            Show(new formNotify(t, screen, anchor, new Tools.BackgroundPatcher.PatchEventArgs()
                 {
                     Build = pe.build,
                     Files = pe.filesTotal + pe.manifestsTotal,
@@ -264,7 +341,12 @@ namespace Gw2Launcher.UI
                 }));
         }
 
-        private void formBuildNotify_Load(object sender, EventArgs e)
+        public static void ShowNote(int screen, Settings.ScreenAnchor anchor, string text, string accountName)
+        {
+            Show(new formNotify(NotifyType.Note, screen, anchor, text, accountName));
+        }
+
+        private void formNotify_Load(object sender, EventArgs e)
         {
             var working = screen.WorkingArea;
             int x, y;
@@ -297,27 +379,30 @@ namespace Gw2Launcher.UI
             this.Location = new Point(x, y);
         }
 
-        void formBuildNotify_LocationChanged(object sender, EventArgs e)
+        void formNotify_LocationChanged(object sender, EventArgs e)
         {
             background.Location = this.Location;
         }
 
-        void formBuildNotify_FormClosed(object sender, FormClosedEventArgs e)
+        void formNotify_FormClosed(object sender, FormClosedEventArgs e)
         {
             background.Dispose();
         }
 
-        void formBuildNotify_VisibleChanged(object sender, EventArgs e)
+        void formNotify_VisibleChanged(object sender, EventArgs e)
         {
             var visible = this.Visible;
             background.Visible = visible;
             if (visible)
-                this.BringToFront();
+            {
+                NativeMethods.SetWindowPos(this.Handle, (IntPtr)0, 0, 0, 0, 0, SetWindowPosFlags.SWP_NOACTIVATE | SetWindowPosFlags.SWP_NOMOVE | SetWindowPosFlags.SWP_NOSIZE | SetWindowPosFlags.SWP_NOOWNERZORDER);
+                //this.BringToFront();
+            }
         }
 
-        void formBuildNotify_Shown(object sender, EventArgs e)
+        void formNotify_Shown(object sender, EventArgs e)
         {
-            this.Shown -= formBuildNotify_Shown;
+            this.Shown -= formNotify_Shown;
 
             if (animate)
             {
@@ -342,7 +427,7 @@ namespace Gw2Launcher.UI
             //if (notifyType == NotifyType.Downloading)
             //{
             //    Tools.BackgroundPatcher.Instance.DownloadProgress += bp_DownloadProgress;
-            //    this.FormClosing += formBuildNotify_FormClosing;
+            //    this.FormClosing += formNotify_FormClosing;
 
             //    DoRefresh();
             //}

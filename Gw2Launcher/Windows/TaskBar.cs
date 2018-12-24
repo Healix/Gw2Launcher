@@ -3,7 +3,7 @@ using System.Runtime.InteropServices;
 
 namespace Gw2Launcher.Windows
 {
-    public class Taskbar
+    public class Taskbar : IDisposable
     {
         public enum TaskbarStates
         {
@@ -50,7 +50,7 @@ namespace Gw2Launcher.Windows
         }
 
         private ITaskbarList3 instance;
-        private static bool isSupported = Environment.OSVersion.Version >= new Version(6, 1);
+        private static readonly bool isSupported = Environment.OSVersion.Version >= new Version(6, 1);
 
         public Taskbar()
         {
@@ -92,6 +92,15 @@ namespace Gw2Launcher.Windows
             get
             {
                 return isSupported;
+            }
+        }
+
+        public void Dispose()
+        {
+            if (instance != null)
+            {
+                Marshal.ReleaseComObject(instance);
+                instance = null;
             }
         }
     }

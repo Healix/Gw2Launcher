@@ -9,6 +9,8 @@ namespace Gw2Launcher.Tools
 {
     static class Gw2Cache
     {
+        public const string USERNAME_GW2LAUNCHER = "@";
+
         private const string GW2CACHE = "gw2cache-{*}";
 
         public static void Delete(string username)
@@ -18,7 +20,16 @@ namespace Gw2Launcher.Tools
 
         public static void Delete()
         {
-            HashSet<string> users = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+            var users = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+
+            try
+            {
+                Delete(USERNAME_GW2LAUNCHER);
+            }
+            catch (Exception ex)
+            {
+                Util.Logging.Log(ex);
+            }
 
             foreach (ushort uid in Settings.Accounts.GetKeys())
             {
@@ -44,7 +55,7 @@ namespace Gw2Launcher.Tools
         public static DirectoryInfo[] GetFolders(string username)
         {
             Security.Impersonation.IImpersonationToken impersonation;
-            if (Util.Users.IsCurrentUser(username))
+            if (username == USERNAME_GW2LAUNCHER || Util.Users.IsCurrentUser(username))
                 impersonation = null;
             else
                 impersonation = Security.Impersonation.Impersonate(username, Security.Credentials.GetPassword(username));
@@ -53,20 +64,24 @@ namespace Gw2Launcher.Tools
 
             try
             {
-                path = Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData);
-                
-                if (string.IsNullOrWhiteSpace(path))
+                if (username == USERNAME_GW2LAUNCHER)
                 {
-                    return new DirectoryInfo[0];
+                    path = DataPath.AppDataAccountDataTemp;
                 }
                 else
                 {
+                    path = Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData);
+                    if (string.IsNullOrWhiteSpace(path))
+                        return new DirectoryInfo[0];
                     path = Path.Combine(path, "temp");
                     if (!Directory.Exists(path))
                         return new DirectoryInfo[0];
+                }
 
-                    var folders = new DirectoryInfo(path).GetDirectories(GW2CACHE, SearchOption.TopDirectoryOnly);
+                var folders = new DirectoryInfo(path).GetDirectories(GW2CACHE, SearchOption.TopDirectoryOnly);
 
+                if (impersonation != null)
+                {
                     foreach (var folder in folders)
                     {
                         try
@@ -78,9 +93,9 @@ namespace Gw2Launcher.Tools
                             Util.Logging.Log(ex);
                         }
                     }
-
-                    return folders;
                 }
+
+                return folders;
             }
             finally
             {
@@ -95,10 +110,6 @@ namespace Gw2Launcher.Tools
             //previously, only older folders were being deleted, but GW2 doesn't really reuse these
             //now, all folders are simply deleted, except those in use
 
-            //DirectoryInfo newest = null;
-            //DateTime utc = DateTime.MinValue;
-            //DateTime limit = DateTime.UtcNow.Subtract(new TimeSpan(6, 0, 0));
-
             foreach (var d in folders)
             {
                 try
@@ -112,54 +123,6 @@ namespace Gw2Launcher.Tools
                 {
                     Util.Logging.Log(e);
                 }
-
-
-                //DateTime lastWrite = DateTime.MinValue;
-                //try
-                //{
-                //    foreach (var f in d.GetFiles("*", SearchOption.AllDirectories))
-                //    {
-                //        if (f.LastWriteTimeUtc > lastWrite)
-                //        {
-                //            lastWrite = f.LastWriteTimeUtc;
-                //            if (lastWrite > utc)
-                //                break;
-                //        }
-                //    }
-                //}
-                //catch (Exception e)
-                //{
-                //    Util.Logging.Log(e);
-                //}
-
-                //if (lastWrite > utc)
-                //{
-                //    if (newest != null && utc < limit)
-                //    {
-                //        try
-                //        {
-                //            newest.Delete(true);
-                //        }
-                //        catch (Exception ex)
-                //        {
-                //            Util.Logging.Log(ex);
-                //        }
-                //    }
-
-                //    utc = lastWrite;
-                //    newest = d;
-                //}
-                //else if (utc < limit)
-                //{
-                //    try
-                //    {
-                //        d.Delete(true);
-                //    }
-                //    catch (Exception ex)
-                //    {
-                //        Util.Logging.Log(ex);
-                //    }
-                //}
             }
         }
     }

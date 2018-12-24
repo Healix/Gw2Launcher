@@ -27,6 +27,19 @@ namespace Gw2Launcher.UI.Controls
             this.Size = new Size(SystemInformation.VerticalScrollBarWidth, SystemInformation.HorizontalScrollBarHeight);
         }
 
+        [System.ComponentModel.Browsable(false)]
+        public override string Text
+        {
+            get
+            {
+                return base.Text;
+            }
+            set
+            {
+                base.Text = value;
+            }
+        }
+
         protected override void OnSizeChanged(EventArgs e)
         {
             base.OnSizeChanged(e);
@@ -91,6 +104,16 @@ namespace Gw2Launcher.UI.Controls
                 if (DragOffsetChanged != null)
                     DragOffsetChanged(this, new Point(Cursor.Position.X - origin.X, Cursor.Position.Y - origin.Y));
             }
+        }
+
+        protected override void Dispose(bool disposing)
+        {
+            if (disposing)
+            {
+                if (components != null)
+                    components.Dispose();
+            }
+            base.Dispose(disposing);
         }
     }
 }

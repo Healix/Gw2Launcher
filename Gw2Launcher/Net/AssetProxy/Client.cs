@@ -10,18 +10,20 @@ using System.Threading;
 
 namespace Gw2Launcher.Net.AssetProxy
 {
-    class Client
+    class Client : IDisposable
     {
-        private const int BUFFER_LENGTH = 16384;
+        private const int BUFFER_LENGTH = 102400; //16384
         private const string ASSET_HOST = Settings.ASSET_HOST;
         protected const byte CONNECTION_TIMEOUT_SECONDS = 5;
         protected const byte CONNECTION_TRANSFER_TIMEOUT_SECONDS = 180;
+        protected const byte CONNECTION_KEEPALIVE_TIMEOUT_SECONDS = 120;
 
         private static ushort nextId;
         private static readonly object _lock;
         private static BpsLimiter bpsLimiter;
 
         private TcpClient clientIn, clientOut, clientSwap;
+        private Task task;
         private IPEndPoint remoteEP;
         private IPPool ipPool;
         private bool doIPPool;
@@ -92,7 +94,21 @@ namespace Gw2Launcher.Net.AssetProxy
             remoteEP = remote;
 
             clientIn = client;
-            clientIn.ReceiveTimeout = clientIn.SendTimeout = CONNECTION_TIMEOUT_SECONDS * 1000;
+            clientIn.ReceiveTimeout = CONNECTION_KEEPALIVE_TIMEOUT_SECONDS * 1000;
+            clientIn.SendTimeout = CONNECTION_TIMEOUT_SECONDS * 1000;
+            clientIn.SendBufferSize = BUFFER_LENGTH;
+            clientIn.NoDelay = true;
+        }
+
+        public void Dispose()
+        {
+            if (clientOut != null)
+                clientOut.Close();
+
+            Close();
+
+            if (task != null && task.IsCompleted)
+                task.Dispose();
         }
 
         public IPEndPoint RemoteEP
@@ -121,7 +137,13 @@ namespace Gw2Launcher.Net.AssetProxy
 
         public void Start()
         {
-            Task.Factory.StartNew(DoClient, TaskCreationOptions.LongRunning);
+            if (task != null)
+            {
+                if (!task.IsCompleted)
+                    return;
+                task.Dispose();
+            }
+            task = Task.Factory.StartNew(DoClient, TaskCreationOptions.LongRunning);
         }
 
         private void DoClient()
@@ -229,7 +251,8 @@ namespace Gw2Launcher.Net.AssetProxy
                             clientOut = new TcpClient()
                             {
                                 ReceiveTimeout = CONNECTION_TIMEOUT_SECONDS * 1000,
-                                SendTimeout = CONNECTION_TIMEOUT_SECONDS * 1000
+                                SendTimeout = CONNECTION_TIMEOUT_SECONDS * 1000,
+                                ReceiveBufferSize = BUFFER_LENGTH * 2,
                             };
 
                             try
@@ -349,8 +372,12 @@ namespace Gw2Launcher.Net.AssetProxy
                                     taskSwap = new Task<IPAddress>(
                                         delegate
                                         {
-                                            var clientSwap = this.clientSwap = new TcpClient();
-                                            clientSwap.ReceiveTimeout = clientSwap.SendTimeout = CONNECTION_TIMEOUT_SECONDS * 1000;
+                                            var clientSwap = this.clientSwap = new TcpClient()
+                                            {
+                                                ReceiveTimeout = CONNECTION_TIMEOUT_SECONDS * 1000,
+                                                SendTimeout = CONNECTION_TIMEOUT_SECONDS * 1000,
+                                                ReceiveBufferSize = BUFFER_LENGTH * 2,
+                                            };
                                             try
                                             {
                                                 if (!clientSwap.ConnectAsync(ip, Settings.PatchingUseHttps.Value ? 443 : 80).Wait(CONNECTION_TIMEOUT_SECONDS * 1000))

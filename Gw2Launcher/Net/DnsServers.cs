@@ -36,6 +36,15 @@ namespace Gw2Launcher.Net
                 },
                 new DnsServer()
                 {
+                    name = "Cloudflare DNS",
+                    IP = new IPAddress[] 
+                    { 
+                        new IPAddress(new byte[] { 1,1,1,1 }),
+                        new IPAddress(new byte[] { 1,0,0,1 })
+                    }
+                },
+                new DnsServer()
+                {
                     name = "Comodo Secure DNS",
                     IP = new IPAddress[] 
                     { 
