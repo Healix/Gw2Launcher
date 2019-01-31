@@ -2031,7 +2031,13 @@ namespace Gw2Launcher.Client
                 options.Password = password;
             }
 
-            options.Variables[ProcessOptions.VAR_TEMP] = DataPath.AppDataAccountDataTemp;
+            var temp = Path.Combine(DataPath.AppDataAccountDataTemp, account.UID.ToString());
+            try
+            {
+                Directory.CreateDirectory(temp);
+            }
+            catch { }
+            options.Variables[ProcessOptions.VAR_TEMP] = temp;
 
             if (customProfile != null)
             {

@@ -1461,7 +1461,15 @@ namespace Gw2Launcher.Client
                     }
                     else
                     {
-                        account.DatFile = file;
+                        file = account.DatFile;
+                        if (file == null)
+                            account.DatFile = file = Settings.CreateDatFile();
+                        customDatPath = pd.GetCustomPath(FileType.Dat, account, false);
+                        account.DatFile.Path = customDatPath;
+                        if (!File.Exists(customDatPath))
+                            File.WriteAllBytes(customDatPath, new byte[0]);
+                        datType = PathType.Custom;
+                        requiresCustom = true;
                     }
                 }
             }
@@ -1502,7 +1510,21 @@ namespace Gw2Launcher.Client
                     }
                     else
                     {
-                        account.GfxFile = file;
+                        file = account.GfxFile;
+                        if (file == null)
+                            account.GfxFile = file = Settings.CreateGfxFile();
+                        customGfxPath = pd.GetCustomPath(FileType.Gfx, account, false);
+                        file.Path = customGfxPath;
+                        if (!File.Exists(customGfxPath) && File.Exists(defaultPath))
+                        {
+                            try
+                            {
+                                File.Copy(defaultPath, customGfxPath);
+                            }
+                            catch { }
+                        }
+                        gfxType = PathType.Custom;
+                        requiresCustom = true;
                     }
                 }
             }

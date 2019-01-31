@@ -893,6 +893,7 @@
             // checkAutomaticLogin
             // 
             this.checkAutomaticLogin.AutoSize = true;
+            this.checkAutomaticLogin.Enabled = false;
             this.checkAutomaticLogin.Location = new System.Drawing.Point(21, 205);
             this.checkAutomaticLogin.Name = "checkAutomaticLogin";
             this.checkAutomaticLogin.Size = new System.Drawing.Size(145, 17);
@@ -908,9 +909,9 @@
             this.label13.ForeColor = System.Drawing.Color.Maroon;
             this.label13.Location = new System.Drawing.Point(14, 184);
             this.label13.Name = "label13";
-            this.label13.Size = new System.Drawing.Size(299, 13);
+            this.label13.Size = new System.Drawing.Size(217, 13);
             this.label13.TabIndex = 0;
-            this.label13.Text = "Warning: your email/password will be visible to other processes";
+            this.label13.Text = "Disabled by ArenaNet as of January 22, 2019";
             // 
             // label10
             // 

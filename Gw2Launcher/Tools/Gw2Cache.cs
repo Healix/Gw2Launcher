@@ -78,7 +78,7 @@ namespace Gw2Launcher.Tools
                         return new DirectoryInfo[0];
                 }
 
-                var folders = new DirectoryInfo(path).GetDirectories(GW2CACHE, SearchOption.TopDirectoryOnly);
+                var folders = new DirectoryInfo(path).GetDirectories(GW2CACHE, SearchOption.AllDirectories);
 
                 if (impersonation != null)
                 {
