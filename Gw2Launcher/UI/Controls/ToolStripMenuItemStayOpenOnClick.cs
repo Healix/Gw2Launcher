@@ -21,6 +21,12 @@ namespace Gw2Launcher.UI.Controls
         {
         }
 
+        public ToolStripMenuItemStayOpenOnClick(string text, System.Drawing.Image image, EventHandler onClick, bool stayOpenOnClick)
+            : base(text, image, onClick)
+        {
+            this.StayOpenOnClick = stayOpenOnClick;
+        }
+
         public bool StayOpenOnClick
         {
             get;

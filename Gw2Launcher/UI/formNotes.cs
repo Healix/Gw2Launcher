@@ -28,6 +28,8 @@ namespace Gw2Launcher.UI
         {
             InitializeComponent();
 
+            SetStyle(ControlStyles.ResizeRedraw, true);
+
             _ExpiredCount = _MessageCount = -1;
 
             this.Opacity = 0;
@@ -592,6 +594,21 @@ namespace Gw2Launcher.UI
                 case WindowMessages.WM_NCLBUTTONDBLCLK:
 
                     break;
+                case WindowMessages.WM_ENTERSIZEMOVE:
+
+                    panelContainer.SuspendLayout();
+                    base.WndProc(ref m);
+
+                    break;
+                case WindowMessages.WM_EXITSIZEMOVE:
+
+                    panelContainer.ResumeLayout(true);
+                    base.WndProc(ref m);
+                    SetupControls();
+
+                    Settings.WindowBounds[this.GetType()].Value = this.Bounds;
+
+                    break;
                 case WindowMessages.WM_NCHITTEST:
 
                     base.WndProc(ref m);
@@ -602,7 +619,10 @@ namespace Gw2Launcher.UI
 
                         if (p.Y > buttonExpired.Bottom && p.Y < buttonMinimize.Top)
                         {
-                            m.Result = (IntPtr)HitTest.Caption;
+                            if (p.X >= this.Width - 5)
+                                m.Result = (IntPtr)HitTest.BottomRight;
+                            else
+                                m.Result = (IntPtr)HitTest.Caption;
                         }
                     }
 

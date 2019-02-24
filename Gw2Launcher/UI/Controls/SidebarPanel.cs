@@ -293,6 +293,13 @@ namespace Gw2Launcher.UI.Controls
             g.DrawLine(penBorder, this.Width - 1, 0, this.Width - 1, this.Height - 1);
         }
 
+        protected override void OnSizeChanged(EventArgs e)
+        {
+            this.Invalidate();
+
+            base.OnSizeChanged(e);
+        }
+
         protected override void Dispose(bool disposing)
         {
             base.Dispose(disposing);

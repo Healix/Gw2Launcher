@@ -23,6 +23,8 @@ namespace Gw2Launcher.Client
                     HandleChanged,
                     DxWindowCreated,
                     DxWindowReady,
+                    LauncherCoherentUIReady,
+                    InGameCoherentUIReady,
 
                     WatcherExited
                 }
@@ -57,17 +59,19 @@ namespace Gw2Launcher.Client
 
             private Process process;
             private Task watcher;
-            private bool watchBounds, watchAutologin, canReadMemory;
+            private bool watchBounds, canReadMemory;
+            private bool processWasAlreadyStarted;
 
             /// <summary>
             /// Watches the process and reports when the DX window is created
             /// </summary>
-            public WindowWatcher(Account account, Process p, bool watchBounds, LaunchMode mode, string args)
+            public WindowWatcher(Account account, Process p, bool isProcessStarter, bool watchBounds, LaunchMode mode, string args)
             {
                 this.process = p;
+                this.processWasAlreadyStarted = !isProcessStarter;
                 this.Account = account;
                 this.watchBounds = watchBounds;
-                this.watchAutologin = account.Settings.AutomaticLogin && account.Settings.HasCredentials && !Settings.DisableAutomaticLogins;
+                //this.watchAutologin = account.Settings.AutomaticLogin && account.Settings.HasCredentials && !Settings.DisableAutomaticLogins;
                 this.Mode = mode;
                 this.Args = args;
 
@@ -109,18 +113,25 @@ namespace Gw2Launcher.Client
                 private set;
             }
 
+            public ProcessOptions ProcessOptions
+            {
+                get;
+                set;
+            }
+
             public LaunchMode Mode
             {
                 get;
                 private set;
             }
 
-            private bool HasChildProcess(int pid)
+            private int GetChildProcess(int pid)
             {
                 if (canReadMemory)
                 {
                     var noChild = true;
                     var processes = Process.GetProcesses();
+                    var cid = 0;
 
                     using (var pi = new Windows.ProcessInfo())
                     {
@@ -135,7 +146,10 @@ namespace Gw2Launcher.Client
                                         if (pi.Open(p.Id))
                                         {
                                             if (pi.GetParent() == pid)
+                                            {
                                                 noChild = false;
+                                                cid = p.Id;
+                                            }
                                         }
                                     }
                                     catch (Exception e)
@@ -147,7 +161,7 @@ namespace Gw2Launcher.Client
                         }
                     }
 
-                    return !noChild;
+                    return cid;
                 }
 
                 using (var searcher = new ManagementObjectSearcher("SELECT ProcessId FROM Win32_Process WHERE ParentProcessID=" + pid))
@@ -156,12 +170,12 @@ namespace Gw2Launcher.Client
                     {
                         foreach (ManagementObject o in results)
                         {
-                            return true;
+                            return (int)(uint)o["ProcessId"];
                         }
                     }
                 }
 
-                return false;
+                return 0;
             }
 
             private Windows.FindWindow.SearchResult Find(IntPtr handle, Windows.FindWindow.TextComparer classCallback, Windows.FindWindow.TextComparer textCallback)
@@ -240,14 +254,24 @@ namespace Gw2Launcher.Client
                 var wce = new WindowChangedEventArgs();
                 var _handle = IntPtr.Zero;
 
-                //watched for windowed mode process exit with no handle -- likely an invisible crash due to outdated Local.dat
-
                 do
                 {
                     try
                     {
-                        process.Refresh();
-                        handle = process.MainWindowHandle;
+                        do
+                        {
+                            process.Refresh();
+                            handle = process.MainWindowHandle;
+
+                            if (handle == IntPtr.Zero)
+                            {
+                                if (!process.WaitForExit(10))
+                                    process.WaitForInputIdle();
+                            }
+                            else
+                                break;
+                        }
+                        while (!process.HasExited);
                     }
                     catch (Exception e)
                     {
@@ -258,13 +282,14 @@ namespace Gw2Launcher.Client
                     {
                         if (this.process.HasExited)
                         {
-                            if (handle == IntPtr.Zero && (IsAutomaticLogin(this.Account.Settings) || Util.Args.Contains(this.Args, "nopatchui")))
-                            {
-                                var elapsed = this.process.ExitTime.Subtract(this.process.StartTime).TotalSeconds;
-                                if (elapsed < 60 && WindowCrashed != null)
-                                    WindowCrashed(this, CrashReason.NoPatchUI);
-                            }
+                            //no longer applicable - nopatchui exiting without creating a window likely meant the client wasn't up to date
 
+                            //if (handle == IntPtr.Zero && (IsAutomaticLogin(this.Account.Settings) || Util.Args.Contains(this.Args, "nopatchui")))
+                            //{
+                            //    var elapsed = this.process.ExitTime.Subtract(this.process.StartTime).TotalSeconds;
+                            //    if (elapsed < 60 && WindowCrashed != null)
+                            //        WindowCrashed(this, CrashReason.NoPatchUI);
+                            //}
                             break;
                         }
                     }
@@ -307,146 +332,230 @@ namespace Gw2Launcher.Client
                                         WindowChanged(this, wce);
                                     }
 
-                                    try
-                                    {
-                                        var t = DateTime.UtcNow.AddSeconds(30);
+                                    //window initialization order:
+                                    //title change > volume (window is ready) > coherentui
 
-                                        do
-                                        {
-                                            buffer.Length = 0;
-                                            if (NativeMethods.GetWindowText(handle, buffer, 2) > 0 && buffer[0] != 'U') //window text is initially Untitled
-                                            {
-                                                if (WindowChanged != null)
-                                                {
-                                                    wce.Type = WindowChangedEventArgs.EventType.TitleChanged;
-                                                    WindowChanged(this, wce);
-                                                }
-
-                                                break;
-                                            }
-                                        }
-                                        while (DateTime.UtcNow < t && !process.WaitForExit(100));
-                                    }
-                                    catch (Exception e)
-                                    {
-                                        Util.Logging.Log(e);
-                                    }
+                                    int pidChild = 0;
+                                    bool hasVolume = false;
+                                    DateTime limit;
 
                                     using (var volumeControl = new Windows.Volume.VolumeControl(process.Id))
                                     {
-                                        //already loaded if audio is initialized (only checks default playback device)
-                                        var hasVolume = volumeControl.Query();
-
-                                        if (hasVolume)
+                                        if (processWasAlreadyStarted && ((hasVolume = volumeControl.Query()) || (pidChild = GetChildProcess(process.Id)) > 0))
                                         {
-                                            if (WindowChanged != null && !this.process.HasExited)
+                                            //window is already loaded
+
+                                            if (WindowChanged != null)
                                             {
-                                                wce.Type = WindowChangedEventArgs.EventType.DxWindowReady;
+                                                wce.Type = WindowChangedEventArgs.EventType.TitleChanged;
                                                 WindowChanged(this, wce);
                                             }
 
-                                            return;
+                                            limit = DateTime.UtcNow.AddMinutes(1);
                                         }
-
-                                        var nextCheck_Seconds = 3;
-                                        var memoryUsage = process.PeakWorkingSet64;
-                                        var limit = DateTime.UtcNow.AddMinutes(3);
-                                        var nextCheck = DateTime.UtcNow.AddSeconds(nextCheck_Seconds);
-                                        var memoryChecks = 0;
-                                        //var verified = false;
-
-                                        do
+                                        else
                                         {
-                                            //the volume will be initialized first, then a child process (CoherentUI) will spawn
-                                            if (hasVolume = volumeControl.Query() || HasChildProcess(process.Id))
+                                            try
                                             {
-                                                break;
+                                                limit = DateTime.UtcNow.AddSeconds(30);
+
+                                                do
+                                                {
+                                                    buffer.Length = 0;
+                                                    if (NativeMethods.GetWindowText(handle, buffer, 2) > 0 && buffer[0] != 'U') //window text is initially Untitled
+                                                    {
+                                                        if (WindowChanged != null)
+                                                        {
+                                                            wce.Type = WindowChangedEventArgs.EventType.TitleChanged;
+                                                            WindowChanged(this, wce);
+                                                        }
+
+                                                        break;
+                                                    }
+                                                }
+                                                while (DateTime.UtcNow < limit && !process.WaitForExit(100));
+                                            }
+                                            catch (Exception e)
+                                            {
+                                                Util.Logging.Log(e);
                                             }
 
-                                            //watching for changes in memory usage to check if it's still doing something
-                                            //bypassing the launching can cause it to get stuck on authentication if either the credentials are wrong or the network isn't authorized
-                                            if (watchAutologin && DateTime.UtcNow > nextCheck)
+                                            var nextCheck_Seconds = 3;
+                                            var memoryUsage = process.PeakWorkingSet64;
+                                            var nextCheck = DateTime.UtcNow.AddSeconds(nextCheck_Seconds);
+                                            var memoryChecks = 0;
+                                            //var verified = false;
+
+                                            limit = DateTime.UtcNow.AddMinutes(3);
+
+                                            do
                                             {
-                                                process.Refresh();
-
-                                                var memoryChange = process.PeakWorkingSet64 - memoryUsage;
-                                                memoryUsage += memoryChange;
-
-                                                if (memoryChange < 1000000)
+                                                if ((hasVolume = volumeControl.Query()) || (pidChild = GetChildProcess(process.Id)) > 0)
                                                 {
-                                                    if (++memoryChecks == 3)
+                                                    break;
+                                                }
+
+                                                #region -nopatchui activity check (obsolete)
+
+                                                //watching for changes in memory usage to check if it's still doing something
+                                                //bypassing the launcher (-nopatchui) can cause it to get stuck on authentication if either the credentials are wrong or the network isn't authorized
+                                                if (!hasVolume && DateTime.UtcNow > nextCheck)
+                                                {
+                                                    process.Refresh();
+
+                                                    var memoryChange = process.PeakWorkingSet64 - memoryUsage;
+                                                    memoryUsage += memoryChange;
+
+                                                    if (memoryChange < 1000000)
                                                     {
-                                                        //this account may be stuck trying to authenticate
-
-                                                        var account = this.Account.Settings;
-                                                        if (account.HasCredentials && account.NetworkAuthorizationState != Settings.NetworkAuthorizationState.Disabled && Settings.NetworkAuthorization.HasValue)
+                                                        if (++memoryChecks == 3)
                                                         {
-                                                            if (account.NetworkAuthorizationState == Settings.NetworkAuthorizationState.Unknown)
-                                                            {
-                                                                if (AuthenticationRequired != null)
-                                                                    AuthenticationRequired(this, null);
+                                                            //this account may be stuck trying to authenticate
 
-                                                                return;
+                                                            var account = this.Account.Settings;
+                                                            if (account.HasCredentials && account.NetworkAuthorizationState != Settings.NetworkAuthorizationState.Disabled && Settings.NetworkAuthorization.HasValue)
+                                                            {
+                                                                if (account.NetworkAuthorizationState == Settings.NetworkAuthorizationState.Unknown)
+                                                                {
+                                                                    if (AuthenticationRequired != null)
+                                                                        AuthenticationRequired(this, null);
+
+                                                                    return;
+                                                                }
+                                                                else
+                                                                {
+                                                                    Tools.ArenaAccount session;
+                                                                    switch (NetworkAuthorization.Verify(account, true, null, out session))
+                                                                    {
+                                                                        case NetworkAuthorization.VerifyResult.Completed:
+                                                                        case NetworkAuthorization.VerifyResult.Required:
+
+                                                                            if (AuthenticationRequired != null)
+                                                                                AuthenticationRequired(this, session);
+
+                                                                            return;
+                                                                        case NetworkAuthorization.VerifyResult.OK:
+
+                                                                            //authentication was ok - assuming it's a slow load
+                                                                            nextCheck_Seconds = 10;
+                                                                            //verified = true;
+
+                                                                            break;
+                                                                        case NetworkAuthorization.VerifyResult.None:
+                                                                        default:
+
+                                                                            //authentication isn't being tracked - assuming it's stuck
+                                                                            nextCheck_Seconds = 10;
+
+                                                                            break;
+                                                                    }
+                                                                }
                                                             }
                                                             else
                                                             {
-                                                                Tools.ArenaAccount session;
-                                                                switch (NetworkAuthorization.Verify(account, true, null, out session))
-                                                                {
-                                                                    case NetworkAuthorization.VerifyResult.Completed:
-                                                                    case NetworkAuthorization.VerifyResult.Required:
-
-                                                                        if (AuthenticationRequired != null)
-                                                                            AuthenticationRequired(this, session);
-
-                                                                        return;
-                                                                    case NetworkAuthorization.VerifyResult.OK:
-
-                                                                        //authentication was ok - assuming it's a slow load
-                                                                        nextCheck_Seconds = 10;
-                                                                        //verified = true;
-
-                                                                        break;
-                                                                    case NetworkAuthorization.VerifyResult.None:
-                                                                    default:
-
-                                                                        //authentication isn't being tracked - assuming it's stuck
-                                                                        nextCheck_Seconds = 10;
-
-                                                                        break;
-                                                                }
+                                                                //authentication isn't enabled
+                                                                nextCheck_Seconds = 10;
                                                             }
                                                         }
-                                                        else
+                                                        else if (memoryChecks > 6)
                                                         {
-                                                            //authentication isn't enabled
-                                                            nextCheck_Seconds = 10;
+                                                            if (AuthenticationRequired != null)
+                                                                AuthenticationRequired(this, null);
+
+                                                            return;
                                                         }
                                                     }
-                                                    else if (memoryChecks > 6)
-                                                    {
-                                                        if (AuthenticationRequired != null)
-                                                            AuthenticationRequired(this, null);
+                                                    else
+                                                        memoryChecks = 0;
 
-                                                        return;
-                                                    }
+                                                    nextCheck = DateTime.UtcNow.AddSeconds(nextCheck_Seconds);
                                                 }
-                                                else
-                                                    memoryChecks = 0;
 
-                                                nextCheck = DateTime.UtcNow.AddSeconds(nextCheck_Seconds);
+                                                #endregion
+                                            }
+                                            while (DateTime.UtcNow < limit && !this.process.WaitForExit(500));
+                                        }
+                                    }
+
+                                    if (WindowChanged != null && !this.process.HasExited)
+                                    {
+                                        wce.Type = WindowChangedEventArgs.EventType.DxWindowReady;
+                                        WindowChanged(this, wce);
+                                    }
+
+                                    #region Find CoherentUI
+
+                                    if (pidChild == 0)
+                                    {
+                                        do
+                                        {
+                                            if ((pidChild = GetChildProcess(process.Id)) > 0)
+                                            {
+                                                break;
                                             }
                                         }
                                         while (DateTime.UtcNow < limit && !this.process.WaitForExit(500));
-
-                                        if (WindowChanged != null && !this.process.HasExited)
-                                        {
-                                            wce.Type = WindowChangedEventArgs.EventType.DxWindowReady;
-                                            WindowChanged(this, wce);
-                                        }
-
-                                        return;
                                     }
+
+                                    if (pidChild > 0)
+                                    {
+                                        try
+                                        {
+                                            using (var child = Process.GetProcessById(pidChild))
+                                            {
+                                                limit = DateTime.UtcNow.AddSeconds(10);
+                                                var pid = pidChild;
+
+                                                do
+                                                {
+                                                    if ((pidChild = GetChildProcess(pid)) > 0)
+                                                    {
+                                                        break;
+                                                    }
+                                                }
+                                                while (DateTime.UtcNow < limit && !child.WaitForExit(500));
+                                            }
+
+                                            if (pidChild > 0)
+                                            {
+                                                using (var child = Process.GetProcessById(pidChild))
+                                                {
+                                                    long mem = 0;
+                                                    byte counter = 0;
+                                                    limit = DateTime.UtcNow.AddSeconds(60);
+
+                                                    do
+                                                    {
+                                                        if (mem > 0)
+                                                            child.Refresh();
+                                                        var _mem = child.PeakWorkingSet64;
+                                                        if (_mem > mem)
+                                                        {
+                                                            mem = _mem;
+                                                            counter = 0;
+                                                        }
+                                                        else if (++counter > 2)
+                                                            break;
+                                                    }
+                                                    while (DateTime.UtcNow <limit && !child.WaitForExit(100));
+                                                }
+                                            }
+                                        }
+                                        catch (Exception ex)
+                                        {
+                                            Util.Logging.Log(ex);
+                                        }
+                                    }
+
+                                    #endregion
+
+                                    if (WindowChanged != null && !this.process.HasExited)
+                                    {
+                                        wce.Type = WindowChangedEventArgs.EventType.InGameCoherentUIReady;
+                                        WindowChanged(this, wce);
+                                    }
+
+                                    return;
                                 }
                                 else if (className[0] == '#')
                                 {
@@ -479,6 +588,86 @@ namespace Gw2Launcher.Client
                                         wce.Type = WindowChangedEventArgs.EventType.TitleChanged;
                                         WindowChanged(this, wce);
                                     }
+
+                                    #region Find CoherentUI
+
+                                    var pidChild = 0;
+                                    var limit = DateTime.UtcNow.AddSeconds(30);
+
+                                        do
+                                        {
+                                            if ((pidChild = GetChildProcess(process.Id)) > 0)
+                                            {
+                                                break;
+                                            }
+
+                                            this.process.Refresh();
+                                            if (_handle != this.process.MainWindowHandle)
+                                                break;
+                                        }
+                                        while (DateTime.UtcNow < limit && !this.process.WaitForExit(500));
+
+                                    if (pidChild > 0)
+                                    {
+                                        try
+                                        {
+                                            using (var child = Process.GetProcessById(pidChild))
+                                            {
+                                                limit = DateTime.UtcNow.AddSeconds(10);
+                                                var pid = pidChild;
+
+                                                do
+                                                {
+                                                    if ((pidChild = GetChildProcess(pid)) > 0)
+                                                    {
+                                                        break;
+                                                    }
+
+                                                    this.process.Refresh();
+                                                    if (_handle != this.process.MainWindowHandle)
+                                                        break;
+                                                }
+                                                while (DateTime.UtcNow < limit && !child.WaitForExit(500));
+                                            }
+
+                                            if (pidChild > 0)
+                                            {
+                                                using (var child = Process.GetProcessById(pidChild))
+                                                {
+                                                    long mem = 0;
+                                                    byte counter = 0;
+                                                    limit = DateTime.UtcNow.AddSeconds(60);
+
+                                                    do
+                                                    {
+                                                        if (mem > 0)
+                                                            child.Refresh();
+                                                        var _mem = child.PeakWorkingSet64;
+                                                        if (_mem > mem)
+                                                        {
+                                                            mem = _mem;
+                                                            counter = 0;
+                                                        }
+                                                        else if (++counter > 2)
+                                                            break;
+                                                    }
+                                                    while (DateTime.UtcNow < limit && !child.WaitForExit(100));
+
+                                                    if (WindowChanged != null)
+                                                    {
+                                                        wce.Type = WindowChangedEventArgs.EventType.LauncherCoherentUIReady;
+                                                        WindowChanged(this, wce);
+                                                    }
+                                                }
+                                            }
+                                        }
+                                        catch (Exception ex)
+                                        {
+                                            Util.Logging.Log(ex);
+                                        }
+                                    }
+
+                                    #endregion
                                 }
                             }
                         }
@@ -588,61 +777,96 @@ namespace Gw2Launcher.Client
             {
                 var _placement = Windows.WindowSize.GetWindowPlacement(window);
                 if (_placement.rcNormalPosition.Equals(bounds))
-                {
                     return;
-                }
-
-                var attempts = 3;
 
                 Windows.WindowSize.SetWindowPlacement(window, bounds, ShowWindowCommands.ShowNormal);
 
-                var t = DateTime.UtcNow.AddMilliseconds(timeout);
+                //var attempts = 3;
+                //var t = DateTime.UtcNow.AddMilliseconds(timeout);
 
-                do
+                //do
+                //{
+                //    Thread.Sleep(500);
+
+                //    //when gw2 is launched using -nopatchui, the window will reset its position while loading
+
+                //    var placement = Windows.WindowSize.GetWindowPlacement(window);
+
+                //    if (placement.showCmd == ShowWindowCommands.ShowNormal)
+                //    {
+                //        if (placement.rcNormalPosition.Equals(bounds))
+                //        {
+
+                //        }
+                //        else if (placement.rcNormalPosition.Equals(_placement.rcNormalPosition))
+                //        {
+                //            if (--attempts > 0) //not all bounds are accepted; gw2 will do a best fit
+                //            {
+                //                Windows.WindowSize.SetWindowPlacement(window, bounds, ShowWindowCommands.ShowNormal);
+                //            }
+                //            else
+                //            {
+                //                break;
+                //            }
+                //        }
+                //        else
+                //        {
+                //            if (attempts > 0)
+                //            {
+                //                attempts = 0;
+
+                //                //retry once, assuming the original placement was changed
+                //                _placement = Windows.WindowSize.GetWindowPlacement(window);
+                //                Windows.WindowSize.SetWindowPlacement(window, bounds, ShowWindowCommands.ShowNormal);
+                //            }
+                //            else
+                //            {
+                //                //size was changed to something other than the original or set size
+                //                //assuming something else moved the window - cancelling
+                //                break;
+                //            }
+                //        }
+                //    }
+                //}
+                //while (DateTime.UtcNow < t);
+            }
+
+            public static void SetTopMost(IntPtr handle)
+            {
+                try
                 {
-                    Thread.Sleep(500);
-
-                    //when gw2 is launched using -nopatchui, the window will reset its position while loading
-
-                    var placement = Windows.WindowSize.GetWindowPlacement(window);
-
-                    if (placement.showCmd == ShowWindowCommands.ShowNormal)
-                    {
-                        if (placement.rcNormalPosition.Equals(bounds))
-                        {
-
-                        }
-                        else if (placement.rcNormalPosition.Equals(_placement.rcNormalPosition))
-                        {
-                            if (--attempts > 0) //not all bounds are accepted; gw2 will do a best fit
-                            {
-                                Windows.WindowSize.SetWindowPlacement(window, bounds, ShowWindowCommands.ShowNormal);
-                            }
-                            else
-                            {
-                                break;
-                            }
-                        }
-                        else
-                        {
-                            if (attempts > 0)
-                            {
-                                attempts = 0;
-
-                                //retry once, assuming the original placement was changed
-                                _placement = Windows.WindowSize.GetWindowPlacement(window);
-                                Windows.WindowSize.SetWindowPlacement(window, bounds, ShowWindowCommands.ShowNormal);
-                            }
-                            else
-                            {
-                                //size was changed to something other than the original or set size
-                                //assuming something else moved the window - cancelling
-                                break;
-                            }
-                        }
-                    }
+                    NativeMethods.SetWindowPos(handle, (IntPtr)WindowZOrder.HWND_TOPMOST, 0, 0, 0, 0, SetWindowPosFlags.SWP_NOMOVE | SetWindowPosFlags.SWP_NOSIZE);
                 }
-                while (DateTime.UtcNow < t);
+                catch (Exception ex)
+                {
+                    Util.Logging.Log(ex);
+                }
+            }
+
+            public static void SetTopMost(Process process)
+            {
+                try
+                {
+                    SetTopMost(process.MainWindowHandle);
+                }
+                catch (Exception ex)
+                {
+                    Util.Logging.Log(ex);
+                }
+            }
+
+            public static void RemoveWindowStyle(IntPtr handle, WindowStyle style)
+            {
+                var l1 = NativeMethods.GetWindowLongPtr(handle, (int)GWL.GWL_STYLE);
+                IntPtr l2;
+
+                if (IntPtr.Size == 4)
+                    l2 = (IntPtr)((int)l1 & ~(int)style);
+                else
+                    l2 = (IntPtr)((long)l1 & ~(long)style);
+                
+                if (l2 != l1)
+                    NativeMethods.SetWindowLongPtr(handle, (int)GWL.GWL_STYLE, l2);
             }
         }
     }

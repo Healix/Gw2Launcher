@@ -274,7 +274,7 @@
             this.ClientSize = new System.Drawing.Size(276, 225);
             this.Cursor = System.Windows.Forms.Cursors.SizeAll;
             this.FormBorderStyle = System.Windows.Forms.FormBorderStyle.None;
-            this.Icon = global::Gw2Launcher.Properties.Resources.Gw2;
+            this.Icon = global::Gw2Launcher.Properties.Resources.Gw2Launcher;
             this.MaximizeBox = false;
             this.MinimizeBox = false;
             this.MinimumSize = new System.Drawing.Size(50, 50);

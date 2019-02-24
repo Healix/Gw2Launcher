@@ -8,6 +8,7 @@ using System.Text;
 using System.Threading.Tasks;
 using System.Windows.Forms;
 using System.IO;
+using System.Diagnostics;
 using Gw2Launcher.UI.Controls;
 using Gw2Launcher.Windows.Native;
 
@@ -20,7 +21,8 @@ namespace Gw2Launcher.UI
         private bool autoSizeGrid;
         private NotifyIcon notifyIcon;
         private bool canShow, initialized;
-        private DateTime lastCacheDelete, lastCrashDelete;
+        private DateTime lastCrashDelete;
+        private bool isInModalLoop;
 
         private Dictionary<ushort, AccountGridButton> buttons;
         private formAccountTooltip tooltip;
@@ -28,9 +30,11 @@ namespace Gw2Launcher.UI
         private formAssetProxy assetProxyWindow;
         private formBackgroundPatcher bpWindow;
         private formProgressOverlay bpProgress;
+        private formAccountBar abWindow;
         private Tools.QueuedAccountApi accountApi;
         private formDailies dailies;
         private Tools.Screenshots screenshotMonitor;
+        private AccountGridButton focusedButton;
 
         private byte activeWindows;
         private List<Form> windows;
@@ -70,6 +74,11 @@ namespace Gw2Launcher.UI
             disableAutomaticLoginsToolStripMenuItem1.Tag = 0;
             applyWindowedBoundsToolStripMenuItem1.Tag = 0;
 
+            Application.EnterThreadModal += Application_EnterThreadModal;
+            Application.LeaveThreadModal += Application_LeaveThreadModal;
+
+            Settings.AccountSorting.SortingChanged += AccountSorting_SortingChanged;
+
             Client.Launcher.AccountStateChanged += Launcher_AccountStateChanged;
             Client.Launcher.LaunchException += Launcher_LaunchException;
             Client.Launcher.AccountLaunched += Launcher_AccountLaunched;
@@ -78,11 +87,12 @@ namespace Gw2Launcher.UI
             Client.Launcher.BuildUpdated += Launcher_BuildUpdated;
             Client.Launcher.AccountQueued += Launcher_AccountQueued;
             Client.Launcher.NetworkAuthorizationRequired += Launcher_NetworkAuthorizationRequired;
+            Client.Launcher.AccountWindowEvent+=Launcher_AccountWindowEvent;
 
             contextNotify.Opening += contextNotify_Opening;
 
             notifyIcon = new NotifyIcon();
-            notifyIcon.Icon = new System.Drawing.Icon(Properties.Resources.Gw2, SystemInformation.SmallIconSize);
+            notifyIcon.Icon = new System.Drawing.Icon(Properties.Resources.Gw2Launcher, SystemInformation.SmallIconSize);
             notifyIcon.Visible = !Settings.ShowTray.HasValue || Settings.ShowTray.Value;
             notifyIcon.Text = "Gw2Launcher";
             notifyIcon.ContextMenuStrip = contextNotify;
@@ -101,7 +111,9 @@ namespace Gw2Launcher.UI
 
             Settings.ShowTray.ValueChanged += SettingsShowTray_ValueChanged;
             Settings.WindowBounds[typeof(formMain)].ValueChanged += SettingsWindowBounds_ValueChanged;
-            Settings.ShowAccount.ValueChanged += ShowAccount_ValueChanged;
+            Settings.StyleShowAccount.ValueChanged += StyleShowAccount_ValueChanged;
+            Settings.StyleShowColor.ValueChanged += StyleShowColor_ValueChanged;
+            Settings.StyleHighlightFocused.ValueChanged += StyleHighlightFocused_ValueChanged;
             Settings.FontLarge.ValueChanged += FontLarge_ValueChanged;
             Settings.FontSmall.ValueChanged += FontSmall_ValueChanged;
             Settings.BackgroundPatchingEnabled.ValueChanged += BackgroundPatchingEnabled_ValueChanged;
@@ -137,10 +149,49 @@ namespace Gw2Launcher.UI
             var h = this.Handle; //force creation
         }
 
+        void AccountSorting_SortingChanged(object sender, EventArgs e)
+        {
+            if (Settings.SortingMode.Value == Settings.SortMode.Custom)
+            {
+                SetSorting(Settings.SortingMode.Value, Settings.SortingOrder.Value, true);
+            }
+        }
+
+        void Application_LeaveThreadModal(object sender, EventArgs e)
+        {
+            isInModalLoop = false;
+            OnIsInModalLoopChanged();
+        }
+
+        void Application_EnterThreadModal(object sender, EventArgs e)
+        {
+            isInModalLoop = true;
+            OnIsInModalLoopChanged();
+        }
+
+        private void OnIsInModalLoopChanged()
+        {
+            if (abWindow != null)
+            {
+                abWindow.CanLaunch = !isInModalLoop;
+            }
+        }
+
+        protected override void OnClick(EventArgs e)
+        {
+            gridContainer.ClearSelected();
+
+            base.OnClick(e);
+        }
+
         void contextNotify_Opening(object sender, CancelEventArgs e)
         {
             disableAutomaticLoginsToolStripMenuItem2.Enabled = (int)disableAutomaticLoginsToolStripMenuItem1.Tag > 0;
             applyWindowedBoundsToolStripMenuItem2.Enabled = (int)applyWindowedBoundsToolStripMenuItem1.Tag > 0;
+
+            var accountBar = Settings.AccountBar.Enabled.Value;
+            showAccountBarToolStripMenuItem1.Visible = accountBar;
+            toolStripMenuItem26.Visible = accountBar;
         }
 
         private void PurgeTemp()
@@ -232,19 +283,8 @@ namespace Gw2Launcher.UI
 
         public void ShowPatchProxy()
         {
-            if (this.InvokeRequired)
-            {
-                try
-                {
-                    this.Invoke(new MethodInvoker(ShowPatchProxy));
-                }
-                catch (Exception e)
-                {
-                    Util.Logging.Log(e);
-                }
-
+            if (Util.Invoke.IfRequired(this, ShowPatchProxy))
                 return;
-            }
 
             var f = assetProxyWindow;
 
@@ -282,48 +322,14 @@ namespace Gw2Launcher.UI
             }
             else
             {
-                try
-                {
-
-                    f.Invoke(new MethodInvoker(
-                        delegate
-                        {
-                            var h = f.Handle;
-                            if (h != IntPtr.Zero)
-                            {
-                                try
-                                {
-                                    Windows.FindWindow.FocusWindow(h);
-                                }
-                                catch (Exception ex)
-                                {
-                                    Util.Logging.Log(ex);
-                                }
-                            }
-                        }));
-                }
-                catch (Exception ex)
-                {
-                    Util.Logging.Log(ex);
-                }
+                FocusFormWindow(f);
             }
         }
 
         public void ShowBackgroundPatcher()
         {
-            if (this.InvokeRequired)
-            {
-                try
-                {
-                    this.Invoke(new MethodInvoker(ShowBackgroundPatcher));
-                }
-                catch (Exception e)
-                {
-                    Util.Logging.Log(e);
-                }
-
+            if (Util.Invoke.IfRequired(this, ShowBackgroundPatcher))
                 return;
-            }
 
             var f = bpWindow;
 
@@ -361,31 +367,69 @@ namespace Gw2Launcher.UI
             }
             else
             {
-                try
-                {
-
-                    f.Invoke(new MethodInvoker(
-                        delegate
-                        {
-                            var h = f.Handle;
-                            if (h != IntPtr.Zero)
-                            {
-                                try
-                                {
-                                    Windows.FindWindow.FocusWindow(h);
-                                }
-                                catch (Exception ex)
-                                {
-                                    Util.Logging.Log(ex);
-                                }
-                            }
-                        }));
-                }
-                catch (Exception ex)
-                {
-                    Util.Logging.Log(ex);
-                }
+                FocusFormWindow(f);
             }
+        }
+
+        public void ShowAccountBar(bool forceShow)
+        {
+            if (Util.Invoke.IfRequired(this, 
+                delegate
+                {
+                    ShowAccountBar(forceShow);
+                }))
+                return;
+
+            var f = abWindow;
+
+            if (f == null || f.IsDisposed)
+            {
+                abWindow = f = new formAccountBar();
+
+                var t = new System.Threading.Thread(new System.Threading.ThreadStart(
+                    delegate
+                    {
+                        f.Initialize(forceShow);
+
+                        Application.Run(f);
+
+                        abWindow = null;
+                    }));
+
+                t.IsBackground = true;
+                t.SetApartmentState(System.Threading.ApartmentState.STA);
+                t.Start();
+            }
+            else
+            {
+                Util.Invoke.Required(f,
+                    delegate
+                    {
+                        if (!f.Visible)
+                            f.Show();
+                        FocusFormWindow(f);
+                    });
+            }
+        }
+
+        private void FocusFormWindow(Form f)
+        {
+            Util.Invoke.Required(f,
+                delegate
+                {
+                    var h = f.Handle;
+                    if (h != IntPtr.Zero)
+                    {
+                        try
+                        {
+                            Windows.FindWindow.FocusWindow(h);
+                        }
+                        catch (Exception ex)
+                        {
+                            Util.Logging.Log(ex);
+                        }
+                    }
+                });
         }
 
         private int OnNoteCallback()
@@ -623,9 +667,7 @@ namespace Gw2Launcher.UI
             }
 
             if (accounts.Count > 0)
-            {
                 e.Update(accounts);
-            }
         }
 
         private formWaiting ShowWaiting()
@@ -698,6 +740,9 @@ namespace Gw2Launcher.UI
             }
 
             Util.ScheduledEvents.Register(OnNoteCallback, 0);
+
+            if (Settings.AccountBar.Enabled.Value)
+                ShowAccountBar(false);
         }
 
         void formMain_Shown(object sender, EventArgs e)
@@ -773,6 +818,12 @@ namespace Gw2Launcher.UI
                     notifyIcon.Dispose(); 
                 if (screenshotMonitor != null)
                     screenshotMonitor.Dispose();
+                if (abWindow != null)
+                    Util.Invoke.Required(abWindow, abWindow.Dispose);
+                if (bpWindow != null)
+                    Util.Invoke.Required(bpWindow, bpWindow.Dispose);
+                if (assetProxyWindow != null)
+                    Util.Invoke.Required(assetProxyWindow, assetProxyWindow.Dispose);
             }
             base.Dispose(disposing);
         }
@@ -1079,6 +1130,38 @@ namespace Gw2Launcher.UI
             }
         }
 
+        private void SetFocusedAccount(Settings.IAccount account)
+        {
+            AccountGridButton button;
+            if (buttons.TryGetValue(account.UID, out button))
+                SetFocusedButton(button);
+        }
+
+        private void SetFocusedButton(AccountGridButton button)
+        {
+            if (focusedButton == button)
+                return;
+            else if (focusedButton != null)
+                focusedButton.IsFocused = false;
+
+            if (Settings.StyleHighlightFocused.Value && button != null)
+                button.IsFocused = true;
+
+            focusedButton = button;
+        }
+
+        void Launcher_AccountWindowEvent(Settings.IAccount account, Client.Launcher.AccountWindowEventEventArgs e)
+        {
+            if (e.Type == Client.Launcher.AccountWindowEventEventArgs.EventType.Focused)
+            {
+                Util.Invoke.Required(this,
+                    delegate
+                    {
+                        SetFocusedAccount(account);
+                    });
+            }
+        }
+
         void Launcher_AccountLaunched(Settings.IAccount account)
         {
             account.TotalUses++;
@@ -1088,23 +1171,23 @@ namespace Gw2Launcher.UI
                 Tools.Statistics.Record(Tools.Statistics.RecordType.Launched, account.UID);
             }
 
-            if (Settings.DeleteCacheOnLaunch.Value && DateTime.UtcNow.Subtract(lastCacheDelete).TotalMinutes > 1)
-            {
-                lastCacheDelete = DateTime.UtcNow;
+            //note: deleting the cache immediately could potentially delete files being used, but not yet locked
 
-                Task.Factory.StartNew(new Action(
-                   delegate
-                   {
-                       try
-                       {
-                           Tools.Gw2Cache.Delete(Tools.Gw2Cache.USERNAME_GW2LAUNCHER); //Util.Users.GetUserName(account.WindowsAccount)
-                       }
-                       catch (Exception ex)
-                       {
-                           Util.Logging.Log(ex);
-                       }
-                   }));
-            }
+            //if (Settings.DeleteCacheOnLaunch.Value)
+            //{
+            //    Task.Run(new Action(
+            //        delegate
+            //        {
+            //            try
+            //            {
+            //                Tools.Gw2Cache.Delete(uid);
+            //            }
+            //            catch (Exception ex)
+            //            {
+            //                Util.Logging.Log(ex);
+            //            }
+            //        }));
+            //}
 
             if (Settings.DeleteCrashLogsOnLaunch.Value && DateTime.UtcNow.Subtract(lastCrashDelete).TotalDays > 1)
             {
@@ -1295,22 +1378,12 @@ namespace Gw2Launcher.UI
 
         void Launcher_AccountStateChanged(ushort uid, Client.Launcher.AccountState state, Client.Launcher.AccountState previousState, object data)
         {
-            if (this.InvokeRequired)
-            {
-                try
+            if (Util.Invoke.IfRequiredAsync(this,
+                delegate
                 {
-                    this.BeginInvoke(new MethodInvoker(
-                        delegate
-                        {
-                            Launcher_AccountStateChanged(uid, state, previousState, data);
-                        }));
-                }
-                catch (Exception ex)
-                {
-                    Util.Logging.Log(ex);
-                }
+                    Launcher_AccountStateChanged(uid, state, previousState, data);
+                }))
                 return;
-            }
 
             AccountGridButton button;
             if (buttons.TryGetValue(uid, out button))
@@ -1327,12 +1400,12 @@ namespace Gw2Launcher.UI
                     var exited = previousState == Client.Launcher.AccountState.ActiveGame;
 
                     //as a backup in case catching the DX window failed, catch the exit time
-                    if (previousState == Client.Launcher.AccountState.Active && state == Client.Launcher.AccountState.Exited && data is TimeSpan)
-                    {
-                        TimeSpan elapsed = (TimeSpan)data;
-                        if (elapsed != TimeSpan.MinValue && elapsed.TotalMinutes > 10)
-                            exited = true;
-                    }
+                    //if (previousState == Client.Launcher.AccountState.Active && state == Client.Launcher.AccountState.Exited && data is TimeSpan)
+                    //{
+                    //    TimeSpan elapsed = (TimeSpan)data;
+                    //    if (elapsed != TimeSpan.MinValue && elapsed.TotalMinutes > 10)
+                    //        exited = true;
+                    //}
 
                     if (exited)
                     {
@@ -1424,28 +1497,22 @@ namespace Gw2Launcher.UI
                     case Client.Launcher.AccountState.Error:
                         button.SetStatus("failed", Color.DarkRed);
                         break;
+                    case Client.Launcher.AccountState.Exited:
+                        if (focusedButton == button)
+                            SetFocusedButton(null);
+                        break;
                 }
             }
         }
 
         void accountApi_DataReceived(object sender, Tools.QueuedAccountApi.DataEventArgs e)
         {
-            if (this.InvokeRequired)
-            {
-                try
+            if (Util.Invoke.IfRequiredAsync(this,
+                delegate
                 {
-                    this.BeginInvoke(new MethodInvoker(
-                        delegate
-                        {
-                            accountApi_DataReceived(sender, e);
-                        }));
-                }
-                catch (Exception ex)
-                {
-                    Util.Logging.Log(ex);
-                }
+                    accountApi_DataReceived(sender, e);
+                }))
                 return;
-            }
 
             var d = e.Account.ApiData;
             if (d == null)
@@ -1632,9 +1699,10 @@ namespace Gw2Launcher.UI
         {
             Font large = Settings.FontLarge.HasValue ? Settings.FontLarge.Value : UI.Controls.AccountGridButton.FONT_LARGE;
             Font small = Settings.FontSmall.HasValue ? Settings.FontSmall.Value : UI.Controls.AccountGridButton.FONT_SMALL;
-            bool showAccount = !Settings.ShowAccount.HasValue || Settings.ShowAccount.Value;
+            bool showAccount = !Settings.StyleShowAccount.HasValue || Settings.StyleShowAccount.Value,
+                 showColor = Settings.StyleShowColor.Value;
 
-            gridContainer.SetStyle(large, small, showAccount);
+            gridContainer.SetStyle(large, small, showAccount, showColor);
         }
 
         void FontSmall_ValueChanged(object sender, EventArgs e)
@@ -1647,7 +1715,18 @@ namespace Gw2Launcher.UI
             OnStyleChanged();
         }
 
-        void ShowAccount_ValueChanged(object sender, EventArgs e)
+        void StyleShowAccount_ValueChanged(object sender, EventArgs e)
+        {
+            OnStyleChanged();
+        }
+
+        void StyleHighlightFocused_ValueChanged(object sender, EventArgs e)
+        {
+            if (focusedButton != null)
+                focusedButton.IsFocused = ((Settings.ISettingValue<bool>)sender).Value;
+        }
+
+        void StyleShowColor_ValueChanged(object sender, EventArgs e)
         {
             OnStyleChanged();
         }
@@ -2046,6 +2125,7 @@ namespace Gw2Launcher.UI
         void gridContainer_AccountMousePressed(object sender, EventArgs e)
         {
             var button = (AccountGridButton)sender;
+            var setting = Settings.ActionActiveLPress;
 
             try
             {
@@ -2054,7 +2134,8 @@ namespace Gw2Launcher.UI
                     case Client.Launcher.AccountState.Active:
                     case Client.Launcher.AccountState.ActiveGame:
 
-                        Client.Launcher.Kill(button.AccountData);
+                        if (setting.Value == Settings.ButtonAction.Close || !setting.HasValue)
+                            Client.Launcher.Kill(button.AccountData);
 
                         break;
                 }
@@ -2090,15 +2171,21 @@ namespace Gw2Launcher.UI
                 state = Client.Launcher.AccountState.None;
             }
 
+            Settings.ButtonAction action;
+            Settings.ISettingValue<Settings.ButtonAction> v;
+
+            action = Settings.ButtonAction.Launch;
+
             switch (state)
             {
                 case Client.Launcher.AccountState.Active:
                 case Client.Launcher.AccountState.ActiveGame:
-
-                    var setting = Settings.ActionActiveLClick;
-                    var action = Settings.ButtonAction.Focus;
-                    if (setting.HasValue)
-                        action= setting.Value;
+                    
+                    v = Settings.ActionActiveLClick;
+                    if (v.HasValue)
+                        action = v.Value;
+                    else
+                        action = Settings.ButtonAction.Focus;
 
                     switch (action)
                     {
@@ -2110,7 +2197,11 @@ namespace Gw2Launcher.UI
                                 e.Handled = true;
                                 e.FlashColor = Color.FromArgb(221, 224, 255);
 
-                                FocusWindowAsync(p.MainWindowHandle);
+                                try
+                                {
+                                    FocusWindowAsync(p.MainWindowHandle);
+                                }
+                                catch { }
                             }
 
                             break;
@@ -2126,8 +2217,22 @@ namespace Gw2Launcher.UI
 
                     break;
                 default:
+                    
+                    v = Settings.ActionInactiveLClick;
+                    if (v.HasValue)
+                        action = v.Value;
+                    else
+                        action = Settings.ButtonAction.Launch;
 
-                    Client.Launcher.Launch(button.AccountData, Client.Launcher.LaunchMode.Launch);
+                    switch (action)
+                    {
+                        case Settings.ButtonAction.LaunchSingle:
+                            Client.Launcher.Launch(button.AccountData, Client.Launcher.LaunchMode.LaunchSingle);
+                            break;
+                        case Settings.ButtonAction.Launch:
+                            Client.Launcher.Launch(button.AccountData, Client.Launcher.LaunchMode.Launch);
+                            break;
+                    }
 
                     break;
             }
@@ -2170,7 +2275,11 @@ namespace Gw2Launcher.UI
                 if (dragHelper == null)
                     dragHelper = Windows.DragHelper.Initialize(this);
 
-                using (var icon = new Icon(global::Gw2Launcher.Properties.Resources.Gw2, 64, 64))
+                var pathIcon = Settings.GW2Path.Value;
+                if (!Settings.UseGw2IconForShortcuts.Value || !File.Exists(pathIcon))
+                    pathIcon = null;
+
+                using (var icon = new Icon(pathIcon == null ? global::Gw2Launcher.Properties.Resources.Gw2Launcher : global::Gw2Launcher.Properties.Resources.Gw2, 64, 64))
                 {
                     using (var image = new Bitmap(icon.Width, icon.Height, System.Drawing.Imaging.PixelFormat.Format32bppArgb))
                     {
@@ -2216,8 +2325,8 @@ namespace Gw2Launcher.UI
                         Func<Windows.DragHelper.FileDescriptor, System.IO.Stream> getContent = delegate(Windows.DragHelper.FileDescriptor file)
                         {
                             var account = accounts[file.Index];
-                            var stream = new System.IO.MemoryStream(1500);
-                            Windows.Shortcut.Create(stream, path, "-l:silent -l:uid:" + account.UID, "Launch " + account.Name);
+                            var stream = new System.IO.MemoryStream(3000);
+                            Windows.Shortcut.Create(stream, path, "-l:silent -l:uid:" + account.UID, "Launch " + account.Name, pathIcon);
                             stream.Position = 0;
                             return stream;
                         };
@@ -2336,6 +2445,10 @@ namespace Gw2Launcher.UI
                 toolStripMenuItemCancelSep.Visible = pending > 0;
                 disableAutomaticLoginsToolStripMenuItem1.Enabled = (int)disableAutomaticLoginsToolStripMenuItem1.Tag > 0;
                 applyWindowedBoundsToolStripMenuItem1.Enabled = (int)applyWindowedBoundsToolStripMenuItem1.Tag > 0;
+
+                var accountBar = Settings.AccountBar.Enabled.Value;
+                showAccountBarToolStripMenuItem.Visible = accountBar;
+                toolStripMenuItem25.Visible = accountBar;
 
                 contextMenu.Tag = button;
 
@@ -2796,6 +2909,7 @@ namespace Gw2Launcher.UI
             nameToolStripMenuItem.Checked = mode == Settings.SortMode.Name;
             windowsAccountToolStripMenuItem.Checked = mode == Settings.SortMode.Account;
             lastUsedToolStripMenuItem.Checked = mode == Settings.SortMode.LastUsed;
+            sortCustomToolStripMenuItem.Checked = mode == Settings.SortMode.Custom;
 
             ascendingToolStripMenuItem.Checked = order == Settings.SortOrder.Ascending;
             descendingToolStripMenuItem.Checked = order == Settings.SortOrder.Descending;
@@ -2822,6 +2936,7 @@ namespace Gw2Launcher.UI
         private void OnSortingModeClick(object sender)
         {
             Settings.SortMode mode;
+            var order = Settings.SortingOrder.Value;
 
             if (sender == nameToolStripMenuItem)
                 mode = Settings.SortMode.Name;
@@ -2829,13 +2944,18 @@ namespace Gw2Launcher.UI
                 mode = Settings.SortMode.Account;
             else if (sender == lastUsedToolStripMenuItem)
                 mode = Settings.SortMode.LastUsed;
+            else if (sender == sortCustomToolStripMenuItem)
+            {
+                mode = Settings.SortMode.Custom;
+                order = Settings.SortOrder.Ascending;
+            }
             else
                 return;
 
             if (Settings.SortingMode.Value == mode)
                 mode = Settings.SortMode.None;
 
-            SetSorting(mode, Settings.SortingOrder.Value, true);
+            SetSorting(mode, order, true);
         }
 
         private void ascendingToolStripMenuItem_Click(object sender, EventArgs e)
@@ -2925,6 +3045,7 @@ namespace Gw2Launcher.UI
             if (replace)
             {
                 fileBefore.Path = fileAfter.Path;
+                fileBefore.IsInitialized = false;
                 fileAfter.Path = null;
                 
                 switch (type)
@@ -3039,6 +3160,8 @@ namespace Gw2Launcher.UI
                     {
                         var datBefore = account.DatFile;
                         var gfxBefore = account.GfxFile;
+                        var nameBefore = account.Name;
+                        var userBefore = account.WindowsAccount;
 
                         OnBeforeAccountSettingsUpdated(account);
 
@@ -3051,6 +3174,21 @@ namespace Gw2Launcher.UI
                                 button.AccountName = "(current user)";
 
                             OnAccountSettingsUpdated(account, false);
+
+                            var sort = false;
+
+                            switch (Settings.SortingMode.Value)
+                            {
+                                case Settings.SortMode.Account:
+                                    sort = userBefore != account.WindowsAccount;
+                                    break;
+                                case Settings.SortMode.Name:
+                                    sort = nameBefore != account.Name;
+                                    break;
+                            }
+
+                            if (sort)
+                                gridContainer.Sort(Settings.SortingMode.Value, Settings.SortingOrder.Value);
                         }
                         else
                         {
@@ -3111,6 +3249,7 @@ namespace Gw2Launcher.UI
                         if (account == null)
                             continue;
 
+#warning Unchecked delete IFiles by FileManager on account deletion
                         try
                         {
                             Client.FileManager.Delete(account);
@@ -3395,9 +3534,17 @@ namespace Gw2Launcher.UI
             {
                 using (var f = AddMessageBox(this))
                 {
-                    if (MessageBox.Show(f, "Attempt to kill all processes with the following path?\n\n\"" + Settings.GW2Path.Value + "\"", "Confirm", MessageBoxButtons.YesNo, MessageBoxIcon.Exclamation) == DialogResult.Yes)
+                    var path = Settings.GW2Path.Value;
+
+                    if (MessageBox.Show(f, "Attempt to kill all processes with the following path?\n\n\"" + path + "\"", "Confirm", MessageBoxButtons.YesNo, MessageBoxIcon.Exclamation) == DialogResult.Yes)
                     {
-                        Client.Launcher.KillAllActiveProcesses();
+                        Task.Run(new Action(
+                            delegate
+                            {
+                                Client.Launcher.KillAllActiveProcesses();
+                            }));
+
+                        
                     }
                 }
             }
@@ -3546,11 +3693,15 @@ namespace Gw2Launcher.UI
 
             try
             {
+                var icon = Settings.GW2Path.Value;
+                if (!Settings.UseGw2IconForShortcuts.Value || !File.Exists(icon))
+                    icon = null;
+
                 foreach (var account in accounts)
                 {
                     var output = System.IO.Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.DesktopDirectory), getName(account.Name) + ".lnk");
                     if (!System.IO.File.Exists(output))
-                        Windows.Shortcut.Create(output, path, "-l:silent -l:uid:" + account.UID, "Launch " + account.Name);
+                        Windows.Shortcut.Create(output, path, "-l:silent -l:uid:" + account.UID, "Launch " + account.Name, icon);
                 }
             }
             catch (Exception e)
@@ -3747,6 +3898,13 @@ namespace Gw2Launcher.UI
                         }
                     };
 
+                    var bounds = Settings.WindowBounds[f.GetType()];
+                    if (bounds.HasValue)
+                    {
+                        f.StartPosition = FormStartPosition.Manual;
+                        f.Bounds = Util.ScreenUtil.Constrain(bounds.Value); 
+                    }
+
                     f.ShowDialog(this);
 
                     if (f.Modified)
@@ -3826,6 +3984,26 @@ namespace Gw2Launcher.UI
                     }
                 }
             }
+        }
+
+        private void panelContainer_MouseClick(object sender, MouseEventArgs e)
+        {
+            gridContainer.ClearSelected();
+        }
+
+        private void showAccountBarToolStripMenuItem1_Click(object sender, EventArgs e)
+        {
+            ShowAccountBar(true);
+        }
+
+        private void showAccountBarToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            ShowAccountBar(true);
+        }
+
+        private void sortCustomToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            OnSortingModeClick(sender);
         }
     }
 }

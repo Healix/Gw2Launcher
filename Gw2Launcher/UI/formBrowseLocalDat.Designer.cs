@@ -270,7 +270,7 @@
             this.Controls.Add(this.gridAccounts);
             this.Font = new System.Drawing.Font("Segoe UI Semilight", 8.25F);
             this.FormBorderStyle = System.Windows.Forms.FormBorderStyle.FixedDialog;
-            this.Icon = global::Gw2Launcher.Properties.Resources.Gw2;
+            this.Icon = global::Gw2Launcher.Properties.Resources.Gw2Launcher;
             this.MaximizeBox = false;
             this.MinimizeBox = false;
             this.Name = "formBrowseLocalDat";

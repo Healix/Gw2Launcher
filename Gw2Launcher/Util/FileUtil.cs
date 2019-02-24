@@ -65,6 +65,29 @@ namespace Gw2Launcher.Util
             }
         }
 
+        public static bool HasFolderPermissions(string path, FileSystemRights rights)
+        {
+            var security = Directory.GetAccessControl(path, AccessControlSections.Access);
+            var rules = security.GetAccessRules(true, true, typeof(SecurityIdentifier));
+            var usersSid = new SecurityIdentifier(WellKnownSidType.BuiltinUsersSid, null);
+            var inheritance = InheritanceFlags.ContainerInherit | InheritanceFlags.ObjectInherit;
+
+            foreach (FileSystemAccessRule rule in rules)
+            {
+                if (rule.IdentityReference == usersSid)
+                {
+                    if (rule.AccessControlType == AccessControlType.Allow)
+                    {
+                        if ((rule.FileSystemRights & rights) == rights && (rule.InheritanceFlags & inheritance) == inheritance)
+                            return true;
+                    }
+                    break;
+                }
+            }
+
+            return false;
+        }
+
         public static string GetTemporaryFileName(string folder)
         {
             int i = 0;

@@ -30,11 +30,11 @@
         {
             this.panelContainer = new System.Windows.Forms.Panel();
             this.panelContent = new System.Windows.Forms.Panel();
+            this.waitingBounce = new Gw2Launcher.UI.Controls.WaitingBounce();
             this.labelMessage = new System.Windows.Forms.Label();
             this.panelAdd = new System.Windows.Forms.Panel();
             this.labelAccountName = new System.Windows.Forms.Label();
             this.labelAdd = new System.Windows.Forms.Label();
-            this.waitingBounce = new Gw2Launcher.UI.Controls.WaitingBounce();
             this.scrollV = new Gw2Launcher.UI.Controls.FlatVScrollBar();
             this.buttonMinimize = new Gw2Launcher.UI.Controls.FlatShapeButton();
             this.buttonExpired = new Gw2Launcher.UI.Controls.FlatVerticalButton();
@@ -67,6 +67,16 @@
             this.panelContent.TabIndex = 1;
             this.panelContent.Visible = false;
             // 
+            // waitingBounce
+            // 
+            this.waitingBounce.Anchor = System.Windows.Forms.AnchorStyles.None;
+            this.waitingBounce.ForeColor = System.Drawing.SystemColors.ControlDark;
+            this.waitingBounce.Location = new System.Drawing.Point(143, 165);
+            this.waitingBounce.Name = "waitingBounce";
+            this.waitingBounce.Size = new System.Drawing.Size(100, 16);
+            this.waitingBounce.TabIndex = 3;
+            this.waitingBounce.Visible = false;
+            // 
             // labelMessage
             // 
             this.labelMessage.Anchor = System.Windows.Forms.AnchorStyles.None;
@@ -91,6 +101,8 @@
             // 
             // labelAccountName
             // 
+            this.labelAccountName.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left) 
+            | System.Windows.Forms.AnchorStyles.Right)));
             this.labelAccountName.AutoEllipsis = true;
             this.labelAccountName.ForeColor = System.Drawing.SystemColors.GrayText;
             this.labelAccountName.Location = new System.Drawing.Point(45, 8);
@@ -111,16 +123,6 @@
             this.labelAdd.TabIndex = 117;
             this.labelAdd.Text = "new";
             this.labelAdd.Click += new System.EventHandler(this.labelAdd_Click);
-            // 
-            // waitingBounce
-            // 
-            this.waitingBounce.Anchor = System.Windows.Forms.AnchorStyles.None;
-            this.waitingBounce.ForeColor = System.Drawing.SystemColors.ControlDark;
-            this.waitingBounce.Location = new System.Drawing.Point(143, 165);
-            this.waitingBounce.Name = "waitingBounce";
-            this.waitingBounce.Size = new System.Drawing.Size(100, 16);
-            this.waitingBounce.TabIndex = 3;
-            this.waitingBounce.Visible = false;
             // 
             // scrollV
             // 
@@ -198,9 +200,10 @@
             this.Controls.Add(this.buttonMessages);
             this.Font = new System.Drawing.Font("Segoe UI", 9F);
             this.FormBorderStyle = System.Windows.Forms.FormBorderStyle.None;
-            this.Icon = global::Gw2Launcher.Properties.Resources.Gw2;
+            this.Icon = global::Gw2Launcher.Properties.Resources.Gw2Launcher;
             this.MaximizeBox = false;
             this.MinimizeBox = false;
+            this.MinimumSize = new System.Drawing.Size(425, 336);
             this.Name = "formNotes";
             this.ShowInTaskbar = false;
             this.StartPosition = System.Windows.Forms.FormStartPosition.CenterParent;

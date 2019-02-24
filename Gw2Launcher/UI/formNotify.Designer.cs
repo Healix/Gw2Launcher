@@ -140,7 +140,7 @@
             this.Font = new System.Drawing.Font("Segoe UI", 8.25F);
             this.ForeColor = System.Drawing.Color.White;
             this.FormBorderStyle = System.Windows.Forms.FormBorderStyle.None;
-            this.Icon = global::Gw2Launcher.Properties.Resources.Gw2;
+            this.Icon = global::Gw2Launcher.Properties.Resources.Gw2Launcher;
             this.Name = "formNotify";
             this.ShowInTaskbar = false;
             this.StartPosition = System.Windows.Forms.FormStartPosition.Manual;

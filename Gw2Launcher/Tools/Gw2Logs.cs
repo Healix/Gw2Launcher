@@ -13,7 +13,7 @@ namespace Gw2Launcher.Tools
 
         public static void Delete()
         {
-            if (Client.FileManager.IsLinkingSupported)
+            if (Client.FileManager.IsDataLinkingSupported)
             {
                 foreach (var uid in Settings.Accounts.GetKeys())
                 {

@@ -54,7 +54,7 @@
             this.ShowInTaskbar = false;
             this.StartPosition = System.Windows.Forms.FormStartPosition.CenterParent;
             this.Text = "Waiting...";
-            this.Icon = global::Gw2Launcher.Properties.Resources.Gw2;
+            this.Icon = global::Gw2Launcher.Properties.Resources.Gw2Launcher;
             this.Load += new System.EventHandler(this.formWaiting_Load);
             this.ResumeLayout(false);
             this.PerformLayout();

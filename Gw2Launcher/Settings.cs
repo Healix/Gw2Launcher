@@ -17,7 +17,7 @@ namespace Gw2Launcher
         private const ushort WRITE_DELAY = 10000;
         private const string FILE_NAME = "settings.dat";
         private static readonly byte[] HEADER;
-        private const ushort VERSION = 4;
+        private const ushort VERSION = 5;
         private static readonly Type[] FORMS;
 
         public enum SortMode : byte
@@ -25,7 +25,9 @@ namespace Gw2Launcher
             None = 0,
             Name = 1,
             Account = 2,
-            LastUsed = 3
+            LastUsed = 3,
+            LaunchTime = 4,
+            Custom = 5,
         }
 
         public enum SortOrder : byte
@@ -43,14 +45,17 @@ namespace Gw2Launcher
             TopLeft = 4,
             TopRight = 5,
             BottomLeft = 6,
-            BottomRight = 7
+            BottomRight = 7,
+            None = 8,
         }
 
         public enum ButtonAction : byte
         {
             None = 0,
             Focus = 1,
-            Close = 2
+            Close = 2,
+            Launch = 3,
+            LaunchSingle = 4,
         }
 
         public enum ScreenshotFormat : byte
@@ -113,6 +118,46 @@ namespace Gw2Launcher
             Normal = 3,
             BelowNormal = 4,
             Low = 5,
+        }
+
+        [Flags]
+        public enum WindowOptions : byte
+        {
+            None = 0,
+            Windowed = 1,
+            RememberChanges = 2,
+            PreventChanges = 4,
+            TopMost = 8,
+        }
+
+        public enum IconType : byte
+        {
+            None = 0,
+            File = 1,
+            Gw2LauncherColorKey = 2,
+            ColorKey = 3,
+        }
+
+        [Flags]
+        public enum AccountBarStyles : byte
+        {
+            None = 0,
+            Name = 1,
+            Color = 2,
+            Icon = 4,
+            Exit = 8,
+            HighlightFocused = 16,
+        }
+
+        [Flags]
+        public enum AccountBarOptions : byte
+        {
+            None = 0,
+            HorizontalLayout = 1,
+            GroupByActive = 2,
+            OnlyShowActive = 4,
+            AutoHide = 8,
+            TopMost = 16,
         }
 
         public class Notes : IEnumerable<Notes.Note>
@@ -589,6 +634,11 @@ namespace Gw2Launcher
 
         public interface IAccount
         {
+            event EventHandler NameChanged,
+                               IconChanged,
+                               IconTypeChanged,
+                               ColorKeyChanged;
+
             /// <summary>
             /// Unique identifier
             /// </summary>
@@ -646,6 +696,14 @@ namespace Gw2Launcher
             /// True if using -windowed mode
             /// </summary>
             bool Windowed
+            {
+                get;
+            }
+
+            /// <summary>
+            /// Options for -windowed mode
+            /// </summary>
+            WindowOptions WindowOptions
             {
                 get;
                 set;
@@ -723,9 +781,18 @@ namespace Gw2Launcher
             }
 
             /// <summary>
-            /// Uses the options -nopatchui, -email and -password
+            /// Automatically login
             /// </summary>
             bool AutomaticLogin
+            {
+                get;
+                set;
+            }
+
+            /// <summary>
+            /// Automatically starts the game after logging in
+            /// </summary>
+            bool AutomaticPlay
             {
                 get;
                 set;
@@ -902,6 +969,48 @@ namespace Gw2Launcher
             }
 
             IAccountApiData CreateApiData();
+
+            /// <summary>
+            /// The color identifier for the account
+            /// </summary>
+            Color ColorKey
+            {
+                get;
+                set;
+            }
+
+            /// <summary>
+            /// The type of icon for the account
+            /// </summary>
+            IconType IconType
+            {
+                get;
+                set;
+            }
+
+            /// <summary>
+            /// The icon for the account
+            /// </summary>
+            string Icon
+            {
+                get;
+                set;
+            }
+
+            /// <summary>
+            /// The key used when sorted manually
+            /// </summary>
+            ushort SortKey
+            {
+                get;
+            }
+
+            /// <summary>
+            /// Adjusts the sort key for the account based on the referenced account
+            /// </summary>
+            /// <param name="reference">The account that will be used as a reference</param>
+            /// <param name="type">Where the account should be ordered based on the referenced account</param>
+            void Sort(IAccount reference, AccountSorting.SortType type);
         }
 
         public interface IFile
@@ -939,7 +1048,8 @@ namespace Gw2Launcher
 
         public interface IKeyedProperty<TKey,TValue>
         {
-            event EventHandler<KeyValuePair<TKey, ISettingValue<TValue>>> ValueChanged;
+            event EventHandler<KeyValuePair<TKey, ISettingValue<TValue>>> ValueChanged, ValueAdded;
+            event EventHandler<TKey> ValueRemoved;
 
             bool Contains(TKey key);
 
@@ -985,6 +1095,7 @@ namespace Gw2Launcher
         public interface ISettingValue<T>
         {
             event EventHandler ValueChanged;
+            event EventHandler<T> ValueCleared;
 
             T Value
             {
@@ -1010,7 +1121,8 @@ namespace Gw2Launcher
 
         private class KeyedProperty<TKey, TValue> : IKeyedProperty<TKey, TValue>, IEnumerable<KeyValuePair<TKey, ISettingValue<TValue>>>
         {
-            public event EventHandler<KeyValuePair<TKey, ISettingValue<TValue>>> ValueChanged;
+            public event EventHandler<KeyValuePair<TKey, ISettingValue<TValue>>> ValueChanged, ValueAdded;
+            public event EventHandler<TKey> ValueRemoved;
 
             private Dictionary<TKey, ISettingValue<TValue>> _dictionary;
             private Func<TKey, ISettingValue<TValue>> onNewKey;
@@ -1050,6 +1162,9 @@ namespace Gw2Launcher
                 {
                     _dictionary.Add(key, value);
                 }
+
+                if (ValueAdded != null)
+                    ValueAdded(this, new KeyValuePair<TKey, ISettingValue<TValue>>(key, value));
             }
 
             public bool Remove(TKey key)
@@ -1063,6 +1178,9 @@ namespace Gw2Launcher
 
                 if (removed)
                 {
+                    if (ValueRemoved != null)
+                        ValueRemoved(this, key);
+
                     return true;
                 }
 
@@ -1263,6 +1381,7 @@ namespace Gw2Launcher
         private class SettingValue<T> : ISettingValue<T>
         {
             public event EventHandler ValueChanged;
+            public event EventHandler<T> ValueCleared;
 
             protected T value;
             protected bool hasValue;
@@ -1307,10 +1426,15 @@ namespace Gw2Launcher
             {
                 if (this.hasValue)
                 {
+                    var v = this.value;
+
                     this.hasValue = false;
                     this.value = default(T);
 
                     OnValueChanged();
+
+                    if (ValueCleared != null)
+                        ValueCleared(this, v);
                 }
             }
 
@@ -1469,11 +1593,112 @@ namespace Gw2Launcher
             }
         }
 
+        public static class AccountSorting
+        {
+            public static event EventHandler SortingChanged;
+
+            public enum SortType
+            {
+                Before,
+                After,
+                Swap,
+            }
+
+            public static void Sort(IAccount account, IAccount reference, SortType type)
+            {
+                var _reference = (Account)reference;
+                var _account = (Account)account;
+                var index = _reference._SortKey;
+
+                switch (type)
+                {
+                    case AccountSorting.SortType.After:
+
+                        if (_account._SortKey > index)
+                            ++index;
+
+                        break;
+                    case AccountSorting.SortType.Before:
+
+                        if (_account._SortKey < index)
+                            --index;
+
+                        break;
+                    case AccountSorting.SortType.Swap:
+
+                        _reference._SortKey = _account._SortKey;
+                        _account._SortKey = index;
+
+                        OnValueChanged();
+
+                        if (SortingChanged != null)
+                            SortingChanged(null, EventArgs.Empty);
+
+                        return;
+                    default:
+                        throw new NotSupportedException();
+                }
+
+                if (_account._SortKey == index)
+                    return;
+
+                if (_account._SortKey > index)
+                {
+                    foreach (var key in _Accounts.Keys)
+                    {
+                        var a = (Account)_Accounts[key].Value;
+                        if (a != null)
+                        {
+                            if (a._SortKey >= index && a._SortKey < _account._SortKey)
+                                ++a._SortKey;
+                        }
+                    }
+                }
+                else
+                {
+                    foreach (var key in _Accounts.Keys)
+                    {
+                        var a = (Account)_Accounts[key].Value;
+                        if (a != null)
+                        {
+                            if (a._SortKey <= index && a._SortKey > _account._SortKey)
+                                --a._SortKey;
+                        }
+                    }
+                }
+
+                _account._SortKey = index;
+
+                var total = _Accounts.Count;
+                total = total * (total + 1) / 2;
+
+                foreach (var key in _Accounts.Keys)
+                {
+                    var a = (Account)_Accounts[key].Value;
+                    if (a != null)
+                    {
+                        total -= a._SortKey;
+                    }
+                }
+
+                OnValueChanged();
+
+                if (SortingChanged != null)
+                    SortingChanged(null, EventArgs.Empty);
+            }
+        }
+
         private class Account : IAccount
         {
-            public Account(ushort uid) : this()
+            public event EventHandler NameChanged,
+                                      IconChanged,
+                                      IconTypeChanged,
+                                      ColorKeyChanged;
+
+            public Account(ushort uid)
+                : this()
             {
-                this.UID = uid;
+                this._UID = uid;
             }
 
             public Account()
@@ -1511,6 +1736,9 @@ namespace Gw2Launcher
                     {
                         _Name = value;
                         OnValueChanged();
+
+                        if (NameChanged != null)
+                            NameChanged(this, EventArgs.Empty);
                     }
                 }
             }
@@ -1567,18 +1795,38 @@ namespace Gw2Launcher
                 }
             }
 
-            public bool _Windowed;
             public bool Windowed
             {
                 get
                 {
-                    return _Windowed;
+                    return _WindowOptions.HasFlag(Settings.WindowOptions.Windowed);
                 }
                 set
                 {
-                    if (_Windowed != value)
+                    if (Windowed != value)
                     {
-                        _Windowed = value;
+                        if (value)
+                            _WindowOptions |= Settings.WindowOptions.Windowed;
+                        else
+                            _WindowOptions &= ~Settings.WindowOptions.Windowed;
+
+                        OnValueChanged();
+                    }
+                }
+            }
+
+            public WindowOptions _WindowOptions;
+            public WindowOptions WindowOptions
+            {
+                get
+                {
+                    return _WindowOptions;
+                }
+                set
+                {
+                    if (_WindowOptions != value)
+                    {
+                        _WindowOptions = value;
                         OnValueChanged();
                     }
                 }
@@ -1776,13 +2024,30 @@ namespace Gw2Launcher
             {
                 get
                 {
-                    return _AutomaticLogin;;
+                    return _AutomaticLogin;
                 }
                 set
                 {
                     if (_AutomaticLogin != value)
                     {
                         _AutomaticLogin = value;
+                        OnValueChanged();
+                    }
+                }
+            }
+
+            public bool _AutomaticPlay;
+            public bool AutomaticPlay
+            {
+                get
+                {
+                    return _AutomaticPlay;
+                }
+                set
+                {
+                    if (_AutomaticPlay != value)
+                    {
+                        _AutomaticPlay = value;
                         OnValueChanged();
                     }
                 }
@@ -1829,7 +2094,7 @@ namespace Gw2Launcher
                     }
                 }
             }
-            
+
             public DateTime _CreatedUtc;
             public DateTime CreatedUtc
             {
@@ -2131,8 +2396,90 @@ namespace Gw2Launcher
             {
                 return new AccountApiData();
             }
-        }
 
+            public Color _ColorKey;
+            public Color ColorKey
+            {
+                get
+                {
+                    return _ColorKey;
+                }
+                set
+                {
+                    if (_ColorKey != value)
+                    {
+                        _ColorKey = value;
+                        OnValueChanged();
+
+                        if (ColorKeyChanged != null)
+                            ColorKeyChanged(this, EventArgs.Empty);
+                    }
+                }
+            }
+
+            public IconType _IconType;
+            public IconType IconType
+            {
+                get
+                {
+                    return _IconType;
+                }
+                set
+                {
+                    if (_IconType != value)
+                    {
+                        _IconType = value;
+                        OnValueChanged();
+
+                        if (IconTypeChanged != null)
+                            IconTypeChanged(this, EventArgs.Empty);
+                    }
+                }
+            }
+
+            public string _Icon;
+            public string Icon
+            {
+                get
+                {
+                    return _Icon;
+                }
+                set
+                {
+                    if (_Icon != value)
+                    {
+                        _Icon = value;
+                        OnValueChanged();
+
+                        if (IconChanged != null)
+                            IconChanged(this, EventArgs.Empty);
+                    }
+                }
+            }
+
+            public ushort _SortKey;
+            public ushort SortKey
+            {
+                get
+                {
+                    return _SortKey;
+                }
+                set
+                {
+                    if (_SortKey != value)
+                    {
+                        _SortKey = value;
+                        OnValueChanged();
+                    }
+                }
+            }
+
+            public void Sort(IAccount reference, AccountSorting.SortType type)
+            {
+                AccountSorting.Sort(this, reference, type);
+            }
+        }
+        
         private class DatFile : BaseFile, IDatFile
         {
             public DatFile(ushort uid)
@@ -2284,6 +2631,55 @@ namespace Gw2Launcher
             }
         }
 
+        public struct Point<T>
+        {
+            public Point(T x, T y) : this()
+            {
+                X = x;
+                Y = y;
+            }
+
+            public T X
+            {
+                get;
+                set;
+            }
+
+            public T Y
+            {
+                get;
+                set;
+            }
+
+            public bool IsEmpty
+            {
+                get
+                {
+                    return object.Equals(X, Y) && object.Equals(X, default(T));
+                }
+            }
+
+            public Point ToPoint()
+            {
+                return new Point(Convert.ToInt32(X), Convert.ToInt32(Y));
+            }
+        }
+
+        public class LauncherPoints
+        {
+            public Point<ushort> EmptyArea
+            {
+                get;
+                set;
+            }
+
+            public Point<ushort> PlayButton
+            {
+                get;
+                set;
+            }
+        }
+
         public class NotificationScreenAttachment : ScreenAttachment
         {
             public NotificationScreenAttachment(byte screen, ScreenAnchor anchor, bool onlyWhileActive)
@@ -2356,6 +2752,7 @@ namespace Gw2Launcher
         private static ushort _accountUID;
         private static ushort _datUID;
         private static ushort _gfxUID;
+        private static ushort _accountSortKey;
 
         static Settings()
         {
@@ -2378,7 +2775,7 @@ namespace Gw2Launcher
             _LastKnownBuild = new SettingValue<int>();
             _FontSmall = new SettingValue<Font>();
             _FontLarge = new SettingValue<Font>();
-            _ShowAccount = new SettingValue<bool>();
+            _StyleShowAccount = new SettingValue<bool>();
             _DatFiles = new KeyedProperty<ushort, IDatFile>(
                 new Func<ushort,ISettingValue<IDatFile>>(
                     delegate (ushort key)
@@ -2429,10 +2826,30 @@ namespace Gw2Launcher
             _NotesNotifications = new SettingValue<NotificationScreenAttachment>();
             _MaxPatchConnections = new SettingValue<byte>();
 
+            _ActionInactiveLClick = new SettingValue<ButtonAction>();
+            _StyleShowColor = new SettingValue<bool>();
+            _StyleHighlightFocused = new SettingValue<bool>();
+            _WindowIcon = new SettingValue<bool>();
+            _AccountBarEnabled = new SettingValue<bool>();
+            _AccountBarStyle = new SettingValue<AccountBarStyles>();
+            _AccountBarOptions = new SettingValue<AccountBarOptions>();
+            _AccountBarSortingMode = new SettingValue<SortMode>();
+            _AccountBarSortingOrder = new SettingValue<SortOrder>();
+            _AccountBarDocked = new SettingValue<ScreenAnchor>();
+            _UseGw2IconForShortcuts = new SettingValue<bool>();
+            _LimitActiveAccounts = new SettingValue<byte>();
+            _DelayLaunchUntilLoaded = new SettingValue<bool>();
+            _DelayLaunchSeconds = new SettingValue<byte>();
+            _LocalizeAccountExecution = new PendingSettingValue<bool>();
+            _LauncherAutologinPoints = new SettingValue<LauncherPoints>();
+
             FORMS = new Type[]
             {
                 typeof(UI.formMain),
-                typeof(UI.formDailies)
+                typeof(UI.formDailies),
+                typeof(UI.formNotes),
+                typeof(UI.formAccountBar),
+                typeof(UI.formSettings),
             };
         }
 
@@ -2479,8 +2896,6 @@ namespace Gw2Launcher
         {
             _StoreCredentials.SetValue(true);
             _ShowTray.SetValue(true);
-            _GW2Arguments.SetValue("-autologin");
-
         }
 
         private static void OnValueChanged()
@@ -2669,7 +3084,7 @@ namespace Gw2Launcher
                         _LastKnownBuild.HasValue,
                         _FontLarge.HasValue,
                         _FontSmall.HasValue,
-                        _ShowAccount.HasValue,
+                        _StyleShowAccount.HasValue,
 
                         //v1-Values from:13
                         _StoreCredentials.Value,
@@ -2677,7 +3092,7 @@ namespace Gw2Launcher
                         _MinimizeToTray.Value,
                         _BringToFrontOnExit.Value,
                         _DeleteCacheOnLaunch.Value,
-                        _ShowAccount.Value,
+                        _StyleShowAccount.Value,
                         
                         //v2-HasValue from:19
                         _CheckForNewBuilds.HasValue,
@@ -2736,6 +3151,35 @@ namespace Gw2Launcher
                         _TopMost.Value,
                         _DeleteCrashLogsOnLaunch.Value,
                         _PrioritizeCoherentUI.Value,
+
+                        //v5-HasValue from:65
+                        _ActionInactiveLClick.HasValue,
+                        _StyleShowColor.HasValue,
+                        _StyleHighlightFocused.HasValue,
+                        _WindowIcon.HasValue,
+                        _AccountBarEnabled.HasValue,
+                        _AccountBarStyle.HasValue,
+                        _AccountBarOptions.HasValue,
+                        _AccountBarSortingMode.HasValue,
+                        _AccountBarSortingOrder.HasValue,
+                        _AccountBarDocked.HasValue,
+                        _UseGw2IconForShortcuts.HasValue,
+                        _LimitActiveAccounts.HasValue,
+                        _DelayLaunchUntilLoaded.HasValue,
+                        _DelayLaunchSeconds.HasValue,
+                        _LocalizeAccountExecution.HasValue,
+                        _LocalizeAccountExecution.IsPending,
+                        _LauncherAutologinPoints.HasValue,
+
+                        //v5-Values from:82
+                        _StyleShowColor.Value,
+                        _StyleHighlightFocused.Value,
+                        _WindowIcon.Value,
+                        _AccountBarEnabled.Value,
+                        _UseGw2IconForShortcuts.Value,
+                        _DelayLaunchUntilLoaded.Value,
+                        _LocalizeAccountExecution.Value,
+                        _LocalizeAccountExecution.ValueCommit,
                     };
 
                     byte[] b = CompressBooleans(booleans);
@@ -2864,6 +3308,32 @@ namespace Gw2Launcher
                     if (booleans[60])
                         writer.Write(_MaxPatchConnections.Value);
 
+                    //v5
+                    if (booleans[65])
+                        writer.Write((byte)_ActionInactiveLClick.Value);
+                    if (booleans[70])
+                        writer.Write((byte)_AccountBarStyle.Value);
+                    if (booleans[71])
+                        writer.Write((byte)_AccountBarOptions.Value);
+                    if (booleans[72])
+                        writer.Write((byte)_AccountBarSortingMode.Value);
+                    if (booleans[73])
+                        writer.Write((byte)_AccountBarSortingOrder.Value);
+                    if (booleans[74])
+                        writer.Write((byte)_AccountBarDocked.Value);
+                    if (booleans[76])
+                        writer.Write(_LimitActiveAccounts.Value);
+                    if (booleans[78])
+                        writer.Write(_DelayLaunchSeconds.Value);
+                    if (booleans[81])
+                    {
+                        var v = _LauncherAutologinPoints.Value;
+                        writer.Write(v.EmptyArea.X);
+                        writer.Write(v.EmptyArea.Y);
+                        writer.Write(v.PlayButton.X);
+                        writer.Write(v.PlayButton.Y);
+                    }
+
                     lock(_DatFiles)
                     {
                         var count = _DatFiles.Count;
@@ -2970,7 +3440,7 @@ namespace Gw2Launcher
                             booleans = new bool[]
                             {
                                 account._ShowDailyLogin,
-                                account._Windowed,
+                                account.Windowed,
                                 account._RecordLaunches,
                                 account._AutomaticLogin,
                                 account._DatFile != null,
@@ -2997,6 +3467,12 @@ namespace Gw2Launcher
                                 account._ProcessPriority != ProcessPriorityClass.None,
                                 account._ProcessAffinity != 0,
                                 account._Notes != null && account._Notes.Count > 0,
+
+                                //v5 from:26
+                                !account._ColorKey.IsEmpty,
+                                account._IconType != IconType.None,
+                                account._SortKey != (i + 1),
+                                account._AutomaticPlay
                             };
 
                             b = CompressBooleans(booleans);
@@ -3147,6 +3623,25 @@ namespace Gw2Launcher
                                     }
                                 }
                             }
+
+                            if (booleans[26])
+                                writer.Write(account._ColorKey.ToArgb());
+
+                            if (booleans[27])
+                            {
+                                var v = account._IconType;
+                                writer.Write((byte)v);
+                                if (v == IconType.File)
+                                {
+                                    var icon = account._Icon;
+                                    if (icon == null)
+                                        icon = "";
+                                    writer.Write(icon);
+                                }
+                            }
+
+                            if (booleans[28])
+                                writer.Write(account._SortKey);
                         }
                     }
 
@@ -3345,9 +3840,9 @@ namespace Gw2Launcher
                     _FontSmall.Clear();
 
                 if (booleans[12])
-                    _ShowAccount.SetValue(booleans[18]);
+                    _StyleShowAccount.SetValue(booleans[18]);
                 else
-                    _ShowAccount.Clear();
+                    _StyleShowAccount.Clear();
 
                 if (version >= 2)
                 {
@@ -3550,6 +4045,101 @@ namespace Gw2Launcher
                         _MaxPatchConnections.Clear();
                 }
 
+                if (version >= 5)
+                {
+                    if (booleans[65])
+                        _ActionInactiveLClick.SetValue((ButtonAction)reader.ReadByte());
+                    else
+                        _ActionInactiveLClick.Clear();
+
+                    if (booleans[66])
+                        _StyleShowColor.SetValue(booleans[82]);
+                    else
+                        _StyleShowColor.Clear();
+
+                    if (booleans[67])
+                        _StyleHighlightFocused.SetValue(booleans[83]);
+                    else
+                        _StyleHighlightFocused.Clear();
+
+                    if (booleans[68])
+                        _WindowIcon.SetValue(booleans[84]);
+                    else
+                        _WindowIcon.Clear();
+
+                    if (booleans[69])
+                        _AccountBarEnabled.SetValue(booleans[85]);
+                    else
+                        _AccountBarEnabled.Clear();
+
+                    if (booleans[70])
+                        _AccountBarStyle.SetValue((AccountBarStyles)reader.ReadByte());
+                    else
+                        _AccountBarStyle.Clear();
+
+                    if (booleans[71])
+                        _AccountBarOptions.SetValue((AccountBarOptions)reader.ReadByte());
+                    else
+                        _AccountBarOptions.Clear();
+
+                    if (booleans[72])
+                        _AccountBarSortingMode.SetValue((SortMode)reader.ReadByte());
+                    else
+                        _AccountBarSortingMode.Clear();
+
+                    if (booleans[73])
+                        _AccountBarSortingOrder.SetValue((SortOrder)reader.ReadByte());
+                    else
+                        _AccountBarSortingOrder.Clear();
+
+                    if (booleans[74])
+                        _AccountBarDocked.SetValue((ScreenAnchor)reader.ReadByte());
+                    else
+                        _AccountBarDocked.Clear();
+
+                    if (booleans[75])
+                        _UseGw2IconForShortcuts.SetValue(booleans[86]);
+                    else
+                        _UseGw2IconForShortcuts.Clear();
+
+                    if (booleans[76])
+                        _LimitActiveAccounts.SetValue(reader.ReadByte());
+                    else
+                        _LimitActiveAccounts.Clear();
+
+                    if (booleans[77])
+                        _DelayLaunchUntilLoaded.SetValue(booleans[87]);
+                    else
+                        _DelayLaunchUntilLoaded.Clear();
+
+                    if (booleans[78])
+                        _DelayLaunchSeconds.SetValue(reader.ReadByte());
+                    else
+                        _DelayLaunchSeconds.Clear();
+
+                    if (booleans[79])
+                        _LocalizeAccountExecution.SetValue(booleans[88]);
+                    else
+                        _LocalizeAccountExecution.Clear();
+
+                    if (booleans[80])
+                        _LocalizeAccountExecution.SetCommit(booleans[89]);
+                    else
+                        _LocalizeAccountExecution.ClearCommit();
+
+                    if (booleans[81])
+                    {
+                        var v = new LauncherPoints()
+                        {
+                            EmptyArea = new Point<ushort>(reader.ReadUInt16(), reader.ReadUInt16()),
+                            PlayButton = new Point<ushort>(reader.ReadUInt16(), reader.ReadUInt16()),
+                        };
+                        _LauncherAutologinPoints.SetValue(v);
+                    }
+                    else
+                        _LauncherAutologinPoints.Clear();
+                }
+
                 _datUID = 0;
 
                 lock (_DatFiles)
@@ -3605,6 +4195,7 @@ namespace Gw2Launcher
                 }
 
                 _accountUID = 0;
+                _accountSortKey = 0;
                 var sids = new HashSet<ushort>();
 
                 lock (_Accounts)
@@ -3612,9 +4203,12 @@ namespace Gw2Launcher
                     _Accounts.Clear();
 
                     var count = reader.ReadUInt16();
+                    var accounts = new Account[count];
+                    uint sortKeySum = 0;
+
                     for (int i = 0; i < count; i++)
                     {
-                        Account account = new Account();
+                        var account = accounts[i] = new Account();
                         account._UID = reader.ReadUInt16();
                         account._Name = reader.ReadString();
                         account._WindowsAccount = reader.ReadString();
@@ -3627,7 +4221,7 @@ namespace Gw2Launcher
                         booleans = ExpandBooleans(b);
 
                         account._ShowDailyLogin = booleans[0];
-                        account._Windowed = booleans[1];
+                        account._WindowOptions = booleans[1] ? WindowOptions.Windowed : WindowOptions.None;
                         account._RecordLaunches = booleans[2];
                         account._AutomaticLogin = booleans[3]; //v4
 
@@ -3780,6 +4374,38 @@ namespace Gw2Launcher
                             }
                         }
 
+                        if (version >= 5)
+                        {
+                            if (booleans[26])
+                                account._ColorKey = Color.FromArgb(reader.ReadInt32());
+
+                            if (booleans[27])
+                            {
+                                var v = (IconType)reader.ReadByte();
+                                if (v == IconType.File)
+                                {
+                                    account._Icon = reader.ReadString();
+                                    if (account._Icon.Length == 0)
+                                        v = IconType.None;
+                                }
+                                account._IconType = v;
+                            }
+
+                            if (booleans[28])
+                                account._SortKey = reader.ReadUInt16();
+                            else
+                                account._SortKey = (ushort)(i + 1);
+
+                            account._AutomaticPlay = booleans[29];
+                        }
+                        else
+                        {
+                            account._SortKey = (ushort)(i + 1);
+                            account._AutomaticLogin = false;
+                        }
+
+                        sortKeySum += account._SortKey;
+
                         SettingValue<IAccount> item = new SettingValue<IAccount>();
                         item.SetValue(account);
                         _Accounts.Add(account._UID, item);
@@ -3787,6 +4413,25 @@ namespace Gw2Launcher
                         if (_accountUID < account._UID)
                             _accountUID = account._UID;
                     }
+
+                    if (sortKeySum != count * (count + 1) / 2)
+                    {
+                        Array.Sort<Account>(accounts, 
+                            delegate(Account a1, Account a2)
+                            {
+                                var c = a1._SortKey.CompareTo(a2._SortKey);
+                                if (c == 0)
+                                    return a1._UID.CompareTo(a2._UID);
+                                return c;
+                            });
+
+                        for (var i = 0; i < count; i++)
+                        {
+                            accounts[i]._SortKey = (ushort)(i + 1);
+                        }
+                    }
+
+                    _accountSortKey = count;
                 }
 
                 if (sids.Count > 0)
@@ -4496,7 +5141,7 @@ namespace Gw2Launcher
                     return i;
             }
 
-            return 0;
+            return byte.MaxValue;
         }
 
         private static SettingValue<string> _GW2Path;
@@ -4535,12 +5180,12 @@ namespace Gw2Launcher
             }
         }
 
-        private static SettingValue<bool> _ShowAccount;
-        public static ISettingValue<bool> ShowAccount
+        private static SettingValue<bool> _StyleShowAccount;
+        public static ISettingValue<bool> StyleShowAccount
         {
             get
             {
-                return _ShowAccount;
+                return _StyleShowAccount;
             }
         }
 
@@ -4869,6 +5514,15 @@ namespace Gw2Launcher
             }
         }
 
+        private static SettingValue<ButtonAction> _ActionInactiveLClick;
+        public static ISettingValue<ButtonAction> ActionInactiveLClick
+        {
+            get
+            {
+                return _ActionInactiveLClick;
+            }
+        }
+
         private static SettingValue<ButtonAction> _ActionActiveLClick;
         public static ISettingValue<ButtonAction> ActionActiveLClick
         {
@@ -4986,6 +5640,145 @@ namespace Gw2Launcher
             }
         }
 
+        private static SettingValue<bool> _StyleShowColor;
+        public static ISettingValue<bool> StyleShowColor
+        {
+            get
+            {
+                return _StyleShowColor;
+            }
+        }
+
+        private static SettingValue<bool> _StyleHighlightFocused;
+        public static ISettingValue<bool> StyleHighlightFocused
+        {
+            get
+            {
+                return _StyleHighlightFocused;
+            }
+        }
+
+        private static SettingValue<bool> _WindowIcon;
+        public static ISettingValue<bool> WindowIcon
+        {
+            get
+            {
+                return _WindowIcon;
+            }
+        }
+
+        private static SettingValue<bool> _UseGw2IconForShortcuts;
+        public static ISettingValue<bool> UseGw2IconForShortcuts
+        {
+            get
+            {
+                return _UseGw2IconForShortcuts;
+            }
+        }
+
+        private static SettingValue<bool> _AccountBarEnabled;
+        private static SettingValue<AccountBarOptions> _AccountBarOptions;
+        private static SettingValue<AccountBarStyles> _AccountBarStyle;
+        private static SettingValue<SortMode> _AccountBarSortingMode;
+        private static SettingValue<SortOrder> _AccountBarSortingOrder;
+        private static SettingValue<ScreenAnchor> _AccountBarDocked;
+
+        public static class AccountBar
+        {
+            public static ISettingValue<bool> Enabled
+            {
+                get
+                {
+                    return _AccountBarEnabled;
+                }
+            }
+
+            public static ISettingValue<AccountBarOptions> Options
+            {
+                get
+                {
+                    return _AccountBarOptions;
+                }
+            }
+
+            public static ISettingValue<AccountBarStyles> Style
+            {
+                get
+                {
+                    return _AccountBarStyle;
+                }
+            }
+
+            public static ISettingValue<SortMode> SortingMode
+            {
+                get
+                {
+                    return _AccountBarSortingMode;
+                }
+            }
+
+            public static ISettingValue<SortOrder> SortingOrder
+            {
+                get
+                {
+                    return _AccountBarSortingOrder;
+                }
+            }
+
+            public static ISettingValue<ScreenAnchor> Docked
+            {
+                get
+                {
+                    return _AccountBarDocked;
+                }
+            }
+        }
+
+        private static SettingValue<byte> _LimitActiveAccounts;
+        public static ISettingValue<byte> LimitActiveAccounts
+        {
+            get
+            {
+                return _LimitActiveAccounts;
+            }
+        }
+
+        private static SettingValue<bool> _DelayLaunchUntilLoaded;
+        public static ISettingValue<bool> DelayLaunchUntilLoaded
+        {
+            get
+            {
+                return _DelayLaunchUntilLoaded;
+            }
+        }
+
+        private static SettingValue<byte> _DelayLaunchSeconds;
+        public static ISettingValue<byte> DelayLaunchSeconds
+        {
+            get
+            {
+                return _DelayLaunchSeconds;
+            }
+        }
+
+        private static PendingSettingValue<bool> _LocalizeAccountExecution;
+        public static IPendingSettingValue<bool> LocalizeAccountExecution
+        {
+            get
+            {
+                return _LocalizeAccountExecution;
+            }
+        }
+
+        private static SettingValue<LauncherPoints> _LauncherAutologinPoints;
+        public static ISettingValue<LauncherPoints> LauncherAutologinPoints
+        {
+            get
+            {
+                return _LauncherAutologinPoints;
+            }
+        }
+
         public static bool DisableAutomaticLogins
         {
             get;
@@ -5004,11 +5797,19 @@ namespace Gw2Launcher
             set;
         }
 
+        public static ushort GetNextUID()
+        {
+            return (ushort)(_accountUID + 1);
+        }
+
         public static IAccount CreateAccount()
         {
             lock (_Accounts)
             {
-                Account account = new Account(++_accountUID);
+                var account = new Account(++_accountUID)
+                {
+                    _SortKey = ++_accountSortKey,
+                };
                 _Accounts.Add(account.UID, new SettingValue<IAccount>(account));
                 return account;
             }

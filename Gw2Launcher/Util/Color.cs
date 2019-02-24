@@ -54,5 +54,45 @@ namespace Gw2Launcher.Util
 
             return System.Drawing.Color.FromArgb(_r, _g, _b);
         }
+
+        /// <summary>
+        /// Converts the HSL values to RGB
+        /// </summary>
+        /// <param name="h">Hue between 0 and 240</param>
+        /// <param name="s">Saturation between 0 and 240</param>
+        /// <param name="l">Lightness between 0 and 240</param>
+        /// <returns></returns>
+        public static System.Drawing.Color FromHSL(int h, int s, int l)
+        {
+            try
+            {
+                return System.Drawing.Color.FromArgb(Windows.Native.NativeMethods.ColorHLSToRGB(h, l, s) | -16777216);
+            }
+            catch
+            {
+                return System.Drawing.Color.Empty;
+            }
+        }
+
+        public static System.Drawing.Color FromUID(ushort uid)
+        {
+            var i = uid - 1;
+            var h = i * 36 % 240;
+            var s = 120 + (i / 7) * 35 % 160;
+            if (s >= 240)
+                s -= 160;
+            var l = 120 + i / 28 * 30 % 80;
+            if (l >= 180)
+                l -= 100;
+
+            try
+            {
+                return System.Drawing.Color.FromArgb(Windows.Native.NativeMethods.ColorHLSToRGB(h, l, s) | -16777216);
+            }
+            catch
+            {
+                return System.Drawing.Color.Empty;
+            }
+        }
     }
 }

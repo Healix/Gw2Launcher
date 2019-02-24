@@ -193,6 +193,12 @@ namespace Gw2Launcher.Windows
             set;
         }
 
+        public string Icon
+        {
+            get;
+            set;
+        }
+
         public string AppUserModelID
         {
             get;
@@ -207,7 +213,7 @@ namespace Gw2Launcher.Windows
 
         private IShellLink Create()
         {
-            var l = Create(this.Target, this.Arguments, this.Description);
+            var l = Create(this.Target, this.Arguments, this.Description, this.Icon);
 
             try
             {
@@ -265,7 +271,7 @@ namespace Gw2Launcher.Windows
             }
         }
 
-        private static IShellLink Create(string target, string args, string comment)
+        private static IShellLink Create(string target, string args, string comment, string icon)
         {
             IShellLink l = (IShellLink)new ShellLink();
             l.SetPath(target);
@@ -273,13 +279,15 @@ namespace Gw2Launcher.Windows
             l.SetArguments(args);
             if (!string.IsNullOrEmpty(comment))
                 l.SetDescription(comment);
+            if (!string.IsNullOrEmpty(icon))
+                l.SetIconLocation(icon, 0);
 
             return l;
         }
 
-        public static void Create(string output, string target, string args, string comment)
+        public static void Create(string output, string target, string args, string comment, string icon)
         {
-            var file = (System.Runtime.InteropServices.ComTypes.IPersistFile)Create(target, args, comment);
+            var file = (System.Runtime.InteropServices.ComTypes.IPersistFile)Create(target, args, comment, icon);
             try
             {
                 file.Save(output, false);
@@ -290,9 +298,9 @@ namespace Gw2Launcher.Windows
             }
         }
 
-        public static void Create(Stream output, string target, string args, string comment)
+        public static void Create(Stream output, string target, string args, string comment, string icon)
         {
-            var stream = (IPersistStream)Create(target, args, comment);
+            var stream = (IPersistStream)Create(target, args, comment, icon);
 
             try
             {

@@ -88,6 +88,12 @@ namespace Gw2Launcher.Client
                 private set;
             }
 
+            public Tools.Icons Icons
+            {
+                get;
+                set;
+            }
+
             public bool IsActive
             {
                 get

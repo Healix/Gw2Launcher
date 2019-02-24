@@ -63,7 +63,7 @@ namespace Gw2Launcher.UI
 
                 cp.ExStyle |= (int)(WindowStyle.WS_EX_NOACTIVATE | WindowStyle.WS_EX_TOOLWINDOW | WindowStyle.WS_EX_TRANSPARENT);
 
-                return base.CreateParams;
+                return cp;
             }
         }
 
@@ -95,6 +95,9 @@ namespace Gw2Launcher.UI
         /// <param name="padding">The offset of this window's arrow to the control</param>
         public void AttachTo(Control control, Control boundary, int padding)
         {
+            if (this.Visible)
+                this.Hide();
+
             attachedTo = control;
             attachedBoundary = boundary;
             attachedPadding = padding;
@@ -113,6 +116,9 @@ namespace Gw2Launcher.UI
 
         public void AttachTo(Rectangle r, int padding, AnchorStyles defaultArrowAnchor)
         {
+            if (this.Visible)
+                this.Hide();
+
             attachedRect = r;
             attachedTo = null;
             attachedBoundary = null;
@@ -198,7 +204,19 @@ namespace Gw2Launcher.UI
                 this.Show(owner);
 
                 cancelToken = new CancellationTokenSource();
-                await this.TransitionOpacity(100, 0, 0.98, cancelToken.Token);
+                try
+                {
+                    await this.TransitionOpacity(100, 0, 0.98, cancelToken.Token);
+                }
+                catch (TaskCanceledException ex)
+                {
+                    Util.Logging.Log(ex);
+                    return;
+                }
+            }
+            else
+            {
+                this.Opacity = 0.98f;
             }
         }
 
@@ -207,12 +225,21 @@ namespace Gw2Launcher.UI
             if (cancelToken != null)
             {
                 cancelToken.Cancel();
-                cancelToken = null;
+                cancelToken.Dispose();
             }
 
             cancelToken = new CancellationTokenSource();
 
-            await this.TransitionOpacity(100, 0.99, 0, cancelToken.Token);
+            try
+            {
+                await this.TransitionOpacity(100, 0.99, 0, cancelToken.Token);
+            }
+            catch (TaskCanceledException ex)
+            {
+                Util.Logging.Log(ex);
+                return;
+            }
+
             this.Hide();
         }
 
@@ -237,7 +264,7 @@ namespace Gw2Launcher.UI
                 if (maxWidth < 100)
                     maxWidth = 100;
                 SizeF size = g.MeasureString(message, this.Font, maxWidth);
-                clientAreaSize = new Size((int)(size.Width + 1.5), (int)(size.Height + 1.5));
+                clientAreaSize = new Size((int)(size.Width + 1.5f), (int)(size.Height + 1.5f));
             }
             this.message = message;
             OnAttachedLocationChanged();
@@ -369,14 +396,42 @@ namespace Gw2Launcher.UI
 
                 if (defaultArrowAnchor != AnchorStyles.None)
                 {
-                    if (defaultArrowAnchor == AnchorStyles.Left && r + size.Width + attachedPadding < screen.Right)
-                        anchor = AnchorStyles.Left;
-                    else if (defaultArrowAnchor == AnchorStyles.Right && l - size.Width + attachedPadding > screen.Left)
-                        anchor = AnchorStyles.Right;
-                    else if (defaultArrowAnchor == AnchorStyles.Top && b + size.Height + attachedPadding < screen.Bottom)
-                        anchor = AnchorStyles.Top;
-                    else if (defaultArrowAnchor == AnchorStyles.Bottom && t - size.Height + attachedPadding > screen.Top)
-                        anchor = AnchorStyles.Bottom;
+                    switch (defaultArrowAnchor)
+                    {
+                        case AnchorStyles.Left:
+                            if (r + size.Width + attachedPadding < screen.Right)
+                                anchor = AnchorStyles.Left;
+                            else
+                                anchor = AnchorStyles.Right;
+                            break;
+                        case AnchorStyles.Right:
+                            if (l - size.Width + attachedPadding > screen.Left)
+                                anchor = AnchorStyles.Right;
+                            else
+                                anchor = AnchorStyles.Left;
+                            break;
+                        case AnchorStyles.Top:
+                            if (b + size.Height + attachedPadding < screen.Bottom)
+                                anchor = AnchorStyles.Top;
+                            else
+                                anchor = AnchorStyles.Bottom;
+                            break;
+                        case AnchorStyles.Bottom:
+                            if (t - size.Height + attachedPadding > screen.Top)
+                                anchor = AnchorStyles.Bottom;
+                            else
+                                anchor = AnchorStyles.Top;
+                            break;
+                    }
+
+                    //if (defaultArrowAnchor == AnchorStyles.Left && r + size.Width + attachedPadding < screen.Right)
+                    //    anchor = AnchorStyles.Left;
+                    //else if (defaultArrowAnchor == AnchorStyles.Right && l - size.Width + attachedPadding > screen.Left)
+                    //    anchor = AnchorStyles.Right;
+                    //else if (defaultArrowAnchor == AnchorStyles.Top && b + size.Height + attachedPadding < screen.Bottom)
+                    //    anchor = AnchorStyles.Top;
+                    //else if (defaultArrowAnchor == AnchorStyles.Bottom && t - size.Height + attachedPadding > screen.Top)
+                    //    anchor = AnchorStyles.Bottom;
                 }
 
                 if (anchor == AnchorStyles.None)
@@ -416,7 +471,7 @@ namespace Gw2Launcher.UI
                         l += attachedPadding;
                         r += attachedPadding;
 
-                        clientArea = new Rectangle(new Point(ARROW_SIZE_HEIGHT + INNER_PADDING, INNER_PADDING), clientAreaSize);
+                        clientArea = new Rectangle(new Point(ARROW_SIZE_HEIGHT + INNER_PADDING, INNER_PADDING + 1), clientAreaSize);
                         bounds = new Rectangle(new Point(r, y), size);
                         arrowBounds = new Rectangle(0, aY, ARROW_SIZE_HEIGHT, ARROW_SIZE_BASE);
                     }
@@ -425,7 +480,7 @@ namespace Gw2Launcher.UI
                         l -= attachedPadding;
                         r -= attachedPadding;
 
-                        clientArea = new Rectangle(new Point(INNER_PADDING, INNER_PADDING), clientAreaSize);
+                        clientArea = new Rectangle(new Point(INNER_PADDING, INNER_PADDING + 1), clientAreaSize);
                         bounds = new Rectangle(new Point(l - size.Width, y), size);
                         arrowBounds = new Rectangle(size.Width - ARROW_SIZE_HEIGHT - 1, aY, ARROW_SIZE_HEIGHT, ARROW_SIZE_BASE);
                     }
@@ -451,7 +506,7 @@ namespace Gw2Launcher.UI
                         t += attachedPadding;
                         b += attachedPadding;
 
-                        clientArea = new Rectangle(new Point(INNER_PADDING, ARROW_SIZE_HEIGHT + INNER_PADDING), clientAreaSize);
+                        clientArea = new Rectangle(new Point(INNER_PADDING, ARROW_SIZE_HEIGHT + INNER_PADDING + 1), clientAreaSize);
                         bounds = new Rectangle(new Point(x, b), size);
                         arrowBounds = new Rectangle(aX, 0, ARROW_SIZE_BASE, ARROW_SIZE_HEIGHT);
                     }
@@ -460,14 +515,14 @@ namespace Gw2Launcher.UI
                         t -= attachedPadding;
                         b -= attachedPadding;
 
-                        clientArea = new Rectangle(new Point(INNER_PADDING, INNER_PADDING), clientAreaSize);
+                        clientArea = new Rectangle(new Point(INNER_PADDING, INNER_PADDING + 1), clientAreaSize);
                         bounds = new Rectangle(new Point(x, t - size.Height), size);
                         arrowBounds = new Rectangle(aX, size.Height - ARROW_SIZE_HEIGHT - 1, ARROW_SIZE_BASE, ARROW_SIZE_HEIGHT);
                     }
                 }
                 else
                 {
-                    clientArea = new Rectangle(new Point(INNER_PADDING, INNER_PADDING), clientAreaSize);
+                    clientArea = new Rectangle(new Point(INNER_PADDING, INNER_PADDING + 1), clientAreaSize);
                     bounds = new Rectangle(new Point(l, t), size);
                     arrowBounds = Rectangle.Empty;
                 }

@@ -726,7 +726,9 @@ namespace Gw2Launcher.Windows
                     System.Windows.Forms.Cursor.Current = System.Windows.Forms.Cursors.Arrow;
                 }
                 else
-                    e.UseDefaultCursors = true;
+                {
+                    //e.UseDefaultCursors = true;
+                }
 
                 if (!isDefault || imageType != DropImageType.None || this.IsDescriptionInvalidated)
                 {
@@ -1397,6 +1399,14 @@ namespace Gw2Launcher.Windows
             sender.QueryContinueDrag += control_QueryContinueDrag;
             sender.GiveFeedback += container.OnGiveFeedback;
 
+            //EventHandler onLostFocus = null;
+            //onLostFocus = delegate
+            //{
+            //    //sender.DoDragDrop()
+            //};
+
+            //sender.LostFocus += onLostFocus;
+
             AllowDropDescriptions(allowDescriptions);
 
             ShDragImage _image = new ShDragImage()
@@ -1415,15 +1425,15 @@ namespace Gw2Launcher.Windows
 
                 var result = sender.DoDragDrop(container, allowedEffects);
 
-                sender.QueryContinueDrag -= control_QueryContinueDrag;
-                sender.GiveFeedback -= container.OnGiveFeedback;
-
                 container.Unadvise(advise);
 
                 return result;
             }
             finally
             {
+                sender.QueryContinueDrag -= control_QueryContinueDrag;
+                sender.GiveFeedback -= container.OnGiveFeedback;
+
                 if (sourceHelper != null)
                     Marshal.ReleaseComObject(sourceHelper);
                 NativeMethods.DeleteObject(_image.hbmpDragImage);
@@ -1432,7 +1442,8 @@ namespace Gw2Launcher.Windows
 
         static void control_QueryContinueDrag(object sender, System.Windows.Forms.QueryContinueDragEventArgs e)
         {
-            if (e.EscapePressed)
+            //note, losing focus can cause DoDragDrop to hang, example: start drag > windows key > drag over start menu > drag back to form and release
+            if (e.EscapePressed || sender is System.Windows.Forms.Control && !((System.Windows.Forms.Control)sender).Focused)
                 e.Action = System.Windows.Forms.DragAction.Cancel;
         }
 

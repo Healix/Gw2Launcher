@@ -181,10 +181,10 @@ namespace Gw2Launcher.Windows
 
                     if (exactMatch)
                     {
-                        if (!name.Equals(objectName))
+                        if (!name.Equals(objectName, StringComparison.Ordinal))
                             continue;
                     }
-                    else if (!name.Contains(objectName))
+                    else if (name.IndexOf(objectName, StringComparison.Ordinal) == -1)
                         continue;
 
                     return new ObjectHandle(handleInfo);

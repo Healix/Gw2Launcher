@@ -144,6 +144,12 @@ namespace Gw2Launcher.Api
                 set;
             }
 
+            public int LowlevelCount
+            {
+                get;
+                set;
+            }
+
             public void Dispose()
             {
                 foreach (var icon in Icons)
@@ -559,7 +565,8 @@ namespace Gw2Launcher.Api
             dailies.Icons = images;
 
             int count = 0,
-                cii = 0;
+                cii = 0,
+                lowcount = 0;
 
             for (int ci = 0, cl = dailies.Categories.Length; ci < cl; ci++)
             {
@@ -583,6 +590,9 @@ namespace Gw2Launcher.Api
                         if (i != j)
                             items[i] = d;
                         i++;
+
+                        if (d.MaxLevel < 80)
+                            lowcount++;
                     }
                     else
                     {
@@ -616,6 +626,7 @@ namespace Gw2Launcher.Api
             }
 
             dailies.Count = count;
+            dailies.LowlevelCount = lowcount;
 
             return dailies;
         }

@@ -162,7 +162,7 @@ namespace Gw2Launcher.UI
             private formDailies owner;
             private FlatShapeButton buttonMinimize;
             private HorizontalAlignment alignment;
-            private bool visible;
+            private bool visible, wasVisible;
 
             public MinimizedWindow(formDailies owner, Form parent)
             {
@@ -200,6 +200,7 @@ namespace Gw2Launcher.UI
 
                 parent.LocationChanged += parent_LocationChanged;
                 parent.SizeChanged += parent_SizeChanged;
+                parent.VisibleChanged += parent_VisibleChanged;
 
                 owner.VisibleChanged += owner_VisibleChanged;
 
@@ -230,6 +231,19 @@ namespace Gw2Launcher.UI
             void buttonMinimize_Click(object sender, EventArgs e)
             {
                 owner.Show(true);
+            }
+
+            void parent_VisibleChanged(object sender, EventArgs e)
+            {
+                if (!parent.Visible)
+                {
+                    if (wasVisible = this.Visible)
+                        this.Visible = false;
+                }
+                else if (wasVisible)
+                {
+                    this.Visible = true;
+                }
             }
 
             void parent_SizeChanged(object sender, EventArgs e)
@@ -299,6 +313,7 @@ namespace Gw2Launcher.UI
                 {
                     parent.LocationChanged -= parent_LocationChanged;
                     parent.SizeChanged -= parent_SizeChanged;
+                    parent.VisibleChanged -= parent_VisibleChanged;
                     owner.VisibleChanged -= owner_VisibleChanged;
                 }
                 base.Dispose(disposing);
@@ -341,7 +356,8 @@ namespace Gw2Launcher.UI
             waitingToMinimize,
             showOnLoad,
             loadOnShow,
-            sizing;
+            sizing,
+            wasVisible;
         private int 
             padding;
         private Point sizingOrigin;
@@ -392,6 +408,22 @@ namespace Gw2Launcher.UI
                 SelectTab(DailyType.Today);
             else
                 loadOnShow = true;
+
+            parent.VisibleChanged += parent_VisibleChanged;
+        }
+
+        void parent_VisibleChanged(object sender, EventArgs e)
+        {
+            if (linkedToParent)
+            {
+                if (!parent.Visible)
+                {
+                    if (wasVisible = this.Visible)
+                        this.Visible = false;
+                }
+                else if (wasVisible)
+                    this.Visible = true;
+            }
         }
 
         void Settings_ValueChanged(object sender, EventArgs e)
@@ -698,19 +730,13 @@ namespace Gw2Launcher.UI
             int x = 0,
                 y = 0;
 
-            //var primaryCategories = 3;
-            //var lowLevel = new List<Control>(4);
-
-            //int gi = 0, 
-            //    gii;
-
             byte id = 0;
 
             var groups = this.groups = new DailyGroup[dailies.Categories.Length + 1];
             var lowlevel = new DailyGroup()
             {
                 id = 0,
-                dailies = new DailyAchievements.Daily[4],
+                dailies = new DailyAchievements.Daily[dailies.LowlevelCount],
                 collapsed = Settings.HiddenDailyCategories[0].Value,
             };
             bool addedLow = false;
@@ -1043,6 +1069,8 @@ namespace Gw2Launcher.UI
             if (disposing)
             {
                 Util.ScheduledEvents.Unregister(OnScheduledRetry);
+
+                parent.VisibleChanged -= parent_VisibleChanged;
 
                 if (components != null)
                     components.Dispose();

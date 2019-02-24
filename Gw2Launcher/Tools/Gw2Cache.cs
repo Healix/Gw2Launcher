@@ -13,6 +13,26 @@ namespace Gw2Launcher.Tools
 
         private const string GW2CACHE = "gw2cache-{*}";
 
+        public static void Delete(ushort uid)
+        {
+            Delete(new DirectoryInfo(Path.Combine(DataPath.AppDataAccountDataTemp, uid.ToString())).GetDirectories(GW2CACHE, SearchOption.TopDirectoryOnly));
+        }
+
+        public static void DeleteLoginCounter(ushort uid)
+        {
+            foreach (var root in Directory.GetDirectories(Path.Combine(DataPath.AppDataAccountDataTemp, uid.ToString()), GW2CACHE, SearchOption.TopDirectoryOnly))
+            {
+                var path = Path.Combine(root, "user", "Local Storage",  "coui_web_0.localstorage");
+
+                try
+                {
+                    if (File.Exists(path))
+                        File.Delete(path);
+                }
+                catch { }
+            }
+        }
+
         public static void Delete(string username)
         {
             Delete(GetFolders(username));
@@ -64,9 +84,12 @@ namespace Gw2Launcher.Tools
 
             try
             {
+                SearchOption searchOption;
+
                 if (username == USERNAME_GW2LAUNCHER)
                 {
                     path = DataPath.AppDataAccountDataTemp;
+                    searchOption = SearchOption.AllDirectories;
                 }
                 else
                 {
@@ -76,9 +99,10 @@ namespace Gw2Launcher.Tools
                     path = Path.Combine(path, "temp");
                     if (!Directory.Exists(path))
                         return new DirectoryInfo[0];
+                    searchOption = SearchOption.TopDirectoryOnly;
                 }
 
-                var folders = new DirectoryInfo(path).GetDirectories(GW2CACHE, SearchOption.AllDirectories);
+                var folders = new DirectoryInfo(path).GetDirectories(GW2CACHE, searchOption);
 
                 if (impersonation != null)
                 {
@@ -106,18 +130,23 @@ namespace Gw2Launcher.Tools
 
         private static void Delete(DirectoryInfo[] folders)
         {
-            //a cache folder will be created for every launch and again once the game starts
-            //previously, only older folders were being deleted, but GW2 doesn't really reuse these
-            //now, all folders are simply deleted, except those in use
+            //gw2 will remember its cache location in Local.dat and reuse it if possible,
+            //but it will forgotten with the next patch. If gw2 can't update Local.dat, the
+            //cache folder will be recreated every time
+
+            var time = DateTime.UtcNow.AddMinutes(-1);
 
             foreach (var d in folders)
             {
                 try
                 {
-                    var index = new FileInfo(Path.Combine(d.FullName, "user", "Cache", "index"));
-                    if (index.Exists)
-                        index.Delete();
-                    d.Delete(true);
+                    if (d.LastWriteTimeUtc < time)
+                    {
+                        var index = Path.Combine(d.FullName, "user", "Cache", "index");
+                        if (File.Exists(index))
+                            File.Delete(index);
+                        d.Delete(true);
+                    }
                 }
                 catch (Exception e)
                 {

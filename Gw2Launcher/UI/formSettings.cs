@@ -9,6 +9,7 @@ using System.Threading.Tasks;
 using System.Windows.Forms;
 using System.IO;
 using Gw2Launcher.UI.Controls;
+using Gw2Launcher.Windows.Native;
 
 namespace Gw2Launcher.UI
 {
@@ -27,11 +28,18 @@ namespace Gw2Launcher.UI
         private ArgsState argsState;
         private CheckBox[] checkProcessorAffinity;
         private AutoScrollContainerPanel containerGeneral, containerTools, containerWindows, containerLaunchOptions, containerLaunchOptionsAdvanced,
-            containerPasswords, containerStyle, containerActions, containerUpdates, containerSecurity, containerScreenshots,containerLaunchOptionsProcess;
+            containerPasswords, containerStyle, containerActions, containerUpdates, containerSecurity, containerScreenshots,containerLaunchOptionsProcess,containerAccountBar,
+            containerLaunchConfiguration;
 
         public formSettings()
         {
             InitializeComponent();
+
+            this.MaximumSize = new Size(this.MinimumSize.Width, int.MaxValue);
+
+            var sbounds = Settings.WindowBounds[typeof(formSettings)];
+            if (sbounds.HasValue)
+                this.Size = sbounds.Value.Size;
 
             checkArgs = InitializeArguments(panelLaunchOptionsAdvancedContainer, labelArgsTemplateHeader, checkArgsTemplate, labelArgsTemplateSwitch, labelArgsTemplateDesc, checkArgs_CheckedChanged);
 
@@ -46,10 +54,12 @@ namespace Gw2Launcher.UI
             containerUpdates = CreateContainer(panelUpdates);
             containerSecurity = CreateContainer(panelSecurity);
             containerScreenshots = CreateContainer(panelScreenshots);
+            containerAccountBar = CreateContainer(panelAccountBar);
             containerLaunchOptionsProcess = CreateContainer(panelLaunchOptionsProcess);
+            containerLaunchConfiguration = CreateContainer(panelLaunchConfiguration);
 
-            buttonGeneral.Panels = new Panel[] { containerGeneral, containerWindows };
-            buttonGeneral.SubItems = new string[] { "Windows" };
+            buttonGeneral.Panels = new Panel[] { containerGeneral, containerLaunchConfiguration, containerWindows };
+            buttonGeneral.SubItems = new string[] { "Launching", "Windows" };
 
             buttonLaunchOptions.Panels = new Panel[] { containerLaunchOptions, containerLaunchOptionsAdvanced, containerLaunchOptionsProcess };
             buttonLaunchOptions.SubItems = new string[] { "Advanced", "Processor" };
@@ -60,8 +70,8 @@ namespace Gw2Launcher.UI
             buttonStyle.Panels = new Panel[] { containerStyle, containerActions };
             buttonStyle.SubItems = new string[] { "Actions" };
 
-            buttonTools.Panels = new Panel[] { containerTools, containerScreenshots };
-            buttonTools.SubItems = new string[] { "Screenshots" };
+            buttonTools.Panels = new Panel[] { containerTools, containerAccountBar, containerScreenshots };
+            buttonTools.SubItems = new string[] { "Account bar", "Screenshots" };
 
             buttonUpdates.Panels = new Panel[] { containerUpdates };
 
@@ -98,9 +108,12 @@ namespace Gw2Launcher.UI
             checkShowTrayIcon.Checked = !Settings.ShowTray.HasValue || Settings.ShowTray.Value;
             checkBringToFrontOnExit.Checked = Settings.BringToFrontOnExit.Value;
             checkStoreCredentials.Checked = Settings.StoreCredentials.Value;
-            checkShowUser.Checked = !Settings.ShowAccount.HasValue || Settings.ShowAccount.Value;
+            checkShowUser.Checked = !Settings.StyleShowAccount.HasValue || Settings.StyleShowAccount.Value;
+            checkShowColor.Checked = Settings.StyleShowColor.Value;
+            checkStyleMarkFocused.Checked = Settings.StyleHighlightFocused.Value;
 
-            buttonSample.ShowAccount = checkShowUser.Checked;
+            //buttonSample.ShowAccount = checkShowUser.Checked;
+            //buttonSample.ShowColorKey = checkShowColor.Checked;
             if (Settings.FontLarge.HasValue)
                 buttonSample.FontLarge = Settings.FontLarge.Value;
             if (Settings.FontSmall.HasValue)
@@ -142,10 +155,12 @@ namespace Gw2Launcher.UI
                 checkWindowCaption.Checked = true;
             }
 
+            checkWindowIcon.Checked = Settings.WindowIcon.Value;
+
             checkPreventTaskbarGrouping.Checked = Settings.PreventTaskbarGrouping.Value;
             checkTopMost.Checked = Settings.TopMost.Value;
 
-            if (Client.FileManager.IsLinkingSupported)
+            if (Client.FileManager.IsDataLinkingSupported)
             {
                 if (Settings.VirtualUserPath.HasValue)
                 {
@@ -176,6 +191,11 @@ namespace Gw2Launcher.UI
             else
                 Util.ComboItem<Settings.ButtonAction>.Select(comboActionActiveLPress, Settings.ButtonAction.Close);
 
+            if (Settings.ActionInactiveLClick.HasValue)
+                Util.ComboItem<Settings.ButtonAction>.Select(comboActionInactiveLClick, Settings.ActionInactiveLClick.Value);
+            else
+                Util.ComboItem<Settings.ButtonAction>.Select(comboActionInactiveLClick, Settings.ButtonAction.Launch);
+
             checkAutomaticLauncherLogin.Checked = Settings.AutomaticRememberedLogin.Value;
             if (Settings.Mute.HasValue)
             {
@@ -189,7 +209,7 @@ namespace Gw2Launcher.UI
             checkPort443.Checked = Settings.ClientPort.Value == 443;
             checkScreenshotsBmp.Checked = Settings.ScreenshotsFormat.Value == Settings.ScreenshotFormat.Bitmap;
 
-            if (Client.FileManager.IsLinkingSupported)
+            if (Client.FileManager.IsDataLinkingSupported)
             {
                 if (checkScreenshotsLocation.Checked = Settings.ScreenshotsLocation.HasValue)
                 {
@@ -337,6 +357,26 @@ namespace Gw2Launcher.UI
                 Util.NumericUpDown.SetValue(numericMaxPatchConnections, Settings.MaxPatchConnections.Value);
             }
 
+            checkAccountBarEnable.Checked = Settings.AccountBar.Enabled.Value;
+
+            if (Settings.LimitActiveAccounts.HasValue)
+            {
+                checkLimitActiveAccount.Checked = true;
+                Util.NumericUpDown.SetValue(numericLimitActiveAccount, Settings.LimitActiveAccounts.Value);
+            }
+
+            if (Settings.DelayLaunchSeconds.HasValue)
+            {
+                checkDelaySeconds.Checked = true;
+                Util.NumericUpDown.SetValue(numericDelaySeconds, Settings.DelayLaunchSeconds.Value);
+            }
+
+            checkDelayUntilLoaded.Checked = Settings.DelayLaunchUntilLoaded.Value;
+
+            checkLocalizedExecution.Checked = Settings.LocalizeAccountExecution.Value;
+
+            checkUseGw2ShortcutIcon.Checked = Settings.UseGw2IconForShortcuts.Value;
+
             argsState = ArgsState.Changed;
             containerLaunchOptionsAdvanced.PreVisiblePropertyChanged += containerLaunchOptionsAdvanced_PreVisiblePropertyChanged;
         }
@@ -346,6 +386,8 @@ namespace Gw2Launcher.UI
             var none = new Util.ComboItem<Settings.ButtonAction>(Settings.ButtonAction.None, "None");
             var focus = new Util.ComboItem<Settings.ButtonAction>(Settings.ButtonAction.Focus, "Focus");
             var close = new Util.ComboItem<Settings.ButtonAction>(Settings.ButtonAction.Close, "Terminate");
+            var launch = new Util.ComboItem<Settings.ButtonAction>(Settings.ButtonAction.Launch, "Launch");
+            var launchNormal = new Util.ComboItem<Settings.ButtonAction>(Settings.ButtonAction.LaunchSingle, "Launch (normal)");
             
             comboActionActiveLClick.Items.AddRange(new object[]
                 {
@@ -358,6 +400,12 @@ namespace Gw2Launcher.UI
                 {
                     none,
                     close
+                });
+
+            comboActionInactiveLClick.Items.AddRange(new object[]
+                {
+                    launch,
+                    launchNormal,
                 });
         }
 
@@ -653,6 +701,24 @@ namespace Gw2Launcher.UI
                 }
                 textGW2Path.Text = f.FileName;
                 textGW2Path.Select(textGW2Path.TextLength, 0);
+
+                try
+                {
+                    var path = Path.GetDirectoryName(f.FileName);
+                    var programfiles = Environment.GetFolderPath(Environment.SpecialFolder.ProgramFiles);
+                    if (!string.IsNullOrEmpty(programfiles) && path.StartsWith(programfiles, StringComparison.OrdinalIgnoreCase))
+                    {
+                        if (!Util.FileUtil.HasFolderPermissions(path, System.Security.AccessControl.FileSystemRights.Modify))
+                        {
+                            if (MessageBox.Show(this, "Program Files is a protected directory and will require administrator permissions to modify.\n\nAllow access to the \"" + Path.GetFileName(path) + "\" folder?", "Warning", MessageBoxButtons.YesNo, MessageBoxIcon.Exclamation) == System.Windows.Forms.DialogResult.Yes)
+                                Util.ProcessUtil.CreateFolder(path);
+                        }
+                    }
+                }
+                catch (Exception ex)
+                {
+                    Util.Logging.Log(ex);
+                }
             }
         }
 
@@ -669,7 +735,9 @@ namespace Gw2Launcher.UI
             Settings.StoreCredentials.Value = checkStoreCredentials.Checked;
             Settings.CheckForNewBuilds.Value = checkCheckBuildOnLaunch.Checked;
 
-            Settings.ShowAccount.Value = checkShowUser.Checked;
+            Settings.StyleShowAccount.Value = checkShowUser.Checked;
+            Settings.StyleShowColor.Value = checkShowColor.Checked;
+            Settings.StyleHighlightFocused.Value = checkStyleMarkFocused.Checked;
 
             if (buttonSample.FontLarge.Equals(UI.Controls.AccountGridButton.FONT_LARGE))
                 Settings.FontLarge.Clear();
@@ -713,6 +781,8 @@ namespace Gw2Launcher.UI
             else
                 Settings.WindowCaption.Clear();
 
+            Settings.WindowIcon.Value = checkWindowIcon.Checked;
+
             Settings.TopMost.Value = checkTopMost.Checked;
 
             if (checkCustomUsername.Checked && !string.IsNullOrWhiteSpace(textCustomUsername.Text))
@@ -732,6 +802,7 @@ namespace Gw2Launcher.UI
 
             Settings.ActionActiveLClick.Value = Util.ComboItem<Settings.ButtonAction>.SelectedValue(comboActionActiveLClick, Settings.ButtonAction.None);
             Settings.ActionActiveLPress.Value = Util.ComboItem<Settings.ButtonAction>.SelectedValue(comboActionActiveLPress, Settings.ButtonAction.None);
+            Settings.ActionInactiveLClick.Value = Util.ComboItem<Settings.ButtonAction>.SelectedValue(comboActionInactiveLClick, Settings.ButtonAction.Launch);
 
             Settings.AutomaticRememberedLogin.Value = checkAutomaticLauncherLogin.Checked;
 
@@ -906,6 +977,31 @@ namespace Gw2Launcher.UI
                 Settings.MaxPatchConnections.Value = (byte)numericMaxPatchConnections.Value;
             else
                 Settings.MaxPatchConnections.Clear();
+
+            if (checkAccountBarEnable.Checked)
+            {
+                var forceShow = !Settings.AccountBar.Options.HasValue;
+                var parent = this.Owner as formMain;
+                if (parent != null)
+                    parent.ShowAccountBar(forceShow);
+            }
+            Settings.AccountBar.Enabled.Value = checkAccountBarEnable.Checked;
+
+            if (checkLimitActiveAccount.Checked)
+                Settings.LimitActiveAccounts.Value = (byte)numericLimitActiveAccount.Value;
+            else
+                Settings.LimitActiveAccounts.Clear();
+
+            Settings.DelayLaunchUntilLoaded.Value = checkDelayUntilLoaded.Checked;
+
+            if (checkDelaySeconds.Checked)
+                Settings.DelayLaunchSeconds.Value = (byte)numericDelaySeconds.Value;
+            else
+                Settings.DelayLaunchSeconds.Clear();
+
+            Settings.LocalizeAccountExecution.Value = checkLocalizedExecution.Checked;
+
+            Settings.UseGw2IconForShortcuts.Value = checkUseGw2ShortcutIcon.Checked;
 
             this.DialogResult = System.Windows.Forms.DialogResult.OK;
         }
@@ -1403,6 +1499,141 @@ namespace Gw2Launcher.UI
         private void checkMaxPatchConnections_CheckedChanged(object sender, EventArgs e)
         {
             numericMaxPatchConnections.Enabled = checkMaxPatchConnections.Checked;
+        }
+
+        protected override void WndProc(ref Message m)
+        {
+            switch ((WindowMessages)m.Msg)
+            {
+                case WindowMessages.WM_NCHITTEST:
+
+                    base.WndProc(ref m);
+
+                    switch ((HitTest)m.Result)
+                    {
+                        case HitTest.BottomLeft:
+                        case HitTest.BottomRight:
+
+                            m.Result = (IntPtr)HitTest.Bottom;
+
+                            break;
+                        case HitTest.Left:
+                        case HitTest.Right:
+                        case HitTest.TopLeft:
+                        case HitTest.TopRight:
+
+                            m.Result = (IntPtr)HitTest.Border;
+
+                            break;
+                    }
+
+                    break;
+                case WindowMessages.WM_EXITSIZEMOVE:
+
+                    base.WndProc(ref m);
+
+                    Settings.WindowBounds[typeof(formSettings)].Value = this.Bounds;
+
+                    break;
+                default:
+
+                    base.WndProc(ref m);
+
+                    break;
+            }
+        }
+
+        private void checkShowColor_CheckedChanged(object sender, EventArgs e)
+        {
+            if (checkShowColor.Checked)
+            {
+                ushort index;
+                if (checkShowColor.Tag != null)
+                    index = (ushort)checkShowColor.Tag;
+                else
+                    index = 1;
+                buttonSample.ColorKey = Util.Color.FromUID(index);
+                buttonSample.ShowColorKey = true;
+                checkShowColor.Tag = ++index;
+            }
+            else
+            {
+                buttonSample.ShowColorKey = false;
+            }
+        }
+
+        private void checkStyleMarkFocused_CheckedChanged(object sender, EventArgs e)
+        {
+            buttonSample.IsFocused = checkStyleMarkFocused.Checked;
+        }
+
+        private void buttonAccountBarShow_Click(object sender, EventArgs e)
+        {
+            var parent = this.Owner as formMain;
+            if (parent != null)
+                parent.ShowAccountBar(true);
+        }
+
+        private void checkLimitActiveAccount_CheckedChanged(object sender, EventArgs e)
+        {
+            numericLimitActiveAccount.Enabled = checkLimitActiveAccount.Checked;
+        }
+
+        private void checkDelaySeconds_CheckedChanged(object sender, EventArgs e)
+        {
+            numericDelaySeconds.Enabled = checkDelaySeconds.Checked;
+        }
+
+        private void labelShowLocalizedExecution_Click(object sender, EventArgs e)
+        {
+            try
+            {
+                var path = Path.Combine(Path.GetDirectoryName(textGW2Path.Text), Client.FileManager.LOCALIZED_EXE_FOLDER_NAME);
+                if (Directory.Exists(path))
+                    Util.Explorer.OpenFolder(path);
+                else
+                    throw new DirectoryNotFoundException();
+            }
+            catch
+            {
+                labelShowLocalizedExecution.Visible = false;
+            }
+        }
+
+        private void panelLaunchConfiguration_VisibleChanged(object sender, EventArgs e)
+        {
+            if (!panelLaunchConfiguration.Visible)
+                return;
+
+            string root;
+
+            try
+            {
+                root = Path.GetDirectoryName(textGW2Path.Text);
+            }
+            catch
+            {
+                return;
+            }
+
+            if (!root.Equals(labelShowLocalizedExecution.Tag))
+            {
+                labelShowLocalizedExecution.Tag = root;
+                labelShowLocalizedExecution.Visible = Directory.Exists(Path.Combine(root, Client.FileManager.LOCALIZED_EXE_FOLDER_NAME));
+            }
+
+            if (!root.Equals(checkLocalizedExecution.Tag))
+            {
+                checkLocalizedExecution.Tag = root;
+
+                if (!(checkLocalizedExecution.Enabled = Client.FileManager.IsPathSupported(root, false)))
+                    checkLocalizedExecution.Checked = false;
+            }
+        }
+
+        private void buttonAccountBarReset_Click(object sender, EventArgs e)
+        {
+            Settings.WindowBounds[typeof(formAccountBar)].Clear();
         }
     }
 }

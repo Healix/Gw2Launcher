@@ -75,7 +75,7 @@
             this.Controls.Add(this.label1);
             this.Controls.Add(this.textPassword);
             this.FormBorderStyle = System.Windows.Forms.FormBorderStyle.FixedDialog;
-            this.Icon = global::Gw2Launcher.Properties.Resources.Gw2;
+            this.Icon = global::Gw2Launcher.Properties.Resources.Gw2Launcher;
             this.MaximizeBox = false;
             this.MinimizeBox = false;
             this.Name = "formPassword";

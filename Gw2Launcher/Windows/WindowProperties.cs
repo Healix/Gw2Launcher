@@ -98,5 +98,75 @@ namespace Gw2Launcher.Windows
                 Dispose();
             }
         }
+
+        //static void SetWindowProperty(IntPtr hwnd, ref PropertyKey pk, PropVariant pv)
+        //{
+        //    IPropertyStore propStore = GetWindowPropertyStore(hwnd);
+
+        //    try
+        //    {
+        //        propStore.SetValue(ref pk, pv);
+        //        propStore.Commit();
+        //    }
+        //    finally
+        //    {
+        //        Marshal.ReleaseComObject(propStore);
+        //    }
+        //}
+
+        //static IPropertyStore GetWindowPropertyStore(IntPtr hwnd)
+        //{
+        //    IPropertyStore propStore;
+        //    var guid = new Guid("886D8EEB-8CF2-4446-8D02-CDBA1DBDCF99");
+        //    int rc = SHGetPropertyStoreForWindow(hwnd, ref guid, out propStore);
+        //    if (rc != 0)
+        //    {
+        //        throw Marshal.GetExceptionForHR(rc);
+        //    }
+        //    return propStore;
+        //}
+
+        //public static void SetAppUserModelID(IntPtr window, string appId)
+        //{
+        //    using (var pv = new PropVariant(appId))
+        //    {
+        //        var pk = PropertyKey.AppUserModel_ID;
+        //        SetWindowProperty(window, ref pk, pv);
+        //    }
+        //}
+
+        //public static void SetPinning(IntPtr window, bool allow)
+        //{
+        //    using (var pv = new PropVariant(!allow))
+        //    {
+        //        var pk = PropertyKey.AppUserModel_PreventPinning;
+        //        SetWindowProperty(window, ref pk, pv);
+        //    }
+        //}
+
+        //public static void SetProperties(IntPtr window, string appId, bool allowPinning)
+        //{
+        //    IPropertyStore propStore = GetWindowPropertyStore(window);
+
+        //    try
+        //    {
+        //        using (var pv = new PropVariant(!allowPinning))
+        //        {
+        //            var pk = PropertyKey.AppUserModel_PreventPinning;
+        //            propStore.SetValue(ref pk, pv);
+        //        }
+        //        using (var pv = new PropVariant(appId))
+        //        {
+        //            var pk = PropertyKey.AppUserModel_ID;
+        //            propStore.SetValue(ref pk, pv);
+        //        }
+
+        //        propStore.Commit();
+        //    }
+        //    finally
+        //    {
+        //        Marshal.ReleaseComObject(propStore);
+        //    }
+        //}
     }
 }

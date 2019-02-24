@@ -15,9 +15,12 @@
         /// </summary>
         private void InitializeComponent()
         {
+            System.ComponentModel.ComponentResourceManager resources = new System.ComponentModel.ComponentResourceManager(typeof(formSettings));
             this.buttonCancel = new System.Windows.Forms.Button();
             this.buttonOK = new System.Windows.Forms.Button();
             this.panelGeneral = new System.Windows.Forms.Panel();
+            this.checkUseGw2ShortcutIcon = new System.Windows.Forms.CheckBox();
+            this.label94 = new System.Windows.Forms.Label();
             this.buttonCustomUsername = new System.Windows.Forms.Button();
             this.checkCustomUsername = new System.Windows.Forms.CheckBox();
             this.checkTopMost = new System.Windows.Forms.CheckBox();
@@ -81,6 +84,8 @@
             this.label6 = new System.Windows.Forms.Label();
             this.label8 = new System.Windows.Forms.Label();
             this.panelStyle = new System.Windows.Forms.Panel();
+            this.checkStyleMarkFocused = new System.Windows.Forms.CheckBox();
+            this.checkShowColor = new System.Windows.Forms.CheckBox();
             this.labelFontRestoreDefaults = new System.Windows.Forms.Label();
             this.buttonFontDescriptors = new System.Windows.Forms.Button();
             this.buttonFontTitle = new System.Windows.Forms.Button();
@@ -115,6 +120,9 @@
             this.checkCheckVersionOnStart = new System.Windows.Forms.CheckBox();
             this.label26 = new System.Windows.Forms.Label();
             this.panelWindows = new System.Windows.Forms.Panel();
+            this.checkWindowIcon = new System.Windows.Forms.CheckBox();
+            this.label88 = new System.Windows.Forms.Label();
+            this.label89 = new System.Windows.Forms.Label();
             this.label36 = new System.Windows.Forms.Label();
             this.label37 = new System.Windows.Forms.Label();
             this.checkPreventTaskbarGrouping = new System.Windows.Forms.CheckBox();
@@ -164,6 +172,10 @@
             this.checkEnableNetworkAuthorization = new System.Windows.Forms.CheckBox();
             this.checkNetworkAbortOnCancel = new System.Windows.Forms.CheckBox();
             this.panelActions = new System.Windows.Forms.Panel();
+            this.label85 = new System.Windows.Forms.Label();
+            this.label86 = new System.Windows.Forms.Label();
+            this.comboActionInactiveLClick = new System.Windows.Forms.ComboBox();
+            this.label87 = new System.Windows.Forms.Label();
             this.panelScreenshots = new System.Windows.Forms.Panel();
             this.checkScreenshotsExistingApplyOnlyToDefault = new System.Windows.Forms.CheckBox();
             this.label72 = new System.Windows.Forms.Label();
@@ -199,6 +211,14 @@
             this.checkProcessPriority = new System.Windows.Forms.CheckBox();
             this.label75 = new System.Windows.Forms.Label();
             this.label76 = new System.Windows.Forms.Label();
+            this.panelAccountBar = new System.Windows.Forms.Panel();
+            this.buttonAccountBarReset = new System.Windows.Forms.Button();
+            this.buttonAccountBarShow = new System.Windows.Forms.Button();
+            this.checkAccountBarEnable = new System.Windows.Forms.CheckBox();
+            this.label90 = new System.Windows.Forms.Label();
+            this.label91 = new System.Windows.Forms.Label();
+            this.label93 = new System.Windows.Forms.Label();
+            this.label92 = new System.Windows.Forms.Label();
             this.sidebarPanel1 = new Gw2Launcher.UI.Controls.SidebarPanel();
             this.buttonTools = new Gw2Launcher.UI.Controls.SidebarButton();
             this.buttonUpdates = new Gw2Launcher.UI.Controls.SidebarButton();
@@ -206,6 +226,22 @@
             this.buttonSecurity = new Gw2Launcher.UI.Controls.SidebarButton();
             this.buttonLaunchOptions = new Gw2Launcher.UI.Controls.SidebarButton();
             this.buttonGeneral = new Gw2Launcher.UI.Controls.SidebarButton();
+            this.label99 = new System.Windows.Forms.Label();
+            this.label98 = new System.Windows.Forms.Label();
+            this.checkLimitActiveAccount = new System.Windows.Forms.CheckBox();
+            this.numericLimitActiveAccount = new System.Windows.Forms.NumericUpDown();
+            this.label96 = new System.Windows.Forms.Label();
+            this.label95 = new System.Windows.Forms.Label();
+            this.checkDelaySeconds = new System.Windows.Forms.CheckBox();
+            this.numericDelaySeconds = new System.Windows.Forms.NumericUpDown();
+            this.checkDelayUntilLoaded = new System.Windows.Forms.CheckBox();
+            this.label97 = new System.Windows.Forms.Label();
+            this.panelLaunchConfiguration = new System.Windows.Forms.Panel();
+            this.labelShowLocalizedExecution = new System.Windows.Forms.Label();
+            this.label102 = new System.Windows.Forms.Label();
+            this.label100 = new System.Windows.Forms.Label();
+            this.checkLocalizedExecution = new System.Windows.Forms.CheckBox();
+            this.label101 = new System.Windows.Forms.Label();
             this.panelGeneral.SuspendLayout();
             this.panelLaunchOptions.SuspendLayout();
             this.panelPasswords.SuspendLayout();
@@ -226,14 +262,18 @@
             this.panelScreenshotImageFormatPng.SuspendLayout();
             this.panelLaunchOptionsProcess.SuspendLayout();
             this.panelLaunchOptionsProcessContent.SuspendLayout();
+            this.panelAccountBar.SuspendLayout();
             this.sidebarPanel1.SuspendLayout();
+            ((System.ComponentModel.ISupportInitialize)(this.numericLimitActiveAccount)).BeginInit();
+            ((System.ComponentModel.ISupportInitialize)(this.numericDelaySeconds)).BeginInit();
+            this.panelLaunchConfiguration.SuspendLayout();
             this.SuspendLayout();
             // 
             // buttonCancel
             // 
             this.buttonCancel.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Right)));
             this.buttonCancel.Font = new System.Drawing.Font("Segoe UI", 8.25F);
-            this.buttonCancel.Location = new System.Drawing.Point(374, 323);
+            this.buttonCancel.Location = new System.Drawing.Point(374, 399);
             this.buttonCancel.Name = "buttonCancel";
             this.buttonCancel.Size = new System.Drawing.Size(86, 35);
             this.buttonCancel.TabIndex = 99;
@@ -245,7 +285,7 @@
             // 
             this.buttonOK.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Right)));
             this.buttonOK.Font = new System.Drawing.Font("Segoe UI", 8.25F);
-            this.buttonOK.Location = new System.Drawing.Point(470, 323);
+            this.buttonOK.Location = new System.Drawing.Point(470, 399);
             this.buttonOK.Name = "buttonOK";
             this.buttonOK.Size = new System.Drawing.Size(86, 35);
             this.buttonOK.TabIndex = 100;
@@ -255,10 +295,13 @@
             // 
             // panelGeneral
             // 
-            this.panelGeneral.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left) 
+            this.panelGeneral.Anchor = ((System.Windows.Forms.AnchorStyles)((((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom) 
+            | System.Windows.Forms.AnchorStyles.Left) 
             | System.Windows.Forms.AnchorStyles.Right)));
             this.panelGeneral.AutoScroll = true;
             this.panelGeneral.AutoScrollMargin = new System.Drawing.Size(0, 10);
+            this.panelGeneral.Controls.Add(this.checkUseGw2ShortcutIcon);
+            this.panelGeneral.Controls.Add(this.label94);
             this.panelGeneral.Controls.Add(this.buttonCustomUsername);
             this.panelGeneral.Controls.Add(this.checkCustomUsername);
             this.panelGeneral.Controls.Add(this.checkTopMost);
@@ -280,15 +323,36 @@
             this.panelGeneral.Controls.Add(this.buttonGW2Path);
             this.panelGeneral.Location = new System.Drawing.Point(183, 12);
             this.panelGeneral.Name = "panelGeneral";
-            this.panelGeneral.Size = new System.Drawing.Size(373, 302);
+            this.panelGeneral.Size = new System.Drawing.Size(373, 378);
             this.panelGeneral.TabIndex = 28;
             this.panelGeneral.Visible = false;
+            // 
+            // checkUseGw2ShortcutIcon
+            // 
+            this.checkUseGw2ShortcutIcon.AutoSize = true;
+            this.checkUseGw2ShortcutIcon.Font = new System.Drawing.Font("Segoe UI", 8.25F);
+            this.checkUseGw2ShortcutIcon.Location = new System.Drawing.Point(21, 250);
+            this.checkUseGw2ShortcutIcon.Name = "checkUseGw2ShortcutIcon";
+            this.checkUseGw2ShortcutIcon.Size = new System.Drawing.Size(287, 17);
+            this.checkUseGw2ShortcutIcon.TabIndex = 76;
+            this.checkUseGw2ShortcutIcon.Text = "Use the Guild Wars 2 icon when creating shortcuts";
+            this.checkUseGw2ShortcutIcon.UseVisualStyleBackColor = true;
+            // 
+            // label94
+            // 
+            this.label94.AutoSize = true;
+            this.label94.Font = new System.Drawing.Font("Segoe UI Semibold", 9F, System.Drawing.FontStyle.Bold);
+            this.label94.Location = new System.Drawing.Point(13, 226);
+            this.label94.Name = "label94";
+            this.label94.Size = new System.Drawing.Size(58, 15);
+            this.label94.TabIndex = 77;
+            this.label94.Text = "Shortcuts";
             // 
             // buttonCustomUsername
             // 
             this.buttonCustomUsername.Enabled = false;
             this.buttonCustomUsername.Font = new System.Drawing.Font("Segoe UI", 8.25F);
-            this.buttonCustomUsername.Location = new System.Drawing.Point(299, 275);
+            this.buttonCustomUsername.Location = new System.Drawing.Point(299, 329);
             this.buttonCustomUsername.Name = "buttonCustomUsername";
             this.buttonCustomUsername.Size = new System.Drawing.Size(43, 24);
             this.buttonCustomUsername.TabIndex = 75;
@@ -300,7 +364,7 @@
             // 
             this.checkCustomUsername.AutoSize = true;
             this.checkCustomUsername.Font = new System.Drawing.Font("Segoe UI", 8.25F);
-            this.checkCustomUsername.Location = new System.Drawing.Point(21, 279);
+            this.checkCustomUsername.Location = new System.Drawing.Point(21, 333);
             this.checkCustomUsername.Name = "checkCustomUsername";
             this.checkCustomUsername.Size = new System.Drawing.Size(15, 14);
             this.checkCustomUsername.TabIndex = 6;
@@ -322,7 +386,7 @@
             // 
             this.textCustomUsername.Enabled = false;
             this.textCustomUsername.Font = new System.Drawing.Font("Segoe UI", 8.25F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            this.textCustomUsername.Location = new System.Drawing.Point(43, 276);
+            this.textCustomUsername.Location = new System.Drawing.Point(43, 330);
             this.textCustomUsername.Name = "textCustomUsername";
             this.textCustomUsername.Size = new System.Drawing.Size(250, 22);
             this.textCustomUsername.TabIndex = 7;
@@ -342,7 +406,7 @@
             // 
             this.label13.AutoSize = true;
             this.label13.Font = new System.Drawing.Font("Segoe UI Semilight", 8.25F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            this.label13.Location = new System.Drawing.Point(14, 327);
+            this.label13.Location = new System.Drawing.Point(14, 381);
             this.label13.Name = "label13";
             this.label13.Size = new System.Drawing.Size(258, 13);
             this.label13.TabIndex = 42;
@@ -352,7 +416,7 @@
             // 
             this.label48.AutoSize = true;
             this.label48.Font = new System.Drawing.Font("Segoe UI Semilight", 8.25F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            this.label48.Location = new System.Drawing.Point(14, 242);
+            this.label48.Location = new System.Drawing.Point(14, 296);
             this.label48.MaximumSize = new System.Drawing.Size(330, 0);
             this.label48.Name = "label48";
             this.label48.Size = new System.Drawing.Size(328, 26);
@@ -364,7 +428,7 @@
             // 
             this.label14.AutoSize = true;
             this.label14.Font = new System.Drawing.Font("Segoe UI Semibold", 9F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            this.label14.Location = new System.Drawing.Point(13, 311);
+            this.label14.Location = new System.Drawing.Point(13, 365);
             this.label14.Name = "label14";
             this.label14.Size = new System.Drawing.Size(129, 15);
             this.label14.TabIndex = 41;
@@ -373,7 +437,7 @@
             // buttonWindowReset
             // 
             this.buttonWindowReset.Font = new System.Drawing.Font("Segoe UI", 8.25F);
-            this.buttonWindowReset.Location = new System.Drawing.Point(20, 347);
+            this.buttonWindowReset.Location = new System.Drawing.Point(20, 401);
             this.buttonWindowReset.Name = "buttonWindowReset";
             this.buttonWindowReset.Size = new System.Drawing.Size(74, 23);
             this.buttonWindowReset.TabIndex = 8;
@@ -385,7 +449,7 @@
             // 
             this.label49.AutoSize = true;
             this.label49.Font = new System.Drawing.Font("Segoe UI Semibold", 9F, System.Drawing.FontStyle.Bold);
-            this.label49.Location = new System.Drawing.Point(13, 226);
+            this.label49.Location = new System.Drawing.Point(13, 280);
             this.label49.Name = "label49";
             this.label49.Size = new System.Drawing.Size(69, 15);
             this.label49.TabIndex = 73;
@@ -486,7 +550,8 @@
             // 
             // panelLaunchOptions
             // 
-            this.panelLaunchOptions.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left) 
+            this.panelLaunchOptions.Anchor = ((System.Windows.Forms.AnchorStyles)((((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom) 
+            | System.Windows.Forms.AnchorStyles.Left) 
             | System.Windows.Forms.AnchorStyles.Right)));
             this.panelLaunchOptions.AutoScroll = true;
             this.panelLaunchOptions.AutoScrollMargin = new System.Drawing.Size(0, 10);
@@ -524,7 +589,7 @@
             this.panelLaunchOptions.Controls.Add(this.sliderVolume);
             this.panelLaunchOptions.Location = new System.Drawing.Point(183, 12);
             this.panelLaunchOptions.Name = "panelLaunchOptions";
-            this.panelLaunchOptions.Size = new System.Drawing.Size(373, 302);
+            this.panelLaunchOptions.Size = new System.Drawing.Size(373, 378);
             this.panelLaunchOptions.TabIndex = 35;
             this.panelLaunchOptions.Visible = false;
             // 
@@ -890,7 +955,8 @@
             // 
             // panelPasswords
             // 
-            this.panelPasswords.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left) 
+            this.panelPasswords.Anchor = ((System.Windows.Forms.AnchorStyles)((((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom) 
+            | System.Windows.Forms.AnchorStyles.Left) 
             | System.Windows.Forms.AnchorStyles.Right)));
             this.panelPasswords.Controls.Add(this.buttonClearPasswords);
             this.panelPasswords.Controls.Add(this.label11);
@@ -900,7 +966,7 @@
             this.panelPasswords.Controls.Add(this.label8);
             this.panelPasswords.Location = new System.Drawing.Point(183, 12);
             this.panelPasswords.Name = "panelPasswords";
-            this.panelPasswords.Size = new System.Drawing.Size(373, 302);
+            this.panelPasswords.Size = new System.Drawing.Size(373, 378);
             this.panelPasswords.TabIndex = 36;
             this.panelPasswords.Visible = false;
             // 
@@ -970,10 +1036,13 @@
             // 
             // panelStyle
             // 
-            this.panelStyle.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left) 
+            this.panelStyle.Anchor = ((System.Windows.Forms.AnchorStyles)((((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom) 
+            | System.Windows.Forms.AnchorStyles.Left) 
             | System.Windows.Forms.AnchorStyles.Right)));
             this.panelStyle.AutoScroll = true;
             this.panelStyle.AutoScrollMargin = new System.Drawing.Size(0, 10);
+            this.panelStyle.Controls.Add(this.checkStyleMarkFocused);
+            this.panelStyle.Controls.Add(this.checkShowColor);
             this.panelStyle.Controls.Add(this.labelFontRestoreDefaults);
             this.panelStyle.Controls.Add(this.buttonFontDescriptors);
             this.panelStyle.Controls.Add(this.buttonFontTitle);
@@ -986,9 +1055,31 @@
             this.panelStyle.Controls.Add(this.label18);
             this.panelStyle.Location = new System.Drawing.Point(183, 12);
             this.panelStyle.Name = "panelStyle";
-            this.panelStyle.Size = new System.Drawing.Size(373, 302);
+            this.panelStyle.Size = new System.Drawing.Size(373, 378);
             this.panelStyle.TabIndex = 37;
             this.panelStyle.Visible = false;
+            // 
+            // checkStyleMarkFocused
+            // 
+            this.checkStyleMarkFocused.AutoSize = true;
+            this.checkStyleMarkFocused.Location = new System.Drawing.Point(24, 144);
+            this.checkStyleMarkFocused.Name = "checkStyleMarkFocused";
+            this.checkStyleMarkFocused.Size = new System.Drawing.Size(204, 17);
+            this.checkStyleMarkFocused.TabIndex = 46;
+            this.checkStyleMarkFocused.Text = "Highlight the last focused account";
+            this.checkStyleMarkFocused.UseVisualStyleBackColor = true;
+            this.checkStyleMarkFocused.CheckedChanged += new System.EventHandler(this.checkStyleMarkFocused_CheckedChanged);
+            // 
+            // checkShowColor
+            // 
+            this.checkShowColor.AutoSize = true;
+            this.checkShowColor.Location = new System.Drawing.Point(24, 124);
+            this.checkShowColor.Name = "checkShowColor";
+            this.checkShowColor.Size = new System.Drawing.Size(148, 17);
+            this.checkShowColor.TabIndex = 45;
+            this.checkShowColor.Text = "Show account bar color";
+            this.checkShowColor.UseVisualStyleBackColor = true;
+            this.checkShowColor.CheckedChanged += new System.EventHandler(this.checkShowColor_CheckedChanged);
             // 
             // labelFontRestoreDefaults
             // 
@@ -1029,7 +1120,7 @@
             // 
             this.label19.AutoSize = true;
             this.label19.Font = new System.Drawing.Font("Segoe UI Semibold", 9F, System.Drawing.FontStyle.Bold);
-            this.label19.Location = new System.Drawing.Point(13, 134);
+            this.label19.Location = new System.Drawing.Point(13, 174);
             this.label19.Name = "label19";
             this.label19.Size = new System.Drawing.Size(47, 15);
             this.label19.TabIndex = 41;
@@ -1041,9 +1132,9 @@
             this.label16.Font = new System.Drawing.Font("Segoe UI Semibold", 9F, System.Drawing.FontStyle.Bold);
             this.label16.Location = new System.Drawing.Point(13, 81);
             this.label16.Name = "label16";
-            this.label16.Size = new System.Drawing.Size(67, 15);
+            this.label16.Size = new System.Drawing.Size(49, 15);
             this.label16.TabIndex = 40;
-            this.label16.Text = "Descriptors";
+            this.label16.Text = "Options";
             // 
             // checkShowUser
             // 
@@ -1061,20 +1152,23 @@
             this.buttonSample.AccountData = null;
             this.buttonSample.AccountName = "Example";
             this.buttonSample.BackColor = System.Drawing.Color.White;
+            this.buttonSample.ColorKey = System.Drawing.Color.Empty;
             this.buttonSample.Cursor = System.Windows.Forms.Cursors.Hand;
             this.buttonSample.DisplayName = "example@example.com";
             this.buttonSample.FontLarge = new System.Drawing.Font("Segoe UI Semibold", 8.25F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
             this.buttonSample.FontSmall = new System.Drawing.Font("Segoe UI Semilight", 8.25F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
             this.buttonSample.Index = 0;
+            this.buttonSample.IsFocused = false;
             this.buttonSample.LastDailyCompletionUtc = new System.DateTime(((long)(0)));
             this.buttonSample.LastDailyLoginUtc = new System.DateTime(((long)(0)));
             this.buttonSample.LastNoteUtc = new System.DateTime(((long)(0)));
             this.buttonSample.LastUsedUtc = new System.DateTime(((long)(0)));
-            this.buttonSample.Location = new System.Drawing.Point(24, 157);
+            this.buttonSample.Location = new System.Drawing.Point(24, 197);
             this.buttonSample.MinimumSize = new System.Drawing.Size(0, 67);
             this.buttonSample.Name = "buttonSample";
             this.buttonSample.Selected = false;
             this.buttonSample.ShowAccount = true;
+            this.buttonSample.ShowColorKey = false;
             this.buttonSample.ShowDailyCompletion = false;
             this.buttonSample.ShowDailyLogin = false;
             this.buttonSample.Size = new System.Drawing.Size(225, 67);
@@ -1170,7 +1264,8 @@
             // 
             // panelUpdates
             // 
-            this.panelUpdates.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left) 
+            this.panelUpdates.Anchor = ((System.Windows.Forms.AnchorStyles)((((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom) 
+            | System.Windows.Forms.AnchorStyles.Left) 
             | System.Windows.Forms.AnchorStyles.Right)));
             this.panelUpdates.Controls.Add(this.labelAutoUpdateDownloadProgressConfig);
             this.panelUpdates.Controls.Add(this.checkAutoUpdateDownloadProgress);
@@ -1190,7 +1285,7 @@
             this.panelUpdates.Controls.Add(this.label26);
             this.panelUpdates.Location = new System.Drawing.Point(183, 12);
             this.panelUpdates.Name = "panelUpdates";
-            this.panelUpdates.Size = new System.Drawing.Size(373, 302);
+            this.panelUpdates.Size = new System.Drawing.Size(373, 378);
             this.panelUpdates.TabIndex = 38;
             this.panelUpdates.Visible = false;
             // 
@@ -1383,8 +1478,12 @@
             // 
             // panelWindows
             // 
-            this.panelWindows.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left) 
+            this.panelWindows.Anchor = ((System.Windows.Forms.AnchorStyles)((((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom) 
+            | System.Windows.Forms.AnchorStyles.Left) 
             | System.Windows.Forms.AnchorStyles.Right)));
+            this.panelWindows.Controls.Add(this.checkWindowIcon);
+            this.panelWindows.Controls.Add(this.label88);
+            this.panelWindows.Controls.Add(this.label89);
             this.panelWindows.Controls.Add(this.label36);
             this.panelWindows.Controls.Add(this.label37);
             this.panelWindows.Controls.Add(this.checkPreventTaskbarGrouping);
@@ -1397,15 +1496,46 @@
             this.panelWindows.Controls.Add(this.label35);
             this.panelWindows.Location = new System.Drawing.Point(183, 12);
             this.panelWindows.Name = "panelWindows";
-            this.panelWindows.Size = new System.Drawing.Size(373, 302);
+            this.panelWindows.Size = new System.Drawing.Size(373, 378);
             this.panelWindows.TabIndex = 37;
             this.panelWindows.Visible = false;
+            // 
+            // checkWindowIcon
+            // 
+            this.checkWindowIcon.AutoSize = true;
+            this.checkWindowIcon.Font = new System.Drawing.Font("Segoe UI", 8.25F);
+            this.checkWindowIcon.Location = new System.Drawing.Point(21, 134);
+            this.checkWindowIcon.Name = "checkWindowIcon";
+            this.checkWindowIcon.Size = new System.Drawing.Size(152, 17);
+            this.checkWindowIcon.TabIndex = 75;
+            this.checkWindowIcon.Text = "Show the account\'s icon";
+            this.checkWindowIcon.UseVisualStyleBackColor = true;
+            // 
+            // label88
+            // 
+            this.label88.AutoSize = true;
+            this.label88.Font = new System.Drawing.Font("Segoe UI Semilight", 8.25F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+            this.label88.Location = new System.Drawing.Point(14, 113);
+            this.label88.Name = "label88";
+            this.label88.Size = new System.Drawing.Size(240, 13);
+            this.label88.TabIndex = 74;
+            this.label88.Text = "Changes the icon displayed in the title and taskbar";
+            // 
+            // label89
+            // 
+            this.label89.AutoSize = true;
+            this.label89.Font = new System.Drawing.Font("Segoe UI Semibold", 9F, System.Drawing.FontStyle.Bold);
+            this.label89.Location = new System.Drawing.Point(13, 97);
+            this.label89.Name = "label89";
+            this.label89.Size = new System.Drawing.Size(78, 15);
+            this.label89.TabIndex = 73;
+            this.label89.Text = "Window icon";
             // 
             // label36
             // 
             this.label36.AutoSize = true;
             this.label36.Font = new System.Drawing.Font("Segoe UI Semilight", 8.25F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            this.label36.Location = new System.Drawing.Point(14, 113);
+            this.label36.Location = new System.Drawing.Point(14, 180);
             this.label36.Name = "label36";
             this.label36.Size = new System.Drawing.Size(284, 13);
             this.label36.TabIndex = 72;
@@ -1415,7 +1545,7 @@
             // 
             this.label37.AutoSize = true;
             this.label37.Font = new System.Drawing.Font("Segoe UI Semibold", 9F, System.Drawing.FontStyle.Bold);
-            this.label37.Location = new System.Drawing.Point(13, 97);
+            this.label37.Location = new System.Drawing.Point(13, 164);
             this.label37.Name = "label37";
             this.label37.Size = new System.Drawing.Size(140, 15);
             this.label37.TabIndex = 71;
@@ -1425,7 +1555,7 @@
             // 
             this.checkPreventTaskbarGrouping.AutoSize = true;
             this.checkPreventTaskbarGrouping.Font = new System.Drawing.Font("Segoe UI", 8.25F);
-            this.checkPreventTaskbarGrouping.Location = new System.Drawing.Point(21, 134);
+            this.checkPreventTaskbarGrouping.Location = new System.Drawing.Point(21, 201);
             this.checkPreventTaskbarGrouping.Name = "checkPreventTaskbarGrouping";
             this.checkPreventTaskbarGrouping.Size = new System.Drawing.Size(116, 17);
             this.checkPreventTaskbarGrouping.TabIndex = 2;
@@ -1509,7 +1639,8 @@
             // 
             // panelLaunchOptionsAdvanced
             // 
-            this.panelLaunchOptionsAdvanced.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left) 
+            this.panelLaunchOptionsAdvanced.Anchor = ((System.Windows.Forms.AnchorStyles)((((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom) 
+            | System.Windows.Forms.AnchorStyles.Left) 
             | System.Windows.Forms.AnchorStyles.Right)));
             this.panelLaunchOptionsAdvanced.AutoScroll = true;
             this.panelLaunchOptionsAdvanced.AutoScrollMargin = new System.Drawing.Size(0, 10);
@@ -1517,7 +1648,7 @@
             this.panelLaunchOptionsAdvanced.Controls.Add(this.panelLaunchOptionsAdvancedExtra);
             this.panelLaunchOptionsAdvanced.Location = new System.Drawing.Point(183, 12);
             this.panelLaunchOptionsAdvanced.Name = "panelLaunchOptionsAdvanced";
-            this.panelLaunchOptionsAdvanced.Size = new System.Drawing.Size(373, 302);
+            this.panelLaunchOptionsAdvanced.Size = new System.Drawing.Size(373, 378);
             this.panelLaunchOptionsAdvanced.TabIndex = 39;
             this.panelLaunchOptionsAdvanced.Visible = false;
             // 
@@ -1643,7 +1774,8 @@
             // 
             // panelTools
             // 
-            this.panelTools.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left) 
+            this.panelTools.Anchor = ((System.Windows.Forms.AnchorStyles)((((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom) 
+            | System.Windows.Forms.AnchorStyles.Left) 
             | System.Windows.Forms.AnchorStyles.Right)));
             this.panelTools.Controls.Add(this.label83);
             this.panelTools.Controls.Add(this.checkNoteNotificationsOnlyWhileActive);
@@ -1662,7 +1794,7 @@
             this.panelTools.Controls.Add(this.label55);
             this.panelTools.Location = new System.Drawing.Point(183, 12);
             this.panelTools.Name = "panelTools";
-            this.panelTools.Size = new System.Drawing.Size(373, 302);
+            this.panelTools.Size = new System.Drawing.Size(373, 378);
             this.panelTools.TabIndex = 101;
             this.panelTools.Visible = false;
             // 
@@ -1671,7 +1803,7 @@
             this.label83.AutoSize = true;
             this.label83.Font = new System.Drawing.Font("Segoe UI Semilight", 8.25F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
             this.label83.ForeColor = System.Drawing.SystemColors.GrayText;
-            this.label83.Location = new System.Drawing.Point(140, 258);
+            this.label83.Location = new System.Drawing.Point(140, 259);
             this.label83.Name = "label83";
             this.label83.Size = new System.Drawing.Size(151, 13);
             this.label83.TabIndex = 110;
@@ -1681,7 +1813,7 @@
             // 
             this.checkNoteNotificationsOnlyWhileActive.AutoSize = true;
             this.checkNoteNotificationsOnlyWhileActive.Enabled = false;
-            this.checkNoteNotificationsOnlyWhileActive.Location = new System.Drawing.Point(21, 257);
+            this.checkNoteNotificationsOnlyWhileActive.Location = new System.Drawing.Point(21, 258);
             this.checkNoteNotificationsOnlyWhileActive.Name = "checkNoteNotificationsOnlyWhileActive";
             this.checkNoteNotificationsOnlyWhileActive.Size = new System.Drawing.Size(113, 17);
             this.checkNoteNotificationsOnlyWhileActive.TabIndex = 93;
@@ -1693,7 +1825,7 @@
             this.labelNoteNotifications.AutoSize = true;
             this.labelNoteNotifications.Cursor = System.Windows.Forms.Cursors.Hand;
             this.labelNoteNotifications.ForeColor = System.Drawing.Color.FromArgb(((int)(((byte)(49)))), ((int)(((byte)(121)))), ((int)(((byte)(242)))));
-            this.labelNoteNotifications.Location = new System.Drawing.Point(148, 238);
+            this.labelNoteNotifications.Location = new System.Drawing.Point(148, 239);
             this.labelNoteNotifications.Name = "labelNoteNotifications";
             this.labelNoteNotifications.Size = new System.Drawing.Size(57, 13);
             this.labelNoteNotifications.TabIndex = 92;
@@ -1703,7 +1835,7 @@
             // checkNoteNotifications
             // 
             this.checkNoteNotifications.AutoSize = true;
-            this.checkNoteNotifications.Location = new System.Drawing.Point(21, 237);
+            this.checkNoteNotifications.Location = new System.Drawing.Point(21, 238);
             this.checkNoteNotifications.Name = "checkNoteNotifications";
             this.checkNoteNotifications.Size = new System.Drawing.Size(123, 17);
             this.checkNoteNotifications.TabIndex = 91;
@@ -1715,7 +1847,7 @@
             // 
             this.label80.AutoSize = true;
             this.label80.Font = new System.Drawing.Font("Segoe UI Semilight", 8.25F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            this.label80.Location = new System.Drawing.Point(14, 203);
+            this.label80.Location = new System.Drawing.Point(14, 204);
             this.label80.MaximumSize = new System.Drawing.Size(330, 0);
             this.label80.Name = "label80";
             this.label80.Size = new System.Drawing.Size(292, 26);
@@ -1727,7 +1859,7 @@
             // 
             this.label81.AutoSize = true;
             this.label81.Font = new System.Drawing.Font("Segoe UI Semibold", 9F, System.Drawing.FontStyle.Bold);
-            this.label81.Location = new System.Drawing.Point(13, 187);
+            this.label81.Location = new System.Drawing.Point(13, 188);
             this.label81.Name = "label81";
             this.label81.Size = new System.Drawing.Size(146, 15);
             this.label81.TabIndex = 89;
@@ -1737,7 +1869,7 @@
             // 
             this.checkDeleteCrashLogsOnLaunch.AutoSize = true;
             this.checkDeleteCrashLogsOnLaunch.Font = new System.Drawing.Font("Segoe UI", 8.25F);
-            this.checkDeleteCrashLogsOnLaunch.Location = new System.Drawing.Point(21, 157);
+            this.checkDeleteCrashLogsOnLaunch.Location = new System.Drawing.Point(21, 158);
             this.checkDeleteCrashLogsOnLaunch.Name = "checkDeleteCrashLogsOnLaunch";
             this.checkDeleteCrashLogsOnLaunch.Size = new System.Drawing.Size(134, 17);
             this.checkDeleteCrashLogsOnLaunch.TabIndex = 88;
@@ -1748,7 +1880,7 @@
             // 
             this.label67.AutoSize = true;
             this.label67.Font = new System.Drawing.Font("Segoe UI Semilight", 8.25F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            this.label67.Location = new System.Drawing.Point(14, 136);
+            this.label67.Location = new System.Drawing.Point(14, 137);
             this.label67.MaximumSize = new System.Drawing.Size(330, 0);
             this.label67.Name = "label67";
             this.label67.Size = new System.Drawing.Size(296, 13);
@@ -1833,7 +1965,8 @@
             // 
             // panelSecurity
             // 
-            this.panelSecurity.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left) 
+            this.panelSecurity.Anchor = ((System.Windows.Forms.AnchorStyles)((((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom) 
+            | System.Windows.Forms.AnchorStyles.Left) 
             | System.Windows.Forms.AnchorStyles.Right)));
             this.panelSecurity.Controls.Add(this.label62);
             this.panelSecurity.Controls.Add(this.radioNetworkVerifyAutomatic);
@@ -1847,7 +1980,7 @@
             this.panelSecurity.Controls.Add(this.checkNetworkAbortOnCancel);
             this.panelSecurity.Location = new System.Drawing.Point(183, 12);
             this.panelSecurity.Name = "panelSecurity";
-            this.panelSecurity.Size = new System.Drawing.Size(373, 302);
+            this.panelSecurity.Size = new System.Drawing.Size(373, 378);
             this.panelSecurity.TabIndex = 102;
             this.panelSecurity.Visible = false;
             // 
@@ -1963,8 +2096,13 @@
             // 
             // panelActions
             // 
-            this.panelActions.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left) 
+            this.panelActions.Anchor = ((System.Windows.Forms.AnchorStyles)((((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom) 
+            | System.Windows.Forms.AnchorStyles.Left) 
             | System.Windows.Forms.AnchorStyles.Right)));
+            this.panelActions.Controls.Add(this.label85);
+            this.panelActions.Controls.Add(this.label86);
+            this.panelActions.Controls.Add(this.comboActionInactiveLClick);
+            this.panelActions.Controls.Add(this.label87);
             this.panelActions.Controls.Add(this.comboActionActiveLPress);
             this.panelActions.Controls.Add(this.label50);
             this.panelActions.Controls.Add(this.label51);
@@ -1973,13 +2111,52 @@
             this.panelActions.Controls.Add(this.label53);
             this.panelActions.Location = new System.Drawing.Point(183, 12);
             this.panelActions.Name = "panelActions";
-            this.panelActions.Size = new System.Drawing.Size(373, 302);
+            this.panelActions.Size = new System.Drawing.Size(373, 378);
             this.panelActions.TabIndex = 102;
             this.panelActions.Visible = false;
             // 
+            // label85
+            // 
+            this.label85.AutoSize = true;
+            this.label85.Font = new System.Drawing.Font("Segoe UI Semibold", 9F, System.Drawing.FontStyle.Bold);
+            this.label85.Location = new System.Drawing.Point(13, 110);
+            this.label85.Name = "label85";
+            this.label85.Size = new System.Drawing.Size(160, 15);
+            this.label85.TabIndex = 50;
+            this.label85.Text = "Actions for inactive accounts";
+            // 
+            // label86
+            // 
+            this.label86.AutoSize = true;
+            this.label86.Font = new System.Drawing.Font("Segoe UI Semilight", 8.25F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+            this.label86.Location = new System.Drawing.Point(14, 126);
+            this.label86.Name = "label86";
+            this.label86.Size = new System.Drawing.Size(269, 13);
+            this.label86.TabIndex = 51;
+            this.label86.Text = "When an account is not active, the following actions will...";
+            // 
+            // comboActionInactiveLClick
+            // 
+            this.comboActionInactiveLClick.DropDownStyle = System.Windows.Forms.ComboBoxStyle.DropDownList;
+            this.comboActionInactiveLClick.FormattingEnabled = true;
+            this.comboActionInactiveLClick.Location = new System.Drawing.Point(102, 149);
+            this.comboActionInactiveLClick.Name = "comboActionInactiveLClick";
+            this.comboActionInactiveLClick.Size = new System.Drawing.Size(121, 21);
+            this.comboActionInactiveLClick.TabIndex = 49;
+            // 
+            // label87
+            // 
+            this.label87.AutoSize = true;
+            this.label87.Location = new System.Drawing.Point(14, 152);
+            this.label87.Name = "label87";
+            this.label87.Size = new System.Drawing.Size(51, 13);
+            this.label87.TabIndex = 52;
+            this.label87.Text = "Left click";
+            // 
             // panelScreenshots
             // 
-            this.panelScreenshots.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left) 
+            this.panelScreenshots.Anchor = ((System.Windows.Forms.AnchorStyles)((((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom) 
+            | System.Windows.Forms.AnchorStyles.Left) 
             | System.Windows.Forms.AnchorStyles.Right)));
             this.panelScreenshots.AutoScroll = true;
             this.panelScreenshots.AutoScrollMargin = new System.Drawing.Size(0, 10);
@@ -2002,7 +2179,7 @@
             this.panelScreenshots.Controls.Add(this.panelScreenshotImageFormatPng);
             this.panelScreenshots.Location = new System.Drawing.Point(183, 12);
             this.panelScreenshots.Name = "panelScreenshots";
-            this.panelScreenshots.Size = new System.Drawing.Size(373, 302);
+            this.panelScreenshots.Size = new System.Drawing.Size(373, 378);
             this.panelScreenshots.TabIndex = 103;
             this.panelScreenshots.Visible = false;
             // 
@@ -2264,7 +2441,8 @@
             // 
             // panelLaunchOptionsProcess
             // 
-            this.panelLaunchOptionsProcess.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left) 
+            this.panelLaunchOptionsProcess.Anchor = ((System.Windows.Forms.AnchorStyles)((((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom) 
+            | System.Windows.Forms.AnchorStyles.Left) 
             | System.Windows.Forms.AnchorStyles.Right)));
             this.panelLaunchOptionsProcess.AutoScroll = true;
             this.panelLaunchOptionsProcess.Controls.Add(this.panelLaunchOptionsProcessContent);
@@ -2278,7 +2456,7 @@
             this.panelLaunchOptionsProcess.Controls.Add(this.label73);
             this.panelLaunchOptionsProcess.Location = new System.Drawing.Point(183, 12);
             this.panelLaunchOptionsProcess.Name = "panelLaunchOptionsProcess";
-            this.panelLaunchOptionsProcess.Size = new System.Drawing.Size(373, 302);
+            this.panelLaunchOptionsProcess.Size = new System.Drawing.Size(373, 378);
             this.panelLaunchOptionsProcess.TabIndex = 104;
             this.panelLaunchOptionsProcess.Visible = false;
             // 
@@ -2391,6 +2569,98 @@
             this.label76.TabIndex = 105;
             this.label76.Text = "The processors that can be used by the process";
             // 
+            // panelAccountBar
+            // 
+            this.panelAccountBar.Anchor = ((System.Windows.Forms.AnchorStyles)((((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom) 
+            | System.Windows.Forms.AnchorStyles.Left) 
+            | System.Windows.Forms.AnchorStyles.Right)));
+            this.panelAccountBar.Controls.Add(this.buttonAccountBarReset);
+            this.panelAccountBar.Controls.Add(this.buttonAccountBarShow);
+            this.panelAccountBar.Controls.Add(this.checkAccountBarEnable);
+            this.panelAccountBar.Controls.Add(this.label90);
+            this.panelAccountBar.Controls.Add(this.label91);
+            this.panelAccountBar.Controls.Add(this.label93);
+            this.panelAccountBar.Controls.Add(this.label92);
+            this.panelAccountBar.Location = new System.Drawing.Point(183, 12);
+            this.panelAccountBar.Name = "panelAccountBar";
+            this.panelAccountBar.Size = new System.Drawing.Size(373, 378);
+            this.panelAccountBar.TabIndex = 76;
+            this.panelAccountBar.Visible = false;
+            // 
+            // buttonAccountBarReset
+            // 
+            this.buttonAccountBarReset.Font = new System.Drawing.Font("Segoe UI", 8.25F);
+            this.buttonAccountBarReset.Location = new System.Drawing.Point(105, 184);
+            this.buttonAccountBarReset.Name = "buttonAccountBarReset";
+            this.buttonAccountBarReset.Size = new System.Drawing.Size(74, 23);
+            this.buttonAccountBarReset.TabIndex = 84;
+            this.buttonAccountBarReset.Text = "Reset";
+            this.buttonAccountBarReset.UseVisualStyleBackColor = true;
+            this.buttonAccountBarReset.Click += new System.EventHandler(this.buttonAccountBarReset_Click);
+            // 
+            // buttonAccountBarShow
+            // 
+            this.buttonAccountBarShow.Font = new System.Drawing.Font("Segoe UI", 8.25F);
+            this.buttonAccountBarShow.Location = new System.Drawing.Point(20, 184);
+            this.buttonAccountBarShow.Name = "buttonAccountBarShow";
+            this.buttonAccountBarShow.Size = new System.Drawing.Size(74, 23);
+            this.buttonAccountBarShow.TabIndex = 82;
+            this.buttonAccountBarShow.Text = "Show";
+            this.buttonAccountBarShow.UseVisualStyleBackColor = true;
+            this.buttonAccountBarShow.Click += new System.EventHandler(this.buttonAccountBarShow_Click);
+            // 
+            // checkAccountBarEnable
+            // 
+            this.checkAccountBarEnable.AutoSize = true;
+            this.checkAccountBarEnable.Font = new System.Drawing.Font("Segoe UI", 8.25F);
+            this.checkAccountBarEnable.Location = new System.Drawing.Point(21, 47);
+            this.checkAccountBarEnable.Name = "checkAccountBarEnable";
+            this.checkAccountBarEnable.Size = new System.Drawing.Size(145, 17);
+            this.checkAccountBarEnable.TabIndex = 75;
+            this.checkAccountBarEnable.Text = "Enable the account bar";
+            this.checkAccountBarEnable.UseVisualStyleBackColor = true;
+            // 
+            // label90
+            // 
+            this.label90.AutoSize = true;
+            this.label90.Font = new System.Drawing.Font("Segoe UI Semilight", 8.25F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+            this.label90.Location = new System.Drawing.Point(14, 26);
+            this.label90.Name = "label90";
+            this.label90.Size = new System.Drawing.Size(179, 13);
+            this.label90.TabIndex = 74;
+            this.label90.Text = "Displays accounts in a taskbar format";
+            // 
+            // label91
+            // 
+            this.label91.AutoSize = true;
+            this.label91.Font = new System.Drawing.Font("Segoe UI Semibold", 9F, System.Drawing.FontStyle.Bold);
+            this.label91.Location = new System.Drawing.Point(13, 10);
+            this.label91.Name = "label91";
+            this.label91.Size = new System.Drawing.Size(72, 15);
+            this.label91.TabIndex = 73;
+            this.label91.Text = "Account bar";
+            // 
+            // label93
+            // 
+            this.label93.AutoSize = true;
+            this.label93.Font = new System.Drawing.Font("Segoe UI Semibold", 9F, System.Drawing.FontStyle.Bold);
+            this.label93.Location = new System.Drawing.Point(13, 77);
+            this.label93.Name = "label93";
+            this.label93.Size = new System.Drawing.Size(71, 15);
+            this.label93.TabIndex = 71;
+            this.label93.Text = "Information";
+            // 
+            // label92
+            // 
+            this.label92.AutoSize = true;
+            this.label92.Font = new System.Drawing.Font("Segoe UI Semilight", 8.25F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+            this.label92.Location = new System.Drawing.Point(14, 93);
+            this.label92.MaximumSize = new System.Drawing.Size(330, 0);
+            this.label92.Name = "label92";
+            this.label92.Size = new System.Drawing.Size(329, 78);
+            this.label92.TabIndex = 72;
+            this.label92.Text = resources.GetString("label92.Text");
+            // 
             // sidebarPanel1
             // 
             this.sidebarPanel1.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom) 
@@ -2406,7 +2676,7 @@
             this.sidebarPanel1.Location = new System.Drawing.Point(0, 0);
             this.sidebarPanel1.Margin = new System.Windows.Forms.Padding(0);
             this.sidebarPanel1.Name = "sidebarPanel1";
-            this.sidebarPanel1.Size = new System.Drawing.Size(180, 370);
+            this.sidebarPanel1.Size = new System.Drawing.Size(180, 446);
             this.sidebarPanel1.TabIndex = 25;
             // 
             // buttonTools
@@ -2541,17 +2811,223 @@
             this.buttonGeneral.TabIndex = 0;
             this.buttonGeneral.Text = "General";
             // 
+            // label99
+            // 
+            this.label99.AutoSize = true;
+            this.label99.Font = new System.Drawing.Font("Segoe UI Semilight", 8.25F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+            this.label99.Location = new System.Drawing.Point(14, 124);
+            this.label99.Name = "label99";
+            this.label99.Size = new System.Drawing.Size(311, 13);
+            this.label99.TabIndex = 46;
+            this.label99.Text = "Limits the number of accounts that can be opened simultaneously";
+            // 
+            // label98
+            // 
+            this.label98.AutoSize = true;
+            this.label98.Font = new System.Drawing.Font("Segoe UI Semibold", 9F, System.Drawing.FontStyle.Bold);
+            this.label98.Location = new System.Drawing.Point(13, 108);
+            this.label98.Name = "label98";
+            this.label98.Size = new System.Drawing.Size(206, 15);
+            this.label98.TabIndex = 45;
+            this.label98.Text = "Maximum number of active accounts";
+            // 
+            // checkLimitActiveAccount
+            // 
+            this.checkLimitActiveAccount.AutoSize = true;
+            this.checkLimitActiveAccount.Location = new System.Drawing.Point(21, 148);
+            this.checkLimitActiveAccount.Name = "checkLimitActiveAccount";
+            this.checkLimitActiveAccount.Size = new System.Drawing.Size(15, 14);
+            this.checkLimitActiveAccount.TabIndex = 113;
+            this.checkLimitActiveAccount.UseVisualStyleBackColor = true;
+            this.checkLimitActiveAccount.CheckedChanged += new System.EventHandler(this.checkLimitActiveAccount_CheckedChanged);
+            // 
+            // numericLimitActiveAccount
+            // 
+            this.numericLimitActiveAccount.Enabled = false;
+            this.numericLimitActiveAccount.Location = new System.Drawing.Point(43, 145);
+            this.numericLimitActiveAccount.Maximum = new decimal(new int[] {
+            50,
+            0,
+            0,
+            0});
+            this.numericLimitActiveAccount.Minimum = new decimal(new int[] {
+            1,
+            0,
+            0,
+            0});
+            this.numericLimitActiveAccount.Name = "numericLimitActiveAccount";
+            this.numericLimitActiveAccount.Size = new System.Drawing.Size(44, 22);
+            this.numericLimitActiveAccount.TabIndex = 114;
+            this.numericLimitActiveAccount.Value = new decimal(new int[] {
+            5,
+            0,
+            0,
+            0});
+            // 
+            // label96
+            // 
+            this.label96.AutoSize = true;
+            this.label96.Font = new System.Drawing.Font("Segoe UI Semilight", 8.25F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+            this.label96.Location = new System.Drawing.Point(14, 237);
+            this.label96.Name = "label96";
+            this.label96.Size = new System.Drawing.Size(275, 13);
+            this.label96.TabIndex = 116;
+            this.label96.Text = "Delay for the specified amount of seconds after launching";
+            // 
+            // label95
+            // 
+            this.label95.AutoSize = true;
+            this.label95.Font = new System.Drawing.Font("Segoe UI Semibold", 9F, System.Drawing.FontStyle.Bold);
+            this.label95.Location = new System.Drawing.Point(13, 177);
+            this.label95.Name = "label95";
+            this.label95.Size = new System.Drawing.Size(191, 15);
+            this.label95.TabIndex = 115;
+            this.label95.Text = "Delay launching multiple accounts";
+            // 
+            // checkDelaySeconds
+            // 
+            this.checkDelaySeconds.AutoSize = true;
+            this.checkDelaySeconds.Location = new System.Drawing.Point(21, 261);
+            this.checkDelaySeconds.Name = "checkDelaySeconds";
+            this.checkDelaySeconds.Size = new System.Drawing.Size(15, 14);
+            this.checkDelaySeconds.TabIndex = 117;
+            this.checkDelaySeconds.UseVisualStyleBackColor = true;
+            this.checkDelaySeconds.CheckedChanged += new System.EventHandler(this.checkDelaySeconds_CheckedChanged);
+            // 
+            // numericDelaySeconds
+            // 
+            this.numericDelaySeconds.Enabled = false;
+            this.numericDelaySeconds.Location = new System.Drawing.Point(43, 258);
+            this.numericDelaySeconds.Maximum = new decimal(new int[] {
+            240,
+            0,
+            0,
+            0});
+            this.numericDelaySeconds.Minimum = new decimal(new int[] {
+            1,
+            0,
+            0,
+            0});
+            this.numericDelaySeconds.Name = "numericDelaySeconds";
+            this.numericDelaySeconds.Size = new System.Drawing.Size(44, 22);
+            this.numericDelaySeconds.TabIndex = 118;
+            this.numericDelaySeconds.Value = new decimal(new int[] {
+            5,
+            0,
+            0,
+            0});
+            // 
+            // checkDelayUntilLoaded
+            // 
+            this.checkDelayUntilLoaded.AutoSize = true;
+            this.checkDelayUntilLoaded.Location = new System.Drawing.Point(21, 214);
+            this.checkDelayUntilLoaded.Name = "checkDelayUntilLoaded";
+            this.checkDelayUntilLoaded.Size = new System.Drawing.Size(216, 17);
+            this.checkDelayUntilLoaded.TabIndex = 119;
+            this.checkDelayUntilLoaded.Text = "Delay until loaded to character select";
+            this.checkDelayUntilLoaded.UseVisualStyleBackColor = true;
+            // 
+            // label97
+            // 
+            this.label97.AutoSize = true;
+            this.label97.Font = new System.Drawing.Font("Segoe UI Semilight", 8.25F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+            this.label97.Location = new System.Drawing.Point(14, 193);
+            this.label97.Name = "label97";
+            this.label97.Size = new System.Drawing.Size(213, 13);
+            this.label97.TabIndex = 120;
+            this.label97.Text = "Delay until the main game window is loaded";
+            // 
+            // panelLaunchConfiguration
+            // 
+            this.panelLaunchConfiguration.Anchor = ((System.Windows.Forms.AnchorStyles)((((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom) 
+            | System.Windows.Forms.AnchorStyles.Left) 
+            | System.Windows.Forms.AnchorStyles.Right)));
+            this.panelLaunchConfiguration.Controls.Add(this.labelShowLocalizedExecution);
+            this.panelLaunchConfiguration.Controls.Add(this.label102);
+            this.panelLaunchConfiguration.Controls.Add(this.label100);
+            this.panelLaunchConfiguration.Controls.Add(this.checkLocalizedExecution);
+            this.panelLaunchConfiguration.Controls.Add(this.label101);
+            this.panelLaunchConfiguration.Controls.Add(this.label97);
+            this.panelLaunchConfiguration.Controls.Add(this.checkDelayUntilLoaded);
+            this.panelLaunchConfiguration.Controls.Add(this.numericDelaySeconds);
+            this.panelLaunchConfiguration.Controls.Add(this.checkDelaySeconds);
+            this.panelLaunchConfiguration.Controls.Add(this.label95);
+            this.panelLaunchConfiguration.Controls.Add(this.label96);
+            this.panelLaunchConfiguration.Controls.Add(this.numericLimitActiveAccount);
+            this.panelLaunchConfiguration.Controls.Add(this.checkLimitActiveAccount);
+            this.panelLaunchConfiguration.Controls.Add(this.label98);
+            this.panelLaunchConfiguration.Controls.Add(this.label99);
+            this.panelLaunchConfiguration.Location = new System.Drawing.Point(183, 12);
+            this.panelLaunchConfiguration.Name = "panelLaunchConfiguration";
+            this.panelLaunchConfiguration.Size = new System.Drawing.Size(373, 378);
+            this.panelLaunchConfiguration.TabIndex = 105;
+            this.panelLaunchConfiguration.Visible = false;
+            this.panelLaunchConfiguration.VisibleChanged += new System.EventHandler(this.panelLaunchConfiguration_VisibleChanged);
+            // 
+            // labelShowLocalizedExecution
+            // 
+            this.labelShowLocalizedExecution.AutoSize = true;
+            this.labelShowLocalizedExecution.Cursor = System.Windows.Forms.Cursors.Hand;
+            this.labelShowLocalizedExecution.ForeColor = System.Drawing.Color.FromArgb(((int)(((byte)(49)))), ((int)(((byte)(121)))), ((int)(((byte)(242)))));
+            this.labelShowLocalizedExecution.Location = new System.Drawing.Point(269, 79);
+            this.labelShowLocalizedExecution.Name = "labelShowLocalizedExecution";
+            this.labelShowLocalizedExecution.Size = new System.Drawing.Size(68, 13);
+            this.labelShowLocalizedExecution.TabIndex = 125;
+            this.labelShowLocalizedExecution.Text = "open folder";
+            this.labelShowLocalizedExecution.Visible = false;
+            this.labelShowLocalizedExecution.Click += new System.EventHandler(this.labelShowLocalizedExecution_Click);
+            // 
+            // label102
+            // 
+            this.label102.AutoSize = true;
+            this.label102.Font = new System.Drawing.Font("Segoe UI Semilight", 8.25F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+            this.label102.ForeColor = System.Drawing.SystemColors.GrayText;
+            this.label102.Location = new System.Drawing.Point(14, 44);
+            this.label102.MaximumSize = new System.Drawing.Size(330, 0);
+            this.label102.Name = "label102";
+            this.label102.Size = new System.Drawing.Size(329, 26);
+            this.label102.TabIndex = 124;
+            this.label102.Text = "Prevents files from being copied multiple times per launch and allows for each ac" +
+    "count to use custom DLLs";
+            // 
+            // label100
+            // 
+            this.label100.AutoSize = true;
+            this.label100.Font = new System.Drawing.Font("Segoe UI Semilight", 8.25F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+            this.label100.Location = new System.Drawing.Point(14, 26);
+            this.label100.Name = "label100";
+            this.label100.Size = new System.Drawing.Size(288, 13);
+            this.label100.TabIndex = 123;
+            this.label100.Text = "Each account will be launched using its own executable path";
+            // 
+            // checkLocalizedExecution
+            // 
+            this.checkLocalizedExecution.AutoSize = true;
+            this.checkLocalizedExecution.Location = new System.Drawing.Point(20, 78);
+            this.checkLocalizedExecution.Name = "checkLocalizedExecution";
+            this.checkLocalizedExecution.Size = new System.Drawing.Size(245, 17);
+            this.checkLocalizedExecution.TabIndex = 122;
+            this.checkLocalizedExecution.Text = "Give each account its own executable path";
+            this.checkLocalizedExecution.UseVisualStyleBackColor = true;
+            // 
+            // label101
+            // 
+            this.label101.AutoSize = true;
+            this.label101.Font = new System.Drawing.Font("Segoe UI Semibold", 9F, System.Drawing.FontStyle.Bold);
+            this.label101.Location = new System.Drawing.Point(13, 10);
+            this.label101.Name = "label101";
+            this.label101.Size = new System.Drawing.Size(158, 15);
+            this.label101.TabIndex = 121;
+            this.label101.Text = "Localized account execution";
+            // 
             // formSettings
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
-            this.ClientSize = new System.Drawing.Size(568, 370);
+            this.ClientSize = new System.Drawing.Size(568, 446);
             this.Controls.Add(this.buttonCancel);
             this.Controls.Add(this.buttonOK);
             this.Controls.Add(this.sidebarPanel1);
-            this.Controls.Add(this.panelTools);
-            this.Controls.Add(this.panelScreenshots);
-            this.Controls.Add(this.panelWindows);
             this.Controls.Add(this.panelGeneral);
             this.Controls.Add(this.panelSecurity);
             this.Controls.Add(this.panelPasswords);
@@ -2559,13 +3035,18 @@
             this.Controls.Add(this.panelStyle);
             this.Controls.Add(this.panelLaunchOptions);
             this.Controls.Add(this.panelLaunchOptionsProcess);
+            this.Controls.Add(this.panelLaunchConfiguration);
             this.Controls.Add(this.panelActions);
             this.Controls.Add(this.panelUpdates);
+            this.Controls.Add(this.panelTools);
+            this.Controls.Add(this.panelScreenshots);
+            this.Controls.Add(this.panelAccountBar);
+            this.Controls.Add(this.panelWindows);
             this.Font = new System.Drawing.Font("Segoe UI", 8.25F);
-            this.FormBorderStyle = System.Windows.Forms.FormBorderStyle.FixedDialog;
-            this.Icon = global::Gw2Launcher.Properties.Resources.Gw2;
+            this.Icon = global::Gw2Launcher.Properties.Resources.Gw2Launcher;
             this.MaximizeBox = false;
             this.MinimizeBox = false;
+            this.MinimumSize = new System.Drawing.Size(584, 485);
             this.Name = "formSettings";
             this.ShowIcon = false;
             this.ShowInTaskbar = false;
@@ -2608,7 +3089,13 @@
             this.panelLaunchOptionsProcess.PerformLayout();
             this.panelLaunchOptionsProcessContent.ResumeLayout(false);
             this.panelLaunchOptionsProcessContent.PerformLayout();
+            this.panelAccountBar.ResumeLayout(false);
+            this.panelAccountBar.PerformLayout();
             this.sidebarPanel1.ResumeLayout(false);
+            ((System.ComponentModel.ISupportInitialize)(this.numericLimitActiveAccount)).EndInit();
+            ((System.ComponentModel.ISupportInitialize)(this.numericDelaySeconds)).EndInit();
+            this.panelLaunchConfiguration.ResumeLayout(false);
+            this.panelLaunchConfiguration.PerformLayout();
             this.ResumeLayout(false);
 
         }
@@ -2806,5 +3293,40 @@
         private System.Windows.Forms.Label label82;
         private System.Windows.Forms.Label label84;
         private System.Windows.Forms.Panel panelLaunchOptionsAdvancedContainer;
+        private System.Windows.Forms.Label label85;
+        private System.Windows.Forms.Label label86;
+        private System.Windows.Forms.ComboBox comboActionInactiveLClick;
+        private System.Windows.Forms.Label label87;
+        private System.Windows.Forms.CheckBox checkWindowIcon;
+        private System.Windows.Forms.Label label88;
+        private System.Windows.Forms.Label label89;
+        private System.Windows.Forms.CheckBox checkStyleMarkFocused;
+        private System.Windows.Forms.CheckBox checkShowColor;
+        private System.Windows.Forms.Panel panelAccountBar;
+        private System.Windows.Forms.CheckBox checkAccountBarEnable;
+        private System.Windows.Forms.Label label90;
+        private System.Windows.Forms.Label label91;
+        private System.Windows.Forms.Label label92;
+        private System.Windows.Forms.Label label93;
+        private System.Windows.Forms.Button buttonAccountBarShow;
+        private System.Windows.Forms.CheckBox checkUseGw2ShortcutIcon;
+        private System.Windows.Forms.Label label94;
+        private System.Windows.Forms.Label label99;
+        private System.Windows.Forms.Label label98;
+        private System.Windows.Forms.CheckBox checkLimitActiveAccount;
+        private System.Windows.Forms.NumericUpDown numericLimitActiveAccount;
+        private System.Windows.Forms.Label label96;
+        private System.Windows.Forms.Label label95;
+        private System.Windows.Forms.CheckBox checkDelaySeconds;
+        private System.Windows.Forms.NumericUpDown numericDelaySeconds;
+        private System.Windows.Forms.CheckBox checkDelayUntilLoaded;
+        private System.Windows.Forms.Label label97;
+        private System.Windows.Forms.Panel panelLaunchConfiguration;
+        private System.Windows.Forms.Label label102;
+        private System.Windows.Forms.Label label100;
+        private System.Windows.Forms.CheckBox checkLocalizedExecution;
+        private System.Windows.Forms.Label label101;
+        private System.Windows.Forms.Label labelShowLocalizedExecution;
+        private System.Windows.Forms.Button buttonAccountBarReset;
     }
 }

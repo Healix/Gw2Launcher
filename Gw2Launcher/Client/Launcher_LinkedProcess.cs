@@ -89,6 +89,11 @@ namespace Gw2Launcher.Client
                 return null;
             }
 
+            public static bool Contains(Process p)
+            {
+                return activeProcesses.ContainsKey(p.Id);
+            }
+
             public LinkedProcess(Account account)
             {
                 this.account = account;
@@ -343,7 +348,7 @@ namespace Gw2Launcher.Client
                 }
             }
 
-            public void KillMutex()
+            public bool KillMutex()
             {
                 if (!Util.Users.IsCurrentUser(account.Settings.WindowsAccount))
                 {
@@ -353,7 +358,8 @@ namespace Gw2Launcher.Client
                     {
                         using (Security.Impersonation.Impersonate(username, password))
                         {
-                            _KillMutex();
+                            if (!_KillMutex())
+                                return false;
                         }
                     }
                     catch (Exception e)
@@ -362,21 +368,57 @@ namespace Gw2Launcher.Client
                         Util.ProcessUtil.KillMutexWindow(this.Process.Id, username, password);
                     }
                 }
-                else
+                else if (!_KillMutex())
                 {
-                    _KillMutex();
+                    return false;
                 }
 
                 this.HasMutex = false;
+
+                return true;
             }
 
-            private void _KillMutex()
+            private bool _KillMutex()
             {
-                Windows.Win32Handles.IObjectHandle handle = Windows.Win32Handles.GetHandle(this.Process.Id, "AN-Mutex-Window-Guild Wars 2", false);
-                if (handle != null)
+                var p = this.Process;
+                var hasWindow = false;
+
+                do
                 {
-                    handle.Kill();
+                    var handle = Windows.Win32Handles.GetHandle(p.Id, "AN-Mutex-Window-Guild Wars 2", false);
+
+                    if (handle != null)
+                    {
+                        handle.Kill();
+                        return true;
+                    }
+                    else if (hasWindow)
+                    {
+                        return true;
+                    }
+
+                    try
+                    {
+                        var limit = DateTime.UtcNow.AddSeconds(30);
+
+                        do
+                        {
+                            var h = p.MainWindowHandle;
+                            if (h != IntPtr.Zero)
+                            {
+                                hasWindow = true;
+                                break;
+                            }
+                            else if (DateTime.UtcNow > limit)
+                            {
+                                return false;
+                            }
+                        }
+                        while (!p.WaitForExit(500));
+                    }
+                    catch { }
                 }
+                while (true);
             }
 
             public void Dispose()

@@ -78,7 +78,7 @@ namespace Gw2Launcher.UI
         {
             InitializeComponent();
 
-            radioAccountShare.Enabled = Client.FileManager.IsLinkingSupported;
+            radioAccountShare.Enabled = Client.FileManager.IsDataLinkingSupported;
 
             this.fileType = type;
 

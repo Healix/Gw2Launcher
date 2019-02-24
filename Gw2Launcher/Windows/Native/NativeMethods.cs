@@ -17,6 +17,7 @@ namespace Gw2Launcher.Windows.Native
             public const string GDI32 = "gdi32.dll";
             public const string SHELL32 = "shell32.dll";
             public const string ADVAPI32 = "advapi32.dll";
+            public const string SHLWAPI = "shlwapi.dll";
         }
 
         [DllImport(DLL.USER32, SetLastError = true)]
@@ -27,11 +28,33 @@ namespace Gw2Launcher.Windows.Native
         [return: MarshalAs(UnmanagedType.Bool)]
         internal static extern bool GetWindowPlacement(IntPtr hWnd, ref WINDOWPLACEMENT lpwndpl);
 
-        [DllImport(DLL.USER32, SetLastError = true)]
-        internal static extern int SetWindowLong(IntPtr hWnd, int nIndex, int dwNewLong);
+        [DllImport(DLL.USER32, EntryPoint = "SetWindowLong")]
+        internal static extern int SetWindowLongPtr32(IntPtr hWnd, int nIndex, int dwNewLong);
 
-        [DllImport(DLL.USER32, SetLastError = true)]
-        internal static extern int GetWindowLong(IntPtr hWnd, int nIndex);
+        [DllImport(DLL.USER32, EntryPoint = "SetWindowLongPtr")]
+        internal static extern IntPtr SetWindowLongPtr64(IntPtr hWnd, int nIndex, IntPtr dwNewLong);
+
+        internal static IntPtr SetWindowLongPtr(IntPtr hWnd, int nIndex, IntPtr dwNewLong)
+        {
+            if (IntPtr.Size == 4)
+                return (IntPtr)SetWindowLongPtr32(hWnd, nIndex, dwNewLong.ToInt32());
+            else
+                return SetWindowLongPtr64(hWnd, nIndex, dwNewLong);
+        }
+
+        [DllImport(DLL.USER32, EntryPoint = "GetWindowLong")]
+        internal static extern IntPtr GetWindowLongPtr32(IntPtr hWnd, int nIndex);
+
+        [DllImport(DLL.USER32, EntryPoint = "GetWindowLongPtr")]
+        internal static extern IntPtr GetWindowLongPtr64(IntPtr hWnd, int nIndex);
+
+        internal static IntPtr GetWindowLongPtr(IntPtr hWnd, int nIndex)
+        {
+            if (IntPtr.Size == 4)
+                return GetWindowLongPtr32(hWnd, nIndex);
+            else
+                return GetWindowLongPtr64(hWnd, nIndex);
+        }
 
         [DllImport(DLL.USER32, SetLastError = true)]
         internal static extern bool GetClientRect(IntPtr hWnd, out RECT lpRect);
@@ -99,6 +122,9 @@ namespace Gw2Launcher.Windows.Native
         internal static extern bool SetForegroundWindow(IntPtr hWnd);
 
         [DllImport(DLL.USER32)]
+        internal static extern IntPtr GetForegroundWindow();
+
+        [DllImport(DLL.USER32)]
         internal static extern bool BringWindowToTop(IntPtr hWnd);
 
         [DllImport(DLL.USER32)]
@@ -116,6 +142,10 @@ namespace Gw2Launcher.Windows.Native
         [return: MarshalAs(UnmanagedType.Bool)]
         [DllImport(DLL.USER32, SetLastError = true, CharSet = CharSet.Auto)]
         internal static extern bool PostMessage(IntPtr hWnd, uint Msg, IntPtr wParam, IntPtr lParam);
+
+        [return: MarshalAs(UnmanagedType.Bool)]
+        [DllImport(DLL.USER32, SetLastError = true, CharSet = CharSet.Auto)]
+        internal static extern bool PostMessage(IntPtr hWnd, uint Msg, uint wParam, uint lParam);
 
         [DllImport(DLL.GDI32)]
         internal static extern bool DeleteObject(IntPtr hObject);
@@ -140,6 +170,9 @@ namespace Gw2Launcher.Windows.Native
 
         [DllImport(DLL.USER32, SetLastError = true, CharSet = CharSet.Auto)]
         internal static extern IntPtr SendMessage(IntPtr hWnd, uint Msg, IntPtr wParam, IntPtr lParam);
+
+        [DllImport(DLL.USER32, SetLastError = true, CharSet = CharSet.Auto)]
+        internal static extern IntPtr SendMessage(IntPtr hWnd, uint Msg, uint wParam, uint lParam);
 
         [DllImport(DLL.USER32, SetLastError = true, CharSet = CharSet.Auto)]
         internal static extern bool SendMessageCallback(IntPtr hWnd, uint Msg, UIntPtr wParam,
@@ -168,7 +201,7 @@ namespace Gw2Launcher.Windows.Native
         [DllImport(DLL.USER32)]
         internal static extern IntPtr SetWinEventHook(uint eventMin, uint eventMax, IntPtr hmodWinEventProc, WinEventDelegate lpfnWinEventProc, uint idProcess, uint idThread, uint dwFlags);
 
-        [DllImport(DLL.USER32)]
+        [DllImport(DLL.USER32, SetLastError = true)]
         internal static extern bool UnhookWinEvent(IntPtr hWinEventHook);
 
         [DllImport(DLL.KERNEL32, SetLastError = true)]
@@ -216,5 +249,31 @@ namespace Gw2Launcher.Windows.Native
 
         [DllImport(DLL.USER32)]
         internal static extern bool GetLastInputInfo(ref LASTINPUTINFO plii);
+
+        [DllImport(DLL.USER32)]
+        internal static extern bool ReleaseCapture();
+
+        [DllImport(DLL.SHLWAPI)]
+        internal static extern int ColorHLSToRGB(int H, int L, int S);
+
+        [DllImport(DLL.USER32)]
+        internal static extern int GetSystemMetrics(SystemMetric smIndex);
+
+        [DllImport(DLL.USER32)]
+        internal static extern IntPtr GetParent(IntPtr hwnd);
+
+        [DllImport(DLL.USER32)]
+        private static extern uint GetWindowThreadProcessId(IntPtr handle, IntPtr pid);
+
+        internal static uint GetWindowThreadId(IntPtr handle)
+        {
+            return GetWindowThreadProcessId(handle, IntPtr.Zero);
+        }
+
+        [DllImport(DLL.USER32, SetLastError = true)]
+        internal static extern void keybd_event(byte bVk, byte bScan, int dwFlags, int dwExtraInfo);
+
+        [DllImport(DLL.USER32)]
+        internal static extern IntPtr WindowFromPoint(System.Drawing.Point p);
     }
 }

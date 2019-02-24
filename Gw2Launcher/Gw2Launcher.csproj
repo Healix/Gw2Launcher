@@ -28,7 +28,7 @@
     <BootstrapperEnabled>true</BootstrapperEnabled>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
-    <PlatformTarget>AnyCPU</PlatformTarget>
+    <PlatformTarget>x64</PlatformTarget>
     <DebugSymbols>true</DebugSymbols>
     <DebugType>full</DebugType>
     <Optimize>false</Optimize>
@@ -39,7 +39,7 @@
     <Prefer32Bit>false</Prefer32Bit>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
-    <PlatformTarget>x86</PlatformTarget>
+    <PlatformTarget>x64</PlatformTarget>
     <DebugType>none</DebugType>
     <Optimize>true</Optimize>
     <OutputPath>bin\Release\</OutputPath>
@@ -49,9 +49,12 @@
     <Prefer32Bit>false</Prefer32Bit>
   </PropertyGroup>
   <PropertyGroup>
-    <ApplicationIcon>Resources\Gw2.ico</ApplicationIcon>
+    <ApplicationIcon>Resources\Gw2Launcher.ico</ApplicationIcon>
   </PropertyGroup>
   <PropertyGroup />
+  <PropertyGroup>
+    <NoWin32Manifest>true</NoWin32Manifest>
+  </PropertyGroup>
   <ItemGroup>
     <Reference Include="System" />
     <Reference Include="System.Core" />
@@ -78,7 +81,9 @@
     <Compile Include="Client\FileManager.cs" />
     <Compile Include="Client\Launcher.cs" />
     <Compile Include="Client\Launcher_Account.cs" />
+    <Compile Include="Client\Launcher_Autologin.cs" />
     <Compile Include="Client\Launcher_LinkedProcess.cs" />
+    <Compile Include="Client\Launcher_WindowEvents.cs" />
     <Compile Include="Client\Launcher_WindowWatcher.cs" />
     <Compile Include="Client\Launcher_NetworkAuthorization.cs" />
     <Compile Include="Client\ProxyLauncher.cs" />
@@ -101,6 +106,7 @@
     <Compile Include="Tools\CoherentMonitor.cs" />
     <Compile Include="Tools\DataStore.cs" />
     <Compile Include="Tools\Gw2Logs.cs" />
+    <Compile Include="Tools\Icons.cs" />
     <Compile Include="Tools\Notes.cs" />
     <Compile Include="Tools\ProcessPriority.cs" />
     <Compile Include="Tools\QueuedAccountApi.cs" />
@@ -114,6 +120,9 @@
     <Compile Include="Tools\Screenshots.cs" />
     <Compile Include="Tools\Statistics.cs" />
     <Compile Include="Tools\Totp.cs" />
+    <Compile Include="UI\Controls\AccountBarButton.cs">
+      <SubType>Component</SubType>
+    </Compile>
     <Compile Include="UI\Controls\ArrowButton.cs">
       <SubType>Component</SubType>
     </Compile>
@@ -207,6 +216,9 @@
     <Compile Include="UI\formAccount.Designer.cs">
       <DependentUpon>formAccount.cs</DependentUpon>
     </Compile>
+    <Compile Include="UI\formAccountBar.cs">
+      <SubType>Form</SubType>
+    </Compile>
     <Compile Include="UI\formAccountSelect.cs">
       <SubType>Form</SubType>
     </Compile>
@@ -225,6 +237,12 @@
     <Compile Include="UI\formAssetProxy.Designer.cs">
       <DependentUpon>formAssetProxy.cs</DependentUpon>
     </Compile>
+    <Compile Include="UI\formAutologinConfig.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="UI\formAutologinConfig.Designer.cs">
+      <DependentUpon>formAutologinConfig.cs</DependentUpon>
+    </Compile>
     <Compile Include="UI\formBackgroundPatcher.cs">
       <SubType>Form</SubType>
     </Compile>
@@ -236,6 +254,12 @@
     </Compile>
     <Compile Include="UI\formBrowseLocalDat.Designer.cs">
       <DependentUpon>formBrowseLocalDat.cs</DependentUpon>
+    </Compile>
+    <Compile Include="UI\formBrowseLocalDatQuick.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="UI\formBrowseLocalDatQuick.Designer.cs">
+      <DependentUpon>formBrowseLocalDatQuick.cs</DependentUpon>
     </Compile>
     <Compile Include="UI\formNotify.cs">
       <SubType>Form</SubType>
@@ -267,12 +291,6 @@
     <Compile Include="UI\formDnsDialog.Designer.cs">
       <DependentUpon>formDnsDialog.cs</DependentUpon>
     </Compile>
-    <Compile Include="UI\formError.cs">
-      <SubType>Form</SubType>
-    </Compile>
-    <Compile Include="UI\formError.Designer.cs">
-      <DependentUpon>formError.cs</DependentUpon>
-    </Compile>
     <Compile Include="UI\formExtendedTextBox.cs">
       <SubType>Form</SubType>
     </Compile>
@@ -290,12 +308,6 @@
     </Compile>
     <Compile Include="UI\formGw2Cache.Designer.cs">
       <DependentUpon>formGw2Cache.cs</DependentUpon>
-    </Compile>
-    <Compile Include="UI\formLog.cs">
-      <SubType>Form</SubType>
-    </Compile>
-    <Compile Include="UI\formLog.Designer.cs">
-      <DependentUpon>formLog.cs</DependentUpon>
     </Compile>
     <Compile Include="UI\formManagedInactiveUsers.cs">
       <SubType>Form</SubType>
@@ -384,6 +396,7 @@
     <Compile Include="UI\ShowWithoutActivation.cs">
       <SubType>Form</SubType>
     </Compile>
+    <Compile Include="Util\AlphanumericStringComparer.cs" />
     <Compile Include="Util\Args.cs" />
     <Compile Include="Util\Bitmap.cs" />
     <Compile Include="Util\Bits.cs" />
@@ -392,6 +405,7 @@
     <Compile Include="Util\DatFiles.cs" />
     <Compile Include="Util\Explorer.cs" />
     <Compile Include="Util\FileUtil.cs" />
+    <Compile Include="Util\Invoke.cs" />
     <Compile Include="Util\IPEndPoint.cs" />
     <Compile Include="Util\Logging.cs" />
     <Compile Include="Messaging\Messaging.cs" />
@@ -489,11 +503,17 @@
     <EmbeddedResource Include="UI\formAssetProxy.resx">
       <DependentUpon>formAssetProxy.cs</DependentUpon>
     </EmbeddedResource>
+    <EmbeddedResource Include="UI\formAutologinConfig.resx">
+      <DependentUpon>formAutologinConfig.cs</DependentUpon>
+    </EmbeddedResource>
     <EmbeddedResource Include="UI\formBackgroundPatcher.resx">
       <DependentUpon>formBackgroundPatcher.cs</DependentUpon>
     </EmbeddedResource>
     <EmbeddedResource Include="UI\formBrowseLocalDat.resx">
       <DependentUpon>formBrowseLocalDat.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="UI\formBrowseLocalDatQuick.resx">
+      <DependentUpon>formBrowseLocalDatQuick.cs</DependentUpon>
     </EmbeddedResource>
     <EmbeddedResource Include="UI\formNotify.resx">
       <DependentUpon>formNotify.cs</DependentUpon>
@@ -510,9 +530,6 @@
     <EmbeddedResource Include="UI\formDnsDialog.resx">
       <DependentUpon>formDnsDialog.cs</DependentUpon>
     </EmbeddedResource>
-    <EmbeddedResource Include="UI\formError.resx">
-      <DependentUpon>formError.cs</DependentUpon>
-    </EmbeddedResource>
     <EmbeddedResource Include="UI\formExtendedTextBox.resx">
       <DependentUpon>formExtendedTextBox.cs</DependentUpon>
     </EmbeddedResource>
@@ -521,9 +538,6 @@
     </EmbeddedResource>
     <EmbeddedResource Include="UI\formGw2Cache.resx">
       <DependentUpon>formGw2Cache.cs</DependentUpon>
-    </EmbeddedResource>
-    <EmbeddedResource Include="UI\formLog.resx">
-      <DependentUpon>formLog.cs</DependentUpon>
     </EmbeddedResource>
     <EmbeddedResource Include="UI\formMain.resx">
       <DependentUpon>formMain.cs</DependentUpon>
@@ -615,9 +629,13 @@
   <ItemGroup>
     <None Include="Resources\mailfull.png" />
   </ItemGroup>
+  <ItemGroup>
+    <None Include="Resources\Gw2Launcher.ico" />
+  </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <PropertyGroup>
-    <PostBuildEvent></PostBuildEvent>
+    <PostBuildEvent>
+    </PostBuildEvent>
   </PropertyGroup>
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
        Other similar extension points exist, see Microsoft.Common.targets.

@@ -62,6 +62,12 @@ namespace Gw2Launcher.UI.Controls
             OnRedrawRequired();
         }
 
+        protected override void OnBackgroundImageChanged(EventArgs e)
+        {
+            base.OnBackgroundImageChanged(e);
+            OnRedrawRequired();
+        }
+
         public bool Selected
         {
             get
@@ -174,12 +180,80 @@ namespace Gw2Launcher.UI.Controls
             return BufferedGraphicsManager.Current.Allocate(g, this.DisplayRectangle);
         }
 
+        protected virtual void DrawText(Graphics g, string text, int x, int y, int w, int h)
+        {
+            TextRenderer.DrawText(g, text, this.Font, new Rectangle(x, y, w, h), ForeColorCurrent, BackColorCurrent, TextFormatFlags.WordBreak | TextFormatFlags.EndEllipsis | TextFormatFlags.VerticalCenter);
+        }
+
+        protected virtual Size GetScaledDimensions(Image image, int maxW, int maxH)
+        {
+            int w = image.Width,
+                h = image.Height;
+
+            float rw = (float)maxW / w,
+                  rh = (float)maxH / h,
+                  r = rw < rh ? rw : rh;
+
+            if (r < 1)
+            {
+                w = (int)(w * r + 0.5f);
+                h = (int)(h * r + 0.5f);
+            }
+
+            return new Size(w, h);
+        }
+
+        protected void DrawImage(Graphics g, Image image, int x, int y)
+        {
+            try
+            {
+                int w = image.Width,
+                    h = image.Height,
+                    cw = this.Width,
+                    ch = this.Height;
+
+                float rx = (float)cw / w,
+                      ry = (float)ch / h,
+                      r = rx < ry ? rx : ry;
+
+                if (r < 1)
+                {
+                    w = (int)(w * r + 0.5f);
+                    h = (int)(w * r + 0.5f);
+                }
+
+                g.DrawImage(image, x, y, w, h);
+            }
+            catch { }
+        }
+
         protected virtual void OnPaintBuffer(Graphics g)
         {
-            int w = this.Width,
-                h = this.Height;
+            Image image;
+            if ((image = this.BackgroundImage) != null)
+            {
+                try
+                {
+                    int w = this.Width,
+                        h = this.Height;
+                    var sz = GetScaledDimensions(image, w, h);
 
-            TextRenderer.DrawText(g, this.Text, this.Font, new Rectangle(this.Padding.Left + 10, this.Padding.Top, w - 10 - this.Padding.Horizontal, h - this.Padding.Vertical), ForeColorCurrent, BackColorCurrent, TextFormatFlags.WordBreak | TextFormatFlags.EndEllipsis | TextFormatFlags.VerticalCenter);
+                    if (this.Text != null)
+                    {
+                        g.DrawImage(image, this.Padding.Left, (h - sz.Height) / 2, sz.Width, sz.Height);
+                        DrawText(g, this.Text, this.Padding.Left + 10 + sz.Width, this.Padding.Top, this.Width - this.Padding.Horizontal - 10 - sz.Width, this.Height - this.Padding.Vertical);
+                    }
+                    else
+                    {
+                        g.DrawImage(image, (w + sz.Width) / 2, (h - sz.Height) / 2, sz.Width, sz.Height);
+                    }
+                }
+                catch { }
+            }
+            else
+            {
+                DrawText(g, this.Text, this.Padding.Left + 10, this.Padding.Top, this.Width - this.Padding.Horizontal, this.Height - this.Padding.Vertical);
+            }
         }
 
         protected virtual void OnPaintBackgroundBuffer(Graphics g)

@@ -113,6 +113,30 @@ namespace Gw2Launcher.Client
         {
             InitializePath();
             Settings.GW2Path.ValueChanged += GW2Path_ValueChanged;
+            Settings.LocalizeAccountExecution.ValueChanged += LocalizeAccountExecution_ValueChanged;
+        }
+
+        static void LocalizeAccountExecution_ValueChanged(object sender, EventArgs e)
+        {
+            try
+            {
+                var di = new DirectoryInfo(Path.Combine(DataPath.AppDataAccountData, "pl"));
+                if (di.Exists)
+                {
+                    foreach (var d in di.GetDirectories())
+                    {
+                        try
+                        {
+                            d.Delete(true);
+                        }
+                        catch { }
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                Util.Logging.Log(ex);
+            }
         }
 
         static void GW2Path_ValueChanged(object sender, EventArgs e)
@@ -221,11 +245,15 @@ namespace Gw2Launcher.Client
 
             using (mf)
             {
-                var startInfo = new ProcessStartInfo(Assembly.GetExecutingAssembly().Location, "-pl " + pid);
+                var path = Assembly.GetExecutingAssembly().Location;
+                var startInfo = new ProcessStartInfo(path, "-pl " + pid);
                 startInfo.UseShellExecute = false;
+                startInfo.WorkingDirectory = Path.GetDirectoryName(path);
 
                 if (!string.IsNullOrEmpty(options.UserName))
                 {
+                    if (!Util.Users.IsCurrentUser(options.UserName))
+                        startInfo.WorkingDirectory = DataPath.AppDataAccountData;
                     startInfo.UserName = options.UserName;
                     startInfo.Password = options.Password;
                     startInfo.LoadUserProfile = true;

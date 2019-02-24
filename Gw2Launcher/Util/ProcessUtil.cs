@@ -209,7 +209,7 @@ namespace Gw2Launcher.Util
                 p.UserName = username;
                 p.LoadUserProfile = true;
                 p.Password = password;
-                p.WorkingDirectory = Path.GetPathRoot(a.Path);
+                p.WorkingDirectory = DataPath.AppDataAccountData; //Path.GetPathRoot(a.Path);
 
                 //creating the user's profile will be handled by Windows
                 //the process doesn't actually do anything itself
@@ -288,19 +288,29 @@ namespace Gw2Launcher.Util
         /// <summary>
         /// Scans entire system and attempts to kill "AN-Mutex-Window-Guild Wars 2"
         /// </summary>
-        public static void KillMutexWindow()
+        public static bool KillMutexWindow()
+        {
+            return KillMutexWindow(true);
+        }
+
+        public static bool KillMutexWindow(bool runAsAdmin)
         {
             using (ApplicationObject a = new ApplicationObject())
             {
                 ProcessStartInfo p = new ProcessStartInfo(a.Path, "-pu -handle -pid 0 \"AN-Mutex-Window-Guild Wars 2\" 0");
                 p.UseShellExecute = true;
-                p.Verb = "runas";
+                if (runAsAdmin)
+                    p.Verb = "runas";
 
                 Process proc = Process.Start(p);
                 if (proc != null)
                 {
                     proc.WaitForExit();
+
+                    return proc.ExitCode == 0;
                 }
+
+                return false;
             }
         }
 
@@ -532,9 +542,8 @@ namespace Gw2Launcher.Util
         }
 
         /// <summary>
-        /// Creates the folder with all users modifiy rights
+        /// Creates the folder with all users modify rights
         /// </summary>
-        /// <param name="path"></param>
         public static bool CreateJunction(string link, string target)
         {
             using (ApplicationObject a = new ApplicationObject())
@@ -545,6 +554,37 @@ namespace Gw2Launcher.Util
                 args.Append(link);
                 args.Append("\" \"");
                 args.Append(target);
+                args.Append('"');
+
+                ProcessStartInfo p = new ProcessStartInfo(a.Path, args.ToString());
+                p.UseShellExecute = true;
+                p.Verb = "runas";
+
+                Process proc = Process.Start(p);
+                if (proc != null)
+                {
+                    proc.WaitForExit();
+
+                    return proc.ExitCode == 0;
+                }
+                else
+                {
+                    return false;
+                }
+            }
+        }
+
+        /// <summary>
+        /// Creates the folder with all users modify rights
+        /// </summary>
+        public static bool CreateFolder(string path)
+        {
+            using (ApplicationObject a = new ApplicationObject())
+            {
+                StringBuilder args = new StringBuilder(512);
+
+                args.Append("-pu -folder \"");
+                args.Append(path);
                 args.Append('"');
 
                 ProcessStartInfo p = new ProcessStartInfo(a.Path, args.ToString());

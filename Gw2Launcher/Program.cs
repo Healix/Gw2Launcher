@@ -15,7 +15,7 @@ namespace Gw2Launcher
 {
     static class Program
     {
-        public const byte RELEASE_VERSION = 5;
+        public const byte RELEASE_VERSION = 6;
 
         /// <summary>
         /// The main entry point for the application.
@@ -520,6 +520,31 @@ namespace Gw2Launcher
                         Windows.Symlink.CreateJunction(link, target);
 
                         Util.FileUtil.AllowFolderAccess(link, System.Security.AccessControl.FileSystemRights.Modify);
+                    }
+                    catch (Exception e)
+                    {
+                        return e.HResult;
+                    }
+
+
+                    #endregion
+                }
+                else if (args[1] == "-folder")
+                {
+                    #region -folder "path"
+
+                    if (args.Length < 3)
+                        return new ArgumentException().HResult;
+
+                    var path = args[2];
+
+                    try
+                    {
+                        var di = new DirectoryInfo(path);
+                        if (!di.Exists)
+                            di.Create();
+
+                        Util.FileUtil.AllowFolderAccess(path, System.Security.AccessControl.FileSystemRights.Modify);
                     }
                     catch (Exception e)
                     {

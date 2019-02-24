@@ -54,18 +54,27 @@ namespace Gw2Launcher.Net.AssetProxy
         {
             if (e == 0)
             {
-                if (cancelToken == null)
+                lock (this)
                 {
-                    cancelToken = new CancellationTokenSource();
-                    AutoStop(cancelToken.Token);
+                    if (cancelToken == null)
+                    {
+                        cancelToken = new CancellationTokenSource();
+                        AutoStop(cancelToken.Token);
+                    }
                 }
             }
             else if (cancelToken != null)
             {
-                using (cancelToken)
+                lock (this)
                 {
-                    cancelToken.Cancel();
-                    cancelToken = null;
+                    if (cancelToken != null)
+                    {
+                        using (cancelToken)
+                        {
+                            cancelToken.Cancel();
+                            cancelToken = null;
+                        }
+                    }
                 }
             }
         }

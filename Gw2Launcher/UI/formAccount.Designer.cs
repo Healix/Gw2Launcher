@@ -15,9 +15,16 @@
         /// </summary>
         private void InitializeComponent()
         {
+            this.components = new System.ComponentModel.Container();
             System.Security.SecureString secureString1 = new System.Security.SecureString();
             System.Security.SecureString secureString2 = new System.Security.SecureString();
             this.panelGeneral = new System.Windows.Forms.Panel();
+            this.label71 = new System.Windows.Forms.Label();
+            this.label72 = new System.Windows.Forms.Label();
+            this.panelIdentifierIconLarge = new System.Windows.Forms.Panel();
+            this.panelIdentifierIcon = new System.Windows.Forms.Panel();
+            this.label65 = new System.Windows.Forms.Label();
+            this.label63 = new System.Windows.Forms.Label();
             this.labelShowDailyLoginApi = new System.Windows.Forms.Label();
             this.labelShowDailyCompletionApi = new System.Windows.Forms.Label();
             this.checkShowDailyCompletion = new System.Windows.Forms.CheckBox();
@@ -32,6 +39,7 @@
             this.textAccountName = new System.Windows.Forms.TextBox();
             this.label1 = new System.Windows.Forms.Label();
             this.label59 = new System.Windows.Forms.Label();
+            this.panelIdentifierColor = new System.Windows.Forms.Panel();
             this.checkTrackDailyCompletionApi = new System.Windows.Forms.CheckBox();
             this.textApiKey = new System.Windows.Forms.TextBox();
             this.labelApiPermissions = new System.Windows.Forms.Label();
@@ -43,10 +51,24 @@
             this.label17 = new System.Windows.Forms.Label();
             this.textLocalDat = new System.Windows.Forms.TextBox();
             this.panelLaunchOptions = new System.Windows.Forms.Panel();
-            this.checkMuteVoices = new System.Windows.Forms.CheckBox();
+            this.labelAutologinConfigure = new System.Windows.Forms.Label();
+            this.checkAutomaticLoginPlay = new System.Windows.Forms.CheckBox();
+            this.label9 = new System.Windows.Forms.Label();
+            this.label10 = new System.Windows.Forms.Label();
+            this.label66 = new System.Windows.Forms.Label();
             this.label55 = new System.Windows.Forms.Label();
+            this.checkWindowedTopMost = new System.Windows.Forms.CheckBox();
+            this.label13 = new System.Windows.Forms.Label();
+            this.checkWindowedPreventChanges = new System.Windows.Forms.CheckBox();
+            this.checkAutomaticLogin = new System.Windows.Forms.CheckBox();
+            this.checkWindowedUpdateOnChange = new System.Windows.Forms.CheckBox();
+            this.textAutoLoginEmail = new System.Windows.Forms.TextBox();
+            this.checkMuteVoices = new System.Windows.Forms.CheckBox();
+            this.label14 = new System.Windows.Forms.Label();
             this.buttonScreenshotsLocation = new System.Windows.Forms.Button();
+            this.textAutoLoginPassword = new Gw2Launcher.UI.Controls.PasswordBox();
             this.checkScreenshotsLocation = new System.Windows.Forms.CheckBox();
+            this.label15 = new System.Windows.Forms.Label();
             this.textScreenshotsLocation = new System.Windows.Forms.TextBox();
             this.label38 = new System.Windows.Forms.Label();
             this.label40 = new System.Windows.Forms.Label();
@@ -73,14 +95,6 @@
             this.label26 = new System.Windows.Forms.Label();
             this.label31 = new System.Windows.Forms.Label();
             this.label35 = new System.Windows.Forms.Label();
-            this.label15 = new System.Windows.Forms.Label();
-            this.textAutoLoginPassword = new Gw2Launcher.UI.Controls.PasswordBox();
-            this.label14 = new System.Windows.Forms.Label();
-            this.textAutoLoginEmail = new System.Windows.Forms.TextBox();
-            this.checkAutomaticLogin = new System.Windows.Forms.CheckBox();
-            this.label13 = new System.Windows.Forms.Label();
-            this.label10 = new System.Windows.Forms.Label();
-            this.label9 = new System.Windows.Forms.Label();
             this.label8 = new System.Windows.Forms.Label();
             this.label7 = new System.Windows.Forms.Label();
             this.buttonWindowed = new System.Windows.Forms.Button();
@@ -161,12 +175,6 @@
             this.label49 = new System.Windows.Forms.Label();
             this.label50 = new System.Windows.Forms.Label();
             this.progressTotpTime = new Gw2Launcher.UI.Controls.FlatProgressBar();
-            this.sidebarPanel1 = new Gw2Launcher.UI.Controls.SidebarPanel();
-            this.buttonSecurity = new Gw2Launcher.UI.Controls.SidebarButton();
-            this.buttonStatistics = new Gw2Launcher.UI.Controls.SidebarButton();
-            this.buttonLocalDat = new Gw2Launcher.UI.Controls.SidebarButton();
-            this.buttonLaunchOptions = new Gw2Launcher.UI.Controls.SidebarButton();
-            this.buttonGeneral = new Gw2Launcher.UI.Controls.SidebarButton();
             this.panelLaunchOptionsProcess = new System.Windows.Forms.Panel();
             this.panelProcessAffinity = new System.Windows.Forms.Panel();
             this.checkProcessAffinityAll = new System.Windows.Forms.CheckBox();
@@ -174,6 +182,18 @@
             this.label76 = new System.Windows.Forms.Label();
             this.label74 = new System.Windows.Forms.Label();
             this.label73 = new System.Windows.Forms.Label();
+            this.sidebarPanel1 = new Gw2Launcher.UI.Controls.SidebarPanel();
+            this.buttonSecurity = new Gw2Launcher.UI.Controls.SidebarButton();
+            this.buttonStatistics = new Gw2Launcher.UI.Controls.SidebarButton();
+            this.buttonLocalDat = new Gw2Launcher.UI.Controls.SidebarButton();
+            this.buttonLaunchOptions = new Gw2Launcher.UI.Controls.SidebarButton();
+            this.buttonGeneral = new Gw2Launcher.UI.Controls.SidebarButton();
+            this.contextIcon = new System.Windows.Forms.ContextMenuStrip(this.components);
+            this.menuIconBrowseToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.toolStripMenuItem1 = new System.Windows.Forms.ToolStripSeparator();
+            this.menuIconUseDefaultToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.menuIconUseColorToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.menuIconUseSolidColorToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.panelGeneral.SuspendLayout();
             this.panelLocalDat.SuspendLayout();
             this.panelLaunchOptions.SuspendLayout();
@@ -184,16 +204,24 @@
             this.panelApi.SuspendLayout();
             this.panelApiContent.SuspendLayout();
             this.panelSecurity.SuspendLayout();
-            this.sidebarPanel1.SuspendLayout();
             this.panelLaunchOptionsProcess.SuspendLayout();
+            this.sidebarPanel1.SuspendLayout();
+            this.contextIcon.SuspendLayout();
             this.SuspendLayout();
             // 
             // panelGeneral
             // 
-            this.panelGeneral.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left) 
+            this.panelGeneral.Anchor = ((System.Windows.Forms.AnchorStyles)((((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom) 
+            | System.Windows.Forms.AnchorStyles.Left) 
             | System.Windows.Forms.AnchorStyles.Right)));
             this.panelGeneral.AutoScroll = true;
             this.panelGeneral.AutoScrollMargin = new System.Drawing.Size(0, 10);
+            this.panelGeneral.Controls.Add(this.label71);
+            this.panelGeneral.Controls.Add(this.label72);
+            this.panelGeneral.Controls.Add(this.panelIdentifierIconLarge);
+            this.panelGeneral.Controls.Add(this.panelIdentifierIcon);
+            this.panelGeneral.Controls.Add(this.label65);
+            this.panelGeneral.Controls.Add(this.label63);
             this.panelGeneral.Controls.Add(this.labelShowDailyLoginApi);
             this.panelGeneral.Controls.Add(this.labelShowDailyCompletionApi);
             this.panelGeneral.Controls.Add(this.checkShowDailyCompletion);
@@ -208,18 +236,84 @@
             this.panelGeneral.Controls.Add(this.textAccountName);
             this.panelGeneral.Controls.Add(this.label1);
             this.panelGeneral.Controls.Add(this.label59);
+            this.panelGeneral.Controls.Add(this.panelIdentifierColor);
             this.panelGeneral.Location = new System.Drawing.Point(183, 12);
             this.panelGeneral.Name = "panelGeneral";
-            this.panelGeneral.Size = new System.Drawing.Size(373, 302);
+            this.panelGeneral.Size = new System.Drawing.Size(373, 378);
             this.panelGeneral.TabIndex = 0;
             this.panelGeneral.Visible = false;
+            // 
+            // label71
+            // 
+            this.label71.AutoSize = true;
+            this.label71.Font = new System.Drawing.Font("Segoe UI Semilight", 8.25F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+            this.label71.Location = new System.Drawing.Point(14, 98);
+            this.label71.Name = "label71";
+            this.label71.Size = new System.Drawing.Size(169, 13);
+            this.label71.TabIndex = 20;
+            this.label71.Text = "Optionally used by the account bar";
+            // 
+            // label72
+            // 
+            this.label72.AutoSize = true;
+            this.label72.Font = new System.Drawing.Font("Segoe UI Semibold", 9F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+            this.label72.Location = new System.Drawing.Point(13, 82);
+            this.label72.Name = "label72";
+            this.label72.Size = new System.Drawing.Size(60, 15);
+            this.label72.TabIndex = 21;
+            this.label72.Text = "Identifiers";
+            // 
+            // panelIdentifierIconLarge
+            // 
+            this.panelIdentifierIconLarge.BackgroundImageLayout = System.Windows.Forms.ImageLayout.Stretch;
+            this.panelIdentifierIconLarge.BorderStyle = System.Windows.Forms.BorderStyle.FixedSingle;
+            this.panelIdentifierIconLarge.Cursor = System.Windows.Forms.Cursors.Hand;
+            this.panelIdentifierIconLarge.Location = new System.Drawing.Point(109, 139);
+            this.panelIdentifierIconLarge.MaximumSize = new System.Drawing.Size(128, 128);
+            this.panelIdentifierIconLarge.Name = "panelIdentifierIconLarge";
+            this.panelIdentifierIconLarge.Size = new System.Drawing.Size(10, 10);
+            this.panelIdentifierIconLarge.TabIndex = 13;
+            this.panelIdentifierIconLarge.Visible = false;
+            // 
+            // panelIdentifierIcon
+            // 
+            this.panelIdentifierIcon.BackgroundImageLayout = System.Windows.Forms.ImageLayout.Stretch;
+            this.panelIdentifierIcon.BorderStyle = System.Windows.Forms.BorderStyle.FixedSingle;
+            this.panelIdentifierIcon.Cursor = System.Windows.Forms.Cursors.Hand;
+            this.panelIdentifierIcon.Location = new System.Drawing.Point(81, 139);
+            this.panelIdentifierIcon.Name = "panelIdentifierIcon";
+            this.panelIdentifierIcon.Size = new System.Drawing.Size(22, 22);
+            this.panelIdentifierIcon.TabIndex = 11;
+            this.panelIdentifierIcon.Click += new System.EventHandler(this.panelIdentifierIcon_Click);
+            this.panelIdentifierIcon.MouseEnter += new System.EventHandler(this.panelIdentifierIcon_MouseEnter);
+            this.panelIdentifierIcon.MouseLeave += new System.EventHandler(this.panelIdentifierIcon_MouseLeave);
+            // 
+            // label65
+            // 
+            this.label65.AutoSize = true;
+            this.label65.Font = new System.Drawing.Font("Segoe UI Semilight", 8.25F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+            this.label65.Location = new System.Drawing.Point(76, 118);
+            this.label65.Name = "label65";
+            this.label65.Size = new System.Drawing.Size(27, 13);
+            this.label65.TabIndex = 9;
+            this.label65.Text = "Icon";
+            // 
+            // label63
+            // 
+            this.label63.AutoSize = true;
+            this.label63.Font = new System.Drawing.Font("Segoe UI Semilight", 8.25F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+            this.label63.Location = new System.Drawing.Point(16, 118);
+            this.label63.Name = "label63";
+            this.label63.Size = new System.Drawing.Size(32, 13);
+            this.label63.TabIndex = 7;
+            this.label63.Text = "Color";
             // 
             // labelShowDailyLoginApi
             // 
             this.labelShowDailyLoginApi.AutoSize = true;
             this.labelShowDailyLoginApi.Cursor = System.Windows.Forms.Cursors.Hand;
             this.labelShowDailyLoginApi.ForeColor = System.Drawing.Color.FromArgb(((int)(((byte)(49)))), ((int)(((byte)(121)))), ((int)(((byte)(242)))));
-            this.labelShowDailyLoginApi.Location = new System.Drawing.Point(161, 191);
+            this.labelShowDailyLoginApi.Location = new System.Drawing.Point(161, 283);
             this.labelShowDailyLoginApi.Name = "labelShowDailyLoginApi";
             this.labelShowDailyLoginApi.Size = new System.Drawing.Size(23, 13);
             this.labelShowDailyLoginApi.TabIndex = 6;
@@ -231,7 +325,7 @@
             this.labelShowDailyCompletionApi.AutoSize = true;
             this.labelShowDailyCompletionApi.Cursor = System.Windows.Forms.Cursors.Hand;
             this.labelShowDailyCompletionApi.ForeColor = System.Drawing.Color.FromArgb(((int)(((byte)(49)))), ((int)(((byte)(121)))), ((int)(((byte)(242)))));
-            this.labelShowDailyCompletionApi.Location = new System.Drawing.Point(225, 250);
+            this.labelShowDailyCompletionApi.Location = new System.Drawing.Point(225, 342);
             this.labelShowDailyCompletionApi.Name = "labelShowDailyCompletionApi";
             this.labelShowDailyCompletionApi.Size = new System.Drawing.Size(23, 13);
             this.labelShowDailyCompletionApi.TabIndex = 4;
@@ -242,7 +336,7 @@
             // 
             this.checkShowDailyCompletion.AutoSize = true;
             this.checkShowDailyCompletion.Font = new System.Drawing.Font("Segoe UI", 8.25F);
-            this.checkShowDailyCompletion.Location = new System.Drawing.Point(21, 249);
+            this.checkShowDailyCompletion.Location = new System.Drawing.Point(21, 341);
             this.checkShowDailyCompletion.Name = "checkShowDailyCompletion";
             this.checkShowDailyCompletion.Size = new System.Drawing.Size(198, 17);
             this.checkShowDailyCompletion.TabIndex = 3;
@@ -253,7 +347,7 @@
             // 
             this.label12.AutoSize = true;
             this.label12.Font = new System.Drawing.Font("Segoe UI Semilight", 8.25F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            this.label12.Location = new System.Drawing.Point(14, 169);
+            this.label12.Location = new System.Drawing.Point(14, 261);
             this.label12.Name = "label12";
             this.label12.Size = new System.Drawing.Size(288, 13);
             this.label12.TabIndex = 0;
@@ -263,7 +357,7 @@
             // 
             this.label11.AutoSize = true;
             this.label11.Font = new System.Drawing.Font("Segoe UI Semibold", 9F, System.Drawing.FontStyle.Bold);
-            this.label11.Location = new System.Drawing.Point(13, 153);
+            this.label11.Location = new System.Drawing.Point(13, 245);
             this.label11.Name = "label11";
             this.label11.Size = new System.Drawing.Size(62, 15);
             this.label11.TabIndex = 0;
@@ -275,7 +369,7 @@
             this.checkShowDailyLogin.Checked = true;
             this.checkShowDailyLogin.CheckState = System.Windows.Forms.CheckState.Checked;
             this.checkShowDailyLogin.Font = new System.Drawing.Font("Segoe UI", 8.25F);
-            this.checkShowDailyLogin.Location = new System.Drawing.Point(21, 190);
+            this.checkShowDailyLogin.Location = new System.Drawing.Point(21, 282);
             this.checkShowDailyLogin.Name = "checkShowDailyLogin";
             this.checkShowDailyLogin.Size = new System.Drawing.Size(134, 17);
             this.checkShowDailyLogin.TabIndex = 2;
@@ -286,7 +380,7 @@
             // 
             this.label6.AutoSize = true;
             this.label6.Font = new System.Drawing.Font("Segoe UI Semilight", 8.25F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            this.label6.Location = new System.Drawing.Point(14, 98);
+            this.label6.Location = new System.Drawing.Point(14, 190);
             this.label6.Name = "label6";
             this.label6.Size = new System.Drawing.Size(240, 13);
             this.label6.TabIndex = 0;
@@ -305,7 +399,7 @@
             // buttonUsername
             // 
             this.buttonUsername.Font = new System.Drawing.Font("Segoe UI", 8.25F);
-            this.buttonUsername.Location = new System.Drawing.Point(196, 117);
+            this.buttonUsername.Location = new System.Drawing.Point(196, 209);
             this.buttonUsername.Name = "buttonUsername";
             this.buttonUsername.Size = new System.Drawing.Size(43, 24);
             this.buttonUsername.TabIndex = 1;
@@ -316,7 +410,7 @@
             // textWindowsAccount
             // 
             this.textWindowsAccount.Font = new System.Drawing.Font("Segoe UI", 8.25F);
-            this.textWindowsAccount.Location = new System.Drawing.Point(21, 118);
+            this.textWindowsAccount.Location = new System.Drawing.Point(21, 210);
             this.textWindowsAccount.Name = "textWindowsAccount";
             this.textWindowsAccount.ReadOnly = true;
             this.textWindowsAccount.Size = new System.Drawing.Size(169, 22);
@@ -327,7 +421,7 @@
             // 
             this.label2.AutoSize = true;
             this.label2.Font = new System.Drawing.Font("Segoe UI Semibold", 9F, System.Drawing.FontStyle.Bold);
-            this.label2.Location = new System.Drawing.Point(13, 82);
+            this.label2.Location = new System.Drawing.Point(13, 174);
             this.label2.Name = "label2";
             this.label2.Size = new System.Drawing.Size(128, 15);
             this.label2.TabIndex = 0;
@@ -355,13 +449,23 @@
             // 
             this.label59.AutoSize = true;
             this.label59.Font = new System.Drawing.Font("Segoe UI Semilight", 8.25F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            this.label59.Location = new System.Drawing.Point(14, 215);
+            this.label59.Location = new System.Drawing.Point(14, 307);
             this.label59.MaximumSize = new System.Drawing.Size(330, 0);
             this.label59.Name = "label59";
             this.label59.Size = new System.Drawing.Size(320, 26);
             this.label59.TabIndex = 5;
             this.label59.Text = "Show when the daily hasn\'t been completed, which can be tracked using the API, or" +
     " manually toggled by clicking the icon";
+            // 
+            // panelIdentifierColor
+            // 
+            this.panelIdentifierColor.BorderStyle = System.Windows.Forms.BorderStyle.FixedSingle;
+            this.panelIdentifierColor.Cursor = System.Windows.Forms.Cursors.Hand;
+            this.panelIdentifierColor.Location = new System.Drawing.Point(21, 139);
+            this.panelIdentifierColor.Name = "panelIdentifierColor";
+            this.panelIdentifierColor.Size = new System.Drawing.Size(39, 22);
+            this.panelIdentifierColor.TabIndex = 10;
+            this.panelIdentifierColor.Click += new System.EventHandler(this.panelIdentifierColor_Click);
             // 
             // checkTrackDailyCompletionApi
             // 
@@ -398,7 +502,8 @@
             // 
             // panelLocalDat
             // 
-            this.panelLocalDat.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left) 
+            this.panelLocalDat.Anchor = ((System.Windows.Forms.AnchorStyles)((((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom) 
+            | System.Windows.Forms.AnchorStyles.Left) 
             | System.Windows.Forms.AnchorStyles.Right)));
             this.panelLocalDat.Controls.Add(this.label19);
             this.panelLocalDat.Controls.Add(this.label18);
@@ -408,7 +513,7 @@
             this.panelLocalDat.Controls.Add(this.textLocalDat);
             this.panelLocalDat.Location = new System.Drawing.Point(183, 12);
             this.panelLocalDat.Name = "panelLocalDat";
-            this.panelLocalDat.Size = new System.Drawing.Size(373, 302);
+            this.panelLocalDat.Size = new System.Drawing.Size(373, 378);
             this.panelLocalDat.TabIndex = 0;
             this.panelLocalDat.Visible = false;
             // 
@@ -480,14 +585,29 @@
             // 
             // panelLaunchOptions
             // 
-            this.panelLaunchOptions.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left) 
+            this.panelLaunchOptions.Anchor = ((System.Windows.Forms.AnchorStyles)((((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom) 
+            | System.Windows.Forms.AnchorStyles.Left) 
             | System.Windows.Forms.AnchorStyles.Right)));
             this.panelLaunchOptions.AutoScroll = true;
             this.panelLaunchOptions.AutoScrollMargin = new System.Drawing.Size(0, 10);
-            this.panelLaunchOptions.Controls.Add(this.checkMuteVoices);
+            this.panelLaunchOptions.Controls.Add(this.labelAutologinConfigure);
+            this.panelLaunchOptions.Controls.Add(this.checkAutomaticLoginPlay);
+            this.panelLaunchOptions.Controls.Add(this.label9);
+            this.panelLaunchOptions.Controls.Add(this.label10);
+            this.panelLaunchOptions.Controls.Add(this.label66);
             this.panelLaunchOptions.Controls.Add(this.label55);
+            this.panelLaunchOptions.Controls.Add(this.checkWindowedTopMost);
+            this.panelLaunchOptions.Controls.Add(this.label13);
+            this.panelLaunchOptions.Controls.Add(this.checkWindowedPreventChanges);
+            this.panelLaunchOptions.Controls.Add(this.checkAutomaticLogin);
+            this.panelLaunchOptions.Controls.Add(this.checkWindowedUpdateOnChange);
+            this.panelLaunchOptions.Controls.Add(this.textAutoLoginEmail);
+            this.panelLaunchOptions.Controls.Add(this.checkMuteVoices);
+            this.panelLaunchOptions.Controls.Add(this.label14);
             this.panelLaunchOptions.Controls.Add(this.buttonScreenshotsLocation);
+            this.panelLaunchOptions.Controls.Add(this.textAutoLoginPassword);
             this.panelLaunchOptions.Controls.Add(this.checkScreenshotsLocation);
+            this.panelLaunchOptions.Controls.Add(this.label15);
             this.panelLaunchOptions.Controls.Add(this.textScreenshotsLocation);
             this.panelLaunchOptions.Controls.Add(this.label38);
             this.panelLaunchOptions.Controls.Add(this.label40);
@@ -514,14 +634,6 @@
             this.panelLaunchOptions.Controls.Add(this.label26);
             this.panelLaunchOptions.Controls.Add(this.label31);
             this.panelLaunchOptions.Controls.Add(this.label35);
-            this.panelLaunchOptions.Controls.Add(this.label15);
-            this.panelLaunchOptions.Controls.Add(this.textAutoLoginPassword);
-            this.panelLaunchOptions.Controls.Add(this.label14);
-            this.panelLaunchOptions.Controls.Add(this.textAutoLoginEmail);
-            this.panelLaunchOptions.Controls.Add(this.checkAutomaticLogin);
-            this.panelLaunchOptions.Controls.Add(this.label13);
-            this.panelLaunchOptions.Controls.Add(this.label10);
-            this.panelLaunchOptions.Controls.Add(this.label9);
             this.panelLaunchOptions.Controls.Add(this.label8);
             this.panelLaunchOptions.Controls.Add(this.label7);
             this.panelLaunchOptions.Controls.Add(this.buttonWindowed);
@@ -532,36 +644,163 @@
             this.panelLaunchOptions.Controls.Add(this.textWindowed);
             this.panelLaunchOptions.Location = new System.Drawing.Point(183, 12);
             this.panelLaunchOptions.Name = "panelLaunchOptions";
-            this.panelLaunchOptions.Size = new System.Drawing.Size(373, 302);
+            this.panelLaunchOptions.Size = new System.Drawing.Size(373, 378);
             this.panelLaunchOptions.TabIndex = 0;
             this.panelLaunchOptions.Visible = false;
             // 
-            // checkMuteVoices
+            // labelAutologinConfigure
             // 
-            this.checkMuteVoices.AutoSize = true;
-            this.checkMuteVoices.Location = new System.Drawing.Point(138, 456);
-            this.checkMuteVoices.Name = "checkMuteVoices";
-            this.checkMuteVoices.Size = new System.Drawing.Size(58, 17);
-            this.checkMuteVoices.TabIndex = 20;
-            this.checkMuteVoices.Text = "Voices";
-            this.checkMuteVoices.UseVisualStyleBackColor = true;
+            this.labelAutologinConfigure.AutoSize = true;
+            this.labelAutologinConfigure.Cursor = System.Windows.Forms.Cursors.Hand;
+            this.labelAutologinConfigure.Font = new System.Drawing.Font("Segoe UI Semilight", 8.25F);
+            this.labelAutologinConfigure.ForeColor = System.Drawing.Color.FromArgb(((int)(((byte)(49)))), ((int)(((byte)(121)))), ((int)(((byte)(242)))));
+            this.labelAutologinConfigure.Location = new System.Drawing.Point(224, 240);
+            this.labelAutologinConfigure.Name = "labelAutologinConfigure";
+            this.labelAutologinConfigure.Size = new System.Drawing.Size(21, 13);
+            this.labelAutologinConfigure.TabIndex = 27;
+            this.labelAutologinConfigure.Text = ">>";
+            this.labelAutologinConfigure.Click += new System.EventHandler(this.labelAutologinConfigure_Click);
+            // 
+            // checkAutomaticLoginPlay
+            // 
+            this.checkAutomaticLoginPlay.AutoSize = true;
+            this.checkAutomaticLoginPlay.Location = new System.Drawing.Point(21, 311);
+            this.checkAutomaticLoginPlay.Name = "checkAutomaticLoginPlay";
+            this.checkAutomaticLoginPlay.Size = new System.Drawing.Size(211, 17);
+            this.checkAutomaticLoginPlay.TabIndex = 26;
+            this.checkAutomaticLoginPlay.Text = "Automatically \"play\" after logging in";
+            this.checkAutomaticLoginPlay.UseVisualStyleBackColor = true;
+            // 
+            // label9
+            // 
+            this.label9.AutoSize = true;
+            this.label9.Font = new System.Drawing.Font("Segoe UI Semibold", 9F, System.Drawing.FontStyle.Bold);
+            this.label9.Location = new System.Drawing.Point(13, 239);
+            this.label9.Name = "label9";
+            this.label9.Size = new System.Drawing.Size(210, 15);
+            this.label9.TabIndex = 0;
+            this.label9.Text = "Automatically login to character select";
+            // 
+            // label10
+            // 
+            this.label10.AutoSize = true;
+            this.label10.Font = new System.Drawing.Font("Segoe UI Semilight", 8.25F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+            this.label10.Location = new System.Drawing.Point(14, 255);
+            this.label10.Name = "label10";
+            this.label10.Size = new System.Drawing.Size(311, 13);
+            this.label10.TabIndex = 0;
+            this.label10.Text = "Automatically enters your email/password and/or starts the game";
+            // 
+            // label66
+            // 
+            this.label66.AutoSize = true;
+            this.label66.Font = new System.Drawing.Font("Segoe UI Semilight", 8.25F);
+            this.label66.Location = new System.Drawing.Point(14, 148);
+            this.label66.Name = "label66";
+            this.label66.Size = new System.Drawing.Size(81, 13);
+            this.label66.TabIndex = 25;
+            this.label66.Text = "Window options";
             // 
             // label55
             // 
             this.label55.AutoSize = true;
             this.label55.Font = new System.Drawing.Font("Segoe UI Semilight", 8.25F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
             this.label55.ForeColor = System.Drawing.SystemColors.GrayText;
-            this.label55.Location = new System.Drawing.Point(77, 284);
+            this.label55.Location = new System.Drawing.Point(77, 393);
             this.label55.Name = "label55";
             this.label55.Size = new System.Drawing.Size(229, 13);
             this.label55.TabIndex = 19;
             this.label55.Text = "* email/password is shared with security settings";
             // 
+            // checkWindowedTopMost
+            // 
+            this.checkWindowedTopMost.AutoSize = true;
+            this.checkWindowedTopMost.Font = new System.Drawing.Font("Segoe UI", 8.25F);
+            this.checkWindowedTopMost.Location = new System.Drawing.Point(21, 209);
+            this.checkWindowedTopMost.Name = "checkWindowedTopMost";
+            this.checkWindowedTopMost.Size = new System.Drawing.Size(188, 17);
+            this.checkWindowedTopMost.TabIndex = 24;
+            this.checkWindowedTopMost.Text = "Show on top of other windows";
+            this.checkWindowedTopMost.UseVisualStyleBackColor = true;
+            // 
+            // label13
+            // 
+            this.label13.AutoSize = true;
+            this.label13.Font = new System.Drawing.Font("Segoe UI Semilight", 8.25F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+            this.label13.ForeColor = System.Drawing.Color.Maroon;
+            this.label13.Location = new System.Drawing.Point(14, 270);
+            this.label13.Name = "label13";
+            this.label13.Size = new System.Drawing.Size(68, 13);
+            this.label13.TabIndex = 0;
+            this.label13.Text = "Experimental";
+            // 
+            // checkWindowedPreventChanges
+            // 
+            this.checkWindowedPreventChanges.AutoSize = true;
+            this.checkWindowedPreventChanges.Font = new System.Drawing.Font("Segoe UI", 8.25F);
+            this.checkWindowedPreventChanges.Location = new System.Drawing.Point(21, 189);
+            this.checkWindowedPreventChanges.Name = "checkWindowedPreventChanges";
+            this.checkWindowedPreventChanges.Size = new System.Drawing.Size(214, 17);
+            this.checkWindowedPreventChanges.TabIndex = 23;
+            this.checkWindowedPreventChanges.Text = "Prevent resizing/moving the window";
+            this.checkWindowedPreventChanges.UseVisualStyleBackColor = true;
+            // 
+            // checkAutomaticLogin
+            // 
+            this.checkAutomaticLogin.AutoSize = true;
+            this.checkAutomaticLogin.Location = new System.Drawing.Point(21, 291);
+            this.checkAutomaticLogin.Name = "checkAutomaticLogin";
+            this.checkAutomaticLogin.Size = new System.Drawing.Size(262, 17);
+            this.checkAutomaticLogin.TabIndex = 4;
+            this.checkAutomaticLogin.Text = "Automatically enter email/password and login";
+            this.checkAutomaticLogin.UseVisualStyleBackColor = true;
+            this.checkAutomaticLogin.CheckedChanged += new System.EventHandler(this.checkAutomaticLogin_CheckedChanged);
+            // 
+            // checkWindowedUpdateOnChange
+            // 
+            this.checkWindowedUpdateOnChange.AutoSize = true;
+            this.checkWindowedUpdateOnChange.Font = new System.Drawing.Font("Segoe UI", 8.25F);
+            this.checkWindowedUpdateOnChange.Location = new System.Drawing.Point(21, 169);
+            this.checkWindowedUpdateOnChange.Name = "checkWindowedUpdateOnChange";
+            this.checkWindowedUpdateOnChange.Size = new System.Drawing.Size(308, 17);
+            this.checkWindowedUpdateOnChange.TabIndex = 22;
+            this.checkWindowedUpdateOnChange.Text = "Remember changes when resizing/moving the window";
+            this.checkWindowedUpdateOnChange.UseVisualStyleBackColor = true;
+            // 
+            // textAutoLoginEmail
+            // 
+            this.textAutoLoginEmail.Enabled = false;
+            this.textAutoLoginEmail.Font = new System.Drawing.Font("Segoe UI", 8.25F);
+            this.textAutoLoginEmail.Location = new System.Drawing.Point(80, 337);
+            this.textAutoLoginEmail.Name = "textAutoLoginEmail";
+            this.textAutoLoginEmail.Size = new System.Drawing.Size(195, 22);
+            this.textAutoLoginEmail.TabIndex = 5;
+            // 
+            // checkMuteVoices
+            // 
+            this.checkMuteVoices.AutoSize = true;
+            this.checkMuteVoices.Location = new System.Drawing.Point(138, 569);
+            this.checkMuteVoices.Name = "checkMuteVoices";
+            this.checkMuteVoices.Size = new System.Drawing.Size(58, 17);
+            this.checkMuteVoices.TabIndex = 20;
+            this.checkMuteVoices.Text = "Voices";
+            this.checkMuteVoices.UseVisualStyleBackColor = true;
+            // 
+            // label14
+            // 
+            this.label14.AutoSize = true;
+            this.label14.Font = new System.Drawing.Font("Segoe UI Semilight", 8.25F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+            this.label14.Location = new System.Drawing.Point(18, 340);
+            this.label14.Name = "label14";
+            this.label14.Size = new System.Drawing.Size(32, 13);
+            this.label14.TabIndex = 0;
+            this.label14.Text = "Email";
+            // 
             // buttonScreenshotsLocation
             // 
             this.buttonScreenshotsLocation.Enabled = false;
             this.buttonScreenshotsLocation.Font = new System.Drawing.Font("Segoe UI", 8.25F);
-            this.buttonScreenshotsLocation.Location = new System.Drawing.Point(299, 632);
+            this.buttonScreenshotsLocation.Location = new System.Drawing.Point(299, 745);
             this.buttonScreenshotsLocation.Name = "buttonScreenshotsLocation";
             this.buttonScreenshotsLocation.Size = new System.Drawing.Size(43, 24);
             this.buttonScreenshotsLocation.TabIndex = 17;
@@ -569,21 +808,43 @@
             this.buttonScreenshotsLocation.UseVisualStyleBackColor = true;
             this.buttonScreenshotsLocation.Click += new System.EventHandler(this.buttonScreenshotsLocation_Click);
             // 
+            // textAutoLoginPassword
+            // 
+            this.textAutoLoginPassword.Enabled = false;
+            this.textAutoLoginPassword.Font = new System.Drawing.Font("Segoe UI", 8.25F);
+            this.textAutoLoginPassword.Location = new System.Drawing.Point(80, 365);
+            this.textAutoLoginPassword.Name = "textAutoLoginPassword";
+            this.textAutoLoginPassword.Password = secureString1;
+            this.textAutoLoginPassword.PasswordChar = '*';
+            this.textAutoLoginPassword.Size = new System.Drawing.Size(195, 22);
+            this.textAutoLoginPassword.TabIndex = 6;
+            this.textAutoLoginPassword.UseSystemPasswordChar = true;
+            // 
             // checkScreenshotsLocation
             // 
             this.checkScreenshotsLocation.AutoSize = true;
-            this.checkScreenshotsLocation.Location = new System.Drawing.Point(21, 636);
+            this.checkScreenshotsLocation.Location = new System.Drawing.Point(21, 749);
             this.checkScreenshotsLocation.Name = "checkScreenshotsLocation";
             this.checkScreenshotsLocation.Size = new System.Drawing.Size(15, 14);
             this.checkScreenshotsLocation.TabIndex = 15;
             this.checkScreenshotsLocation.UseVisualStyleBackColor = true;
             this.checkScreenshotsLocation.CheckedChanged += new System.EventHandler(this.checkScreenshotsLocation_CheckedChanged);
             // 
+            // label15
+            // 
+            this.label15.AutoSize = true;
+            this.label15.Font = new System.Drawing.Font("Segoe UI Semilight", 8.25F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+            this.label15.Location = new System.Drawing.Point(18, 368);
+            this.label15.Name = "label15";
+            this.label15.Size = new System.Drawing.Size(51, 13);
+            this.label15.TabIndex = 0;
+            this.label15.Text = "Password";
+            // 
             // textScreenshotsLocation
             // 
             this.textScreenshotsLocation.Enabled = false;
             this.textScreenshotsLocation.Font = new System.Drawing.Font("Segoe UI", 8.25F);
-            this.textScreenshotsLocation.Location = new System.Drawing.Point(43, 633);
+            this.textScreenshotsLocation.Location = new System.Drawing.Point(43, 746);
             this.textScreenshotsLocation.Name = "textScreenshotsLocation";
             this.textScreenshotsLocation.Size = new System.Drawing.Size(250, 22);
             this.textScreenshotsLocation.TabIndex = 16;
@@ -592,7 +853,7 @@
             // 
             this.label38.AutoSize = true;
             this.label38.Font = new System.Drawing.Font("Segoe UI Semilight", 8.25F);
-            this.label38.Location = new System.Drawing.Point(14, 612);
+            this.label38.Location = new System.Drawing.Point(14, 725);
             this.label38.Name = "label38";
             this.label38.Size = new System.Drawing.Size(183, 13);
             this.label38.TabIndex = 0;
@@ -602,17 +863,17 @@
             // 
             this.label40.AutoSize = true;
             this.label40.Font = new System.Drawing.Font("Segoe UI Semilight", 8.25F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            this.label40.Location = new System.Drawing.Point(14, 322);
+            this.label40.Location = new System.Drawing.Point(14, 435);
             this.label40.Name = "label40";
-            this.label40.Size = new System.Drawing.Size(313, 13);
+            this.label40.Size = new System.Drawing.Size(291, 13);
             this.label40.TabIndex = 0;
-            this.label40.Text = "Automatically login when the fields have been set to remembered";
+            this.label40.Text = "Automatically login when the email/password is remembered";
             // 
             // label41
             // 
             this.label41.AutoSize = true;
             this.label41.Font = new System.Drawing.Font("Segoe UI Semibold", 9F, System.Drawing.FontStyle.Bold);
-            this.label41.Location = new System.Drawing.Point(13, 306);
+            this.label41.Location = new System.Drawing.Point(13, 419);
             this.label41.Name = "label41";
             this.label41.Size = new System.Drawing.Size(197, 15);
             this.label41.TabIndex = 0;
@@ -622,7 +883,7 @@
             // 
             this.checkAutomaticLauncherLogin.AutoSize = true;
             this.checkAutomaticLauncherLogin.Font = new System.Drawing.Font("Segoe UI", 8.25F);
-            this.checkAutomaticLauncherLogin.Location = new System.Drawing.Point(21, 344);
+            this.checkAutomaticLauncherLogin.Location = new System.Drawing.Point(21, 457);
             this.checkAutomaticLauncherLogin.Name = "checkAutomaticLauncherLogin";
             this.checkAutomaticLauncherLogin.Size = new System.Drawing.Size(224, 17);
             this.checkAutomaticLauncherLogin.TabIndex = 7;
@@ -634,7 +895,7 @@
             this.label20.AutoSize = true;
             this.label20.Cursor = System.Windows.Forms.Cursors.Hand;
             this.label20.Font = new System.Drawing.Font("Segoe UI Semibold", 8.25F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            this.label20.Location = new System.Drawing.Point(149, 699);
+            this.label20.Location = new System.Drawing.Point(149, 812);
             this.label20.Name = "label20";
             this.label20.Size = new System.Drawing.Size(74, 13);
             this.label20.TabIndex = 0;
@@ -645,7 +906,7 @@
             // 
             this.label39.AutoSize = true;
             this.label39.Font = new System.Drawing.Font("Segoe UI Semibold", 9F, System.Drawing.FontStyle.Bold);
-            this.label39.Location = new System.Drawing.Point(14, 434);
+            this.label39.Location = new System.Drawing.Point(14, 547);
             this.label39.Name = "label39";
             this.label39.Size = new System.Drawing.Size(35, 15);
             this.label39.TabIndex = 0;
@@ -656,7 +917,7 @@
             this.label30.AutoSize = true;
             this.label30.Cursor = System.Windows.Forms.Cursors.Hand;
             this.label30.Font = new System.Drawing.Font("Segoe UI Semibold", 8.25F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            this.label30.Location = new System.Drawing.Point(69, 699);
+            this.label30.Location = new System.Drawing.Point(69, 812);
             this.label30.Name = "label30";
             this.label30.Size = new System.Drawing.Size(74, 13);
             this.label30.TabIndex = 0;
@@ -666,7 +927,7 @@
             // checkMuteMusic
             // 
             this.checkMuteMusic.AutoSize = true;
-            this.checkMuteMusic.Location = new System.Drawing.Point(71, 456);
+            this.checkMuteMusic.Location = new System.Drawing.Point(71, 569);
             this.checkMuteMusic.Name = "checkMuteMusic";
             this.checkMuteMusic.Size = new System.Drawing.Size(56, 17);
             this.checkMuteMusic.TabIndex = 11;
@@ -676,7 +937,7 @@
             // checkMuteAll
             // 
             this.checkMuteAll.AutoSize = true;
-            this.checkMuteAll.Location = new System.Drawing.Point(21, 456);
+            this.checkMuteAll.Location = new System.Drawing.Point(21, 569);
             this.checkMuteAll.Name = "checkMuteAll";
             this.checkMuteAll.Size = new System.Drawing.Size(39, 17);
             this.checkMuteAll.TabIndex = 10;
@@ -687,7 +948,7 @@
             // 
             this.label29.AutoSize = true;
             this.label29.Font = new System.Drawing.Font("Segoe UI Semilight", 8.25F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            this.label29.Location = new System.Drawing.Point(14, 699);
+            this.label29.Location = new System.Drawing.Point(14, 812);
             this.label29.Name = "label29";
             this.label29.Size = new System.Drawing.Size(49, 13);
             this.label29.TabIndex = 0;
@@ -697,7 +958,7 @@
             // 
             this.labelVolume.AutoSize = true;
             this.labelVolume.Font = new System.Drawing.Font("Segoe UI Semilight", 8.25F);
-            this.labelVolume.Location = new System.Drawing.Point(199, 412);
+            this.labelVolume.Location = new System.Drawing.Point(199, 525);
             this.labelVolume.Name = "labelVolume";
             this.labelVolume.Size = new System.Drawing.Size(32, 13);
             this.labelVolume.TabIndex = 0;
@@ -707,7 +968,7 @@
             // 
             this.label21.AutoSize = true;
             this.label21.Font = new System.Drawing.Font("Segoe UI Semilight", 8.25F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            this.label21.Location = new System.Drawing.Point(14, 684);
+            this.label21.Location = new System.Drawing.Point(14, 797);
             this.label21.Name = "label21";
             this.label21.Size = new System.Drawing.Size(216, 13);
             this.label21.TabIndex = 0;
@@ -716,7 +977,7 @@
             // sliderVolume
             // 
             this.sliderVolume.Enabled = false;
-            this.sliderVolume.Location = new System.Drawing.Point(43, 409);
+            this.sliderVolume.Location = new System.Drawing.Point(43, 522);
             this.sliderVolume.Name = "sliderVolume";
             this.sliderVolume.Size = new System.Drawing.Size(150, 20);
             this.sliderVolume.TabIndex = 9;
@@ -728,7 +989,7 @@
             // 
             this.textRunAfterLaunch.ExtendedSize = new System.Drawing.Size(0, 0);
             this.textRunAfterLaunch.Font = new System.Drawing.Font("Segoe UI", 8.25F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            this.textRunAfterLaunch.Location = new System.Drawing.Point(21, 720);
+            this.textRunAfterLaunch.Location = new System.Drawing.Point(21, 833);
             this.textRunAfterLaunch.MaximumExtendedSize = new System.Drawing.Size(0, 0);
             this.textRunAfterLaunch.Multiline = true;
             this.textRunAfterLaunch.Name = "textRunAfterLaunch";
@@ -740,7 +1001,7 @@
             // 
             this.label28.AutoSize = true;
             this.label28.Font = new System.Drawing.Font("Segoe UI Semibold", 9F, System.Drawing.FontStyle.Bold);
-            this.label28.Location = new System.Drawing.Point(13, 668);
+            this.label28.Location = new System.Drawing.Point(13, 781);
             this.label28.Name = "label28";
             this.label28.Size = new System.Drawing.Size(111, 15);
             this.label28.TabIndex = 0;
@@ -749,7 +1010,7 @@
             // checkScreenshotsBmp
             // 
             this.checkScreenshotsBmp.AutoSize = true;
-            this.checkScreenshotsBmp.Location = new System.Drawing.Point(21, 590);
+            this.checkScreenshotsBmp.Location = new System.Drawing.Point(21, 703);
             this.checkScreenshotsBmp.Name = "checkScreenshotsBmp";
             this.checkScreenshotsBmp.Size = new System.Drawing.Size(161, 17);
             this.checkScreenshotsBmp.TabIndex = 14;
@@ -760,7 +1021,7 @@
             // 
             this.label32.AutoSize = true;
             this.label32.Font = new System.Drawing.Font("Segoe UI Semilight", 8.25F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            this.label32.Location = new System.Drawing.Point(14, 390);
+            this.label32.Location = new System.Drawing.Point(14, 503);
             this.label32.Name = "label32";
             this.label32.Size = new System.Drawing.Size(261, 13);
             this.label32.TabIndex = 0;
@@ -769,7 +1030,7 @@
             // checkPort443
             // 
             this.checkPort443.AutoSize = true;
-            this.checkPort443.Location = new System.Drawing.Point(70, 523);
+            this.checkPort443.Location = new System.Drawing.Point(70, 636);
             this.checkPort443.Name = "checkPort443";
             this.checkPort443.Size = new System.Drawing.Size(44, 17);
             this.checkPort443.TabIndex = 13;
@@ -781,7 +1042,7 @@
             // 
             this.label34.AutoSize = true;
             this.label34.Font = new System.Drawing.Font("Segoe UI Semibold", 9F, System.Drawing.FontStyle.Bold);
-            this.label34.Location = new System.Drawing.Point(13, 374);
+            this.label34.Location = new System.Drawing.Point(13, 487);
             this.label34.Name = "label34";
             this.label34.Size = new System.Drawing.Size(48, 15);
             this.label34.TabIndex = 0;
@@ -791,7 +1052,7 @@
             // 
             this.checkVolume.AutoSize = true;
             this.checkVolume.Font = new System.Drawing.Font("Segoe UI", 8.25F);
-            this.checkVolume.Location = new System.Drawing.Point(21, 412);
+            this.checkVolume.Location = new System.Drawing.Point(21, 525);
             this.checkVolume.Name = "checkVolume";
             this.checkVolume.Size = new System.Drawing.Size(15, 14);
             this.checkVolume.TabIndex = 8;
@@ -801,7 +1062,7 @@
             // checkPort80
             // 
             this.checkPort80.AutoSize = true;
-            this.checkPort80.Location = new System.Drawing.Point(21, 523);
+            this.checkPort80.Location = new System.Drawing.Point(21, 636);
             this.checkPort80.Name = "checkPort80";
             this.checkPort80.Size = new System.Drawing.Size(38, 17);
             this.checkPort80.TabIndex = 12;
@@ -813,7 +1074,7 @@
             // 
             this.label33.AutoSize = true;
             this.label33.Font = new System.Drawing.Font("Segoe UI Semilight", 8.25F);
-            this.label33.Location = new System.Drawing.Point(14, 569);
+            this.label33.Location = new System.Drawing.Point(14, 682);
             this.label33.Name = "label33";
             this.label33.Size = new System.Drawing.Size(242, 13);
             this.label33.TabIndex = 0;
@@ -823,7 +1084,7 @@
             // 
             this.label26.AutoSize = true;
             this.label26.Font = new System.Drawing.Font("Segoe UI Semilight", 8.25F);
-            this.label26.Location = new System.Drawing.Point(14, 502);
+            this.label26.Location = new System.Drawing.Point(14, 615);
             this.label26.Name = "label26";
             this.label26.Size = new System.Drawing.Size(189, 13);
             this.label26.TabIndex = 0;
@@ -833,7 +1094,7 @@
             // 
             this.label31.AutoSize = true;
             this.label31.Font = new System.Drawing.Font("Segoe UI Semibold", 9F, System.Drawing.FontStyle.Bold);
-            this.label31.Location = new System.Drawing.Point(13, 486);
+            this.label31.Location = new System.Drawing.Point(13, 599);
             this.label31.Name = "label31";
             this.label31.Size = new System.Drawing.Size(29, 15);
             this.label31.TabIndex = 0;
@@ -843,95 +1104,11 @@
             // 
             this.label35.AutoSize = true;
             this.label35.Font = new System.Drawing.Font("Segoe UI Semibold", 9F, System.Drawing.FontStyle.Bold);
-            this.label35.Location = new System.Drawing.Point(13, 553);
+            this.label35.Location = new System.Drawing.Point(13, 666);
             this.label35.Name = "label35";
             this.label35.Size = new System.Drawing.Size(71, 15);
             this.label35.TabIndex = 0;
             this.label35.Text = "Screenshots";
-            // 
-            // label15
-            // 
-            this.label15.AutoSize = true;
-            this.label15.Font = new System.Drawing.Font("Segoe UI Semilight", 8.25F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            this.label15.Location = new System.Drawing.Point(18, 259);
-            this.label15.Name = "label15";
-            this.label15.Size = new System.Drawing.Size(51, 13);
-            this.label15.TabIndex = 0;
-            this.label15.Text = "Password";
-            // 
-            // textAutoLoginPassword
-            // 
-            this.textAutoLoginPassword.Enabled = false;
-            this.textAutoLoginPassword.Font = new System.Drawing.Font("Segoe UI", 8.25F);
-            this.textAutoLoginPassword.Location = new System.Drawing.Point(80, 256);
-            this.textAutoLoginPassword.Name = "textAutoLoginPassword";
-            this.textAutoLoginPassword.Password = secureString1;
-            this.textAutoLoginPassword.PasswordChar = '*';
-            this.textAutoLoginPassword.Size = new System.Drawing.Size(195, 22);
-            this.textAutoLoginPassword.TabIndex = 6;
-            this.textAutoLoginPassword.UseSystemPasswordChar = true;
-            // 
-            // label14
-            // 
-            this.label14.AutoSize = true;
-            this.label14.Font = new System.Drawing.Font("Segoe UI Semilight", 8.25F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            this.label14.Location = new System.Drawing.Point(18, 231);
-            this.label14.Name = "label14";
-            this.label14.Size = new System.Drawing.Size(32, 13);
-            this.label14.TabIndex = 0;
-            this.label14.Text = "Email";
-            // 
-            // textAutoLoginEmail
-            // 
-            this.textAutoLoginEmail.Enabled = false;
-            this.textAutoLoginEmail.Font = new System.Drawing.Font("Segoe UI", 8.25F);
-            this.textAutoLoginEmail.Location = new System.Drawing.Point(80, 228);
-            this.textAutoLoginEmail.Name = "textAutoLoginEmail";
-            this.textAutoLoginEmail.Size = new System.Drawing.Size(195, 22);
-            this.textAutoLoginEmail.TabIndex = 5;
-            // 
-            // checkAutomaticLogin
-            // 
-            this.checkAutomaticLogin.AutoSize = true;
-            this.checkAutomaticLogin.Enabled = false;
-            this.checkAutomaticLogin.Location = new System.Drawing.Point(21, 205);
-            this.checkAutomaticLogin.Name = "checkAutomaticLogin";
-            this.checkAutomaticLogin.Size = new System.Drawing.Size(145, 17);
-            this.checkAutomaticLogin.TabIndex = 4;
-            this.checkAutomaticLogin.Text = "Enable automatic login";
-            this.checkAutomaticLogin.UseVisualStyleBackColor = true;
-            this.checkAutomaticLogin.CheckedChanged += new System.EventHandler(this.checkAutomaticLogin_CheckedChanged);
-            // 
-            // label13
-            // 
-            this.label13.AutoSize = true;
-            this.label13.Font = new System.Drawing.Font("Segoe UI Semilight", 8.25F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            this.label13.ForeColor = System.Drawing.Color.Maroon;
-            this.label13.Location = new System.Drawing.Point(14, 184);
-            this.label13.Name = "label13";
-            this.label13.Size = new System.Drawing.Size(217, 13);
-            this.label13.TabIndex = 0;
-            this.label13.Text = "Disabled by ArenaNet as of January 22, 2019";
-            // 
-            // label10
-            // 
-            this.label10.AutoSize = true;
-            this.label10.Font = new System.Drawing.Font("Segoe UI Semilight", 8.25F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            this.label10.Location = new System.Drawing.Point(14, 169);
-            this.label10.Name = "label10";
-            this.label10.Size = new System.Drawing.Size(286, 13);
-            this.label10.TabIndex = 0;
-            this.label10.Text = "Launches with the -nopatchui, -email and -password options";
-            // 
-            // label9
-            // 
-            this.label9.AutoSize = true;
-            this.label9.Font = new System.Drawing.Font("Segoe UI Semibold", 9F, System.Drawing.FontStyle.Bold);
-            this.label9.Location = new System.Drawing.Point(13, 153);
-            this.label9.Name = "label9";
-            this.label9.Size = new System.Drawing.Size(210, 15);
-            this.label9.TabIndex = 0;
-            this.label9.Text = "Automatically login to character select";
             // 
             // label8
             // 
@@ -1037,7 +1214,7 @@
             // 
             this.buttonCancel.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Right)));
             this.buttonCancel.Font = new System.Drawing.Font("Segoe UI", 8.25F);
-            this.buttonCancel.Location = new System.Drawing.Point(374, 323);
+            this.buttonCancel.Location = new System.Drawing.Point(374, 399);
             this.buttonCancel.Name = "buttonCancel";
             this.buttonCancel.Size = new System.Drawing.Size(86, 35);
             this.buttonCancel.TabIndex = 99;
@@ -1049,7 +1226,7 @@
             // 
             this.buttonOK.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Right)));
             this.buttonOK.Font = new System.Drawing.Font("Segoe UI", 8.25F);
-            this.buttonOK.Location = new System.Drawing.Point(470, 323);
+            this.buttonOK.Location = new System.Drawing.Point(470, 399);
             this.buttonOK.Name = "buttonOK";
             this.buttonOK.Size = new System.Drawing.Size(86, 35);
             this.buttonOK.TabIndex = 100;
@@ -1059,7 +1236,8 @@
             // 
             // panelStatistics
             // 
-            this.panelStatistics.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left) 
+            this.panelStatistics.Anchor = ((System.Windows.Forms.AnchorStyles)((((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom) 
+            | System.Windows.Forms.AnchorStyles.Left) 
             | System.Windows.Forms.AnchorStyles.Right)));
             this.panelStatistics.Controls.Add(this.label23);
             this.panelStatistics.Controls.Add(this.label25);
@@ -1076,7 +1254,7 @@
             this.panelStatistics.Controls.Add(this.labelLaunchCountEnd);
             this.panelStatistics.Location = new System.Drawing.Point(183, 12);
             this.panelStatistics.Name = "panelStatistics";
-            this.panelStatistics.Size = new System.Drawing.Size(373, 302);
+            this.panelStatistics.Size = new System.Drawing.Size(373, 378);
             this.panelStatistics.TabIndex = 0;
             this.panelStatistics.Visible = false;
             // 
@@ -1221,7 +1399,8 @@
             // 
             // panelLaunchOptionsAdvanced
             // 
-            this.panelLaunchOptionsAdvanced.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left) 
+            this.panelLaunchOptionsAdvanced.Anchor = ((System.Windows.Forms.AnchorStyles)((((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom) 
+            | System.Windows.Forms.AnchorStyles.Left) 
             | System.Windows.Forms.AnchorStyles.Right)));
             this.panelLaunchOptionsAdvanced.AutoScroll = true;
             this.panelLaunchOptionsAdvanced.AutoScrollMargin = new System.Drawing.Size(0, 10);
@@ -1231,7 +1410,7 @@
             this.panelLaunchOptionsAdvanced.Controls.Add(this.checkArgsTemplate);
             this.panelLaunchOptionsAdvanced.Location = new System.Drawing.Point(183, 12);
             this.panelLaunchOptionsAdvanced.Name = "panelLaunchOptionsAdvanced";
-            this.panelLaunchOptionsAdvanced.Size = new System.Drawing.Size(373, 302);
+            this.panelLaunchOptionsAdvanced.Size = new System.Drawing.Size(373, 378);
             this.panelLaunchOptionsAdvanced.TabIndex = 0;
             this.panelLaunchOptionsAdvanced.Visible = false;
             // 
@@ -1281,7 +1460,8 @@
             // 
             // panelGraphics
             // 
-            this.panelGraphics.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left) 
+            this.panelGraphics.Anchor = ((System.Windows.Forms.AnchorStyles)((((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom) 
+            | System.Windows.Forms.AnchorStyles.Left) 
             | System.Windows.Forms.AnchorStyles.Right)));
             this.panelGraphics.AutoScroll = true;
             this.panelGraphics.AutoScrollMargin = new System.Drawing.Size(0, 10);
@@ -1302,7 +1482,7 @@
             this.panelGraphics.Controls.Add(this.panelGraphicsXml);
             this.panelGraphics.Location = new System.Drawing.Point(183, 12);
             this.panelGraphics.Name = "panelGraphics";
-            this.panelGraphics.Size = new System.Drawing.Size(373, 302);
+            this.panelGraphics.Size = new System.Drawing.Size(373, 378);
             this.panelGraphics.TabIndex = 0;
             this.panelGraphics.Visible = false;
             // 
@@ -1482,7 +1662,8 @@
             // 
             // panelApi
             // 
-            this.panelApi.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left) 
+            this.panelApi.Anchor = ((System.Windows.Forms.AnchorStyles)((((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom) 
+            | System.Windows.Forms.AnchorStyles.Left) 
             | System.Windows.Forms.AnchorStyles.Right)));
             this.panelApi.AutoScroll = true;
             this.panelApi.AutoScrollMargin = new System.Drawing.Size(0, 10);
@@ -1494,7 +1675,7 @@
             this.panelApi.Controls.Add(this.textApiKey);
             this.panelApi.Location = new System.Drawing.Point(183, 12);
             this.panelApi.Name = "panelApi";
-            this.panelApi.Size = new System.Drawing.Size(373, 302);
+            this.panelApi.Size = new System.Drawing.Size(373, 378);
             this.panelApi.TabIndex = 101;
             this.panelApi.Visible = false;
             // 
@@ -1638,7 +1819,8 @@
             // 
             // panelSecurity
             // 
-            this.panelSecurity.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left) 
+            this.panelSecurity.Anchor = ((System.Windows.Forms.AnchorStyles)((((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom) 
+            | System.Windows.Forms.AnchorStyles.Left) 
             | System.Windows.Forms.AnchorStyles.Right)));
             this.panelSecurity.AutoScrollMargin = new System.Drawing.Size(0, 10);
             this.panelSecurity.Controls.Add(this.label60);
@@ -1661,7 +1843,7 @@
             this.panelSecurity.Controls.Add(this.progressTotpTime);
             this.panelSecurity.Location = new System.Drawing.Point(183, 12);
             this.panelSecurity.Name = "panelSecurity";
-            this.panelSecurity.Size = new System.Drawing.Size(373, 302);
+            this.panelSecurity.Size = new System.Drawing.Size(373, 378);
             this.panelSecurity.TabIndex = 102;
             this.panelSecurity.Visible = false;
             // 
@@ -1853,6 +2035,88 @@
             this.progressTotpTime.TabIndex = 26;
             this.progressTotpTime.Value = ((long)(30000));
             // 
+            // panelLaunchOptionsProcess
+            // 
+            this.panelLaunchOptionsProcess.Anchor = ((System.Windows.Forms.AnchorStyles)((((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom) 
+            | System.Windows.Forms.AnchorStyles.Left) 
+            | System.Windows.Forms.AnchorStyles.Right)));
+            this.panelLaunchOptionsProcess.AutoScroll = true;
+            this.panelLaunchOptionsProcess.Controls.Add(this.panelProcessAffinity);
+            this.panelLaunchOptionsProcess.Controls.Add(this.checkProcessAffinityAll);
+            this.panelLaunchOptionsProcess.Controls.Add(this.label75);
+            this.panelLaunchOptionsProcess.Controls.Add(this.label76);
+            this.panelLaunchOptionsProcess.Controls.Add(this.label74);
+            this.panelLaunchOptionsProcess.Controls.Add(this.label73);
+            this.panelLaunchOptionsProcess.Controls.Add(this.comboProcessPriority);
+            this.panelLaunchOptionsProcess.Controls.Add(this.checkProcessPriority);
+            this.panelLaunchOptionsProcess.Location = new System.Drawing.Point(183, 12);
+            this.panelLaunchOptionsProcess.Name = "panelLaunchOptionsProcess";
+            this.panelLaunchOptionsProcess.Size = new System.Drawing.Size(373, 378);
+            this.panelLaunchOptionsProcess.TabIndex = 105;
+            this.panelLaunchOptionsProcess.Visible = false;
+            // 
+            // panelProcessAffinity
+            // 
+            this.panelProcessAffinity.Location = new System.Drawing.Point(16, 139);
+            this.panelProcessAffinity.Name = "panelProcessAffinity";
+            this.panelProcessAffinity.Size = new System.Drawing.Size(322, 29);
+            this.panelProcessAffinity.TabIndex = 109;
+            this.panelProcessAffinity.Visible = false;
+            // 
+            // checkProcessAffinityAll
+            // 
+            this.checkProcessAffinityAll.AutoSize = true;
+            this.checkProcessAffinityAll.Checked = true;
+            this.checkProcessAffinityAll.CheckState = System.Windows.Forms.CheckState.Checked;
+            this.checkProcessAffinityAll.Font = new System.Drawing.Font("Segoe UI", 8.25F);
+            this.checkProcessAffinityAll.Location = new System.Drawing.Point(21, 117);
+            this.checkProcessAffinityAll.Name = "checkProcessAffinityAll";
+            this.checkProcessAffinityAll.Size = new System.Drawing.Size(108, 17);
+            this.checkProcessAffinityAll.TabIndex = 108;
+            this.checkProcessAffinityAll.Text = "Use all available";
+            this.checkProcessAffinityAll.UseVisualStyleBackColor = true;
+            this.checkProcessAffinityAll.CheckedChanged += new System.EventHandler(this.checkProcessAffinityAll_CheckedChanged);
+            // 
+            // label75
+            // 
+            this.label75.AutoSize = true;
+            this.label75.Font = new System.Drawing.Font("Segoe UI Semibold", 9F, System.Drawing.FontStyle.Bold);
+            this.label75.Location = new System.Drawing.Point(13, 80);
+            this.label75.Name = "label75";
+            this.label75.Size = new System.Drawing.Size(98, 15);
+            this.label75.TabIndex = 106;
+            this.label75.Text = "Processor affinity";
+            // 
+            // label76
+            // 
+            this.label76.AutoSize = true;
+            this.label76.Font = new System.Drawing.Font("Segoe UI Semilight", 8.25F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+            this.label76.Location = new System.Drawing.Point(14, 96);
+            this.label76.Name = "label76";
+            this.label76.Size = new System.Drawing.Size(228, 13);
+            this.label76.TabIndex = 105;
+            this.label76.Text = "The processors that can be used by the process";
+            // 
+            // label74
+            // 
+            this.label74.AutoSize = true;
+            this.label74.Font = new System.Drawing.Font("Segoe UI Semibold", 9F, System.Drawing.FontStyle.Bold);
+            this.label74.Location = new System.Drawing.Point(13, 10);
+            this.label74.Name = "label74";
+            this.label74.Size = new System.Drawing.Size(45, 15);
+            this.label74.TabIndex = 103;
+            this.label74.Text = "Priority";
+            // 
+            // label73
+            // 
+            this.label73.AutoSize = true;
+            this.label73.Font = new System.Drawing.Font("Segoe UI Semilight", 8.25F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+            this.label73.Location = new System.Drawing.Point(14, 26);
+            this.label73.Name = "label73";
+            this.label73.Size = new System.Drawing.Size(218, 13);
+            this.label73.TabIndex = 102;
+            this.label73.Text = "The amount of CPU time given to the process";
+            // 
             // sidebarPanel1
             // 
             this.sidebarPanel1.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom) 
@@ -1867,7 +2131,7 @@
             this.sidebarPanel1.Location = new System.Drawing.Point(0, 0);
             this.sidebarPanel1.Margin = new System.Windows.Forms.Padding(0);
             this.sidebarPanel1.Name = "sidebarPanel1";
-            this.sidebarPanel1.Size = new System.Drawing.Size(180, 370);
+            this.sidebarPanel1.Size = new System.Drawing.Size(180, 446);
             this.sidebarPanel1.TabIndex = 0;
             // 
             // buttonSecurity
@@ -1980,109 +2244,72 @@
             this.buttonGeneral.TabIndex = 0;
             this.buttonGeneral.Text = "General";
             // 
-            // panelLaunchOptionsProcess
+            // contextIcon
             // 
-            this.panelLaunchOptionsProcess.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left) 
-            | System.Windows.Forms.AnchorStyles.Right)));
-            this.panelLaunchOptionsProcess.AutoScroll = true;
-            this.panelLaunchOptionsProcess.Controls.Add(this.panelProcessAffinity);
-            this.panelLaunchOptionsProcess.Controls.Add(this.checkProcessAffinityAll);
-            this.panelLaunchOptionsProcess.Controls.Add(this.label75);
-            this.panelLaunchOptionsProcess.Controls.Add(this.label76);
-            this.panelLaunchOptionsProcess.Controls.Add(this.label74);
-            this.panelLaunchOptionsProcess.Controls.Add(this.label73);
-            this.panelLaunchOptionsProcess.Controls.Add(this.comboProcessPriority);
-            this.panelLaunchOptionsProcess.Controls.Add(this.checkProcessPriority);
-            this.panelLaunchOptionsProcess.Location = new System.Drawing.Point(183, 12);
-            this.panelLaunchOptionsProcess.Name = "panelLaunchOptionsProcess";
-            this.panelLaunchOptionsProcess.Size = new System.Drawing.Size(373, 302);
-            this.panelLaunchOptionsProcess.TabIndex = 105;
-            this.panelLaunchOptionsProcess.Visible = false;
+            this.contextIcon.Items.AddRange(new System.Windows.Forms.ToolStripItem[] {
+            this.menuIconBrowseToolStripMenuItem,
+            this.toolStripMenuItem1,
+            this.menuIconUseDefaultToolStripMenuItem,
+            this.menuIconUseColorToolStripMenuItem,
+            this.menuIconUseSolidColorToolStripMenuItem});
+            this.contextIcon.Name = "contextIcon";
+            this.contextIcon.Size = new System.Drawing.Size(163, 98);
             // 
-            // panelProcessAffinity
+            // menuIconBrowseToolStripMenuItem
             // 
-            this.panelProcessAffinity.Location = new System.Drawing.Point(16, 139);
-            this.panelProcessAffinity.Name = "panelProcessAffinity";
-            this.panelProcessAffinity.Size = new System.Drawing.Size(322, 29);
-            this.panelProcessAffinity.TabIndex = 109;
-            this.panelProcessAffinity.Visible = false;
+            this.menuIconBrowseToolStripMenuItem.Name = "menuIconBrowseToolStripMenuItem";
+            this.menuIconBrowseToolStripMenuItem.Size = new System.Drawing.Size(162, 22);
+            this.menuIconBrowseToolStripMenuItem.Text = "Browse...";
+            this.menuIconBrowseToolStripMenuItem.Click += new System.EventHandler(this.menuIconBrowseToolStripMenuItem_Click);
             // 
-            // checkProcessAffinityAll
+            // toolStripMenuItem1
             // 
-            this.checkProcessAffinityAll.AutoSize = true;
-            this.checkProcessAffinityAll.Checked = true;
-            this.checkProcessAffinityAll.CheckState = System.Windows.Forms.CheckState.Checked;
-            this.checkProcessAffinityAll.Font = new System.Drawing.Font("Segoe UI", 8.25F);
-            this.checkProcessAffinityAll.Location = new System.Drawing.Point(21, 117);
-            this.checkProcessAffinityAll.Name = "checkProcessAffinityAll";
-            this.checkProcessAffinityAll.Size = new System.Drawing.Size(108, 17);
-            this.checkProcessAffinityAll.TabIndex = 108;
-            this.checkProcessAffinityAll.Text = "Use all available";
-            this.checkProcessAffinityAll.UseVisualStyleBackColor = true;
-            this.checkProcessAffinityAll.CheckedChanged += new System.EventHandler(this.checkProcessAffinityAll_CheckedChanged);
+            this.toolStripMenuItem1.Name = "toolStripMenuItem1";
+            this.toolStripMenuItem1.Size = new System.Drawing.Size(159, 6);
             // 
-            // label75
+            // menuIconUseDefaultToolStripMenuItem
             // 
-            this.label75.AutoSize = true;
-            this.label75.Font = new System.Drawing.Font("Segoe UI Semibold", 9F, System.Drawing.FontStyle.Bold);
-            this.label75.Location = new System.Drawing.Point(13, 80);
-            this.label75.Name = "label75";
-            this.label75.Size = new System.Drawing.Size(98, 15);
-            this.label75.TabIndex = 106;
-            this.label75.Text = "Processor affinity";
+            this.menuIconUseDefaultToolStripMenuItem.Name = "menuIconUseDefaultToolStripMenuItem";
+            this.menuIconUseDefaultToolStripMenuItem.Size = new System.Drawing.Size(162, 22);
+            this.menuIconUseDefaultToolStripMenuItem.Text = "Use default";
+            this.menuIconUseDefaultToolStripMenuItem.Click += new System.EventHandler(this.menuIconUseDefaultToolStripMenuItem_Click);
             // 
-            // label76
+            // menuIconUseColorToolStripMenuItem
             // 
-            this.label76.AutoSize = true;
-            this.label76.Font = new System.Drawing.Font("Segoe UI Semilight", 8.25F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            this.label76.Location = new System.Drawing.Point(14, 96);
-            this.label76.Name = "label76";
-            this.label76.Size = new System.Drawing.Size(228, 13);
-            this.label76.TabIndex = 105;
-            this.label76.Text = "The processors that can be used by the process";
+            this.menuIconUseColorToolStripMenuItem.Name = "menuIconUseColorToolStripMenuItem";
+            this.menuIconUseColorToolStripMenuItem.Size = new System.Drawing.Size(162, 22);
+            this.menuIconUseColorToolStripMenuItem.Text = "Use colored icon";
+            this.menuIconUseColorToolStripMenuItem.Click += new System.EventHandler(this.menuIconUseColorToolStripMenuItem_Click);
             // 
-            // label74
+            // menuIconUseSolidColorToolStripMenuItem
             // 
-            this.label74.AutoSize = true;
-            this.label74.Font = new System.Drawing.Font("Segoe UI Semibold", 9F, System.Drawing.FontStyle.Bold);
-            this.label74.Location = new System.Drawing.Point(13, 10);
-            this.label74.Name = "label74";
-            this.label74.Size = new System.Drawing.Size(45, 15);
-            this.label74.TabIndex = 103;
-            this.label74.Text = "Priority";
-            // 
-            // label73
-            // 
-            this.label73.AutoSize = true;
-            this.label73.Font = new System.Drawing.Font("Segoe UI Semilight", 8.25F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            this.label73.Location = new System.Drawing.Point(14, 26);
-            this.label73.Name = "label73";
-            this.label73.Size = new System.Drawing.Size(218, 13);
-            this.label73.TabIndex = 102;
-            this.label73.Text = "The amount of CPU time given to the process";
+            this.menuIconUseSolidColorToolStripMenuItem.Name = "menuIconUseSolidColorToolStripMenuItem";
+            this.menuIconUseSolidColorToolStripMenuItem.Size = new System.Drawing.Size(162, 22);
+            this.menuIconUseSolidColorToolStripMenuItem.Text = "Use solid color";
+            this.menuIconUseSolidColorToolStripMenuItem.Click += new System.EventHandler(this.menuIconUseSolidColorToolStripMenuItem_Click);
             // 
             // formAccount
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
-            this.ClientSize = new System.Drawing.Size(568, 370);
+            this.ClientSize = new System.Drawing.Size(568, 446);
             this.Controls.Add(this.buttonCancel);
             this.Controls.Add(this.buttonOK);
             this.Controls.Add(this.sidebarPanel1);
-            this.Controls.Add(this.panelLaunchOptions);
-            this.Controls.Add(this.panelStatistics);
-            this.Controls.Add(this.panelSecurity);
-            this.Controls.Add(this.panelApi);
             this.Controls.Add(this.panelGeneral);
             this.Controls.Add(this.panelGraphics);
             this.Controls.Add(this.panelLocalDat);
             this.Controls.Add(this.panelLaunchOptionsAdvanced);
             this.Controls.Add(this.panelLaunchOptionsProcess);
+            this.Controls.Add(this.panelLaunchOptions);
+            this.Controls.Add(this.panelStatistics);
+            this.Controls.Add(this.panelSecurity);
+            this.Controls.Add(this.panelApi);
             this.Font = new System.Drawing.Font("Segoe UI", 8.25F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            this.FormBorderStyle = System.Windows.Forms.FormBorderStyle.FixedDialog;
-            this.Icon = global::Gw2Launcher.Properties.Resources.Gw2;
+            this.Icon = global::Gw2Launcher.Properties.Resources.Gw2Launcher;
             this.MaximizeBox = false;
             this.MinimizeBox = false;
+            this.MinimumSize = new System.Drawing.Size(584, 485);
             this.Name = "formAccount";
             this.ShowIcon = false;
             this.ShowInTaskbar = false;
@@ -2108,9 +2335,10 @@
             this.panelApiContent.PerformLayout();
             this.panelSecurity.ResumeLayout(false);
             this.panelSecurity.PerformLayout();
-            this.sidebarPanel1.ResumeLayout(false);
             this.panelLaunchOptionsProcess.ResumeLayout(false);
             this.panelLaunchOptionsProcess.PerformLayout();
+            this.sidebarPanel1.ResumeLayout(false);
+            this.contextIcon.ResumeLayout(false);
             this.ResumeLayout(false);
 
         }
@@ -2274,5 +2502,24 @@
         private System.Windows.Forms.Label label76;
         private System.Windows.Forms.Label label74;
         private System.Windows.Forms.Label label73;
+        private System.Windows.Forms.Panel panelIdentifierIcon;
+        private System.Windows.Forms.Label label65;
+        private System.Windows.Forms.Label label63;
+        private System.Windows.Forms.Panel panelIdentifierColor;
+        private System.Windows.Forms.Panel panelIdentifierIconLarge;
+        private System.Windows.Forms.Label label71;
+        private System.Windows.Forms.Label label72;
+        private System.Windows.Forms.CheckBox checkWindowedPreventChanges;
+        private System.Windows.Forms.CheckBox checkWindowedUpdateOnChange;
+        private System.Windows.Forms.CheckBox checkWindowedTopMost;
+        private System.Windows.Forms.Label label66;
+        private System.Windows.Forms.ContextMenuStrip contextIcon;
+        private System.Windows.Forms.ToolStripMenuItem menuIconBrowseToolStripMenuItem;
+        private System.Windows.Forms.ToolStripSeparator toolStripMenuItem1;
+        private System.Windows.Forms.ToolStripMenuItem menuIconUseDefaultToolStripMenuItem;
+        private System.Windows.Forms.ToolStripMenuItem menuIconUseColorToolStripMenuItem;
+        private System.Windows.Forms.ToolStripMenuItem menuIconUseSolidColorToolStripMenuItem;
+        private System.Windows.Forms.CheckBox checkAutomaticLoginPlay;
+        private System.Windows.Forms.Label labelAutologinConfigure;
     }
 }

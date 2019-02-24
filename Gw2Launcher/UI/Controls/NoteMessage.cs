@@ -77,6 +77,14 @@ namespace Gw2Launcher.UI.Controls
             }
         }
 
+        protected override void OnSizeChanged(EventArgs e)
+        {
+            labelMessage.MaximumSize = new Size(this.Width - labelMessage.Left * 2, 0);
+            panelBottom.Width = this.Width - panelBottom.Left * 2;
+
+            base.OnSizeChanged(e);
+        }
+
         private void labelMessage_SizeChanged(object sender, EventArgs e)
         {
             panelBottom.Top = labelMessage.Bottom;

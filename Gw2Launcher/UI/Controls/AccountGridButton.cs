@@ -8,6 +8,7 @@ using System.Text;
 using System.Threading.Tasks;
 using System.Threading;
 using System.Windows.Forms;
+using System.Drawing.Drawing2D;
 using System.Drawing.Imaging;
 
 namespace Gw2Launcher.UI.Controls
@@ -120,10 +121,11 @@ namespace Gw2Launcher.UI.Controls
         }
 
         protected Rectangle rectName, rectAccountValue, rectLastUsedValue, rectIcon;
+        protected SolidBrush brushColor;
         protected SolidBrush brush;
         protected Pen pen;
 
-        protected bool isHovered, isSelected, isPressed;
+        protected bool isHovered, isSelected, isPressed, isFocused;
         protected float pressedProgress;
         protected byte pressedState;
         protected DisplayedIcon[] icons;
@@ -234,8 +236,7 @@ namespace Gw2Launcher.UI.Controls
                 {
                     fontSmall = value;
                     resize = true;
-                    redraw = true;
-                    this.Invalidate();
+                    OnRedrawRequired();
                 }
             }
         }
@@ -255,8 +256,7 @@ namespace Gw2Launcher.UI.Controls
                 {
                     fontLarge = value;
                     resize = true;
-                    redraw = true;
-                    this.Invalidate();
+                    OnRedrawRequired();
                 }
             }
         }
@@ -303,8 +303,7 @@ namespace Gw2Launcher.UI.Controls
                     {
                         pressedProgress = (float)((DateTime.UtcNow.Ticks - start) / 10000) / duration;
 
-                        redraw = true;
-                        this.Invalidate();
+                        OnRedrawRequired();
 
                         if (pressedProgress >= 1)
                         {
@@ -326,8 +325,7 @@ namespace Gw2Launcher.UI.Controls
                                 start = DateTime.UtcNow.Ticks;
                                 brush.Color = e.FlashColor;
 
-                                redraw = true;
-                                this.Invalidate();
+                                OnRedrawRequired();
 
                                 if (Pressed != null)
                                     Pressed(this, EventArgs.Empty);
@@ -351,8 +349,7 @@ namespace Gw2Launcher.UI.Controls
             catch
             {
                 isPressed = false;
-                redraw = true;
-                this.Invalidate();
+                OnRedrawRequired();
             }
             finally
             {
@@ -393,8 +390,7 @@ namespace Gw2Launcher.UI.Controls
 
         public void Redraw()
         {
-            redraw = true;
-            this.Invalidate();
+            OnRedrawRequired();
         }
 
         private int OnDelayedRefresh()
@@ -402,8 +398,7 @@ namespace Gw2Launcher.UI.Controls
             if (this.IsDisposed)
                 return -1;
 
-            redraw = true;
-            Invalidate();
+            OnRedrawRequired();
 
             return GetNextRefresh();
         }
@@ -411,7 +406,7 @@ namespace Gw2Launcher.UI.Controls
         private int GetNextRefresh()
         {
             var ms = (int)DateTime.UtcNow.Subtract(_LastUsed).TotalMilliseconds;
-            //displayed time is rounded, so refreshes need to occur at 30s (1m), 90s (2m), etc
+            //displayed time is rounded, so refreshes need to occur at 30s (1m), 90s (2m), etc, until it gets to 24 hours
 
             if (ms < 0)
             {
@@ -420,9 +415,13 @@ namespace Gw2Launcher.UI.Controls
             {
                 return 60000 - (ms + 30000) % 60000;
             }
-            else if (ms < 86400000)
+            else if (ms < 82800000)
             {
                 return 3600000 - (ms + 1800000) % 3600000;
+            }
+            else if (ms < 86400000)
+            {
+                return 86400000 - ms;
             }
 
             return -1;
@@ -440,8 +439,7 @@ namespace Gw2Launcher.UI.Controls
             base.OnMouseEnter(e);
 
             isHovered = true;
-            redraw = true;
-            this.Invalidate();
+            OnRedrawRequired();
         }
 
         protected override void OnMouseLeave(EventArgs e)
@@ -454,8 +452,7 @@ namespace Gw2Launcher.UI.Controls
                 activeIcon = null;
             }
             isHovered = false;
-            redraw = true;
-            this.Invalidate();
+            OnRedrawRequired();
         }
 
         protected override void OnMouseMove(MouseEventArgs e)
@@ -488,8 +485,7 @@ namespace Gw2Launcher.UI.Controls
 
                     if (redraw)
                     {
-                        this.redraw = true;
-                        this.Invalidate();
+                        OnRedrawRequired();
                     }
 
                     return;
@@ -502,8 +498,7 @@ namespace Gw2Launcher.UI.Controls
 
                 if (activeIcon.CanClick)
                 {
-                    this.redraw = true;
-                    this.Invalidate();
+                    OnRedrawRequired();
                 }
 
                 activeIcon = null;
@@ -545,8 +540,7 @@ namespace Gw2Launcher.UI.Controls
                             var a = this._AccountData;
                             if (a != null)
                                 a.LastDailyCompletionUtc = this._LastDailyCompletion = DateTime.UtcNow;
-                            redraw = true;
-                            this.Invalidate();
+                            OnRedrawRequired();
 
                             break;
                         case DisplayedIcon.IconType.Note:
@@ -568,7 +562,7 @@ namespace Gw2Launcher.UI.Controls
             var elapsed = DateTime.UtcNow.Subtract(_LastUsed);
             var d = elapsed.TotalHours;
 
-            if (d > 24)
+            if (d >= 24)
             {
                 int days = (int)(elapsed.TotalDays + 0.5);
 
@@ -744,11 +738,11 @@ namespace Gw2Launcher.UI.Controls
                 else
                     g.Clear(BACK_COLOR);
 
+                int w = this.Width - 1;
+                int h = this.Height - 1;
+
                 if (isPressed)
                 {
-                    int w = this.Width - 1;
-                    int h = this.Height - 1;
-
                     if (pressedState == 1)
                     {
                         g.FillRectangle(brush, 0, 0, w, h);
@@ -772,7 +766,35 @@ namespace Gw2Launcher.UI.Controls
                     icons[INDEX_ICON_NOTE].type = DisplayedIcon.IconType.None;
                 }
 
-                g.DrawRectangle(pen, 0, 0, this.Width - 1, this.Height - 1);
+                g.DrawRectangle(pen, 0, 0, w, h);
+
+                if (isFocused)
+                {
+                    var x = w / 5;
+
+                    using (var gradient = new LinearGradientBrush(new Rectangle(x - 1, 0, w + 1, h), Color.Transparent, Util.Color.Darken(BACK_COLOR_SELECTED, 0.1f), 0f))
+                    {
+                        g.FillRectangle(gradient, x, 1, w - x, h);
+
+                        gradient.LinearColors = new Color[] { Color.Transparent, Color.FromArgb(63, 72, 204) };
+
+                        using (var p = new Pen(gradient))
+                        {
+                            g.DrawLines(p, new Point[]
+                                {
+                                    new Point(x,0),
+                                    new Point(w,0),
+                                    new Point(w,h),
+                                    new Point(x,h),
+                                });
+                        }
+                    }
+                }
+
+                if (_ShowColorKey && _ColorKey.A != 0)
+                {
+                    g.FillRectangle(brushColor, 0, 0, 5, h + 1);
+                }
             }
         }
 
@@ -823,12 +845,17 @@ namespace Gw2Launcher.UI.Controls
 
         }
 
+        protected void OnRedrawRequired()
+        {
+            redraw = true;
+            this.Invalidate();
+        }
+
         public void SetStatus(string status, Color color)
         {
             _Status = status;
             _StatusColor = color;
-            redraw = true;
-            this.Invalidate();
+            OnRedrawRequired();
         }
 
         public int Index
@@ -849,8 +876,7 @@ namespace Gw2Launcher.UI.Controls
                 if (_Status != value)
                 {
                     _Status = value;
-                    redraw = true;
-                    this.Invalidate();
+                    OnRedrawRequired();
                 }
             }
         }
@@ -867,8 +893,7 @@ namespace Gw2Launcher.UI.Controls
                 if (_StatusColor != value)
                 {
                     _StatusColor = value;
-                    redraw = true;
-                    this.Invalidate();
+                    OnRedrawRequired();
                 }
             }
         }
@@ -886,8 +911,24 @@ namespace Gw2Launcher.UI.Controls
                 {
                     _ShowAccount = value;
                     resize = true;
-                    redraw = true;
-                    this.Invalidate();
+                    OnRedrawRequired();
+                }
+            }
+        }
+
+        private bool _ShowColorKey;
+        public bool ShowColorKey
+        {
+            get
+            {
+                return _ShowColorKey;
+            }
+            set
+            {
+                if (_ShowColorKey != value)
+                {
+                    _ShowColorKey = value;
+                    OnRedrawRequired();
                 }
             }
         }
@@ -920,6 +961,10 @@ namespace Gw2Launcher.UI.Controls
                         this.LastDailyLoginUtc = value.LastUsedUtc;
                     if (value.Notes != null)
                         this.LastNoteUtc = value.Notes.ExpiresLast;
+                    if (value.ColorKey.IsEmpty)
+                        this.ColorKey = Util.Color.FromUID(value.UID);
+                    else
+                        this.ColorKey = value.ColorKey;
                 }
             }
         }
@@ -936,8 +981,7 @@ namespace Gw2Launcher.UI.Controls
                 if (_AccountName != value)
                 {
                     _AccountName = value;
-                    redraw = true;
-                    this.Invalidate();
+                    OnRedrawRequired();
                 }
             }
         }
@@ -954,8 +998,7 @@ namespace Gw2Launcher.UI.Controls
                 if (_DisplayName != value)
                 {
                     _DisplayName = value;
-                    redraw = true;
-                    this.Invalidate();
+                    OnRedrawRequired();
                 }
             }
         }
@@ -975,8 +1018,7 @@ namespace Gw2Launcher.UI.Controls
                         _LastDailyLogin = value;
                     _LastUsed = value;
                     DelayedRefresh();
-                    redraw = true;
-                    this.Invalidate();
+                    OnRedrawRequired();
                 }
             }
         }
@@ -993,8 +1035,7 @@ namespace Gw2Launcher.UI.Controls
                 if (_ShowDailyLogin != value)
                 {
                     _ShowDailyLogin = value;
-                    redraw = true;
-                    this.Invalidate();
+                    OnRedrawRequired();
                 }
             }
         }
@@ -1011,8 +1052,7 @@ namespace Gw2Launcher.UI.Controls
                 if (_ShowDailyCompletion != value)
                 {
                     _ShowDailyCompletion = value;
-                    redraw = true;
-                    this.Invalidate();
+                    OnRedrawRequired();
                 }
             }
         }
@@ -1029,8 +1069,7 @@ namespace Gw2Launcher.UI.Controls
                 if (_LastNote != value)
                 {
                     _LastNote = value;
-                    redraw = true;
-                    this.Invalidate();
+                    OnRedrawRequired();
                 }
             }
         }
@@ -1047,8 +1086,7 @@ namespace Gw2Launcher.UI.Controls
                 if (_LastDailyCompletion != value)
                 {
                     _LastDailyCompletion = value;
-                    redraw = true;
-                    this.Invalidate();
+                    OnRedrawRequired();
                 }
             }
         }
@@ -1065,8 +1103,30 @@ namespace Gw2Launcher.UI.Controls
                 if (_LastDailyLogin != value)
                 {
                     _LastDailyLogin = value;
-                    redraw = true;
-                    this.Invalidate();
+                    OnRedrawRequired();
+                }
+            }
+        }
+
+        private Color _ColorKey;
+        public Color ColorKey
+        {
+            get
+            {
+                return _ColorKey;
+            }
+            set
+            {
+                if (_ColorKey != value)
+                {
+                    if (brushColor == null)
+                        brushColor = new SolidBrush(value);
+                    else
+                        brushColor.Color = value;
+
+                    _ColorKey = value;
+
+                    OnRedrawRequired();
                 }
             }
         }
@@ -1076,6 +1136,22 @@ namespace Gw2Launcher.UI.Controls
             get
             {
                 return isHovered;
+            }
+        }
+
+        public bool IsFocused
+        {
+            get
+            {
+                return isFocused;
+            }
+            set
+            {
+                if (isFocused != value)
+                {
+                    isFocused = value;
+                    OnRedrawRequired();
+                }
             }
         }
 
@@ -1090,8 +1166,7 @@ namespace Gw2Launcher.UI.Controls
                 if (isSelected != value)
                 {
                     isSelected = value;
-                    redraw = true;
-                    this.Invalidate();
+                    OnRedrawRequired();
                 }
             }
         }

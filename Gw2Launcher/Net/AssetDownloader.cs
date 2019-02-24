@@ -587,6 +587,7 @@ namespace Gw2Launcher.Net
                                             progress.total = progress.downloaded = stream.ContentLengthProcessed;
                                             progress.sizeChange = asset.size - progress.processed;
                                             progress.processed = asset.size;
+                                            //progress.sizeChange = progress.processed = asset.size; //orig
                                             asset.OnProgress(progress);
                                         }
                                         else

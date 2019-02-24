@@ -20,14 +20,17 @@ namespace Gw2Launcher.UI.Controls
             this.Bounds = panel.Bounds;
             this.Anchor = panel.Anchor;
             this.AutoScroll = panel.AutoScroll;
-            this.AutoScrollMargin = panel.AutoScrollMargin;
             this.Visible = panel.Visible;
 
+            panel.Anchor = panel.Anchor & ~AnchorStyles.Bottom;
             panel.AutoScroll = false;
             panel.AutoScrollMargin = Size.Empty;
             panel.Bounds = new Rectangle(0, 0, 0, 0);
             panel.AutoSize = true;
             panel.Visible = true;
+
+            if (panel.Height > this.Height)
+                this.AutoScrollMargin = panel.AutoScrollMargin;
 
             this.Controls.Add(panel);
         }

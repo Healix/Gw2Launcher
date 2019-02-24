@@ -9,6 +9,8 @@ namespace Gw2Launcher.Client
 {
     public static class FileManager
     {
+        public const string LOCALIZED_EXE_FOLDER_NAME = "Gw2Launcher";
+
         private const string DAT_NAME = "Local.dat";
         private const string GFX_NAME = "GFXSettings.{0}.xml";
         private const string ALT_DATA = "alt";
@@ -16,7 +18,8 @@ namespace Gw2Launcher.Client
         private const string MUSIC_FOLDER_NAME = "Music";
         private const string COHERENT_DUMPS_FOLDER_NAME = "Coherent Dumps";
 
-        private static bool isSupported;
+        private static IsSupportedState isSupported;
+        private static byte exebits;
 
         public enum SpecialPath
         {
@@ -77,6 +80,14 @@ namespace Gw2Launcher.Client
             Gfx,
         }
 
+        private enum IsSupportedState : byte
+        {
+            DataTested = 1,
+            DataSupported = 2,
+            Gw2Tested = 4,
+            Gw2Supported = 8,
+        }
+
         public interface IProfileInformation
         {
             string UserProfile
@@ -125,7 +136,7 @@ namespace Gw2Launcher.Client
                 {
                     case FileType.Dat:
 
-                        if (isSupported)
+                        if (IsDataLinkingSupported)
                         {
                             if (link)
                                 return Path.Combine(accountdata, account.DatFile.UID.ToString(), appdata.Substring(userprofile.Length + 1), DAT_NAME);
@@ -137,7 +148,7 @@ namespace Gw2Launcher.Client
 
                     case FileType.Gfx:
 
-                        if (isSupported)
+                        if (IsDataLinkingSupported)
                         {
                             if (link)
                                 return Path.Combine(accountdata, account.GfxFile.UID.ToString(), appdata.Substring(userprofile.Length + 1), gfxName);
@@ -214,7 +225,7 @@ namespace Gw2Launcher.Client
                             var i = appdata.Length + 1;
                             var j = path.IndexOf(Path.DirectorySeparatorChar, i);
 
-                            if (i != -1 && int.TryParse(path.Substring(i, j - i), out i))
+                            if (j != -1 && int.TryParse(path.Substring(i, j - i), out i))
                             {
                                 return PathType.DataByGw2;
                             }
@@ -327,18 +338,64 @@ namespace Gw2Launcher.Client
             try
             {
                 var path = DataPath.AppData;
-                isSupported = path[1] == ':' && new DriveInfo(path.Substring(0, 1)).DriveFormat.Equals("NTFS", StringComparison.OrdinalIgnoreCase);
+                IsDataLinkingSupported = IsPathSupported(path, true);
             }
             catch (Exception e)
             {
                 Util.Logging.Log(e);
             }
 
-            if (!isSupported)
-            {
-                //confirm that linking isn't possible
+            DoPendingLocalizeAccountExecution();
 
-                var l = Path.Combine(DataPath.AppData, "l");
+            Settings.GW2Path.ValueChanged += GW2Path_ValueChanged;
+            Settings.ScreenshotsLocation.ValueChanged += Setting_ValueChanged;
+            Settings.LocalizeAccountExecution.ValueChanged += LocalizeAccountExecution_ValueChanged;
+
+            Client.Launcher.ActiveProcessCountChanged += Launcher_ActiveProcessCountChanged;
+        }
+
+        static void Launcher_ActiveProcessCountChanged(object sender, int e)
+        {
+            if (e == 0)
+                DoPendingLocalizeAccountExecution();
+        }
+
+        private static void DoPendingLocalizeAccountExecution()
+        {
+            try
+            {
+                var v = Settings.LocalizeAccountExecution;
+                if (v.IsPending && !v.Value)
+                {
+                    if (DeleteExecutableRoot())
+                        v.Commit();
+                }
+            }
+            catch { }
+        }
+
+        /// <summary>
+        /// Tests if the path supports hard links
+        /// </summary>
+        /// <param name="path">The path to test</param>
+        /// <param name="test">If true, a link will be created to confirm</param>
+        /// <returns>True if the drive of the path supports linking</returns>
+        public static bool IsPathSupported(string path, bool test)
+        {
+            bool isSupported;
+            try
+            {
+                isSupported = path[1] == ':' && new DriveInfo(path.Substring(0, 1)).DriveFormat.Equals("NTFS", StringComparison.OrdinalIgnoreCase);
+            }
+            catch (Exception e)
+            {
+                Util.Logging.Log(e);
+                isSupported = false;
+            }
+
+            if (!isSupported && test)
+            {
+                var l = Path.Combine(path, "l");
                 var a = l + ".a";
                 var b = l + ".b";
 
@@ -360,8 +417,12 @@ namespace Gw2Launcher.Client
                 }
             }
 
-            Settings.GW2Path.ValueChanged += Setting_ValueChanged;
-            Settings.ScreenshotsLocation.ValueChanged += Setting_ValueChanged;
+            return isSupported;
+        }
+        
+        static void LocalizeAccountExecution_ValueChanged(object sender, EventArgs e)
+        {
+            DoPendingLocalizeAccountExecution();
         }
 
         static void Setting_ValueChanged(object sender, EventArgs e)
@@ -369,11 +430,50 @@ namespace Gw2Launcher.Client
             FlagAllAccountForPendingFiles();
         }
 
-        public static bool IsLinkingSupported
+        static void GW2Path_ValueChanged(object sender, EventArgs e)
+        {
+            isSupported &= ~(IsSupportedState.Gw2Tested | IsSupportedState.Gw2Supported);
+            exebits = 0;
+            FlagAllAccountForPendingFiles();
+        }
+
+        public static bool IsDataLinkingSupported
         {
             get
             {
-                return isSupported;
+                return (isSupported & IsSupportedState.DataSupported) == IsSupportedState.DataSupported;
+            }
+            private set
+            {
+                if (value)
+                    isSupported |= IsSupportedState.DataSupported;
+                else
+                    isSupported &= ~IsSupportedState.DataSupported;
+            }
+        }
+
+        public static bool IsGw2LinkingSupported
+        {
+            get
+            {
+                if ((isSupported & IsSupportedState.Gw2Tested) != IsSupportedState.Gw2Tested)
+                {
+                    var path = Settings.GW2Path.Value;
+                    if (!string.IsNullOrEmpty(path))
+                    {
+                        IsGw2LinkingSupported = IsPathSupported(path, false);
+                    }
+                    else
+                        return false;
+                }
+                return (isSupported & IsSupportedState.Gw2Supported) == IsSupportedState.Gw2Supported;
+            }
+            private set
+            {
+                if (value)
+                    isSupported |= IsSupportedState.Gw2Supported | IsSupportedState.Gw2Tested;
+                else
+                    isSupported = (isSupported & ~IsSupportedState.Gw2Supported) | IsSupportedState.Gw2Tested;
             }
         }
 
@@ -419,7 +519,7 @@ namespace Gw2Launcher.Client
 
         private static bool IsCustomized(Settings.IAccount account)
         {
-            return Settings.ScreenshotsLocation.HasValue || isSupported && (!string.IsNullOrEmpty(account.ScreenshotsLocation) || Settings.VirtualUserPath.HasValue);
+            return Settings.ScreenshotsLocation.HasValue || IsDataLinkingSupported && (!string.IsNullOrEmpty(account.ScreenshotsLocation) || Settings.VirtualUserPath.HasValue);
         }
 
         private static bool Move(string from, string to)
@@ -435,7 +535,7 @@ namespace Gw2Launcher.Client
         private static bool CreateProfile(Settings.IAccount account, PathData pd)
         {
             string path;
-            if (isSupported)
+            if (IsDataLinkingSupported)
                 path = Path.Combine(pd.accountdata, account.UID.ToString());
             else
                 path = Path.Combine(pd.accountdata, ALT_DATA, account.DatFile.UID.ToString());
@@ -470,14 +570,17 @@ namespace Gw2Launcher.Client
             //note: added links must be mirrored in DeleteProfile
 
             string path;
-            if (isSupported)
+            if (IsDataLinkingSupported)
                 path = Path.Combine(pd.accountdata, account.UID.ToString());
             else
                 path = Path.Combine(pd.accountdata, ALT_DATA, account.DatFile.UID.ToString());
 
             var isCurrentUser = Util.Users.IsCurrentUser(account.WindowsAccount);
             if (!isCurrentUser) //different users will need permision to access GW2's appdata and documents
+            {
                 Util.FileUtil.AllowFolderAccess(pd.appdata, System.Security.AccessControl.FileSystemRights.Modify);
+                Util.FileUtil.AllowFolderAccess(DataPath.AppDataAccountData, System.Security.AccessControl.FileSystemRights.Modify);
+            }
 
             if (pd.IsAppDataInUserFolder)
             {
@@ -497,7 +600,7 @@ namespace Gw2Launcher.Client
                         if (fi.Exists)
                             fi.Delete();
 
-                        if (isSupported)
+                        if (IsDataLinkingSupported)
                         {
                             if (!File.Exists(dat))
                             {
@@ -531,7 +634,7 @@ namespace Gw2Launcher.Client
                         if (fi.Exists)
                             fi.Delete();
 
-                        if (isSupported)
+                        if (IsDataLinkingSupported)
                         {
                             if (!File.Exists(gfx))
                             {
@@ -551,7 +654,7 @@ namespace Gw2Launcher.Client
 
                 #endregion
 
-                if (isSupported)
+                if (IsDataLinkingSupported)
                 {
                     #region Link Coherent Dumps
 
@@ -590,7 +693,7 @@ namespace Gw2Launcher.Client
 
                 if (pd.IsDocumentsInUserFolder)
                 {
-                    if (isSupported)
+                    if (IsDataLinkingSupported)
                     {
                         #region Link Documents or subfolders
 
@@ -733,7 +836,7 @@ namespace Gw2Launcher.Client
 
                     if (account == null)
                         return pd.appdata;
-                    if (isSupported)
+                    if (IsDataLinkingSupported)
                         return Path.Combine(pd.accountdata, account.UID.ToString(), pd.appdata.Substring(pd.userprofile.Length + 1));
                     else
                         return Path.Combine(pd.accountdata, ALT_DATA, account.DatFile.UID.ToString(), pd.appdata.Substring(pd.userprofile.Length + 1));
@@ -742,7 +845,7 @@ namespace Gw2Launcher.Client
 
                     if (account == null)
                         return Path.Combine(pd.appdata, COHERENT_DUMPS_FOLDER_NAME);
-                    if (isSupported)
+                    if (IsDataLinkingSupported)
                         return Path.Combine(pd.accountdata, account.UID.ToString(), pd.appdata.Substring(pd.userprofile.Length + 1), COHERENT_DUMPS_FOLDER_NAME);
                     else
                         return Path.Combine(pd.accountdata, ALT_DATA, account.DatFile.UID.ToString(), pd.appdata.Substring(pd.userprofile.Length + 1), COHERENT_DUMPS_FOLDER_NAME);
@@ -751,7 +854,7 @@ namespace Gw2Launcher.Client
 
                     if (account == null)
                         return pd.documents;
-                    if (isSupported)
+                    if (IsDataLinkingSupported)
                         return Path.Combine(pd.accountdata, account.UID.ToString(), pd.documents.Substring(pd.userprofile.Length + 1));
                     else
                         return Path.Combine(pd.accountdata, ALT_DATA, account.DatFile.UID.ToString(), pd.documents.Substring(pd.userprofile.Length + 1));
@@ -760,7 +863,7 @@ namespace Gw2Launcher.Client
 
                     if (account == null)
                         return Path.Combine(pd.documents, MUSIC_FOLDER_NAME);
-                    if (isSupported)
+                    if (IsDataLinkingSupported)
                         return Path.Combine(pd.accountdata, account.UID.ToString(), pd.documents.Substring(pd.userprofile.Length + 1), MUSIC_FOLDER_NAME);
                     else
                         return Path.Combine(pd.accountdata, ALT_DATA, account.DatFile.UID.ToString(), pd.documents.Substring(pd.userprofile.Length + 1), MUSIC_FOLDER_NAME);
@@ -769,7 +872,7 @@ namespace Gw2Launcher.Client
 
                     if (account == null)
                         return Path.Combine(pd.documents, SCREENS_FOLDER_NAME);
-                    if (isSupported)
+                    if (IsDataLinkingSupported)
                         return Path.Combine(pd.accountdata, account.UID.ToString(), pd.documents.Substring(pd.userprofile.Length + 1), SCREENS_FOLDER_NAME);
                     else
                         return Path.Combine(pd.accountdata, ALT_DATA, account.DatFile.UID.ToString(), pd.documents.Substring(pd.userprofile.Length + 1), SCREENS_FOLDER_NAME);
@@ -1024,7 +1127,10 @@ namespace Gw2Launcher.Client
                 account.GfxFile = null;
             }
 
-            if (isSupported)
+            if (Settings.LocalizeAccountExecution.Value)
+                DeleteExecutable(account.UID);
+
+            if (IsDataLinkingSupported)
             {
                 var path = Path.Combine(pd.accountdata, account.UID.ToString());
                 if (Directory.Exists(path))
@@ -1062,7 +1168,7 @@ namespace Gw2Launcher.Client
 
             if (type == PathType.Custom)
             {
-                if (isSupported)
+                if (IsDataLinkingSupported)
                     type = PathType.DataByAccount;
                 else
                     type = PathType.DataByDat;
@@ -1105,7 +1211,7 @@ namespace Gw2Launcher.Client
 
         private static void DeleteProfile(Settings.IAccount account, PathData pd)
         {
-            if (isSupported)
+            if (IsDataLinkingSupported)
                 DeleteProfile(PathType.DataByAccount, account.UID, pd);
             else if (account.DatFile != null)
                 DeleteProfile(PathType.DataByDat, account.DatFile.UID, pd);
@@ -1141,7 +1247,7 @@ namespace Gw2Launcher.Client
                     break;
                 case PathType.Custom:
                     
-                    if (isSupported)
+                    if (IsDataLinkingSupported)
                         type = PathType.DataByAccount;
                     else
                         type = PathType.DataByDat;
@@ -1305,7 +1411,7 @@ namespace Gw2Launcher.Client
 
             string profileRoot = null;
 
-            if (isSupported)
+            if (IsDataLinkingSupported)
             {
                 Func<string, string> getPath = delegate(string v)
                 {
@@ -1355,9 +1461,8 @@ namespace Gw2Launcher.Client
                         {
                             try
                             {
-                                var di = new DirectoryInfo(path);
-                                di.Delete(); //only deleting if it's a link or empty folder
-
+                                //only deleting if it's a link or empty folder
+                                Directory.Delete(path);
                                 exists = false;
                             }
                             catch (Exception e)
@@ -1461,15 +1566,7 @@ namespace Gw2Launcher.Client
                     }
                     else
                     {
-                        file = account.DatFile;
-                        if (file == null)
-                            account.DatFile = file = Settings.CreateDatFile();
-                        customDatPath = pd.GetCustomPath(FileType.Dat, account, false);
-                        account.DatFile.Path = customDatPath;
-                        if (!File.Exists(customDatPath))
-                            File.WriteAllBytes(customDatPath, new byte[0]);
-                        datType = PathType.Custom;
-                        requiresCustom = true;
+                        account.DatFile = file;
                     }
                 }
             }
@@ -1510,21 +1607,7 @@ namespace Gw2Launcher.Client
                     }
                     else
                     {
-                        file = account.GfxFile;
-                        if (file == null)
-                            account.GfxFile = file = Settings.CreateGfxFile();
-                        customGfxPath = pd.GetCustomPath(FileType.Gfx, account, false);
-                        file.Path = customGfxPath;
-                        if (!File.Exists(customGfxPath) && File.Exists(defaultPath))
-                        {
-                            try
-                            {
-                                File.Copy(defaultPath, customGfxPath);
-                            }
-                            catch { }
-                        }
-                        gfxType = PathType.Custom;
-                        requiresCustom = true;
+                        account.GfxFile = file;
                     }
                 }
             }
@@ -1544,7 +1627,7 @@ namespace Gw2Launcher.Client
                     if (pd.IsDocumentsInUserFolder)
                     {
                         string path;
-                        if (isSupported)
+                        if (IsDataLinkingSupported)
                             path = Path.Combine(pd.accountdata, account.UID.ToString(), pd.documents.Substring(pd.userprofile.Length + 1), DAT_NAME);
                         else
                             path = Path.Combine(pd.accountdata, ALT_DATA, account.DatFile.UID.ToString(), pd.documents.Substring(pd.userprofile.Length + 1), DAT_NAME);
@@ -1715,15 +1798,27 @@ namespace Gw2Launcher.Client
 
             #endregion
 
-            var verified = false;
-            if (account.PendingFiles)
+            bool isVerified = false,
+                 isPending = account.PendingFiles;
+
+            if (!isPending && requiresCustom)
+            {
+                string path;
+                if (IsDataLinkingSupported)
+                    path = Path.Combine(pd.accountdata, account.UID.ToString());
+                else
+                    path = Path.Combine(pd.accountdata, ALT_DATA, account.DatFile.UID.ToString());
+                isPending = !Directory.Exists(path);
+            }
+
+            if (isPending)
             {
                 if (requiresCustom)
                 {
                     UpdateProfile(account, pd);
-                    verified = true;
+                    isVerified = true;
                 }
-                else if (isSupported)
+                else if (IsDataLinkingSupported)
                 {
                     //this account no longer needs its custom profile; delete if one exists
                     try
@@ -1738,7 +1833,7 @@ namespace Gw2Launcher.Client
                 account.PendingFiles = false;
             }
 
-            if (!verified)
+            if (!isVerified)
             {
                 if (account.DatFile.IsInitialized && !File.Exists(account.DatFile.Path))
                     account.DatFile.IsInitialized = false;
@@ -1749,7 +1844,7 @@ namespace Gw2Launcher.Client
 
             if (requiresCustom)
             {
-                if (isSupported)
+                if (IsDataLinkingSupported)
                 {
                     if (profileRoot == null)
                         pd.profileUserProfile = Path.Combine(pd.accountdata, account.UID.ToString());
@@ -1766,6 +1861,198 @@ namespace Gw2Launcher.Client
             else
             {
                 return null;
+            }
+        }
+
+        /// <summary>
+        /// Activates the account's specific executable path
+        /// </summary>
+        /// <param name="fi">Path to Gw2.exe</param>
+        /// <returns>Path to this account's executable</returns>
+        public static string ActivateExecutable(Settings.IAccount account, FileInfo fi)
+        {
+            if (!IsGw2LinkingSupported)
+                throw new NotSupportedException();
+
+            var gw2root = fi.DirectoryName;
+            var localroot = Path.Combine(gw2root, LOCALIZED_EXE_FOLDER_NAME);
+            var root = Path.Combine(localroot, account.UID.ToString());
+            var exe = Path.Combine(root, fi.Name);
+
+            if (File.Exists(exe))
+            {
+                if (File.GetLastWriteTimeUtc(exe) == fi.LastWriteTimeUtc)
+                    return exe;
+                File.Delete(exe);
+            }
+            else if (!Directory.Exists(localroot))
+            {
+                try
+                {
+                    Directory.CreateDirectory(localroot);
+                }
+                catch
+                {
+                    //the entire GW2 folder needs permission
+                    if (!Util.ProcessUtil.CreateFolder(gw2root))
+                        throw;
+                    Directory.CreateDirectory(localroot);
+                }
+            }
+
+            var v = Settings.LocalizeAccountExecution;
+            if (v.IsPending && v.Value)
+                v.Commit();
+
+            if (exebits == 0)
+                exebits = Util.FileUtil.GetExecutableBits(fi.FullName);
+
+            if (exebits == 32)
+            {
+                var bin = Path.Combine(gw2root, "bin");
+                if (Directory.Exists(bin))
+                    CopyBinFolder(bin, Path.Combine(root, "bin"));
+            }
+            else
+            {
+                var bin64 = Path.Combine(gw2root, "bin64");
+                if (Directory.Exists(bin64))
+                    CopyBinFolder(bin64, Path.Combine(root, "bin64"));
+            }
+
+            MakeLink(root, gw2root, "Gw2.dat");
+            MakeLink(root, gw2root, "THIRDPARTYSOFTWAREREADME.txt");
+
+            Windows.Symlink.CreateHardLink(exe, fi.FullName);
+
+            return exe;
+        }
+
+        private static bool DeleteExecutable(ushort uid)
+        {
+            var path = Settings.GW2Path.Value;
+            if (string.IsNullOrEmpty(path))
+                return false;
+            var root = Path.Combine(Path.GetDirectoryName(path), LOCALIZED_EXE_FOLDER_NAME, uid.ToString());
+
+            if (Directory.Exists(root))
+            {
+                var name = Path.GetFileName(path);
+                path = Path.Combine(root,name);
+                if (File.Exists(path))
+                {
+                    try
+                    {
+                        File.Delete(path);
+                    }
+                    catch
+                    {
+                        return false;
+                    }
+                }
+
+                try
+                {
+                    Directory.Delete(root, true);
+                }
+                catch
+                {
+                    return false;
+                }
+            }
+
+            return true;
+        }
+
+        private static bool DeleteExecutableRoot()
+        {
+            var path = Settings.GW2Path.Value;
+            if (string.IsNullOrEmpty(path) || Client.Launcher.GetActiveProcessCount() != 0)
+                return false;
+            var root = Path.Combine(Path.GetDirectoryName(path), LOCALIZED_EXE_FOLDER_NAME);
+
+            if (Directory.Exists(root))
+            {
+                try
+                {
+                    Directory.Delete(root, true);
+                }
+                catch
+                {
+                    return false;
+                }
+            }
+
+            return true;
+        }
+
+        /// <summary>
+        /// Makes a hard link
+        /// </summary>
+        /// <param name="link">The directory where the link will be created</param>
+        /// <param name="target">The directory where the target file is located</param>
+        /// <param name="name">The name of the target file</param>
+        private static void MakeLink(string link, string target, string name)
+        {
+            link = Path.Combine(link, name);
+            target = Path.Combine(target, name);
+            if (File.Exists(link))
+                File.Delete(link);
+            if (File.Exists(target))
+                Windows.Symlink.CreateHardLink(link, target);
+        }
+
+        private static void CopyBinFolder(string from, string to)
+        {
+            var existing = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+
+            if (Directory.Exists(to))
+            {
+                foreach (var path in Directory.GetFiles(to))
+                {
+                    existing.Add(Path.GetFileName(path));
+                }
+            }
+            else
+            {
+                Directory.CreateDirectory(to);
+            }
+
+            foreach (var path in Directory.GetFiles(from))
+            {
+                var name = Path.GetFileName(path);
+                var output = Path.Combine(to, name);
+
+                switch (name)
+                {
+                    //these files can be linked
+                    case "CoherentUI_Host.exe":
+                    case "CoherentUI64.dll":
+                    case "CoherentUI.dll":
+
+                        if (existing.Contains(name))
+                            File.Delete(output);
+                        Windows.Symlink.CreateHardLink(output, path);
+
+                        break;
+                    //these files require exclusive access
+                    case "d3dcompiler_43.dll":
+                    case "ffmpegsumo.dll":
+                    case "icudt.dll":
+                    case "libEGL.dll":
+                    case "libGLESv2.dll":
+
+                        File.Copy(path, output, true);
+
+                        break;
+                    //these files are unknown
+                    default:
+
+                        if (!existing.Contains(name))
+                            Windows.Symlink.CreateHardLink(output, path);
+
+                        break;
+                }
             }
         }
     }
