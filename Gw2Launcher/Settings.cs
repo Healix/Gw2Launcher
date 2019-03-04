@@ -17,7 +17,7 @@ namespace Gw2Launcher
         private const ushort WRITE_DELAY = 10000;
         private const string FILE_NAME = "settings.dat";
         private static readonly byte[] HEADER;
-        private const ushort VERSION = 5;
+        private const ushort VERSION = 6;
         private static readonly Type[] FORMS;
 
         public enum SortMode : byte
@@ -4402,6 +4402,16 @@ namespace Gw2Launcher
                         {
                             account._SortKey = (ushort)(i + 1);
                             account._AutomaticLogin = false;
+                        }
+
+                        if (version >= 6)
+                        {
+                            //nothing
+                        }
+                        else
+                        {
+                            //LocalAppData changed
+                            account._PendingFiles = true;
                         }
 
                         sortKeySum += account._SortKey;

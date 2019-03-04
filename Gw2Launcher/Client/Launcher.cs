@@ -3124,12 +3124,6 @@ namespace Gw2Launcher.Client
                     break;
                 case WindowWatcher.WindowChangedEventArgs.EventType.InGameCoherentUIReady:
 
-                    try
-                    {
-                        NativeMethods.BringWindowToTop(e.Handle);
-                    }
-                    catch { }
-
                     OnWindowStateChanged(e.Handle, watcher.Account);
 
                     if (Settings.DeleteCacheOnLaunch.Value)
@@ -3477,9 +3471,9 @@ namespace Gw2Launcher.Client
                                     account.inQueueCount++;
                                     var queue = watcher.Mode == LaunchMode.LaunchSingle ? queueSingle : queueMulti;
                                     queue.Enqueue(new QueuedLaunch(account, watcher.Mode, watcher.Args)
-                                    {
-                                        session = e
-                                    });
+                                        {
+                                            session = e
+                                        });
                                     if (AccountQueued != null)
                                         AccountQueued(account.Settings, watcher.Mode);
 

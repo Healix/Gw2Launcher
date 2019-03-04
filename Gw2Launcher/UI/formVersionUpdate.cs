@@ -358,7 +358,7 @@ namespace Gw2Launcher.UI
         {
             this.Shown -= formVersionUpdate_Shown;
 
-            ShowChangelog();
+            //ShowChangelog();
             DoUpdate();
         }
 

@@ -15,7 +15,7 @@ namespace Gw2Launcher
 {
     static class Program
     {
-        public const byte RELEASE_VERSION = 6;
+        public const byte RELEASE_VERSION = 7;
 
         /// <summary>
         /// The main entry point for the application.

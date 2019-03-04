@@ -216,6 +216,9 @@ namespace Gw2Launcher.UI
                             var parts = line.Split(';');
                             var release = int.Parse(parts[1]);
 
+                            if (release <= Program.RELEASE_VERSION)
+                                return onComplete();
+
                             x = 0;
 
                             if (panelContent.Controls.Count > 0)

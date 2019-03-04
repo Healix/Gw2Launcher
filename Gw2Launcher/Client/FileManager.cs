@@ -568,7 +568,7 @@ namespace Gw2Launcher.Client
         private static void UpdateProfile(Settings.IAccount account, PathData pd)
         {
             //note: added links must be mirrored in DeleteProfile
-
+            
             string path;
             if (IsDataLinkingSupported)
                 path = Path.Combine(pd.accountdata, account.UID.ToString());
@@ -685,6 +685,44 @@ namespace Gw2Launcher.Client
                         catch (Exception e)
                         {
                             Util.Logging.Log(e);
+                        }
+                    }
+
+                    #endregion
+
+                    #region Link LocalAppData
+
+                    var localappdata = Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData, Environment.SpecialFolderOption.DoNotVerify);
+                    if (localappdata.StartsWith(pd.userprofile, StringComparison.OrdinalIgnoreCase))
+                    {
+                        var diLocal = new DirectoryInfo(Path.Combine(path, localappdata.Substring(pd.userprofile.Length + 1)));
+                        create = true;
+
+                        if (diLocal.Exists)
+                        {
+                            if (diLocal.Attributes.HasFlag(FileAttributes.ReparsePoint))
+                            {
+                                create = false;
+                            }
+                            else
+                            {
+                                diLocal.Delete(true);
+                            }
+                        }
+
+                        if (create)
+                        {
+                            try
+                            {
+                                var diTo = new DirectoryInfo(localappdata);
+                                if (!diTo.Exists)
+                                    diTo.Create();
+                                Windows.Symlink.CreateJunction(diLocal.FullName, diTo.FullName);
+                            }
+                            catch (Exception e)
+                            {
+                                Util.Logging.Log(e);
+                            }
                         }
                     }
 
@@ -1270,6 +1308,16 @@ namespace Gw2Launcher.Client
 
                 if (diDumps.Exists && diDumps.Attributes.HasFlag(FileAttributes.ReparsePoint))
                     diDumps.Delete();
+
+                var localappdata = Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData, Environment.SpecialFolderOption.DoNotVerify);
+                if (localappdata.StartsWith(pd.userprofile, StringComparison.OrdinalIgnoreCase))
+                {
+                    var diLocal = new DirectoryInfo(Path.Combine(root, localappdata.Substring(pd.userprofile.Length + 1)));
+                    if (diLocal.Exists && diLocal.Attributes.HasFlag(FileAttributes.ReparsePoint))
+                    {
+                        diLocal.Delete();
+                    }
+                }
 
                 if (diDocs.Exists)
                 {
