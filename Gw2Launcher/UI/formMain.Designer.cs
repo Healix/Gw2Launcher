@@ -56,10 +56,10 @@
             this.nameToolStripMenuItem = new Gw2Launcher.UI.Controls.ToolStripMenuItemStayOpenOnClick();
             this.windowsAccountToolStripMenuItem = new Gw2Launcher.UI.Controls.ToolStripMenuItemStayOpenOnClick();
             this.lastUsedToolStripMenuItem = new Gw2Launcher.UI.Controls.ToolStripMenuItemStayOpenOnClick();
+            this.sortCustomToolStripMenuItem = new Gw2Launcher.UI.Controls.ToolStripMenuItemStayOpenOnClick();
             this.toolStripMenuItem7 = new System.Windows.Forms.ToolStripSeparator();
             this.ascendingToolStripMenuItem = new Gw2Launcher.UI.Controls.ToolStripMenuItemStayOpenOnClick();
             this.descendingToolStripMenuItem = new Gw2Launcher.UI.Controls.ToolStripMenuItemStayOpenOnClick();
-            this.sortCustomToolStripMenuItem = new Gw2Launcher.UI.Controls.ToolStripMenuItemStayOpenOnClick();
             this.toolStripMenuItem16 = new System.Windows.Forms.ToolStripSeparator();
             this.newToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.settingsToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
@@ -128,7 +128,7 @@
             this.panelContainer.Controls.Add(this.gridContainer);
             this.panelContainer.Location = new System.Drawing.Point(12, 12);
             this.panelContainer.Name = "panelContainer";
-            this.panelContainer.Size = new System.Drawing.Size(455, 415);
+            this.panelContainer.Size = new System.Drawing.Size(455, 410);
             this.panelContainer.TabIndex = 0;
             this.panelContainer.MouseClick += new System.Windows.Forms.MouseEventHandler(this.panelContainer_MouseClick);
             // 
@@ -139,11 +139,11 @@
             | System.Windows.Forms.AnchorStyles.Left) 
             | System.Windows.Forms.AnchorStyles.Right)));
             this.gridContainer.BackColor = System.Drawing.Color.White;
-            this.gridContainer.GridSize = new System.Drawing.Size(200, 67);
+            this.gridContainer.GridSize = new System.Drawing.Size(225, 67);
             this.gridContainer.Location = new System.Drawing.Point(5, 5);
             this.gridContainer.Margin = new System.Windows.Forms.Padding(5);
             this.gridContainer.Name = "gridContainer";
-            this.gridContainer.Size = new System.Drawing.Size(443, 403);
+            this.gridContainer.Size = new System.Drawing.Size(443, 398);
             this.gridContainer.TabIndex = 0;
             // 
             // contextMenu
@@ -166,7 +166,7 @@
             this.settingsToolStripMenuItem,
             this.toolsToolStripMenuItem1});
             this.contextMenu.Name = "contextMenu";
-            this.contextMenu.Size = new System.Drawing.Size(208, 320);
+            this.contextMenu.Size = new System.Drawing.Size(208, 276);
             // 
             // cancelPendingLaunchesToolStripMenuItem
             // 
@@ -423,7 +423,7 @@
             // nameToolStripMenuItem
             // 
             this.nameToolStripMenuItem.Name = "nameToolStripMenuItem";
-            this.nameToolStripMenuItem.Size = new System.Drawing.Size(152, 22);
+            this.nameToolStripMenuItem.Size = new System.Drawing.Size(145, 22);
             this.nameToolStripMenuItem.StayOpenOnClick = true;
             this.nameToolStripMenuItem.Text = "Name";
             this.nameToolStripMenuItem.Click += new System.EventHandler(this.nameToolStripMenuItem_Click);
@@ -431,7 +431,7 @@
             // windowsAccountToolStripMenuItem
             // 
             this.windowsAccountToolStripMenuItem.Name = "windowsAccountToolStripMenuItem";
-            this.windowsAccountToolStripMenuItem.Size = new System.Drawing.Size(152, 22);
+            this.windowsAccountToolStripMenuItem.Size = new System.Drawing.Size(145, 22);
             this.windowsAccountToolStripMenuItem.StayOpenOnClick = true;
             this.windowsAccountToolStripMenuItem.Text = "User Account";
             this.windowsAccountToolStripMenuItem.Click += new System.EventHandler(this.windowsAccountToolStripMenuItem_Click);
@@ -439,22 +439,30 @@
             // lastUsedToolStripMenuItem
             // 
             this.lastUsedToolStripMenuItem.Name = "lastUsedToolStripMenuItem";
-            this.lastUsedToolStripMenuItem.Size = new System.Drawing.Size(152, 22);
+            this.lastUsedToolStripMenuItem.Size = new System.Drawing.Size(145, 22);
             this.lastUsedToolStripMenuItem.StayOpenOnClick = true;
             this.lastUsedToolStripMenuItem.Text = "Last Used";
             this.lastUsedToolStripMenuItem.Click += new System.EventHandler(this.lastUsedToolStripMenuItem_Click);
             // 
+            // sortCustomToolStripMenuItem
+            // 
+            this.sortCustomToolStripMenuItem.Name = "sortCustomToolStripMenuItem";
+            this.sortCustomToolStripMenuItem.Size = new System.Drawing.Size(145, 22);
+            this.sortCustomToolStripMenuItem.StayOpenOnClick = true;
+            this.sortCustomToolStripMenuItem.Text = "Custom";
+            this.sortCustomToolStripMenuItem.Click += new System.EventHandler(this.sortCustomToolStripMenuItem_Click);
+            // 
             // toolStripMenuItem7
             // 
             this.toolStripMenuItem7.Name = "toolStripMenuItem7";
-            this.toolStripMenuItem7.Size = new System.Drawing.Size(149, 6);
+            this.toolStripMenuItem7.Size = new System.Drawing.Size(142, 6);
             // 
             // ascendingToolStripMenuItem
             // 
             this.ascendingToolStripMenuItem.Checked = true;
             this.ascendingToolStripMenuItem.CheckState = System.Windows.Forms.CheckState.Checked;
             this.ascendingToolStripMenuItem.Name = "ascendingToolStripMenuItem";
-            this.ascendingToolStripMenuItem.Size = new System.Drawing.Size(152, 22);
+            this.ascendingToolStripMenuItem.Size = new System.Drawing.Size(145, 22);
             this.ascendingToolStripMenuItem.StayOpenOnClick = true;
             this.ascendingToolStripMenuItem.Text = "Ascending";
             this.ascendingToolStripMenuItem.Click += new System.EventHandler(this.ascendingToolStripMenuItem_Click);
@@ -462,18 +470,10 @@
             // descendingToolStripMenuItem
             // 
             this.descendingToolStripMenuItem.Name = "descendingToolStripMenuItem";
-            this.descendingToolStripMenuItem.Size = new System.Drawing.Size(152, 22);
+            this.descendingToolStripMenuItem.Size = new System.Drawing.Size(145, 22);
             this.descendingToolStripMenuItem.StayOpenOnClick = true;
             this.descendingToolStripMenuItem.Text = "Descending";
             this.descendingToolStripMenuItem.Click += new System.EventHandler(this.descendingToolStripMenuItem_Click);
-            // 
-            // sortCustomToolStripMenuItem
-            // 
-            this.sortCustomToolStripMenuItem.Name = "sortCustomToolStripMenuItem";
-            this.sortCustomToolStripMenuItem.Size = new System.Drawing.Size(152, 22);
-            this.sortCustomToolStripMenuItem.StayOpenOnClick = true;
-            this.sortCustomToolStripMenuItem.Text = "Custom";
-            this.sortCustomToolStripMenuItem.Click += new System.EventHandler(this.sortCustomToolStripMenuItem_Click);
             // 
             // toolStripMenuItem16
             // 
@@ -867,9 +867,9 @@
             // formMain
             // 
             this.AllowDrop = true;
-            this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
-            this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
-            this.ClientSize = new System.Drawing.Size(479, 439);
+            this.AutoScaleDimensions = new System.Drawing.SizeF(96F, 96F);
+            this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Dpi;
+            this.ClientSize = new System.Drawing.Size(479, 434);
             this.Controls.Add(this.panelContainer);
             this.Icon = global::Gw2Launcher.Properties.Resources.Gw2Launcher;
             this.MaximizeBox = false;

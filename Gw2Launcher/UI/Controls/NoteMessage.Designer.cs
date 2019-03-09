@@ -108,12 +108,11 @@
             this.labelMessage.Name = "labelMessage";
             this.labelMessage.Size = new System.Drawing.Size(0, 15);
             this.labelMessage.TabIndex = 119;
-            this.labelMessage.SizeChanged += new System.EventHandler(this.labelMessage_SizeChanged);
             // 
             // NoteMessage
             // 
-            this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
-            this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
+            this.AutoScaleDimensions = new System.Drawing.SizeF(96F, 96F);
+            this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Dpi;
             this.BackColor = System.Drawing.Color.White;
             this.Controls.Add(this.labelMessage);
             this.Controls.Add(this.panelBottom);

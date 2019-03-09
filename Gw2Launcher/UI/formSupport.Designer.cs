@@ -28,13 +28,13 @@
         /// </summary>
         private void InitializeComponent()
         {
-            System.Windows.Forms.DataGridViewCellStyle dataGridViewCellStyle11 = new System.Windows.Forms.DataGridViewCellStyle();
-            System.Windows.Forms.DataGridViewCellStyle dataGridViewCellStyle8 = new System.Windows.Forms.DataGridViewCellStyle();
-            System.Windows.Forms.DataGridViewCellStyle dataGridViewCellStyle9 = new System.Windows.Forms.DataGridViewCellStyle();
-            System.Windows.Forms.DataGridViewCellStyle dataGridViewCellStyle10 = new System.Windows.Forms.DataGridViewCellStyle();
-            System.Windows.Forms.DataGridViewCellStyle dataGridViewCellStyle14 = new System.Windows.Forms.DataGridViewCellStyle();
-            System.Windows.Forms.DataGridViewCellStyle dataGridViewCellStyle12 = new System.Windows.Forms.DataGridViewCellStyle();
-            System.Windows.Forms.DataGridViewCellStyle dataGridViewCellStyle13 = new System.Windows.Forms.DataGridViewCellStyle();
+            System.Windows.Forms.DataGridViewCellStyle dataGridViewCellStyle4 = new System.Windows.Forms.DataGridViewCellStyle();
+            System.Windows.Forms.DataGridViewCellStyle dataGridViewCellStyle7 = new System.Windows.Forms.DataGridViewCellStyle();
+            System.Windows.Forms.DataGridViewCellStyle dataGridViewCellStyle1 = new System.Windows.Forms.DataGridViewCellStyle();
+            System.Windows.Forms.DataGridViewCellStyle dataGridViewCellStyle2 = new System.Windows.Forms.DataGridViewCellStyle();
+            System.Windows.Forms.DataGridViewCellStyle dataGridViewCellStyle3 = new System.Windows.Forms.DataGridViewCellStyle();
+            System.Windows.Forms.DataGridViewCellStyle dataGridViewCellStyle5 = new System.Windows.Forms.DataGridViewCellStyle();
+            System.Windows.Forms.DataGridViewCellStyle dataGridViewCellStyle6 = new System.Windows.Forms.DataGridViewCellStyle();
             this.buttonCancel = new System.Windows.Forms.Button();
             this.buttonOK = new System.Windows.Forms.Button();
             this.panelDiagnostics = new System.Windows.Forms.Panel();
@@ -69,12 +69,6 @@
             this.progressLoginServer = new System.Windows.Forms.ProgressBar();
             this.buttonLoginServerLookup = new System.Windows.Forms.Button();
             this.gridLoginServers = new System.Windows.Forms.DataGridView();
-            this.columnLoginServerEnable = new System.Windows.Forms.DataGridViewCheckBoxColumn();
-            this.columnLoginServer = new System.Windows.Forms.DataGridViewTextBoxColumn();
-            this.columnLoginServerRegion = new System.Windows.Forms.DataGridViewTextBoxColumn();
-            this.columnLoginServerResponseTime = new System.Windows.Forms.DataGridViewTextBoxColumn();
-            this.columnLoginServerPing = new System.Windows.Forms.DataGridViewTextBoxColumn();
-            this.columnLoginServerFill = new System.Windows.Forms.DataGridViewTextBoxColumn();
             this.label6 = new System.Windows.Forms.Label();
             this.label8 = new System.Windows.Forms.Label();
             this.panelPatching = new System.Windows.Forms.Panel();
@@ -86,12 +80,6 @@
             this.label17 = new System.Windows.Forms.Label();
             this.label18 = new System.Windows.Forms.Label();
             this.gridPatchServers = new System.Windows.Forms.DataGridView();
-            this.columnPatchServerEnable = new System.Windows.Forms.DataGridViewCheckBoxColumn();
-            this.columnPatchServer = new System.Windows.Forms.DataGridViewTextBoxColumn();
-            this.columnPatchServerResponseTime = new System.Windows.Forms.DataGridViewTextBoxColumn();
-            this.columnPatchServerPing = new System.Windows.Forms.DataGridViewTextBoxColumn();
-            this.columnPatchServerStatus = new System.Windows.Forms.DataGridViewTextBoxColumn();
-            this.columnPatchServerFill = new System.Windows.Forms.DataGridViewTextBoxColumn();
             this.progressPatchServer = new System.Windows.Forms.ProgressBar();
             this.panelPatchIntercept = new System.Windows.Forms.Panel();
             this.checkPatchInterceptEnable = new System.Windows.Forms.CheckBox();
@@ -104,6 +92,16 @@
             this.buttonAuthentication = new Gw2Launcher.UI.Controls.SidebarButton();
             this.buttonRepair = new Gw2Launcher.UI.Controls.SidebarButton();
             this.buttonDiagnostics = new Gw2Launcher.UI.Controls.SidebarButton();
+            this.columnLoginServerEnable = new System.Windows.Forms.DataGridViewCheckBoxColumn();
+            this.columnLoginServer = new System.Windows.Forms.DataGridViewTextBoxColumn();
+            this.columnLoginServerRegion = new System.Windows.Forms.DataGridViewTextBoxColumn();
+            this.columnLoginServerResponseTime = new System.Windows.Forms.DataGridViewTextBoxColumn();
+            this.columnLoginServerPing = new System.Windows.Forms.DataGridViewTextBoxColumn();
+            this.columnPatchServerEnable = new System.Windows.Forms.DataGridViewCheckBoxColumn();
+            this.columnPatchServer = new System.Windows.Forms.DataGridViewTextBoxColumn();
+            this.columnPatchServerResponseTime = new System.Windows.Forms.DataGridViewTextBoxColumn();
+            this.columnPatchServerPing = new System.Windows.Forms.DataGridViewTextBoxColumn();
+            this.columnPatchServerStatus = new System.Windows.Forms.DataGridViewTextBoxColumn();
             this.panelDiagnostics.SuspendLayout();
             this.panelRepair.SuspendLayout();
             this.panelAuthentication.SuspendLayout();
@@ -515,16 +513,15 @@
             this.columnLoginServer,
             this.columnLoginServerRegion,
             this.columnLoginServerResponseTime,
-            this.columnLoginServerPing,
-            this.columnLoginServerFill});
-            dataGridViewCellStyle11.Alignment = System.Windows.Forms.DataGridViewContentAlignment.MiddleLeft;
-            dataGridViewCellStyle11.BackColor = System.Drawing.SystemColors.Control;
-            dataGridViewCellStyle11.Font = new System.Drawing.Font("Segoe UI", 8.25F);
-            dataGridViewCellStyle11.ForeColor = System.Drawing.SystemColors.ControlText;
-            dataGridViewCellStyle11.SelectionBackColor = System.Drawing.SystemColors.Highlight;
-            dataGridViewCellStyle11.SelectionForeColor = System.Drawing.SystemColors.HighlightText;
-            dataGridViewCellStyle11.WrapMode = System.Windows.Forms.DataGridViewTriState.False;
-            this.gridLoginServers.DefaultCellStyle = dataGridViewCellStyle11;
+            this.columnLoginServerPing});
+            dataGridViewCellStyle4.Alignment = System.Windows.Forms.DataGridViewContentAlignment.MiddleLeft;
+            dataGridViewCellStyle4.BackColor = System.Drawing.SystemColors.Control;
+            dataGridViewCellStyle4.Font = new System.Drawing.Font("Segoe UI", 8.25F);
+            dataGridViewCellStyle4.ForeColor = System.Drawing.SystemColors.ControlText;
+            dataGridViewCellStyle4.SelectionBackColor = System.Drawing.SystemColors.Highlight;
+            dataGridViewCellStyle4.SelectionForeColor = System.Drawing.SystemColors.HighlightText;
+            dataGridViewCellStyle4.WrapMode = System.Windows.Forms.DataGridViewTriState.False;
+            this.gridLoginServers.DefaultCellStyle = dataGridViewCellStyle4;
             this.gridLoginServers.EditMode = System.Windows.Forms.DataGridViewEditMode.EditProgrammatically;
             this.gridLoginServers.Location = new System.Drawing.Point(21, 98);
             this.gridLoginServers.MultiSelect = false;
@@ -539,58 +536,6 @@
             this.gridLoginServers.CellContentClick += new System.Windows.Forms.DataGridViewCellEventHandler(this.gridLoginServers_CellContentClick);
             this.gridLoginServers.SelectionChanged += new System.EventHandler(this.gridLoginServers_SelectionChanged);
             this.gridLoginServers.SortCompare += new System.Windows.Forms.DataGridViewSortCompareEventHandler(this.gridLoginServers_SortCompare);
-            // 
-            // columnLoginServerEnable
-            // 
-            this.columnLoginServerEnable.HeaderText = "";
-            this.columnLoginServerEnable.Name = "columnLoginServerEnable";
-            this.columnLoginServerEnable.ReadOnly = true;
-            this.columnLoginServerEnable.ToolTipText = "Use the selected server";
-            this.columnLoginServerEnable.Width = 25;
-            // 
-            // columnLoginServer
-            // 
-            this.columnLoginServer.HeaderText = "Address";
-            this.columnLoginServer.Name = "columnLoginServer";
-            this.columnLoginServer.ReadOnly = true;
-            // 
-            // columnLoginServerRegion
-            // 
-            dataGridViewCellStyle8.Alignment = System.Windows.Forms.DataGridViewContentAlignment.MiddleCenter;
-            this.columnLoginServerRegion.DefaultCellStyle = dataGridViewCellStyle8;
-            this.columnLoginServerRegion.HeaderText = "";
-            this.columnLoginServerRegion.Name = "columnLoginServerRegion";
-            this.columnLoginServerRegion.ReadOnly = true;
-            this.columnLoginServerRegion.ToolTipText = "Region";
-            this.columnLoginServerRegion.Width = 40;
-            // 
-            // columnLoginServerResponseTime
-            // 
-            dataGridViewCellStyle9.Alignment = System.Windows.Forms.DataGridViewContentAlignment.MiddleCenter;
-            this.columnLoginServerResponseTime.DefaultCellStyle = dataGridViewCellStyle9;
-            this.columnLoginServerResponseTime.HeaderText = "Response";
-            this.columnLoginServerResponseTime.Name = "columnLoginServerResponseTime";
-            this.columnLoginServerResponseTime.ReadOnly = true;
-            this.columnLoginServerResponseTime.ToolTipText = "Time to connect";
-            this.columnLoginServerResponseTime.Width = 70;
-            // 
-            // columnLoginServerPing
-            // 
-            dataGridViewCellStyle10.Alignment = System.Windows.Forms.DataGridViewContentAlignment.MiddleCenter;
-            this.columnLoginServerPing.DefaultCellStyle = dataGridViewCellStyle10;
-            this.columnLoginServerPing.HeaderText = "Ping";
-            this.columnLoginServerPing.Name = "columnLoginServerPing";
-            this.columnLoginServerPing.ReadOnly = true;
-            this.columnLoginServerPing.ToolTipText = "Network response time";
-            this.columnLoginServerPing.Width = 70;
-            // 
-            // columnLoginServerFill
-            // 
-            this.columnLoginServerFill.AutoSizeMode = System.Windows.Forms.DataGridViewAutoSizeColumnMode.Fill;
-            this.columnLoginServerFill.HeaderText = "";
-            this.columnLoginServerFill.Name = "columnLoginServerFill";
-            this.columnLoginServerFill.ReadOnly = true;
-            this.columnLoginServerFill.SortMode = System.Windows.Forms.DataGridViewColumnSortMode.NotSortable;
             // 
             // label6
             // 
@@ -724,16 +669,15 @@
             this.columnPatchServer,
             this.columnPatchServerResponseTime,
             this.columnPatchServerPing,
-            this.columnPatchServerStatus,
-            this.columnPatchServerFill});
-            dataGridViewCellStyle14.Alignment = System.Windows.Forms.DataGridViewContentAlignment.MiddleLeft;
-            dataGridViewCellStyle14.BackColor = System.Drawing.SystemColors.Control;
-            dataGridViewCellStyle14.Font = new System.Drawing.Font("Segoe UI", 8.25F);
-            dataGridViewCellStyle14.ForeColor = System.Drawing.SystemColors.ControlText;
-            dataGridViewCellStyle14.SelectionBackColor = System.Drawing.SystemColors.Highlight;
-            dataGridViewCellStyle14.SelectionForeColor = System.Drawing.SystemColors.HighlightText;
-            dataGridViewCellStyle14.WrapMode = System.Windows.Forms.DataGridViewTriState.False;
-            this.gridPatchServers.DefaultCellStyle = dataGridViewCellStyle14;
+            this.columnPatchServerStatus});
+            dataGridViewCellStyle7.Alignment = System.Windows.Forms.DataGridViewContentAlignment.MiddleLeft;
+            dataGridViewCellStyle7.BackColor = System.Drawing.SystemColors.Control;
+            dataGridViewCellStyle7.Font = new System.Drawing.Font("Segoe UI", 8.25F);
+            dataGridViewCellStyle7.ForeColor = System.Drawing.SystemColors.ControlText;
+            dataGridViewCellStyle7.SelectionBackColor = System.Drawing.SystemColors.Highlight;
+            dataGridViewCellStyle7.SelectionForeColor = System.Drawing.SystemColors.HighlightText;
+            dataGridViewCellStyle7.WrapMode = System.Windows.Forms.DataGridViewTriState.False;
+            this.gridPatchServers.DefaultCellStyle = dataGridViewCellStyle7;
             this.gridPatchServers.EditMode = System.Windows.Forms.DataGridViewEditMode.EditProgrammatically;
             this.gridPatchServers.Location = new System.Drawing.Point(21, 98);
             this.gridPatchServers.MultiSelect = false;
@@ -748,56 +692,6 @@
             this.gridPatchServers.CellContentClick += new System.Windows.Forms.DataGridViewCellEventHandler(this.gridPatchServers_CellContentClick);
             this.gridPatchServers.SelectionChanged += new System.EventHandler(this.gridPatchServers_SelectionChanged);
             this.gridPatchServers.SortCompare += new System.Windows.Forms.DataGridViewSortCompareEventHandler(this.gridPatchServers_SortCompare);
-            // 
-            // columnPatchServerEnable
-            // 
-            this.columnPatchServerEnable.HeaderText = "";
-            this.columnPatchServerEnable.Name = "columnPatchServerEnable";
-            this.columnPatchServerEnable.ReadOnly = true;
-            this.columnPatchServerEnable.ToolTipText = "Use the selected server";
-            this.columnPatchServerEnable.Width = 25;
-            // 
-            // columnPatchServer
-            // 
-            this.columnPatchServer.HeaderText = "Address";
-            this.columnPatchServer.Name = "columnPatchServer";
-            this.columnPatchServer.ReadOnly = true;
-            // 
-            // columnPatchServerResponseTime
-            // 
-            dataGridViewCellStyle12.Alignment = System.Windows.Forms.DataGridViewContentAlignment.MiddleCenter;
-            this.columnPatchServerResponseTime.DefaultCellStyle = dataGridViewCellStyle12;
-            this.columnPatchServerResponseTime.HeaderText = "Response";
-            this.columnPatchServerResponseTime.Name = "columnPatchServerResponseTime";
-            this.columnPatchServerResponseTime.ReadOnly = true;
-            this.columnPatchServerResponseTime.ToolTipText = "HTTP response time";
-            this.columnPatchServerResponseTime.Width = 70;
-            // 
-            // columnPatchServerPing
-            // 
-            dataGridViewCellStyle13.Alignment = System.Windows.Forms.DataGridViewContentAlignment.MiddleCenter;
-            this.columnPatchServerPing.DefaultCellStyle = dataGridViewCellStyle13;
-            this.columnPatchServerPing.HeaderText = "Ping";
-            this.columnPatchServerPing.Name = "columnPatchServerPing";
-            this.columnPatchServerPing.ReadOnly = true;
-            this.columnPatchServerPing.ToolTipText = "Network response time";
-            this.columnPatchServerPing.Width = 70;
-            // 
-            // columnPatchServerStatus
-            // 
-            this.columnPatchServerStatus.AutoSizeMode = System.Windows.Forms.DataGridViewAutoSizeColumnMode.Fill;
-            this.columnPatchServerStatus.HeaderText = "Status";
-            this.columnPatchServerStatus.Name = "columnPatchServerStatus";
-            this.columnPatchServerStatus.ReadOnly = true;
-            this.columnPatchServerStatus.Visible = false;
-            // 
-            // columnPatchServerFill
-            // 
-            this.columnPatchServerFill.AutoSizeMode = System.Windows.Forms.DataGridViewAutoSizeColumnMode.Fill;
-            this.columnPatchServerFill.HeaderText = "";
-            this.columnPatchServerFill.Name = "columnPatchServerFill";
-            this.columnPatchServerFill.ReadOnly = true;
-            this.columnPatchServerFill.SortMode = System.Windows.Forms.DataGridViewColumnSortMode.NotSortable;
             // 
             // progressPatchServer
             // 
@@ -894,12 +788,16 @@
             this.buttonPatchingIntercept.BorderColor = System.Drawing.SystemColors.ControlDark;
             this.buttonPatchingIntercept.Cursor = System.Windows.Forms.Cursors.Hand;
             this.buttonPatchingIntercept.Font = new System.Drawing.Font("Segoe UI", 8.25F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+            this.buttonPatchingIntercept.Index = -1;
             this.buttonPatchingIntercept.Location = new System.Drawing.Point(0, 200);
             this.buttonPatchingIntercept.Margin = new System.Windows.Forms.Padding(0);
             this.buttonPatchingIntercept.Name = "buttonPatchingIntercept";
+            this.buttonPatchingIntercept.Panels = null;
             this.buttonPatchingIntercept.Selected = false;
             this.buttonPatchingIntercept.SelectedColor = System.Drawing.SystemColors.Control;
             this.buttonPatchingIntercept.Size = new System.Drawing.Size(180, 40);
+            this.buttonPatchingIntercept.SubitemForeColor = System.Drawing.Color.FromArgb(((int)(((byte)(75)))), ((int)(((byte)(75)))), ((int)(((byte)(75)))));
+            this.buttonPatchingIntercept.SubItems = null;
             this.buttonPatchingIntercept.TabIndex = 7;
             this.buttonPatchingIntercept.Text = "Servers / Proxy";
             // 
@@ -912,12 +810,16 @@
             this.buttonPatching.BorderColor = System.Drawing.SystemColors.ControlDark;
             this.buttonPatching.Cursor = System.Windows.Forms.Cursors.Hand;
             this.buttonPatching.Font = new System.Drawing.Font("Segoe UI", 8.25F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+            this.buttonPatching.Index = -1;
             this.buttonPatching.Location = new System.Drawing.Point(0, 160);
             this.buttonPatching.Margin = new System.Windows.Forms.Padding(0);
             this.buttonPatching.Name = "buttonPatching";
+            this.buttonPatching.Panels = null;
             this.buttonPatching.Selected = false;
             this.buttonPatching.SelectedColor = System.Drawing.SystemColors.Control;
             this.buttonPatching.Size = new System.Drawing.Size(180, 40);
+            this.buttonPatching.SubitemForeColor = System.Drawing.Color.FromArgb(((int)(((byte)(75)))), ((int)(((byte)(75)))), ((int)(((byte)(75)))));
+            this.buttonPatching.SubItems = null;
             this.buttonPatching.TabIndex = 6;
             this.buttonPatching.Text = "Servers / Patching";
             // 
@@ -930,12 +832,16 @@
             this.buttonAuthentication.BorderColor = System.Drawing.SystemColors.ControlDark;
             this.buttonAuthentication.Cursor = System.Windows.Forms.Cursors.Hand;
             this.buttonAuthentication.Font = new System.Drawing.Font("Segoe UI", 8.25F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+            this.buttonAuthentication.Index = -1;
             this.buttonAuthentication.Location = new System.Drawing.Point(0, 120);
             this.buttonAuthentication.Margin = new System.Windows.Forms.Padding(0);
             this.buttonAuthentication.Name = "buttonAuthentication";
+            this.buttonAuthentication.Panels = null;
             this.buttonAuthentication.Selected = false;
             this.buttonAuthentication.SelectedColor = System.Drawing.SystemColors.Control;
             this.buttonAuthentication.Size = new System.Drawing.Size(180, 40);
+            this.buttonAuthentication.SubitemForeColor = System.Drawing.Color.FromArgb(((int)(((byte)(75)))), ((int)(((byte)(75)))), ((int)(((byte)(75)))));
+            this.buttonAuthentication.SubItems = null;
             this.buttonAuthentication.TabIndex = 5;
             this.buttonAuthentication.Text = "Servers / Authentication";
             // 
@@ -948,12 +854,16 @@
             this.buttonRepair.BorderColor = System.Drawing.SystemColors.ControlDark;
             this.buttonRepair.Cursor = System.Windows.Forms.Cursors.Hand;
             this.buttonRepair.Font = new System.Drawing.Font("Segoe UI", 8.25F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+            this.buttonRepair.Index = -1;
             this.buttonRepair.Location = new System.Drawing.Point(0, 80);
             this.buttonRepair.Margin = new System.Windows.Forms.Padding(0);
             this.buttonRepair.Name = "buttonRepair";
+            this.buttonRepair.Panels = null;
             this.buttonRepair.Selected = false;
             this.buttonRepair.SelectedColor = System.Drawing.SystemColors.Control;
             this.buttonRepair.Size = new System.Drawing.Size(180, 40);
+            this.buttonRepair.SubitemForeColor = System.Drawing.Color.FromArgb(((int)(((byte)(75)))), ((int)(((byte)(75)))), ((int)(((byte)(75)))));
+            this.buttonRepair.SubItems = null;
             this.buttonRepair.TabIndex = 4;
             this.buttonRepair.Text = "Repair";
             // 
@@ -966,19 +876,111 @@
             this.buttonDiagnostics.BorderColor = System.Drawing.SystemColors.ControlDark;
             this.buttonDiagnostics.Cursor = System.Windows.Forms.Cursors.Hand;
             this.buttonDiagnostics.Font = new System.Drawing.Font("Segoe UI", 8.25F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+            this.buttonDiagnostics.Index = -1;
             this.buttonDiagnostics.Location = new System.Drawing.Point(0, 40);
             this.buttonDiagnostics.Margin = new System.Windows.Forms.Padding(0);
             this.buttonDiagnostics.Name = "buttonDiagnostics";
+            this.buttonDiagnostics.Panels = null;
             this.buttonDiagnostics.Selected = false;
             this.buttonDiagnostics.SelectedColor = System.Drawing.SystemColors.Control;
             this.buttonDiagnostics.Size = new System.Drawing.Size(180, 40);
+            this.buttonDiagnostics.SubitemForeColor = System.Drawing.Color.FromArgb(((int)(((byte)(75)))), ((int)(((byte)(75)))), ((int)(((byte)(75)))));
+            this.buttonDiagnostics.SubItems = null;
             this.buttonDiagnostics.TabIndex = 3;
             this.buttonDiagnostics.Text = "Diagnostics";
             // 
+            // columnLoginServerEnable
+            // 
+            this.columnLoginServerEnable.HeaderText = "";
+            this.columnLoginServerEnable.Name = "columnLoginServerEnable";
+            this.columnLoginServerEnable.ReadOnly = true;
+            this.columnLoginServerEnable.ToolTipText = "Use the selected server";
+            this.columnLoginServerEnable.Width = 25;
+            // 
+            // columnLoginServer
+            // 
+            this.columnLoginServer.AutoSizeMode = System.Windows.Forms.DataGridViewAutoSizeColumnMode.Fill;
+            this.columnLoginServer.HeaderText = "Address";
+            this.columnLoginServer.Name = "columnLoginServer";
+            this.columnLoginServer.ReadOnly = true;
+            // 
+            // columnLoginServerRegion
+            // 
+            dataGridViewCellStyle1.Alignment = System.Windows.Forms.DataGridViewContentAlignment.MiddleCenter;
+            this.columnLoginServerRegion.DefaultCellStyle = dataGridViewCellStyle1;
+            this.columnLoginServerRegion.HeaderText = "";
+            this.columnLoginServerRegion.Name = "columnLoginServerRegion";
+            this.columnLoginServerRegion.ReadOnly = true;
+            this.columnLoginServerRegion.ToolTipText = "Region";
+            this.columnLoginServerRegion.Width = 40;
+            // 
+            // columnLoginServerResponseTime
+            // 
+            dataGridViewCellStyle2.Alignment = System.Windows.Forms.DataGridViewContentAlignment.MiddleCenter;
+            this.columnLoginServerResponseTime.DefaultCellStyle = dataGridViewCellStyle2;
+            this.columnLoginServerResponseTime.HeaderText = "Response";
+            this.columnLoginServerResponseTime.Name = "columnLoginServerResponseTime";
+            this.columnLoginServerResponseTime.ReadOnly = true;
+            this.columnLoginServerResponseTime.ToolTipText = "Time to connect";
+            this.columnLoginServerResponseTime.Width = 70;
+            // 
+            // columnLoginServerPing
+            // 
+            dataGridViewCellStyle3.Alignment = System.Windows.Forms.DataGridViewContentAlignment.MiddleCenter;
+            this.columnLoginServerPing.DefaultCellStyle = dataGridViewCellStyle3;
+            this.columnLoginServerPing.HeaderText = "Ping";
+            this.columnLoginServerPing.Name = "columnLoginServerPing";
+            this.columnLoginServerPing.ReadOnly = true;
+            this.columnLoginServerPing.ToolTipText = "Network response time";
+            this.columnLoginServerPing.Width = 70;
+            // 
+            // columnPatchServerEnable
+            // 
+            this.columnPatchServerEnable.HeaderText = "";
+            this.columnPatchServerEnable.Name = "columnPatchServerEnable";
+            this.columnPatchServerEnable.ReadOnly = true;
+            this.columnPatchServerEnable.ToolTipText = "Use the selected server";
+            this.columnPatchServerEnable.Width = 25;
+            // 
+            // columnPatchServer
+            // 
+            this.columnPatchServer.AutoSizeMode = System.Windows.Forms.DataGridViewAutoSizeColumnMode.Fill;
+            this.columnPatchServer.HeaderText = "Address";
+            this.columnPatchServer.Name = "columnPatchServer";
+            this.columnPatchServer.ReadOnly = true;
+            // 
+            // columnPatchServerResponseTime
+            // 
+            dataGridViewCellStyle5.Alignment = System.Windows.Forms.DataGridViewContentAlignment.MiddleCenter;
+            this.columnPatchServerResponseTime.DefaultCellStyle = dataGridViewCellStyle5;
+            this.columnPatchServerResponseTime.HeaderText = "Response";
+            this.columnPatchServerResponseTime.Name = "columnPatchServerResponseTime";
+            this.columnPatchServerResponseTime.ReadOnly = true;
+            this.columnPatchServerResponseTime.ToolTipText = "HTTP response time";
+            this.columnPatchServerResponseTime.Width = 70;
+            // 
+            // columnPatchServerPing
+            // 
+            dataGridViewCellStyle6.Alignment = System.Windows.Forms.DataGridViewContentAlignment.MiddleCenter;
+            this.columnPatchServerPing.DefaultCellStyle = dataGridViewCellStyle6;
+            this.columnPatchServerPing.HeaderText = "Ping";
+            this.columnPatchServerPing.Name = "columnPatchServerPing";
+            this.columnPatchServerPing.ReadOnly = true;
+            this.columnPatchServerPing.ToolTipText = "Network response time";
+            this.columnPatchServerPing.Width = 70;
+            // 
+            // columnPatchServerStatus
+            // 
+            this.columnPatchServerStatus.AutoSizeMode = System.Windows.Forms.DataGridViewAutoSizeColumnMode.Fill;
+            this.columnPatchServerStatus.HeaderText = "Status";
+            this.columnPatchServerStatus.Name = "columnPatchServerStatus";
+            this.columnPatchServerStatus.ReadOnly = true;
+            this.columnPatchServerStatus.Visible = false;
+            // 
             // formSupport
             // 
-            this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
-            this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
+            this.AutoScaleDimensions = new System.Drawing.SizeF(96F, 96F);
+            this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Dpi;
             this.ClientSize = new System.Drawing.Size(568, 370);
             this.Controls.Add(this.buttonCancel);
             this.Controls.Add(this.buttonOK);
@@ -1069,22 +1071,20 @@
         private System.Windows.Forms.Label labelPatchInterceptShowServer;
         private System.Windows.Forms.Label label19;
         private System.Windows.Forms.Label label20;
-        private System.Windows.Forms.DataGridViewCheckBoxColumn columnPatchServerEnable;
-        private System.Windows.Forms.DataGridViewTextBoxColumn columnPatchServer;
-        private System.Windows.Forms.DataGridViewTextBoxColumn columnPatchServerResponseTime;
-        private System.Windows.Forms.DataGridViewTextBoxColumn columnPatchServerPing;
-        private System.Windows.Forms.DataGridViewTextBoxColumn columnPatchServerStatus;
-        private System.Windows.Forms.DataGridViewTextBoxColumn columnPatchServerFill;
         private System.Windows.Forms.Label labelLoginServerDns;
         private Controls.ArrowButton arrowLoginExpand;
         private Controls.ArrowButton arrowAssetExpand;
+        private Controls.CopyButton copyLogin;
+        private Controls.CopyButton copyAsset;
         private System.Windows.Forms.DataGridViewCheckBoxColumn columnLoginServerEnable;
         private System.Windows.Forms.DataGridViewTextBoxColumn columnLoginServer;
         private System.Windows.Forms.DataGridViewTextBoxColumn columnLoginServerRegion;
         private System.Windows.Forms.DataGridViewTextBoxColumn columnLoginServerResponseTime;
         private System.Windows.Forms.DataGridViewTextBoxColumn columnLoginServerPing;
-        private System.Windows.Forms.DataGridViewTextBoxColumn columnLoginServerFill;
-        private Controls.CopyButton copyLogin;
-        private Controls.CopyButton copyAsset;
+        private System.Windows.Forms.DataGridViewCheckBoxColumn columnPatchServerEnable;
+        private System.Windows.Forms.DataGridViewTextBoxColumn columnPatchServer;
+        private System.Windows.Forms.DataGridViewTextBoxColumn columnPatchServerResponseTime;
+        private System.Windows.Forms.DataGridViewTextBoxColumn columnPatchServerPing;
+        private System.Windows.Forms.DataGridViewTextBoxColumn columnPatchServerStatus;
     }
 }

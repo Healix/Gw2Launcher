@@ -5825,6 +5825,16 @@ namespace Gw2Launcher
             }
         }
 
+        public static IAccount CreateVoidAccount()
+        {
+            return new Account(0);
+        }
+
+        public static IDatFile CreateVoidDatFile()
+        {
+            return new DatFile(0);
+        }
+
         public static IDatFile CreateDatFile()
         {
             lock(_DatFiles)

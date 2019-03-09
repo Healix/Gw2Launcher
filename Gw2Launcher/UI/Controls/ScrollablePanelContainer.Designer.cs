@@ -28,13 +28,23 @@
         /// </summary>
         private void InitializeComponent()
         {
-            this.scrollV = new FlatVScrollBar();
             this.panelContainer = new System.Windows.Forms.Panel();
+            this.scrollV = new Gw2Launcher.UI.Controls.FlatVScrollBar();
             this.SuspendLayout();
+            // 
+            // panelContainer
+            // 
+            this.panelContainer.Anchor = ((System.Windows.Forms.AnchorStyles)((((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom) 
+            | System.Windows.Forms.AnchorStyles.Left) 
+            | System.Windows.Forms.AnchorStyles.Right)));
+            this.panelContainer.Location = new System.Drawing.Point(3, 3);
+            this.panelContainer.Name = "panelContainer";
+            this.panelContainer.Size = new System.Drawing.Size(323, 236);
+            this.panelContainer.TabIndex = 1;
             // 
             // scrollV
             // 
-            this.scrollV.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom)
+            this.scrollV.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom) 
             | System.Windows.Forms.AnchorStyles.Right)));
             this.scrollV.Location = new System.Drawing.Point(330, 3);
             this.scrollV.Maximum = 100;
@@ -44,20 +54,9 @@
             this.scrollV.Value = 0;
             this.scrollV.ValueChanged += new System.EventHandler<int>(this.scrollV_ValueChanged);
             // 
-            // panelContainer
-            // 
-            this.panelContainer.Anchor = ((System.Windows.Forms.AnchorStyles)((((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom)
-            | System.Windows.Forms.AnchorStyles.Left)
-            | System.Windows.Forms.AnchorStyles.Right)));
-            this.panelContainer.Location = new System.Drawing.Point(3, 3);
-            this.panelContainer.Name = "panelContainer";
-            this.panelContainer.Size = new System.Drawing.Size(323, 236);
-            this.panelContainer.TabIndex = 1;
-            // 
             // ScrollablePanelContainer
             // 
-            this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
-            this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
+            this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Inherit;
             this.Controls.Add(this.panelContainer);
             this.Controls.Add(this.scrollV);
             this.Name = "ScrollablePanelContainer";

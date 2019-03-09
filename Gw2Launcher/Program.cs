@@ -8,14 +8,15 @@ using System.Drawing;
 using System.Diagnostics;
 using System.IO;
 using System.IO.MemoryMappedFiles;
-using Gw2Launcher.Windows;
 using System.Runtime.InteropServices;
+using Gw2Launcher.Windows;
+using Gw2Launcher.Windows.Native;
 
 namespace Gw2Launcher
 {
     static class Program
     {
-        public const byte RELEASE_VERSION = 7;
+        public const byte RELEASE_VERSION = 8;
 
         /// <summary>
         /// The main entry point for the application.
@@ -583,6 +584,55 @@ namespace Gw2Launcher
 
             #endregion
 
+            #region -update [path] [path] [etc]
+
+            Messaging.UpdateMessage update = null;
+            if (args.Length > 0 && args[0] == "-update")
+            {
+                var files = new List<string>();
+
+                for (var i = 1; i < args.Length; i++)
+                {
+                    try
+                    {
+                        if (File.Exists(args[i]))
+                        {
+                            files.Add(Path.GetFullPath(args[i]));
+                        }
+                        else if (Directory.Exists(args[i]))
+                        {
+                            files.AddRange(Directory.GetFiles(args[i], "*.dat"));
+                        }
+                        else
+                        {
+                            var d = Path.GetDirectoryName(args[i]);
+                            var searchAll = Path.GetFileName(d) == "*";
+                            if (searchAll)
+                                d = Path.GetDirectoryName(d);
+                            var n = Path.GetFileName(args[i]);
+                            if (n.Length == 0)
+                                n = "*.dat";
+
+                            files.AddRange(Directory.GetFiles(d, n, searchAll ? SearchOption.AllDirectories : SearchOption.TopDirectoryOnly));
+                        }
+                    }
+                    catch { }
+                }
+
+                if (files.Count > 0)
+                {
+                    update = new Messaging.UpdateMessage(files.Count);
+                    update.files.AddRange(files);
+                    Settings.Silent = true;
+                }
+                else
+                {
+                    return 0;
+                }
+            }
+
+            #endregion
+
             #region Launch from args
 
             Messaging.LaunchMessage launch = null;
@@ -744,6 +794,9 @@ namespace Gw2Launcher
                 if (launch != null)
                     launch.Send();
 
+                if (update != null)
+                    update.Send();
+
                 mutex.Dispose();
                 return 0;
             }
@@ -792,6 +845,12 @@ namespace Gw2Launcher
                 {
                     launch.Send();
                     launch = null;
+                }
+
+                if (update != null)
+                {
+                    update.Send();
+                    update = null;
                 }
 
                 Application.Run(f);

@@ -117,7 +117,7 @@
   <resheader name="writer">
     <value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </resheader>
-  <data name="label92.Text" xml:space="preserve">
+  <data name="labelAccountBarInfo.Text" xml:space="preserve">
     <value>The menu can be opened by right-clicking the top/left grab bar or any empty space
 
 The bar can be moved by dragging the top/left grab bar, or resized by dragging the bottom/right grab bar. Moving the bar to the middle edge of the screen will snap it to that edge</value>

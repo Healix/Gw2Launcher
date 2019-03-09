@@ -1442,6 +1442,38 @@ namespace Gw2Launcher.Client
             return false;
         }
 
+        public static bool DeleteProfile(string path)
+        {
+            byte count = 0;
+
+            do
+            {
+                try
+                {
+                    if (Directory.Exists(path))
+                        Directory.Delete(path, true);
+
+                    return true;
+                }
+                catch { }
+
+                try
+                {
+                    foreach (var f in Directory.EnumerateFileSystemEntries(path, "*", SearchOption.AllDirectories))
+                    {
+                        var a1 = File.GetAttributes(f);
+                        var a2 = a1 & ~(FileAttributes.ReadOnly | FileAttributes.System);
+                        if (a2 != a1)
+                            File.SetAttributes(f, a2);
+                    }
+                }
+                catch { }
+            }
+            while (++count < 2);
+
+            return false;
+        }
+
         /// <summary>
         /// Activates any data files for the account
         /// </summary>
@@ -1913,6 +1945,45 @@ namespace Gw2Launcher.Client
         }
 
         /// <summary>
+        /// Activates a profile for the dat file
+        /// </summary>
+        /// <param name="path">The dat file</param>
+        /// <returns></returns>
+        public static IProfileInformation Activate(string dat)
+        {
+            var pd = new PathData();
+            if (!pd.IsAppDataInUserFolder)
+                throw new NotSupportedException();
+            var path = Util.FileUtil.GetTemporaryFolderName(Path.GetDirectoryName(dat), "temp-{0}");
+            if (path == null)
+                throw new IOException();
+            
+            var appdata = Path.Combine(path, pd.appdata.Substring(pd.userprofile.Length + 1));
+            var fi = new FileInfo(Path.Combine(appdata, DAT_NAME));
+
+            try
+            {
+                new DirectoryInfo(appdata).Create();
+                if (pd.IsDocumentsInUserFolder)
+                    new DirectoryInfo(Path.Combine(path, pd.documents.Substring(pd.userprofile.Length + 1))).Create();
+                if (fi.Exists)
+                    fi.Delete();
+
+                Windows.Symlink.CreateHardLink(fi.FullName, dat);
+            }
+            catch
+            {
+                Directory.Delete(path, true);
+                throw;
+            }
+
+            pd.profileUserProfile = path;
+            pd.profileAppData = appdata;
+
+            return pd;
+        }
+
+        /// <summary>
         /// Activates the account's specific executable path
         /// </summary>
         /// <param name="fi">Path to Gw2.exe</param>
@@ -2079,7 +2150,16 @@ namespace Gw2Launcher.Client
                     case "CoherentUI.dll":
 
                         if (existing.Contains(name))
-                            File.Delete(output);
+                        {
+                            try
+                            {
+                                File.Delete(output);
+                            }
+                            catch (UnauthorizedAccessException)
+                            {
+                                continue;
+                            }
+                        }
                         Windows.Symlink.CreateHardLink(output, path);
 
                         break;

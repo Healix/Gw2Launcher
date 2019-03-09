@@ -28,6 +28,7 @@
         /// </summary>
         private void InitializeComponent()
         {
+            System.Security.SecureString secureString1 = new System.Security.SecureString();
             this.textPassword = new Gw2Launcher.UI.Controls.PasswordBox();
             this.label1 = new System.Windows.Forms.Label();
             this.buttonOK = new System.Windows.Forms.Button();
@@ -38,6 +39,7 @@
             this.textPassword.Font = new System.Drawing.Font("Segoe UI", 8.25F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
             this.textPassword.Location = new System.Drawing.Point(15, 30);
             this.textPassword.Name = "textPassword";
+            this.textPassword.Password = secureString1;
             this.textPassword.PasswordChar = '*';
             this.textPassword.Size = new System.Drawing.Size(218, 22);
             this.textPassword.TabIndex = 3;
@@ -68,8 +70,8 @@
             // 
             // formPassword
             // 
-            this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
-            this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
+            this.AutoScaleDimensions = new System.Drawing.SizeF(96F, 96F);
+            this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Dpi;
             this.ClientSize = new System.Drawing.Size(342, 67);
             this.Controls.Add(this.buttonOK);
             this.Controls.Add(this.label1);

@@ -78,6 +78,16 @@ namespace Gw2Launcher.UI
         {
             InitializeComponent();
 
+            var scale = this.CurrentAutoScaleDimensions.Width / 96f;
+            if (scale != 1)
+            {
+                foreach (DataGridViewColumn col in gridAccounts.Columns)
+                {
+                    if (col.AutoSizeMode != DataGridViewAutoSizeColumnMode.Fill)
+                        col.Width = (int)(col.Width * scale + 0.5f);
+                }
+            }
+
             radioAccountShare.Enabled = Client.FileManager.IsDataLinkingSupported;
 
             this.fileType = type;

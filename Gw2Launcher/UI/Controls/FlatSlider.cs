@@ -32,8 +32,6 @@ namespace Gw2Launcher.UI.Controls
         {
             brush = new SolidBrush(colorBar);
 
-            sliderY = 0;
-            barX = 0;
             barH = 4;
             sliderW = 10;
             sliderH = 20;
@@ -53,6 +51,27 @@ namespace Gw2Launcher.UI.Controls
             SetStyle(ControlStyles.Selectable, true);
 
             this.TabStop = false;
+        }
+
+        protected override void ScaleControl(SizeF factor, BoundsSpecified specified)
+        {
+            var scale = factor.Width;
+
+            if (scale != 1)
+            {
+                var v = Value;
+
+                barH = (int)(4 * scale + 0.5f);
+                sliderW = (int)(10 * scale + 0.5f);
+                sliderH = (int)(20 * scale + 0.5f);
+                barW = (int)(100 * scale + 0.5f);
+
+                base.ScaleControl(factor, specified);
+
+                Value = v;
+            }
+            else
+                base.ScaleControl(factor, specified);
         }
 
         [System.ComponentModel.Browsable(false)]

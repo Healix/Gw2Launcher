@@ -49,7 +49,7 @@
             this.checkEmpty.Location = new System.Drawing.Point(17, 125);
             this.checkEmpty.Name = "checkEmpty";
             this.checkEmpty.Size = new System.Drawing.Size(15, 14);
-            this.checkEmpty.TabIndex = 3;
+            this.checkEmpty.TabIndex = 0;
             this.checkEmpty.UseVisualStyleBackColor = true;
             this.checkEmpty.CheckedChanged += new System.EventHandler(this.checkEmpty_CheckedChanged);
             // 
@@ -60,7 +60,7 @@
             this.textEmpty.Location = new System.Drawing.Point(39, 122);
             this.textEmpty.Name = "textEmpty";
             this.textEmpty.Size = new System.Drawing.Size(82, 22);
-            this.textEmpty.TabIndex = 4;
+            this.textEmpty.TabIndex = 1;
             this.textEmpty.Text = "0, 0";
             // 
             // label4
@@ -112,7 +112,7 @@
             this.checkPlay.Location = new System.Drawing.Point(17, 197);
             this.checkPlay.Name = "checkPlay";
             this.checkPlay.Size = new System.Drawing.Size(15, 14);
-            this.checkPlay.TabIndex = 7;
+            this.checkPlay.TabIndex = 2;
             this.checkPlay.UseVisualStyleBackColor = true;
             this.checkPlay.CheckedChanged += new System.EventHandler(this.checkPlay_CheckedChanged);
             // 
@@ -123,7 +123,7 @@
             this.textPlay.Location = new System.Drawing.Point(39, 194);
             this.textPlay.Name = "textPlay";
             this.textPlay.Size = new System.Drawing.Size(82, 22);
-            this.textPlay.TabIndex = 8;
+            this.textPlay.TabIndex = 3;
             this.textPlay.Text = "0, 0";
             // 
             // label5
@@ -156,7 +156,7 @@
             this.buttonOK.Location = new System.Drawing.Point(228, 207);
             this.buttonOK.Name = "buttonOK";
             this.buttonOK.Size = new System.Drawing.Size(86, 35);
-            this.buttonOK.TabIndex = 101;
+            this.buttonOK.TabIndex = 4;
             this.buttonOK.Text = "OK";
             this.buttonOK.UseVisualStyleBackColor = true;
             this.buttonOK.Click += new System.EventHandler(this.buttonOK_Click);
@@ -189,8 +189,8 @@
             // 
             // formAutologinConfig
             // 
-            this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
-            this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
+            this.AutoScaleDimensions = new System.Drawing.SizeF(96F, 96F);
+            this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Dpi;
             this.ClientSize = new System.Drawing.Size(326, 254);
             this.Controls.Add(this.labelSelectPlay);
             this.Controls.Add(this.labelSelectEmpty);

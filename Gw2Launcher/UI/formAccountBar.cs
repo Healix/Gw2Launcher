@@ -1809,9 +1809,9 @@ namespace Gw2Launcher.UI
             }
         }
 
-        void Launcher_AccountStateChanged(ushort uid, Client.Launcher.AccountState state, Client.Launcher.AccountState previousState, object data)
+        void Launcher_AccountStateChanged(Settings.IAccount account, Client.Launcher.AccountStateEventArgs e)
         {
-            switch (state)
+            switch (e.State)
             {
                 case Client.Launcher.AccountState.Active:
                 case Client.Launcher.AccountState.ActiveGame:
@@ -1824,7 +1824,7 @@ namespace Gw2Launcher.UI
                     if (Util.Invoke.IfRequired(this,
                         delegate
                         {
-                            Launcher_AccountStateChanged(uid, state, previousState, data);
+                            Launcher_AccountStateChanged(account, e);
                         }))
                         return;
 
@@ -1835,19 +1835,19 @@ namespace Gw2Launcher.UI
 
             AccountButton b;
 
-            switch (state)
+            switch (e.State)
             {
                 case Client.Launcher.AccountState.Active:
                 case Client.Launcher.AccountState.ActiveGame:
 
-                    if (accounts.TryGetValue(uid, out b) && !b.IsActive)
+                    if (accounts.TryGetValue(e.UID, out b) && !b.IsActive)
                         OnAccountActive(b);
 
                     break;
                 case Client.Launcher.AccountState.Exited:
                 case Client.Launcher.AccountState.None:
 
-                    if (accounts.TryGetValue(uid, out b))
+                    if (accounts.TryGetValue(e.UID, out b))
                     {
                         b.IsInUse = false;
                         if (b.IsActive)
@@ -1859,7 +1859,7 @@ namespace Gw2Launcher.UI
                 case Client.Launcher.AccountState.WaitingForOtherProcessToExit:
                 case Client.Launcher.AccountState.Launching:
 
-                    if (accounts.TryGetValue(uid, out b))
+                    if (accounts.TryGetValue(e.UID, out b))
                         b.IsInUse = true;
 
                     break;

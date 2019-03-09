@@ -70,7 +70,7 @@
             this.label5.Font = new System.Drawing.Font("Segoe UI Semilight", 8.25F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
             this.label5.Location = new System.Drawing.Point(10, 10);
             this.label5.Name = "label5";
-            this.label5.Size = new System.Drawing.Size(200, 13);
+            this.label5.Size = new System.Drawing.Size(203, 13);
             this.label5.TabIndex = 13;
             this.label5.Text = "Enter the name of an existing or new user";
             // 
@@ -86,8 +86,8 @@
             // 
             // formWindowsAccount
             // 
-            this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
-            this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
+            this.AutoScaleDimensions = new System.Drawing.SizeF(96F, 96F);
+            this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Dpi;
             this.ClientSize = new System.Drawing.Size(253, 242);
             this.Controls.Add(this.label2);
             this.Controls.Add(this.buttonOK);

@@ -15,7 +15,7 @@ namespace Gw2Launcher.UI
 {
     public partial class formUpdating : Form
     {
-        private Dictionary<ushort, AccountItem> accounts;
+        private Dictionary<Settings.IAccount, AccountItem> accounts;
         private int remaining, total;
 
         private string datPath;
@@ -51,7 +51,7 @@ namespace Gw2Launcher.UI
             this.processChanged = new ManualResetEvent(false);
             this.result = DialogResult.OK;
             this.closeOnCompletion = closeOnCompletion;
-            this.accounts = new Dictionary<ushort, AccountItem>();
+            this.accounts = new Dictionary<Settings.IAccount, AccountItem>();
             this.total = accounts != null ? accounts.Count * 2 : 0;
             this.remaining = total;
 
@@ -66,7 +66,7 @@ namespace Gw2Launcher.UI
             {
                 foreach (var account in accounts)
                 {
-                    this.accounts[account.UID] = new AccountItem(account);
+                    this.accounts[account] = new AccountItem(account);
                 }
             }
 
@@ -114,8 +114,8 @@ namespace Gw2Launcher.UI
             this.total += 2;
             this.remaining += 2;
             progressUpdating.Maximum = total;
-            if (!this.accounts.ContainsKey(account.UID))
-                this.accounts[account.UID] = new AccountItem(account);
+            if (!this.accounts.ContainsKey(account))
+                this.accounts[account] = new AccountItem(account);
 
             if (cancelDelayedComplete != null)
             {
@@ -542,7 +542,7 @@ namespace Gw2Launcher.UI
             OnProcessChanged();
         }
 
-        void Launcher_AccountStateChanged(ushort uid, Client.Launcher.AccountState state, Client.Launcher.AccountState previousState, object data)
+        void Launcher_AccountStateChanged(Settings.IAccount account, Client.Launcher.AccountStateEventArgs e)
         {
             if (this.InvokeRequired)
             {
@@ -551,7 +551,7 @@ namespace Gw2Launcher.UI
                     this.BeginInvoke(new MethodInvoker(
                         delegate
                         {
-                            Launcher_AccountStateChanged(uid, state, previousState, data);
+                            Launcher_AccountStateChanged(account, e);
                         }));
                 }
                 catch (Exception ex)
@@ -562,12 +562,12 @@ namespace Gw2Launcher.UI
             }
 
             AccountItem item;
-            if (accounts.TryGetValue(uid,out item))
+            if (accounts.TryGetValue(account, out item))
             {
                 timeout = DateTime.UtcNow;
                 OnTimeoutChanged();
 
-                switch (state)
+                switch (e.State)
                 {
                     //case Client.Launcher.AccountState.Active:
                     //case Client.Launcher.AccountState.ActiveGame:
@@ -575,7 +575,7 @@ namespace Gw2Launcher.UI
                     case Client.Launcher.AccountState.Updating:
 
                         activeAccount = item.Account;
-                        var p = data as Process;
+                        var p = e.Data as Process;
                         if (p != activeProcess)
                         {
                             activeProcess = p;

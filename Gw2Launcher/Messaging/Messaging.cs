@@ -20,6 +20,7 @@ namespace Gw2Launcher.Messaging
             Show = 1,
             Launch = 2,
             LaunchMap = 3,
+            UpdateMap = 4,
         }
 
         public static bool Post(IntPtr hWnd, MessageType type, int value)

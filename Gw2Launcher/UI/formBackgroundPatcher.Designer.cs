@@ -84,7 +84,7 @@
             this.checkEnabled.Location = new System.Drawing.Point(10, 10);
             this.checkEnabled.Name = "checkEnabled";
             this.checkEnabled.Size = new System.Drawing.Size(176, 17);
-            this.checkEnabled.TabIndex = 57;
+            this.checkEnabled.TabIndex = 0;
             this.checkEnabled.Text = "Enable background patching";
             this.checkEnabled.UseVisualStyleBackColor = true;
             this.checkEnabled.CheckedChanged += new System.EventHandler(this.checkEnabled_CheckedChanged);
@@ -297,7 +297,7 @@
             this.checkSpeedLimit.Location = new System.Drawing.Point(14, 78);
             this.checkSpeedLimit.Name = "checkSpeedLimit";
             this.checkSpeedLimit.Size = new System.Drawing.Size(15, 14);
-            this.checkSpeedLimit.TabIndex = 57;
+            this.checkSpeedLimit.TabIndex = 1;
             this.checkSpeedLimit.UseVisualStyleBackColor = true;
             this.checkSpeedLimit.CheckedChanged += new System.EventHandler(this.checkSpeedLimit_CheckedChanged);
             // 
@@ -385,7 +385,7 @@
             this.checkUseHttps.Location = new System.Drawing.Point(14, 124);
             this.checkUseHttps.Name = "checkUseHttps";
             this.checkUseHttps.Size = new System.Drawing.Size(78, 17);
-            this.checkUseHttps.TabIndex = 67;
+            this.checkUseHttps.TabIndex = 3;
             this.checkUseHttps.Text = "Use HTTPS";
             this.checkUseHttps.UseVisualStyleBackColor = true;
             this.checkUseHttps.Click += new System.EventHandler(this.checkUseHttps_Click);
@@ -433,7 +433,7 @@
             this.sliderThreads.Location = new System.Drawing.Point(14, 26);
             this.sliderThreads.Name = "sliderThreads";
             this.sliderThreads.Size = new System.Drawing.Size(100, 20);
-            this.sliderThreads.TabIndex = 55;
+            this.sliderThreads.TabIndex = 0;
             this.sliderThreads.TabStop = false;
             this.sliderThreads.Value = 0.5F;
             this.sliderThreads.ValueChanged += new System.EventHandler<float>(this.sliderThreads_ValueChanged);
@@ -444,7 +444,7 @@
             this.sliderSpeedLimit.Location = new System.Drawing.Point(36, 75);
             this.sliderSpeedLimit.Name = "sliderSpeedLimit";
             this.sliderSpeedLimit.Size = new System.Drawing.Size(145, 20);
-            this.sliderSpeedLimit.TabIndex = 59;
+            this.sliderSpeedLimit.TabIndex = 2;
             this.sliderSpeedLimit.TabStop = false;
             this.sliderSpeedLimit.Value = 1F;
             this.sliderSpeedLimit.ValueChanged += new System.EventHandler<float>(this.sliderSpeedLimit_ValueChanged);
@@ -452,11 +452,11 @@
             // panelAdvanced
             // 
             this.panelAdvanced.Location = new System.Drawing.Point(229, 8);
+            this.panelAdvanced.Margin = new System.Windows.Forms.Padding(48, 22, 48, 22);
             this.panelAdvanced.Name = "panelAdvanced";
             this.panelAdvanced.Size = new System.Drawing.Size(261, 153);
             this.panelAdvanced.TabIndex = 78;
             this.panelAdvanced.Visible = false;
-            this.panelAdvanced.ShowBorder = true;
             // 
             // labelAdvanced
             // 
@@ -488,8 +488,8 @@
             // 
             // formBackgroundPatcher
             // 
-            this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
-            this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
+            this.AutoScaleDimensions = new System.Drawing.SizeF(96F, 96F);
+            this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Dpi;
             this.ClientSize = new System.Drawing.Size(505, 169);
             this.Controls.Add(this.panelAdvancedContent);
             this.Controls.Add(this.panelAdvanced);

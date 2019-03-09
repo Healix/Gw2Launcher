@@ -97,7 +97,7 @@
             this.radioDatShareDefault.Location = new System.Drawing.Point(162, 136);
             this.radioDatShareDefault.Name = "radioDatShareDefault";
             this.radioDatShareDefault.Size = new System.Drawing.Size(133, 17);
-            this.radioDatShareDefault.TabIndex = 33;
+            this.radioDatShareDefault.TabIndex = 2;
             this.radioDatShareDefault.TabStop = true;
             this.radioDatShareDefault.Text = "Share the default file";
             this.radioDatShareDefault.UseVisualStyleBackColor = true;
@@ -109,7 +109,7 @@
             this.radioDatCopyDefault.Location = new System.Drawing.Point(162, 115);
             this.radioDatCopyDefault.Name = "radioDatCopyDefault";
             this.radioDatCopyDefault.Size = new System.Drawing.Size(130, 17);
-            this.radioDatCopyDefault.TabIndex = 32;
+            this.radioDatCopyDefault.TabIndex = 1;
             this.radioDatCopyDefault.TabStop = true;
             this.radioDatCopyDefault.Text = "Copy the default file";
             this.radioDatCopyDefault.UseVisualStyleBackColor = true;
@@ -120,7 +120,7 @@
             this.radioDatNew.Location = new System.Drawing.Point(16, 115);
             this.radioDatNew.Name = "radioDatNew";
             this.radioDatNew.Size = new System.Drawing.Size(111, 17);
-            this.radioDatNew.TabIndex = 29;
+            this.radioDatNew.TabIndex = 0;
             this.radioDatNew.TabStop = true;
             this.radioDatNew.Text = "Create a new file";
             this.radioDatNew.UseVisualStyleBackColor = true;
@@ -163,7 +163,7 @@
             this.buttonCancel.Location = new System.Drawing.Point(144, 343);
             this.buttonCancel.Name = "buttonCancel";
             this.buttonCancel.Size = new System.Drawing.Size(86, 35);
-            this.buttonCancel.TabIndex = 101;
+            this.buttonCancel.TabIndex = 1;
             this.buttonCancel.Text = "Cancel";
             this.buttonCancel.UseVisualStyleBackColor = true;
             this.buttonCancel.Click += new System.EventHandler(this.buttonCancel_Click);
@@ -175,7 +175,7 @@
             this.buttonOK.Location = new System.Drawing.Point(240, 343);
             this.buttonOK.Name = "buttonOK";
             this.buttonOK.Size = new System.Drawing.Size(86, 35);
-            this.buttonOK.TabIndex = 102;
+            this.buttonOK.TabIndex = 0;
             this.buttonOK.Text = "OK";
             this.buttonOK.UseVisualStyleBackColor = true;
             this.buttonOK.Click += new System.EventHandler(this.buttonOK_Click);
@@ -213,7 +213,7 @@
             this.radioGfxShareDefault.Location = new System.Drawing.Point(162, 121);
             this.radioGfxShareDefault.Name = "radioGfxShareDefault";
             this.radioGfxShareDefault.Size = new System.Drawing.Size(133, 17);
-            this.radioGfxShareDefault.TabIndex = 31;
+            this.radioGfxShareDefault.TabIndex = 2;
             this.radioGfxShareDefault.TabStop = true;
             this.radioGfxShareDefault.Text = "Share the default file";
             this.radioGfxShareDefault.UseVisualStyleBackColor = true;
@@ -225,7 +225,7 @@
             this.radioGfxCopyDefault.Location = new System.Drawing.Point(162, 100);
             this.radioGfxCopyDefault.Name = "radioGfxCopyDefault";
             this.radioGfxCopyDefault.Size = new System.Drawing.Size(130, 17);
-            this.radioGfxCopyDefault.TabIndex = 30;
+            this.radioGfxCopyDefault.TabIndex = 1;
             this.radioGfxCopyDefault.TabStop = true;
             this.radioGfxCopyDefault.Text = "Copy the default file";
             this.radioGfxCopyDefault.UseVisualStyleBackColor = true;
@@ -236,7 +236,7 @@
             this.radioGfxNew.Location = new System.Drawing.Point(16, 100);
             this.radioGfxNew.Name = "radioGfxNew";
             this.radioGfxNew.Size = new System.Drawing.Size(111, 17);
-            this.radioGfxNew.TabIndex = 29;
+            this.radioGfxNew.TabIndex = 0;
             this.radioGfxNew.TabStop = true;
             this.radioGfxNew.Text = "Create a new file";
             this.radioGfxNew.UseVisualStyleBackColor = true;
@@ -285,8 +285,8 @@
             // 
             // formBrowseLocalDatQuick
             // 
-            this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
-            this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
+            this.AutoScaleDimensions = new System.Drawing.SizeF(96F, 96F);
+            this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Dpi;
             this.ClientSize = new System.Drawing.Size(455, 390);
             this.Controls.Add(this.buttonCancel);
             this.Controls.Add(this.buttonOK);

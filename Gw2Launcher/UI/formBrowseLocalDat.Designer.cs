@@ -58,7 +58,7 @@
             this.radioAccountCopy.Location = new System.Drawing.Point(18, 69);
             this.radioAccountCopy.Name = "radioAccountCopy";
             this.radioAccountCopy.Size = new System.Drawing.Size(74, 17);
-            this.radioAccountCopy.TabIndex = 15;
+            this.radioAccountCopy.TabIndex = 0;
             this.radioAccountCopy.TabStop = true;
             this.radioAccountCopy.Text = "Copy from";
             this.radioAccountCopy.UseVisualStyleBackColor = true;
@@ -70,7 +70,7 @@
             this.radioAccountShare.Location = new System.Drawing.Point(108, 69);
             this.radioAccountShare.Name = "radioAccountShare";
             this.radioAccountShare.Size = new System.Drawing.Size(75, 17);
-            this.radioAccountShare.TabIndex = 16;
+            this.radioAccountShare.TabIndex = 1;
             this.radioAccountShare.Text = "Share with";
             this.radioAccountShare.UseVisualStyleBackColor = true;
             this.radioAccountShare.CheckedChanged += new System.EventHandler(this.radio_CheckedChanged);
@@ -101,7 +101,7 @@
             this.buttonBrowse.Location = new System.Drawing.Point(292, 253);
             this.buttonBrowse.Name = "buttonBrowse";
             this.buttonBrowse.Size = new System.Drawing.Size(43, 23);
-            this.buttonBrowse.TabIndex = 21;
+            this.buttonBrowse.TabIndex = 6;
             this.buttonBrowse.Text = "...";
             this.buttonBrowse.UseVisualStyleBackColor = true;
             this.buttonBrowse.Click += new System.EventHandler(this.buttonBrowse_Click);
@@ -113,7 +113,7 @@
             this.textBrowse.Name = "textBrowse";
             this.textBrowse.ReadOnly = true;
             this.textBrowse.Size = new System.Drawing.Size(268, 22);
-            this.textBrowse.TabIndex = 20;
+            this.textBrowse.TabIndex = 5;
             // 
             // radioFileCopy
             // 
@@ -121,7 +121,7 @@
             this.radioFileCopy.Location = new System.Drawing.Point(18, 226);
             this.radioFileCopy.Name = "radioFileCopy";
             this.radioFileCopy.Size = new System.Drawing.Size(74, 17);
-            this.radioFileCopy.TabIndex = 22;
+            this.radioFileCopy.TabIndex = 3;
             this.radioFileCopy.Text = "Copy from";
             this.radioFileCopy.UseVisualStyleBackColor = true;
             this.radioFileCopy.CheckedChanged += new System.EventHandler(this.radio_CheckedChanged);
@@ -133,7 +133,7 @@
             this.buttonCancel.Location = new System.Drawing.Point(113, 349);
             this.buttonCancel.Name = "buttonCancel";
             this.buttonCancel.Size = new System.Drawing.Size(86, 35);
-            this.buttonCancel.TabIndex = 24;
+            this.buttonCancel.TabIndex = 10;
             this.buttonCancel.Text = "Cancel";
             this.buttonCancel.UseVisualStyleBackColor = true;
             this.buttonCancel.Click += new System.EventHandler(this.buttonCancel_Click);
@@ -145,7 +145,7 @@
             this.buttonOK.Location = new System.Drawing.Point(209, 349);
             this.buttonOK.Name = "buttonOK";
             this.buttonOK.Size = new System.Drawing.Size(86, 35);
-            this.buttonOK.TabIndex = 23;
+            this.buttonOK.TabIndex = 9;
             this.buttonOK.Text = "OK";
             this.buttonOK.UseVisualStyleBackColor = true;
             this.buttonOK.Click += new System.EventHandler(this.buttonOK_Click);
@@ -173,7 +173,7 @@
             this.gridAccounts.RowHeadersVisible = false;
             this.gridAccounts.SelectionMode = System.Windows.Forms.DataGridViewSelectionMode.FullRowSelect;
             this.gridAccounts.Size = new System.Drawing.Size(317, 95);
-            this.gridAccounts.TabIndex = 25;
+            this.gridAccounts.TabIndex = 2;
             this.gridAccounts.CellMouseEnter += new System.Windows.Forms.DataGridViewCellEventHandler(this.gridAccounts_CellMouseEnter);
             // 
             // columnName
@@ -213,7 +213,7 @@
             this.radioFileMove.Location = new System.Drawing.Point(108, 226);
             this.radioFileMove.Name = "radioFileMove";
             this.radioFileMove.Size = new System.Drawing.Size(77, 17);
-            this.radioFileMove.TabIndex = 26;
+            this.radioFileMove.TabIndex = 4;
             this.radioFileMove.Text = "Move from";
             this.radioFileMove.UseVisualStyleBackColor = true;
             this.radioFileMove.CheckedChanged += new System.EventHandler(this.radio_CheckedChanged);
@@ -224,7 +224,7 @@
             this.radioCreateNew.Location = new System.Drawing.Point(18, 310);
             this.radioCreateNew.Name = "radioCreateNew";
             this.radioCreateNew.Size = new System.Drawing.Size(120, 17);
-            this.radioCreateNew.TabIndex = 29;
+            this.radioCreateNew.TabIndex = 7;
             this.radioCreateNew.Text = "Create a new {0} file";
             this.radioCreateNew.UseVisualStyleBackColor = true;
             this.radioCreateNew.CheckedChanged += new System.EventHandler(this.radio_CheckedChanged);
@@ -251,8 +251,8 @@
             // 
             // formBrowseLocalDat
             // 
-            this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
-            this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
+            this.AutoScaleDimensions = new System.Drawing.SizeF(96F, 96F);
+            this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Dpi;
             this.ClientSize = new System.Drawing.Size(392, 396);
             this.Controls.Add(this.radioCreateNew);
             this.Controls.Add(this.label3);

@@ -110,8 +110,6 @@ namespace Gw2Launcher.Client
                 private Account account;
                 private RegisteredEvent[] events;
                 private WinEventDelegate proc;
-                private bool waitForeground;
-                private bool waitMinimize;
 
                 public Events(Account account)
                 {
@@ -145,8 +143,6 @@ namespace Gw2Launcher.Client
 
                     try
                     {
-                        waitForeground = true;
-
                         this.events[0] = new RegisteredEvent(pid, 0x0003, 0x0017, proc);
                         this.events[1] = new RegisteredEvent(pid, 0x8004, 0x8004, proc);
                     }

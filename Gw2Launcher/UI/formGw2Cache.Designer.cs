@@ -52,7 +52,7 @@
             this.labelSize.Font = new System.Drawing.Font("Segoe UI Semilight", 8.25F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
             this.labelSize.Location = new System.Drawing.Point(9, 269);
             this.labelSize.Name = "labelSize";
-            this.labelSize.Size = new System.Drawing.Size(85, 13);
+            this.labelSize.Size = new System.Drawing.Size(86, 13);
             this.labelSize.TabIndex = 19;
             this.labelSize.Text = "0 MB in 0 folders";
             // 
@@ -163,8 +163,8 @@
             // 
             // formGw2Cache
             // 
-            this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
-            this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
+            this.AutoScaleDimensions = new System.Drawing.SizeF(96F, 96F);
+            this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Dpi;
             this.ClientSize = new System.Drawing.Size(426, 295);
             this.Controls.Add(this.checkDeleteCacheOnLaunch);
             this.Controls.Add(this.label1);

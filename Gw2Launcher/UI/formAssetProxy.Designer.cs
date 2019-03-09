@@ -106,7 +106,7 @@
             this.checkRecord.Location = new System.Drawing.Point(13, 115);
             this.checkRecord.Name = "checkRecord";
             this.checkRecord.Size = new System.Drawing.Size(109, 17);
-            this.checkRecord.TabIndex = 33;
+            this.checkRecord.TabIndex = 1;
             this.checkRecord.Text = "Record requests";
             this.checkRecord.UseVisualStyleBackColor = true;
             this.checkRecord.CheckedChanged += new System.EventHandler(this.checkRecord_CheckedChanged);
@@ -198,7 +198,7 @@
             this.checkEnabled.Location = new System.Drawing.Point(10, 10);
             this.checkEnabled.Name = "checkEnabled";
             this.checkEnabled.Size = new System.Drawing.Size(181, 17);
-            this.checkEnabled.TabIndex = 50;
+            this.checkEnabled.TabIndex = 0;
             this.checkEnabled.Text = "Enable local asset server proxy";
             this.checkEnabled.UseVisualStyleBackColor = true;
             // 
@@ -209,7 +209,7 @@
             this.checkRecordData.Location = new System.Drawing.Point(133, 115);
             this.checkRecordData.Name = "checkRecordData";
             this.checkRecordData.Size = new System.Drawing.Size(105, 17);
-            this.checkRecordData.TabIndex = 51;
+            this.checkRecordData.TabIndex = 2;
             this.checkRecordData.Text = "Record content";
             this.checkRecordData.UseVisualStyleBackColor = true;
             // 
@@ -303,7 +303,7 @@
             this.checkUseHttps.Location = new System.Drawing.Point(17, 78);
             this.checkUseHttps.Name = "checkUseHttps";
             this.checkUseHttps.Size = new System.Drawing.Size(78, 17);
-            this.checkUseHttps.TabIndex = 67;
+            this.checkUseHttps.TabIndex = 2;
             this.checkUseHttps.Text = "Use HTTPS";
             this.checkUseHttps.UseVisualStyleBackColor = true;
             this.checkUseHttps.Click += new System.EventHandler(this.checkUseHttps_Click);
@@ -334,7 +334,7 @@
             this.sliderSpeedLimit.Location = new System.Drawing.Point(39, 29);
             this.sliderSpeedLimit.Name = "sliderSpeedLimit";
             this.sliderSpeedLimit.Size = new System.Drawing.Size(145, 20);
-            this.sliderSpeedLimit.TabIndex = 59;
+            this.sliderSpeedLimit.TabIndex = 1;
             this.sliderSpeedLimit.TabStop = false;
             this.sliderSpeedLimit.Value = 1F;
             this.sliderSpeedLimit.ValueChanged += new System.EventHandler<float>(this.sliderSpeedLimit_ValueChanged);
@@ -346,7 +346,7 @@
             this.checkSpeedLimit.Location = new System.Drawing.Point(17, 32);
             this.checkSpeedLimit.Name = "checkSpeedLimit";
             this.checkSpeedLimit.Size = new System.Drawing.Size(15, 14);
-            this.checkSpeedLimit.TabIndex = 57;
+            this.checkSpeedLimit.TabIndex = 0;
             this.checkSpeedLimit.UseVisualStyleBackColor = true;
             this.checkSpeedLimit.CheckedChanged += new System.EventHandler(this.checkSpeedLimit_CheckedChanged);
             // 
@@ -366,8 +366,8 @@
             // 
             // formAssetProxy
             // 
-            this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
-            this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
+            this.AutoScaleDimensions = new System.Drawing.SizeF(96F, 96F);
+            this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Dpi;
             this.ClientSize = new System.Drawing.Size(505, 319);
             this.Controls.Add(this.panelAdvanced);
             this.Controls.Add(this.labelAdvanced);

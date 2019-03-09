@@ -28,7 +28,7 @@
     <BootstrapperEnabled>true</BootstrapperEnabled>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
-    <PlatformTarget>x64</PlatformTarget>
+    <PlatformTarget>AnyCPU</PlatformTarget>
     <DebugSymbols>true</DebugSymbols>
     <DebugType>full</DebugType>
     <Optimize>false</Optimize>
@@ -51,6 +51,8 @@
   <PropertyGroup>
     <ApplicationIcon>Resources\Gw2Launcher.ico</ApplicationIcon>
   </PropertyGroup>
+  <PropertyGroup />
+  <PropertyGroup />
   <PropertyGroup />
   <PropertyGroup>
     <NoWin32Manifest>true</NoWin32Manifest>
@@ -82,6 +84,7 @@
     <Compile Include="Client\Launcher.cs" />
     <Compile Include="Client\Launcher_Account.cs" />
     <Compile Include="Client\Launcher_Autologin.cs" />
+    <Compile Include="Client\Launcher_FileLocker.cs" />
     <Compile Include="Client\Launcher_LinkedProcess.cs" />
     <Compile Include="Client\Launcher_WindowEvents.cs" />
     <Compile Include="Client\Launcher_WindowWatcher.cs" />
@@ -90,6 +93,7 @@
     <Compile Include="DataPath.cs" />
     <Compile Include="Messaging\LaunchMessage.cs" />
     <Compile Include="Messaging\MappedMessage.cs" />
+    <Compile Include="Messaging\UpdateMessage.cs" />
     <Compile Include="Net\AssetDownloader.cs" />
     <Compile Include="Net\AssetProxy\IPPool.cs" />
     <Compile Include="Net\AssetProxy\Cache.cs" />
@@ -484,6 +488,9 @@
     </EmbeddedResource>
     <EmbeddedResource Include="UI\Controls\ProgressGraph.resx">
       <DependentUpon>ProgressGraph.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="UI\Controls\ScrollablePanelContainer.resx">
+      <DependentUpon>ScrollablePanelContainer.cs</DependentUpon>
     </EmbeddedResource>
     <EmbeddedResource Include="UI\Controls\SidebarButton.resx">
       <DependentUpon>SidebarButton.cs</DependentUpon>

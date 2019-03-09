@@ -183,15 +183,18 @@ namespace Gw2Launcher.UI.Controls
             base.Dispose(disposing);
         }
 
-        protected void ResizeLabels(Graphics g)
+        protected virtual void ResizeLabels(Graphics g)
         {
             fontSmallHeight = (ushort)(fontSmall.GetHeight(g) + 0.5f);
             fontLargeHeight = (ushort)(fontLarge.GetHeight(g) + 0.5f);
+            var scale = g.DpiX / 96f;
 
-            pointAccount = new Point(POINT_NAME.X, POINT_NAME.Y + fontLargeHeight + 3);
+            var pointName = new Point((int)(POINT_NAME.X * scale + 0.5f), (int)(POINT_NAME.Y * scale + 0.5f));
+
+            pointAccount = new Point(pointName.X, pointName.Y + fontLargeHeight + 3);
 
             if (_ShowAccount)
-                pointLastUsed = new Point(POINT_NAME.X, pointAccount.Y + fontSmallHeight + 1);
+                pointLastUsed = new Point(pointAccount.X, pointAccount.Y + fontSmallHeight + 1);
             else
                 pointLastUsed = pointAccount;
 
@@ -200,11 +203,11 @@ namespace Gw2Launcher.UI.Controls
             pointAccountValue = new Point(pointAccount.X + lastUsed.Width + 3, pointAccount.Y);
             pointLastUsedValue = new Point(pointAccountValue.X, pointLastUsed.Y);
 
-            rectName = new Rectangle(POINT_NAME, new Size(this.Width - POINT_NAME.X * 2, fontLargeHeight + 1));
+            rectName = new Rectangle(pointName, new Size(this.Width - pointAccount.X * 2, fontLargeHeight + 1));
             rectAccountValue = new Rectangle(pointAccountValue, new Size(this.Width - pointAccount.X - pointAccountValue.X, fontSmallHeight + 1));
             rectLastUsedValue = new Rectangle(pointLastUsedValue, new Size(this.Width - pointLastUsed.X - pointLastUsedValue.X, fontSmallHeight + 1));
 
-            int height = pointLastUsed.Y + fontSmallHeight + POINT_NAME.X - 2;
+            int height = rectLastUsedValue.Bottom + pointName.Y - 2;
 
             if (this.MinimumSize.Height != height)
             {

@@ -30,11 +30,11 @@
         {
             System.Windows.Forms.DataGridViewCellStyle dataGridViewCellStyle1 = new System.Windows.Forms.DataGridViewCellStyle();
             this.gridAccounts = new System.Windows.Forms.DataGridView();
+            this.columnCheck = new System.Windows.Forms.DataGridViewCheckBoxColumn();
+            this.columnName = new System.Windows.Forms.DataGridViewTextBoxColumn();
             this.buttonCancel = new System.Windows.Forms.Button();
             this.buttonOK = new System.Windows.Forms.Button();
             this.labelTitle = new System.Windows.Forms.Label();
-            this.columnCheck = new System.Windows.Forms.DataGridViewCheckBoxColumn();
-            this.columnName = new System.Windows.Forms.DataGridViewTextBoxColumn();
             ((System.ComponentModel.ISupportInitialize)(this.gridAccounts)).BeginInit();
             this.SuspendLayout();
             // 
@@ -74,6 +74,20 @@
             this.gridAccounts.CellContentClick += new System.Windows.Forms.DataGridViewCellEventHandler(this.gridAccounts_CellContentClick);
             this.gridAccounts.SelectionChanged += new System.EventHandler(this.gridServers_SelectionChanged);
             // 
+            // columnCheck
+            // 
+            this.columnCheck.HeaderText = "Check";
+            this.columnCheck.Name = "columnCheck";
+            this.columnCheck.ReadOnly = true;
+            this.columnCheck.Width = 25;
+            // 
+            // columnName
+            // 
+            this.columnName.AutoSizeMode = System.Windows.Forms.DataGridViewAutoSizeColumnMode.Fill;
+            this.columnName.HeaderText = "Name";
+            this.columnName.Name = "columnName";
+            this.columnName.ReadOnly = true;
+            // 
             // buttonCancel
             // 
             this.buttonCancel.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Right)));
@@ -109,24 +123,10 @@
             this.labelTitle.Text = "Which accounts?";
             this.labelTitle.SizeChanged += new System.EventHandler(this.labelTitle_SizeChanged);
             // 
-            // columnCheck
-            // 
-            this.columnCheck.HeaderText = "Check";
-            this.columnCheck.Name = "columnCheck";
-            this.columnCheck.ReadOnly = true;
-            this.columnCheck.Width = 25;
-            // 
-            // columnName
-            // 
-            this.columnName.AutoSizeMode = System.Windows.Forms.DataGridViewAutoSizeColumnMode.Fill;
-            this.columnName.HeaderText = "Name";
-            this.columnName.Name = "columnName";
-            this.columnName.ReadOnly = true;
-            // 
             // formAccountSelect
             // 
-            this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
-            this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
+            this.AutoScaleDimensions = new System.Drawing.SizeF(96F, 96F);
+            this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Dpi;
             this.ClientSize = new System.Drawing.Size(285, 290);
             this.Controls.Add(this.labelTitle);
             this.Controls.Add(this.buttonCancel);

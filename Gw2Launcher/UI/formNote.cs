@@ -95,6 +95,15 @@ namespace Gw2Launcher.UI
         {
             InitializeComponent();
 
+            //ensure the textbox isn't overlapping if it was scaled
+            while (textMessage.Bottom > label74.Top)
+            {
+                var h = textMessage.Height;
+                textMessage.Height -= textMessage.Font.Height + 1;
+                if (textMessage.Height == h)
+                    break;
+            }
+
             var now = DateTime.Now;
             dateCustom.Value = customDate = new DateTime(now.Year, now.Month, now.Day, now.Hour, now.Minute, 0, 0, DateTimeKind.Local).AddMinutes(1);
             customTime = new TimeSpan(0, 0, 0, 0);

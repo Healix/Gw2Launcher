@@ -14,11 +14,7 @@ namespace Gw2Launcher.UI
     public partial class formDnsDialog : Form
     {
         private int selectedCount;
-
-        static formDnsDialog()
-        {
-        }
-
+        
         public formDnsDialog()
             : this(null)
         {
@@ -28,6 +24,16 @@ namespace Gw2Launcher.UI
         public formDnsDialog(IEnumerable<IPAddress> selected)
         {
             InitializeComponent();
+
+            var scale = this.CurrentAutoScaleDimensions.Width / 96f;
+            if (scale != 1)
+            {
+                foreach (DataGridViewColumn col in gridServers.Columns)
+                {
+                    if (col.AutoSizeMode != DataGridViewAutoSizeColumnMode.Fill)
+                        col.Width = (int)(col.Width * scale + 0.5f);
+                }
+            }
 
             gridServers.AdvancedCellBorderStyle.All = DataGridViewAdvancedCellBorderStyle.None;
 

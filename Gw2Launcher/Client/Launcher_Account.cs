@@ -41,6 +41,24 @@ namespace Gw2Launcher.Client
                 }
             }
 
+            private FileLocker.SharedFile gfxLock;
+            public FileLocker.SharedFile GfxLock
+            {
+                get
+                {
+                    return gfxLock;
+                }
+                set
+                {
+                    if (gfxLock != value)
+                    {
+                        if (gfxLock != null)
+                            gfxLock.Release();
+                        gfxLock = value;
+                    }
+                }
+            }
+
             public void Dispose()
             {
                 if (watcher != null)
@@ -120,7 +138,7 @@ namespace Gw2Launcher.Client
                     {
                         lock (queueAnnounce)
                         {
-                            queueAnnounce.Enqueue(new QueuedAnnounce(this.Settings.UID, state, previousState, data));
+                            queueAnnounce.Enqueue(new QueuedAnnounce(this.Settings, state, previousState, data));
                             if (taskAnnounce == null || taskAnnounce.IsCompleted)
                             {
                                 taskAnnounce = new Task(
@@ -142,6 +160,7 @@ namespace Gw2Launcher.Client
 
             public void OnExited()
             {
+                this.GfxLock = null;
                 if (Exited != null)
                     Exited(this, this);
             }

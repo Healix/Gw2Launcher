@@ -16,6 +16,16 @@ namespace Gw2Launcher.UI
         {
             InitializeComponent();
 
+            var scale = this.CurrentAutoScaleDimensions.Width / 96f;
+            if (scale != 1)
+            {
+                foreach (DataGridViewColumn col in gridUsers.Columns)
+                {
+                    if (col.AutoSizeMode != DataGridViewAutoSizeColumnMode.Fill)
+                        col.Width = (int)(col.Width * scale + 0.5f);
+                }
+            }
+
             int _space = buttonOK.Location.X - buttonCancel.Bounds.Right;
             buttonCancel.Location = new Point(this.ClientSize.Width / 2 - (buttonOK.Bounds.Right - buttonCancel.Bounds.Left) / 2, buttonCancel.Location.Y);
             buttonOK.Location = new Point(buttonCancel.Bounds.Right + _space, buttonCancel.Location.Y);

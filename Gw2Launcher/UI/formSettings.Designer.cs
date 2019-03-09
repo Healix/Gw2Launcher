@@ -63,7 +63,6 @@
             this.label30 = new System.Windows.Forms.Label();
             this.label29 = new System.Windows.Forms.Label();
             this.label27 = new System.Windows.Forms.Label();
-            this.textRunAfterLaunch = new Gw2Launcher.UI.Controls.ExtendableTextBox();
             this.label28 = new System.Windows.Forms.Label();
             this.labelVolume = new System.Windows.Forms.Label();
             this.label20 = new System.Windows.Forms.Label();
@@ -72,7 +71,6 @@
             this.label7 = new System.Windows.Forms.Label();
             this.textArguments = new System.Windows.Forms.TextBox();
             this.label3 = new System.Windows.Forms.Label();
-            this.sliderVolume = new Gw2Launcher.UI.Controls.FlatSlider();
             this.comboProcessPriority = new System.Windows.Forms.ComboBox();
             this.label73 = new System.Windows.Forms.Label();
             this.label74 = new System.Windows.Forms.Label();
@@ -92,7 +90,6 @@
             this.label19 = new System.Windows.Forms.Label();
             this.label16 = new System.Windows.Forms.Label();
             this.checkShowUser = new System.Windows.Forms.CheckBox();
-            this.buttonSample = new Gw2Launcher.UI.Controls.AccountGridButton();
             this.label15 = new System.Windows.Forms.Label();
             this.label17 = new System.Windows.Forms.Label();
             this.label18 = new System.Windows.Forms.Label();
@@ -212,20 +209,14 @@
             this.label75 = new System.Windows.Forms.Label();
             this.label76 = new System.Windows.Forms.Label();
             this.panelAccountBar = new System.Windows.Forms.Panel();
-            this.buttonAccountBarReset = new System.Windows.Forms.Button();
-            this.buttonAccountBarShow = new System.Windows.Forms.Button();
             this.checkAccountBarEnable = new System.Windows.Forms.CheckBox();
             this.label90 = new System.Windows.Forms.Label();
             this.label91 = new System.Windows.Forms.Label();
             this.label93 = new System.Windows.Forms.Label();
-            this.label92 = new System.Windows.Forms.Label();
-            this.sidebarPanel1 = new Gw2Launcher.UI.Controls.SidebarPanel();
-            this.buttonTools = new Gw2Launcher.UI.Controls.SidebarButton();
-            this.buttonUpdates = new Gw2Launcher.UI.Controls.SidebarButton();
-            this.buttonStyle = new Gw2Launcher.UI.Controls.SidebarButton();
-            this.buttonSecurity = new Gw2Launcher.UI.Controls.SidebarButton();
-            this.buttonLaunchOptions = new Gw2Launcher.UI.Controls.SidebarButton();
-            this.buttonGeneral = new Gw2Launcher.UI.Controls.SidebarButton();
+            this.labelAccountBarInfo = new System.Windows.Forms.Label();
+            this.panelAccountBarControls = new System.Windows.Forms.Panel();
+            this.buttonAccountBarReset = new System.Windows.Forms.Button();
+            this.buttonAccountBarShow = new System.Windows.Forms.Button();
             this.label99 = new System.Windows.Forms.Label();
             this.label98 = new System.Windows.Forms.Label();
             this.checkLimitActiveAccount = new System.Windows.Forms.CheckBox();
@@ -242,6 +233,16 @@
             this.label100 = new System.Windows.Forms.Label();
             this.checkLocalizedExecution = new System.Windows.Forms.CheckBox();
             this.label101 = new System.Windows.Forms.Label();
+            this.sidebarPanel1 = new Gw2Launcher.UI.Controls.SidebarPanel();
+            this.buttonTools = new Gw2Launcher.UI.Controls.SidebarButton();
+            this.buttonUpdates = new Gw2Launcher.UI.Controls.SidebarButton();
+            this.buttonStyle = new Gw2Launcher.UI.Controls.SidebarButton();
+            this.buttonSecurity = new Gw2Launcher.UI.Controls.SidebarButton();
+            this.buttonLaunchOptions = new Gw2Launcher.UI.Controls.SidebarButton();
+            this.buttonGeneral = new Gw2Launcher.UI.Controls.SidebarButton();
+            this.textRunAfterLaunch = new Gw2Launcher.UI.Controls.ExtendableTextBox();
+            this.sliderVolume = new Gw2Launcher.UI.Controls.FlatSlider();
+            this.buttonSample = new Gw2Launcher.UI.Controls.AccountGridButton();
             this.panelGeneral.SuspendLayout();
             this.panelLaunchOptions.SuspendLayout();
             this.panelPasswords.SuspendLayout();
@@ -263,10 +264,11 @@
             this.panelLaunchOptionsProcess.SuspendLayout();
             this.panelLaunchOptionsProcessContent.SuspendLayout();
             this.panelAccountBar.SuspendLayout();
-            this.sidebarPanel1.SuspendLayout();
+            this.panelAccountBarControls.SuspendLayout();
             ((System.ComponentModel.ISupportInitialize)(this.numericLimitActiveAccount)).BeginInit();
             ((System.ComponentModel.ISupportInitialize)(this.numericDelaySeconds)).BeginInit();
             this.panelLaunchConfiguration.SuspendLayout();
+            this.sidebarPanel1.SuspendLayout();
             this.SuspendLayout();
             // 
             // buttonCancel
@@ -334,7 +336,7 @@
             this.checkUseGw2ShortcutIcon.Location = new System.Drawing.Point(21, 250);
             this.checkUseGw2ShortcutIcon.Name = "checkUseGw2ShortcutIcon";
             this.checkUseGw2ShortcutIcon.Size = new System.Drawing.Size(287, 17);
-            this.checkUseGw2ShortcutIcon.TabIndex = 76;
+            this.checkUseGw2ShortcutIcon.TabIndex = 6;
             this.checkUseGw2ShortcutIcon.Text = "Use the Guild Wars 2 icon when creating shortcuts";
             this.checkUseGw2ShortcutIcon.UseVisualStyleBackColor = true;
             // 
@@ -355,7 +357,7 @@
             this.buttonCustomUsername.Location = new System.Drawing.Point(299, 329);
             this.buttonCustomUsername.Name = "buttonCustomUsername";
             this.buttonCustomUsername.Size = new System.Drawing.Size(43, 24);
-            this.buttonCustomUsername.TabIndex = 75;
+            this.buttonCustomUsername.TabIndex = 9;
             this.buttonCustomUsername.Text = "...";
             this.buttonCustomUsername.UseVisualStyleBackColor = true;
             this.buttonCustomUsername.Click += new System.EventHandler(this.buttonCustomUsername_Click);
@@ -367,7 +369,7 @@
             this.checkCustomUsername.Location = new System.Drawing.Point(21, 333);
             this.checkCustomUsername.Name = "checkCustomUsername";
             this.checkCustomUsername.Size = new System.Drawing.Size(15, 14);
-            this.checkCustomUsername.TabIndex = 6;
+            this.checkCustomUsername.TabIndex = 7;
             this.checkCustomUsername.UseVisualStyleBackColor = true;
             this.checkCustomUsername.CheckedChanged += new System.EventHandler(this.checkCustomUsername_CheckedChanged);
             // 
@@ -389,7 +391,7 @@
             this.textCustomUsername.Location = new System.Drawing.Point(43, 330);
             this.textCustomUsername.Name = "textCustomUsername";
             this.textCustomUsername.Size = new System.Drawing.Size(250, 22);
-            this.textCustomUsername.TabIndex = 7;
+            this.textCustomUsername.TabIndex = 8;
             this.textCustomUsername.Text = "Gw2Launcher";
             // 
             // label47
@@ -440,7 +442,7 @@
             this.buttonWindowReset.Location = new System.Drawing.Point(20, 401);
             this.buttonWindowReset.Name = "buttonWindowReset";
             this.buttonWindowReset.Size = new System.Drawing.Size(74, 23);
-            this.buttonWindowReset.TabIndex = 8;
+            this.buttonWindowReset.TabIndex = 10;
             this.buttonWindowReset.Text = "Reset";
             this.buttonWindowReset.UseVisualStyleBackColor = true;
             this.buttonWindowReset.Click += new System.EventHandler(this.buttonWindowReset_Click);
@@ -599,7 +601,7 @@
             this.checkMuteVoices.Location = new System.Drawing.Point(138, 231);
             this.checkMuteVoices.Name = "checkMuteVoices";
             this.checkMuteVoices.Size = new System.Drawing.Size(58, 17);
-            this.checkMuteVoices.TabIndex = 87;
+            this.checkMuteVoices.TabIndex = 6;
             this.checkMuteVoices.Text = "Voices";
             this.checkMuteVoices.UseVisualStyleBackColor = true;
             // 
@@ -610,7 +612,7 @@
             this.buttonScreenshotsLocation.Location = new System.Drawing.Point(299, 407);
             this.buttonScreenshotsLocation.Name = "buttonScreenshotsLocation";
             this.buttonScreenshotsLocation.Size = new System.Drawing.Size(43, 24);
-            this.buttonScreenshotsLocation.TabIndex = 11;
+            this.buttonScreenshotsLocation.TabIndex = 12;
             this.buttonScreenshotsLocation.Text = "...";
             this.buttonScreenshotsLocation.UseVisualStyleBackColor = true;
             this.buttonScreenshotsLocation.Click += new System.EventHandler(this.buttonScreenshotsLocation_Click);
@@ -621,7 +623,7 @@
             this.checkScreenshotsLocation.Location = new System.Drawing.Point(21, 411);
             this.checkScreenshotsLocation.Name = "checkScreenshotsLocation";
             this.checkScreenshotsLocation.Size = new System.Drawing.Size(15, 14);
-            this.checkScreenshotsLocation.TabIndex = 9;
+            this.checkScreenshotsLocation.TabIndex = 10;
             this.checkScreenshotsLocation.UseVisualStyleBackColor = true;
             this.checkScreenshotsLocation.CheckedChanged += new System.EventHandler(this.checkScreenshotsLocation_CheckedChanged);
             // 
@@ -632,7 +634,7 @@
             this.textScreenshotsLocation.Location = new System.Drawing.Point(43, 408);
             this.textScreenshotsLocation.Name = "textScreenshotsLocation";
             this.textScreenshotsLocation.Size = new System.Drawing.Size(250, 22);
-            this.textScreenshotsLocation.TabIndex = 10;
+            this.textScreenshotsLocation.TabIndex = 11;
             // 
             // label38
             // 
@@ -711,7 +713,7 @@
             this.checkScreenshotsBmp.Location = new System.Drawing.Point(21, 365);
             this.checkScreenshotsBmp.Name = "checkScreenshotsBmp";
             this.checkScreenshotsBmp.Size = new System.Drawing.Size(161, 17);
-            this.checkScreenshotsBmp.TabIndex = 8;
+            this.checkScreenshotsBmp.TabIndex = 9;
             this.checkScreenshotsBmp.Text = "Save screenshots as *.bmp";
             this.checkScreenshotsBmp.UseVisualStyleBackColor = true;
             // 
@@ -721,7 +723,7 @@
             this.checkPort443.Location = new System.Drawing.Point(70, 298);
             this.checkPort443.Name = "checkPort443";
             this.checkPort443.Size = new System.Drawing.Size(44, 17);
-            this.checkPort443.TabIndex = 7;
+            this.checkPort443.TabIndex = 8;
             this.checkPort443.Text = "443";
             this.checkPort443.UseVisualStyleBackColor = true;
             this.checkPort443.CheckedChanged += new System.EventHandler(this.checkPort443_CheckedChanged);
@@ -732,7 +734,7 @@
             this.checkPort80.Location = new System.Drawing.Point(21, 298);
             this.checkPort80.Name = "checkPort80";
             this.checkPort80.Size = new System.Drawing.Size(38, 17);
-            this.checkPort80.TabIndex = 6;
+            this.checkPort80.TabIndex = 7;
             this.checkPort80.Text = "80";
             this.checkPort80.UseVisualStyleBackColor = true;
             this.checkPort80.CheckedChanged += new System.EventHandler(this.checkPort80_CheckedChanged);
@@ -821,18 +823,6 @@
             this.label27.TabIndex = 46;
             this.label27.Text = "Executes the shell commands after launching";
             // 
-            // textRunAfterLaunch
-            // 
-            this.textRunAfterLaunch.ExtendedSize = new System.Drawing.Size(0, 0);
-            this.textRunAfterLaunch.Font = new System.Drawing.Font("Segoe UI", 8.25F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            this.textRunAfterLaunch.Location = new System.Drawing.Point(21, 495);
-            this.textRunAfterLaunch.MaximumExtendedSize = new System.Drawing.Size(0, 0);
-            this.textRunAfterLaunch.Multiline = true;
-            this.textRunAfterLaunch.Name = "textRunAfterLaunch";
-            this.textRunAfterLaunch.Size = new System.Drawing.Size(321, 51);
-            this.textRunAfterLaunch.TabIndex = 12;
-            this.textRunAfterLaunch.WordWrap = false;
-            // 
             // label28
             // 
             this.label28.AutoSize = true;
@@ -912,17 +902,6 @@
             this.label3.TabIndex = 20;
             this.label3.Text = "Arguments";
             // 
-            // sliderVolume
-            // 
-            this.sliderVolume.Enabled = false;
-            this.sliderVolume.Location = new System.Drawing.Point(43, 184);
-            this.sliderVolume.Name = "sliderVolume";
-            this.sliderVolume.Size = new System.Drawing.Size(150, 20);
-            this.sliderVolume.TabIndex = 3;
-            this.sliderVolume.TabStop = false;
-            this.sliderVolume.Value = 1F;
-            this.sliderVolume.ValueChanged += new System.EventHandler<float>(this.sliderVolume_ValueChanged);
-            // 
             // comboProcessPriority
             // 
             this.comboProcessPriority.DropDownStyle = System.Windows.Forms.ComboBoxStyle.DropDownList;
@@ -931,7 +910,7 @@
             this.comboProcessPriority.Location = new System.Drawing.Point(43, 47);
             this.comboProcessPriority.Name = "comboProcessPriority";
             this.comboProcessPriority.Size = new System.Drawing.Size(157, 21);
-            this.comboProcessPriority.TabIndex = 104;
+            this.comboProcessPriority.TabIndex = 1;
             // 
             // label73
             // 
@@ -1065,7 +1044,7 @@
             this.checkStyleMarkFocused.Location = new System.Drawing.Point(24, 144);
             this.checkStyleMarkFocused.Name = "checkStyleMarkFocused";
             this.checkStyleMarkFocused.Size = new System.Drawing.Size(204, 17);
-            this.checkStyleMarkFocused.TabIndex = 46;
+            this.checkStyleMarkFocused.TabIndex = 4;
             this.checkStyleMarkFocused.Text = "Highlight the last focused account";
             this.checkStyleMarkFocused.UseVisualStyleBackColor = true;
             this.checkStyleMarkFocused.CheckedChanged += new System.EventHandler(this.checkStyleMarkFocused_CheckedChanged);
@@ -1076,7 +1055,7 @@
             this.checkShowColor.Location = new System.Drawing.Point(24, 124);
             this.checkShowColor.Name = "checkShowColor";
             this.checkShowColor.Size = new System.Drawing.Size(148, 17);
-            this.checkShowColor.TabIndex = 45;
+            this.checkShowColor.TabIndex = 3;
             this.checkShowColor.Text = "Show account bar color";
             this.checkShowColor.UseVisualStyleBackColor = true;
             this.checkShowColor.CheckedChanged += new System.EventHandler(this.checkShowColor_CheckedChanged);
@@ -1147,35 +1126,6 @@
             this.checkShowUser.UseVisualStyleBackColor = true;
             this.checkShowUser.CheckedChanged += new System.EventHandler(this.checkShowUser_CheckedChanged);
             // 
-            // buttonSample
-            // 
-            this.buttonSample.AccountData = null;
-            this.buttonSample.AccountName = "Example";
-            this.buttonSample.BackColor = System.Drawing.Color.White;
-            this.buttonSample.ColorKey = System.Drawing.Color.Empty;
-            this.buttonSample.Cursor = System.Windows.Forms.Cursors.Hand;
-            this.buttonSample.DisplayName = "example@example.com";
-            this.buttonSample.FontLarge = new System.Drawing.Font("Segoe UI Semibold", 8.25F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            this.buttonSample.FontSmall = new System.Drawing.Font("Segoe UI Semilight", 8.25F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            this.buttonSample.Index = 0;
-            this.buttonSample.IsFocused = false;
-            this.buttonSample.LastDailyCompletionUtc = new System.DateTime(((long)(0)));
-            this.buttonSample.LastDailyLoginUtc = new System.DateTime(((long)(0)));
-            this.buttonSample.LastNoteUtc = new System.DateTime(((long)(0)));
-            this.buttonSample.LastUsedUtc = new System.DateTime(((long)(0)));
-            this.buttonSample.Location = new System.Drawing.Point(24, 197);
-            this.buttonSample.MinimumSize = new System.Drawing.Size(0, 67);
-            this.buttonSample.Name = "buttonSample";
-            this.buttonSample.Selected = false;
-            this.buttonSample.ShowAccount = true;
-            this.buttonSample.ShowColorKey = false;
-            this.buttonSample.ShowDailyCompletion = false;
-            this.buttonSample.ShowDailyLogin = false;
-            this.buttonSample.Size = new System.Drawing.Size(225, 67);
-            this.buttonSample.Status = null;
-            this.buttonSample.StatusColor = System.Drawing.Color.Empty;
-            this.buttonSample.TabIndex = 38;
-            // 
             // label15
             // 
             this.label15.AutoSize = true;
@@ -1213,7 +1163,7 @@
             this.comboActionActiveLPress.Location = new System.Drawing.Point(102, 76);
             this.comboActionActiveLPress.Name = "comboActionActiveLPress";
             this.comboActionActiveLPress.Size = new System.Drawing.Size(121, 21);
-            this.comboActionActiveLPress.TabIndex = 4;
+            this.comboActionActiveLPress.TabIndex = 1;
             // 
             // comboActionActiveLClick
             // 
@@ -1222,7 +1172,7 @@
             this.comboActionActiveLClick.Location = new System.Drawing.Point(102, 49);
             this.comboActionActiveLClick.Name = "comboActionActiveLClick";
             this.comboActionActiveLClick.Size = new System.Drawing.Size(121, 21);
-            this.comboActionActiveLClick.TabIndex = 3;
+            this.comboActionActiveLClick.TabIndex = 0;
             // 
             // label53
             // 
@@ -1308,7 +1258,7 @@
             this.checkAutoUpdateDownloadProgress.Location = new System.Drawing.Point(21, 195);
             this.checkAutoUpdateDownloadProgress.Name = "checkAutoUpdateDownloadProgress";
             this.checkAutoUpdateDownloadProgress.Size = new System.Drawing.Size(103, 17);
-            this.checkAutoUpdateDownloadProgress.TabIndex = 73;
+            this.checkAutoUpdateDownloadProgress.TabIndex = 5;
             this.checkAutoUpdateDownloadProgress.Text = "Show progress";
             this.checkAutoUpdateDownloadProgress.UseVisualStyleBackColor = true;
             // 
@@ -1462,7 +1412,7 @@
             this.checkCheckVersionOnStart.Location = new System.Drawing.Point(21, 249);
             this.checkCheckVersionOnStart.Name = "checkCheckVersionOnStart";
             this.checkCheckVersionOnStart.Size = new System.Drawing.Size(127, 17);
-            this.checkCheckVersionOnStart.TabIndex = 5;
+            this.checkCheckVersionOnStart.TabIndex = 6;
             this.checkCheckVersionOnStart.Text = "Check every 30 days";
             this.checkCheckVersionOnStart.UseVisualStyleBackColor = true;
             // 
@@ -1507,7 +1457,7 @@
             this.checkWindowIcon.Location = new System.Drawing.Point(21, 134);
             this.checkWindowIcon.Name = "checkWindowIcon";
             this.checkWindowIcon.Size = new System.Drawing.Size(152, 17);
-            this.checkWindowIcon.TabIndex = 75;
+            this.checkWindowIcon.TabIndex = 2;
             this.checkWindowIcon.Text = "Show the account\'s icon";
             this.checkWindowIcon.UseVisualStyleBackColor = true;
             // 
@@ -1558,7 +1508,7 @@
             this.checkPreventTaskbarGrouping.Location = new System.Drawing.Point(21, 201);
             this.checkPreventTaskbarGrouping.Name = "checkPreventTaskbarGrouping";
             this.checkPreventTaskbarGrouping.Size = new System.Drawing.Size(116, 17);
-            this.checkPreventTaskbarGrouping.TabIndex = 2;
+            this.checkPreventTaskbarGrouping.TabIndex = 3;
             this.checkPreventTaskbarGrouping.Text = "Prevent grouping";
             this.checkPreventTaskbarGrouping.UseVisualStyleBackColor = true;
             // 
@@ -1680,7 +1630,7 @@
             this.checkArgsTemplate.Location = new System.Drawing.Point(24, 35);
             this.checkArgsTemplate.Name = "checkArgsTemplate";
             this.checkArgsTemplate.Size = new System.Drawing.Size(63, 17);
-            this.checkArgsTemplate.TabIndex = 69;
+            this.checkArgsTemplate.TabIndex = 2;
             this.checkArgsTemplate.Text = "Sample";
             this.checkArgsTemplate.UseVisualStyleBackColor = true;
             this.checkArgsTemplate.Visible = false;
@@ -1735,7 +1685,7 @@
             0});
             this.numericMaxPatchConnections.Name = "numericMaxPatchConnections";
             this.numericMaxPatchConnections.Size = new System.Drawing.Size(44, 22);
-            this.numericMaxPatchConnections.TabIndex = 112;
+            this.numericMaxPatchConnections.TabIndex = 1;
             this.numericMaxPatchConnections.Value = new decimal(new int[] {
             8,
             0,
@@ -1748,7 +1698,7 @@
             this.checkMaxPatchConnections.Location = new System.Drawing.Point(21, 50);
             this.checkMaxPatchConnections.Name = "checkMaxPatchConnections";
             this.checkMaxPatchConnections.Size = new System.Drawing.Size(15, 14);
-            this.checkMaxPatchConnections.TabIndex = 111;
+            this.checkMaxPatchConnections.TabIndex = 0;
             this.checkMaxPatchConnections.UseVisualStyleBackColor = true;
             this.checkMaxPatchConnections.CheckedChanged += new System.EventHandler(this.checkMaxPatchConnections_CheckedChanged);
             // 
@@ -1816,7 +1766,7 @@
             this.checkNoteNotificationsOnlyWhileActive.Location = new System.Drawing.Point(21, 258);
             this.checkNoteNotificationsOnlyWhileActive.Name = "checkNoteNotificationsOnlyWhileActive";
             this.checkNoteNotificationsOnlyWhileActive.Size = new System.Drawing.Size(113, 17);
-            this.checkNoteNotificationsOnlyWhileActive.TabIndex = 93;
+            this.checkNoteNotificationsOnlyWhileActive.TabIndex = 5;
             this.checkNoteNotificationsOnlyWhileActive.Text = "Only while active";
             this.checkNoteNotificationsOnlyWhileActive.UseVisualStyleBackColor = true;
             // 
@@ -1838,7 +1788,7 @@
             this.checkNoteNotifications.Location = new System.Drawing.Point(21, 238);
             this.checkNoteNotifications.Name = "checkNoteNotifications";
             this.checkNoteNotifications.Size = new System.Drawing.Size(123, 17);
-            this.checkNoteNotifications.TabIndex = 91;
+            this.checkNoteNotifications.TabIndex = 4;
             this.checkNoteNotifications.Text = "Show notifications";
             this.checkNoteNotifications.UseVisualStyleBackColor = true;
             this.checkNoteNotifications.CheckedChanged += new System.EventHandler(this.checkNoteNotifications_CheckedChanged);
@@ -1872,7 +1822,7 @@
             this.checkDeleteCrashLogsOnLaunch.Location = new System.Drawing.Point(21, 158);
             this.checkDeleteCrashLogsOnLaunch.Name = "checkDeleteCrashLogsOnLaunch";
             this.checkDeleteCrashLogsOnLaunch.Size = new System.Drawing.Size(134, 17);
-            this.checkDeleteCrashLogsOnLaunch.TabIndex = 88;
+            this.checkDeleteCrashLogsOnLaunch.TabIndex = 3;
             this.checkDeleteCrashLogsOnLaunch.Text = "Delete old crash logs";
             this.checkDeleteCrashLogsOnLaunch.UseVisualStyleBackColor = true;
             // 
@@ -1894,7 +1844,7 @@
             this.checkDeleteCacheOnLaunch.Location = new System.Drawing.Point(21, 114);
             this.checkDeleteCacheOnLaunch.Name = "checkDeleteCacheOnLaunch";
             this.checkDeleteCacheOnLaunch.Size = new System.Drawing.Size(141, 17);
-            this.checkDeleteCacheOnLaunch.TabIndex = 85;
+            this.checkDeleteCacheOnLaunch.TabIndex = 2;
             this.checkDeleteCacheOnLaunch.Text = "Delete old web caches";
             this.checkDeleteCacheOnLaunch.UseVisualStyleBackColor = true;
             // 
@@ -1927,7 +1877,7 @@
             this.checkShowDailiesAuto.Location = new System.Drawing.Point(123, 47);
             this.checkShowDailiesAuto.Name = "checkShowDailiesAuto";
             this.checkShowDailiesAuto.Size = new System.Drawing.Size(187, 17);
-            this.checkShowDailiesAuto.TabIndex = 82;
+            this.checkShowDailiesAuto.TabIndex = 1;
             this.checkShowDailiesAuto.Text = "Automatically show new dailies";
             this.checkShowDailiesAuto.UseVisualStyleBackColor = true;
             // 
@@ -1938,7 +1888,7 @@
             this.checkShowDailies.Location = new System.Drawing.Point(21, 47);
             this.checkShowDailies.Name = "checkShowDailies";
             this.checkShowDailies.Size = new System.Drawing.Size(91, 17);
-            this.checkShowDailies.TabIndex = 79;
+            this.checkShowDailies.TabIndex = 0;
             this.checkShowDailies.Text = "Show dailies";
             this.checkShowDailies.UseVisualStyleBackColor = true;
             this.checkShowDailies.CheckedChanged += new System.EventHandler(this.checkShowDailies_CheckedChanged);
@@ -2002,7 +1952,7 @@
             this.radioNetworkVerifyAutomatic.Location = new System.Drawing.Point(21, 170);
             this.radioNetworkVerifyAutomatic.Name = "radioNetworkVerifyAutomatic";
             this.radioNetworkVerifyAutomatic.Size = new System.Drawing.Size(77, 17);
-            this.radioNetworkVerifyAutomatic.TabIndex = 26;
+            this.radioNetworkVerifyAutomatic.TabIndex = 4;
             this.radioNetworkVerifyAutomatic.TabStop = true;
             this.radioNetworkVerifyAutomatic.Text = "Automatic";
             this.radioNetworkVerifyAutomatic.UseVisualStyleBackColor = true;
@@ -2013,7 +1963,7 @@
             this.radioNetworkVerifyManual.Location = new System.Drawing.Point(21, 150);
             this.radioNetworkVerifyManual.Name = "radioNetworkVerifyManual";
             this.radioNetworkVerifyManual.Size = new System.Drawing.Size(64, 17);
-            this.radioNetworkVerifyManual.TabIndex = 25;
+            this.radioNetworkVerifyManual.TabIndex = 3;
             this.radioNetworkVerifyManual.TabStop = true;
             this.radioNetworkVerifyManual.Text = "Manual";
             this.radioNetworkVerifyManual.UseVisualStyleBackColor = true;
@@ -2046,7 +1996,7 @@
             this.checkRemovePreviousNetworks.Location = new System.Drawing.Point(21, 82);
             this.checkRemovePreviousNetworks.Name = "checkRemovePreviousNetworks";
             this.checkRemovePreviousNetworks.Size = new System.Drawing.Size(326, 17);
-            this.checkRemovePreviousNetworks.TabIndex = 21;
+            this.checkRemovePreviousNetworks.TabIndex = 1;
             this.checkRemovePreviousNetworks.Text = "Remove all previously authorized networks when changed";
             this.checkRemovePreviousNetworks.UseVisualStyleBackColor = true;
             // 
@@ -2076,7 +2026,7 @@
             this.checkEnableNetworkAuthorization.Location = new System.Drawing.Point(21, 62);
             this.checkEnableNetworkAuthorization.Name = "checkEnableNetworkAuthorization";
             this.checkEnableNetworkAuthorization.Size = new System.Drawing.Size(180, 17);
-            this.checkEnableNetworkAuthorization.TabIndex = 18;
+            this.checkEnableNetworkAuthorization.TabIndex = 0;
             this.checkEnableNetworkAuthorization.Text = "Enable network authorization";
             this.checkEnableNetworkAuthorization.UseVisualStyleBackColor = true;
             this.checkEnableNetworkAuthorization.CheckedChanged += new System.EventHandler(this.checkEnableNetworkAuthorization_CheckedChanged);
@@ -2090,7 +2040,7 @@
             this.checkNetworkAbortOnCancel.Location = new System.Drawing.Point(21, 102);
             this.checkNetworkAbortOnCancel.Name = "checkNetworkAbortOnCancel";
             this.checkNetworkAbortOnCancel.Size = new System.Drawing.Size(307, 17);
-            this.checkNetworkAbortOnCancel.TabIndex = 29;
+            this.checkNetworkAbortOnCancel.TabIndex = 2;
             this.checkNetworkAbortOnCancel.Text = "Cancel launching when authorization is not successful";
             this.checkNetworkAbortOnCancel.UseVisualStyleBackColor = true;
             // 
@@ -2142,7 +2092,7 @@
             this.comboActionInactiveLClick.Location = new System.Drawing.Point(102, 149);
             this.comboActionInactiveLClick.Name = "comboActionInactiveLClick";
             this.comboActionInactiveLClick.Size = new System.Drawing.Size(121, 21);
-            this.comboActionInactiveLClick.TabIndex = 49;
+            this.comboActionInactiveLClick.TabIndex = 2;
             // 
             // label87
             // 
@@ -2192,7 +2142,7 @@
             this.checkScreenshotsExistingApplyOnlyToDefault.Location = new System.Drawing.Point(21, 285);
             this.checkScreenshotsExistingApplyOnlyToDefault.Name = "checkScreenshotsExistingApplyOnlyToDefault";
             this.checkScreenshotsExistingApplyOnlyToDefault.Size = new System.Drawing.Size(266, 17);
-            this.checkScreenshotsExistingApplyOnlyToDefault.TabIndex = 107;
+            this.checkScreenshotsExistingApplyOnlyToDefault.TabIndex = 8;
             this.checkScreenshotsExistingApplyOnlyToDefault.Text = "Only apply to screenshots in the format gw000";
             this.checkScreenshotsExistingApplyOnlyToDefault.UseVisualStyleBackColor = true;
             // 
@@ -2214,7 +2164,7 @@
             this.buttonScreenshotsExistingApply.Location = new System.Drawing.Point(20, 308);
             this.buttonScreenshotsExistingApply.Name = "buttonScreenshotsExistingApply";
             this.buttonScreenshotsExistingApply.Size = new System.Drawing.Size(128, 23);
-            this.buttonScreenshotsExistingApply.TabIndex = 105;
+            this.buttonScreenshotsExistingApply.TabIndex = 9;
             this.buttonScreenshotsExistingApply.Text = "Rename / Convert";
             this.buttonScreenshotsExistingApply.UseVisualStyleBackColor = true;
             this.buttonScreenshotsExistingApply.Click += new System.EventHandler(this.buttonScreenshotsExistingApply_Click);
@@ -2236,7 +2186,7 @@
             this.checkScreenshotDeleteOriginal.Location = new System.Drawing.Point(21, 218);
             this.checkScreenshotDeleteOriginal.Name = "checkScreenshotDeleteOriginal";
             this.checkScreenshotDeleteOriginal.Size = new System.Drawing.Size(207, 17);
-            this.checkScreenshotDeleteOriginal.TabIndex = 103;
+            this.checkScreenshotDeleteOriginal.TabIndex = 7;
             this.checkScreenshotDeleteOriginal.Text = "Delete original file after conversion";
             this.checkScreenshotDeleteOriginal.UseVisualStyleBackColor = true;
             // 
@@ -2267,7 +2217,7 @@
             this.numericScreenshotImageFormatJpgQuality.Location = new System.Drawing.Point(4, 19);
             this.numericScreenshotImageFormatJpgQuality.Name = "numericScreenshotImageFormatJpgQuality";
             this.numericScreenshotImageFormatJpgQuality.Size = new System.Drawing.Size(45, 22);
-            this.numericScreenshotImageFormatJpgQuality.TabIndex = 97;
+            this.numericScreenshotImageFormatJpgQuality.TabIndex = 4;
             this.numericScreenshotImageFormatJpgQuality.Value = new decimal(new int[] {
             90,
             0,
@@ -2292,7 +2242,7 @@
             this.checkScreenshotImageFormat.Location = new System.Drawing.Point(21, 136);
             this.checkScreenshotImageFormat.Name = "checkScreenshotImageFormat";
             this.checkScreenshotImageFormat.Size = new System.Drawing.Size(15, 14);
-            this.checkScreenshotImageFormat.TabIndex = 99;
+            this.checkScreenshotImageFormat.TabIndex = 2;
             this.checkScreenshotImageFormat.UseVisualStyleBackColor = true;
             this.checkScreenshotImageFormat.CheckedChanged += new System.EventHandler(this.checkScreenshotImageFormat_CheckedChanged);
             // 
@@ -2304,7 +2254,7 @@
             this.comboScreenshotImageFormat.Location = new System.Drawing.Point(43, 133);
             this.comboScreenshotImageFormat.Name = "comboScreenshotImageFormat";
             this.comboScreenshotImageFormat.Size = new System.Drawing.Size(157, 21);
-            this.comboScreenshotImageFormat.TabIndex = 100;
+            this.comboScreenshotImageFormat.TabIndex = 3;
             this.comboScreenshotImageFormat.SelectedIndexChanged += new System.EventHandler(this.comboScreenshotImageFormat_SelectedIndexChanged);
             // 
             // label63
@@ -2356,7 +2306,7 @@
             this.checkScreenshotNameFormat.Location = new System.Drawing.Point(21, 50);
             this.checkScreenshotNameFormat.Name = "checkScreenshotNameFormat";
             this.checkScreenshotNameFormat.Size = new System.Drawing.Size(15, 14);
-            this.checkScreenshotNameFormat.TabIndex = 82;
+            this.checkScreenshotNameFormat.TabIndex = 0;
             this.checkScreenshotNameFormat.UseVisualStyleBackColor = true;
             this.checkScreenshotNameFormat.CheckedChanged += new System.EventHandler(this.checkScreenshotNameFormat_CheckedChanged);
             // 
@@ -2392,7 +2342,7 @@
             this.comboScreenshotNameFormat.Location = new System.Drawing.Point(43, 47);
             this.comboScreenshotNameFormat.Name = "comboScreenshotNameFormat";
             this.comboScreenshotNameFormat.Size = new System.Drawing.Size(300, 21);
-            this.comboScreenshotNameFormat.TabIndex = 88;
+            this.comboScreenshotNameFormat.TabIndex = 1;
             this.comboScreenshotNameFormat.TextChanged += new System.EventHandler(this.comboScreenshotNameFormat_TextChanged);
             // 
             // panelScreenshotImageFormatPng
@@ -2424,7 +2374,7 @@
             this.radioScreenshotImageFormat24.Location = new System.Drawing.Point(7, 19);
             this.radioScreenshotImageFormat24.Name = "radioScreenshotImageFormat24";
             this.radioScreenshotImageFormat24.Size = new System.Drawing.Size(55, 17);
-            this.radioScreenshotImageFormat24.TabIndex = 102;
+            this.radioScreenshotImageFormat24.TabIndex = 5;
             this.radioScreenshotImageFormat24.TabStop = true;
             this.radioScreenshotImageFormat24.Text = "24-bit";
             this.radioScreenshotImageFormat24.UseVisualStyleBackColor = true;
@@ -2435,7 +2385,7 @@
             this.radioScreenshotImageFormat16.Location = new System.Drawing.Point(73, 20);
             this.radioScreenshotImageFormat16.Name = "radioScreenshotImageFormat16";
             this.radioScreenshotImageFormat16.Size = new System.Drawing.Size(55, 17);
-            this.radioScreenshotImageFormat16.TabIndex = 103;
+            this.radioScreenshotImageFormat16.TabIndex = 6;
             this.radioScreenshotImageFormat16.Text = "16-bit";
             this.radioScreenshotImageFormat16.UseVisualStyleBackColor = true;
             // 
@@ -2489,7 +2439,7 @@
             this.checkProcessBoostBrowser.Location = new System.Drawing.Point(8, 68);
             this.checkProcessBoostBrowser.Name = "checkProcessBoostBrowser";
             this.checkProcessBoostBrowser.Size = new System.Drawing.Size(240, 17);
-            this.checkProcessBoostBrowser.TabIndex = 113;
+            this.checkProcessBoostBrowser.TabIndex = 3;
             this.checkProcessBoostBrowser.Text = "Boost the priority of the in-game browser";
             this.checkProcessBoostBrowser.UseVisualStyleBackColor = true;
             // 
@@ -2534,7 +2484,7 @@
             this.checkProcessAffinityAll.Location = new System.Drawing.Point(21, 117);
             this.checkProcessAffinityAll.Name = "checkProcessAffinityAll";
             this.checkProcessAffinityAll.Size = new System.Drawing.Size(108, 17);
-            this.checkProcessAffinityAll.TabIndex = 108;
+            this.checkProcessAffinityAll.TabIndex = 2;
             this.checkProcessAffinityAll.Text = "Use all available";
             this.checkProcessAffinityAll.UseVisualStyleBackColor = true;
             this.checkProcessAffinityAll.CheckedChanged += new System.EventHandler(this.checkProcessAffinityAll_CheckedChanged);
@@ -2545,7 +2495,7 @@
             this.checkProcessPriority.Location = new System.Drawing.Point(21, 50);
             this.checkProcessPriority.Name = "checkProcessPriority";
             this.checkProcessPriority.Size = new System.Drawing.Size(15, 14);
-            this.checkProcessPriority.TabIndex = 107;
+            this.checkProcessPriority.TabIndex = 0;
             this.checkProcessPriority.UseVisualStyleBackColor = true;
             this.checkProcessPriority.CheckedChanged += new System.EventHandler(this.checkProcessPriority_CheckedChanged);
             // 
@@ -2574,40 +2524,17 @@
             this.panelAccountBar.Anchor = ((System.Windows.Forms.AnchorStyles)((((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom) 
             | System.Windows.Forms.AnchorStyles.Left) 
             | System.Windows.Forms.AnchorStyles.Right)));
-            this.panelAccountBar.Controls.Add(this.buttonAccountBarReset);
-            this.panelAccountBar.Controls.Add(this.buttonAccountBarShow);
             this.panelAccountBar.Controls.Add(this.checkAccountBarEnable);
             this.panelAccountBar.Controls.Add(this.label90);
             this.panelAccountBar.Controls.Add(this.label91);
             this.panelAccountBar.Controls.Add(this.label93);
-            this.panelAccountBar.Controls.Add(this.label92);
+            this.panelAccountBar.Controls.Add(this.labelAccountBarInfo);
+            this.panelAccountBar.Controls.Add(this.panelAccountBarControls);
             this.panelAccountBar.Location = new System.Drawing.Point(183, 12);
             this.panelAccountBar.Name = "panelAccountBar";
             this.panelAccountBar.Size = new System.Drawing.Size(373, 378);
             this.panelAccountBar.TabIndex = 76;
             this.panelAccountBar.Visible = false;
-            // 
-            // buttonAccountBarReset
-            // 
-            this.buttonAccountBarReset.Font = new System.Drawing.Font("Segoe UI", 8.25F);
-            this.buttonAccountBarReset.Location = new System.Drawing.Point(105, 184);
-            this.buttonAccountBarReset.Name = "buttonAccountBarReset";
-            this.buttonAccountBarReset.Size = new System.Drawing.Size(74, 23);
-            this.buttonAccountBarReset.TabIndex = 84;
-            this.buttonAccountBarReset.Text = "Reset";
-            this.buttonAccountBarReset.UseVisualStyleBackColor = true;
-            this.buttonAccountBarReset.Click += new System.EventHandler(this.buttonAccountBarReset_Click);
-            // 
-            // buttonAccountBarShow
-            // 
-            this.buttonAccountBarShow.Font = new System.Drawing.Font("Segoe UI", 8.25F);
-            this.buttonAccountBarShow.Location = new System.Drawing.Point(20, 184);
-            this.buttonAccountBarShow.Name = "buttonAccountBarShow";
-            this.buttonAccountBarShow.Size = new System.Drawing.Size(74, 23);
-            this.buttonAccountBarShow.TabIndex = 82;
-            this.buttonAccountBarShow.Text = "Show";
-            this.buttonAccountBarShow.UseVisualStyleBackColor = true;
-            this.buttonAccountBarShow.Click += new System.EventHandler(this.buttonAccountBarShow_Click);
             // 
             // checkAccountBarEnable
             // 
@@ -2616,7 +2543,7 @@
             this.checkAccountBarEnable.Location = new System.Drawing.Point(21, 47);
             this.checkAccountBarEnable.Name = "checkAccountBarEnable";
             this.checkAccountBarEnable.Size = new System.Drawing.Size(145, 17);
-            this.checkAccountBarEnable.TabIndex = 75;
+            this.checkAccountBarEnable.TabIndex = 0;
             this.checkAccountBarEnable.Text = "Enable the account bar";
             this.checkAccountBarEnable.UseVisualStyleBackColor = true;
             // 
@@ -2650,16 +2577,259 @@
             this.label93.TabIndex = 71;
             this.label93.Text = "Information";
             // 
-            // label92
+            // labelAccountBarInfo
             // 
-            this.label92.AutoSize = true;
-            this.label92.Font = new System.Drawing.Font("Segoe UI Semilight", 8.25F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            this.label92.Location = new System.Drawing.Point(14, 93);
-            this.label92.MaximumSize = new System.Drawing.Size(330, 0);
-            this.label92.Name = "label92";
-            this.label92.Size = new System.Drawing.Size(329, 78);
-            this.label92.TabIndex = 72;
-            this.label92.Text = resources.GetString("label92.Text");
+            this.labelAccountBarInfo.AutoSize = true;
+            this.labelAccountBarInfo.Font = new System.Drawing.Font("Segoe UI Semilight", 8.25F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+            this.labelAccountBarInfo.Location = new System.Drawing.Point(14, 93);
+            this.labelAccountBarInfo.MaximumSize = new System.Drawing.Size(330, 0);
+            this.labelAccountBarInfo.Name = "labelAccountBarInfo";
+            this.labelAccountBarInfo.Size = new System.Drawing.Size(329, 78);
+            this.labelAccountBarInfo.TabIndex = 72;
+            this.labelAccountBarInfo.Text = resources.GetString("labelAccountBarInfo.Text");
+            this.labelAccountBarInfo.SizeChanged += new System.EventHandler(this.labelAccountBarInfo_SizeChanged);
+            // 
+            // panelAccountBarControls
+            // 
+            this.panelAccountBarControls.Controls.Add(this.buttonAccountBarReset);
+            this.panelAccountBarControls.Controls.Add(this.buttonAccountBarShow);
+            this.panelAccountBarControls.Location = new System.Drawing.Point(20, 171);
+            this.panelAccountBarControls.Name = "panelAccountBarControls";
+            this.panelAccountBarControls.Size = new System.Drawing.Size(223, 37);
+            this.panelAccountBarControls.TabIndex = 85;
+            // 
+            // buttonAccountBarReset
+            // 
+            this.buttonAccountBarReset.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Left)));
+            this.buttonAccountBarReset.Font = new System.Drawing.Font("Segoe UI", 8.25F);
+            this.buttonAccountBarReset.Location = new System.Drawing.Point(85, 13);
+            this.buttonAccountBarReset.Name = "buttonAccountBarReset";
+            this.buttonAccountBarReset.Size = new System.Drawing.Size(74, 23);
+            this.buttonAccountBarReset.TabIndex = 2;
+            this.buttonAccountBarReset.Text = "Reset";
+            this.buttonAccountBarReset.UseVisualStyleBackColor = true;
+            this.buttonAccountBarReset.Click += new System.EventHandler(this.buttonAccountBarReset_Click);
+            // 
+            // buttonAccountBarShow
+            // 
+            this.buttonAccountBarShow.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Left)));
+            this.buttonAccountBarShow.Font = new System.Drawing.Font("Segoe UI", 8.25F);
+            this.buttonAccountBarShow.Location = new System.Drawing.Point(0, 13);
+            this.buttonAccountBarShow.Name = "buttonAccountBarShow";
+            this.buttonAccountBarShow.Size = new System.Drawing.Size(74, 23);
+            this.buttonAccountBarShow.TabIndex = 1;
+            this.buttonAccountBarShow.Text = "Show";
+            this.buttonAccountBarShow.UseVisualStyleBackColor = true;
+            this.buttonAccountBarShow.Click += new System.EventHandler(this.buttonAccountBarShow_Click);
+            // 
+            // label99
+            // 
+            this.label99.AutoSize = true;
+            this.label99.Font = new System.Drawing.Font("Segoe UI Semilight", 8.25F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+            this.label99.Location = new System.Drawing.Point(14, 124);
+            this.label99.Name = "label99";
+            this.label99.Size = new System.Drawing.Size(311, 13);
+            this.label99.TabIndex = 46;
+            this.label99.Text = "Limits the number of accounts that can be opened simultaneously";
+            // 
+            // label98
+            // 
+            this.label98.AutoSize = true;
+            this.label98.Font = new System.Drawing.Font("Segoe UI Semibold", 9F, System.Drawing.FontStyle.Bold);
+            this.label98.Location = new System.Drawing.Point(13, 108);
+            this.label98.Name = "label98";
+            this.label98.Size = new System.Drawing.Size(206, 15);
+            this.label98.TabIndex = 45;
+            this.label98.Text = "Maximum number of active accounts";
+            // 
+            // checkLimitActiveAccount
+            // 
+            this.checkLimitActiveAccount.AutoSize = true;
+            this.checkLimitActiveAccount.Location = new System.Drawing.Point(21, 148);
+            this.checkLimitActiveAccount.Name = "checkLimitActiveAccount";
+            this.checkLimitActiveAccount.Size = new System.Drawing.Size(15, 14);
+            this.checkLimitActiveAccount.TabIndex = 1;
+            this.checkLimitActiveAccount.UseVisualStyleBackColor = true;
+            this.checkLimitActiveAccount.CheckedChanged += new System.EventHandler(this.checkLimitActiveAccount_CheckedChanged);
+            // 
+            // numericLimitActiveAccount
+            // 
+            this.numericLimitActiveAccount.Enabled = false;
+            this.numericLimitActiveAccount.Location = new System.Drawing.Point(43, 145);
+            this.numericLimitActiveAccount.Maximum = new decimal(new int[] {
+            50,
+            0,
+            0,
+            0});
+            this.numericLimitActiveAccount.Minimum = new decimal(new int[] {
+            1,
+            0,
+            0,
+            0});
+            this.numericLimitActiveAccount.Name = "numericLimitActiveAccount";
+            this.numericLimitActiveAccount.Size = new System.Drawing.Size(44, 22);
+            this.numericLimitActiveAccount.TabIndex = 2;
+            this.numericLimitActiveAccount.Value = new decimal(new int[] {
+            5,
+            0,
+            0,
+            0});
+            // 
+            // label96
+            // 
+            this.label96.AutoSize = true;
+            this.label96.Font = new System.Drawing.Font("Segoe UI Semilight", 8.25F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+            this.label96.Location = new System.Drawing.Point(14, 237);
+            this.label96.Name = "label96";
+            this.label96.Size = new System.Drawing.Size(275, 13);
+            this.label96.TabIndex = 116;
+            this.label96.Text = "Delay for the specified amount of seconds after launching";
+            // 
+            // label95
+            // 
+            this.label95.AutoSize = true;
+            this.label95.Font = new System.Drawing.Font("Segoe UI Semibold", 9F, System.Drawing.FontStyle.Bold);
+            this.label95.Location = new System.Drawing.Point(13, 177);
+            this.label95.Name = "label95";
+            this.label95.Size = new System.Drawing.Size(191, 15);
+            this.label95.TabIndex = 115;
+            this.label95.Text = "Delay launching multiple accounts";
+            // 
+            // checkDelaySeconds
+            // 
+            this.checkDelaySeconds.AutoSize = true;
+            this.checkDelaySeconds.Location = new System.Drawing.Point(21, 261);
+            this.checkDelaySeconds.Name = "checkDelaySeconds";
+            this.checkDelaySeconds.Size = new System.Drawing.Size(15, 14);
+            this.checkDelaySeconds.TabIndex = 4;
+            this.checkDelaySeconds.UseVisualStyleBackColor = true;
+            this.checkDelaySeconds.CheckedChanged += new System.EventHandler(this.checkDelaySeconds_CheckedChanged);
+            // 
+            // numericDelaySeconds
+            // 
+            this.numericDelaySeconds.Enabled = false;
+            this.numericDelaySeconds.Location = new System.Drawing.Point(43, 258);
+            this.numericDelaySeconds.Maximum = new decimal(new int[] {
+            240,
+            0,
+            0,
+            0});
+            this.numericDelaySeconds.Minimum = new decimal(new int[] {
+            1,
+            0,
+            0,
+            0});
+            this.numericDelaySeconds.Name = "numericDelaySeconds";
+            this.numericDelaySeconds.Size = new System.Drawing.Size(44, 22);
+            this.numericDelaySeconds.TabIndex = 5;
+            this.numericDelaySeconds.Value = new decimal(new int[] {
+            5,
+            0,
+            0,
+            0});
+            // 
+            // checkDelayUntilLoaded
+            // 
+            this.checkDelayUntilLoaded.AutoSize = true;
+            this.checkDelayUntilLoaded.Location = new System.Drawing.Point(21, 214);
+            this.checkDelayUntilLoaded.Name = "checkDelayUntilLoaded";
+            this.checkDelayUntilLoaded.Size = new System.Drawing.Size(216, 17);
+            this.checkDelayUntilLoaded.TabIndex = 3;
+            this.checkDelayUntilLoaded.Text = "Delay until loaded to character select";
+            this.checkDelayUntilLoaded.UseVisualStyleBackColor = true;
+            // 
+            // label97
+            // 
+            this.label97.AutoSize = true;
+            this.label97.Font = new System.Drawing.Font("Segoe UI Semilight", 8.25F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+            this.label97.Location = new System.Drawing.Point(14, 193);
+            this.label97.Name = "label97";
+            this.label97.Size = new System.Drawing.Size(213, 13);
+            this.label97.TabIndex = 120;
+            this.label97.Text = "Delay until the main game window is loaded";
+            // 
+            // panelLaunchConfiguration
+            // 
+            this.panelLaunchConfiguration.Anchor = ((System.Windows.Forms.AnchorStyles)((((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom) 
+            | System.Windows.Forms.AnchorStyles.Left) 
+            | System.Windows.Forms.AnchorStyles.Right)));
+            this.panelLaunchConfiguration.Controls.Add(this.labelShowLocalizedExecution);
+            this.panelLaunchConfiguration.Controls.Add(this.label102);
+            this.panelLaunchConfiguration.Controls.Add(this.label100);
+            this.panelLaunchConfiguration.Controls.Add(this.checkLocalizedExecution);
+            this.panelLaunchConfiguration.Controls.Add(this.label101);
+            this.panelLaunchConfiguration.Controls.Add(this.label97);
+            this.panelLaunchConfiguration.Controls.Add(this.checkDelayUntilLoaded);
+            this.panelLaunchConfiguration.Controls.Add(this.numericDelaySeconds);
+            this.panelLaunchConfiguration.Controls.Add(this.checkDelaySeconds);
+            this.panelLaunchConfiguration.Controls.Add(this.label95);
+            this.panelLaunchConfiguration.Controls.Add(this.label96);
+            this.panelLaunchConfiguration.Controls.Add(this.numericLimitActiveAccount);
+            this.panelLaunchConfiguration.Controls.Add(this.checkLimitActiveAccount);
+            this.panelLaunchConfiguration.Controls.Add(this.label98);
+            this.panelLaunchConfiguration.Controls.Add(this.label99);
+            this.panelLaunchConfiguration.Location = new System.Drawing.Point(183, 12);
+            this.panelLaunchConfiguration.Name = "panelLaunchConfiguration";
+            this.panelLaunchConfiguration.Size = new System.Drawing.Size(373, 378);
+            this.panelLaunchConfiguration.TabIndex = 105;
+            this.panelLaunchConfiguration.Visible = false;
+            this.panelLaunchConfiguration.VisibleChanged += new System.EventHandler(this.panelLaunchConfiguration_VisibleChanged);
+            // 
+            // labelShowLocalizedExecution
+            // 
+            this.labelShowLocalizedExecution.AutoSize = true;
+            this.labelShowLocalizedExecution.Cursor = System.Windows.Forms.Cursors.Hand;
+            this.labelShowLocalizedExecution.ForeColor = System.Drawing.Color.FromArgb(((int)(((byte)(49)))), ((int)(((byte)(121)))), ((int)(((byte)(242)))));
+            this.labelShowLocalizedExecution.Location = new System.Drawing.Point(269, 79);
+            this.labelShowLocalizedExecution.Name = "labelShowLocalizedExecution";
+            this.labelShowLocalizedExecution.Size = new System.Drawing.Size(68, 13);
+            this.labelShowLocalizedExecution.TabIndex = 125;
+            this.labelShowLocalizedExecution.Text = "open folder";
+            this.labelShowLocalizedExecution.Visible = false;
+            this.labelShowLocalizedExecution.Click += new System.EventHandler(this.labelShowLocalizedExecution_Click);
+            // 
+            // label102
+            // 
+            this.label102.AutoSize = true;
+            this.label102.Font = new System.Drawing.Font("Segoe UI Semilight", 8.25F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+            this.label102.ForeColor = System.Drawing.SystemColors.GrayText;
+            this.label102.Location = new System.Drawing.Point(14, 44);
+            this.label102.MaximumSize = new System.Drawing.Size(330, 0);
+            this.label102.Name = "label102";
+            this.label102.Size = new System.Drawing.Size(329, 26);
+            this.label102.TabIndex = 124;
+            this.label102.Text = "Prevents files from being copied multiple times per launch and allows for each ac" +
+    "count to use custom DLLs";
+            // 
+            // label100
+            // 
+            this.label100.AutoSize = true;
+            this.label100.Font = new System.Drawing.Font("Segoe UI Semilight", 8.25F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+            this.label100.Location = new System.Drawing.Point(14, 26);
+            this.label100.Name = "label100";
+            this.label100.Size = new System.Drawing.Size(288, 13);
+            this.label100.TabIndex = 123;
+            this.label100.Text = "Each account will be launched using its own executable path";
+            // 
+            // checkLocalizedExecution
+            // 
+            this.checkLocalizedExecution.AutoSize = true;
+            this.checkLocalizedExecution.Location = new System.Drawing.Point(20, 78);
+            this.checkLocalizedExecution.Name = "checkLocalizedExecution";
+            this.checkLocalizedExecution.Size = new System.Drawing.Size(245, 17);
+            this.checkLocalizedExecution.TabIndex = 0;
+            this.checkLocalizedExecution.Text = "Give each account its own executable path";
+            this.checkLocalizedExecution.UseVisualStyleBackColor = true;
+            // 
+            // label101
+            // 
+            this.label101.AutoSize = true;
+            this.label101.Font = new System.Drawing.Font("Segoe UI Semibold", 9F, System.Drawing.FontStyle.Bold);
+            this.label101.Location = new System.Drawing.Point(13, 10);
+            this.label101.Name = "label101";
+            this.label101.Size = new System.Drawing.Size(158, 15);
+            this.label101.TabIndex = 121;
+            this.label101.Text = "Localized account execution";
             // 
             // sidebarPanel1
             // 
@@ -2811,228 +2981,67 @@
             this.buttonGeneral.TabIndex = 0;
             this.buttonGeneral.Text = "General";
             // 
-            // label99
+            // textRunAfterLaunch
             // 
-            this.label99.AutoSize = true;
-            this.label99.Font = new System.Drawing.Font("Segoe UI Semilight", 8.25F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            this.label99.Location = new System.Drawing.Point(14, 124);
-            this.label99.Name = "label99";
-            this.label99.Size = new System.Drawing.Size(311, 13);
-            this.label99.TabIndex = 46;
-            this.label99.Text = "Limits the number of accounts that can be opened simultaneously";
+            this.textRunAfterLaunch.ExtendedSize = new System.Drawing.Size(0, 0);
+            this.textRunAfterLaunch.Font = new System.Drawing.Font("Segoe UI", 8.25F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+            this.textRunAfterLaunch.Location = new System.Drawing.Point(21, 495);
+            this.textRunAfterLaunch.MaximumExtendedSize = new System.Drawing.Size(0, 0);
+            this.textRunAfterLaunch.Multiline = true;
+            this.textRunAfterLaunch.Name = "textRunAfterLaunch";
+            this.textRunAfterLaunch.Size = new System.Drawing.Size(321, 51);
+            this.textRunAfterLaunch.TabIndex = 13;
+            this.textRunAfterLaunch.WordWrap = false;
             // 
-            // label98
+            // sliderVolume
             // 
-            this.label98.AutoSize = true;
-            this.label98.Font = new System.Drawing.Font("Segoe UI Semibold", 9F, System.Drawing.FontStyle.Bold);
-            this.label98.Location = new System.Drawing.Point(13, 108);
-            this.label98.Name = "label98";
-            this.label98.Size = new System.Drawing.Size(206, 15);
-            this.label98.TabIndex = 45;
-            this.label98.Text = "Maximum number of active accounts";
+            this.sliderVolume.Enabled = false;
+            this.sliderVolume.Location = new System.Drawing.Point(43, 184);
+            this.sliderVolume.Name = "sliderVolume";
+            this.sliderVolume.Size = new System.Drawing.Size(150, 20);
+            this.sliderVolume.TabIndex = 3;
+            this.sliderVolume.TabStop = false;
+            this.sliderVolume.Value = 1F;
+            this.sliderVolume.ValueChanged += new System.EventHandler<float>(this.sliderVolume_ValueChanged);
             // 
-            // checkLimitActiveAccount
+            // buttonSample
             // 
-            this.checkLimitActiveAccount.AutoSize = true;
-            this.checkLimitActiveAccount.Location = new System.Drawing.Point(21, 148);
-            this.checkLimitActiveAccount.Name = "checkLimitActiveAccount";
-            this.checkLimitActiveAccount.Size = new System.Drawing.Size(15, 14);
-            this.checkLimitActiveAccount.TabIndex = 113;
-            this.checkLimitActiveAccount.UseVisualStyleBackColor = true;
-            this.checkLimitActiveAccount.CheckedChanged += new System.EventHandler(this.checkLimitActiveAccount_CheckedChanged);
-            // 
-            // numericLimitActiveAccount
-            // 
-            this.numericLimitActiveAccount.Enabled = false;
-            this.numericLimitActiveAccount.Location = new System.Drawing.Point(43, 145);
-            this.numericLimitActiveAccount.Maximum = new decimal(new int[] {
-            50,
-            0,
-            0,
-            0});
-            this.numericLimitActiveAccount.Minimum = new decimal(new int[] {
-            1,
-            0,
-            0,
-            0});
-            this.numericLimitActiveAccount.Name = "numericLimitActiveAccount";
-            this.numericLimitActiveAccount.Size = new System.Drawing.Size(44, 22);
-            this.numericLimitActiveAccount.TabIndex = 114;
-            this.numericLimitActiveAccount.Value = new decimal(new int[] {
-            5,
-            0,
-            0,
-            0});
-            // 
-            // label96
-            // 
-            this.label96.AutoSize = true;
-            this.label96.Font = new System.Drawing.Font("Segoe UI Semilight", 8.25F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            this.label96.Location = new System.Drawing.Point(14, 237);
-            this.label96.Name = "label96";
-            this.label96.Size = new System.Drawing.Size(275, 13);
-            this.label96.TabIndex = 116;
-            this.label96.Text = "Delay for the specified amount of seconds after launching";
-            // 
-            // label95
-            // 
-            this.label95.AutoSize = true;
-            this.label95.Font = new System.Drawing.Font("Segoe UI Semibold", 9F, System.Drawing.FontStyle.Bold);
-            this.label95.Location = new System.Drawing.Point(13, 177);
-            this.label95.Name = "label95";
-            this.label95.Size = new System.Drawing.Size(191, 15);
-            this.label95.TabIndex = 115;
-            this.label95.Text = "Delay launching multiple accounts";
-            // 
-            // checkDelaySeconds
-            // 
-            this.checkDelaySeconds.AutoSize = true;
-            this.checkDelaySeconds.Location = new System.Drawing.Point(21, 261);
-            this.checkDelaySeconds.Name = "checkDelaySeconds";
-            this.checkDelaySeconds.Size = new System.Drawing.Size(15, 14);
-            this.checkDelaySeconds.TabIndex = 117;
-            this.checkDelaySeconds.UseVisualStyleBackColor = true;
-            this.checkDelaySeconds.CheckedChanged += new System.EventHandler(this.checkDelaySeconds_CheckedChanged);
-            // 
-            // numericDelaySeconds
-            // 
-            this.numericDelaySeconds.Enabled = false;
-            this.numericDelaySeconds.Location = new System.Drawing.Point(43, 258);
-            this.numericDelaySeconds.Maximum = new decimal(new int[] {
-            240,
-            0,
-            0,
-            0});
-            this.numericDelaySeconds.Minimum = new decimal(new int[] {
-            1,
-            0,
-            0,
-            0});
-            this.numericDelaySeconds.Name = "numericDelaySeconds";
-            this.numericDelaySeconds.Size = new System.Drawing.Size(44, 22);
-            this.numericDelaySeconds.TabIndex = 118;
-            this.numericDelaySeconds.Value = new decimal(new int[] {
-            5,
-            0,
-            0,
-            0});
-            // 
-            // checkDelayUntilLoaded
-            // 
-            this.checkDelayUntilLoaded.AutoSize = true;
-            this.checkDelayUntilLoaded.Location = new System.Drawing.Point(21, 214);
-            this.checkDelayUntilLoaded.Name = "checkDelayUntilLoaded";
-            this.checkDelayUntilLoaded.Size = new System.Drawing.Size(216, 17);
-            this.checkDelayUntilLoaded.TabIndex = 119;
-            this.checkDelayUntilLoaded.Text = "Delay until loaded to character select";
-            this.checkDelayUntilLoaded.UseVisualStyleBackColor = true;
-            // 
-            // label97
-            // 
-            this.label97.AutoSize = true;
-            this.label97.Font = new System.Drawing.Font("Segoe UI Semilight", 8.25F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            this.label97.Location = new System.Drawing.Point(14, 193);
-            this.label97.Name = "label97";
-            this.label97.Size = new System.Drawing.Size(213, 13);
-            this.label97.TabIndex = 120;
-            this.label97.Text = "Delay until the main game window is loaded";
-            // 
-            // panelLaunchConfiguration
-            // 
-            this.panelLaunchConfiguration.Anchor = ((System.Windows.Forms.AnchorStyles)((((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom) 
-            | System.Windows.Forms.AnchorStyles.Left) 
-            | System.Windows.Forms.AnchorStyles.Right)));
-            this.panelLaunchConfiguration.Controls.Add(this.labelShowLocalizedExecution);
-            this.panelLaunchConfiguration.Controls.Add(this.label102);
-            this.panelLaunchConfiguration.Controls.Add(this.label100);
-            this.panelLaunchConfiguration.Controls.Add(this.checkLocalizedExecution);
-            this.panelLaunchConfiguration.Controls.Add(this.label101);
-            this.panelLaunchConfiguration.Controls.Add(this.label97);
-            this.panelLaunchConfiguration.Controls.Add(this.checkDelayUntilLoaded);
-            this.panelLaunchConfiguration.Controls.Add(this.numericDelaySeconds);
-            this.panelLaunchConfiguration.Controls.Add(this.checkDelaySeconds);
-            this.panelLaunchConfiguration.Controls.Add(this.label95);
-            this.panelLaunchConfiguration.Controls.Add(this.label96);
-            this.panelLaunchConfiguration.Controls.Add(this.numericLimitActiveAccount);
-            this.panelLaunchConfiguration.Controls.Add(this.checkLimitActiveAccount);
-            this.panelLaunchConfiguration.Controls.Add(this.label98);
-            this.panelLaunchConfiguration.Controls.Add(this.label99);
-            this.panelLaunchConfiguration.Location = new System.Drawing.Point(183, 12);
-            this.panelLaunchConfiguration.Name = "panelLaunchConfiguration";
-            this.panelLaunchConfiguration.Size = new System.Drawing.Size(373, 378);
-            this.panelLaunchConfiguration.TabIndex = 105;
-            this.panelLaunchConfiguration.Visible = false;
-            this.panelLaunchConfiguration.VisibleChanged += new System.EventHandler(this.panelLaunchConfiguration_VisibleChanged);
-            // 
-            // labelShowLocalizedExecution
-            // 
-            this.labelShowLocalizedExecution.AutoSize = true;
-            this.labelShowLocalizedExecution.Cursor = System.Windows.Forms.Cursors.Hand;
-            this.labelShowLocalizedExecution.ForeColor = System.Drawing.Color.FromArgb(((int)(((byte)(49)))), ((int)(((byte)(121)))), ((int)(((byte)(242)))));
-            this.labelShowLocalizedExecution.Location = new System.Drawing.Point(269, 79);
-            this.labelShowLocalizedExecution.Name = "labelShowLocalizedExecution";
-            this.labelShowLocalizedExecution.Size = new System.Drawing.Size(68, 13);
-            this.labelShowLocalizedExecution.TabIndex = 125;
-            this.labelShowLocalizedExecution.Text = "open folder";
-            this.labelShowLocalizedExecution.Visible = false;
-            this.labelShowLocalizedExecution.Click += new System.EventHandler(this.labelShowLocalizedExecution_Click);
-            // 
-            // label102
-            // 
-            this.label102.AutoSize = true;
-            this.label102.Font = new System.Drawing.Font("Segoe UI Semilight", 8.25F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            this.label102.ForeColor = System.Drawing.SystemColors.GrayText;
-            this.label102.Location = new System.Drawing.Point(14, 44);
-            this.label102.MaximumSize = new System.Drawing.Size(330, 0);
-            this.label102.Name = "label102";
-            this.label102.Size = new System.Drawing.Size(329, 26);
-            this.label102.TabIndex = 124;
-            this.label102.Text = "Prevents files from being copied multiple times per launch and allows for each ac" +
-    "count to use custom DLLs";
-            // 
-            // label100
-            // 
-            this.label100.AutoSize = true;
-            this.label100.Font = new System.Drawing.Font("Segoe UI Semilight", 8.25F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            this.label100.Location = new System.Drawing.Point(14, 26);
-            this.label100.Name = "label100";
-            this.label100.Size = new System.Drawing.Size(288, 13);
-            this.label100.TabIndex = 123;
-            this.label100.Text = "Each account will be launched using its own executable path";
-            // 
-            // checkLocalizedExecution
-            // 
-            this.checkLocalizedExecution.AutoSize = true;
-            this.checkLocalizedExecution.Location = new System.Drawing.Point(20, 78);
-            this.checkLocalizedExecution.Name = "checkLocalizedExecution";
-            this.checkLocalizedExecution.Size = new System.Drawing.Size(245, 17);
-            this.checkLocalizedExecution.TabIndex = 122;
-            this.checkLocalizedExecution.Text = "Give each account its own executable path";
-            this.checkLocalizedExecution.UseVisualStyleBackColor = true;
-            // 
-            // label101
-            // 
-            this.label101.AutoSize = true;
-            this.label101.Font = new System.Drawing.Font("Segoe UI Semibold", 9F, System.Drawing.FontStyle.Bold);
-            this.label101.Location = new System.Drawing.Point(13, 10);
-            this.label101.Name = "label101";
-            this.label101.Size = new System.Drawing.Size(158, 15);
-            this.label101.TabIndex = 121;
-            this.label101.Text = "Localized account execution";
+            this.buttonSample.AccountData = null;
+            this.buttonSample.AccountName = "Example";
+            this.buttonSample.BackColor = System.Drawing.Color.White;
+            this.buttonSample.ColorKey = System.Drawing.Color.Empty;
+            this.buttonSample.Cursor = System.Windows.Forms.Cursors.Hand;
+            this.buttonSample.DisplayName = "example@example.com";
+            this.buttonSample.FontLarge = new System.Drawing.Font("Segoe UI Semibold", 8.25F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+            this.buttonSample.FontSmall = new System.Drawing.Font("Segoe UI Semilight", 8.25F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+            this.buttonSample.Index = 0;
+            this.buttonSample.IsFocused = false;
+            this.buttonSample.LastDailyCompletionUtc = new System.DateTime(((long)(0)));
+            this.buttonSample.LastDailyLoginUtc = new System.DateTime(((long)(0)));
+            this.buttonSample.LastNoteUtc = new System.DateTime(((long)(0)));
+            this.buttonSample.LastUsedUtc = new System.DateTime(((long)(0)));
+            this.buttonSample.Location = new System.Drawing.Point(24, 197);
+            this.buttonSample.Margin = new System.Windows.Forms.Padding(48, 22, 48, 22);
+            this.buttonSample.MinimumSize = new System.Drawing.Size(0, 68);
+            this.buttonSample.Name = "buttonSample";
+            this.buttonSample.Selected = false;
+            this.buttonSample.ShowAccount = true;
+            this.buttonSample.ShowColorKey = false;
+            this.buttonSample.ShowDailyCompletion = false;
+            this.buttonSample.ShowDailyLogin = false;
+            this.buttonSample.Size = new System.Drawing.Size(225, 68);
+            this.buttonSample.Status = null;
+            this.buttonSample.StatusColor = System.Drawing.Color.Empty;
+            this.buttonSample.TabIndex = 38;
             // 
             // formSettings
             // 
-            this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
-            this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
+            this.AutoScaleDimensions = new System.Drawing.SizeF(96F, 96F);
+            this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Dpi;
             this.ClientSize = new System.Drawing.Size(568, 446);
             this.Controls.Add(this.buttonCancel);
             this.Controls.Add(this.buttonOK);
             this.Controls.Add(this.sidebarPanel1);
-            this.Controls.Add(this.panelGeneral);
-            this.Controls.Add(this.panelSecurity);
-            this.Controls.Add(this.panelPasswords);
-            this.Controls.Add(this.panelLaunchOptionsAdvanced);
-            this.Controls.Add(this.panelStyle);
             this.Controls.Add(this.panelLaunchOptions);
             this.Controls.Add(this.panelLaunchOptionsProcess);
             this.Controls.Add(this.panelLaunchConfiguration);
@@ -3042,6 +3051,11 @@
             this.Controls.Add(this.panelScreenshots);
             this.Controls.Add(this.panelAccountBar);
             this.Controls.Add(this.panelWindows);
+            this.Controls.Add(this.panelGeneral);
+            this.Controls.Add(this.panelSecurity);
+            this.Controls.Add(this.panelPasswords);
+            this.Controls.Add(this.panelLaunchOptionsAdvanced);
+            this.Controls.Add(this.panelStyle);
             this.Font = new System.Drawing.Font("Segoe UI", 8.25F);
             this.Icon = global::Gw2Launcher.Properties.Resources.Gw2Launcher;
             this.MaximizeBox = false;
@@ -3091,11 +3105,12 @@
             this.panelLaunchOptionsProcessContent.PerformLayout();
             this.panelAccountBar.ResumeLayout(false);
             this.panelAccountBar.PerformLayout();
-            this.sidebarPanel1.ResumeLayout(false);
+            this.panelAccountBarControls.ResumeLayout(false);
             ((System.ComponentModel.ISupportInitialize)(this.numericLimitActiveAccount)).EndInit();
             ((System.ComponentModel.ISupportInitialize)(this.numericDelaySeconds)).EndInit();
             this.panelLaunchConfiguration.ResumeLayout(false);
             this.panelLaunchConfiguration.PerformLayout();
+            this.sidebarPanel1.ResumeLayout(false);
             this.ResumeLayout(false);
 
         }
@@ -3306,7 +3321,7 @@
         private System.Windows.Forms.CheckBox checkAccountBarEnable;
         private System.Windows.Forms.Label label90;
         private System.Windows.Forms.Label label91;
-        private System.Windows.Forms.Label label92;
+        private System.Windows.Forms.Label labelAccountBarInfo;
         private System.Windows.Forms.Label label93;
         private System.Windows.Forms.Button buttonAccountBarShow;
         private System.Windows.Forms.CheckBox checkUseGw2ShortcutIcon;
@@ -3328,5 +3343,6 @@
         private System.Windows.Forms.Label label101;
         private System.Windows.Forms.Label labelShowLocalizedExecution;
         private System.Windows.Forms.Button buttonAccountBarReset;
+        private System.Windows.Forms.Panel panelAccountBarControls;
     }
 }

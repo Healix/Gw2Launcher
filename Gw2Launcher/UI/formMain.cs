@@ -71,7 +71,7 @@ namespace Gw2Launcher.UI
             buttons = new Dictionary<ushort, AccountGridButton>();
             canShow = true;
 
-            disableAutomaticLoginsToolStripMenuItem1.Tag = 0;
+            //disableAutomaticLoginsToolStripMenuItem1.Tag = 0;
             applyWindowedBoundsToolStripMenuItem1.Tag = 0;
 
             Application.EnterThreadModal += Application_EnterThreadModal;
@@ -186,7 +186,7 @@ namespace Gw2Launcher.UI
 
         void contextNotify_Opening(object sender, CancelEventArgs e)
         {
-            disableAutomaticLoginsToolStripMenuItem2.Enabled = (int)disableAutomaticLoginsToolStripMenuItem1.Tag > 0;
+            //disableAutomaticLoginsToolStripMenuItem2.Enabled = (int)disableAutomaticLoginsToolStripMenuItem1.Tag > 0;
             applyWindowedBoundsToolStripMenuItem2.Enabled = (int)applyWindowedBoundsToolStripMenuItem1.Tag > 0;
 
             var accountBar = Settings.AccountBar.Enabled.Value;
@@ -1376,28 +1376,28 @@ namespace Gw2Launcher.UI
             }
         }
 
-        void Launcher_AccountStateChanged(ushort uid, Client.Launcher.AccountState state, Client.Launcher.AccountState previousState, object data)
+        void Launcher_AccountStateChanged(Settings.IAccount a, Client.Launcher.AccountStateEventArgs e)
         {
             if (Util.Invoke.IfRequiredAsync(this,
                 delegate
                 {
-                    Launcher_AccountStateChanged(uid, state, previousState, data);
+                    Launcher_AccountStateChanged(a, e);
                 }))
                 return;
 
             AccountGridButton button;
-            if (buttons.TryGetValue(uid, out button))
+            if (buttons.TryGetValue(e.UID, out button))
             {
-                if (button.Tag != data)
+                if (button.Tag != e.Data)
                 {
-                    button.Tag = data;
-                    OnButtonDataChanged(button, data);
+                    button.Tag = e.Data;
+                    OnButtonDataChanged(button, e.Data);
                 }
 
                 if (button.AccountData != null)
                 {
                     var account = button.AccountData;
-                    var exited = previousState == Client.Launcher.AccountState.ActiveGame;
+                    var exited = e.PreviousState == Client.Launcher.AccountState.ActiveGame;
 
                     //as a backup in case catching the DX window failed, catch the exit time
                     //if (previousState == Client.Launcher.AccountState.Active && state == Client.Launcher.AccountState.Exited && data is TimeSpan)
@@ -1417,7 +1417,7 @@ namespace Gw2Launcher.UI
 
                         if (account.ApiData != null)
                         {
-                            var minutes = data is TimeSpan ? (int)((TimeSpan)data).TotalMinutes : 1;
+                            var minutes = e.Data is TimeSpan ? (int)((TimeSpan)e.Data).TotalMinutes : 1;
 
                             if (minutes >= 1)
                             {
@@ -1431,7 +1431,7 @@ namespace Gw2Launcher.UI
 
                     }
 
-                    if (state == Client.Launcher.AccountState.Active && account.ApiData != null)
+                    if (e.State == Client.Launcher.AccountState.Active && account.ApiData != null)
                     {
                         //note that played time is always checked on the daily launch because what was previously stored on exit is outdated due to the API giving cached responses
                         //whereas points only need to be checked if the state isn't okay, as it only updates once per day
@@ -1459,12 +1459,12 @@ namespace Gw2Launcher.UI
                     {
                         if (exited)
                             screenshotMonitor.Remove(account);
-                        else if (state == Client.Launcher.AccountState.ActiveGame)
+                        else if (e.State == Client.Launcher.AccountState.ActiveGame)
                             screenshotMonitor.Add(account);
                     }
                 }
 
-                switch (state)
+                switch (e.State)
                 {
                     case Client.Launcher.AccountState.Active:
                         button.SetStatus("active", Color.DarkGreen);
@@ -2053,15 +2053,17 @@ namespace Gw2Launcher.UI
 
         protected void ResizeAuto()
         {
+            var scale = this.CurrentAutoScaleDimensions.Width / 96f;
             var screen = Screen.FromControl(this).WorkingArea;
             int height = gridContainer.ContentHeight + (this.Height - this.ClientSize.Height) + panelContainer.Location.Y * 2 + gridContainer.Location.Y * 2 + 2;
-            int width = 250 + (this.Width - this.ClientSize.Width) + panelContainer.Location.X * 2 + gridContainer.Location.X * 2 + 2;
+            int width = (int)(250 * scale + 0.5f) + (this.Width - this.ClientSize.Width) + panelContainer.Location.X * 2 + gridContainer.Location.X * 2 + 2;
 
             if (this.Location.Y + height > screen.Bottom)
             {
                 height = screen.Bottom - this.Location.Y;
-                if (height < 100)
-                    height = 100;
+                var min = (int)(100 * scale + 0.5f);
+                if (height < min)
+                    height = min;
             }
 
             this.Size = new Size(width, height);
@@ -2380,7 +2382,7 @@ namespace Gw2Launcher.UI
                     }
                 }
 
-                disableAutomaticLoginsToolStripMenuItem1.Enabled = (int)disableAutomaticLoginsToolStripMenuItem1.Tag > 0;
+                //disableAutomaticLoginsToolStripMenuItem1.Enabled = (int)disableAutomaticLoginsToolStripMenuItem1.Tag > 0;
                 applyWindowedBoundsToolStripMenuItem1.Enabled = (int)applyWindowedBoundsToolStripMenuItem1.Tag > 0;
 
                 contextMenu.Tag = null;
@@ -2443,7 +2445,7 @@ namespace Gw2Launcher.UI
 
                 cancelPendingLaunchesToolStripMenuItem.Visible = pending > 0;
                 toolStripMenuItemCancelSep.Visible = pending > 0;
-                disableAutomaticLoginsToolStripMenuItem1.Enabled = (int)disableAutomaticLoginsToolStripMenuItem1.Tag > 0;
+                //disableAutomaticLoginsToolStripMenuItem1.Enabled = (int)disableAutomaticLoginsToolStripMenuItem1.Tag > 0;
                 applyWindowedBoundsToolStripMenuItem1.Enabled = (int)applyWindowedBoundsToolStripMenuItem1.Tag > 0;
 
                 var accountBar = Settings.AccountBar.Enabled.Value;
@@ -2823,8 +2825,8 @@ namespace Gw2Launcher.UI
         {
             if (account.Windowed)
                 applyWindowedBoundsToolStripMenuItem1.Tag = (int)applyWindowedBoundsToolStripMenuItem1.Tag + 1;
-            if (account.AutomaticLogin)
-                disableAutomaticLoginsToolStripMenuItem1.Tag = (int)disableAutomaticLoginsToolStripMenuItem1.Tag + 1;
+            //if (account.AutomaticLogin)
+            //    disableAutomaticLoginsToolStripMenuItem1.Tag = (int)disableAutomaticLoginsToolStripMenuItem1.Tag + 1;
 
             var d = account.ApiData;
             if (d != null && (d.Played != null && d.Played.State == Settings.ApiCacheState.None || d.DailyPoints != null && d.DailyPoints.State == Settings.ApiCacheState.None))
@@ -2837,8 +2839,8 @@ namespace Gw2Launcher.UI
         {
             if (account.Windowed)
                 applyWindowedBoundsToolStripMenuItem1.Tag = (int)applyWindowedBoundsToolStripMenuItem1.Tag - 1;
-            if (account.AutomaticLogin)
-                disableAutomaticLoginsToolStripMenuItem1.Tag = (int)disableAutomaticLoginsToolStripMenuItem1.Tag - 1;
+            //if (account.AutomaticLogin)
+            //    disableAutomaticLoginsToolStripMenuItem1.Tag = (int)disableAutomaticLoginsToolStripMenuItem1.Tag - 1;
         }
 
         void OnBeforeAccountSettingsUpdated(Settings.IAccount account)
@@ -3765,7 +3767,24 @@ namespace Gw2Launcher.UI
                         catch { }
 
                         break;
+                    case Messaging.Messager.MessageType.UpdateMap:
+
+                        try
+                        {
+                            var update = Messaging.UpdateMessage.FromMap((int)m.LParam);
+
+                            this.BeginInvoke(new MethodInvoker(
+                                delegate
+                                {
+                                    Client.Launcher.Update(update.files);
+                                }));
+                        }
+                        catch { }
+
+                        break;
                 }
+
+                base.WndProc(ref m);
 
                 return;
             }

@@ -35,7 +35,7 @@ namespace Gw2Launcher.Tools.Dat
                 if (compression != 0)
                     throw new IOException("File is compressed");
 
-                //each entry is 8 bytes - file id + index
+                //each entry is 8 bytes (file id + index)
                 r.BaseStream.Position = offset;
 
                 do

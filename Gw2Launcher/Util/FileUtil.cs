@@ -87,15 +87,20 @@ namespace Gw2Launcher.Util
 
             return false;
         }
-
+        
         public static string GetTemporaryFileName(string folder)
+        {
+            return GetTemporaryFileName(folder, "{0}.tmp");
+        }
+
+        public static string GetTemporaryFileName(string folder, string format)
         {
             int i = 0;
             Random r = new Random();
             string temp;
             do
             {
-                temp = Path.Combine(folder, (i++ + r.Next(0x1000, 0xffff)).ToString("x") + ".tmp");
+                temp = Path.Combine(folder, string.Format(format, (i++ + r.Next(0x1000, 0xffff)).ToString("x")));
             }
             while (File.Exists(temp) && i < 100);
             if (i == 100 && File.Exists(temp))
@@ -103,6 +108,35 @@ namespace Gw2Launcher.Util
                 try
                 {
                     File.Delete(temp);
+                }
+                catch
+                {
+                    return null;
+                }
+            }
+            return temp;
+        }
+
+        public static string GetTemporaryFolderName(string folder)
+        {
+            return GetTemporaryFolderName(folder, "{0}");
+        }
+
+        public static string GetTemporaryFolderName(string folder, string format)
+        {
+            int i = 0;
+            Random r = new Random();
+            string temp;
+            do
+            {
+                temp = Path.Combine(folder, string.Format(format, (i++ + r.Next(0x1000, 0xffff)).ToString("x")));
+            }
+            while (Directory.Exists(temp) && i < 100);
+            if (i == 100 && Directory.Exists(temp))
+            {
+                try
+                {
+                    Directory.Delete(temp);
                 }
                 catch
                 {

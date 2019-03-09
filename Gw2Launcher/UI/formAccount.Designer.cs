@@ -16,8 +16,8 @@
         private void InitializeComponent()
         {
             this.components = new System.ComponentModel.Container();
-            System.Security.SecureString secureString1 = new System.Security.SecureString();
-            System.Security.SecureString secureString2 = new System.Security.SecureString();
+            System.Security.SecureString secureString3 = new System.Security.SecureString();
+            System.Security.SecureString secureString4 = new System.Security.SecureString();
             this.panelGeneral = new System.Windows.Forms.Panel();
             this.label71 = new System.Windows.Forms.Label();
             this.label72 = new System.Windows.Forms.Label();
@@ -53,7 +53,7 @@
             this.panelLaunchOptions = new System.Windows.Forms.Panel();
             this.labelAutologinConfigure = new System.Windows.Forms.Label();
             this.checkAutomaticLoginPlay = new System.Windows.Forms.CheckBox();
-            this.label9 = new System.Windows.Forms.Label();
+            this.labelAutologin = new System.Windows.Forms.Label();
             this.label10 = new System.Windows.Forms.Label();
             this.label66 = new System.Windows.Forms.Label();
             this.label55 = new System.Windows.Forms.Label();
@@ -339,7 +339,7 @@
             this.checkShowDailyCompletion.Location = new System.Drawing.Point(21, 341);
             this.checkShowDailyCompletion.Name = "checkShowDailyCompletion";
             this.checkShowDailyCompletion.Size = new System.Drawing.Size(198, 17);
-            this.checkShowDailyCompletion.TabIndex = 3;
+            this.checkShowDailyCompletion.TabIndex = 4;
             this.checkShowDailyCompletion.Text = "Show daily achievement indicator";
             this.checkShowDailyCompletion.UseVisualStyleBackColor = true;
             // 
@@ -372,7 +372,7 @@
             this.checkShowDailyLogin.Location = new System.Drawing.Point(21, 282);
             this.checkShowDailyLogin.Name = "checkShowDailyLogin";
             this.checkShowDailyLogin.Size = new System.Drawing.Size(134, 17);
-            this.checkShowDailyLogin.TabIndex = 2;
+            this.checkShowDailyLogin.TabIndex = 3;
             this.checkShowDailyLogin.Text = "Show login indicator";
             this.checkShowDailyLogin.UseVisualStyleBackColor = true;
             // 
@@ -402,7 +402,7 @@
             this.buttonUsername.Location = new System.Drawing.Point(196, 209);
             this.buttonUsername.Name = "buttonUsername";
             this.buttonUsername.Size = new System.Drawing.Size(43, 24);
-            this.buttonUsername.TabIndex = 1;
+            this.buttonUsername.TabIndex = 2;
             this.buttonUsername.Text = "...";
             this.buttonUsername.UseVisualStyleBackColor = true;
             this.buttonUsername.Click += new System.EventHandler(this.buttonUsername_Click);
@@ -414,7 +414,7 @@
             this.textWindowsAccount.Name = "textWindowsAccount";
             this.textWindowsAccount.ReadOnly = true;
             this.textWindowsAccount.Size = new System.Drawing.Size(169, 22);
-            this.textWindowsAccount.TabIndex = 0;
+            this.textWindowsAccount.TabIndex = 1;
             this.textWindowsAccount.TabStop = false;
             // 
             // label2
@@ -474,7 +474,7 @@
             this.checkTrackDailyCompletionApi.Location = new System.Drawing.Point(21, 170);
             this.checkTrackDailyCompletionApi.Name = "checkTrackDailyCompletionApi";
             this.checkTrackDailyCompletionApi.Size = new System.Drawing.Size(139, 17);
-            this.checkTrackDailyCompletionApi.TabIndex = 5;
+            this.checkTrackDailyCompletionApi.TabIndex = 1;
             this.checkTrackDailyCompletionApi.Text = "Track daily completion";
             this.checkTrackDailyCompletionApi.UseVisualStyleBackColor = true;
             // 
@@ -592,7 +592,7 @@
             this.panelLaunchOptions.AutoScrollMargin = new System.Drawing.Size(0, 10);
             this.panelLaunchOptions.Controls.Add(this.labelAutologinConfigure);
             this.panelLaunchOptions.Controls.Add(this.checkAutomaticLoginPlay);
-            this.panelLaunchOptions.Controls.Add(this.label9);
+            this.panelLaunchOptions.Controls.Add(this.labelAutologin);
             this.panelLaunchOptions.Controls.Add(this.label10);
             this.panelLaunchOptions.Controls.Add(this.label66);
             this.panelLaunchOptions.Controls.Add(this.label55);
@@ -667,19 +667,20 @@
             this.checkAutomaticLoginPlay.Location = new System.Drawing.Point(21, 311);
             this.checkAutomaticLoginPlay.Name = "checkAutomaticLoginPlay";
             this.checkAutomaticLoginPlay.Size = new System.Drawing.Size(211, 17);
-            this.checkAutomaticLoginPlay.TabIndex = 26;
+            this.checkAutomaticLoginPlay.TabIndex = 8;
             this.checkAutomaticLoginPlay.Text = "Automatically \"play\" after logging in";
             this.checkAutomaticLoginPlay.UseVisualStyleBackColor = true;
             // 
-            // label9
+            // labelAutologin
             // 
-            this.label9.AutoSize = true;
-            this.label9.Font = new System.Drawing.Font("Segoe UI Semibold", 9F, System.Drawing.FontStyle.Bold);
-            this.label9.Location = new System.Drawing.Point(13, 239);
-            this.label9.Name = "label9";
-            this.label9.Size = new System.Drawing.Size(210, 15);
-            this.label9.TabIndex = 0;
-            this.label9.Text = "Automatically login to character select";
+            this.labelAutologin.AutoSize = true;
+            this.labelAutologin.Font = new System.Drawing.Font("Segoe UI Semibold", 9F, System.Drawing.FontStyle.Bold);
+            this.labelAutologin.Location = new System.Drawing.Point(13, 239);
+            this.labelAutologin.Name = "labelAutologin";
+            this.labelAutologin.Size = new System.Drawing.Size(210, 15);
+            this.labelAutologin.TabIndex = 0;
+            this.labelAutologin.Text = "Automatically login to character select";
+            this.labelAutologin.SizeChanged += new System.EventHandler(this.labelAutologin_SizeChanged);
             // 
             // label10
             // 
@@ -719,7 +720,7 @@
             this.checkWindowedTopMost.Location = new System.Drawing.Point(21, 209);
             this.checkWindowedTopMost.Name = "checkWindowedTopMost";
             this.checkWindowedTopMost.Size = new System.Drawing.Size(188, 17);
-            this.checkWindowedTopMost.TabIndex = 24;
+            this.checkWindowedTopMost.TabIndex = 6;
             this.checkWindowedTopMost.Text = "Show on top of other windows";
             this.checkWindowedTopMost.UseVisualStyleBackColor = true;
             // 
@@ -741,7 +742,7 @@
             this.checkWindowedPreventChanges.Location = new System.Drawing.Point(21, 189);
             this.checkWindowedPreventChanges.Name = "checkWindowedPreventChanges";
             this.checkWindowedPreventChanges.Size = new System.Drawing.Size(214, 17);
-            this.checkWindowedPreventChanges.TabIndex = 23;
+            this.checkWindowedPreventChanges.TabIndex = 5;
             this.checkWindowedPreventChanges.Text = "Prevent resizing/moving the window";
             this.checkWindowedPreventChanges.UseVisualStyleBackColor = true;
             // 
@@ -751,7 +752,7 @@
             this.checkAutomaticLogin.Location = new System.Drawing.Point(21, 291);
             this.checkAutomaticLogin.Name = "checkAutomaticLogin";
             this.checkAutomaticLogin.Size = new System.Drawing.Size(262, 17);
-            this.checkAutomaticLogin.TabIndex = 4;
+            this.checkAutomaticLogin.TabIndex = 7;
             this.checkAutomaticLogin.Text = "Automatically enter email/password and login";
             this.checkAutomaticLogin.UseVisualStyleBackColor = true;
             this.checkAutomaticLogin.CheckedChanged += new System.EventHandler(this.checkAutomaticLogin_CheckedChanged);
@@ -763,7 +764,7 @@
             this.checkWindowedUpdateOnChange.Location = new System.Drawing.Point(21, 169);
             this.checkWindowedUpdateOnChange.Name = "checkWindowedUpdateOnChange";
             this.checkWindowedUpdateOnChange.Size = new System.Drawing.Size(308, 17);
-            this.checkWindowedUpdateOnChange.TabIndex = 22;
+            this.checkWindowedUpdateOnChange.TabIndex = 4;
             this.checkWindowedUpdateOnChange.Text = "Remember changes when resizing/moving the window";
             this.checkWindowedUpdateOnChange.UseVisualStyleBackColor = true;
             // 
@@ -774,7 +775,7 @@
             this.textAutoLoginEmail.Location = new System.Drawing.Point(80, 337);
             this.textAutoLoginEmail.Name = "textAutoLoginEmail";
             this.textAutoLoginEmail.Size = new System.Drawing.Size(195, 22);
-            this.textAutoLoginEmail.TabIndex = 5;
+            this.textAutoLoginEmail.TabIndex = 9;
             // 
             // checkMuteVoices
             // 
@@ -782,7 +783,7 @@
             this.checkMuteVoices.Location = new System.Drawing.Point(138, 569);
             this.checkMuteVoices.Name = "checkMuteVoices";
             this.checkMuteVoices.Size = new System.Drawing.Size(58, 17);
-            this.checkMuteVoices.TabIndex = 20;
+            this.checkMuteVoices.TabIndex = 16;
             this.checkMuteVoices.Text = "Voices";
             this.checkMuteVoices.UseVisualStyleBackColor = true;
             // 
@@ -803,7 +804,7 @@
             this.buttonScreenshotsLocation.Location = new System.Drawing.Point(299, 745);
             this.buttonScreenshotsLocation.Name = "buttonScreenshotsLocation";
             this.buttonScreenshotsLocation.Size = new System.Drawing.Size(43, 24);
-            this.buttonScreenshotsLocation.TabIndex = 17;
+            this.buttonScreenshotsLocation.TabIndex = 22;
             this.buttonScreenshotsLocation.Text = "...";
             this.buttonScreenshotsLocation.UseVisualStyleBackColor = true;
             this.buttonScreenshotsLocation.Click += new System.EventHandler(this.buttonScreenshotsLocation_Click);
@@ -814,10 +815,10 @@
             this.textAutoLoginPassword.Font = new System.Drawing.Font("Segoe UI", 8.25F);
             this.textAutoLoginPassword.Location = new System.Drawing.Point(80, 365);
             this.textAutoLoginPassword.Name = "textAutoLoginPassword";
-            this.textAutoLoginPassword.Password = secureString1;
+            this.textAutoLoginPassword.Password = secureString3;
             this.textAutoLoginPassword.PasswordChar = '*';
             this.textAutoLoginPassword.Size = new System.Drawing.Size(195, 22);
-            this.textAutoLoginPassword.TabIndex = 6;
+            this.textAutoLoginPassword.TabIndex = 10;
             this.textAutoLoginPassword.UseSystemPasswordChar = true;
             // 
             // checkScreenshotsLocation
@@ -826,7 +827,7 @@
             this.checkScreenshotsLocation.Location = new System.Drawing.Point(21, 749);
             this.checkScreenshotsLocation.Name = "checkScreenshotsLocation";
             this.checkScreenshotsLocation.Size = new System.Drawing.Size(15, 14);
-            this.checkScreenshotsLocation.TabIndex = 15;
+            this.checkScreenshotsLocation.TabIndex = 20;
             this.checkScreenshotsLocation.UseVisualStyleBackColor = true;
             this.checkScreenshotsLocation.CheckedChanged += new System.EventHandler(this.checkScreenshotsLocation_CheckedChanged);
             // 
@@ -847,7 +848,7 @@
             this.textScreenshotsLocation.Location = new System.Drawing.Point(43, 746);
             this.textScreenshotsLocation.Name = "textScreenshotsLocation";
             this.textScreenshotsLocation.Size = new System.Drawing.Size(250, 22);
-            this.textScreenshotsLocation.TabIndex = 16;
+            this.textScreenshotsLocation.TabIndex = 21;
             // 
             // label38
             // 
@@ -886,7 +887,7 @@
             this.checkAutomaticLauncherLogin.Location = new System.Drawing.Point(21, 457);
             this.checkAutomaticLauncherLogin.Name = "checkAutomaticLauncherLogin";
             this.checkAutomaticLauncherLogin.Size = new System.Drawing.Size(224, 17);
-            this.checkAutomaticLauncherLogin.TabIndex = 7;
+            this.checkAutomaticLauncherLogin.TabIndex = 11;
             this.checkAutomaticLauncherLogin.Text = "Automatically login when remembered";
             this.checkAutomaticLauncherLogin.UseVisualStyleBackColor = true;
             // 
@@ -930,7 +931,7 @@
             this.checkMuteMusic.Location = new System.Drawing.Point(71, 569);
             this.checkMuteMusic.Name = "checkMuteMusic";
             this.checkMuteMusic.Size = new System.Drawing.Size(56, 17);
-            this.checkMuteMusic.TabIndex = 11;
+            this.checkMuteMusic.TabIndex = 15;
             this.checkMuteMusic.Text = "Music";
             this.checkMuteMusic.UseVisualStyleBackColor = true;
             // 
@@ -940,7 +941,7 @@
             this.checkMuteAll.Location = new System.Drawing.Point(21, 569);
             this.checkMuteAll.Name = "checkMuteAll";
             this.checkMuteAll.Size = new System.Drawing.Size(39, 17);
-            this.checkMuteAll.TabIndex = 10;
+            this.checkMuteAll.TabIndex = 14;
             this.checkMuteAll.Text = "All";
             this.checkMuteAll.UseVisualStyleBackColor = true;
             // 
@@ -980,7 +981,7 @@
             this.sliderVolume.Location = new System.Drawing.Point(43, 522);
             this.sliderVolume.Name = "sliderVolume";
             this.sliderVolume.Size = new System.Drawing.Size(150, 20);
-            this.sliderVolume.TabIndex = 9;
+            this.sliderVolume.TabIndex = 13;
             this.sliderVolume.TabStop = false;
             this.sliderVolume.Value = 1F;
             this.sliderVolume.ValueChanged += new System.EventHandler<float>(this.sliderVolume_ValueChanged);
@@ -994,7 +995,7 @@
             this.textRunAfterLaunch.Multiline = true;
             this.textRunAfterLaunch.Name = "textRunAfterLaunch";
             this.textRunAfterLaunch.Size = new System.Drawing.Size(321, 51);
-            this.textRunAfterLaunch.TabIndex = 18;
+            this.textRunAfterLaunch.TabIndex = 23;
             this.textRunAfterLaunch.WordWrap = false;
             // 
             // label28
@@ -1013,7 +1014,7 @@
             this.checkScreenshotsBmp.Location = new System.Drawing.Point(21, 703);
             this.checkScreenshotsBmp.Name = "checkScreenshotsBmp";
             this.checkScreenshotsBmp.Size = new System.Drawing.Size(161, 17);
-            this.checkScreenshotsBmp.TabIndex = 14;
+            this.checkScreenshotsBmp.TabIndex = 19;
             this.checkScreenshotsBmp.Text = "Save screenshots as *.bmp";
             this.checkScreenshotsBmp.UseVisualStyleBackColor = true;
             // 
@@ -1033,7 +1034,7 @@
             this.checkPort443.Location = new System.Drawing.Point(70, 636);
             this.checkPort443.Name = "checkPort443";
             this.checkPort443.Size = new System.Drawing.Size(44, 17);
-            this.checkPort443.TabIndex = 13;
+            this.checkPort443.TabIndex = 18;
             this.checkPort443.Text = "443";
             this.checkPort443.UseVisualStyleBackColor = true;
             this.checkPort443.CheckedChanged += new System.EventHandler(this.checkPort443_CheckedChanged);
@@ -1055,7 +1056,7 @@
             this.checkVolume.Location = new System.Drawing.Point(21, 525);
             this.checkVolume.Name = "checkVolume";
             this.checkVolume.Size = new System.Drawing.Size(15, 14);
-            this.checkVolume.TabIndex = 8;
+            this.checkVolume.TabIndex = 12;
             this.checkVolume.UseVisualStyleBackColor = true;
             this.checkVolume.CheckedChanged += new System.EventHandler(this.checkVolume_CheckedChanged);
             // 
@@ -1065,7 +1066,7 @@
             this.checkPort80.Location = new System.Drawing.Point(21, 636);
             this.checkPort80.Name = "checkPort80";
             this.checkPort80.Size = new System.Drawing.Size(38, 17);
-            this.checkPort80.TabIndex = 12;
+            this.checkPort80.TabIndex = 17;
             this.checkPort80.Text = "80";
             this.checkPort80.UseVisualStyleBackColor = true;
             this.checkPort80.CheckedChanged += new System.EventHandler(this.checkPort80_CheckedChanged);
@@ -1196,7 +1197,7 @@
             this.checkProcessPriority.Location = new System.Drawing.Point(21, 50);
             this.checkProcessPriority.Name = "checkProcessPriority";
             this.checkProcessPriority.Size = new System.Drawing.Size(15, 14);
-            this.checkProcessPriority.TabIndex = 102;
+            this.checkProcessPriority.TabIndex = 0;
             this.checkProcessPriority.UseVisualStyleBackColor = true;
             this.checkProcessPriority.CheckedChanged += new System.EventHandler(this.checkProcessPriority_CheckedChanged);
             // 
@@ -1208,7 +1209,7 @@
             this.comboProcessPriority.Location = new System.Drawing.Point(43, 47);
             this.comboProcessPriority.Name = "comboProcessPriority";
             this.comboProcessPriority.Size = new System.Drawing.Size(157, 21);
-            this.comboProcessPriority.TabIndex = 101;
+            this.comboProcessPriority.TabIndex = 1;
             // 
             // buttonCancel
             // 
@@ -1685,7 +1686,7 @@
             this.buttonApiVerify.Location = new System.Drawing.Point(21, 90);
             this.buttonApiVerify.Name = "buttonApiVerify";
             this.buttonApiVerify.Size = new System.Drawing.Size(74, 23);
-            this.buttonApiVerify.TabIndex = 10;
+            this.buttonApiVerify.TabIndex = 1;
             this.buttonApiVerify.Text = "Verify";
             this.buttonApiVerify.UseVisualStyleBackColor = true;
             this.buttonApiVerify.Click += new System.EventHandler(this.buttonApiVerify_Click);
@@ -1746,7 +1747,7 @@
             this.checkTrackPlayedApi.Location = new System.Drawing.Point(21, 88);
             this.checkTrackPlayedApi.Name = "checkTrackPlayedApi";
             this.checkTrackPlayedApi.Size = new System.Drawing.Size(108, 17);
-            this.checkTrackPlayedApi.TabIndex = 12;
+            this.checkTrackPlayedApi.TabIndex = 0;
             this.checkTrackPlayedApi.Text = "Track daily login";
             this.checkTrackPlayedApi.UseVisualStyleBackColor = true;
             // 
@@ -1910,7 +1911,7 @@
             this.textAuthenticatorKey.Location = new System.Drawing.Point(21, 242);
             this.textAuthenticatorKey.Name = "textAuthenticatorKey";
             this.textAuthenticatorKey.Size = new System.Drawing.Size(319, 22);
-            this.textAuthenticatorKey.TabIndex = 20;
+            this.textAuthenticatorKey.TabIndex = 3;
             this.textAuthenticatorKey.TextChanged += new System.EventHandler(this.textAuthenticatorKey_TextChanged);
             // 
             // label53
@@ -1970,10 +1971,10 @@
             this.textPassword.Font = new System.Drawing.Font("Segoe UI", 8.25F);
             this.textPassword.Location = new System.Drawing.Point(80, 75);
             this.textPassword.Name = "textPassword";
-            this.textPassword.Password = secureString2;
+            this.textPassword.Password = secureString4;
             this.textPassword.PasswordChar = '*';
             this.textPassword.Size = new System.Drawing.Size(195, 22);
-            this.textPassword.TabIndex = 14;
+            this.textPassword.TabIndex = 1;
             this.textPassword.UseSystemPasswordChar = true;
             // 
             // label45
@@ -1992,7 +1993,7 @@
             this.textEmail.Location = new System.Drawing.Point(80, 47);
             this.textEmail.Name = "textEmail";
             this.textEmail.Size = new System.Drawing.Size(195, 22);
-            this.textEmail.TabIndex = 13;
+            this.textEmail.TabIndex = 0;
             // 
             // checkEnableNetworkAuthorization
             // 
@@ -2000,7 +2001,7 @@
             this.checkEnableNetworkAuthorization.Location = new System.Drawing.Point(21, 162);
             this.checkEnableNetworkAuthorization.Name = "checkEnableNetworkAuthorization";
             this.checkEnableNetworkAuthorization.Size = new System.Drawing.Size(218, 17);
-            this.checkEnableNetworkAuthorization.TabIndex = 12;
+            this.checkEnableNetworkAuthorization.TabIndex = 2;
             this.checkEnableNetworkAuthorization.Text = "Enable authorization for this account";
             this.checkEnableNetworkAuthorization.UseVisualStyleBackColor = true;
             this.checkEnableNetworkAuthorization.CheckedChanged += new System.EventHandler(this.checkEnableNetworkAuthorization_CheckedChanged);
@@ -2072,7 +2073,7 @@
             this.checkProcessAffinityAll.Location = new System.Drawing.Point(21, 117);
             this.checkProcessAffinityAll.Name = "checkProcessAffinityAll";
             this.checkProcessAffinityAll.Size = new System.Drawing.Size(108, 17);
-            this.checkProcessAffinityAll.TabIndex = 108;
+            this.checkProcessAffinityAll.TabIndex = 2;
             this.checkProcessAffinityAll.Text = "Use all available";
             this.checkProcessAffinityAll.UseVisualStyleBackColor = true;
             this.checkProcessAffinityAll.CheckedChanged += new System.EventHandler(this.checkProcessAffinityAll_CheckedChanged);
@@ -2290,21 +2291,21 @@
             // 
             // formAccount
             // 
-            this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
-            this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
+            this.AutoScaleDimensions = new System.Drawing.SizeF(96F, 96F);
+            this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Dpi;
             this.ClientSize = new System.Drawing.Size(568, 446);
             this.Controls.Add(this.buttonCancel);
             this.Controls.Add(this.buttonOK);
             this.Controls.Add(this.sidebarPanel1);
+            this.Controls.Add(this.panelLaunchOptions);
+            this.Controls.Add(this.panelStatistics);
+            this.Controls.Add(this.panelSecurity);
+            this.Controls.Add(this.panelApi);
             this.Controls.Add(this.panelGeneral);
             this.Controls.Add(this.panelGraphics);
             this.Controls.Add(this.panelLocalDat);
             this.Controls.Add(this.panelLaunchOptionsAdvanced);
             this.Controls.Add(this.panelLaunchOptionsProcess);
-            this.Controls.Add(this.panelLaunchOptions);
-            this.Controls.Add(this.panelStatistics);
-            this.Controls.Add(this.panelSecurity);
-            this.Controls.Add(this.panelApi);
             this.Font = new System.Drawing.Font("Segoe UI", 8.25F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
             this.Icon = global::Gw2Launcher.Properties.Resources.Gw2Launcher;
             this.MaximizeBox = false;
@@ -2369,7 +2370,7 @@
         private System.Windows.Forms.CheckBox checkAutomaticLogin;
         private System.Windows.Forms.Label label13;
         private System.Windows.Forms.Label label10;
-        private System.Windows.Forms.Label label9;
+        private System.Windows.Forms.Label labelAutologin;
         private System.Windows.Forms.Label label8;
         private System.Windows.Forms.Label label7;
         private System.Windows.Forms.Button buttonWindowed;

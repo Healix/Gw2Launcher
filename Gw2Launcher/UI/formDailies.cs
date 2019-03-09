@@ -176,7 +176,8 @@ namespace Gw2Launcher.UI
 
                 var h = this.Handle; //force
 
-                this.Size = new System.Drawing.Size(18, 66);
+                var scale = owner.CurrentAutoScaleDimensions.Width / 96f;
+                this.Size = new System.Drawing.Size((int)(18 * scale + 0.5f), (int)(66 * scale + 0.5f));
 
                 this.alignment = owner.alignment;
 
@@ -571,7 +572,10 @@ namespace Gw2Launcher.UI
             popup.SetData(control.Daily);
 
             var y = this.Top + panelContainer.Top + panelContent.Top + control.Top;
-            popup.Location = new Point(this.Left, y + control.Height / 2 - popup.Height / 2);
+            var x = this.Left + panelContainer.Left - 1;
+            if (alignment == HorizontalAlignment.Left)
+                x -= scrollV.Width - 1;
+            popup.Location = new Point(x, y + control.Height / 2 - popup.Height / 2);
 
             if (!popup.Visible)
                 popup.Show(this);
@@ -1240,8 +1244,13 @@ namespace Gw2Launcher.UI
                 return;
             this.alignment = alignment;
 
+            AnchorStyles a1, a2;
+
             if (alignment == HorizontalAlignment.Right)
             {
+                a1 = ~AnchorStyles.Left;
+                a2 = AnchorStyles.Right;
+
                 buttonToday.Left = this.Width - buttonToday.Right;
                 buttonTomorrow.Left = this.Width - buttonTomorrow.Right;
                 buttonMinimize.Left = this.Width - buttonMinimize.Right;
@@ -1253,6 +1262,9 @@ namespace Gw2Launcher.UI
             }
             else
             {
+                a1 = ~AnchorStyles.Right;
+                a2 = AnchorStyles.Left;
+
                 buttonToday.Left = this.Width - buttonToday.Right;
                 buttonTomorrow.Left = this.Width - buttonTomorrow.Right;
                 buttonMinimize.Left = this.Width - buttonMinimize.Right;
@@ -1262,6 +1274,11 @@ namespace Gw2Launcher.UI
                 buttonMinimize.ShapeAlignment = ContentAlignment.MiddleLeft;
                 buttonMinimize.ShapeDirection = ArrowDirection.Right;
             }
+
+            buttonToday.Anchor = buttonToday.Anchor & a1 | a2;
+            buttonTomorrow.Anchor = buttonTomorrow.Anchor & a1 | a2;
+            buttonMinimize.Anchor = buttonMinimize.Anchor & a1 | a2;
+            scrollV.Anchor = scrollV.Anchor & a1 | a2;
         }
 
         public void Minimize(bool focus)

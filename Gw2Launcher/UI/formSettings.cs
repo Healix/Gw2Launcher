@@ -138,6 +138,8 @@ namespace Gw2Launcher.UI
             checkVolume.Checked = Settings.Volume.HasValue;
             if (Settings.Volume.HasValue)
                 sliderVolume.Value = Settings.Volume.Value;
+            else
+                sliderVolume.Value = 1f;
             if (Settings.RunAfterLaunching.HasValue)
                 textRunAfterLaunch.Text = Settings.RunAfterLaunching.Value;
             else
@@ -379,6 +381,8 @@ namespace Gw2Launcher.UI
 
             argsState = ArgsState.Changed;
             containerLaunchOptionsAdvanced.PreVisiblePropertyChanged += containerLaunchOptionsAdvanced_PreVisiblePropertyChanged;
+
+            labelAccountBarInfo_SizeChanged(null, null);
         }
 
         private void InitializeActions()
@@ -1634,6 +1638,11 @@ namespace Gw2Launcher.UI
         private void buttonAccountBarReset_Click(object sender, EventArgs e)
         {
             Settings.WindowBounds[typeof(formAccountBar)].Clear();
+        }
+
+        private void labelAccountBarInfo_SizeChanged(object sender, EventArgs e)
+        {
+            panelAccountBarControls.Top = labelAccountBarInfo.Bottom;
         }
     }
 }

@@ -78,6 +78,19 @@ namespace Gw2Launcher.UI
         {
             InitializeComponent();
 
+            var scale = this.CurrentAutoScaleDimensions.Width / 96f;
+            if (scale != 1)
+            {
+                foreach (var gv in new DataGridView[] { gridLoginServers, gridPatchServers })
+                {
+                    foreach (DataGridViewColumn col in gv.Columns)
+                    {
+                        if (col.AutoSizeMode != DataGridViewAutoSizeColumnMode.Fill)
+                            col.Width = (int)(col.Width * scale + 0.5f);
+                    }
+                }
+            }
+
             cancelToken = new CancellationTokenSource();
 
             this.FormClosing += new System.Windows.Forms.FormClosingEventHandler(this.formSupport_FormClosing);

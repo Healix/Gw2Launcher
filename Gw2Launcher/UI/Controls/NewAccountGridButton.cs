@@ -25,6 +25,13 @@ namespace Gw2Launcher.UI.Controls
             rectName = new Rectangle(Point.Subtract(rectName.Location, new Size(size.Width / 2, size.Height / 2)), size);
         }
 
+        protected override void ResizeLabels(Graphics g)
+        {
+            base.ResizeLabels(g);
+
+            rectName = new Rectangle(new Point(this.Size.Width / 2 - rectName.Width / 2, this.Size.Height / 2 - rectName.Height / 2), rectName.Size);
+        }
+
         protected override void OnSizeChanged()
         {
             rectName = new Rectangle(new Point(this.Size.Width / 2 - rectName.Width / 2, this.Size.Height / 2 - rectName.Height / 2), rectName.Size);

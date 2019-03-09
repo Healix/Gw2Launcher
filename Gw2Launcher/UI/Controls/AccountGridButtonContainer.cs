@@ -759,18 +759,19 @@ namespace Gw2Launcher.UI.Controls
             fontSmall = AccountGridButton.FONT_SMALL;
             showAccount = true;
 
-            this.GridSize = new Size(200, 67);
-
             panelContents.Size = Size.Empty;
+
+            isNewAccountVisible = false;
 
             buttonNewAccount = new NewAccountGridButton();
             buttonNewAccount.Visible = false;
             buttonNewAccount.Click += buttonNewAccount_Click;
             buttonNewAccount.VisibleChanged += buttonNewAccount_VisibleChanged;
             buttonNewAccount.LostFocus += buttonNewAccount_LostFocus;
-
             panelContents.Controls.Add(buttonNewAccount);
-            isNewAccountVisible = false;
+
+            this.GridSize = new Size(fontLarge.Height * 30 / 2, buttonNewAccount.MinimumSize.Height);
+            //this.GridSize = new Size(200, 67);
 
             Application.AddMessageFilter(this);
             this.Disposed += AccountGridButtonContainer_Disposed;
@@ -877,8 +878,9 @@ namespace Gw2Launcher.UI.Controls
                     var wParam = (int)m.WParam.ToInt64();
                     var delta = wParam >> 16;
                     var e = new MouseEventArgs(GetMouseButtons(wParam), 0, pos.X, pos.Y, delta);
+                    var f = this.ParentForm;
 
-                    if (this.ParentForm.DesktopBounds.Contains(pos))
+                    if (f.CanFocus && f.DesktopBounds.Contains(pos))
                         OnMsgMouseWheel(e);
 
                     break;
@@ -1853,7 +1855,7 @@ namespace Gw2Launcher.UI.Controls
 
         public void SetStyle(Font fontLarge, Font fontSmall, bool showAccount, bool showColor)
         {
-            if (this.fontLarge == fontLarge && this.fontSmall == fontSmall && this.showAccount == showAccount && this.showColor == showColor)
+            if (this.fontLarge == fontLarge && this.fontSmall == fontSmall && this.showAccount == showAccount && this.showColor == showColor && this.IsHandleCreated)
                 return;
 
             this.fontLarge = fontLarge;

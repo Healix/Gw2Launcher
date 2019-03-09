@@ -68,6 +68,7 @@ namespace Gw2Launcher.UI
 
             this.source = source;
 
+            buttonResize.Location = new Point(textText.Right - buttonResize.Width - 1, textText.Bottom - buttonResize.Height - 1);
             buttonResize.Enabled = false;
 
             this.Size = source.Size;

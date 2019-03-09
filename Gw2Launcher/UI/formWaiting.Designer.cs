@@ -44,17 +44,17 @@
             // 
             // formWaiting
             // 
-            this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
-            this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
+            this.AutoScaleDimensions = new System.Drawing.SizeF(96F, 96F);
+            this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Dpi;
             this.BackColor = System.Drawing.Color.Black;
             this.ClientSize = new System.Drawing.Size(294, 92);
             this.Controls.Add(this.label8);
             this.FormBorderStyle = System.Windows.Forms.FormBorderStyle.None;
+            this.Icon = global::Gw2Launcher.Properties.Resources.Gw2Launcher;
             this.Name = "formWaiting";
             this.ShowInTaskbar = false;
             this.StartPosition = System.Windows.Forms.FormStartPosition.CenterParent;
             this.Text = "Waiting...";
-            this.Icon = global::Gw2Launcher.Properties.Resources.Gw2Launcher;
             this.Load += new System.EventHandler(this.formWaiting_Load);
             this.ResumeLayout(false);
             this.PerformLayout();

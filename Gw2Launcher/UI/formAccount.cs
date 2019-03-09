@@ -365,6 +365,8 @@ namespace Gw2Launcher.UI
                 panelIdentifierColor.BackColor = Util.Color.FromUID(Settings.GetNextUID());
                 SetIcon(CreateIcon(Settings.IconType.None));
             }
+
+            labelAutologin_SizeChanged(null, null);
         }
 
         public formAccount(Settings.IAccount account)
@@ -452,6 +454,8 @@ namespace Gw2Launcher.UI
                 checkVolume.Checked = true;
                 sliderVolume.Value = account.Volume;
             }
+            else
+                sliderVolume.Value = 1f;
 
             if (!string.IsNullOrEmpty(account.RunAfterLaunching))
                 textRunAfterLaunch.Text = account.RunAfterLaunching;
@@ -2989,6 +2993,11 @@ namespace Gw2Launcher.UI
 
             this.Visible = true;
             this.Owner.Visible = true;
+        }
+
+        private void labelAutologin_SizeChanged(object sender, EventArgs e)
+        {
+            labelAutologinConfigure.Location = new Point(labelAutologin.Right + 1, labelAutologin.Top + (labelAutologin.Height - labelAutologinConfigure.Height) / 2);
         }
     }
 }

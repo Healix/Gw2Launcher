@@ -32,13 +32,10 @@ namespace Gw2Launcher.UI.Controls
             value = 0;
             maximum = 100;
 
-            sliderY = 0;
-            barX = 0;
-            barY = 0;
             barH = 100;
             sliderW = 6;
             sliderH = DEFAULT_SLIDER_H;
-            barW = 6;
+            barW = sliderW;
 
             colorBar = Color.FromArgb(214, 214, 214);
             colorSlider = Color.FromArgb(150, 150, 150);
@@ -50,6 +47,27 @@ namespace Gw2Launcher.UI.Controls
             SetStyle(ControlStyles.AllPaintingInWmPaint, true);
             SetStyle(ControlStyles.OptimizedDoubleBuffer, true);
             SetStyle(ControlStyles.Selectable, true);
+        }
+
+        protected override void ScaleControl(SizeF factor, BoundsSpecified specified)
+        {
+            var scale = factor.Width;
+
+            if (scale != 1)
+            {
+                var v = Value;
+
+                barH = (int)(100 * scale + 0.5f);
+                sliderW = (int)(6 * scale + 0.5f);
+                sliderH = (int)(DEFAULT_SLIDER_H * scale + 0.5f);
+                barW = sliderW;
+
+                base.ScaleControl(factor, specified);
+
+                Value = v;
+            }
+            else
+                base.ScaleControl(factor, specified);
         }
 
         protected override void Dispose(bool disposing)

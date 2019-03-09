@@ -174,7 +174,10 @@ namespace Gw2Launcher.UI
                     sliderSpeedLimit.Value = (float)(v.Value - SPEED_LIMIT_MIN_0) / SPEED_LIMIT_MAX_0 * 0.5f;
             }
             else
+            {
                 checkSpeedLimit.Checked = false;
+                sliderSpeedLimit.Value = 1;
+            }
         }
 
         private async void DoTimer()

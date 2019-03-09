@@ -33,7 +33,7 @@
             this.radioTL.Location = new System.Drawing.Point(12, 12);
             this.radioTL.Name = "radioTL";
             this.radioTL.Size = new System.Drawing.Size(14, 13);
-            this.radioTL.TabIndex = 0;
+            this.radioTL.TabIndex = 5;
             this.radioTL.TabStop = true;
             this.radioTL.UseVisualStyleBackColor = true;
             // 
@@ -44,7 +44,7 @@
             this.radioBL.Location = new System.Drawing.Point(12, 81);
             this.radioBL.Name = "radioBL";
             this.radioBL.Size = new System.Drawing.Size(14, 13);
-            this.radioBL.TabIndex = 1;
+            this.radioBL.TabIndex = 3;
             this.radioBL.TabStop = true;
             this.radioBL.UseVisualStyleBackColor = true;
             // 
@@ -66,7 +66,7 @@
             this.radioTR.Location = new System.Drawing.Point(164, 12);
             this.radioTR.Name = "radioTR";
             this.radioTR.Size = new System.Drawing.Size(14, 13);
-            this.radioTR.TabIndex = 3;
+            this.radioTR.TabIndex = 0;
             this.radioTR.TabStop = true;
             this.radioTR.UseVisualStyleBackColor = true;
             // 
@@ -77,7 +77,7 @@
             this.radioR.Location = new System.Drawing.Point(164, 46);
             this.radioR.Name = "radioR";
             this.radioR.Size = new System.Drawing.Size(14, 13);
-            this.radioR.TabIndex = 4;
+            this.radioR.TabIndex = 1;
             this.radioR.TabStop = true;
             this.radioR.UseVisualStyleBackColor = true;
             this.radioR.Visible = false;
@@ -89,7 +89,7 @@
             this.radioL.Location = new System.Drawing.Point(12, 46);
             this.radioL.Name = "radioL";
             this.radioL.Size = new System.Drawing.Size(14, 13);
-            this.radioL.TabIndex = 5;
+            this.radioL.TabIndex = 4;
             this.radioL.TabStop = true;
             this.radioL.UseVisualStyleBackColor = true;
             this.radioL.Visible = false;
@@ -124,7 +124,7 @@
             this.arrowLeft.Location = new System.Drawing.Point(70, 48);
             this.arrowLeft.Name = "arrowLeft";
             this.arrowLeft.Size = new System.Drawing.Size(6, 11);
-            this.arrowLeft.TabIndex = 76;
+            this.arrowLeft.TabIndex = 6;
             this.arrowLeft.Visible = false;
             this.arrowLeft.Click += new System.EventHandler(this.arrowLeft_Click);
             // 
@@ -136,14 +136,14 @@
             this.arrowRight.Location = new System.Drawing.Point(116, 48);
             this.arrowRight.Name = "arrowRight";
             this.arrowRight.Size = new System.Drawing.Size(6, 11);
-            this.arrowRight.TabIndex = 75;
+            this.arrowRight.TabIndex = 7;
             this.arrowRight.Visible = false;
             this.arrowRight.Click += new System.EventHandler(this.arrowRight_Click);
             // 
             // formScreenPosition
             // 
-            this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
-            this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
+            this.AutoScaleDimensions = new System.Drawing.SizeF(96F, 96F);
+            this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Dpi;
             this.ClientSize = new System.Drawing.Size(190, 106);
             this.ControlBox = false;
             this.Controls.Add(this.label1);
