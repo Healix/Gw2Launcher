@@ -841,16 +841,23 @@ namespace Gw2Launcher
                         f.DisableNextVisibilityChange = true;
                 }
 
-                if (launch != null)
+                if (launch != null || update != null)
                 {
-                    launch.Send();
-                    launch = null;
-                }
+                    Task.Run(
+                        delegate
+                        {
+                            if (launch != null)
+                            {
+                                launch.Send();
+                                launch = null;
+                            }
 
-                if (update != null)
-                {
-                    update.Send();
-                    update = null;
+                            if (update != null)
+                            {
+                                update.Send();
+                                update = null;
+                            }
+                        });
                 }
 
                 Application.Run(f);
@@ -961,7 +968,7 @@ namespace Gw2Launcher
                 PassedLaunch l = new PassedLaunch();
 
                 var count = Marshal.ReadByte(ptr);
-                
+
                 var i = 1;
                 for (var j = 0; j < count; j++, i += 2)
                     l.accounts.Add((ushort)Marshal.ReadInt16(ptr, i));

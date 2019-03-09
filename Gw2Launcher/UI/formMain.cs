@@ -36,9 +36,11 @@ namespace Gw2Launcher.UI
         private Tools.Screenshots screenshotMonitor;
         private AccountGridButton focusedButton;
 
+        private bool shown;
+
         private byte activeWindows;
         private List<Form> windows;
-        
+
         private Windows.DragHelper.DragHelperInstance dragHelper;
 
         private event EventHandler ActiveWindowChanged;
@@ -87,7 +89,7 @@ namespace Gw2Launcher.UI
             Client.Launcher.BuildUpdated += Launcher_BuildUpdated;
             Client.Launcher.AccountQueued += Launcher_AccountQueued;
             Client.Launcher.NetworkAuthorizationRequired += Launcher_NetworkAuthorizationRequired;
-            Client.Launcher.AccountWindowEvent+=Launcher_AccountWindowEvent;
+            Client.Launcher.AccountWindowEvent += Launcher_AccountWindowEvent;
 
             contextNotify.Opening += contextNotify_Opening;
 
@@ -97,7 +99,7 @@ namespace Gw2Launcher.UI
             notifyIcon.Text = "Gw2Launcher";
             notifyIcon.ContextMenuStrip = contextNotify;
             notifyIcon.DoubleClick += notifyIcon_DoubleClick;
-            
+
             gridContainer.AddAccountClick += gridContainer_AddAccountClick;
             gridContainer.AccountMouseClick += gridContainer_AccountMouseClick;
             gridContainer.AccountBeginDrag += gridContainer_AccountBeginDrag;
@@ -106,7 +108,7 @@ namespace Gw2Launcher.UI
             gridContainer.AccountBeginMouseClick += gridContainer_AccountBeginMouseClick;
             gridContainer.AccountSelection += gridContainer_AccountSelection;
             gridContainer.AccountNoteClicked += gridContainer_AccountNoteClicked;
-            
+
             contextMenu.Closed += contextMenu_Closed;
 
             Settings.ShowTray.ValueChanged += SettingsShowTray_ValueChanged;
@@ -373,7 +375,7 @@ namespace Gw2Launcher.UI
 
         public void ShowAccountBar(bool forceShow)
         {
-            if (Util.Invoke.IfRequired(this, 
+            if (Util.Invoke.IfRequired(this,
                 delegate
                 {
                     ShowAccountBar(forceShow);
@@ -654,7 +656,7 @@ namespace Gw2Launcher.UI
         {
             HashSet<Settings.IDatFile> dats = new HashSet<Settings.IDatFile>();
             List<Settings.IAccount> accounts = new List<Settings.IAccount>();
-            
+
             //only accounts with a unique dat file need to be updated
 
             foreach (ushort uid in Settings.Accounts.GetKeys())
@@ -701,28 +703,47 @@ namespace Gw2Launcher.UI
             return w;
         }
 
+        protected override void OnShown(EventArgs e)
+        {
+            base.OnShown(e);
+            shown = true;
+        }
+
         private void Initialize()
         {
             var s = Settings.WindowBounds[typeof(UI.formMain)];
 
+            Point location;
+            Size size;
+
             if (s.HasValue && !s.Value.Size.IsEmpty)
             {
                 this.AutoSizeGrid = false;
-                this.Size = s.Value.Size;
+                size = s.Value.Size;
             }
             else
             {
                 this.AutoSizeGrid = true;
-                ResizeAuto();
+                size = ResizeAuto(Point.Empty);
             }
 
             if (s.HasValue && !s.Value.Location.Equals(new Point(int.MinValue, int.MinValue)))
-                this.Location = Util.ScreenUtil.Constrain(s.Value.Location, this.Size);
+                location = Util.ScreenUtil.Constrain(s.Value.Location, size);
             else
             {
                 var bounds = Screen.PrimaryScreen.WorkingArea;
-                this.Location = Point.Add(bounds.Location, new Size(bounds.Width / 2 - this.Size.Width / 2, bounds.Height / 3));
+                location = Point.Add(bounds.Location, new Size(bounds.Width / 2 - size.Width / 2, bounds.Height / 3));
             }
+
+            if (this.AutoSizeGrid)
+                size = ResizeAuto(location);
+
+            try
+            {
+                this.Bounds = new Rectangle(location, size);
+                NativeMethods.SetWindowPos(this.Handle, IntPtr.Zero, location.X, location.Y, size.Width, size.Height, SetWindowPosFlags.SWP_NOZORDER);
+            }
+            catch { }
 
             gridContainer.ArrangeGrid();
 
@@ -753,16 +774,11 @@ namespace Gw2Launcher.UI
 
             if (!Settings.Silent)
             {
-#if DEBUG
                 try
                 {
-                    Windows.FindWindow.FocusWindow(this.Handle);
+                    NativeMethods.BringWindowToTop(this.Handle);
                 }
-                catch (Exception ex)
-                {
-                    Util.Logging.Log(ex);
-                }
-#endif
+                catch { }
 
                 if (Settings.CheckForNewBuilds.Value && !Settings.AutoUpdate.Value)
                 {
@@ -815,7 +831,7 @@ namespace Gw2Launcher.UI
                 if (components != null)
                     components.Dispose();
                 if (notifyIcon != null)
-                    notifyIcon.Dispose(); 
+                    notifyIcon.Dispose();
                 if (screenshotMonitor != null)
                     screenshotMonitor.Dispose();
                 if (abWindow != null)
@@ -1247,7 +1263,7 @@ namespace Gw2Launcher.UI
                                 OnSettingsInvalid();
                             }));
                     }
-                    catch (Exception ex) 
+                    catch (Exception ex)
                     {
                         Util.Logging.Log(ex);
                     }
@@ -1682,7 +1698,7 @@ namespace Gw2Launcher.UI
         {
             try
             {
-                bool showTray=!Settings.ShowTray.HasValue || Settings.ShowTray.Value;
+                bool showTray = !Settings.ShowTray.HasValue || Settings.ShowTray.Value;
                 notifyIcon.Visible = showTray;
                 if (!showTray && !this.Visible)
                 {
@@ -2038,7 +2054,8 @@ namespace Gw2Launcher.UI
                     if (value)
                     {
                         gridContainer.ContentHeightChanged += gridContainer_ContentHeightChanged;
-                        ResizeAuto();
+                        if (shown)
+                            this.Size = ResizeAuto(this.Location);
                     }
                     else
                         gridContainer.ContentHeightChanged -= gridContainer_ContentHeightChanged;
@@ -2048,17 +2065,18 @@ namespace Gw2Launcher.UI
 
         void gridContainer_ContentHeightChanged(object sender, EventArgs e)
         {
-            ResizeAuto();
+            if (shown)
+                this.Size = ResizeAuto(this.Location);
         }
 
-        protected void ResizeAuto()
+        protected Size ResizeAuto(Point location)
         {
             var scale = this.CurrentAutoScaleDimensions.Width / 96f;
             var screen = Screen.FromControl(this).WorkingArea;
             int height = gridContainer.ContentHeight + (this.Height - this.ClientSize.Height) + panelContainer.Location.Y * 2 + gridContainer.Location.Y * 2 + 2;
             int width = (int)(250 * scale + 0.5f) + (this.Width - this.ClientSize.Width) + panelContainer.Location.X * 2 + gridContainer.Location.X * 2 + 2;
 
-            if (this.Location.Y + height > screen.Bottom)
+            if (location.Y + height > screen.Bottom)
             {
                 height = screen.Bottom - this.Location.Y;
                 var min = (int)(100 * scale + 0.5f);
@@ -2066,7 +2084,7 @@ namespace Gw2Launcher.UI
                     height = min;
             }
 
-            this.Size = new Size(width, height);
+            return new Size(width, height);
         }
 
         protected override void OnResizeBegin(EventArgs e)
@@ -2182,7 +2200,7 @@ namespace Gw2Launcher.UI
             {
                 case Client.Launcher.AccountState.Active:
                 case Client.Launcher.AccountState.ActiveGame:
-                    
+
                     v = Settings.ActionActiveLClick;
                     if (v.HasValue)
                         action = v.Value;
@@ -2192,7 +2210,7 @@ namespace Gw2Launcher.UI
                     switch (action)
                     {
                         case Settings.ButtonAction.Focus:
-                            
+
                             var p = Client.Launcher.GetProcess(button.AccountData);
                             if (p != null)
                             {
@@ -2208,7 +2226,7 @@ namespace Gw2Launcher.UI
 
                             break;
                         case Settings.ButtonAction.Close:
-                            
+
                             e.Handled = true;
                             e.FlashColor = Color.FromArgb(255, 207, 212);
 
@@ -2219,7 +2237,7 @@ namespace Gw2Launcher.UI
 
                     break;
                 default:
-                    
+
                     v = Settings.ActionInactiveLClick;
                     if (v.HasValue)
                         action = v.Value;
@@ -2680,7 +2698,7 @@ namespace Gw2Launcher.UI
         private void OnWindowHidden(object sender, EventArgs e)
         {
             var form = (Form)sender;
-            
+
             form.Disposed -= OnWindowHidden;
 
             for (var i = windows.Count - 1; i >= 0; i--)
@@ -2691,7 +2709,7 @@ namespace Gw2Launcher.UI
                     break;
                 }
             }
-            
+
             OnActiveWindowChanged();
         }
 
@@ -3049,7 +3067,7 @@ namespace Gw2Launcher.UI
                 fileBefore.Path = fileAfter.Path;
                 fileBefore.IsInitialized = false;
                 fileAfter.Path = null;
-                
+
                 switch (type)
                 {
                     case Client.FileManager.FileType.Dat:
@@ -3268,7 +3286,7 @@ namespace Gw2Launcher.UI
                                 sids.Add(n.SID);
                             }
                         }
-                        
+
                         RemoveAccount(account);
                     }
 
@@ -3544,14 +3562,32 @@ namespace Gw2Launcher.UI
                             delegate
                             {
                                 Client.Launcher.KillAllActiveProcesses();
+
+                                //var name = Path.GetFileNameWithoutExtension(path);
+                                //path = Path.GetDirectoryName(path);
+
+                                //foreach (var p in Process.GetProcesses())
+                                //{
+                                //    using (p)
+                                //    {
+                                //        try
+                                //        {
+                                //            if (p.ProcessName.Equals(name, StringComparison.OrdinalIgnoreCase) && p.MainModule.FileName.StartsWith(path, StringComparison.OrdinalIgnoreCase))
+                                //            {
+                                //                p.Kill();
+                                //            }
+                                //        }
+                                //        catch { }
+                                //    }
+                                //}
                             }));
 
-                        
+
                     }
                 }
             }
         }
-        
+
         private async void killMutexToolStripMenuItem_Click(object sender, EventArgs e)
         {
             using (BeforeShowDialog())
@@ -3921,7 +3957,7 @@ namespace Gw2Launcher.UI
                     if (bounds.HasValue)
                     {
                         f.StartPosition = FormStartPosition.Manual;
-                        f.Bounds = Util.ScreenUtil.Constrain(bounds.Value); 
+                        f.Bounds = Util.ScreenUtil.Constrain(bounds.Value);
                     }
 
                     f.ShowDialog(this);
