@@ -24,7 +24,7 @@ namespace Gw2Launcher.UI
 
             protected override bool ProcessCmdKey(ref Message msg, Keys keyData)
             {
-                var keyCode = (Keys)((int)msg.WParam.ToInt64() & Convert.ToInt32(Keys.KeyCode));
+                var keyCode = (Keys)msg.WParam.GetValue() & Keys.KeyCode;
                 if ((msg.Msg == (int)WindowMessages.WM_KEYDOWN && keyCode == Keys.A) && (ModifierKeys == Keys.Control) && this.Focused)
                 {
                     this.SelectAll();
@@ -41,7 +41,7 @@ namespace Gw2Launcher.UI
                 {
                     case Windows.Native.WindowMessages.WM_NCHITTEST:
 
-                        switch ((HitTest)m.Result)
+                        switch ((HitTest)m.Result.GetValue())
                         {
                             case HitTest.GrowBox:
 

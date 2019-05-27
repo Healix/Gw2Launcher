@@ -12,7 +12,7 @@ namespace Gw2Launcher.Messaging
         public delegate bool SendCallbackEventHandler(IntPtr hWnd, uint Msg, IntPtr lResult);
 
         public static readonly uint WM_GW2LAUNCHER = NativeMethods.RegisterWindowMessage("Gw2Launcher_Message");
-        private const int BROADCAST = 0xffff;
+        public const int BROADCAST = 0xffff;
 
         public enum MessageType
         {

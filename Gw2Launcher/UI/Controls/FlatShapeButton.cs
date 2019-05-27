@@ -254,6 +254,32 @@ namespace Gw2Launcher.UI.Controls
                             pen.EndCap = System.Drawing.Drawing2D.LineCap.Flat;
 
                             g.SmoothingMode = System.Drawing.Drawing2D.SmoothingMode.AntiAlias;
+
+                            if (borderColor.A > 0)
+                            {
+                                pen.Width = 3.5f;
+                                pen.Color = borderColor;
+
+                                x -= 0.5f;
+                                y -= 0.5f;
+                                w += 1f;
+                                h += 1f;
+
+                                g.DrawLine(pen, x, y, x + w, y + h);
+                                g.DrawLine(pen, x, y + h, x + w, y);
+
+                                pen.Width = 2f;
+                                pen.Color = ForeColorCurrent;
+
+                                x += 0.5f;
+                                y += 0.5f;
+                                w -= 1f;
+                                h -= 1f;
+
+                                g.DrawLine(pen, x, y, x + w, y + h);
+                                g.DrawLine(pen, x, y + h, x + w, y);
+                            }
+
                             g.DrawLine(pen, x, y, x + w, y + h);
                             g.DrawLine(pen, x, y + h, x + w, y);
                         }

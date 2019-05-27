@@ -83,6 +83,23 @@ namespace Gw2Launcher.UI.Controls
             }
         }
 
+        protected Color borderColor;
+        public Color BorderColor
+        {
+            get
+            {
+                return borderColor;
+            }
+            set
+            {
+                if (borderColor != value)
+                {
+                    borderColor = value;
+                    this.Invalidate();
+                }
+            }
+        }
+
         protected Color backColorHovered;
         public Color BackColorHovered
         {
@@ -259,6 +276,14 @@ namespace Gw2Launcher.UI.Controls
         protected virtual void OnPaintBackgroundBuffer(Graphics g)
         {
             g.Clear(BackColorCurrent);
+
+            if (borderColor.A > 0)
+            {
+                using (var p = new Pen(borderColor,1))
+                {
+                    g.DrawRectangle(p, 0, 0, this.Width - 1, this.Height - 1);
+                }
+            }
         }
 
         protected override void OnPaint(PaintEventArgs e)

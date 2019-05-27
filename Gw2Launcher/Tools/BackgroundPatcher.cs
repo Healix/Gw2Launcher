@@ -71,6 +71,7 @@ namespace Gw2Launcher.Tools
         private DownloadProgressEventArgs progress;
         private DateTime initializationTime;
         private int progressValue;
+        private Dat.Compression.Archive archive;
 
         private struct LatestData
         {
@@ -150,6 +151,8 @@ namespace Gw2Launcher.Tools
                 progress.downloadRate = 0;
                 DownloadProgress(this, progress);
             }
+
+            archive = null;
 
             if (Complete != null)
                 Complete(this, e);
@@ -467,6 +470,14 @@ namespace Gw2Launcher.Tools
 
             return is64;
         }
+        
+        private void AddFilesFromManifest(byte[] data, Dictionary<int, int> baseIds)
+        {
+            using (var stream = new MemoryStream(data,false))
+            {
+                AddFilesFromManifest(stream, baseIds);
+            }
+        }
 
         private void AddFilesFromManifest(Stream stream, Dictionary<int, int> baseIds)
         {
@@ -548,7 +559,7 @@ namespace Gw2Launcher.Tools
                 Error(this, "Failed to retieve manifests", null);
         }
 
-        void manifest_Complete(object sender, Net.AssetDownloader.Asset.CompleteEventArgs e)
+        void manifest_Complete(object sender, Net.AssetDownloader.Asset.CompleteEventArgs e, bool isUsed)
         {
             var asset = (Net.AssetDownloader.Asset)sender;
             var c = e.GetCache();
@@ -557,18 +568,33 @@ namespace Gw2Launcher.Tools
             {
                 if (c != null && c.HasData)
                 {
-                    if (asset.type == Net.AssetDownloader.Asset.AssetType.File)
+                    if (isUsed)
                     {
-                        try
+                        if (asset.type == Net.AssetDownloader.Asset.AssetType.File)
                         {
-                            c.SetPositionToContent();
-                            AddFilesFromManifest(c, baseIds);
+                            try
+                            {
+                                c.SetPositionToContent();
+                                AddFilesFromManifest(c, baseIds);
 
-                            Create404Manifest(asset.fileId);
+                                Create404Manifest(asset.fileId);
+                            }
+                            catch (Exception ex)
+                            {
+                                Util.Logging.Log(ex);
+                            }
                         }
-                        catch (Exception ex)
+                        else if (asset.type == Net.AssetDownloader.Asset.AssetType.FileCompressed)
                         {
-                            Util.Logging.Log(ex);
+                            try
+                            {
+                                c.SetPositionToContent();
+                                AddFilesFromManifest(archive.DecompressRaw(c, -1), baseIds);
+                            }
+                            catch (Exception ex)
+                            {
+                                Util.Logging.Log(ex);
+                            }
                         }
                     }
 
@@ -580,7 +606,7 @@ namespace Gw2Launcher.Tools
                         isComplete = progress.manifestsDownloaded == progress.manifestsTotal;
                     }
 
-                    if (isComplete) 
+                    if (isComplete)
                         OnManifestsComplete();
                 }
                 else
@@ -596,6 +622,16 @@ namespace Gw2Launcher.Tools
                         Error(this, "Failed to retieve manifests", null);
                 }
             }
+        }
+
+        void manifestUsed_Complete(object sender, Net.AssetDownloader.Asset.CompleteEventArgs e)
+        {
+            manifest_Complete(sender, e, true);
+        }
+
+        void manifestUnused_Complete(object sender, Net.AssetDownloader.Asset.CompleteEventArgs e)
+        {
+            manifest_Complete(sender, e, false);
         }
 
         private void OnManifestsComplete()
@@ -657,7 +693,14 @@ namespace Gw2Launcher.Tools
                     break;
             }
 
-            var asset = new Net.AssetDownloader.Asset(manifestId, false, manifestSize);
+#warning useCompression = BitConverter.IsLittleEndian
+            var useCompression = BitConverter.IsLittleEndian;
+
+            if (useCompression && archive == null)
+                archive = new Dat.Compression.Archive();
+
+            //var asset = new Net.AssetDownloader.Asset(manifestId, false, manifestSize);
+            var asset = new Net.AssetDownloader.Asset(manifestId, useCompression, useCompression ? (int)(manifestSize * AVG_COMPRESSION + 0.5f) : manifestSize);
             asset.Complete += delegate(object o, Net.AssetDownloader.Asset.CompleteEventArgs c)
             {
                 progress.contentBytesCore += c.ContentLength;
@@ -671,17 +714,27 @@ namespace Gw2Launcher.Tools
                 {
                     cache.SetPositionToContent();
                     var p = cache.Position;
+                    Dat.Manifest manifest;
 
-                    var manifest = Tools.Dat.Manifest.Parse(cache);
-
-                    Create404Manifest(manifestId);
+                    if (useCompression)
+                    {
+                        using (var ms = new MemoryStream(archive.DecompressRaw(cache, manifestSize)))
+                        {
+                            manifest = Tools.Dat.Manifest.Parse(ms);
+                        }
+                    }
+                    else
+                    {
+                        manifest = Tools.Dat.Manifest.Parse(cache);
+                        Create404Manifest(manifestId);
+                    }
                     
                     List<Net.AssetDownloader.Asset> assets = new List<Net.AssetDownloader.Asset>(manifest.records.Length);
                     long size = 0;
 
                     foreach (var record in manifest.records)
                     {
-                        bool isUsed = true; //can't parse compressed files
+                        bool isUsed = true;
 
                         switch (record.baseId)
                         {
@@ -712,9 +765,12 @@ namespace Gw2Launcher.Tools
                                 break;
                         }
 
-                        asset = new Net.AssetDownloader.Asset(record.fileId, !isUsed, !isUsed ? (int)(record.size * AVG_COMPRESSION + 0.5f) : record.size);
-
-                        asset.Complete += manifest_Complete;
+                        //asset = new Net.AssetDownloader.Asset(record.fileId, !isUsed, !isUsed ? (int)(record.size * AVG_COMPRESSION + 0.5f) : record.size);
+                        asset = new Net.AssetDownloader.Asset(record.fileId, useCompression, useCompression ? (int)(record.size * AVG_COMPRESSION + 0.5f) : record.size);
+                        if (isUsed)
+                            asset.Complete += manifestUsed_Complete;
+                        else
+                            asset.Complete += manifestUnused_Complete;
                         asset.Cancelled += manifest_Cancelled;
                         asset.Progress += asset_Progress;
 

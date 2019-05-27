@@ -2,6 +2,7 @@
 using System.Text;
 using System.Windows.Forms;
 using System.Drawing;
+using System.Drawing.Imaging;
 using Gw2Launcher.Api;
 
 namespace Gw2Launcher.UI.Controls
@@ -422,6 +423,42 @@ namespace Gw2Launcher.UI.Controls
             base.OnPaint(e);
         }
 
+        protected void DrawImage(Graphics g, Image image, int x, int y, int w, int h, byte opacity, bool grayscale)
+        {
+            if (grayscale)
+            {
+                using (var ia = new ImageAttributes())
+                {
+                    ia.SetColorMatrix(new ColorMatrix(new float[][] 
+                        {
+                            new float[] {.3f, .3f, .3f, 0, 0},
+                            new float[] {.6f, .6f, .6f, 0, 0},
+                            new float[] {.1f, .1f, .1f, 0, 0},
+                            new float[] {0, 0, 0, opacity / 255f, 0},
+                            new float[] {0, 0, 0, 0, 1}
+                        }));
+
+                    g.DrawImage(image, new Rectangle(x, y, w, h), 0, 0, w, h, GraphicsUnit.Pixel, ia);
+                }
+            }
+            else if (opacity != 255)
+            {
+                using (var ia = new ImageAttributes())
+                {
+                    ia.SetColorMatrix(new ColorMatrix()
+                    {
+                        Matrix33 = opacity / 255f,
+                    });
+
+                    g.DrawImage(image, new Rectangle(x, y, w, h), 0, 0, w, h, GraphicsUnit.Pixel, ia);
+                }
+            }
+            else
+            {
+                g.DrawImage(image, new Rectangle(x, y, w, h), 0, 0, w, h, GraphicsUnit.Pixel);
+            }
+        }
+
         protected override void OnPaintBackground(PaintEventArgs e)
         {
             if (redraw)
@@ -429,7 +466,30 @@ namespace Gw2Launcher.UI.Controls
                 if (buffer == null)
                     buffer = BufferedGraphicsManager.Current.Allocate(e.Graphics, this.DisplayRectangle);
 
-                buffer.Graphics.Clear(this.BackColor);
+                var g = buffer.Graphics;
+
+                g.Clear(this.BackColor);
+
+                if (daily != null && daily.Access != DailyAchievements.Daily.AccessCondition.None)
+                {
+                    int w = this.Width,
+                        h = this.Height;
+                    var hasAccess = (daily.Access & DailyAchievements.Daily.AccessCondition.HasAccess) == DailyAchievements.Daily.AccessCondition.HasAccess;
+
+                    switch (daily.Access & ~DailyAchievements.Daily.AccessCondition.HasAccess)
+                    {
+                        case DailyAchievements.Daily.AccessCondition.HeartOfThorns:
+
+                            DrawImage(g, Properties.Resources.hot32, w - 32 - 5, (h - 32) / 2, 32, 32, hasAccess ? (byte)220 : (byte)180, !hasAccess);
+
+                            break;
+                        case DailyAchievements.Daily.AccessCondition.PathOfFire:
+
+                            DrawImage(g, Properties.Resources.pof32, w - 32 - 5, (h - 32) / 2, 32, 32, hasAccess ? (byte)220 : (byte)180, !hasAccess);
+
+                            break;
+                    }
+                }
             }
         }
 

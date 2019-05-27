@@ -17,7 +17,7 @@ namespace Gw2Launcher
         private const ushort WRITE_DELAY = 10000;
         private const string FILE_NAME = "settings.dat";
         private static readonly byte[] HEADER;
-        private const ushort VERSION = 6;
+        private const ushort VERSION = 7;
         private static readonly Type[] FORMS;
 
         public enum SortMode : byte
@@ -158,6 +158,14 @@ namespace Gw2Launcher
             OnlyShowActive = 4,
             AutoHide = 8,
             TopMost = 16,
+        }
+
+        [Flags]
+        public enum LocalizeAccountExecutionOptions : byte
+        {
+            None = 0,
+            Enabled = 1,
+            ExcludeUnkownFiles = 2,
         }
 
         public class Notes : IEnumerable<Notes.Note>
@@ -1027,6 +1035,12 @@ namespace Gw2Launcher
             }
 
             bool IsInitialized
+            {
+                get;
+                set;
+            }
+
+            bool IsPending
             {
                 get;
                 set;
@@ -2510,6 +2524,14 @@ namespace Gw2Launcher
         {
             public event EventHandler PathChanged;
 
+            [Flags]
+            public enum DataFlags : byte
+            {
+                None = 0,
+                Initialized = 1,
+                Pending = 2,
+            }
+
             public BaseFile(ushort uid)
             {
                 this.UID = uid;
@@ -2521,6 +2543,7 @@ namespace Gw2Launcher
             }
 
             public byte ReferenceCount;
+            public DataFlags _flags;
 
             public ushort _UID;
             public ushort UID
@@ -2559,18 +2582,39 @@ namespace Gw2Launcher
                 }
             }
 
-            public bool _IsInitialized;
             public bool IsInitialized
             {
                 get
                 {
-                    return _IsInitialized;
+                    return (_flags & DataFlags.Initialized) == DataFlags.Initialized;
                 }
                 set
                 {
-                    if (_IsInitialized != value)
+                    if (IsInitialized != value)
                     {
-                        _IsInitialized = value;
+                        if (value)
+                            _flags |= DataFlags.Initialized;
+                        else
+                            _flags &= ~DataFlags.Initialized;
+                        OnValueChanged();
+                    }
+                }
+            }
+
+            public bool IsPending
+            {
+                get
+                {
+                    return (_flags & DataFlags.Pending) == DataFlags.Pending;
+                }
+                set
+                {
+                    if (IsPending != value)
+                    {
+                        if (value)
+                            _flags |= DataFlags.Pending;
+                        else
+                            _flags &= ~DataFlags.Pending;
                         OnValueChanged();
                     }
                 }
@@ -2840,8 +2884,13 @@ namespace Gw2Launcher
             _LimitActiveAccounts = new SettingValue<byte>();
             _DelayLaunchUntilLoaded = new SettingValue<bool>();
             _DelayLaunchSeconds = new SettingValue<byte>();
-            _LocalizeAccountExecution = new PendingSettingValue<bool>();
+            _LocalizeAccountExecution = new PendingSettingValue<LocalizeAccountExecutionOptions>();
             _LauncherAutologinPoints = new SettingValue<LauncherPoints>();
+
+            _DatUpdaterEnabled = new SettingValue<bool>();
+            _UseCustomGw2Cache = new SettingValue<bool>();
+            _ShowKillAllAccounts = new SettingValue<bool>();
+            _PreventDefaultCoherentUI = new SettingValue<bool>();
 
             FORMS = new Type[]
             {
@@ -3178,8 +3227,20 @@ namespace Gw2Launcher
                         _AccountBarEnabled.Value,
                         _UseGw2IconForShortcuts.Value,
                         _DelayLaunchUntilLoaded.Value,
-                        _LocalizeAccountExecution.Value,
-                        _LocalizeAccountExecution.ValueCommit,
+                        //_LocalizeAccountExecution.Value,
+                        //_LocalizeAccountExecution.ValueCommit,
+                        
+                        //v7-Values from:88
+                        _DatUpdaterEnabled.HasValue,
+                        _UseCustomGw2Cache.HasValue,
+                        _ShowKillAllAccounts.HasValue,
+                        _PreventDefaultCoherentUI.HasValue,
+
+                        //v7-HasValues from:92
+                        _DatUpdaterEnabled.Value,
+                        _UseCustomGw2Cache.Value,
+                        _ShowKillAllAccounts.Value,
+                        _PreventDefaultCoherentUI.Value,
                     };
 
                     byte[] b = CompressBooleans(booleans);
@@ -3325,6 +3386,10 @@ namespace Gw2Launcher
                         writer.Write(_LimitActiveAccounts.Value);
                     if (booleans[78])
                         writer.Write(_DelayLaunchSeconds.Value);
+                    if (booleans[79])
+                        writer.Write((byte)_LocalizeAccountExecution.Value);
+                    if (booleans[80])
+                        writer.Write((byte)_LocalizeAccountExecution.ValueCommit);
                     if (booleans[81])
                     {
                         var v = _LauncherAutologinPoints.Value;
@@ -3364,7 +3429,8 @@ namespace Gw2Launcher
                                 writer.Write("");
                             else
                                 writer.Write(item.Value.Path);
-                            writer.Write(item.Value.IsInitialized);
+                            //writer.Write(item.Value.IsInitialized); //v6
+                            writer.Write((byte)item.Value._flags);
                         }
                     }
 
@@ -3399,7 +3465,8 @@ namespace Gw2Launcher
                                 writer.Write("");
                             else
                                 writer.Write(item.Value.Path);
-                            writer.Write(item.Value.IsInitialized);
+                            //writer.Write(item.Value.IsInitialized); //v6
+                            writer.Write((byte)item.Value._flags);
                         }
                     }
 
@@ -4116,14 +4183,24 @@ namespace Gw2Launcher
                         _DelayLaunchSeconds.SetValue(reader.ReadByte());
                     else
                         _DelayLaunchSeconds.Clear();
-
+                    
                     if (booleans[79])
-                        _LocalizeAccountExecution.SetValue(booleans[88]);
+                    {
+                        if (version >= 7)
+                            _LocalizeAccountExecution.SetValue((LocalizeAccountExecutionOptions)reader.ReadByte());
+                        else
+                            _LocalizeAccountExecution.SetValue(booleans[88] ? LocalizeAccountExecutionOptions.Enabled : LocalizeAccountExecutionOptions.None);
+                    }
                     else
                         _LocalizeAccountExecution.Clear();
 
                     if (booleans[80])
-                        _LocalizeAccountExecution.SetCommit(booleans[89]);
+                    {
+                        if (version >= 7)
+                            _LocalizeAccountExecution.SetCommit((LocalizeAccountExecutionOptions)reader.ReadByte());
+                        else
+                            _LocalizeAccountExecution.SetValue(booleans[89] ? LocalizeAccountExecutionOptions.Enabled : LocalizeAccountExecutionOptions.None);
+                    }
                     else
                         _LocalizeAccountExecution.ClearCommit();
 
@@ -4140,6 +4217,29 @@ namespace Gw2Launcher
                         _LauncherAutologinPoints.Clear();
                 }
 
+                if (version >= 7)
+                {
+                    if (booleans[88])
+                        _DatUpdaterEnabled.SetValue(booleans[92]);
+                    else
+                        _DatUpdaterEnabled.Clear();
+                    
+                    if (booleans[89])
+                        _UseCustomGw2Cache.SetValue(booleans[93]);
+                    else
+                        _UseCustomGw2Cache.Clear();
+
+                    if (booleans[90])
+                        _ShowKillAllAccounts.SetValue(booleans[94]);
+                    else
+                        _ShowKillAllAccounts.Clear();
+
+                    if (booleans[91])
+                        _PreventDefaultCoherentUI.SetValue(booleans[95]);
+                    else
+                        _PreventDefaultCoherentUI.Clear();
+                }
+
                 _datUID = 0;
 
                 lock (_DatFiles)
@@ -4152,7 +4252,9 @@ namespace Gw2Launcher
                         var s = new DatFile();
                         s._UID = reader.ReadUInt16();
                         s._Path = reader.ReadString();
-                        s._IsInitialized = reader.ReadBoolean();
+
+                        //s._IsInitialized = reader.ReadBoolean(); //v6
+                        s._flags = (BaseFile.DataFlags)reader.ReadByte();
 
                         _DatFiles.Add(s.UID, new SettingValue<IDatFile>(s));
 
@@ -4175,7 +4277,8 @@ namespace Gw2Launcher
                             var s = new GfxFile();
                             s._UID = reader.ReadUInt16();
                             s._Path = reader.ReadString();
-                            s._IsInitialized = reader.ReadBoolean();
+                            //s._IsInitialized = reader.ReadBoolean(); //v6
+                            s._flags = (BaseFile.DataFlags)reader.ReadByte();
 
                             _GfxFiles.Add(s.UID, new SettingValue<IGfxFile>(s));
 
@@ -5771,8 +5874,8 @@ namespace Gw2Launcher
             }
         }
 
-        private static PendingSettingValue<bool> _LocalizeAccountExecution;
-        public static IPendingSettingValue<bool> LocalizeAccountExecution
+        private static PendingSettingValue<LocalizeAccountExecutionOptions> _LocalizeAccountExecution;
+        public static IPendingSettingValue<LocalizeAccountExecutionOptions> LocalizeAccountExecution
         {
             get
             {
@@ -5786,6 +5889,42 @@ namespace Gw2Launcher
             get
             {
                 return _LauncherAutologinPoints;
+            }
+        }
+
+        private static SettingValue<bool> _DatUpdaterEnabled;
+        public static ISettingValue<bool> DatUpdaterEnabled
+        {
+            get
+            {
+                return _DatUpdaterEnabled;
+            }
+        }
+
+        private static SettingValue<bool> _UseCustomGw2Cache;
+        public static ISettingValue<bool> UseCustomGw2Cache
+        {
+            get
+            {
+                return _UseCustomGw2Cache;
+            }
+        }
+
+        private static SettingValue<bool> _ShowKillAllAccounts;
+        public static ISettingValue<bool> ShowKillAllAccounts
+        {
+            get
+            {
+                return _ShowKillAllAccounts;
+            }
+        }
+
+        private static SettingValue<bool> _PreventDefaultCoherentUI;
+        public static ISettingValue<bool> PreventDefaultCoherentUI
+        {
+            get
+            {
+                return _PreventDefaultCoherentUI;
             }
         }
 

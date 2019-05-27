@@ -159,7 +159,7 @@ namespace Gw2Launcher.UI
                     break;
                 case WindowMessages.WM_NCHITTEST:
                     
-                    var p = this.PointToClient(new Point(m.LParam.ToInt32()));
+                    var p = this.PointToClient(new Point(m.LParam.GetValue32()));
                     var size = this.ClientSize;
 
                     if (p.X <= 20)

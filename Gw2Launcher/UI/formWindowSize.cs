@@ -865,11 +865,11 @@ namespace Gw2Launcher.UI
 
                     base.WndProc(ref m);
 
-                    switch ((HitTest)m.Result)
+                    switch ((HitTest)m.Result.GetValue())
                     {
                         case HitTest.Client:
 
-                            var p = this.PointToClient(new Point(m.LParam.ToInt32()));
+                            var p = this.PointToClient(new Point(m.LParam.GetValue32()));
                             var size = this.ClientSize;
 
                             if (p.Y < MOVE_SIZE)
@@ -942,7 +942,7 @@ namespace Gw2Launcher.UI
                     if (snapToGrid || snapToAccounts != SnapType.None)
                     {
                         var r = (RECT)m.GetLParam(typeof(RECT));
-                        if (OnSizing((Sizing)m.WParam, ref r))
+                        if (OnSizing((Sizing)m.WParam.GetValue(), ref r))
                             Marshal.StructureToPtr(r, m.LParam, false);
                     }
 

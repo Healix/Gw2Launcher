@@ -29,7 +29,7 @@ namespace Gw2Launcher.UI
         private CheckBox[] checkProcessorAffinity;
         private AutoScrollContainerPanel containerGeneral, containerTools, containerWindows, containerLaunchOptions, containerLaunchOptionsAdvanced,
             containerPasswords, containerStyle, containerActions, containerUpdates, containerSecurity, containerScreenshots,containerLaunchOptionsProcess,containerAccountBar,
-            containerLaunchConfiguration;
+            containerLaunchConfiguration, containerLocalDat;
 
         public formSettings()
         {
@@ -57,6 +57,7 @@ namespace Gw2Launcher.UI
             containerAccountBar = CreateContainer(panelAccountBar);
             containerLaunchOptionsProcess = CreateContainer(panelLaunchOptionsProcess);
             containerLaunchConfiguration = CreateContainer(panelLaunchConfiguration);
+            containerLocalDat = CreateContainer(panelLocalDat);
 
             buttonGeneral.Panels = new Panel[] { containerGeneral, containerLaunchConfiguration, containerWindows };
             buttonGeneral.SubItems = new string[] { "Launching", "Windows" };
@@ -70,8 +71,8 @@ namespace Gw2Launcher.UI
             buttonStyle.Panels = new Panel[] { containerStyle, containerActions };
             buttonStyle.SubItems = new string[] { "Actions" };
 
-            buttonTools.Panels = new Panel[] { containerTools, containerAccountBar, containerScreenshots };
-            buttonTools.SubItems = new string[] { "Account bar", "Screenshots" };
+            buttonTools.Panels = new Panel[] { containerTools, containerAccountBar, containerLocalDat, containerScreenshots };
+            buttonTools.SubItems = new string[] { "Account bar", "Local.dat", "Screenshots" };
 
             buttonUpdates.Panels = new Panel[] { containerUpdates };
 
@@ -375,9 +376,17 @@ namespace Gw2Launcher.UI
 
             checkDelayUntilLoaded.Checked = Settings.DelayLaunchUntilLoaded.Value;
 
-            checkLocalizedExecution.Checked = Settings.LocalizeAccountExecution.Value;
+            checkLocalizedExecution.Checked = Settings.LocalizeAccountExecution.Value.HasFlag(Settings.LocalizeAccountExecutionOptions.Enabled);
+            checkLocalizedExecutionExcludeUnknown.Checked = Settings.LocalizeAccountExecution.Value.HasFlag(Settings.LocalizeAccountExecutionOptions.ExcludeUnkownFiles);
 
             checkUseGw2ShortcutIcon.Checked = Settings.UseGw2IconForShortcuts.Value;
+
+            checkLocalDatDirectUpdates.Enabled = checkLocalDatCache.Enabled = BitConverter.IsLittleEndian;
+            checkLocalDatDirectUpdates.Checked = Settings.DatUpdaterEnabled.Value;
+            checkLocalDatCache.Checked = Settings.UseCustomGw2Cache.Value;
+
+            checkPreventDefaultCoherentUI.Checked = Settings.PreventDefaultCoherentUI.Value;
+            checkStyleShowCloseAll.Checked = Settings.ShowKillAllAccounts.Value;
 
             argsState = ArgsState.Changed;
             containerLaunchOptionsAdvanced.PreVisiblePropertyChanged += containerLaunchOptionsAdvanced_PreVisiblePropertyChanged;
@@ -1003,9 +1012,20 @@ namespace Gw2Launcher.UI
             else
                 Settings.DelayLaunchSeconds.Clear();
 
-            Settings.LocalizeAccountExecution.Value = checkLocalizedExecution.Checked;
+            var localizedExe = Settings.LocalizeAccountExecutionOptions.None;
+            if (checkLocalizedExecution.Checked)
+                localizedExe |= Settings.LocalizeAccountExecutionOptions.Enabled;
+            if (checkLocalizedExecutionExcludeUnknown.Checked)
+                localizedExe |= Settings.LocalizeAccountExecutionOptions.ExcludeUnkownFiles;
+            Settings.LocalizeAccountExecution.Value = localizedExe;
 
             Settings.UseGw2IconForShortcuts.Value = checkUseGw2ShortcutIcon.Checked;
+
+            Settings.DatUpdaterEnabled.Value = checkLocalDatDirectUpdates.Checked;
+            Settings.UseCustomGw2Cache.Value = checkLocalDatCache.Checked;
+
+            Settings.PreventDefaultCoherentUI.Value = checkPreventDefaultCoherentUI.Checked;
+            Settings.ShowKillAllAccounts.Value = checkStyleShowCloseAll.Checked;
 
             this.DialogResult = System.Windows.Forms.DialogResult.OK;
         }
@@ -1513,7 +1533,7 @@ namespace Gw2Launcher.UI
 
                     base.WndProc(ref m);
 
-                    switch ((HitTest)m.Result)
+                    switch ((HitTest)m.Result.GetValue())
                     {
                         case HitTest.BottomLeft:
                         case HitTest.BottomRight:
@@ -1643,6 +1663,66 @@ namespace Gw2Launcher.UI
         private void labelAccountBarInfo_SizeChanged(object sender, EventArgs e)
         {
             panelAccountBarControls.Top = labelAccountBarInfo.Bottom;
+        }
+
+        private void labelResyncLocalizedExecution_Click(object sender, EventArgs e)
+        {
+            var failed = 0;
+
+            try
+            {
+                var path = Path.Combine(Path.GetDirectoryName(textGW2Path.Text), Client.FileManager.LOCALIZED_EXE_FOLDER_NAME);
+                if (Directory.Exists(path))
+                {
+                    foreach (var d in Directory.GetDirectories(path))
+                    {
+                        var n = Path.GetFileName(d);
+                        ushort uid;
+                        if (ushort.TryParse(n, out uid))
+                        {
+                            try
+                            {
+                                foreach (var f in Directory.GetFiles(d, "*.exe", SearchOption.TopDirectoryOnly))
+                                {
+                                    File.Delete(f);
+                                }
+                                Util.FileUtil.DeleteDirectory(d);
+                            }
+                            catch
+                            {
+                                failed++;
+                            }
+                        }
+                    }
+
+                    if (failed == 0)
+                        labelResyncLocalizedExecution.Visible = false;
+                }
+            }
+            catch
+            {
+            }
+
+            if (failed > 0)
+            {
+                MessageBox.Show(this, "Unable to resync accounts; files are in use", "Failed to sync accounts", MessageBoxButtons.OK, MessageBoxIcon.Error);
+            }
+        }
+
+        private void labelShowLocalizedExecution_VisibleChanged(object sender, EventArgs e)
+        {
+            labelResyncLocalizedExecution.Visible = labelShowLocalizedExecution.Visible;
+        }
+
+        private void checkLocalizedExecution_CheckedChanged(object sender, EventArgs e)
+        {
+            checkPreventDefaultCoherentUI.Enabled = !checkLocalizedExecution.Checked;
+            checkLocalizedExecutionExcludeUnknown.Enabled = checkLocalizedExecution.Checked;
+        }
+
+        private void buttonSample_SizeChanged(object sender, EventArgs e)
+        {
+            panelStyleGeneral.Top = buttonSample.Bottom;
         }
     }
 }

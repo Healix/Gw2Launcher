@@ -76,10 +76,15 @@ namespace Gw2Launcher.Messaging
 
         public void Send()
         {
+            Send((IntPtr)Messaging.Messager.BROADCAST);
+        }
+
+        public void Send(IntPtr handle)
+        {
             if (files.Count > 0)
             {
                 using (var map = ToMap())
-                    Messaging.Messager.Send(Messaging.Messager.MessageType.UpdateMap, map.ID);
+                    Messaging.Messager.Send(handle, Messaging.Messager.MessageType.UpdateMap, map.ID);
             }
         }
     }

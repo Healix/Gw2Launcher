@@ -212,5 +212,32 @@ namespace Gw2Launcher.Util
         {
             return GetExecutableBits(path) == 64;
         }
+
+        /// <summary>
+        /// Deletes a directory and its content; directory-link aware
+        /// </summary>
+        public static void DeleteDirectory(string path)
+        {
+            var q = new Stack<string>();
+            q.Push(path);
+
+            do
+            {
+                foreach (var d in Directory.GetDirectories(q.Pop()))
+                {
+                    if (File.GetAttributes(d).HasFlag(FileAttributes.ReparsePoint))
+                    {
+                        Directory.Delete(d);
+                    }
+                    else
+                    {
+                        q.Push(d);
+                    }
+                }
+            }
+            while (q.Count > 0);
+
+            Directory.Delete(path, true);
+        }
     }
 }

@@ -2463,7 +2463,7 @@ namespace Gw2Launcher.UI
 
                     if (m.Result == (IntPtr)HitTest.Client)
                     {
-                        p = this.PointToClient(new Point(m.LParam.ToInt32()));
+                        p = this.PointToClient(new Point(m.LParam.GetValue32()));
 
                         if (barTop.Bounds.Contains(p))
                         {

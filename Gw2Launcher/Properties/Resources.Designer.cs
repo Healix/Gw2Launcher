@@ -93,6 +93,16 @@ namespace Gw2Launcher.Properties {
         /// <summary>
         ///   Looks up a localized resource of type System.Drawing.Bitmap.
         /// </summary>
+        internal static System.Drawing.Bitmap hot32 {
+            get {
+                object obj = ResourceManager.GetObject("hot32", resourceCulture);
+                return ((System.Drawing.Bitmap)(obj));
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized resource of type System.Drawing.Bitmap.
+        /// </summary>
         internal static System.Drawing.Bitmap icon42684 {
             get {
                 object obj = ResourceManager.GetObject("icon42684", resourceCulture);
@@ -116,6 +126,16 @@ namespace Gw2Launcher.Properties {
         internal static System.Drawing.Bitmap mailfull {
             get {
                 object obj = ResourceManager.GetObject("mailfull", resourceCulture);
+                return ((System.Drawing.Bitmap)(obj));
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized resource of type System.Drawing.Bitmap.
+        /// </summary>
+        internal static System.Drawing.Bitmap pof32 {
+            get {
+                object obj = ResourceManager.GetObject("pof32", resourceCulture);
                 return ((System.Drawing.Bitmap)(obj));
             }
         }

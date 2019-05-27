@@ -57,13 +57,21 @@ namespace Gw2Launcher.Api
             set;
         }
 
+        public DateTime LastModified
+        {
+            get;
+            set;
+        }
+
         public static async Task<Account> GetAccountAsync(string key)
         {
             Dictionary<string, object> data;
+            Net.ResponseData<string> response;
 
             try
             {
-                data = (Dictionary<string, object>)Json.Decode((await Net.DownloadStringAsync(Net.URL + "v2/account?access_token=" + key)).Data);
+                response = await Net.DownloadStringAsync(Net.URL + "v2/account?access_token=" + key);
+                data = (Dictionary<string, object>)Json.Decode(response.Data);
             }
             catch (System.Net.WebException e)
             {
@@ -101,6 +109,7 @@ namespace Gw2Launcher.Api
                 DailyAP = dap,
                 MonthlyAP = map,
                 Access = access,
+                LastModified = response.LastModifiedAdjusted,
             };
 
             return a;

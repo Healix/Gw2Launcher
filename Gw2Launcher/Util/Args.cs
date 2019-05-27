@@ -131,7 +131,7 @@ namespace Gw2Launcher.Util
             string b = args.Substring(to);
 
             if (keyAndValue.Length == 0)
-                return a + b;
+                return AddOrReplace(a + b, key, keyAndValue);
 
             return a + (a.Length > 0 && a[a.Length - 1] != ' ' ? " " + keyAndValue : keyAndValue) + (b.Length > 0 && b[0] != ' ' ? " " : "") + b;
         }

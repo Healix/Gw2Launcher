@@ -16,7 +16,7 @@ namespace Gw2Launcher
 {
     static class Program
     {
-        public const byte RELEASE_VERSION = 8;
+        public const byte RELEASE_VERSION = 9;
 
         /// <summary>
         /// The main entry point for the application.
@@ -804,6 +804,7 @@ namespace Gw2Launcher
             #endregion
 
 #if DEBUG
+
             if (!Debugger.IsAttached)
                 Debugger.Launch();
 #else
@@ -848,13 +849,13 @@ namespace Gw2Launcher
                         {
                             if (launch != null)
                             {
-                                launch.Send();
+                                launch.Send(f.Handle);
                                 launch = null;
                             }
 
                             if (update != null)
                             {
-                                update.Send();
+                                update.Send(f.Handle);
                                 update = null;
                             }
                         });
@@ -898,6 +899,43 @@ namespace Gw2Launcher
 
             Util.Users.Activate(false);
         }
+
+
+#if x86
+
+        public static int GetValue(this IntPtr ptr)
+        {
+            return (int)ptr;
+        }
+
+        public static int GetValue32(this IntPtr ptr)
+        {
+            return (int)ptr;
+        }
+
+        public static uint GetValue(this UIntPtr ptr)
+        {
+            return (uint)ptr;
+        }
+
+#else
+
+        public static long GetValue(this IntPtr ptr)
+        {
+            return (long)ptr;
+        }
+
+        public static int GetValue32(this IntPtr ptr)
+        {
+            return (int)(long)ptr;
+        }
+
+        public static ulong GetValue(this UIntPtr ptr)
+        {
+            return (ulong)ptr;
+        }
+
+#endif
 
         static void StoredCredentials_ValueChanged(object sender, EventArgs e)
         {
@@ -968,7 +1006,7 @@ namespace Gw2Launcher
                 PassedLaunch l = new PassedLaunch();
 
                 var count = Marshal.ReadByte(ptr);
-
+                
                 var i = 1;
                 for (var j = 0; j < count; j++, i += 2)
                     l.accounts.Add((ushort)Marshal.ReadInt16(ptr, i));

@@ -124,7 +124,7 @@ namespace Gw2Launcher.UI
 
                     await Task.Delay(10);
                 }
-                
+
             }
 
             public void SetData(DailyAchievements.Daily daily)
@@ -162,7 +162,7 @@ namespace Gw2Launcher.UI
             private formDailies owner;
             private FlatShapeButton buttonMinimize;
             private HorizontalAlignment alignment;
-            private bool visible, wasVisible;
+            private bool visible, wasVisible, wasMinimized, firstShow;
 
             public MinimizedWindow(formDailies owner, Form parent)
             {
@@ -232,6 +232,7 @@ namespace Gw2Launcher.UI
             void buttonMinimize_Click(object sender, EventArgs e)
             {
                 owner.Show(true);
+                firstShow = true;
             }
 
             void parent_VisibleChanged(object sender, EventArgs e)
@@ -243,7 +244,78 @@ namespace Gw2Launcher.UI
                 }
                 else if (wasVisible)
                 {
-                    this.Visible = true;
+                    if (!firstShow)
+                        SlideIn(200, 200);
+                    else if (parent.WindowState != FormWindowState.Minimized)
+                        this.Visible = true;
+                }
+            }
+
+            private async void SlideIn(int delay, int duration)
+            {
+                var active = true;
+
+                this.Opacity = 0;
+                this.Visible = true;
+
+                EventHandler onVisible = null;
+                onVisible = delegate
+                {
+                    if (!this.Visible)
+                    {
+                        active = false;
+                        PositionToParent();
+                        this.Opacity = 1;
+                        this.Owner = parent;
+                        this.VisibleChanged -= onVisible;
+                    }
+                };
+                this.VisibleChanged += onVisible;
+
+                await Task.Delay(delay);
+
+                if (!active)
+                    return;
+
+                var start = DateTime.UtcNow;
+                var offsetX = this.Width * 3 / 2;
+
+                var setX = new Action<int>(
+                    delegate(int offset)
+                    {
+                        if (owner.Left < parent.Left)
+                            this.Left = parent.Left - this.Width - owner.padding + offset;
+                        else
+                            this.Left = parent.Right + owner.padding - offset;
+                    });
+
+                this.Owner = null;
+                setX(offsetX);
+
+                parent.BringToFront();
+
+                while (active)
+                {
+                    var p = DateTime.UtcNow.Subtract(start).TotalMilliseconds / duration;
+                    if (p >= 1)
+                    {
+                        setX(0);
+
+                        this.Opacity = 1f;
+                        this.Owner = parent;
+                        this.VisibleChanged -= onVisible;
+
+                        parent.BringToFront();
+
+                        break;
+                    }
+                    else
+                    {
+                        setX((int)(offsetX * (1 - p)));
+                        this.Opacity = p;
+                    }
+
+                    await Task.Delay(10);
                 }
             }
 
@@ -255,12 +327,42 @@ namespace Gw2Launcher.UI
             void parent_LocationChanged(object sender, EventArgs e)
             {
                 PositionToParent();
+
+                if (wasMinimized)
+                {
+                    if (parent.WindowState != FormWindowState.Minimized)
+                    {
+                        SlideIn(200, 200);
+                        wasMinimized = false;
+                    }
+                }
+                else
+                {
+                    wasMinimized = parent.WindowState == FormWindowState.Minimized;
+                }
             }
 
             void owner_VisibleChanged(object sender, EventArgs e)
             {
                 if (owner.Visible)
+                {
+                    wasVisible = false;
                     this.Hide();
+                }
+            }
+
+            public void Show(bool focus)
+            {
+                if (parent.Visible)
+                {
+                    this.Show(parent);
+                    if (focus)
+                        this.Focus();
+                }
+                else
+                {
+                    wasVisible = true;
+                }
             }
 
             protected override void SetVisibleCore(bool value)
@@ -351,7 +453,7 @@ namespace Gw2Launcher.UI
         private HorizontalAlignment alignment;
         private MinimizedWindow minimized;
         private byte retryCount;
-        private bool 
+        private bool
             linkedToParent,
             minimizeOnMouseLeave,
             waitingToMinimize,
@@ -359,7 +461,7 @@ namespace Gw2Launcher.UI
             loadOnShow,
             sizing,
             wasVisible;
-        private int 
+        private int
             padding;
         private Point sizingOrigin;
         private RECT sizingBounds;
@@ -382,11 +484,14 @@ namespace Gw2Launcher.UI
             fontName = new System.Drawing.Font("Segoe UI Semibold", 9f, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
             fontDescription = new System.Drawing.Font("Segoe UI Semilight", 8.25f, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
 
-            padding = (parent.Width - parent.ClientSize.Width) / 2;
-            if (padding > 5)
-                padding = 0;
-            else
+            if (!NativeMethods.IsDwmCompositionEnabled())
                 padding = 5;
+
+            //padding = (parent.Width - parent.ClientSize.Width) / 2;
+            //if (padding > 5)
+            //    padding = 0;
+            //else
+            //    padding = 5;
 
             imageDefault = Properties.Resources.icon42684;
 
@@ -908,7 +1013,7 @@ namespace Gw2Launcher.UI
                 for (int gi = 0; gi < g.count; gi++)
                 {
                     var c = g.controls[gi];
-                    
+
                     if (visible)
                     {
                         c.Top = y;
@@ -1293,10 +1398,13 @@ namespace Gw2Launcher.UI
                 }
 
                 if (!minimized.Visible)
-                    minimized.Show(parent);
+                {
+                    minimized.Show(focus);
+                    if (this.Visible)
+                        this.Hide();
+                }
             }
-
-            if (focus)
+            else if (focus)
                 minimized.Focus();
         }
 
@@ -1322,7 +1430,7 @@ namespace Gw2Launcher.UI
             switch (shape)
             {
                 case FlatShapeButton.IconShape.Arrow:
-                    
+
                     button.ShapeSize = new Size(5, 9);
 
                     break;
@@ -1401,7 +1509,7 @@ namespace Gw2Launcher.UI
 
                     if (m.Result == (IntPtr)HitTest.Client)
                     {
-                        p = this.PointToClient(new Point(m.LParam.ToInt32()));
+                        p = this.PointToClient(new Point(m.LParam.GetValue32()));
 
                         if (p.Y > buttonTomorrow.Bottom && p.Y < buttonMinimize.Top)
                         {

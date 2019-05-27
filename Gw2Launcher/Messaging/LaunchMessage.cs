@@ -73,17 +73,22 @@ namespace Gw2Launcher.Messaging
 
         public void Send()
         {
+            Send((IntPtr)Messaging.Messager.BROADCAST);
+        }
+
+        public void Send(IntPtr handle)
+        {
             if (accounts.Count > 0)
             {
                 if (string.IsNullOrEmpty(args))
                 {
                     foreach (var uid in accounts)
-                        Messaging.Messager.Post(Messaging.Messager.MessageType.Launch, uid);
+                        Messaging.Messager.Post(handle, Messaging.Messager.MessageType.Launch, uid);
                 }
                 else
                 {
                     using (var map = ToMap())
-                        Messaging.Messager.Send(Messaging.Messager.MessageType.LaunchMap, map.ID);
+                        Messaging.Messager.Send(handle, Messaging.Messager.MessageType.LaunchMap, map.ID);
                 }
             }
         }

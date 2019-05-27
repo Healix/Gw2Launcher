@@ -419,11 +419,12 @@ namespace Gw2Launcher.Client
 
                     data.SetText(text);
 
-                    data.DataRequested += delegate
+                    EventHandler onRequested = delegate
                     {
                         if (cancel != null)
                             cancel.Cancel();
                     };
+                    data.DataRequested += onRequested;
 
                     try
                     {
@@ -468,6 +469,8 @@ namespace Gw2Launcher.Client
                         }
                         catch { }
                     }
+
+                    data.DataRequested -= onRequested;
 
                     return completed;
                 }

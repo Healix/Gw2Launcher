@@ -11,7 +11,31 @@ namespace Gw2Launcher.Tools
     {
         public const string USERNAME_GW2LAUNCHER = "@";
 
-        private const string GW2CACHE = "gw2cache-{*}";
+        private const string GW2CACHE = "gw2cache*";
+
+        /// <summary>
+        /// Deletes cache folders for the specified account
+        /// </summary>
+        /// <param name="uid">Account's UID</param>
+        /// <param name="all">True to delete all folders, otherwise folders will be checked to ensure they're not needed</param>
+        public static void Delete(ushort uid, bool all)
+        {
+            if (all)
+            {
+                foreach (var d in Directory.GetDirectories(Path.Combine(DataPath.AppDataAccountDataTemp, uid.ToString()), GW2CACHE, SearchOption.TopDirectoryOnly))
+                {
+                    try
+                    {
+                        Directory.Delete(d, true);
+                    }
+                    catch { }
+                }
+            }
+            else
+            {
+                Delete(uid);
+            }
+        }
 
         public static void Delete(ushort uid)
         {

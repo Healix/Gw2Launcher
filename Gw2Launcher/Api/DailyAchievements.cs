@@ -60,6 +60,17 @@ namespace Gw2Launcher.Api
 
         public class Daily
         {
+            [Flags]
+            public enum AccessCondition
+            {
+                None = 0,
+
+                HasAccess = 1,
+
+                HeartOfThorns = 2,
+                PathOfFire = 4,
+            }
+
             public uint ID
             {
                 get;
@@ -97,6 +108,12 @@ namespace Gw2Launcher.Api
             }
 
             public System.Drawing.Image Icon
+            {
+                get;
+                set;
+            }
+
+            public AccessCondition Access
             {
                 get;
                 set;
@@ -350,7 +367,7 @@ namespace Gw2Launcher.Api
             if (onDownloadBegin != null)
                 onDownloadBegin();
 
-            var d = await TryGetDailies(Api.Net.URL + "v2/achievements/daily");
+            var d = await TryGetDailies(Api.Net.URL + "v2/achievements/daily?v=latest");
 
             if (d != null)
             {
@@ -396,7 +413,7 @@ namespace Gw2Launcher.Api
             if (onDownloadBegin != null)
                 onDownloadBegin();
 
-            var d = await TryGetDailies(Api.Net.URL + "v2/achievements/daily/tomorrow");
+            var d = await TryGetDailies(Api.Net.URL + "v2/achievements/daily/tomorrow?v=latest");
 
             if (d != null)
             {
@@ -631,6 +648,36 @@ namespace Gw2Launcher.Api
             return dailies;
         }
 
+        private Daily.AccessCondition ParseAccessCondition(string product, string condition)
+        {
+            var c = Daily.AccessCondition.None;
+
+            switch (product)
+            {
+                case "HeartOfThorns":
+                    c = Daily.AccessCondition.HeartOfThorns;
+                    break;
+                case "PathOfFire":
+                    c = Daily.AccessCondition.PathOfFire;
+                    break;
+                default:
+                    throw new NotSupportedException("Unknown product \"" + product + "\"");
+            }
+
+            switch (condition)
+            {
+                case "HasAccess":
+                    c |= Daily.AccessCondition.HasAccess;
+                    break;
+                case "NoAccess":
+                    break;
+                default:
+                    throw new NotSupportedException("Unknown condition \"" + condition + "\"");
+            }
+
+            return c;
+        }
+
         /// <summary>
         /// Parses dailies from json data
         /// </summary>
@@ -673,6 +720,21 @@ namespace Gw2Launcher.Api
                         MinLevel = (int)ldata["min"],
                         MaxLevel = (int)ldata["max"],
                     };
+
+                    try
+                    {
+                        object o;
+                        if (ddata.TryGetValue("required_access", out o))
+                        {
+                            var rdata = (Dictionary<string, object>)o;
+
+                            d.Access = ParseAccessCondition((string)rdata["product"], (string)rdata["condition"]);
+                        }
+                    }
+                    catch (Exception ex)
+                    {
+                        Util.Logging.Log(ex);
+                    }
 
                     ids.Add(new ItemID(CacheType.Achievement, d.ID));
                 }

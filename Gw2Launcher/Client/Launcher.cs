@@ -432,6 +432,7 @@ namespace Gw2Launcher.Client
         private static Tools.CoherentMonitor coherentMonitor;
         private static WindowEvents windowEvents;
         private static Autologin autologin;
+        private static Stream coherentLock;
 
         static Launcher()
         {
@@ -449,6 +450,25 @@ namespace Gw2Launcher.Client
 
             LinkedProcess.ProcessExited += LinkedProcess_ProcessExited;
             LinkedProcess.ProcessActive += LinkedProcess_ProcessActive;
+
+            Settings.PreventDefaultCoherentUI.ValueChanged += PreventDefaultCoherentUI_ValueChanged;
+        }
+
+        static void PreventDefaultCoherentUI_ValueChanged(object sender, EventArgs e)
+        {
+            var v = ((Settings.ISettingValue<bool>)sender).Value;
+
+            if (!v)
+            {
+                lock (queueMulti)
+                {
+                    if (coherentLock != null)
+                    {
+                        coherentLock.Dispose();
+                        coherentLock = null;
+                    }
+                }
+            }
         }
 
         public static Process FindProcess(Settings.IAccount account)
@@ -541,6 +561,8 @@ namespace Gw2Launcher.Client
         {
             lock (queue)
             {
+                aborting = false;
+
                 var first = true;
                 var mode = LaunchMode.UpdateVisible;
 
@@ -734,7 +756,10 @@ namespace Gw2Launcher.Client
             }
         }
 
-        private static void WaitForExit(Account account, CancellationToken cancel)
+        /// <summary>
+        /// Returns true if or when the account exits or false if cancelled
+        /// </summary>
+        private static bool WaitForExit(Account account, CancellationToken cancel)
         {
             ManualResetEvent waitOnExit;
             EventHandler<Account> onExit = null;
@@ -770,6 +795,8 @@ namespace Gw2Launcher.Client
                     }
                 }
             }
+
+            return !cancel.IsCancellationRequested;
         }
 
         private static void DoAnnounce()
@@ -811,13 +838,14 @@ namespace Gw2Launcher.Client
 
             int build = 0;
             var lastMode = (LaunchMode)(-1);
+            Tools.DatUpdater datUpdater = null;
 
             do
             {
                 Queue<QueuedLaunch> queue;
                 QueuedLaunch q;
 
-                #region wait for last launch
+                #region Wait for last launch
 
                 if (lastLaunch != null && lastLaunch.mode != LaunchMode.Launch && lastLaunch.account != null)
                 {
@@ -1069,6 +1097,13 @@ namespace Gw2Launcher.Client
                                     else
                                         mode = LaunchMode.Update;
 
+                                    if (account.Settings != null)
+                                    {
+                                        var dat = account.Settings.DatFile;
+                                        if (dat != null)
+                                            dat.IsPending = true;
+                                    }
+
                                     var ql = new QueuedLaunch(account, mode);
                                     queueSingle.Enqueue(ql);
                                     announce.Add(ql);
@@ -1133,6 +1168,57 @@ namespace Gw2Launcher.Client
                     {
                         continue;
                     }
+
+                    #region DatUpdater
+
+                    if (q.mode == LaunchMode.Update && datUpdater != null && datUpdater.CanUpdate)
+                    {
+                        var dat = q.account.Settings.DatFile;
+                        if (dat != null)
+                        {
+                            lock (q.account)
+                            {
+                                q.account.SetState(AccountState.Updating, true);
+                            }
+
+                            FileManager.VerifyLinks(FileManager.FileType.Dat, dat);
+
+                            if (datUpdater.Update(dat))
+                            {
+
+                                try
+                                {
+                                    //note that gw2 normally creates a new cache folder after a build change
+                                    Tools.Gw2Cache.Delete(q.account.Settings.UID, true);
+                                }
+                                catch { }
+
+                                lock (queueMulti)
+                                {
+                                    queue.Dequeue();
+                                    q.account.inQueueCount--;
+                                    q.OnDequeued(QueuedLaunch.DequeuedState.OK);
+
+                                    lock (q.account)
+                                    {
+                                        if (q.account.inQueueCount > 0)
+                                        {
+                                            q.account.SetState(AccountState.None, true);
+                                            q.account.SetState(AccountState.Waiting, true);
+                                        }
+                                        else
+                                        {
+                                            q.account.SetState(AccountState.None, true);
+                                        }
+                                    }
+                                }
+
+                                continue;
+                            }
+                        }
+                    }
+
+                    #endregion
                 }
                 else
                 {
@@ -1161,6 +1247,7 @@ namespace Gw2Launcher.Client
                     try
                     {
                         Launch(q, cancel);
+
                         lastMode = q.mode;
                     }
                     catch (Security.Impersonation.BadUsernameOrPasswordException)
@@ -1374,6 +1461,56 @@ namespace Gw2Launcher.Client
                             q.account.SetState(AccountState.None, true);
                     }
                 }
+
+                #region DatUpdater
+
+                if (IsUpdate(q.mode) && WaitForExit(q.account, cancel))
+                {
+                    var dat = q.account.Settings.DatFile;
+                    dat.IsPending = false;
+
+                    FileManager.VerifyLinks(FileManager.FileType.Dat, dat);
+
+                    if (Settings.DatUpdaterEnabled.Value || Settings.UseCustomGw2Cache.Value)
+                    {
+                        if (q.mode == LaunchMode.UpdateVisible)
+                        {
+                            try
+                            {
+                                if (Settings.DatUpdaterEnabled.Value)
+                                {
+                                    datUpdater = Tools.DatUpdater.Create(q.account.Settings.DatFile);
+                                }
+                                else if (Settings.UseCustomGw2Cache.Value)
+                                {
+                                    datUpdater = Tools.DatUpdater.Create();
+                                    datUpdater.UpdateCache(q.account.Settings.DatFile);
+                                }
+                            }
+                            catch
+                            {
+                                datUpdater = null;
+                            }
+                        }
+                        else if (datUpdater != null && !datUpdater.CanUpdate)
+                        {
+                            try
+                            {
+                                datUpdater.UpdateCache(q.account.Settings.DatFile);
+                            }
+                            catch { }
+                        }
+
+                        try
+                        {
+                            //note that gw2 normally creates a new cache folder after a build change
+                            Tools.Gw2Cache.Delete(q.account.Settings.UID, true);
+                        }
+                        catch { }
+                    }
+                }
+
+                #endregion
             }
             while (true);
         }
@@ -1511,7 +1648,7 @@ namespace Gw2Launcher.Client
             //}
             #endregion
 
-            if (Settings.LocalizeAccountExecution.Value && !isUpdate)
+            if (Settings.LocalizeAccountExecution.Value.HasFlag(Settings.LocalizeAccountExecutionOptions.Enabled) && !isUpdate)
             {
                 try
                 {
@@ -1519,7 +1656,7 @@ namespace Gw2Launcher.Client
                 }
                 catch (NotSupportedException)
                 {
-                    Settings.LocalizeAccountExecution.Value = false;
+                    Settings.LocalizeAccountExecution.Value = Settings.LocalizeAccountExecution.Value & ~Settings.LocalizeAccountExecutionOptions.Enabled;
                     throw new Exception("Linking " + fi.Name + " is not supported; localized execution has been disabled");
                 }
                 catch (Exception e)
@@ -1615,6 +1752,36 @@ namespace Gw2Launcher.Client
                 }
 
                 account.isRelaunch = 0;
+            }
+
+            if (Settings.PreventDefaultCoherentUI.Value)
+            {
+                lock (queueMulti)
+                {
+                    if (mode == LaunchMode.Launch)
+                    {
+                        if (coherentLock == null)
+                        {
+                            try
+                            {
+                                //CoherentUI_Host.exe is the first file loaded
+                                //icudt.dll is the first file that requires write access
+
+                                var exebits = Util.FileUtil.GetExecutableBits(Settings.GW2Path.Value);
+                                coherentLock = File.Open(Path.Combine(Path.GetDirectoryName(Settings.GW2Path.Value), exebits == 32 ? "bin" : "bin64", "CoherentUI_Host.exe"), FileMode.Open, FileAccess.Read, FileShare.None);
+                            }
+                            catch (Exception e)
+                            {
+                                Util.Logging.Log(e);
+                            }
+                        }
+                    }
+                    else if (coherentLock != null)
+                    {
+                        coherentLock.Dispose();
+                        coherentLock = null;
+                    }
+                }
             }
 
             //flush announcements
@@ -2348,6 +2515,9 @@ namespace Gw2Launcher.Client
 
             var a = args.ToString();
 
+            if (mode == LaunchMode.LaunchSingle)
+                a = Util.Args.AddOrReplace(a, "sharearchive", "");
+
             if (Net.AssetProxy.ServerController.Enabled)
             {
                 var proxy = Net.AssetProxy.ServerController.Active;
@@ -2928,6 +3098,18 @@ namespace Gw2Launcher.Client
         {
             if (ActiveProcessCountChanged != null)
                 ActiveProcessCountChanged(null, activeProcesses);
+
+            if (activeProcesses == 0)
+            {
+                lock (queueMulti)
+                {
+                    if (coherentLock != null)
+                    {
+                        coherentLock.Dispose();
+                        coherentLock = null;
+                    }
+                }
+            }
         }
 
         private static void OnScanComplete(DateTime startTime, ScanOptions options)

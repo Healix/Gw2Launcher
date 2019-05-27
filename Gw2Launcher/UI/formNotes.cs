@@ -615,7 +615,7 @@ namespace Gw2Launcher.UI
 
                     if (m.Result == (IntPtr)HitTest.Client)
                     {
-                        var p = this.PointToClient(new Point(m.LParam.ToInt32()));
+                        var p = this.PointToClient(new Point(m.LParam.GetValue32()));
 
                         if (p.Y > buttonExpired.Bottom && p.Y < buttonMinimize.Top)
                         {

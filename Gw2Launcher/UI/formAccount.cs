@@ -2847,8 +2847,8 @@ namespace Gw2Launcher.UI
                 case WindowMessages.WM_NCHITTEST:
 
                     base.WndProc(ref m);
-
-                    switch ((HitTest)m.Result)
+                    
+                    switch ((HitTest)m.Result.GetValue())
                     {
                         case HitTest.BottomLeft:
                         case HitTest.BottomRight:
@@ -2991,8 +2991,10 @@ namespace Gw2Launcher.UI
                 }
             }
 
-            this.Visible = true;
             this.Owner.Visible = true;
+            this.Visible = true;
+
+            this.Select();
         }
 
         private void labelAutologin_SizeChanged(object sender, EventArgs e)

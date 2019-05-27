@@ -312,7 +312,7 @@ namespace Gw2Launcher.UI
             {
                 case WindowMessages.WM_NCHITTEST:
 
-                    switch ((HitTest)m.Result)
+                    switch ((HitTest)m.Result.GetValue())
                     {
                         case HitTest.BottomLeft:
                         case HitTest.BottomRight:

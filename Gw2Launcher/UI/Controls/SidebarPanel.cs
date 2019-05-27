@@ -77,6 +77,7 @@ namespace Gw2Launcher.UI.Controls
             selectedPanel = panel;
 
             panel.Visible = true;
+            panel.Select();
 
             if (previous != null)
                 previous.Visible = false;

@@ -874,8 +874,8 @@ namespace Gw2Launcher.UI.Controls
             {
                 case WindowMessages.WM_MOUSEWHEEL:
 
-                    var pos = new Point(m.LParam.ToInt32());
-                    var wParam = (int)m.WParam.ToInt64();
+                    var pos = new Point(m.LParam.GetValue32());
+                    var wParam = m.WParam.GetValue32();
                     var delta = wParam >> 16;
                     var e = new MouseEventArgs(GetMouseButtons(wParam), 0, pos.X, pos.Y, delta);
                     var f = this.ParentForm;
@@ -891,7 +891,7 @@ namespace Gw2Launcher.UI.Controls
                     break;
                 case WindowMessages.WM_KEYUP:
 
-                    OnMsgKeyUp(new KeyEventArgs((Keys)m.WParam));
+                    OnMsgKeyUp(new KeyEventArgs((Keys)m.WParam.GetValue()));
 
                     break;
 

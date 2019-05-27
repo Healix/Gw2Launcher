@@ -341,9 +341,22 @@ namespace Gw2Launcher.Net.AssetProxy
 
                         var response = (HttpStream.HttpResponseHeader)header;
 
-                        if (writeCache && response.StatusCode == HttpStatusCode.OK)
+                        if (response.StatusCode == HttpStatusCode.OK)
                         {
-                            cache.Commit();
+                            if (writeCache)
+                            {
+                                cache.Commit();
+                            }
+                        }
+                        else if (doIPPool)
+                        {
+                            if (request.Location.IndexOf("latest") != -1)
+                            {
+                                //the latest index should always be good, this IP is bad
+                                ipPool.AddSample(remoteEP.Address, double.MaxValue);
+                                if (!doSwap)
+                                    count = 9; //force triggering swap
+                            }
                         }
 
                         if (doIPPool)

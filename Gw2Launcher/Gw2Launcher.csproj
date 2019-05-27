@@ -28,7 +28,7 @@
     <BootstrapperEnabled>true</BootstrapperEnabled>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
-    <PlatformTarget>AnyCPU</PlatformTarget>
+    <PlatformTarget>x64</PlatformTarget>
     <DebugSymbols>true</DebugSymbols>
     <DebugType>full</DebugType>
     <Optimize>false</Optimize>
@@ -39,7 +39,7 @@
     <Prefer32Bit>false</Prefer32Bit>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
-    <PlatformTarget>x64</PlatformTarget>
+    <PlatformTarget>x86</PlatformTarget>
     <DebugType>none</DebugType>
     <Optimize>true</Optimize>
     <OutputPath>bin\Release\</OutputPath>
@@ -47,6 +47,9 @@
     <ErrorReport>prompt</ErrorReport>
     <WarningLevel>4</WarningLevel>
     <Prefer32Bit>false</Prefer32Bit>
+  </PropertyGroup>
+  <PropertyGroup>
+    <DefineConstants>$(DefineConstants);$(PlatformTarget)</DefineConstants>
   </PropertyGroup>
   <PropertyGroup>
     <ApplicationIcon>Resources\Gw2Launcher.ico</ApplicationIcon>
@@ -109,6 +112,13 @@
     <Compile Include="Tools\AutoUpdate.cs" />
     <Compile Include="Tools\CoherentMonitor.cs" />
     <Compile Include="Tools\DataStore.cs" />
+    <Compile Include="Tools\DatUpdater.cs" />
+    <Compile Include="Tools\Dat\Compression\Crc32.cs" />
+    <Compile Include="Tools\Dat\Compression\Archive.cs" />
+    <Compile Include="Tools\Dat\Compression\IO\BitStream.cs" />
+    <Compile Include="Tools\Dat\Compression\IO\FileStream.cs" />
+    <Compile Include="Tools\Dat\Compression\Tree\BinaryTree.cs" />
+    <Compile Include="Tools\Dat\Compression\Tree\TreeBuilder.cs" />
     <Compile Include="Tools\Gw2Logs.cs" />
     <Compile Include="Tools\Icons.cs" />
     <Compile Include="Tools\Notes.cs" />
@@ -638,6 +648,12 @@
   </ItemGroup>
   <ItemGroup>
     <None Include="Resources\Gw2Launcher.ico" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Resources\hot32.jpg" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Resources\pof32.jpg" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <PropertyGroup>

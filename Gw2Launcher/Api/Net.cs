@@ -14,13 +14,15 @@ namespace Gw2Launcher.Api
 
         public class ResponseData<T>
         {
-            private DateTime date;
+            private DateTime created, date, lastModified;
             private T data;
 
-            public ResponseData(DateTime date, T data)
+            public ResponseData(DateTime date, DateTime lastModified, T data)
             {
+                this.created = DateTime.UtcNow;
                 this.data = data;
                 this.date = date;
+                this.lastModified = lastModified;
             }
 
             public DateTime Date
@@ -28,6 +30,24 @@ namespace Gw2Launcher.Api
                 get
                 {
                     return date;
+                }
+            }
+
+            public DateTime LastModified
+            {
+                get
+                {
+                    return lastModified;
+                }
+            }
+
+            public DateTime LastModifiedAdjusted
+            {
+                get
+                {
+                    if (lastModified == DateTime.MinValue)
+                        return DateTime.MinValue;
+                    return created.Subtract(date.Subtract(lastModified));
                 }
             }
 
@@ -51,12 +71,16 @@ namespace Gw2Launcher.Api
                 using (var r = new StreamReader(response.GetResponseStream()))
                 {
                     var date = response.Headers[HttpResponseHeader.Date];
-                    DateTime d;
+                    DateTime d, lm;
 
                     if (string.IsNullOrEmpty(date) || !DateTime.TryParse(date, null, System.Globalization.DateTimeStyles.AdjustToUniversal, out d))
                         d = DateTime.MinValue;
 
-                    return new ResponseData<string>(d, await r.ReadToEndAsync());
+                    date = response.Headers[HttpResponseHeader.LastModified];
+                    if (string.IsNullOrEmpty(date) || !DateTime.TryParse(date, null, System.Globalization.DateTimeStyles.AdjustToUniversal, out lm))
+                        lm = DateTime.MinValue;
+
+                    return new ResponseData<string>(d, lm, await r.ReadToEndAsync());
                 }
             }
         }
@@ -72,10 +96,14 @@ namespace Gw2Launcher.Api
                 using (var stream = response.GetResponseStream())
                 {
                     var date = response.Headers[HttpResponseHeader.Date];
-                    DateTime d;
+                    DateTime d, lm;
 
                     if (string.IsNullOrEmpty(date) || !DateTime.TryParse(date, null, System.Globalization.DateTimeStyles.AdjustToUniversal, out d))
                         d = DateTime.MinValue;
+
+                    date = response.Headers[HttpResponseHeader.LastModified];
+                    if (string.IsNullOrEmpty(date) || !DateTime.TryParse(date, null, System.Globalization.DateTimeStyles.AdjustToUniversal, out lm))
+                        lm = DateTime.MinValue;
 
                     int contentLength = (int)response.ContentLength;
                     if (contentLength < 0)
@@ -90,7 +118,7 @@ namespace Gw2Launcher.Api
                         else
                             bytes = ms.ToArray();
 
-                        return new ResponseData<byte[]>(d, ms.ToArray());
+                        return new ResponseData<byte[]>(d, lm, ms.ToArray());
                     }
                 }
             }

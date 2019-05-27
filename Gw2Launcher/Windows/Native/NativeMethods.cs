@@ -18,6 +18,7 @@ namespace Gw2Launcher.Windows.Native
             public const string SHELL32 = "shell32.dll";
             public const string ADVAPI32 = "advapi32.dll";
             public const string SHLWAPI = "shlwapi.dll";
+            public const string DWMAPI = "dwmapi.dll";
         }
 
         [DllImport(DLL.USER32, SetLastError = true)]
@@ -36,10 +37,16 @@ namespace Gw2Launcher.Windows.Native
 
         internal static IntPtr SetWindowLongPtr(IntPtr hWnd, int nIndex, IntPtr dwNewLong)
         {
+#if x86
+            return (IntPtr)SetWindowLongPtr32(hWnd, nIndex, (int)dwNewLong);
+#elif x64
+            return SetWindowLongPtr64(hWnd, nIndex, dwNewLong);
+#else
             if (IntPtr.Size == 4)
-                return (IntPtr)SetWindowLongPtr32(hWnd, nIndex, dwNewLong.ToInt32());
+                return (IntPtr)SetWindowLongPtr32(hWnd, nIndex, (int)dwNewLong);
             else
                 return SetWindowLongPtr64(hWnd, nIndex, dwNewLong);
+#endif
         }
 
         [DllImport(DLL.USER32, EntryPoint = "GetWindowLong")]
@@ -50,10 +57,16 @@ namespace Gw2Launcher.Windows.Native
 
         internal static IntPtr GetWindowLongPtr(IntPtr hWnd, int nIndex)
         {
+#if x86
+            return GetWindowLongPtr32(hWnd, nIndex);
+#elif x64
+            return GetWindowLongPtr64(hWnd, nIndex);
+#else
             if (IntPtr.Size == 4)
                 return GetWindowLongPtr32(hWnd, nIndex);
             else
                 return GetWindowLongPtr64(hWnd, nIndex);
+#endif
         }
 
         [DllImport(DLL.USER32, SetLastError = true)]
@@ -275,5 +288,22 @@ namespace Gw2Launcher.Windows.Native
 
         [DllImport(DLL.USER32)]
         internal static extern IntPtr WindowFromPoint(System.Drawing.Point p);
+
+        [DllImport(DLL.DWMAPI)]
+        internal static extern int DwmIsCompositionEnabled(out bool enabled);
+
+        internal static bool IsDwmCompositionEnabled()
+        {
+            bool isEnabled;
+            try
+            {
+                DwmIsCompositionEnabled(out isEnabled);
+            }
+            catch
+            {
+                isEnabled = false;
+            }
+            return isEnabled;
+        }
     }
 }
