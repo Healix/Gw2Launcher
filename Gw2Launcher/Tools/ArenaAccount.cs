@@ -227,7 +227,44 @@ namespace Gw2Launcher.Tools
         public async Task<bool> Login(string email, SecureString password)
         {
             var cookies = new CookieContainer(1);
-            var request = CreateHttpJsonPost(URL_BASE + "login.json", URL_BASE + "login", cookies);
+            var request = CreateHttp(URL_BASE + "login.json", URL_BASE + "login", cookies);
+            
+            try
+            {
+                using (var response = await request.GetResponseAsync())
+                {
+                    var cookie = response.Headers[HttpResponseHeader.SetCookie];
+                    if (cookie.StartsWith("s="))
+                    {
+                        var key = cookie.Substring(2, cookie.IndexOf(';') - 2);
+                        cookies.Add(new Cookie("s", key, "/", "arena.net"));
+                    }
+                }
+            }
+            catch (WebException e)
+            {
+                if (e.Response == null)
+                    throw;
+
+                using (var response = e.Response as HttpWebResponse)
+                {
+                    switch (response.StatusCode)
+                    {
+                        case HttpStatusCode.BadRequest:
+                            throw new AuthenticationException();
+                        case HttpStatusCode.NotFound:
+                        case HttpStatusCode.Redirect:
+                        case HttpStatusCode.MovedPermanently:
+                        case HttpStatusCode.TemporaryRedirect:
+                        case HttpStatusCode.Forbidden:
+                            throw new UnexpectedResponseException();
+                    }
+                }
+
+                return false;
+            }
+
+            request = CreateHttpJsonPost(URL_BASE + "login.json", URL_BASE + "login", cookies);
 
             using (var rs = request.GetRequestStream())
             {
