@@ -73,9 +73,12 @@ namespace Gw2Launcher.UI
             if (Net.AssetProxy.ServerController.Enabled)
             {
                 proxy = Net.AssetProxy.ServerController.Active;
-                proxy.ResponseDataReceived += proxy_ResponseDataReceived;
-                proxy.RequestDataReceived += proxy_RequestDataReceived;
-                label4.Text = "UL / DL";
+                if (proxy != null)
+                {
+                    proxy.ResponseDataReceived += proxy_ResponseDataReceived;
+                    proxy.RequestDataReceived += proxy_RequestDataReceived;
+                    label4.Text = "UL / DL";
+                }
             }
 
             Client.Launcher.AccountStateChanged += Launcher_AccountStateChanged;
@@ -84,22 +87,7 @@ namespace Gw2Launcher.UI
 
             Settings.GW2Path.ValueChanged += GW2Path_ValueChanged;
             GW2Path_ValueChanged(null, EventArgs.Empty);
-
-            long size;
-            DateTime lastWrite;
-            try
-            {
-                FileInfo fi = new FileInfo(datPath);
-                size = fi.Length;
-                lastWrite = fi.LastWriteTimeUtc;
-            }
-            catch (Exception e)
-            {
-                Util.Logging.Log(e);
-                size = 0;
-                lastWrite = DateTime.MinValue;
-            }
-
+            
             if (!alreadyQueued)
                 this.Shown += formUpdating_Shown;
         }
@@ -120,6 +108,7 @@ namespace Gw2Launcher.UI
             if (cancelDelayedComplete != null)
             {
                 cancelDelayedComplete.Cancel();
+                cancelDelayedComplete.Dispose();
                 cancelDelayedComplete = null;
             }
 
@@ -152,28 +141,16 @@ namespace Gw2Launcher.UI
                     datLastWrite = DateTime.MinValue;
                 }
 
-                try
+                Util.Invoke.Required(this, delegate
                 {
-                    Action a = delegate
+                    labelTotalSize.Text = Util.Text.FormatBytes(datSize);
+
+                    if (cancelWatch == null || cancelWatch.IsCancellationRequested)
                     {
-                        labelTotalSize.Text = Util.Text.FormatBytes(datSize);
-
-                        if (cancelWatch == null || cancelWatch.IsCancellationRequested)
-                        {
-                            cancelWatch = new CancellationTokenSource();
-                            WatchDat(cancelWatch.Token);
-                        }
-                    };
-
-                    if (this.InvokeRequired)
-                        this.Invoke(a);
-                    else
-                        a();
-                }
-                catch (Exception ex)
-                {
-                    Util.Logging.Log(ex);
-                }
+                        cancelWatch = new CancellationTokenSource();
+                        WatchDat(cancelWatch.Token);
+                    }
+                });
             }
         }
 
@@ -195,74 +172,43 @@ namespace Gw2Launcher.UI
 
         void Launcher_AllQueuedLaunchesComplete(object sender, EventArgs e)
         {
-            if (this.InvokeRequired)
+            if (Util.Invoke.IfRequiredAsync(this,
+                delegate
+                {
+                    Launcher_AllQueuedLaunchesComplete(sender, e);
+                }))
             {
-                this.BeginInvoke(new MethodInvoker(
-                    delegate
-                    {
-                        Launcher_AllQueuedLaunchesComplete(sender, e);
-                    }));
                 return;
             }
 
             if (remaining > 0)
             {
                 if (cancelDelayedComplete != null)
+                {
                     cancelDelayedComplete.Cancel();
+                    cancelDelayedComplete.Dispose();
+                }
 
                 cancelDelayedComplete = new CancellationTokenSource();
-
-                Action a = async delegate
-                {
-                    try
-                    {
-                        await Task.Delay(3000, cancelDelayedComplete.Token);
-                    }
-                    catch (TaskCanceledException ex)
-                    {
-                        Util.Logging.Log(ex);
-                        return;
-                    }
-                    if (remaining > 0 && Client.Launcher.GetPendingLaunchCount() == 0 && Client.Launcher.GetActiveProcesses().Count == 0)
-                    {
-                        OnComplete();
-                    }                    
-                };
-
-                a();
+                OnAllQueuedLaunchesCompleteAsync(cancelDelayedComplete.Token);
             }
         }
 
-        private string GetInstanceName(Process process)
+        private async void OnAllQueuedLaunchesCompleteAsync(CancellationToken cancel)
         {
-            if (PerformanceCounterCategory.CounterExists("ID Process", "Process"))
+            try
             {
-                Process[] processes = Process.GetProcessesByName(process.ProcessName);
-                if (processes.Length > 0)
-                {
-                    for (var i = processes.Length - 1; i >= 0; i--)
-                    {
-                        string name = i == 0 ? process.ProcessName : process.ProcessName + "#" + i;
-
-                        try
-                        {
-                            using (var counter = new PerformanceCounter("Process", "ID Process", name))
-                            {
-                                if (process.Id == counter.RawValue)
-                                {
-                                    return name;
-                                }
-                            }
-                        }
-                        catch (Exception ex)
-                        {
-                            Util.Logging.Log(ex);
-                        }
-                    }
-                }
+                await Task.Delay(3000, cancel);
             }
-
-            return null;
+            catch (Exception ex)
+            {
+                Util.Logging.Log(ex);
+                return;
+            }
+            if (remaining > 0 && Client.Launcher.GetPendingLaunchCount() == 0 && Client.Launcher.GetActiveProcesses().Count == 0)
+            {
+                OnComplete();
+            }  
         }
 
         private async void WatchDat(CancellationToken token)
@@ -270,7 +216,8 @@ namespace Gw2Launcher.UI
             Process p = null;
             PerformanceCounter counter = null;
             PerformanceCounter counterRead = null;
-            bool doCounters = proxy == null;
+            bool doCounters = proxy == null,
+                 queryCounters = true;
             long lastDownloaded = 0;
             long lastUploaded = 0;
             long lastDownloadSample = 0;
@@ -283,11 +230,12 @@ namespace Gw2Launcher.UI
                 if (doCounters && p != activeProcess)
                 {
                     p = activeProcess;
-                    if (counter != null)
+                    if (counter != null || counterRead != null)
                     {
-                        counter.Dispose();
-                        counterRead.Dispose();
+                        using (counter) { }
+                        using (counterRead) { }
                         counter = null;
+                        counterRead = null;
                     }
                     if (p != null)
                     {
@@ -296,28 +244,52 @@ namespace Gw2Launcher.UI
                             {
                                 try
                                 {
-                                    string name = GetInstanceName(p);
+                                    if (queryCounters)
+                                    {
+                                        if (!Util.ProcessUtil.QueryPerformanceCounters(p.Id))
+                                        {
+                                            if (!p.HasExited)
+                                                doCounters = false;
+                                            throw new NotSupportedException();
+                                        }
+                                    }
+
+                                    var name = Util.PerfCounter.GetInstanceName(p);
                                     if (name != null)
                                     {
-                                        counter = new PerformanceCounter("Process", "IO Write Bytes/sec", name);
-                                        counterRead = new PerformanceCounter("Process", "IO Read Bytes/sec", name);
+                                        counter = Util.PerfCounter.GetCounter(Util.PerfCounter.CategoryName.Process, Util.PerfCounter.CounterName.IOWriteByesPerSecond, name);
+                                        counterRead = Util.PerfCounter.GetCounter(Util.PerfCounter.CategoryName.Process, Util.PerfCounter.CounterName.IOReadBytesPerSecond, name);
+                                        if (counter == null || counterRead == null)
+                                            throw new NullReferenceException();
+
+                                        queryCounters = false;
                                     }
                                 }
                                 catch (Exception ex)
                                 {
                                     Util.Logging.Log(ex);
+
+                                    if (counter != null || counterRead != null)
+                                    {
+                                        using (counter) { }
+                                        using (counterRead) { }
+                                        counter = null;
+                                        counterRead = null;
+                                    }
                                 }
                             });
                     }
+
+                    lastDownloaded = 0;
+                    lastUploaded = 0;
                 }
 
                 try
                 {
                     await Task.Delay(1000, token);
                 }
-                catch (TaskCanceledException e)
+                catch
                 {
-                    Util.Logging.Log(e);
                     break;
                 }
 
@@ -327,19 +299,38 @@ namespace Gw2Launcher.UI
                     {
                         try
                         {
-                            var val = (long)counter.NextValue();
-                            bool update = false;
-                            if (val != 0)
+                            //var val = (long)counter.NextValue();
+                            //bool update = false;
+                            //if (val != 0)
+                            //{
+                            //    totalBytes += val;
+                            //    update = true;
+                            //}
+                            //val = (long)counterRead.NextValue();
+                            //if (val != 0)
+                            //{
+                            //    totalBytesRead += val;
+                            //    update = true;
+                            //}
+
+                            var update = false;
+                            var raw = counter.RawValue;
+                            var diff = raw - lastUploaded;
+                            lastUploaded = raw;
+                            if (diff > 0)
                             {
-                                totalBytes += val;
+                                totalBytes += diff;
                                 update = true;
                             }
-                            val = (long)counterRead.NextValue();
-                            if (val != 0)
+                            raw = counterRead.RawValue;
+                            diff = raw - lastDownloaded;
+                            lastDownloaded = raw;
+                            if (diff > 0)
                             {
-                                totalBytesRead += val;
+                                totalBytesRead += diff;
                                 update = true;
                             }
+
                             if (update)
                             {
                                 labelWritten.Text = Util.Text.FormatBytes(totalBytesRead) + " / " + Util.Text.FormatBytes(totalBytes);
@@ -348,9 +339,14 @@ namespace Gw2Launcher.UI
                         catch (Exception e)
                         {
                             Util.Logging.Log(e);
-                            counter.Dispose();
-                            counterRead.Dispose();
-                            counter = null;
+
+                            if (counter != null || counterRead != null)
+                            {
+                                using (counter) { }
+                                using (counterRead) { }
+                                counter = null;
+                                counterRead = null;
+                            }
                         }
                     }
                 }
@@ -451,10 +447,12 @@ namespace Gw2Launcher.UI
             }
             while (!token.IsCancellationRequested);
 
-            if (counter != null)
+            if (counter != null || counterRead != null)
             {
-                counter.Dispose();
-                counterRead.Dispose();
+                using (counter) { }
+                using (counterRead) { }
+                counter = null;
+                counterRead = null;
             }
         }
 
@@ -470,32 +468,37 @@ namespace Gw2Launcher.UI
 
             if (p != null)
             {
-                if (proxy == null && cancelWatch != null && !cancelWatch.IsCancellationRequested)
+                if (proxy == null)
                 {
-                    cancelWatch.Cancel();
+                    if (cancelWatch != null && !cancelWatch.IsCancellationRequested)
+                    {
+                        cancelWatch.Cancel();
+                        cancelWatch.Dispose();
+                    }
+
                     cancelWatch = new CancellationTokenSource();
                     WatchDat(cancelWatch.Token);
                 }
 
-                try
-                {
-                    if (p.HasExited)
-                        p = null;
-                }
-                catch  (Exception e)
-                {
-                    Util.Logging.Log(e);
-                    p = null;
-                }
+                //try
+                //{
+                //    if (p.HasExited)
+                //        p = null;
+                //}
+                //catch  (Exception e)
+                //{
+                //    Util.Logging.Log(e);
+                //    p = null;
+                //}
             }
 
-            if (p == null)
-            {
-            }
-            else
-            {
-                ShowCloseTooltip(p);
-            }
+            //if (p == null)
+            //{
+            //}
+            //else
+            //{
+            //    ShowCloseTooltip(p);
+            //}
         }
 
         void formUpdating_Shown(object sender, EventArgs e)
@@ -521,20 +524,12 @@ namespace Gw2Launcher.UI
             if (activeAccount != account)
                 return;
             
-            if (this.InvokeRequired)
+            if (Util.Invoke.IfRequiredAsync(this, 
+                delegate
+                {
+                    Launcher_AccountProcessActivated(account, e);
+                }))
             {
-                try
-                {
-                    this.BeginInvoke(new MethodInvoker(
-                        delegate
-                        {
-                            Launcher_AccountProcessActivated(account, e);
-                        }));
-                }
-                catch (Exception ex)
-                {
-                    Util.Logging.Log(ex);
-                }
                 return;
             }
 
@@ -544,20 +539,12 @@ namespace Gw2Launcher.UI
 
         void Launcher_AccountStateChanged(Settings.IAccount account, Client.Launcher.AccountStateEventArgs e)
         {
-            if (this.InvokeRequired)
+            if (Util.Invoke.IfRequiredAsync(this,
+                delegate
+                {
+                    Launcher_AccountStateChanged(account, e);
+                }))
             {
-                try
-                {
-                    this.BeginInvoke(new MethodInvoker(
-                        delegate
-                        {
-                            Launcher_AccountStateChanged(account, e);
-                        }));
-                }
-                catch (Exception ex)
-                {
-                    Util.Logging.Log(ex);
-                }
                 return;
             }
 
@@ -613,8 +600,6 @@ namespace Gw2Launcher.UI
 
                             if (this.remaining == 0)
                             {
-                                if (cancelWatch != null)
-                                    cancelWatch.Cancel();
                                 OnComplete();
                             }
                         }
@@ -624,8 +609,8 @@ namespace Gw2Launcher.UI
             }
         }
 
-        private /*async*/ void ShowCloseTooltip(Process p)
-        {
+        //private /*async*/ void ShowCloseTooltip(Process p)
+        //{
             //gw2 will automatically close once the update is complete, so this isn't really needed
 
             //while (!p.HasExited)
@@ -689,15 +674,23 @@ namespace Gw2Launcher.UI
             //        await Task.Delay(100);
             //    }
             //}
-        }
+        //}
 
         private void OnComplete()
         {
             isComplete = true;
 
+            if (cancelDelayedComplete != null)
+            {
+                cancelDelayedComplete.Cancel();
+                cancelDelayedComplete.Dispose();
+                cancelDelayedComplete = null;
+            }
+
             if (cancelWatch != null)
             {
                 cancelWatch.Cancel();
+                cancelWatch.Dispose();
                 cancelWatch = null;
             }
 
@@ -731,11 +724,19 @@ namespace Gw2Launcher.UI
             Client.Launcher.AccountProcessActivated -= Launcher_AccountProcessActivated;
             Client.Launcher.AllQueuedLaunchesComplete -= Launcher_AllQueuedLaunchesComplete;
 
-            if (cancelDelayedComplete != null)
+            if (cancelDelayedComplete != null && !cancelDelayedComplete.IsCancellationRequested)
+            {
                 cancelDelayedComplete.Cancel();
+                cancelDelayedComplete.Dispose();
+                cancelDelayedComplete = null;
+            }
 
-            if (cancelWatch != null)
+            if (cancelWatch != null && !cancelWatch.IsCancellationRequested)
+            {
                 cancelWatch.Cancel();
+                cancelWatch.Dispose();
+                cancelWatch = null;
+            }
 
             if (!isComplete && remaining != 0)
             {

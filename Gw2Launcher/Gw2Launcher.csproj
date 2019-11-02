@@ -28,7 +28,7 @@
     <BootstrapperEnabled>true</BootstrapperEnabled>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
-    <PlatformTarget>x64</PlatformTarget>
+    <PlatformTarget>AnyCPU</PlatformTarget>
     <DebugSymbols>true</DebugSymbols>
     <DebugType>full</DebugType>
     <Optimize>false</Optimize>
@@ -54,6 +54,8 @@
   <PropertyGroup>
     <ApplicationIcon>Resources\Gw2Launcher.ico</ApplicationIcon>
   </PropertyGroup>
+  <PropertyGroup />
+  <PropertyGroup />
   <PropertyGroup />
   <PropertyGroup />
   <PropertyGroup />
@@ -424,6 +426,7 @@
     <Compile Include="Util\Logging.cs" />
     <Compile Include="Messaging\Messaging.cs" />
     <Compile Include="Util\NumericUpDown.cs" />
+    <Compile Include="Util\PerfCounter.cs" />
     <Compile Include="Util\ReusableControls.cs" />
     <Compile Include="Util\SortedQueue.cs" />
     <Compile Include="Util\Text.cs" />
@@ -609,7 +612,9 @@
     </Compile>
   </ItemGroup>
   <ItemGroup>
-    <None Include="App.config" />
+    <None Include="App.config">
+      <SubType>Designer</SubType>
+    </None>
   </ItemGroup>
   <ItemGroup>
     <None Include="Resources\Gw2.ico" />
@@ -656,10 +661,6 @@
     <None Include="Resources\pof32.jpg" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
-  <PropertyGroup>
-    <PostBuildEvent>
-    </PostBuildEvent>
-  </PropertyGroup>
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
        Other similar extension points exist, see Microsoft.Common.targets.
   <Target Name="BeforeBuild">

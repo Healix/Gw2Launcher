@@ -16,7 +16,7 @@ namespace Gw2Launcher
 {
     static class Program
     {
-        public const byte RELEASE_VERSION = 10;
+        public const byte RELEASE_VERSION = 11;
 
         /// <summary>
         /// The main entry point for the application.
@@ -555,6 +555,30 @@ namespace Gw2Launcher
 
                     #endregion
                 }
+                else if (args[1] == "-perfcounter")
+                {
+                    #region -perfcounter [processId]
+
+                    int pid;
+
+                    if (int.TryParse(args[2], out pid))
+                    {
+                        try
+                        {
+                            var instanceName = Util.PerfCounter.GetInstanceName(pid);
+                            if (instanceName != null)
+                            {
+                                using (var counter = Util.PerfCounter.GetCounter(Util.PerfCounter.CategoryName.Process, Util.PerfCounter.CounterName.IOWriteByesPerSecond, instanceName)) { }
+                                using (var counterRead = Util.PerfCounter.GetCounter(Util.PerfCounter.CategoryName.Process, Util.PerfCounter.CounterName.IOReadBytesPerSecond, instanceName)) { }
+                            }
+                        }
+                        catch { }
+
+                        return pid;
+                    }
+
+                    #endregion
+                }
 
                 return 0;
             }
@@ -571,6 +595,7 @@ namespace Gw2Launcher
 
                     try
                     {
+                        Settings.ReadOnly = true;
                         Settings.Load();
                         string[] users = Settings.HiddenUserAccounts.GetKeys();
                         if (users.Length > 0)
@@ -804,7 +829,6 @@ namespace Gw2Launcher
             #endregion
 
 #if DEBUG
-
             if (!Debugger.IsAttached)
                 Debugger.Launch();
 #else
@@ -864,6 +888,11 @@ namespace Gw2Launcher
                 Application.Run(f);
 
                 OnExit();
+            }
+            catch (Exception e)
+            {
+                Util.Logging.Crash(e);
+                return -1;
             }
             finally
             {

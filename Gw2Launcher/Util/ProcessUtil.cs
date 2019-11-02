@@ -604,5 +604,29 @@ namespace Gw2Launcher.Util
                 }
             }
         }
+
+        /// <summary>
+        /// Returns true if performance counters can be used
+        /// </summary>
+        public static bool QueryPerformanceCounters(int pid)
+        {
+            using (ApplicationObject a = new ApplicationObject())
+            {
+                ProcessStartInfo p = new ProcessStartInfo(a.Path, "-pu -perfcounter " + pid);
+                p.UseShellExecute = true;
+
+                Process proc = Process.Start(p);
+                if (proc != null)
+                {
+                    proc.WaitForExit();
+
+                    return proc.ExitCode == pid;
+                }
+                else
+                {
+                    return false;
+                }
+            }
+        }
     }
 }

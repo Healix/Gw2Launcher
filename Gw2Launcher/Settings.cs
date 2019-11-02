@@ -17,7 +17,7 @@ namespace Gw2Launcher
         private const ushort WRITE_DELAY = 10000;
         private const string FILE_NAME = "settings.dat";
         private static readonly byte[] HEADER;
-        private const ushort VERSION = 7;
+        private const ushort VERSION = 8;
         private static readonly Type[] FORMS;
 
         public enum SortMode : byte
@@ -2789,10 +2789,293 @@ namespace Gw2Launcher
             }
         }
 
+        private class SettingsFile
+        {
+            private const string NAME_FORMAT = "{0}.bk";
+            private const string FIRST_NAME_FORMAT = "load-{0}.bk";
+            private const string PREVIOUS_NAME_FORMAT = "previous-{0}.bk";
+            private const string UPGRADE_NAME_FORMAT = "upgrade-{0}.bk";
+
+            private enum BackupType : byte
+            {
+                None,
+                All,
+
+                First,
+                Previous,
+                Upgrade,
+            }
+
+            private class BackupFile
+            {
+                public BackupFile(string path, long timestamp)
+                {
+                    this.Path = path;
+                    this.Timestamp = timestamp;
+                }
+
+                public string Path
+                {
+                    get;
+                    set;
+                }
+
+                public long Timestamp
+                {
+                    get;
+                    set;
+                }
+
+                public DateTime GetDate()
+                {
+                    DateTime d;
+                    DateTime.TryParseExact(Timestamp.ToString(), "yyyyMMddHHmmss", null, System.Globalization.DateTimeStyles.AssumeUniversal, out d);
+                    return d;
+                }
+            }
+
+            private BackupType firstSave;
+            private DateTime lastBackup;
+
+            public SettingsFile()
+            {
+            }
+
+            public void Loaded()
+            {
+                Loaded(0);
+            }
+
+            public void Loaded(ushort version)
+            {
+                if (version > 0)
+                {
+                    if (version < VERSION)
+                    {
+                        firstSave = BackupType.Upgrade;
+                    }
+                    else
+                    {
+                        var b = GetBackups(BackupType.First, 1);
+
+                        if (b.Length == 0 || DateTime.UtcNow.Subtract(b[0].GetDate()).TotalHours > 6)
+                            firstSave = BackupType.First;
+                        else
+                            firstSave = BackupType.Previous;
+                    }
+                }
+                else
+                    firstSave = BackupType.None;
+
+                lastBackup = DateTime.UtcNow;
+            }
+
+            public void Save()
+            {
+                var path = this.Path;
+                var tmp = path + ".tmp";
+
+                if (firstSave != BackupType.None)
+                {
+                    try
+                    {
+                        Move(path, GetPath(firstSave));
+                        Purge(firstSave);
+
+                        lastBackup = DateTime.UtcNow;
+                    }
+                    catch { }
+
+                    firstSave = BackupType.None;
+                }
+                else if (DateTime.UtcNow.Subtract(lastBackup).TotalMinutes >= 10)
+                {
+                    try
+                    {
+                        Move(path, GetPath(BackupType.Previous));
+                        Purge(BackupType.Previous);
+
+                        lastBackup = DateTime.UtcNow;
+                    }
+                    catch { }
+                }
+
+                Move(tmp, path);
+            }
+
+            private string GetTimestamp()
+            {
+                return DateTime.UtcNow.ToString("yyyyMMddHHmmss");
+            }
+
+            private string GetFormat(BackupType type)
+            {
+                string f;
+
+                switch (type)
+                {
+                    case BackupType.All:
+                        f = NAME_FORMAT;
+                        break;
+                    case BackupType.First:
+                        f = FIRST_NAME_FORMAT;
+                        break;
+                    case BackupType.Upgrade:
+                        f = UPGRADE_NAME_FORMAT;
+                        break;
+                    case BackupType.Previous:
+                    default:
+                        f = PREVIOUS_NAME_FORMAT;
+                        break;
+                }
+
+                return f;
+            }
+
+            private string GetPath(BackupType type)
+            {
+                return System.IO.Path.Combine(BackupPath, string.Format(GetFormat(type), GetTimestamp()));
+            }
+
+            private void Purge(BackupType type)
+            {
+                byte limit;
+
+                switch (type)
+                {
+                    case BackupType.Upgrade:
+                        limit = 2;
+                        break;
+                    default:
+                        limit = 3;
+                        break;
+                }
+
+                var b = GetBackups(type, limit);
+
+                for (var j = limit; j < b.Length; ++j)
+                {
+                    try
+                    {
+                        File.Delete(b[j].Path);
+                    }
+                    catch { }
+                }
+            }
+
+            private void Move(string from, string to)
+            {
+                try
+                {
+                    if (File.Exists(to))
+                        File.Delete(to);
+                }
+                catch { }
+
+                File.Move(from, to);
+            }
+
+            /// <summary>
+            /// Path to settings.dat
+            /// </summary>
+            public string Path
+            {
+                get
+                {
+                    return System.IO.Path.Combine(DataPath.AppData, FILE_NAME);
+                }
+            }
+
+            /// <summary>
+            /// Path to settings.dat.tmp
+            /// </summary>
+            public string Temp
+            {
+                get
+                {
+                    return Path + ".tmp";
+                }
+            }
+
+            /// <summary>
+            /// Path to the backup folder
+            /// </summary>
+            public string BackupPath
+            {
+                get
+                {
+                    var p = System.IO.Path.Combine(DataPath.AppData, "backups");
+                    try
+                    {
+                        Directory.CreateDirectory(p);
+                    }
+                    catch { }
+                    return p;
+                }
+            }
+
+            private BackupFile[] GetBackups(BackupType type)
+            {
+                return GetBackups(type, 0);
+            }
+
+            /// <summary>
+            /// Returns the available backups for the given type in order of newest first
+            /// </summary>
+            private BackupFile[] GetBackups(BackupType type, int minimum)
+            {
+                var files = Directory.GetFiles(BackupPath, string.Format(GetFormat(type), "*"));
+                if (files.Length < minimum)
+                    return new BackupFile[0];
+                var backups = new BackupFile[files.Length];
+                int count = 0;
+
+                for (var i = files.Length - 1; i >= 0; --i)
+                {
+                    var n = files[i];
+                    var j = n.LastIndexOf('-') + 1;
+                    var k = n.LastIndexOf('.');
+                    if (j == 0 || k == -1)
+                        continue;
+                    long l;
+                    if (long.TryParse(n.Substring(j, k - j), out l))
+                    {
+                        backups[count++] = new BackupFile(n, l);
+                    }
+                }
+
+                if (count != files.Length)
+                {
+                    var b2 = new BackupFile[count];
+                    Array.Copy(backups, 0, b2, 0, count);
+                    backups = b2;
+                }
+
+                Array.Sort(backups, 
+                    delegate(BackupFile a, BackupFile b)
+                    {
+                        return b.Timestamp.CompareTo(a.Timestamp);
+                    });
+
+                return backups;
+            }
+
+            public IEnumerable<string> GetBackups()
+            {
+                var backups = GetBackups(BackupType.All, 0);
+
+                foreach (var b in backups)
+                {
+                    yield return b.Path;
+                }
+            }
+        }
+
         private static object _lock = new object();
         private static System.Threading.CancellationTokenSource cancelWrite;
         private static Task task;
         private static DateTime _lastModified;
+        private static SettingsFile _settingsFile;
         private static ushort _accountUID;
         private static ushort _datUID;
         private static ushort _gfxUID;
@@ -2803,6 +3086,7 @@ namespace Gw2Launcher
             HEADER = new byte[] { 41, 229, 122, 91, 23 };
 
             cancelWrite = new System.Threading.CancellationTokenSource();
+            _settingsFile = new SettingsFile();
 
             _WindowBounds = new KeyedProperty<Type, Rectangle>();
             _Accounts = new KeyedProperty<ushort, IAccount>();
@@ -2892,6 +3176,9 @@ namespace Gw2Launcher
             _ShowKillAllAccounts = new SettingValue<bool>();
             _PreventDefaultCoherentUI = new SettingValue<bool>();
 
+            //new
+            _RepaintInitialWindow = new SettingValue<bool>();
+
             FORMS = new Type[]
             {
                 typeof(UI.formMain),
@@ -2904,21 +3191,24 @@ namespace Gw2Launcher
 
         public static void Load()
         {
-            string path = Path.Combine(DataPath.AppData, FILE_NAME);
+            var path = _settingsFile.Path;
+            var temp = _settingsFile.Temp;
+
             try
             {
-                var tmp = new FileInfo(path + ".tmp");
+                var tmp = new FileInfo(temp);
+                ushort version;
 
                 if (tmp.Exists && tmp.Length > 0)
                 {
                     try
                     {
-                        Load(path + ".tmp");
+                        version = Load(temp);
                         try
                         {
                             if (File.Exists(path))
                                 File.Delete(path);
-                            File.Move(path + ".tmp", path);
+                            File.Move(temp, path);
                         }
                         catch (Exception ex)
                         {
@@ -2928,16 +3218,35 @@ namespace Gw2Launcher
                     catch (Exception ex)
                     {
                         Util.Logging.Log(ex);
-                        Load(path);
+                        version = Load(path);
                     }
                 }
                 else
-                    Load(path);
+                    version = Load(path);
+
+                _settingsFile.Loaded(version);
             }
             catch (Exception e)
             {
                 Util.Logging.Log(e);
-                SetDefaults();
+
+                _settingsFile.Loaded();
+
+                var failed = true;
+
+                foreach (var p in _settingsFile.GetBackups())
+                {
+                    try
+                    {
+                        Load(p);
+                        failed = false;
+                        break;
+                    }
+                    catch { }
+                }
+
+                if (failed)
+                    SetDefaults();
             }
         }
 
@@ -3075,9 +3384,7 @@ namespace Gw2Launcher
 
             try
             {
-                string path = Path.Combine(DataPath.AppData, FILE_NAME);
-
-                using (BinaryWriter writer = new BinaryWriter(new BufferedStream(File.Open(path + ".tmp", FileMode.Create, FileAccess.Write, FileShare.Read))))
+                using (BinaryWriter writer = new BinaryWriter(new BufferedStream(File.Open(_settingsFile.Temp, FileMode.Create, FileAccess.Write, FileShare.Read))))
                 {
                     writer.Write(HEADER);
                     writer.Write(VERSION);
@@ -3121,8 +3428,8 @@ namespace Gw2Launcher
                     booleans = new bool[]
                     {
                         //v1-HasValue from:0
-                        _SortingMode.HasValue && _SortingMode.Value != default(SortMode),
-                        _SortingOrder.HasValue && _SortingOrder.Value != default(SortOrder),
+                        _SortingMode.HasValue, //&& _SortingMode.Value != default(SortMode),
+                        _SortingOrder.HasValue, //&& _SortingOrder.Value != default(SortOrder),
                         _StoreCredentials.HasValue,
                         _ShowTray.HasValue,
                         _MinimizeToTray.HasValue,
@@ -3230,17 +3537,23 @@ namespace Gw2Launcher
                         //_LocalizeAccountExecution.Value,
                         //_LocalizeAccountExecution.ValueCommit,
                         
-                        //v7-Values from:88
+                        //v7-HasValues from:88
                         _DatUpdaterEnabled.HasValue,
                         _UseCustomGw2Cache.HasValue,
                         _ShowKillAllAccounts.HasValue,
                         _PreventDefaultCoherentUI.HasValue,
 
-                        //v7-HasValues from:92
+                        //v7-Values from:92
                         _DatUpdaterEnabled.Value,
                         _UseCustomGw2Cache.Value,
                         _ShowKillAllAccounts.Value,
                         _PreventDefaultCoherentUI.Value,
+
+                        //v8-HasValues from:96
+                        _RepaintInitialWindow.HasValue,
+
+                        //v8-Values from:97
+                        _RepaintInitialWindow.Value
                     };
 
                     byte[] b = CompressBooleans(booleans);
@@ -3770,13 +4083,7 @@ namespace Gw2Launcher
                     }
                 }
 
-                var tmp = new FileInfo(path + ".tmp");
-                if (tmp.Length > 0)
-                {
-                    if (File.Exists(path))
-                        File.Delete(path);
-                    File.Move(path + ".tmp", path);
-                }
+                _settingsFile.Save();
             }
             catch (Exception e)
             {
@@ -3787,14 +4094,16 @@ namespace Gw2Launcher
             return null;
         }
 
-        private static void Load(string path)
+        private static ushort Load(string path)
         {
+            ushort version;
+
             using (BinaryReader reader = new BinaryReader(new BufferedStream(File.Open(path, FileMode.Open, FileAccess.Read, FileShare.ReadWrite))))
             {
                 byte[] header = reader.ReadBytes(HEADER.Length);
                 if (!Compare(HEADER, header))
                     throw new IOException("Invalid header");
-                ushort version = reader.ReadUInt16();
+                version = reader.ReadUInt16();
 
                 lock (_WindowBounds)
                 {
@@ -3948,9 +4257,7 @@ namespace Gw2Launcher
                         _BackgroundPatchingLang.Clear();
 
                     if (booleans[25])
-                    {
                         _BackgroundPatchingNotifications.SetValue(new ScreenAttachment(reader.ReadByte(), (ScreenAnchor)reader.ReadByte()));
-                    }
                     else
                         _BackgroundPatchingNotifications.Clear();
 
@@ -4238,6 +4545,14 @@ namespace Gw2Launcher
                         _PreventDefaultCoherentUI.SetValue(booleans[95]);
                     else
                         _PreventDefaultCoherentUI.Clear();
+                }
+
+                if (version >= 8)
+                {
+                    if (booleans[96])
+                        _RepaintInitialWindow.SetValue(booleans[97]);
+                    else
+                        _RepaintInitialWindow.Clear();
                 }
 
                 _datUID = 0;
@@ -4761,6 +5076,8 @@ namespace Gw2Launcher
 
                 #endregion
             }
+
+            return version;
         }
 
         #region Historical v1 I/O
@@ -5925,6 +6242,15 @@ namespace Gw2Launcher
             get
             {
                 return _PreventDefaultCoherentUI;
+            }
+        }
+
+        private static SettingValue<bool> _RepaintInitialWindow;
+        public static ISettingValue<bool> RepaintInitialWindow
+        {
+            get
+            {
+                return _RepaintInitialWindow;
             }
         }
 

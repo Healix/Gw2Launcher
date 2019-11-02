@@ -2206,9 +2206,9 @@ namespace Gw2Launcher.UI
             using (formWindowSize f = new formWindowSize(true, account, textAccountName.Text))
             {
                 Rectangle r = FixSize(ParseWindowSize(textWindowed.Text));
-
+                
                 f.SetBounds(r.X, r.Y, r.Width, r.Height);
-                if (f.ShowDialog(this) == DialogResult.OK)
+                if (f.ShowDialog() == DialogResult.OK)
                     textWindowed.Text = ToString(f.Bounds);
 
                 this.Focus();

@@ -21,6 +21,7 @@ namespace Gw2Launcher.Client
                 {
                     TitleChanged,
                     HandleChanged,
+                    DxWindowStyleChanged,
                     DxWindowCreated,
                     DxWindowReady,
                     LauncherCoherentUIReady,
@@ -358,9 +359,23 @@ namespace Gw2Launcher.Client
                                             try
                                             {
                                                 limit = DateTime.UtcNow.AddSeconds(30);
+                                                var ws1 = IntPtr.Zero;
 
                                                 do
                                                 {
+                                                    //window style changes when loading into fullscreen mode
+                                                    var ws2 = NativeMethods.GetWindowLongPtr(handle, (int)GWL.GWL_STYLE);
+                                                    if (ws2 != ws1)
+                                                    {
+                                                        if (ws1 != IntPtr.Zero && WindowChanged != null)
+                                                        {
+                                                            wce.Type = WindowChangedEventArgs.EventType.DxWindowStyleChanged;
+                                                            WindowChanged(this, wce);
+                                                        }
+
+                                                        ws1 = ws2;
+                                                    }
+
                                                     buffer.Length = 0;
                                                     if (NativeMethods.GetWindowText(handle, buffer, 2) > 0 && buffer[0] != 'U') //window text is initially Untitled
                                                     {

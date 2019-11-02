@@ -31,15 +31,12 @@ namespace Gw2Launcher.Util
             #if DEBUG
             try
             {
-                StackTrace stackTrace = new StackTrace();
-                MethodBase methodBase = stackTrace.GetFrame(1).GetMethod();
-                var now = DateTime.Now;
-
-                Debug.WriteLine(e.Message + "\n----------------------------->\n" + e.StackTrace + "\n==============================", "[" + now.ToShortDateString() + " " + now.ToLongTimeString() +  "][" + methodBase.ReflectedType.Name + "." + methodBase.Name + "]");
+                var methodBase = new StackTrace().GetFrame(1).GetMethod();
+                Debug.WriteLine(e.Message + "\n----------------------------->\n" + e.StackTrace + "\n==============================", "[" + DateTime.Now.ToString("MM/dd/yyyy HH:mm:ss.fff") + "][" + methodBase.ReflectedType.Name + "." + methodBase.Name + "]");
             }
             catch (Exception ex)
             {
-                Console.WriteLine(ex.Message + "\n" + e.StackTrace);
+                Console.WriteLine(ex.ToString());
             }
             #endif
         }
@@ -49,46 +46,43 @@ namespace Gw2Launcher.Util
             #if DEBUG
             try
             {
-                StackTrace stackTrace = new StackTrace();
-                MethodBase methodBase = stackTrace.GetFrame(1).GetMethod();
-                var now = DateTime.Now;
-
-                Debug.WriteLine(message, "[" + now.ToShortDateString() + " " + now.ToShortTimeString() + "][" + methodBase.ReflectedType.Name + "." + methodBase.Name + "]");
+                var methodBase = new StackTrace().GetFrame(1).GetMethod();
+                Debug.WriteLine(message, "[" + DateTime.Now.ToString("MM/dd/yyyy HH:mm:ss.fff") + "][" + methodBase.ReflectedType.Name + "." + methodBase.Name + "]");
             }
             catch (Exception ex)
             {
-                Console.WriteLine(ex.Message + "\n" + ex.StackTrace);
+                Console.WriteLine(ex.ToString());
             }
             #endif
         }
 
-        public static void Crash(Exception e)
+        public static bool Crash(Exception e)
         {
-            Write(e.GetType().ToString() + ": " + e.Message + "\r\n" + new StackTrace(1).ToString());
+            return Write(e.ToString());
         }
 
-        public static void Crash(string message)
+        public static bool Crash(string message)
         {
-            Write(message + "\r\n" + new StackTrace(1).ToString());
+            return Write(message + "\r\n" + new StackTrace(1).ToString());
         }
 
-        public static void Write(string message)
+        public static bool Write(string message)
         {
             try
             {
                 lock (PATH)
                 {
-                    var now = DateTime.Now;
-
                     using (var writer = new StreamWriter(File.Open(PATH, FileMode.Append, FileAccess.Write, FileShare.Read)))
                     {
-                        writer.WriteLine("[" + now.ToString("MM/dd/yyyy HH:mm:ss.fff") + "] " + message);
+                        writer.WriteLine("[" + DateTime.Now.ToString("MM/dd/yyyy HH:mm:ss.fff") + "] " + message);
                     }
                 }
+
+                return true;
             }
             catch
             {
-
+                return false;
             }
         }
     }

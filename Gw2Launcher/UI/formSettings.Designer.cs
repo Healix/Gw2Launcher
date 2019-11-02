@@ -63,6 +63,7 @@
             this.label30 = new System.Windows.Forms.Label();
             this.label29 = new System.Windows.Forms.Label();
             this.label27 = new System.Windows.Forms.Label();
+            this.textRunAfterLaunch = new Gw2Launcher.UI.Controls.ExtendableTextBox();
             this.label28 = new System.Windows.Forms.Label();
             this.labelVolume = new System.Windows.Forms.Label();
             this.label20 = new System.Windows.Forms.Label();
@@ -71,6 +72,7 @@
             this.label7 = new System.Windows.Forms.Label();
             this.textArguments = new System.Windows.Forms.TextBox();
             this.label3 = new System.Windows.Forms.Label();
+            this.sliderVolume = new Gw2Launcher.UI.Controls.FlatSlider();
             this.comboProcessPriority = new System.Windows.Forms.ComboBox();
             this.label73 = new System.Windows.Forms.Label();
             this.label74 = new System.Windows.Forms.Label();
@@ -90,6 +92,7 @@
             this.label19 = new System.Windows.Forms.Label();
             this.label16 = new System.Windows.Forms.Label();
             this.checkShowUser = new System.Windows.Forms.CheckBox();
+            this.buttonSample = new Gw2Launcher.UI.Controls.AccountGridButton();
             this.label15 = new System.Windows.Forms.Label();
             this.label17 = new System.Windows.Forms.Label();
             this.label18 = new System.Windows.Forms.Label();
@@ -120,6 +123,9 @@
             this.checkCheckVersionOnStart = new System.Windows.Forms.CheckBox();
             this.label26 = new System.Windows.Forms.Label();
             this.panelWindows = new System.Windows.Forms.Panel();
+            this.label108 = new System.Windows.Forms.Label();
+            this.label115 = new System.Windows.Forms.Label();
+            this.checkRepaintInitialWindow = new System.Windows.Forms.CheckBox();
             this.checkWindowIcon = new System.Windows.Forms.CheckBox();
             this.label88 = new System.Windows.Forms.Label();
             this.label89 = new System.Windows.Forms.Label();
@@ -260,9 +266,6 @@
             this.buttonSecurity = new Gw2Launcher.UI.Controls.SidebarButton();
             this.buttonLaunchOptions = new Gw2Launcher.UI.Controls.SidebarButton();
             this.buttonGeneral = new Gw2Launcher.UI.Controls.SidebarButton();
-            this.textRunAfterLaunch = new Gw2Launcher.UI.Controls.ExtendableTextBox();
-            this.sliderVolume = new Gw2Launcher.UI.Controls.FlatSlider();
-            this.buttonSample = new Gw2Launcher.UI.Controls.AccountGridButton();
             this.panelGeneral.SuspendLayout();
             this.panelLaunchOptions.SuspendLayout();
             this.panelPasswords.SuspendLayout();
@@ -845,6 +848,18 @@
             this.label27.TabIndex = 46;
             this.label27.Text = "Executes the shell commands after launching";
             // 
+            // textRunAfterLaunch
+            // 
+            this.textRunAfterLaunch.ExtendedSize = new System.Drawing.Size(0, 0);
+            this.textRunAfterLaunch.Font = new System.Drawing.Font("Segoe UI", 8.25F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+            this.textRunAfterLaunch.Location = new System.Drawing.Point(21, 495);
+            this.textRunAfterLaunch.MaximumExtendedSize = new System.Drawing.Size(0, 0);
+            this.textRunAfterLaunch.Multiline = true;
+            this.textRunAfterLaunch.Name = "textRunAfterLaunch";
+            this.textRunAfterLaunch.Size = new System.Drawing.Size(321, 51);
+            this.textRunAfterLaunch.TabIndex = 13;
+            this.textRunAfterLaunch.WordWrap = false;
+            // 
             // label28
             // 
             this.label28.AutoSize = true;
@@ -923,6 +938,17 @@
             this.label3.Size = new System.Drawing.Size(66, 15);
             this.label3.TabIndex = 20;
             this.label3.Text = "Arguments";
+            // 
+            // sliderVolume
+            // 
+            this.sliderVolume.Enabled = false;
+            this.sliderVolume.Location = new System.Drawing.Point(43, 184);
+            this.sliderVolume.Name = "sliderVolume";
+            this.sliderVolume.Size = new System.Drawing.Size(150, 20);
+            this.sliderVolume.TabIndex = 3;
+            this.sliderVolume.TabStop = false;
+            this.sliderVolume.Value = 1F;
+            this.sliderVolume.ValueChanged += new System.EventHandler<float>(this.sliderVolume_ValueChanged);
             // 
             // comboProcessPriority
             // 
@@ -1148,6 +1174,37 @@
             this.checkShowUser.Text = "Show Windows user account";
             this.checkShowUser.UseVisualStyleBackColor = true;
             this.checkShowUser.CheckedChanged += new System.EventHandler(this.checkShowUser_CheckedChanged);
+            // 
+            // buttonSample
+            // 
+            this.buttonSample.AccountData = null;
+            this.buttonSample.AccountName = "Example";
+            this.buttonSample.BackColor = System.Drawing.Color.White;
+            this.buttonSample.ColorKey = System.Drawing.Color.Empty;
+            this.buttonSample.Cursor = System.Windows.Forms.Cursors.Hand;
+            this.buttonSample.DisplayName = "example@example.com";
+            this.buttonSample.FontLarge = new System.Drawing.Font("Segoe UI Semibold", 8.25F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+            this.buttonSample.FontSmall = new System.Drawing.Font("Segoe UI Semilight", 8.25F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+            this.buttonSample.Index = 0;
+            this.buttonSample.IsFocused = false;
+            this.buttonSample.LastDailyCompletionUtc = new System.DateTime(((long)(0)));
+            this.buttonSample.LastDailyLoginUtc = new System.DateTime(((long)(0)));
+            this.buttonSample.LastNoteUtc = new System.DateTime(((long)(0)));
+            this.buttonSample.LastUsedUtc = new System.DateTime(((long)(0)));
+            this.buttonSample.Location = new System.Drawing.Point(24, 197);
+            this.buttonSample.Margin = new System.Windows.Forms.Padding(48, 22, 48, 22);
+            this.buttonSample.MinimumSize = new System.Drawing.Size(0, 68);
+            this.buttonSample.Name = "buttonSample";
+            this.buttonSample.Selected = false;
+            this.buttonSample.ShowAccount = true;
+            this.buttonSample.ShowColorKey = false;
+            this.buttonSample.ShowDailyCompletion = false;
+            this.buttonSample.ShowDailyLogin = false;
+            this.buttonSample.Size = new System.Drawing.Size(225, 68);
+            this.buttonSample.Status = null;
+            this.buttonSample.StatusColor = System.Drawing.Color.Empty;
+            this.buttonSample.TabIndex = 38;
+            this.buttonSample.SizeChanged += new System.EventHandler(this.buttonSample_SizeChanged);
             // 
             // label15
             // 
@@ -1484,6 +1541,9 @@
             this.panelWindows.Anchor = ((System.Windows.Forms.AnchorStyles)((((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom) 
             | System.Windows.Forms.AnchorStyles.Left) 
             | System.Windows.Forms.AnchorStyles.Right)));
+            this.panelWindows.Controls.Add(this.label108);
+            this.panelWindows.Controls.Add(this.label115);
+            this.panelWindows.Controls.Add(this.checkRepaintInitialWindow);
             this.panelWindows.Controls.Add(this.checkWindowIcon);
             this.panelWindows.Controls.Add(this.label88);
             this.panelWindows.Controls.Add(this.label89);
@@ -1502,6 +1562,37 @@
             this.panelWindows.Size = new System.Drawing.Size(373, 378);
             this.panelWindows.TabIndex = 37;
             this.panelWindows.Visible = false;
+            // 
+            // label108
+            // 
+            this.label108.AutoSize = true;
+            this.label108.Font = new System.Drawing.Font("Segoe UI Semilight", 8.25F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+            this.label108.Location = new System.Drawing.Point(14, 247);
+            this.label108.Name = "label108";
+            this.label108.Size = new System.Drawing.Size(266, 13);
+            this.label108.TabIndex = 77;
+            this.label108.Text = "Changes the white background to black while initializing";
+            // 
+            // label115
+            // 
+            this.label115.AutoSize = true;
+            this.label115.Font = new System.Drawing.Font("Segoe UI Semibold", 9F, System.Drawing.FontStyle.Bold);
+            this.label115.Location = new System.Drawing.Point(13, 231);
+            this.label115.Name = "label115";
+            this.label115.Size = new System.Drawing.Size(196, 15);
+            this.label115.TabIndex = 76;
+            this.label115.Text = "Prevent white window backgrounds";
+            // 
+            // checkRepaintInitialWindow
+            // 
+            this.checkRepaintInitialWindow.AutoSize = true;
+            this.checkRepaintInitialWindow.Font = new System.Drawing.Font("Segoe UI", 8.25F);
+            this.checkRepaintInitialWindow.Location = new System.Drawing.Point(21, 268);
+            this.checkRepaintInitialWindow.Name = "checkRepaintInitialWindow";
+            this.checkRepaintInitialWindow.Size = new System.Drawing.Size(179, 17);
+            this.checkRepaintInitialWindow.TabIndex = 75;
+            this.checkRepaintInitialWindow.Text = "Darken window backgrounds";
+            this.checkRepaintInitialWindow.UseVisualStyleBackColor = true;
             // 
             // checkWindowIcon
             // 
@@ -3243,65 +3334,12 @@
             this.buttonGeneral.TabIndex = 0;
             this.buttonGeneral.Text = "General";
             // 
-            // textRunAfterLaunch
-            // 
-            this.textRunAfterLaunch.ExtendedSize = new System.Drawing.Size(0, 0);
-            this.textRunAfterLaunch.Font = new System.Drawing.Font("Segoe UI", 8.25F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            this.textRunAfterLaunch.Location = new System.Drawing.Point(21, 495);
-            this.textRunAfterLaunch.MaximumExtendedSize = new System.Drawing.Size(0, 0);
-            this.textRunAfterLaunch.Multiline = true;
-            this.textRunAfterLaunch.Name = "textRunAfterLaunch";
-            this.textRunAfterLaunch.Size = new System.Drawing.Size(321, 51);
-            this.textRunAfterLaunch.TabIndex = 13;
-            this.textRunAfterLaunch.WordWrap = false;
-            // 
-            // sliderVolume
-            // 
-            this.sliderVolume.Enabled = false;
-            this.sliderVolume.Location = new System.Drawing.Point(43, 184);
-            this.sliderVolume.Name = "sliderVolume";
-            this.sliderVolume.Size = new System.Drawing.Size(150, 20);
-            this.sliderVolume.TabIndex = 3;
-            this.sliderVolume.TabStop = false;
-            this.sliderVolume.Value = 1F;
-            this.sliderVolume.ValueChanged += new System.EventHandler<float>(this.sliderVolume_ValueChanged);
-            // 
-            // buttonSample
-            // 
-            this.buttonSample.AccountData = null;
-            this.buttonSample.AccountName = "Example";
-            this.buttonSample.BackColor = System.Drawing.Color.White;
-            this.buttonSample.ColorKey = System.Drawing.Color.Empty;
-            this.buttonSample.Cursor = System.Windows.Forms.Cursors.Hand;
-            this.buttonSample.DisplayName = "example@example.com";
-            this.buttonSample.FontLarge = new System.Drawing.Font("Segoe UI Semibold", 8.25F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            this.buttonSample.FontSmall = new System.Drawing.Font("Segoe UI Semilight", 8.25F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            this.buttonSample.Index = 0;
-            this.buttonSample.IsFocused = false;
-            this.buttonSample.LastDailyCompletionUtc = new System.DateTime(((long)(0)));
-            this.buttonSample.LastDailyLoginUtc = new System.DateTime(((long)(0)));
-            this.buttonSample.LastNoteUtc = new System.DateTime(((long)(0)));
-            this.buttonSample.LastUsedUtc = new System.DateTime(((long)(0)));
-            this.buttonSample.Location = new System.Drawing.Point(24, 197);
-            this.buttonSample.Margin = new System.Windows.Forms.Padding(48, 22, 48, 22);
-            this.buttonSample.MinimumSize = new System.Drawing.Size(0, 68);
-            this.buttonSample.Name = "buttonSample";
-            this.buttonSample.Selected = false;
-            this.buttonSample.ShowAccount = true;
-            this.buttonSample.ShowColorKey = false;
-            this.buttonSample.ShowDailyCompletion = false;
-            this.buttonSample.ShowDailyLogin = false;
-            this.buttonSample.Size = new System.Drawing.Size(225, 68);
-            this.buttonSample.Status = null;
-            this.buttonSample.StatusColor = System.Drawing.Color.Empty;
-            this.buttonSample.TabIndex = 38;
-            this.buttonSample.SizeChanged += new System.EventHandler(this.buttonSample_SizeChanged);
-            // 
             // formSettings
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(96F, 96F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Dpi;
             this.ClientSize = new System.Drawing.Size(568, 446);
+            this.Controls.Add(this.panelWindows);
             this.Controls.Add(this.buttonCancel);
             this.Controls.Add(this.buttonOK);
             this.Controls.Add(this.sidebarPanel1);
@@ -3312,7 +3350,6 @@
             this.Controls.Add(this.panelScreenshots);
             this.Controls.Add(this.panelAccountBar);
             this.Controls.Add(this.panelLocalDat);
-            this.Controls.Add(this.panelWindows);
             this.Controls.Add(this.panelGeneral);
             this.Controls.Add(this.panelSecurity);
             this.Controls.Add(this.panelPasswords);
@@ -3632,5 +3669,8 @@
         private System.Windows.Forms.Panel panelStyleGeneral;
         private System.Windows.Forms.Label label114;
         private System.Windows.Forms.CheckBox checkLocalizedExecutionExcludeUnknown;
+        private System.Windows.Forms.Label label108;
+        private System.Windows.Forms.Label label115;
+        private System.Windows.Forms.CheckBox checkRepaintInitialWindow;
     }
 }

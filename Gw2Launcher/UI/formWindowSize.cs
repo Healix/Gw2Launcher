@@ -979,7 +979,7 @@ namespace Gw2Launcher.UI
             this.Opacity = 0.9;
 
             activeWindows.Add(this);
-
+            
             base.OnShown(e);
         }
 

@@ -6,6 +6,16 @@ namespace Gw2Launcher.Util
 {
     static class Invoke
     {
+        private static Action Run(Control c, Action a)
+        {
+            return new Action(
+                delegate
+                {
+                    if (!c.IsDisposed)
+                        a();
+                });
+        }
+
         /// <summary>
         /// Executes the action on the control's thread, but only if invoking was required
         /// </summary>
@@ -16,7 +26,7 @@ namespace Gw2Launcher.Util
             {
                 try
                 {
-                    c.Invoke(a);
+                    c.Invoke(Run(c, a));
                 }
                 catch (Exception e)
                 {
@@ -38,7 +48,7 @@ namespace Gw2Launcher.Util
             {
                 try
                 {
-                    c.Invoke(a);
+                    c.Invoke(Run(c, a));
                 }
                 catch (Exception e)
                 {
@@ -61,7 +71,7 @@ namespace Gw2Launcher.Util
             {
                 try
                 {
-                    c.BeginInvoke(a);
+                    c.BeginInvoke(Run(c, a));
                 }
                 catch (Exception e)
                 {
@@ -81,7 +91,7 @@ namespace Gw2Launcher.Util
         {
             try
             {
-                c.BeginInvoke(a);
+                c.BeginInvoke(Run(c, a));
             }
             catch (Exception e)
             {

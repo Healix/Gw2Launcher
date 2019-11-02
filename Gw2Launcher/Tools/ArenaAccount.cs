@@ -228,7 +228,7 @@ namespace Gw2Launcher.Tools
         {
             var cookies = new CookieContainer(1);
             var request = CreateHttp(URL_BASE + "login.json", URL_BASE + "login", cookies);
-            
+
             try
             {
                 using (var response = await request.GetResponseAsync())

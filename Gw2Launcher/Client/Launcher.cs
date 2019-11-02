@@ -3297,6 +3297,14 @@ namespace Gw2Launcher.Client
                     }
 
                     break;
+                case WindowWatcher.WindowChangedEventArgs.EventType.DxWindowStyleChanged:
+
+                    if (Settings.RepaintInitialWindow.Value)
+                    {
+                        RepaintWindow(e.Handle);
+                    }
+
+                    break;
                 case WindowWatcher.WindowChangedEventArgs.EventType.DxWindowCreated:
                     
                     lock (watcher.Account)
@@ -3318,6 +3326,11 @@ namespace Gw2Launcher.Client
                         {
                             Util.Logging.Log(ex);
                         }
+                    }
+
+                    if (Settings.RepaintInitialWindow.Value)
+                    {
+                        RepaintWindow(e.Handle);
                     }
 
                     break;
@@ -3443,6 +3456,21 @@ namespace Gw2Launcher.Client
                     watcher.Dispose();
 
                     break;
+            }
+        }
+
+        static void RepaintWindow(IntPtr handle)
+        {
+            try
+            {
+                using (var g = System.Drawing.Graphics.FromHwnd(handle))
+                {
+                    g.Clear(System.Drawing.Color.Black);
+                }
+            }
+            catch (Exception ex)
+            {
+                Util.Logging.Log(ex);
             }
         }
 

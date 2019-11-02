@@ -388,6 +388,8 @@ namespace Gw2Launcher.UI
             checkPreventDefaultCoherentUI.Checked = Settings.PreventDefaultCoherentUI.Value;
             checkStyleShowCloseAll.Checked = Settings.ShowKillAllAccounts.Value;
 
+            checkRepaintInitialWindow.Checked = Settings.RepaintInitialWindow.Value;
+
             argsState = ArgsState.Changed;
             containerLaunchOptionsAdvanced.PreVisiblePropertyChanged += containerLaunchOptionsAdvanced_PreVisiblePropertyChanged;
 
@@ -1026,6 +1028,8 @@ namespace Gw2Launcher.UI
 
             Settings.PreventDefaultCoherentUI.Value = checkPreventDefaultCoherentUI.Checked;
             Settings.ShowKillAllAccounts.Value = checkStyleShowCloseAll.Checked;
+
+            Settings.RepaintInitialWindow.Value = checkRepaintInitialWindow.Checked;
 
             this.DialogResult = System.Windows.Forms.DialogResult.OK;
         }

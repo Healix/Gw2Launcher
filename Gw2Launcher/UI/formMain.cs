@@ -320,7 +320,16 @@ namespace Gw2Launcher.UI
                 var t = new System.Threading.Thread(new System.Threading.ThreadStart(
                     delegate
                     {
-                        Application.Run(f);
+                        Application.SetUnhandledExceptionMode(UnhandledExceptionMode.ThrowException);
+
+                        try
+                        {
+                            Application.Run(f);
+                        }
+                        catch (Exception e)
+                        {
+                            Util.Logging.Crash(e);
+                        }
                     }));
 
                 t.IsBackground = true;
@@ -365,7 +374,16 @@ namespace Gw2Launcher.UI
                 var t = new System.Threading.Thread(new System.Threading.ThreadStart(
                     delegate
                     {
-                        Application.Run(f);
+                        Application.SetUnhandledExceptionMode(UnhandledExceptionMode.ThrowException);
+
+                        try
+                        {
+                            Application.Run(f);
+                        }
+                        catch (Exception e)
+                        {
+                            Util.Logging.Crash(e);
+                        }
                     }));
 
                 t.IsBackground = true;
@@ -396,9 +414,18 @@ namespace Gw2Launcher.UI
                 var t = new System.Threading.Thread(new System.Threading.ThreadStart(
                     delegate
                     {
+                        Application.SetUnhandledExceptionMode(UnhandledExceptionMode.ThrowException);
+
                         f.Initialize(forceShow);
 
-                        Application.Run(f);
+                        try
+                        {
+                            Application.Run(f);
+                        }
+                        catch (Exception e)
+                        {
+                            Util.Logging.Crash(e);
+                        }
 
                         abWindow = null;
                     }));
@@ -605,55 +632,60 @@ namespace Gw2Launcher.UI
         {
             if (e == Client.Launcher.LaunchMode.Update || e == Client.Launcher.LaunchMode.UpdateVisible)
             {
-                System.Threading.CancellationTokenSource cancel = new System.Threading.CancellationTokenSource(3000);
+                var cancel = new System.Threading.CancellationTokenSource(3000);
 
                 try
                 {
-                    this.Invoke(new MethodInvoker(
-                        delegate
+                    Util.Invoke.Required(this, delegate
+                    {
+                        if (updatingWindow != null && !updatingWindow.IsDisposed)
                         {
-                            if (updatingWindow != null && !updatingWindow.IsDisposed)
+                            updatingWindow.AddAccount(account);
+                            cancel.Cancel();
+                            return;
+                        }
+
+                        List<Settings.IAccount> accounts = new List<Settings.IAccount>();
+                        accounts.Add(account);
+
+                        formUpdating f = updatingWindow = new formUpdating(accounts, true, true);
+
+                        Util.Invoke.Async(this, delegate
+                        {
+                            using (BeforeShowDialog())
                             {
-                                updatingWindow.AddAccount(account);
-                                if (cancel != null)
-                                    cancel.Cancel();
-                                return;
-                            }
-
-                            List<Settings.IAccount> accounts = new List<Settings.IAccount>();
-                            accounts.Add(account);
-
-                            formUpdating f = updatingWindow = new formUpdating(accounts, true, true);
-
-                            this.BeginInvoke(new MethodInvoker(
-                                delegate
+                                using (AddWindow(f))
                                 {
-                                    using (BeforeShowDialog())
+                                    f.Shown += delegate
                                     {
-                                        using (AddWindow(f))
+                                        try
                                         {
-                                            f.Shown += delegate
-                                            {
-                                                if (cancel != null)
-                                                    cancel.Cancel();
-                                            };
-                                            if (f.ShowDialog(this) == System.Windows.Forms.DialogResult.OK)
-                                            {
-                                                if (Settings.CheckForNewBuilds.Value || Tools.AutoUpdate.IsEnabled())
-                                                    UpdateLastKnownBuild();
-                                            }
-                                            updatingWindow = null;
+                                            if (cancel != null)
+                                                cancel.Cancel();
                                         }
+                                        catch { }
+                                    };
+                                    if (f.ShowDialog(this) == System.Windows.Forms.DialogResult.OK)
+                                    {
+                                        if (Settings.CheckForNewBuilds.Value || Tools.AutoUpdate.IsEnabled())
+                                            UpdateLastKnownBuild();
                                     }
-                                }));
-                        }));
+                                    updatingWindow = null;
+                                }
+                            }
+                        });
+                    });
 
                     cancel.Token.WaitHandle.WaitOne();
                 }
                 catch (Exception ex)
                 {
                     Util.Logging.Log(ex);
-                    cancel.Cancel();
+                }
+                finally
+                {
+                    cancel.Dispose();
+                    cancel = null;
                 }
             }
         }
@@ -789,11 +821,24 @@ namespace Gw2Launcher.UI
             else
             {
                 var bounds = Screen.PrimaryScreen.WorkingArea;
-                location = Point.Add(bounds.Location, new Size(bounds.Width / 2 - size.Width / 2, bounds.Height / 3));
+                var l = Point.Add(bounds.Location, new Size(bounds.Width / 2 - size.Width / 2, bounds.Height / 2 - size.Height / 2 + this.Height - this.ClientSize.Height));
+
+                if (l.Y + size.Height > bounds.Bottom)
+                {
+                    l.Y = bounds.Bottom - size.Height;
+                    if (l.Y < bounds.Top)
+                    {
+                        l.Y = bounds.Top;
+                    }
+                }
+
+                location = l;
             }
 
             if (this.AutoSizeGrid)
+            {
                 size = ResizeAuto(location);
+            }
 
             try
             {
@@ -1050,10 +1095,10 @@ namespace Gw2Launcher.UI
                                                                 Util.Logging.Log(ex);
                                                             }
                                                         }
-                                                        f.Invoke(new MethodInvoker(delegate
+                                                        Util.Invoke.Required(f, delegate
                                                         {
                                                             f.Close();
-                                                        }));
+                                                        });
                                                     }));
                                             };
 
@@ -1275,25 +1320,10 @@ namespace Gw2Launcher.UI
 
         void Launcher_NetworkAuthorizationRequired(object sender, Client.Launcher.NetworkAuthorizationRequiredEventsArgs e)
         {
-            if (this.InvokeRequired)
-            {
-                try
-                {
-                    this.Invoke(new MethodInvoker(
-                        delegate
-                        {
-                            OnNetworkAuthorizationRequired(e);
-                        }));
-                }
-                catch (Exception ex)
-                {
-                    Util.Logging.Log(ex);
-                }
-            }
-            else
+            Util.Invoke.Required(this, delegate
             {
                 OnNetworkAuthorizationRequired(e);
-            }
+            });
         }
 
         void Launcher_LaunchException(Settings.IAccount account, Client.Launcher.LaunchExceptionEventArgs e)
@@ -1302,25 +1332,7 @@ namespace Gw2Launcher.UI
             {
                 string path = Settings.GW2Path.Value;
 
-                if (this.InvokeRequired)
-                {
-                    try
-                    {
-                        this.Invoke(new MethodInvoker(
-                            delegate
-                            {
-                                OnSettingsInvalid();
-                            }));
-                    }
-                    catch (Exception ex) 
-                    {
-                        Util.Logging.Log(ex);
-                    }
-                }
-                else
-                {
-                    OnSettingsInvalid();
-                }
+                Util.Invoke.Required(this, OnSettingsInvalid);
 
                 if (Settings.GW2Path.Value != path)
                     e.Retry = true;
@@ -1328,47 +1340,17 @@ namespace Gw2Launcher.UI
             else if (e.Exception is Client.Launcher.BadUsernameOrPasswordException)
             {
                 string username = Util.Users.GetUserName(account.WindowsAccount);
-                if (this.InvokeRequired)
-                {
-                    try
-                    {
-                        this.Invoke(new MethodInvoker(
-                            delegate
-                            {
-                                e.Retry = OnPasswordRequired(username) == DialogResult.OK;
-                            }));
-                    }
-                    catch (Exception ex)
-                    {
-                        Util.Logging.Log(ex);
-                    }
-                }
-                else
+                Util.Invoke.Required(this, delegate
                 {
                     e.Retry = OnPasswordRequired(username) == DialogResult.OK;
-                }
+                });
             }
             else if (e.Exception is Client.Launcher.DatFileNotInitialized)
             {
-                if (this.InvokeRequired)
-                {
-                    try
-                    {
-                        this.Invoke(new MethodInvoker(
-                            delegate
-                            {
-                                e.Retry = OnDatFileNotInitialized(account) == DialogResult.OK;
-                            }));
-                    }
-                    catch (Exception ex)
-                    {
-                        Util.Logging.Log(ex);
-                    }
-                }
-                else
+                Util.Invoke.Required(this, delegate
                 {
                     e.Retry = OnDatFileNotInitialized(account) == DialogResult.OK;
-                }
+                });
             }
         }
 
@@ -1811,7 +1793,18 @@ namespace Gw2Launcher.UI
                 AutoSizeGrid = true;
 
                 var bounds = Screen.PrimaryScreen.WorkingArea;
-                this.Location = Point.Add(bounds.Location, new Size(bounds.Width / 2 - this.Size.Width / 2, bounds.Height / 3));
+                var l = Point.Add(bounds.Location, new Size(bounds.Width / 2 - this.Width / 2, bounds.Height / 2 - this.Height / 2 + this.Height - this.ClientSize.Height));
+
+                if (l.Y + this.Height > bounds.Bottom)
+                {
+                    l.Y = bounds.Bottom - this.Height;
+                    if (l.Y < bounds.Top)
+                    {
+                        l.Y = bounds.Top;
+                    }
+                }
+
+                this.Location = l;
             }
             else if (setting.Value.Size.IsEmpty)
             {
@@ -1917,20 +1910,12 @@ namespace Gw2Launcher.UI
 
         void bp_Error(object sender, string message, Exception exception)
         {
-            if (this.InvokeRequired)
+            if (Util.Invoke.IfRequiredAsync(this,
+                delegate
+                {
+                    bp_Error(sender, message, exception);
+                }))
             {
-                try
-                {
-                    this.BeginInvoke(new MethodInvoker(
-                        delegate
-                        {
-                            bp_Error(sender, message, exception);
-                        }));
-                }
-                catch (Exception ex)
-                {
-                    Util.Logging.Log(ex);
-                }
                 return;
             }
 
@@ -1943,20 +1928,12 @@ namespace Gw2Launcher.UI
 
         void bp_Complete(object sender, EventArgs e)
         {
-            if (this.InvokeRequired)
+            if (Util.Invoke.IfRequiredAsync(this,
+                delegate
+                {
+                    bp_Complete(sender, e);
+                }))
             {
-                try
-                {
-                    this.BeginInvoke(new MethodInvoker(
-                        delegate
-                        {
-                            bp_Complete(sender, e);
-                        }));
-                }
-                catch (Exception ex)
-                {
-                    Util.Logging.Log(ex);
-                }
                 return;
             }
 
@@ -1993,20 +1970,12 @@ namespace Gw2Launcher.UI
 
         void bp_PatchBeginning(object sender, Tools.BackgroundPatcher.PatchEventArgs e)
         {
-            if (this.InvokeRequired)
+            if (Util.Invoke.IfRequired(this,
+                delegate
+                {
+                    bp_PatchBeginning(sender, e);
+                }))
             {
-                try
-                {
-                    this.Invoke(new MethodInvoker(
-                        delegate
-                        {
-                            bp_PatchBeginning(sender, e);
-                        }));
-                }
-                catch (Exception ex)
-                {
-                    Util.Logging.Log(ex);
-                }
                 return;
             }
 
@@ -2043,20 +2012,12 @@ namespace Gw2Launcher.UI
 
         void bp_PatchReady(object sender, Tools.BackgroundPatcher.PatchEventArgs e)
         {
-            if (this.InvokeRequired)
+            if (Util.Invoke.IfRequiredAsync(this,
+                delegate
+                {
+                    bp_PatchReady(sender, e);
+                }))
             {
-                try
-                {
-                    this.BeginInvoke(new MethodInvoker(
-                        delegate
-                        {
-                            bp_PatchReady(sender, e);
-                        }));
-                }
-                catch (Exception ex)
-                {
-                    Util.Logging.Log(ex);
-                }
                 return;
             }
 
@@ -2134,7 +2095,7 @@ namespace Gw2Launcher.UI
 
             if (location.Y + height > screen.Bottom)
             {
-                height = screen.Bottom - this.Location.Y;
+                height = screen.Bottom - location.Y;
                 var min = (int)(100 * scale + 0.5f);
                 if (height < min)
                     height = min;
@@ -3468,10 +3429,10 @@ namespace Gw2Launcher.UI
                                                         Util.Logging.Log(ex);
                                                     }
                                                 }
-                                                f.Invoke(new MethodInvoker(delegate
+                                                Util.Invoke.Required(f, delegate
                                                 {
                                                     f.Close();
-                                                }));
+                                                });
                                             }));
                                     };
 
