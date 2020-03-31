@@ -201,6 +201,35 @@ namespace Gw2Launcher.UI
             toolStripMenuItem26.Visible = accountBar;
         }
 
+        private void PurgeFolder(DirectoryInfo di, int days, bool subfolder)
+        {
+            var now = DateTime.UtcNow;
+            foreach (var d in di.EnumerateDirectories())
+            {
+                try
+                {
+                    if (now.Subtract(d.LastWriteTimeUtc).TotalDays > days)
+                    {
+                        d.Delete(true);
+                    }
+                    else if (subfolder)
+                    {
+                        PurgeFolder(d, days, false);
+                    }
+                }
+                catch { }
+            }
+            foreach (var f in di.EnumerateFiles())
+            {
+                try
+                {
+                    if (now.Subtract(f.LastWriteTimeUtc).TotalDays > days)
+                        f.Delete();
+                }
+                catch { }
+            }
+        }
+
         private void PurgeTemp()
         {
             Task.Factory.StartNew(new Action(
@@ -210,24 +239,8 @@ namespace Gw2Launcher.UI
                    {
                        var now = DateTime.UtcNow;
                        var di = new DirectoryInfo(DataPath.AppDataAccountDataTemp);
-                       foreach (var d in di.EnumerateDirectories())
-                       {
-                           try
-                           {
-                               if (now.Subtract(d.LastWriteTimeUtc).TotalDays > 7)
-                                   d.Delete(true);
-                           }
-                           catch { }
-                       }
-                       foreach (var f in di.EnumerateFiles())
-                       {
-                           try
-                           {
-                               if (now.Subtract(f.LastWriteTimeUtc).TotalDays > 7)
-                                   f.Delete();
-                           }
-                           catch { }
-                       }
+
+                       PurgeFolder(di, 7, true);
                    }
                    catch (Exception ex)
                    {
