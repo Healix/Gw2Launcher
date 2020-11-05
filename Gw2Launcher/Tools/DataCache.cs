@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -24,6 +24,10 @@ namespace Gw2Launcher.Tools
         {
             T Read(BinaryReader reader);
             void Write(BinaryWriter writer, T value);
+            IEqualityComparer<T> Comparer
+            {
+                get;
+            }
         }
 
         public class DictionarySet<TKey, TValue> : ISet<TKey>
@@ -153,6 +157,14 @@ namespace Gw2Launcher.Tools
             {
                 writer.Write(value);
             }
+
+            public IEqualityComparer<uint> Comparer
+            {
+                get
+                {
+                    return null;
+                }
+            }
         }
 
         protected class FormatU16 : IFormat<ushort>
@@ -166,7 +178,44 @@ namespace Gw2Launcher.Tools
             {
                 writer.Write(value);
             }
+
+            public IEqualityComparer<ushort> Comparer
+            {
+                get
+                {
+                    return null;
+                }
+            }
         }
+
+        protected class FormatUtf8 : IFormat<string>
+        {
+            private IEqualityComparer<string> comparer;
+
+            public FormatUtf8(IEqualityComparer<string> comparer)
+            {
+                this.comparer = comparer;
+            }
+
+            public string Read(BinaryReader reader)
+            {
+                return reader.ReadString();
+            }
+
+            public void Write(BinaryWriter writer, string value)
+            {
+                writer.Write(value);
+            }
+
+            public IEqualityComparer<string> Comparer
+            {
+                get
+                {
+                    return comparer;
+                }
+            }
+        }
+
 
         public static IFormat<uint> U32
         {
@@ -181,6 +230,44 @@ namespace Gw2Launcher.Tools
             get
             {
                 return new FormatU16();
+            }
+        }
+
+        public static IFormat<string> Utf8
+        {
+            get
+            {
+                return new FormatUtf8(null);
+            }
+        }
+
+        public static IFormat<string> Utf8IgnoreCase
+        {
+            get
+            {
+                return new FormatUtf8(StringComparer.OrdinalIgnoreCase);
+            }
+        }
+
+
+        public class UnknownHeaderException : Exception
+        {
+            public UnknownHeaderException(int header, ushort version)
+            {
+                this.Header = header;
+                this.Version = version;
+            }
+
+            public int Header
+            {
+                get;
+                private set;
+            }
+
+            public ushort Version
+            {
+                get;
+                private set;
             }
         }
     }
@@ -221,6 +308,51 @@ namespace Gw2Launcher.Tools
             this.formatter = formatter;
         }
 
+        /// <summary>
+        /// If the file already exists and has data, verifies the header or throws a UnknownHeaderException
+        /// </summary>
+        public void Verify()
+        {
+            lock (this)
+            {
+                try
+                {
+                    using (var reader = new BinaryReader(new BufferedStream(File.Open(path, FileMode.Open, FileAccess.Read, FileShare.Read)), Encoding.UTF8))
+                    {
+                        var length = reader.BaseStream.Length;
+                        ushort version;
+                        int header;
+
+                        if (length >= 6)
+                        {
+                            reader.BaseStream.Position = length - 6;
+                            version = reader.ReadUInt16();
+                            header = reader.ReadInt32();
+                        }
+                        else if (length == 0)
+                        {
+                            return;
+                        }
+                        else
+                        {
+                            version = 0;
+                            header = 0;
+                        }
+
+                        if (header != this.header || version != this.version)
+                        {
+                            throw new UnknownHeaderException(header, version);
+                        }
+                    }
+                }
+                catch (UnknownHeaderException)
+                {
+                    throw;
+                }
+                catch { }
+            }
+        }
+
         protected DataEntry[] ReadEntries(BinaryReader reader, out Format format)
         {
             const byte HEADER_LENGTH = 11;
@@ -241,7 +373,7 @@ namespace Gw2Launcher.Tools
 
             if (header != this.header || version != this.version)
             {
-                return null;
+                throw new UnknownHeaderException(header, version);
             }
 
             reader.BaseStream.Position = position;
@@ -283,6 +415,35 @@ namespace Gw2Launcher.Tools
             return entries;
         }
 
+        public IEnumerable<TItem> ReadAll<TItem>()
+            where TItem : DataCache.ICacheItem<TID>, new()
+        {
+            lock (this)
+            {
+                using (var reader = new BinaryReader(new BufferedStream(File.Open(path, FileMode.Open, FileAccess.Read, FileShare.Read)), Encoding.UTF8))
+                {
+                    Format format;
+                    var entries = ReadEntries(reader, out format);
+                    if (entries != null)
+                    {
+                        foreach (var e in entries)
+                        {
+                            reader.BaseStream.Position = e.offset;
+
+                            var item = new TItem()
+                            {
+                                ID = e.id,
+                            };
+
+                            item.ReadFrom(reader, e.length);
+
+                            yield return item;
+                        }
+                    }
+                }
+            }
+        }
+
         public void Read<TItem>(ISet<TID> ids, Dictionary<TID, TItem> output)
             where TItem : DataCache.ICacheItem<TID>, new()
         {
@@ -302,9 +463,18 @@ namespace Gw2Launcher.Tools
         public void Read<TItem>(ISet<TID> ids, Dictionary<TID, TItem> output, Action<TItem> onRead)
             where TItem : DataCache.ICacheItem<TID>, new()
         {
-            int count = ids.Count;
-            if (count == 0)
-                return;
+            int count;
+
+            if (ids != null)
+            {
+                count = ids.Count;
+                if (count == 0)
+                    return;
+            }
+            else
+            {
+                count = int.MaxValue;
+            }
 
             lock (this)
             {
@@ -317,7 +487,7 @@ namespace Gw2Launcher.Tools
 
                     foreach (var e in entries)
                     {
-                        if (ids.Remove(e.id))
+                        if (ids == null || ids.Remove(e.id))
                         {
                             reader.BaseStream.Position = e.offset;
 
@@ -341,6 +511,47 @@ namespace Gw2Launcher.Tools
                     }
                 }
             }
+        }
+
+        public TItem Read<TItem>(TID id)
+            where TItem : DataCache.ICacheItem<TID>, new()
+        {
+            lock (this)
+            {
+                using (var reader = new BinaryReader(new BufferedStream(File.Open(path, FileMode.Open, FileAccess.Read, FileShare.Read)), Encoding.UTF8))
+                {
+                    var comparer = formatter.Comparer;
+                    Format format;
+                    var entries = ReadEntries(reader, out format);
+                    if (entries == null)
+                        throw new KeyNotFoundException();
+
+                    foreach (var e in entries)
+                    {
+                        bool eq;
+                        if (comparer == null)
+                            eq = e.id.Equals(id);
+                        else
+                            eq = comparer.Equals(e.id, id);
+
+                        if (eq)
+                        {
+                            reader.BaseStream.Position = e.offset;
+
+                            TItem item = new TItem()
+                            {
+                                ID = e.id,
+                            };
+
+                            item.ReadFrom(reader, e.length);
+
+                            return item;
+                        }
+                    }
+                }
+            }
+
+            throw new KeyNotFoundException();
         }
 
         public Task ReadAsync<TItem>(ISet<TID> ids, Dictionary<TID, TItem> output, Action<TItem> onRead)
@@ -502,6 +713,12 @@ namespace Gw2Launcher.Tools
             WriteEntries(writer, format, entries, count, null);
         }
 
+        public void Write<TItem>(TItem item)
+            where TItem : DataCache.ICacheItem<TID>, new()
+        {
+            Write<TItem>(new TItem[] { item });
+        }
+
         public void Write<TItem>(ICollection<TItem> items)
             where TItem : DataCache.ICacheItem<TID>, new()
         {
@@ -561,7 +778,7 @@ namespace Gw2Launcher.Tools
                 format = Format.U16;
             }
 
-            var existing = new HashSet<TID>();
+            var existing = new HashSet<TID>(formatter.Comparer);
             uint offsetNext = 0;
 
             if (count > 0)
@@ -585,7 +802,7 @@ namespace Gw2Launcher.Tools
                 if (existing.Contains(item.ID))
                 {
                     if (modified == null)
-                        modified = new Dictionary<TID, TItem>();
+                        modified = new Dictionary<TID, TItem>(formatter.Comparer);
                     modified[item.ID] = item;
                     continue;
                 }

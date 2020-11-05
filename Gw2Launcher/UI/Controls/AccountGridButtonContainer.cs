@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Drawing;
@@ -9,6 +9,7 @@ using System.Threading.Tasks;
 using System.Threading;
 using System.Windows.Forms;
 using System.Runtime.InteropServices;
+using System.Windows.Forms.Layout;
 using Gw2Launcher.Windows.Native;
 
 namespace Gw2Launcher.UI.Controls
@@ -30,59 +31,83 @@ namespace Gw2Launcher.UI.Controls
             Reset,
         }
 
-        private class AccountGridButtonComparer : IComparer<AccountGridButton>
+        private class AccountGridButtonComparer : Util.AccountComparer, IComparer<AccountGridButton>
         {
-            private Settings.SortMode mode;
-            private Settings.SortOrder order;
-            private Util.AlphanumericStringComparer stringComparer;
-
-            public AccountGridButtonComparer(Settings.SortMode mode, Settings.SortOrder order)
+            public AccountGridButtonComparer(Settings.SortingOptions options)
+                : base(options)
             {
-                this.mode = mode;
-                this.order = order;
-
-                switch (mode)
-                {
-                    case Settings.SortMode.Account:
-                    case Settings.SortMode.Name:
-                        this.stringComparer = new Util.AlphanumericStringComparer();
-                        break;
-                }
-
             }
 
             public int Compare(AccountGridButton a, AccountGridButton b)
             {
                 int result;
 
-                switch (mode)
+                if (groupingEnabled)
+                {
+                    result = 0;
+
+                    if ((grouping & Settings.GroupMode.Active) == Settings.GroupMode.Active)
+                    {
+                        var b1 = a.AccountData != null ? Client.Launcher.IsActive(a.AccountData) : false;
+                        var b2 = b.AccountData != null ? Client.Launcher.IsActive(b.AccountData) : false;
+
+                        result = -b1.CompareTo(b2);
+                    }
+
+                    if (result == 0 && (grouping & Settings.GroupMode.Type) == Settings.GroupMode.Type)
+                    {
+                        result = a.AccountType.CompareTo(b.AccountType);
+                    }
+
+                    if (result != 0)
+                    {
+                        if (groupingReversed)
+                            return -result;
+                        return result;
+                    }
+                }
+
+                switch (sorting)
                 {
                     case Settings.SortMode.Account:
+
                         result = stringComparer.Compare(a.AccountName, b.AccountName);
+
                         break;
                     case Settings.SortMode.LastUsed:
+
                         result = a.LastUsedUtc.CompareTo(b.LastUsedUtc);
+
                         break;
                     case Settings.SortMode.Name:
-                        result = stringComparer.Compare(a.DisplayName, b.DisplayName);
-                        break;
-                    case Settings.SortMode.Custom:
-                        ushort ka, kb;
-                        if (a.AccountData != null)
-                            ka = a.AccountData.SortKey;
-                        else
-                            ka = ushort.MaxValue;
 
-                        if (b.AccountData != null)
-                            kb = b.AccountData.SortKey;
-                        else
-                            kb = ushort.MaxValue;
+                        result = stringComparer.Compare(a.DisplayName, b.DisplayName);
+
+                        break;
+                    case Settings.SortMode.CustomGrid:
+                    case Settings.SortMode.CustomList:
+
+                        ushort ka, kb;
+                        ka = a.SortKey;
+                        kb = b.SortKey;
+                        //if (a.AccountData != null)
+                        //    ka = a.AccountData.SortKey;
+                        //else
+                        //    ka = ushort.MaxValue;
+
+                        //if (b.AccountData != null)
+                        //    kb = b.AccountData.SortKey;
+                        //else
+                        //    kb = ushort.MaxValue;
 
                         result = ka.CompareTo(kb);
+
                         break;
                     case Settings.SortMode.None:
                     default:
+
                         result = 0;
+
                         break;
                 }
 
@@ -102,67 +127,13 @@ namespace Gw2Launcher.UI.Controls
                     result = ua.CompareTo(ub);
                 }
 
-                if (order == Settings.SortOrder.Ascending)
-                    return result;
+                if (sortingReversed)
+                    return -result;
 
-                return -result;
-            }
-
-            public void Clear()
-            {
-                if (stringComparer != null)
-                    stringComparer.Clear();
-            }
-
-            public Settings.SortMode Mode
-            {
-                get
-                {
-                    return mode;
-                }
-                set
-                {
-                    if (mode != value)
-                    {
-                        mode = value;
-
-                        switch (value)
-                        {
-                            case Settings.SortMode.Account:
-                            case Settings.SortMode.Name:
-                                if (this.stringComparer == null)
-                                    this.stringComparer = new Util.AlphanumericStringComparer();
-                                break;
-                            default:
-                                this.stringComparer = null;
-                                break;
-                        }
-                    }
-                }
-            }
-
-            public Settings.SortOrder Order
-            {
-                get
-                {
-                    return order;
-                }
-                set
-                {
-                    order = value;
-                }
+                return result;
             }
         }
 
-        private class BufferedPanel : Panel
-        {
-            public BufferedPanel()
-                : base()
-            {
-                base.DoubleBuffered = true;
-            }
-        }
-        
         private class SelectionBox : IDisposable
         {
             private class PaintedControl : IDisposable
@@ -253,12 +224,18 @@ namespace Gw2Launcher.UI.Controls
             private Pen pen;
             private SolidBrush brush;
 
-            private bool changed, disposed;
+            private bool changed, disposed, scaled;
 
             private SelectionBox(Control container, Size size, Point offset, Control source, Point location)
             {
                 this.pen = new Pen(new SolidBrush(Color.FromArgb((int)(255 * 0.75f), SystemColors.Highlight)));
+                this.pen.Alignment = System.Drawing.Drawing2D.PenAlignment.Inset;
                 this.brush = new SolidBrush(Color.FromArgb((int)(255 * 0.25f), SystemColors.Highlight));
+
+                using (var g = container.CreateGraphics())
+                {
+                    this.pen.Width = (int)(g.DpiX / 96f + 0.5f);
+                }
 
                 this.source = source;
                 
@@ -445,6 +422,9 @@ namespace Gw2Launcher.UI.Controls
                 {
                     var c = pc.control;
 
+                    if (!c.Visible)
+                        continue;
+
                     cr = pc.x + pc.w;
                     cb = pc.y + pc.h;
 
@@ -509,7 +489,14 @@ namespace Gw2Launcher.UI.Controls
 
                 g.SetClip(e.ClipRectangle);
                 g.FillRectangle(brush, selection);
-                g.DrawRectangle(pen, selection.X, selection.Y, selection.Width - 1, selection.Height - 1);
+                var w = selection.Width;
+                var h = selection.Height;
+                if (pen.Width < 1.5f)
+                {
+                    --w;
+                    --h;
+                }
+                g.DrawRectangle(pen, selection.X, selection.Y, w, h);
             }
 
             void control_Paint(object sender, PaintEventArgs e)
@@ -531,7 +518,12 @@ namespace Gw2Launcher.UI.Controls
 
                     g.SetClip(e.ClipRectangle);
                     g.FillRectangle(brush, x, y, w, h);
-                    g.DrawRectangle(pen, x, y, w - 1, h - 1);
+                    if (pen.Width < 1.5f)
+                    {
+                        --w;
+                        --h;
+                    }
+                    g.DrawRectangle(pen, x, y, w, h);
                 }
             }
 
@@ -562,6 +554,18 @@ namespace Gw2Launcher.UI.Controls
                         Disposed(this, EventArgs.Empty);
                 }
             }
+
+            public float BorderSize
+            {
+                get
+                {
+                    return pen.Width;
+                }
+                set
+                {
+                    pen.Width = value;
+                }
+            }
         }
 
         private class DragHotspots
@@ -577,14 +581,16 @@ namespace Gw2Launcher.UI.Controls
             public class Bounds
             {
                 public AccountGridButton button;
+                public Control control;
                 public Hotspot[] hotspots;
                 public Rectangle bounds;
+                public int index;
 
                 public Hotspot Select(int x, int y)
                 {
                     foreach (var h in hotspots)
                     {
-                        if (h.bounds.Contains(x, y))
+                        if (h.visible && h.bounds.Contains(x, y))
                             return h;
                     }
 
@@ -594,7 +600,7 @@ namespace Gw2Launcher.UI.Controls
 
             public Bounds[] bounds;
             public AccountGridButton source;
-            public Bounds active;
+            public Bounds active, sourceb;
             public Hotspot activeHotspot;
             public Panel target, highlight;
             public bool entered, cursor;
@@ -656,7 +662,6 @@ namespace Gw2Launcher.UI.Controls
                         activeHotspot = b.Select(x, y);
                         if (activeHotspot != null)
                         {
-                            Console.WriteLine(b.button.AccountData.Name + ", " + activeHotspot.visible);
                             Show(activeHotspot);
                             return;
                         }
@@ -680,8 +685,270 @@ namespace Gw2Launcher.UI.Controls
             public void Hide()
             {
                 active = null;
+                activeHotspot = null;
                 if (target != null)
                     target.Visible = false;
+            }
+        }
+
+        private class AccountGridButtonContainerLayout : LayoutEngine
+        {
+            public override bool Layout(object container, LayoutEventArgs args)
+            {
+                var c = (AccountGridButtonContainer)container;
+                var s = DoLayout(c, c.ClientSize, true, true);
+
+                return false;
+            }
+
+            public Size DoLayout(AccountGridButtonContainer panel, Size proposed, bool apply, bool measure)
+            {
+                var panelContents = panel.panelContents;
+                var scrollV = panel.scrollV;
+                var height = panel.ClientSize.Height;
+
+                scrollV.SetBounds(panel.ClientSize.Width - scrollV.Width, 0, scrollV.Width, height);
+
+                while (true)
+                {
+                    var ch = panelContents.ContentHeight;
+                    var h = ch - height;
+                    Size size;
+
+                    if (h > 0)
+                    {
+                        scrollV.Visible = true;
+                        scrollV.Maximum = h;
+
+                        size = new Size(scrollV.Left, ch);
+
+                        if (panel.returnToScroll != -1)
+                        {
+                            if (panelContents.NewButtonVisible)
+                            {
+                                scrollV.Value = scrollV.Maximum;
+                            }
+                            else
+                            {
+                                if (panel.returnToScroll > scrollV.Maximum)
+                                    scrollV.Value = scrollV.Maximum;
+                                else
+                                    scrollV.Value = panel.returnToScroll;
+
+                                panel.returnToScroll = -1;
+                            }
+                        }
+                    }
+                    else
+                    {
+                        scrollV.Visible = false;
+                        scrollV.Value = 0;
+
+                        size = panel.ClientSize; // new Size(panel.ClientSize.Width, panelContents.ContentHeight); //filling height to support custom dragging anywhere
+                    }
+
+                    if (panel.gridColumnsAuto)
+                        panel.AutoColumns(size.Width);
+
+                    panelContents.ClientSize = size;
+
+                    if (panelContents.ContentHeight != ch)
+                    {
+                        continue;
+                    }
+                    else
+                    {
+                        break;
+                    }
+                }
+
+                return panel.Size;
+            }
+        }
+
+        private class SearchFilter
+        {
+            private bool[] types;
+            private string[] items;
+
+            public SearchFilter(byte page, string filter)
+            {
+                Page = page;
+                Filter = filter;
+            }
+
+            private string _Filter;
+            public string Filter
+            {
+                get
+                {
+                    return _Filter;
+                }
+                set
+                {
+                    if (_Filter == value)
+                        return;
+
+                    _Filter = value;
+
+                    if (value == null)
+                    {
+                        this.types = null;
+                        this.items = null;
+                    }
+                    else
+                    {
+                        var filter = value.ToLower();
+
+                        int i = 0,
+                            l = filter.Length;
+                        var items = new List<string>();
+                        bool[] types = null;
+
+                        while (i < l)
+                        {
+                            while (filter[i] == ' ')
+                            {
+                                if (++i == l)
+                                    break;
+                            }
+                            if (i == l)
+                                break;
+
+                            int j;
+                            var quoted = false;
+
+                            if (filter[i] == '"')
+                            {
+                                j = filter.IndexOf('"', i + 1);
+                                if (j == -1)
+                                    j = filter.IndexOf(' ', i + 1);
+                                else
+                                    quoted = true;
+                            }
+                            else
+                            {
+                                j = filter.IndexOf(' ', i + 1);
+                            }
+
+                            string f;
+
+                            if (j == -1)
+                            {
+                                j = filter.Length;
+                                if (i == 0)
+                                    f = filter;
+                                else
+                                    f = filter.Substring(i, j - i);
+                            }
+                            else if (quoted)
+                            {
+                                f = filter.Substring(i + 1, j - i - 1);
+                            }
+                            else
+                            {
+                                f = filter.Substring(i, j - i);
+                            }
+
+                            switch (f)
+                            {
+                                case "gw1":
+
+                                    if (types == null)
+                                        types = new bool[2];
+                                    types[(byte)Settings.AccountType.GuildWars1] = true;
+
+                                    break;
+                                case "gw2":
+
+                                    if (types == null)
+                                        types = new bool[2];
+                                    types[(byte)Settings.AccountType.GuildWars2] = true;
+
+                                    break;
+                                default:
+
+                                    items.Add(f);
+
+                                    break;
+                            }
+
+                            i = j + 1;
+                        }
+
+                        if (items.Count > 0)
+                            this.items = items.ToArray();
+                        else
+                            this.items = null;
+                        this.types = types;
+                    }
+                }
+            }
+
+            private byte _Page;
+            public byte Page
+            {
+                get
+                {
+                    return _Page;
+                }
+                set
+                {
+                    _Page = value;
+                }
+            }
+
+            public bool MatchPage(AccountGridButton button)
+            {
+                if (_Page > 0)
+                {
+                    if (button.Paging == null || button.Paging.Page == _Page && button.Paging.Current == null)
+                    {
+                        return false;
+                    }
+                    else
+                    {
+                        return button.Paging.SetCurrent(_Page);
+                    }
+                }
+                else if (button.Paging != null && button.Paging.Page != 0)
+                {
+                    button.Paging.Current = null;
+                }
+
+                return true;
+            }
+
+            public bool MatchText(AccountGridButton button)
+            {
+                if (types != null && !types[(byte)button.AccountType])
+                    return false;
+
+                if (items == null)
+                    return true;
+
+                var name = button.DisplayName;
+                var account = button.AccountName;
+
+                if (name != null)
+                    name = name.ToLower();
+                if (account != null)
+                    account = account.ToLower();
+
+                foreach (var t in items)
+                {
+                    if (name != null && name.IndexOf(t, StringComparison.Ordinal) != -1 || account != null && account.Equals(t, StringComparison.Ordinal))
+                    {
+                        return true;
+                    }
+                }
+
+                return false;
+            }
+
+            public bool MatchAll(AccountGridButton button)
+            {
+                return MatchPage(button) && MatchText(button);
             }
         }
 
@@ -703,6 +970,9 @@ namespace Gw2Launcher.UI.Controls
 
             }
 
+            /// <summary>
+            /// True to use animations or to continue with the pressed event
+            /// </summary>
             public bool Handled
             {
                 get;
@@ -722,17 +992,14 @@ namespace Gw2Launcher.UI.Controls
             }
         }
 
-        private List<AccountGridButton> buttons;
-        private Size gridSize;
         private int lastSelected = -1;
-
-        private bool isDirty;
-        private bool isNewAccountVisible;
-        private NewAccountGridButton buttonNewAccount;
         private int returnToScroll;
+        private int buttonsOnPage;
+        private bool hideNewAccount;
 
-        private Font fontLarge, fontSmall;
-        private bool showAccount, showColor;
+        private Font fontName, fontStatus, fontUser;
+        private bool showAccount, showColor, showIcon;
+        private Settings.AccountGridButtonColors colors;
 
         private SelectionBox selection;
         private Rectangle dragBounds;
@@ -743,49 +1010,48 @@ namespace Gw2Launcher.UI.Controls
         private ButtonAction action;
 
         private AccountGridButtonComparer comparer;
+        private AccountGridButtonContainerLayout layout;
+        private List<AccountGridButton> pendingAdd;
 
         public AccountGridButtonContainer()
         {
-            buttons = new List<AccountGridButton>();
+            this.layout = new AccountGridButtonContainerLayout();
+            this.DoubleBuffered = true;
 
             InitializeComponent();
 
-            this.DoubleBuffered = true;
-
+            gridColumnsAuto = true;
             buttonState = System.Windows.Forms.MouseButtons.None;
-
             returnToScroll = -1;
-            fontLarge = AccountGridButton.FONT_LARGE;
-            fontSmall = AccountGridButton.FONT_SMALL;
+            fontName = AccountGridButton.FONT_NAME;
+            fontStatus = AccountGridButton.FONT_STATUS;
+            fontUser = AccountGridButton.FONT_USER;
             showAccount = true;
 
-            panelContents.Size = Size.Empty;
-
-            isNewAccountVisible = false;
-
-            buttonNewAccount = new NewAccountGridButton();
+            var buttonNewAccount = new NewAccountGridButton();
             buttonNewAccount.Visible = false;
             buttonNewAccount.Click += buttonNewAccount_Click;
             buttonNewAccount.VisibleChanged += buttonNewAccount_VisibleChanged;
             buttonNewAccount.LostFocus += buttonNewAccount_LostFocus;
-            panelContents.Controls.Add(buttonNewAccount);
+            panelContents.NewButton = buttonNewAccount;
+            panelContents.NewButtonVisible = true;
 
-            this.GridSize = new Size(fontLarge.Height * 30 / 2, buttonNewAccount.MinimumSize.Height);
-            //this.GridSize = new Size(200, 67);
-
-            Application.AddMessageFilter(this);
             this.Disposed += AccountGridButtonContainer_Disposed;
-
-            panelContents.MouseDown += panelContents_MouseDown;
             this.MouseDown += panelContents_MouseDown;
 
-            panelContents.Paint+=panelContents_Paint;
+            panelContents.MouseDown += panelContents_MouseDown;
+            panelContents.ContentHeightChanged += panelContents_ContentHeightChanged;
+            Application.AddMessageFilter(this);
+        }
 
-            isDirty = true;
+        void panelContents_ContentHeightChanged(object sender, EventArgs e)
+        {
+            OnContentHeightChanged();
         }
 
         void panelContents_MouseDown(object sender, MouseEventArgs e)
         {
+            this.Focus();
             if (e.Button == System.Windows.Forms.MouseButtons.Left || e.Button == System.Windows.Forms.MouseButtons.Right)
                 OnBeginSelection(sender, e);
         }
@@ -796,6 +1062,37 @@ namespace Gw2Launcher.UI.Controls
 
             //to include the parent in the draggable area
             //this.Parent.MouseDown += panelContents_MouseDown;
+        }
+
+        void ParentForm_Deactivate(object sender, EventArgs e)
+        {
+            ShowNewAccountButton(false);
+        }
+
+        protected override void OnHandleCreated(EventArgs e)
+        {
+            base.OnHandleCreated(e);
+
+            float scale;
+            using (var g = this.CreateGraphics())
+            {
+                scale = g.DpiX / 96f;
+            }
+
+            panelContents.GridColumnMinimumWidth = (int)(10 * scale);
+
+            if (panelContents.NewButton != null)
+            {
+                panelContents.GridRowHeight = panelContents.NewButton.MinimumSize.Height;
+            }
+            else
+            {
+                panelContents.GridRowHeight = (int)(65 * scale);
+            }
+
+            var f = this.ParentForm;
+            if (f != null)
+                this.ParentForm.Deactivate += ParentForm_Deactivate;
         }
 
         private void OnBeginSelection(object sender, MouseEventArgs e)
@@ -823,8 +1120,8 @@ namespace Gw2Launcher.UI.Controls
         {
             if (this.ParentForm.ContainsFocus)
             {
-                if (isNewAccountVisible)
-                    buttonNewAccount.Focus();
+                //if (panelContents.NewButtonVisible)
+                //    panelContents.NewButton.Focus();
             }
             else
             {
@@ -834,14 +1131,28 @@ namespace Gw2Launcher.UI.Controls
 
         void buttonNewAccount_VisibleChanged(object sender, EventArgs e)
         {
-            if (buttonNewAccount.Visible)
-                buttonNewAccount.Focus();
+            //var b = panelContents.NewButton;
+            //if (b.Visible)
+            //{
+            //    var p = this.ParentForm;
+            //    if (p != null && p.ContainsFocus)
+            //        b.Focus();
+            //}
         }
 
         void buttonNewAccount_Click(object sender, EventArgs e)
         {
             if (AddAccountClick != null)
-                AddAccountClick(this, EventArgs.Empty);
+            {
+                try
+                {
+                    AddAccountClick(this, EventArgs.Empty);
+                }
+                catch (Exception ex)
+                {
+                    Util.Logging.Log(ex);
+                }
+            }
         }
 
         void AccountGridButtonContainer_Disposed(object sender, EventArgs e)
@@ -868,22 +1179,47 @@ namespace Gw2Launcher.UI.Controls
             return (value & flag) == flag;
         }
 
+        public void DoMouseWheel(MouseEventArgs e)
+        {
+            if (scrollV.Visible)
+            {
+                int largeChange = (panelContents.GridRowHeight + panelContents.GridSpacing) / 2;
+
+                if (e.Delta > 0)
+                {
+                    scrollV.Value -= largeChange;
+                }
+                else
+                {
+                    scrollV.Value += largeChange;
+                }
+
+                if (e is HandledMouseEventArgs)
+                    ((HandledMouseEventArgs)e).Handled = true;
+            }
+        }
+
+        protected override void OnMouseWheel(MouseEventArgs e)
+        {
+            base.OnMouseWheel(e);
+        }
+
         public bool PreFilterMessage(ref Message m)
         {
             switch ((WindowMessages)m.Msg)
             {
-                case WindowMessages.WM_MOUSEWHEEL:
+                //case WindowMessages.WM_MOUSEWHEEL:
 
-                    var pos = new Point(m.LParam.GetValue32());
-                    var wParam = m.WParam.GetValue32();
-                    var delta = wParam >> 16;
-                    var e = new MouseEventArgs(GetMouseButtons(wParam), 0, pos.X, pos.Y, delta);
-                    var f = this.ParentForm;
+                //    var pos = new Point(m.LParam.GetValue32());
+                //    var wParam = m.WParam.GetValue32();
+                //    var delta = wParam >> 16;
+                //    var e = new MouseEventArgs(GetMouseButtons(wParam), 0, pos.X, pos.Y, delta);
+                //    var f = this.ParentForm;
 
-                    if (f.CanFocus && f.DesktopBounds.Contains(pos))
-                        OnMsgMouseWheel(e);
+                //    if (f.CanFocus && f.DesktopBounds.Contains(pos))
+                //        OnMsgMouseWheel(e);
 
-                    break;
+                //    break;
                 case WindowMessages.WM_KEYDOWN:
 
                     ShowNewAccountButton(false);
@@ -894,7 +1230,6 @@ namespace Gw2Launcher.UI.Controls
                     OnMsgKeyUp(new KeyEventArgs((Keys)m.WParam.GetValue()));
 
                     break;
-
                 case WindowMessages.WM_SYSKEYDOWN:
 
                     if (m.WParam == (IntPtr)Keys.Menu)
@@ -910,17 +1245,24 @@ namespace Gw2Launcher.UI.Controls
                         ShowNewAccountButton(false);
 
                     break;
-
                 case WindowMessages.WM_SYSKEYUP:
 
-                    if (isNewAccountVisible && m.WParam == (IntPtr)Keys.Menu)
+                    if (panelContents.NewButtonVisible && m.WParam == (IntPtr)Keys.Menu)
                         ShowNewAccountButton(false);
 
                     break;
-
                 case WindowMessages.WM_NCLBUTTONDOWN:
 
-                    ShowNewAccountButton(false);
+                    hideNewAccount = panelContents.NewButtonVisible;
+
+                    break;
+                default:
+
+                    if (hideNewAccount)
+                    {
+                        hideNewAccount = false;
+                        ShowNewAccountButton(false);
+                    }
 
                     break;
             }
@@ -930,22 +1272,21 @@ namespace Gw2Launcher.UI.Controls
 
         private void ShowNewAccountButton(bool visible)
         {
-            if (visible)
+            if (panelContents.NewButtonVisible)
             {
-                if (!isNewAccountVisible)
-                {
-                    returnToScroll = scrollV.Value;
-                    isNewAccountVisible = true;
-                    isDirty = true;
-                    panelContents.Invalidate();
-                }
+                if (visible)
+                    return;
             }
-            else if (isNewAccountVisible)
+            else if (visible)
             {
-                isNewAccountVisible = false;
-                isDirty = true;
-                panelContents.Invalidate();
+                returnToScroll = scrollV.Value;
             }
+            else
+            {
+                return;
+            }
+
+            panelContents.NewButtonVisible = visible || panelContents.Buttons.Length == 0 || _Filter != null && buttonsOnPage == 0;
         }
 
         void OnMsgKeyUp(KeyEventArgs e)
@@ -960,7 +1301,7 @@ namespace Gw2Launcher.UI.Controls
         {
             if (scrollV.Visible)
             {
-                int largeChange = (gridSize.Height + 5) / 2;
+                int largeChange = (panelContents.GridRowHeight + panelContents.GridSpacing) / 2;
 
                 if (e.Delta > 0)
                 {
@@ -973,68 +1314,107 @@ namespace Gw2Launcher.UI.Controls
             }
         }
 
-        private void AccountGridButtonContainer_Load(object sender, EventArgs e)
+        public bool AllowCustomOrdering
         {
+            get;
+            set;
         }
 
-        void panelContents_Click(object sender, EventArgs e)
-        {
-        }
-
-        public Size GridSize
+        /// <summary>
+        /// Number of columns to display
+        /// </summary>
+        public int GridColumns
         {
             get
             {
-                return this.gridSize;
+                return panelContents.GridColumns;
             }
             set
             {
-                this.gridSize = value;
-                isDirty = true;
-                panelContents.Invalidate();
+                panelContents.GridColumns = value;
             }
         }
 
-        public void ClearSelected()
-        {
-            foreach (var button in buttons)
-            {
-                if (button.Selected)
-                {
-                    button.Selected = false;
-                    button.Invalidate();
-                }
-            }
+        ///// <summary>
+        ///// Automatically sets number of columns based on width
+        ///// </summary>
+        //public bool GridColumnsAuto
+        //{
+        //    get
+        //    {
+        //        return panelContents.GridColumnsAuto;
+        //    }
+        //    set
+        //    {
+        //        panelContents.GridColumnsAuto = value;
+        //    }
+        //}
 
-            lastSelected = -1;
-        }
-
-        public IList<AccountGridButton> GetSelected()
-        {
-            List<AccountGridButton> selected = new List<AccountGridButton>();
-
-            foreach (var button in buttons)
-            {
-                if (button.Selected)
-                    selected.Add(button);
-            }
-
-            return selected;
-        }
-
-        protected override void OnSizeChanged(EventArgs e)
-        {
-            base.OnSizeChanged(e);
-            isDirty = true;
-            panelContents.Invalidate();
-        }
-
-        public int Count
+        private bool gridColumnsAuto;
+        /// <summary>
+        /// Automatically sets number of columns based on width
+        /// </summary>
+        [DefaultValue(true)]
+        public bool GridColumnsAuto
         {
             get
             {
-                bool isNewAccountVisible = buttonNewAccount != null && (buttons.Count == 0 || this.isNewAccountVisible);
-                return buttons.Count + (isNewAccountVisible ? 1 : 0);
+                return gridColumnsAuto;
+            }
+            set
+            {
+                if (gridColumnsAuto != value)
+                {
+                    gridColumnsAuto = value;
+                    if (value)
+                        AutoColumns(panelContents.Width);
+                }
+            }
+        }
+
+        private int gridColumnAutoWidth;
+        /// <summary>
+        /// Minimum width when using auto columns
+        /// </summary>
+        public int GridColumnAutoWidth
+        {
+            get
+            {
+                return gridColumnAutoWidth;
+            }
+            set
+            {
+                if (gridColumnAutoWidth != value)
+                {
+                    gridColumnAutoWidth = value;
+                    if (gridColumnsAuto)
+                        AutoColumns(panelContents.Width);
+                }
+            }
+        }
+
+        /// <summary>
+        /// Space between grid buttons
+        /// </summary>
+        public int GridSpacing
+        {
+            get
+            {
+                return panelContents.GridSpacing;
+            }
+            set
+            {
+                panelContents.GridSpacing = value;
+            }
+        }
+
+        public int CurrentButtonWidth
+        {
+            get
+            {
+                if (panelContents.Buttons.Length > 0)
+                    return panelContents.Buttons[0].Width;
+                return panelContents.NewButton.Width;
             }
         }
 
@@ -1042,64 +1422,167 @@ namespace Gw2Launcher.UI.Controls
         {
             get
             {
-                if (this.gridSize.IsEmpty)
-                    return 0;
-
-                bool isNewAccountVisible = buttonNewAccount != null && (buttons.Count == 0 || this.isNewAccountVisible);
-                int count = buttons.Count + (isNewAccountVisible ? 1 : 0);
-
-                int w = this.Width - 5;
-                int columns = w / this.gridSize.Width;
-                if (columns < 1)
-                    columns = 1;
-                int rows = (count - 1) / columns + 1;
-                int rowHeight = gridSize.Height + 5;
-
-                return rowHeight * rows + 5;
+                return panelContents.Height;
             }
         }
 
-        public void Sort(Settings.SortMode mode, Settings.SortOrder order)
+        public int GetContentHeight(int columns)
+        {
+            return panelContents.GetContentHeight(columns);
+        }
+
+        public void ClearSelected()
+        {
+            foreach (var button in panelContents.Buttons)
+            {
+                button.Selected = false;
+            }
+
+            lastSelected = -1;
+        }
+
+        public void SelectAll()
+        {
+            foreach (var button in panelContents.Buttons)
+            {
+                button.Selected = button.GridVisibility;
+            }
+
+            lastSelected = -1;
+        }
+
+        public IList<AccountGridButton> GetVisible()
+        {
+            if (_Filter == null)
+            {
+                return panelContents.Buttons;
+            }
+
+            var buttons = new List<AccountGridButton>(panelContents.Buttons.Length);
+            
+            foreach (var button in panelContents.Buttons)
+            {
+                if (button.GridVisibility)
+                    buttons.Add(button);
+            }
+
+            return buttons;
+        }
+
+        public IList<AccountGridButton> GetSelected()
+        {
+            var buttons = new List<AccountGridButton>();
+
+            foreach (var button in panelContents.Buttons)
+            {
+                if (button.Selected && button.GridVisibility)
+                    buttons.Add(button);
+            }
+
+            return buttons;
+        }
+
+        public IList<AccountGridButton> GetButtons()
+        {
+            return panelContents.Buttons;
+        }
+
+        public void Sort(Settings.SortingOptions options)
         {
             if (comparer == null)
             {
-                comparer = new AccountGridButtonComparer(mode, order);
+                comparer = new AccountGridButtonComparer(options);
             }
             else
             {
-                comparer.Mode = mode;
-                comparer.Order = order;
+                comparer.Options = options;
             }
 
-            buttons.Sort(comparer);
-            comparer.Clear();
+            var buttons = panelContents.Buttons;
 
-            for (int i = 0, count = buttons.Count; i < count; i++)
+            Array.Sort<AccountGridButton>(buttons, comparer);
+
+            for (int i = buttons.Length - 1; i >= 0; --i)
             {
                 buttons[i].Index = i;
             }
 
-            isDirty = true;
-            panelContents.Invalidate();
+            var filtered = _Filter != null && _Filter.Filter != null;
+            if (filtered || comparer.Options.Sorting.Mode != Settings.SortMode.CustomGrid)
+            {
+                panelContents.GridLayout = AccountGridButtonPanel.GridLayoutMode.Auto;
+            }
+            else
+            {
+                panelContents.GridLayout = AccountGridButtonPanel.GridLayoutMode.Indexed;
+            }
+
+            comparer.Clear();
+
+            panelContents.UpdateLayout();
+        }
+
+        public void SuspendAdd()
+        {
+            if (pendingAdd == null)
+                pendingAdd = new List<AccountGridButton>();
+        }
+
+        public void ResumeAdd()
+        {
+            if (pendingAdd != null)
+            {
+                if (pendingAdd.Count > 0)
+                {
+                    panelContents.SuspendLayout();
+                    panelContents.NewButtonVisible = false;
+
+                    if (pendingAdd.Count > 1)
+                    {
+                        panelContents.AddRange(pendingAdd.ToArray());
+                    }
+                    else
+                    {
+                        panelContents.Add(pendingAdd[0]);
+                    }
+
+                    panelContents.ResumeLayout();
+                }
+
+                pendingAdd = null;
+            }
         }
 
         public void Add(AccountGridButton button)
         {
-            button.FontLarge = fontLarge;
-            button.FontSmall = fontSmall;
+            button.FontName = fontName;
+            button.FontStatus = fontStatus;
+            button.FontUser = fontUser;
             button.ShowAccount = showAccount;
             button.ShowColorKey = showColor;
-
-            panelContents.Controls.Add(button);
-            button.Index = buttons.Count;
-            buttons.Add(button);
-            isDirty = true;
-            panelContents.Invalidate();
+            button.ShowImage = showIcon || button.Image != null;
 
             button.MouseClick += button_MouseClick;
             button.MouseDown += button_MouseDown;
             button.MouseUp += button_MouseUp;
             button.NoteClicked += button_NoteClicked;
+
+            button.Visible = button.GridVisibility = _Filter == null || _Filter.MatchAll(button);
+
+            if (button.GridVisibility)
+                ++buttonsOnPage;
+
+            if (pendingAdd == null)
+            {
+                panelContents.SuspendLayout();
+                panelContents.NewButtonVisible = false;
+                panelContents.Add(button);
+                panelContents.ResumeLayout();
+            }
+            else
+            {
+                pendingAdd.Add(button);
+            }
         }
 
         private CancellationTokenSource GetPressedCancelToken()
@@ -1167,8 +1650,14 @@ namespace Gw2Launcher.UI.Controls
                 if (AccountBeginMousePressed != null)
                 {
                     var mp = new MousePressedEventArgs(buttonState, e.Clicks, e.X, e.Y, e.Delta);
-                    AccountBeginMousePressed(button, mp);
-
+                    try
+                    {
+                        AccountBeginMousePressed(button, mp);
+                    }
+                    catch (Exception ex)
+                    {
+                        Util.Logging.Log(ex);
+                    }
                     if (mp.Handled)
                     {
                         button.PressedProgress += button_PressedProgress;
@@ -1226,7 +1715,16 @@ namespace Gw2Launcher.UI.Controls
             SetAction(ButtonAction.Pressed);
 
             if (AccountMousePressed != null)
-                AccountMousePressed(sender, e);
+            {
+                try
+                {
+                    AccountMousePressed(sender, e);
+                }
+                catch (Exception ex)
+                {
+                    Util.Logging.Log(ex);
+                }
+            }
         }
 
         void button_EndPressed(object sender, bool cancelled)
@@ -1289,7 +1787,16 @@ namespace Gw2Launcher.UI.Controls
                         if (b.Bounds.Contains(p))
                         {
                             if (AccountMouseClick != null)
-                                AccountMouseClick(b, e);
+                            {
+                                try
+                                {
+                                    AccountMouseClick(b, e);
+                                }
+                                catch (Exception ex)
+                                {
+                                    Util.Logging.Log(ex);
+                                }
+                            }
                         }
                         else if (b.Selected)
                         {
@@ -1297,7 +1804,7 @@ namespace Gw2Launcher.UI.Controls
                         }
                         else
                         {
-                            foreach (var button in buttons)
+                            foreach (var button in panelContents.Buttons)
                             {
                                 if (button.Selected)
                                 {
@@ -1308,7 +1815,16 @@ namespace Gw2Launcher.UI.Controls
                         }
 
                         if (selected)
-                            AccountSelection(b, e);
+                        {
+                            try
+                            {
+                                AccountSelection(b, e);
+                            }
+                            catch (Exception ex)
+                            {
+                                Util.Logging.Log(ex);
+                            }
+                        }
                     }
                     else if (AccountMouseClick != null)
                     {
@@ -1321,7 +1837,7 @@ namespace Gw2Launcher.UI.Controls
                         if (!b.Bounds.Contains(p))
                         {
                             b = null;
-                            foreach (var button in buttons)
+                            foreach (var button in panelContents.Buttons)
                             {
                                 if (button.Bounds.Contains(p))
                                 {
@@ -1332,7 +1848,16 @@ namespace Gw2Launcher.UI.Controls
                         }
 
                         if (b != null)
-                            AccountMouseClick(b, e);
+                        {
+                            try
+                            {
+                                AccountMouseClick(b, e);
+                            }
+                            catch (Exception ex)
+                            {
+                                Util.Logging.Log(ex);
+                            }
+                        }
                     }
 
                     break;
@@ -1361,7 +1886,7 @@ namespace Gw2Launcher.UI.Controls
                         var button = (AccountGridButton)sender;
                         try
                         {
-                            if (comparer != null && comparer.Mode == Settings.SortMode.Custom)
+                            if (comparer != null && comparer.IsSortingCustom)
                             {
                                 InitializeDragHotspots(button);
 
@@ -1370,7 +1895,28 @@ namespace Gw2Launcher.UI.Controls
                             }
 
                             var he = new HandledMouseEventArgs(e.Button, e.Clicks, e.X, e.Y, e.Delta, false);
-                            AccountBeginDrag(sender, he);
+                            try
+                            {
+                                AccountBeginDrag(sender, he);
+                            }
+                            catch (Exception ex)
+                            {
+                                Util.Logging.Log(ex);
+                            }
+
+                            if (!he.Handled)
+                            {
+                                try
+                                {
+                                    DoDragDrop("", DragDropEffects.Copy);
+                                    he.Handled = true;
+                                }
+                                catch (Exception ex)
+                                {
+                                    Util.Logging.Log(ex);
+                                }
+                            }
+
                             if (he.Handled)
                                 buttonState = System.Windows.Forms.MouseButtons.None; //dragging causes the mouse events to be lost
                         }
@@ -1378,6 +1924,8 @@ namespace Gw2Launcher.UI.Controls
                         {
                             if (dragspots != null)
                             {
+                                panelContents.SuspendLayout();
+
                                 if (dragspots.target != null)
                                 {
                                     panelContents.Controls.Remove(dragspots.target);
@@ -1388,7 +1936,20 @@ namespace Gw2Launcher.UI.Controls
                                     panelContents.Controls.Remove(dragspots.highlight);
                                     dragspots.highlight.Dispose();
                                 }
+                                if (dragspots.bounds != null)
+                                {
+                                    foreach (var b in dragspots.bounds)
+                                    {
+                                        if (b.control != null)
+                                        {
+                                            panelContents.Controls.Remove(b.control);
+                                            b.control.Dispose();
+                                        }
+                                    }
+                                }
                                 dragspots = null;
+
+                                panelContents.ResumeLayout();
 
                                 this.AllowDrop = false;
                                 button.GiveFeedback -= AccountGridButtonContainer_GiveFeedback;
@@ -1413,30 +1974,47 @@ namespace Gw2Launcher.UI.Controls
             }
         }
 
+        private class Placeholder : Control
+        {
+            protected override void OnPaint(PaintEventArgs e)
+            {
+                base.OnPaint(e);
+
+                using (var p = new Pen(Color.FromArgb(230, 230, 230), 2))
+                {
+                    e.Graphics.DrawRectangle(p, 1, 1, this.Width - 2, this.Height - 2);
+                }
+            }
+        }
+
         private void InitializeDragHotspots(AccountGridButton source)
         {
-            var count = buttons.Count;
+            var count = panelContents.Buttons.Length;
 
-            const int PADDING = 5;
-            const int PANEL_SIZE = 3;
-            const int PANEL_SPACING = (PADDING - PANEL_SIZE) / 2;
+            var spacing = panelContents.GridSpacing;
+            var PADDING = spacing;
+            var PANEL_SIZE = 1;
+            var PANEL_SPACING = (PADDING - PANEL_SIZE) / 2;
 
-            int wContainer = this.Width - PADDING;
-            if (scrollV.Visible)
-                wContainer -= scrollV.Width;
-            int columns = wContainer / this.gridSize.Width;
-            if (columns < 1)
-                columns = 1;
-            int rows = (count - 1) / columns + 1;
+            if (panelContents.IsLayoutPending)
+                panelContents.PerformLayout();
+
+            int columns = panelContents.GridColumns;
 
             dragspots = new DragHotspots();
             dragspots.source = source;
-            dragspots.bounds = new DragHotspots.Bounds[count];
 
-            int index = 0;
             var offset = panelContents.PointToScreen(Point.Empty);
-            var reverse = comparer != null && comparer.Order == Settings.SortOrder.Descending;
+            var reverse = comparer != null && comparer.Options.Sorting.Descending;
+            var gridmode = comparer == null || comparer.Options.Sorting.Mode != Settings.SortMode.CustomList;
             var sourceIndex = -1;
+            var buttons = panelContents.Buttons;
+
+            var rw = (float)(panelContents.Width - spacing) / columns;
+            if (rw < spacing + panelContents.GridColumnMinimumWidth)
+                rw = spacing + panelContents.GridColumnMinimumWidth;
+            var rh = panelContents.GridRowHeight;
+            var rows = panelContents.Height / rh;
 
             dragspots.highlight = new Panel()
             {
@@ -1444,91 +2022,126 @@ namespace Gw2Launcher.UI.Controls
                 Visible = false,
             };
 
-            for (int i = 0; i < count; i++)
+            panelContents.SuspendLayout();
+
+            dragspots.bounds = new DragHotspots.Bounds[columns * rows];
+
+            foreach (var b in panelContents.Buttons)
             {
-                var b = buttons[i];
-
-                int w = b.Width,
-                    h = b.Height,
-                    x = b.Left,
-                    y = b.Top,
-                    column = i % columns,
-                    row = i / columns;
-
-                var visible = b != source;
-                if (!visible)
+                if (b.GridVisibility)
                 {
-                    sourceIndex = i;
-                    dragspots.highlight.Bounds = new Rectangle(x - PANEL_SIZE + 1, y - PANEL_SIZE + 1, w + (PANEL_SIZE-1) * 2, h + (PANEL_SIZE-1) * 2);
-                    dragspots.highlight.Visible = true;
+                    dragspots.bounds[b.GridIndex] = new DragHotspots.Bounds()
+                    {
+                        button = b,
+                    };
                 }
+            }
+
+            for (var i = dragspots.bounds.Length - 1; i >= 0; --i)
+            {
+                var db = dragspots.bounds[i];
+                Control c;
+
+                if (db == null)
+                {
+                    var column = i % columns;
+                    var row = i / columns;
+
+                    db = dragspots.bounds[i] = new DragHotspots.Bounds();
+
+                    var _y = spacing + row * (rh + spacing);
+                    var _x = spacing + (int)(column * rw);
+                    var _rw = (int)((column + 1) * rw) - _x;
+
+                    db.control = c = new Placeholder()
+                    {
+                        Bounds = new Rectangle(_x, _y, _rw, rh),
+                    };
+
+                    c.Visible = gridmode;
+
+                    panelContents.Controls.Add(c);
+                }
+                else
+                {
+                    c = db.button;
+                }
+
+                db.index = i;
+
+                int w = c.Width,
+                    h = c.Height,
+                    x = c.Left,
+                    y = c.Top;
 
                 int left = x - PADDING / 2 + offset.X,
                     top = y - PADDING / 2 + offset.Y,
                     width = w + PADDING,
                     height = h + PADDING;
 
-                var db = dragspots.bounds[index++] = new DragHotspots.Bounds()
-                {
-                    bounds = new Rectangle(left, top, width, height),
-                    button = b,
-                };
+                var visible = c != source;
 
-                if (columns == 1)
+                if (!visible)
                 {
-                    //vertical layout, drop indicator will be shown above/below
+                    sourceIndex = i;
+                    dragspots.sourceb = db;
+                    dragspots.highlight.Bounds = new Rectangle(x - PANEL_SIZE, y - PANEL_SIZE, w + PANEL_SIZE*2, h+PANEL_SIZE*2);
+                    dragspots.highlight.Visible = true;
+                }
 
+                db.bounds = new Rectangle(left, top, width, height);
+
+                if (db.control == null)
+                {
                     db.hotspots = new DragHotspots.Hotspot[]
                     {
-                        new DragHotspots.Hotspot()
+                        new DragHotspots.Hotspot() //center
                         {
-                            bounds = new Rectangle(left,top + height / 4,width,height / 2),
+                            bounds = new Rectangle(left,top + height / 6,width,height * 2 / 3),
                             target = new Rectangle(x - PANEL_SIZE, y - PANEL_SIZE, w + PANEL_SIZE*2, h+PANEL_SIZE*2),
                             type = Settings.AccountSorting.SortType.Swap,
                             visible = visible,
                         },
-                        new DragHotspots.Hotspot()
+                        new DragHotspots.Hotspot() //top
                         {
-                            bounds = new Rectangle(left,top,width,height / 4),
+                            bounds = new Rectangle(left,top,width,height / 6),
                             target = new Rectangle(x,y - PANEL_SIZE - PANEL_SPACING,w,PANEL_SIZE),
-                            type = reverse ? Settings.AccountSorting.SortType.After : Settings.AccountSorting.SortType.Before,
+                            type = Settings.AccountSorting.SortType.Before,
                             visible = visible,
                         },
-                        new DragHotspots.Hotspot()
+                        new DragHotspots.Hotspot() //bottom
                         {
-                            bounds = new Rectangle(left,top + height * 3 / 4,width,height / 4),
+                            bounds = new Rectangle(left,top + height * 5 / 6,width,height / 6),
                             target = new Rectangle(x,y + h + PANEL_SPACING,w,PANEL_SIZE),
-                            type = reverse ? Settings.AccountSorting.SortType.Before : Settings.AccountSorting.SortType.After,
+                            type = Settings.AccountSorting.SortType.After,
                             visible = visible,
                         }
                     };
                 }
                 else
                 {
-                    //horizontal layout, drop indicator will be shown to the sides
-
                     db.hotspots = new DragHotspots.Hotspot[]
                     {
-                        new DragHotspots.Hotspot()
+                        new DragHotspots.Hotspot() //center
                         {
-                            bounds = new Rectangle(left + width / 4,top,width / 2,height),
+                            bounds = new Rectangle(left,top + height / 6,width,height * 2 / 3),
                             target = new Rectangle(x - PANEL_SIZE, y - PANEL_SIZE, w + PANEL_SIZE*2, h+PANEL_SIZE*2),
                             type = Settings.AccountSorting.SortType.Swap,
-                            visible = visible,
+                            visible = visible && gridmode,
                         },
-                        new DragHotspots.Hotspot()
+                        new DragHotspots.Hotspot() //top
                         {
-                            bounds = new Rectangle(left,top,width / 4,height),
-                            target = new Rectangle(x - PANEL_SIZE - PANEL_SPACING,y,PANEL_SIZE,h),
-                            type = reverse ? Settings.AccountSorting.SortType.After : Settings.AccountSorting.SortType.Before,
-                            visible = visible,
+                            bounds = new Rectangle(left,top,width,height / 6),
+                            target = new Rectangle(x,y - PANEL_SIZE - PANEL_SPACING,w,PANEL_SIZE),
+                            type = Settings.AccountSorting.SortType.Before,
+                            visible = visible && gridmode,
                         },
-                        new DragHotspots.Hotspot()
+                        new DragHotspots.Hotspot() //bottom
                         {
-                            bounds = new Rectangle(left + width * 3 / 4,top,width / 4,height),
-                            target = new Rectangle(x + w + PANEL_SPACING,y,PANEL_SIZE,h),
-                            type = reverse ? Settings.AccountSorting.SortType.Before : Settings.AccountSorting.SortType.After,
-                            visible = visible,
+                            bounds = new Rectangle(left,top + height * 5 / 6,width,height / 6),
+                            target = new Rectangle(x,y + h + PANEL_SPACING,w,PANEL_SIZE),
+                            type = Settings.AccountSorting.SortType.After,
+                            visible = visible && gridmode,
                         }
                     };
                 }
@@ -1536,12 +2149,28 @@ namespace Gw2Launcher.UI.Controls
 
             if (sourceIndex != -1)
             {
-                if (sourceIndex > 0)
+                var row = sourceIndex / columns;
+                if (sourceIndex > columns)
                 {
-                    dragspots.bounds[sourceIndex - 1].hotspots[2].visible = false;
+                    //disable inbetween drop on the button above the source
+                    var db = dragspots.bounds[sourceIndex - columns];
+                    var c = db.button != null ? db.button : db.control;
+                    var bh = db.hotspots[2].bounds.Height;
+
+                    db.hotspots[2].visible = false;
+                    db.hotspots[0].bounds.Height += bh; //height * 3 / 4;
                 }
-                if (sourceIndex < count - 1)
-                    dragspots.bounds[sourceIndex + 1].hotspots[1].visible = false;
+                if (sourceIndex + columns < dragspots.bounds.Length)
+                {
+                    //disable inbetween drop on the button below the source
+                    var db = dragspots.bounds[sourceIndex + columns];
+                    var c = db.button != null ? db.button : db.control;
+                    var bh = db.hotspots[1].bounds.Height;
+
+                    db.hotspots[1].visible = false;
+                    db.hotspots[0].bounds.Y -= bh; //= top;
+                    db.hotspots[0].bounds.Height += bh;// height * 3 / 4;
+                }
             }
 
             dragspots.target = new Panel()
@@ -1551,6 +2180,8 @@ namespace Gw2Launcher.UI.Controls
             };
 
             panelContents.Controls.AddRange(new Control[] { dragspots.target, dragspots.highlight });
+
+            panelContents.ResumeLayout();
         }
 
         protected override void OnDragEnter(DragEventArgs drgevent)
@@ -1592,25 +2223,150 @@ namespace Gw2Launcher.UI.Controls
             {
                 if (dragspots.activeHotspot != null)
                 {
-                    var b = dragspots.active.button;
-                    if (b != dragspots.source)
-                    {
-                        var from = dragspots.source.AccountData;
-                        var to = b.AccountData;
+                    var active = dragspots.active;
+                    var source = dragspots.sourceb;
+                    var b = active.button;
 
-                        if (from != null && to != null)
-                            from.Sort(to, dragspots.activeHotspot.type);
+                    if (dragspots.highlight != null)
+                        dragspots.highlight.Visible = false;
+
+                    if (b != source.button)
+                    {
+                        var from = source.button.AccountData;
+                        var to = b != null ? b.AccountData : null;
+                        var columns = panelContents.GridColumns;
+                        var column = active.index % columns;
+                        var iactive = active.index;
+                        var isource = source.index;
+
+                        switch (dragspots.activeHotspot.type)
+                        {
+                            case Settings.AccountSorting.SortType.After:
+
+                                if (true || to != null) //true to support grid sorting
+                                {
+                                    if (iactive % columns != isource % columns)
+                                    {
+                                        //item is being removed from a column, everything after is shifted up
+                                        for (var i = isource + columns; i < dragspots.bounds.Length; i += columns)
+                                        {
+                                            dragspots.bounds[i].index -= columns;
+                                        }
+                                        //item is being inserted, everything after is shifted down
+                                        for (var i = iactive + columns; i < dragspots.bounds.Length; i += columns)
+                                        {
+                                            dragspots.bounds[i].index += columns;
+                                        }
+                                    }
+                                    else if (isource < iactive)
+                                    {
+                                        //item is being moved down within the column
+                                        for (var i = isource + columns; i <= iactive; i += columns)
+                                        {
+                                            dragspots.bounds[i].index -= columns;
+                                        }
+                                    }
+                                    else
+                                    {
+                                        //item is being moved up within the column
+                                        for (var i = iactive + columns; i < isource; i += columns)
+                                        {
+                                            dragspots.bounds[i].index += columns;
+                                        }
+                                    }
+
+                                    source.index = active.index + columns;
+                                }
+
+                                break;
+                            case Settings.AccountSorting.SortType.Before:
+
+                                if (true || to != null) //true to support grid sorting
+                                {
+                                    if (iactive % columns != isource % columns)
+                                    {
+                                        //item is being removed from a column, everything after is shifted up
+                                        for (var i = isource + columns; i < dragspots.bounds.Length; i += columns)
+                                        {
+                                            dragspots.bounds[i].index -= columns;
+                                        }
+                                        //item is being inserted, everything after is shifted down
+                                        for (var i = iactive; i < dragspots.bounds.Length; i += columns)
+                                        {
+                                            dragspots.bounds[i].index += columns;
+                                        }
+                                    }
+                                    else if (isource < iactive)
+                                    {
+                                        //item is being moved down within the column
+                                        for (var i = isource + columns; i < iactive; i += columns)
+                                        {
+                                            dragspots.bounds[i].index -= columns;
+                                        }
+                                    }
+                                    else
+                                    {
+                                        //item is being moved up within the column
+                                        for (var i = iactive; i < isource; i += columns)
+                                        {
+                                            dragspots.bounds[i].index += columns;
+                                        }
+                                    }
+
+                                    source.index = active.index - columns;
+                                }
+
+                                break;
+                            case Settings.AccountSorting.SortType.Swap:
+
+                                var ai = active.index;
+                                active.index = source.index;
+                                source.index = ai;
+
+                                break;
+                        }
+
+                        var reversed = comparer != null && comparer.Options.Sorting.Descending;
+                        if (reversed)
+                        {
+                            var lasti = 0;
+
+                            foreach (var _b in dragspots.bounds)
+                            {
+                                if (_b.button != null && _b.button.AccountData != null)
+                                {
+                                    if (_b.index > lasti)
+                                        lasti = _b.index;
+                                }
+                            }
+
+                            lasti += columns - lasti % columns - 1;
+
+                            foreach (var _b in dragspots.bounds)
+                            {
+                                if (_b.button != null && _b.button.AccountData != null)
+                                {
+                                    _b.button.SortKey = (ushort)(lasti - _b.index + 1);
+                                }
+                            }
+                        }
+                        else
+                        {
+                            foreach (var _b in dragspots.bounds)
+                            {
+                                if (_b.button != null && _b.button.AccountData != null)
+                                {
+                                    _b.button.SortKey = (ushort)(_b.index + 1);
+                                }
+                            }
+                        }
+
+                        Settings.AccountSorting.Update();
                     }
 
                     dragspots.Hide();
                 }
             }
-        }
-
-        public bool AllowCustomOrdering
-        {
-            get;
-            set;
         }
 
         void selection_MouseUp(object sender, MouseEventArgs e)
@@ -1627,7 +2383,7 @@ namespace Gw2Launcher.UI.Controls
                 if (!b.Bounds.Contains(p))
                 {
                     b = null;
-                    foreach (var button in buttons)
+                    foreach (var button in panelContents.Buttons)
                     {
                         if (button.Bounds.Contains(p))
                         {
@@ -1638,7 +2394,16 @@ namespace Gw2Launcher.UI.Controls
                 }
 
                 if (b != null)
-                    AccountMouseClick(b, e);
+                {
+                    try
+                    {
+                        AccountMouseClick(b, e);
+                    }
+                    catch (Exception ex)
+                    {
+                        Util.Logging.Log(ex);
+                    }
+                }
             }
         }
 
@@ -1659,7 +2424,16 @@ namespace Gw2Launcher.UI.Controls
         void button_NoteClicked(object sender, EventArgs e)
         {
             if (AccountNoteClicked != null)
-                AccountNoteClicked(sender, e);
+            {
+                try
+                {
+                    AccountNoteClicked(sender, e);
+                }
+                catch (Exception ex)
+                {
+                    Util.Logging.Log(ex);
+                }
+            }
         }
 
         void button_MouseClick(object sender, MouseEventArgs e)
@@ -1687,24 +2461,30 @@ namespace Gw2Launcher.UI.Controls
             }
             else if (ModifierKeys.HasFlag(Keys.Shift))
             {
+                var buttons = panelContents.Buttons;
+
                 if (lastSelected == -1)
                 {
-                    for (int i = 0; i < buttons.Count; i++)
+                    for (var i = buttons.Length - 1; i >= 0; --i)
                     {
-                        button=buttons[i];
-                        button.Selected = i == index;
+                        if (buttons[i].GridVisibility)
+                        {
+                            buttons[i].Selected = i == index;
+                        }
                     }
                     lastSelected = index;
                 }
                 else
                 {
-                    for (int i = 0; i < buttons.Count;i++)
+                    for (var i = buttons.Length - 1; i >= 0; --i)
                     {
-                        button=buttons[i];
-                        if (lastSelected > index)
-                            button.Selected = (i >= index && i <= lastSelected);
-                        else
-                            button.Selected = (i >= lastSelected && i <= index);
+                        if (buttons[i].GridVisibility)
+                        {
+                            if (lastSelected > index)
+                                buttons[i].Selected = (i >= index && i <= lastSelected);
+                            else
+                                buttons[i].Selected = (i >= lastSelected && i <= index);
+                        }
                     }
                 }
             }
@@ -1715,181 +2495,326 @@ namespace Gw2Launcher.UI.Controls
                     SetAction(ButtonAction.None);
 
                     var mp = new MousePressedEventArgs(buttonState, e.Clicks, e.X, e.Y, e.Delta);
-                    AccountBeginMouseClick(button, mp);
-
+                    try
+                    {
+                        AccountBeginMouseClick(button, mp);
+                    }
+                    catch (Exception ex)
+                    {
+                        Util.Logging.Log(ex);
+                    }
                     if (mp.Handled)
                     {
                         SetAction(ButtonAction.Pressed);
                         button.EndPressed += button_EndPressed;
-                        button.BeginPressed(1, GetPressedCancelToken().Token, mp);
+                        button.BeginPressed(AccountGridButton.PressedState.Pressed, GetPressedCancelToken().Token, mp);
                     }
                 }
 
                 if (AccountMouseClick != null)
-                    AccountMouseClick(sender, e);
+                {
+                    try
+                    {
+                        AccountMouseClick(sender, e);
+                    }
+                    catch (Exception ex)
+                    {
+                        Util.Logging.Log(ex);
+                    }
+                }
             }
         }
 
         public void Remove(AccountGridButton button)
         {
-            if (buttons.Remove(button))
+            panelContents.SuspendLayout();
+            panelContents.Remove(button);
+            if (buttonsOnPage > 0)
             {
-                panelContents.Controls.Remove(button);
-                isDirty = true;
-                panelContents.Invalidate();
+                if (_Filter == null || _Filter.Page == 0 || button.Paging != null && button.Paging.Current != null && button.Paging.Current.Page == _Filter.Page)
+                    --buttonsOnPage;
+            }
+            if (panelContents.Buttons.Length == 0 || buttonsOnPage == 0)
+                panelContents.NewButtonVisible = true;
+            panelContents.ResumeLayout();
+        }
+
+        public override LayoutEngine LayoutEngine
+        {
+            get
+            {
+                return layout;
             }
         }
 
-        protected override void OnPaintBackground(PaintEventArgs e)
+        public void SetStyle(Font fontName, Font fontStatus, Font fontUser, bool showAccount, bool showColor, bool showIcon, Settings.AccountGridButtonColors colors)
         {
-            if (isDirty)
-            {
-                ArrangeGrid();
-            }
+            if (colors == null)
+                colors = AccountGridButton.DefaultColors;
 
-            base.OnPaintBackground(e);
-        }
-
-        public void ArrangeGrid()
-        {
-            isDirty = false;
-
-            if (this.gridSize.IsEmpty)
+            if (this.fontName == fontName && this.fontStatus == fontStatus && this.showAccount == showAccount && this.showColor == showColor && this.showIcon == showIcon && this.colors == colors && this.IsHandleCreated)
                 return;
 
-            bool isNewAccountVisible = buttonNewAccount != null && (buttons.Count == 0 || this.isNewAccountVisible);
-            int count = buttons.Count + (isNewAccountVisible ? 1 : 0);
-
-            buttonNewAccount.Visible = isNewAccountVisible;
-
-            int w = this.Width - 5;
-            int columns = w / this.gridSize.Width;
-            if (columns < 1)
-                columns = 1;
-            int columnWidth = w / columns;
-            int rows = (count - 1) / columns + 1;
-            int rowHeight = gridSize.Height + 5;
-
-            int panelWidth = columnWidth * columns + 5;
-            int panelHeight = rowHeight * rows + 5;
-
-            if (ContentHeightChanged != null && panelContents.Height != panelHeight)
-                ContentHeightChanged(this, EventArgs.Empty);
-
-            if (panelHeight > this.Height)
-            {
-                scrollV.Visible = true;
-
-                w -= scrollV.Width;
-                columns = w / this.gridSize.Width;
-                if (columns < 1)
-                    columns = 1;
-                columnWidth = w / columns;
-                rows = (count - 1) / columns + 1;
-
-                panelWidth = columnWidth * columns + 5;
-                panelHeight = rowHeight * rows + 5;
-
-                scrollV.Maximum = panelHeight - this.Height;
-
-                if (returnToScroll != -1)
-                {
-                    if (isNewAccountVisible)
-                        scrollV.Value = scrollV.Maximum;
-                    else
-                    {
-                        if (returnToScroll > scrollV.Maximum)
-                            scrollV.Value = scrollV.Maximum;
-                        else
-                            scrollV.Value = returnToScroll;
-
-                        returnToScroll = -1;
-                    }
-                }
-            }
-            else
-            {
-                scrollV.Visible = false;
-                scrollV.Value = 0;
-            }
-
-            panelContents.Size = new Size(panelWidth, panelHeight);
-
-            for (int i = 0; i < count; i++)
-            {
-                int column = i % columns;
-                int row = i / columns;
-
-                AccountGridButton b;
-                if (i == count - 1 && isNewAccountVisible)
-                    b = buttonNewAccount;
-                else
-                    b = buttons[i];
-
-                b.Size = new Size(columnWidth - 5, rowHeight - 5);
-                b.Location = new Point(columnWidth * column + 5, rowHeight * row + 5);
-            }
-        }
-
-        private void panelContents_Paint(object sender, PaintEventArgs e)
-        {
-            if (isDirty)
-            {
-                ArrangeGrid();
-            }
-        }
-
-        private void verticalScroll_Scroll(object sender, ScrollEventArgs e)
-        {
-        }
-
-        private void verticalScroll_ValueChanged(object sender, EventArgs e)
-        {
-            panelContents.Location = new Point(0, -verticalScroll.Value);
-
-            if (isNewAccountVisible && returnToScroll != -1 && verticalScroll.Value < verticalScroll.Maximum)
-            {
-                returnToScroll = -1;
-            }
-        }
-
-        public void SetStyle(Font fontLarge, Font fontSmall, bool showAccount, bool showColor)
-        {
-            if (this.fontLarge == fontLarge && this.fontSmall == fontSmall && this.showAccount == showAccount && this.showColor == showColor && this.IsHandleCreated)
-                return;
-
-            this.fontLarge = fontLarge;
-            this.fontSmall = fontSmall;
+            this.fontName = fontName;
+            this.fontStatus = fontStatus;
+            this.fontUser = fontUser;
             this.showAccount = showAccount;
             this.showColor = showColor;
+            this.showIcon = showIcon;
+            this.colors = colors;
 
-            if (buttons.Count > 0)
+            foreach (var b in panelContents.Buttons)
             {
-                foreach (var b in buttons)
-                {
-                    b.FontLarge = fontLarge;
-                    b.FontSmall = fontSmall;
-                    b.ShowAccount = showAccount;
-                    b.ShowColorKey = showColor;
-                }
+                b.FontName = fontName;
+                b.FontStatus = fontStatus;
+                b.ShowAccount = showAccount;
+                b.ShowColorKey = showColor;
+                b.ShowImage = showIcon || b.Image != null;
+                b.Colors = colors;
             }
 
-            buttonNewAccount.FontLarge = fontLarge;
-            buttonNewAccount.FontSmall = fontSmall;
+            var buttonNewAccount = panelContents.NewButton;
+            buttonNewAccount.FontName = fontName;
+            buttonNewAccount.FontStatus = fontStatus;
             buttonNewAccount.ShowAccount = showAccount;
             buttonNewAccount.ShowColorKey = false;
+            buttonNewAccount.ShowImage = false;
             buttonNewAccount.ResizeLabels();
 
-            this.GridSize = new Size(fontLarge.Height * 30 / 2, buttonNewAccount.MinimumSize.Height);
+            panelContents.GridRowHeight = buttonNewAccount.MinimumSize.Height;
+            using (var g = this.CreateGraphics())
+            {
+                GridColumnAutoWidth = TextRenderer.MeasureText(g, "www", this.fontName).Width * 5;
+            }
         }
 
         private void scrollV_ValueChanged(object sender, int e)
         {
-            panelContents.Location = new Point(0, -e);
-
-            if (isNewAccountVisible && returnToScroll != -1 && scrollV.Value < scrollV.Maximum)
+            if (panelContents.NewButtonVisible && returnToScroll != -1 && scrollV.Value < scrollV.Maximum)
             {
                 returnToScroll = -1;
+            }
+
+            panelContents.Location = new Point(0, -e);
+        }
+
+        private void OnContentHeightChanged()
+        {
+            if (ContentHeightChanged != null)
+            {
+                try
+                {
+                    ContentHeightChanged(this, EventArgs.Empty);
+                }
+                catch (Exception ex)
+                {
+                    Util.Logging.Log(ex);
+                }
+            }
+        }
+
+        private void AutoColumns(int width)
+        {
+            int columns;
+
+            if (gridColumnAutoWidth == 0)
+            {
+                columns = 1;
+            }
+            else
+            {
+                columns = (width - panelContents.GridSpacing) / (gridColumnAutoWidth + panelContents.GridSpacing);
+                if (columns < 1)
+                    columns = 1;
+            }
+
+            GridColumns = columns;
+        }
+
+        protected void OnFilterChanged(bool pageChanged)
+        {
+            var buttons = panelContents.Buttons;
+            var enabled = _Filter != null;
+            var filtered = enabled && _Filter.Filter != null;
+            var count = enabled ? 0 : buttons.Length;
+
+            this.SuspendLayout();
+
+            foreach (var b in buttons)
+            {
+                bool v;
+
+                if (enabled)
+                {
+                    if (_Filter.MatchPage(b))
+                    {
+                        ++count;
+
+                        v = _Filter.MatchText(b);
+                    }
+                    else
+                        v = false;
+                }
+                else
+                {
+                    if (pageChanged && b.Paging != null)
+                        b.Paging.Current = null;
+                    v = true;
+                }
+
+                b.Visible = b.GridVisibility = v;
+            }
+
+            if (buttonsOnPage != count)
+            {
+                var b = buttonsOnPage == 0 || count == 0;
+                buttonsOnPage = count;
+                if (b)
+                {
+                    ShowNewAccountButton(count == 0);
+                }
+            }
+
+            if (pageChanged)
+            {
+                if (count > 0 && comparer != null && comparer.IsSortingCustom)
+                    Sort(comparer.Options);
+            }
+
+            if (filtered || comparer == null || comparer.Options.Sorting.Mode != Settings.SortMode.CustomGrid)
+            {
+                panelContents.GridLayout = AccountGridButtonPanel.GridLayoutMode.Auto;
+            }
+            else
+            {
+                panelContents.GridLayout = AccountGridButtonPanel.GridLayoutMode.Indexed;
+            }
+
+            panelContents.UpdateLayout();
+
+            this.ResumeLayout();
+        }
+
+        public void SetFilter(byte page, string filter)
+        {
+            if (string.IsNullOrEmpty(filter))
+                filter = null;
+
+            if (_Filter != null)
+            {
+                var pageChanged = _Filter.Page != page;
+
+                if (page == 0 && filter == null)
+                {
+                    _Filter = null;
+                    OnFilterChanged(pageChanged);
+                }
+                else if (pageChanged || _Filter.Filter != filter)
+                {
+                    _Filter.Page = page;
+                    _Filter.Filter = filter;
+                    OnFilterChanged(pageChanged);
+                }
+            }
+            else if (page != 0 || filter != null)
+            {
+                _Filter = new SearchFilter(page, filter);
+                OnFilterChanged(page != 0);
+            }
+        }
+
+        public byte Page
+        {
+            get
+            {
+                if (_Filter == null)
+                    return 0;
+                return _Filter.Page;
+            }
+            set
+            {
+                if (_Filter == null)
+                {
+                    if (value > 0)
+                    {
+                        _Filter = new SearchFilter(value, null);
+                        OnFilterChanged(true);
+                    }
+                }
+                else
+                {
+                    if (_Filter.Page != value)
+                    {
+                        if (value == 0 && _Filter.Filter == null)
+                            _Filter = null;
+                        else
+                            _Filter.Page = value;
+                        OnFilterChanged(true);
+                    }
+                }
+            }
+        }
+
+        private SearchFilter _Filter;
+        public string Filter
+        {
+            get
+            {
+                if (_Filter == null)
+                    return null;
+                return _Filter.Filter;
+            }
+            set
+            {
+                if (string.IsNullOrEmpty(value))
+                    value = null;
+
+                if (_Filter == null)
+                {
+                    _Filter = new SearchFilter(0, value);
+                    OnFilterChanged(false);
+                }
+                else
+                {
+                    if (_Filter.Filter != value)
+                    {
+                        if (value == null && _Filter.Page == 0)
+                            _Filter = null;
+                        else
+                            _Filter.Filter = value;
+                        OnFilterChanged(false);
+                    }
+                }
+            }
+        }
+
+        public bool IsFilterEnabled
+        {
+            get
+            {
+                return _Filter != null;
+            }
+        }
+
+        public void RefreshFilter()
+        {
+            OnFilterChanged(false);
+        }
+
+        public void RefreshFilter(AccountGridButton b, bool update = true)
+        {
+            var visible = _Filter == null || _Filter.MatchAll(b);
+
+            if (b.GridVisibility != visible)
+            {
+                this.SuspendLayout();
+
+                b.Visible = b.GridVisibility = visible;
+
+                if (update)
+                    panelContents.UpdateLayout();
+
+                this.ResumeLayout();
             }
         }
     }

@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Drawing;
@@ -23,16 +23,30 @@ namespace Gw2Launcher.UI.Controls
         {
             InitializeComponent();
 
-            labelMessage.SizeChanged += labelMessage_SizeChanged;
+            stackPanel1.SizeChanged += stackPanel1_SizeChanged;
 
-            labelEdit.Visible = false;
-            labelSep.Visible = false;
-            labelDelete.Visible = false;
+            stackPanel3.Visible = false;
 
-            foreach (Control control in panelBottom.Controls)
+            foreach (Control control in EnumerateControls(this))
             {
                 control.MouseLeave += control_MouseLeave;
                 control.MouseEnter += control_MouseEnter;
+            }
+        }
+
+        private IEnumerable<Control> EnumerateControls(Control c)
+        {
+            foreach (Control c1 in c.Controls)
+            {
+                if (c1.HasChildren)
+                {
+                    foreach (Control c2 in EnumerateControls(c1))
+                    {
+                        yield return c2;
+                    }
+                }
+
+                yield return c1;
             }
         }
 
@@ -79,18 +93,9 @@ namespace Gw2Launcher.UI.Controls
             }
         }
 
-        protected override void OnSizeChanged(EventArgs e)
+        private void stackPanel1_SizeChanged(object sender, EventArgs e)
         {
-            labelMessage.MaximumSize = new Size(this.Width - labelMessage.Left * 2, 0);
-            //panelBottom.Width = this.Width - panelBottom.Left * 2;
-
-            base.OnSizeChanged(e);
-        }
-
-        private void labelMessage_SizeChanged(object sender, EventArgs e)
-        {
-            panelBottom.Top = labelMessage.Bottom;
-            this.Height = panelBottom.Bottom + this.Padding.Bottom;
+            this.Height = stackPanel1.Height;
         }
 
         protected override void OnControlAdded(ControlEventArgs e)
@@ -128,9 +133,7 @@ namespace Gw2Launcher.UI.Controls
 
         void OnEnteredBegin()
         {
-            labelEdit.Visible = true;
-            labelSep.Visible = true;
-            labelDelete.Visible = true;
+            stackPanel3.Visible = true;
 
             colorBg = this.BackColor;
             this.BackColor = Util.Color.Darken(this.BackColor, 0.025f);
@@ -138,9 +141,7 @@ namespace Gw2Launcher.UI.Controls
 
         void OnEnteredEnd()
         {
-            labelEdit.Visible = false;
-            labelSep.Visible = false;
-            labelDelete.Visible = false;
+            stackPanel3.Visible = false;
 
             this.BackColor = colorBg;
         }
@@ -154,13 +155,6 @@ namespace Gw2Launcher.UI.Controls
             }
         }
 
-        protected override void OnMouseEnter(EventArgs e)
-        {
-            base.OnMouseEnter(e);
-
-            control_MouseEnter(this, e);
-        }
-
         protected override void OnVisibleChanged(EventArgs e)
         {
             base.OnVisibleChanged(e);
@@ -170,12 +164,6 @@ namespace Gw2Launcher.UI.Controls
                 entered = false;
                 OnEnteredEnd();
             }
-        }
-
-        protected override void OnMouseLeave(EventArgs e)
-        {
-            base.OnMouseLeave(e);
-            control_MouseLeave(this, e);
         }
 
         private void labelEdit_Click(object sender, EventArgs e)
@@ -190,6 +178,13 @@ namespace Gw2Launcher.UI.Controls
             if (DeleteClick != null)
                 DeleteClick(this, e);
             control_MouseLeave(this, e);
+        }
+
+        protected override void OnSizeChanged(EventArgs e)
+        {
+            base.OnSizeChanged(e);
+
+            stackPanel1.MinimumSize = new Size(this.Width, 0);
         }
     }
 }

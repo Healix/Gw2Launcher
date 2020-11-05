@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -8,10 +8,61 @@ using System.IO;
 
 namespace Gw2Launcher.Client
 {
-    static partial class Launcher
+    public static partial class FileManager
     {
-        static class FileLocker
+        public static class FileLocker
         {
+            public interface ISharedFile : IDisposable
+            {
+                string Path
+                {
+                    get;
+                }
+
+                ISharedFile Copy();
+            }
+
+            private class SharedDisposable : ISharedFile
+            {
+                private SharedFile file;
+
+                public SharedDisposable(SharedFile s)
+                {
+                    file = s;
+                }
+
+                public string Path
+                {
+                    get
+                    {
+                        return file.Path;
+                    }
+                }
+
+                public ISharedFile Copy()
+                {
+                    if (file.IsAlive)
+                    {
+                        file.Lock();
+                        return new SharedDisposable(file);
+                    }
+
+                    throw new ObjectDisposedException("SharedFile");
+                }
+
+                public void Dispose()
+                {
+                    lock (this)
+                    {
+                        if (file != null)
+                        {
+                            file.Release();
+                            file = null;
+                        }
+                    }
+                }
+            }
+
             public class SharedFile
             {
                 private ushort locks;
@@ -37,7 +88,7 @@ namespace Gw2Launcher.Client
                 {
                     lock(files)
                     {
-                        if (--locks == 0)
+                        if (locks > 0 && --locks == 0)
                         {
                             Remove(this);
                         }
@@ -51,6 +102,14 @@ namespace Gw2Launcher.Client
                         ++locks;
                     }
                 }
+
+                public bool IsAlive
+                {
+                    get
+                    {
+                        return locks > 0;
+                    }
+                }
             }
 
             private static Dictionary<string, SharedFile> files;
@@ -60,7 +119,11 @@ namespace Gw2Launcher.Client
                 files = new Dictionary<string, SharedFile>();
             }
 
-            public static SharedFile Lock(Account account, string path, int timeout)
+            /// <summary>
+            /// Locks the file
+            /// </summary>
+            /// <param name="timeout">The amount of time to try to acquire a lock</param>
+            public static ISharedFile Lock(string path, int timeout)
             {
                 SharedFile sf;
 
@@ -73,7 +136,7 @@ namespace Gw2Launcher.Client
                     sf.Lock();
 
                     if (!b)
-                        return sf;
+                        return new SharedDisposable(sf);
                 }
 
                 if (File.Exists(path))
@@ -113,15 +176,20 @@ namespace Gw2Launcher.Client
                     }
                 }
 
-                return sf;
+                return new SharedDisposable(sf);
             }
 
-            public static SharedFile Lock(Account account, Settings.IFile file, int timeout)
+            /// <summary>
+            /// Locks the file
+            /// </summary>
+            /// <param name="timeout">The amount of time to try to acquire a lock</param>
+            /// <param name="force">Forces a file with only 1 reference to lock</param>
+            public static ISharedFile Lock(Settings.IFile file, int timeout, bool force = false)
             {
-                if (file.References <= 1)
+                if (file == null || file.References <= 1 && !force)
                     return null;
 
-                return Lock(account, file.Path, timeout);
+                return Lock(file.Path, timeout);
             }
 
             private static void Remove(SharedFile sf)
@@ -143,6 +211,13 @@ namespace Gw2Launcher.Client
                     }
                     files.Clear();
                 }
+            }
+
+            public static async void Release(ISharedFile file, int delay)
+            {
+                await Task.Delay(delay);
+
+                file.Dispose();
             }
         }
     }

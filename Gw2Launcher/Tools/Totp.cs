@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -150,6 +150,16 @@ namespace Gw2Launcher.Tools
         public static char[] Generate(byte[] key, long ticks)
         {
             return GetCode(key, (ticks - UNIX_EPOCH) / 10000000, 6);
+        }
+        
+        public static int GetRemainingTicks()
+        {
+            return GetRemainingTicks(DateTime.UtcNow.Ticks);
+        }
+
+        public static int GetRemainingTicks(long ticks)
+        {
+            return (int)(OTP_LIFESPAN_TICKS - ticks % OTP_LIFESPAN_TICKS);
         }
 
         private static char[] GetCode(byte[] key, long epoch, byte length)

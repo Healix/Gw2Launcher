@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -81,6 +81,15 @@ namespace Gw2Launcher.UI
             }
         }
 
+        protected override void OnFormClosing(FormClosingEventArgs e)
+        {
+            if (e.CloseReason == CloseReason.UserClosing)
+            {
+                e.Cancel = true;
+            }
+            base.OnFormClosing(e);
+        }
+
         void background_Paint(object sender, PaintEventArgs e)
         {
             e.Graphics.Clear(this.BackColor);
@@ -109,7 +118,10 @@ namespace Gw2Launcher.UI
             if (disposing)
             {
                 if (foreground == null && progress != null)
+                {
                     progress.Dispose();
+                    progress = null;
+                }
             }
             base.Dispose(disposing);
         }

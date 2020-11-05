@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -562,6 +562,7 @@ namespace Gw2Launcher.Windows
                     }
                     catch
                     {
+                        Marshal.DestroyStructure(_dd, typeof(DropDescription));
                         Marshal.FreeHGlobal(_dd);
                         throw;
                     }
@@ -1038,14 +1039,11 @@ namespace Gw2Launcher.Windows
 
                     if (i == -1)
                     {
-                        lock (this)
-                        {
-                            i = _index;
-                            if (i >= _count)
-                                ExpandStorage();
-                            _storage[i] = data;
-                            _index++;
-                        }
+                        i = _index;
+                        if (i >= _count)
+                            ExpandStorage();
+                        _storage[i] = data;
+                        _index++;
                     }
                     else
                     {
@@ -1368,7 +1366,8 @@ namespace Gw2Launcher.Windows
 
         private static byte[] GetBytes(object o)
         {
-            var size = Marshal.SizeOf(o.GetType());
+            var t = o.GetType();
+            var size = Marshal.SizeOf(t);
             var ptr = Marshal.AllocHGlobal(size);
             var bytes = new byte[size];
             try
@@ -1378,6 +1377,7 @@ namespace Gw2Launcher.Windows
             }
             finally
             {
+                Marshal.DestroyStructure(ptr, t);
                 Marshal.FreeHGlobal(ptr);
             }
             return bytes;
@@ -1395,6 +1395,8 @@ namespace Gw2Launcher.Windows
             DataObjectContainer container = new DataObjectContainer(data);
 
             var advise = container.Advise();
+
+            sender.Focus();
 
             sender.QueryContinueDrag += control_QueryContinueDrag;
             sender.GiveFeedback += container.OnGiveFeedback;

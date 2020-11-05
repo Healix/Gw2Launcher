@@ -1,4 +1,4 @@
-﻿namespace Gw2Launcher.UI
+namespace Gw2Launcher.UI
 {
     partial class formCleanup
     {
@@ -39,9 +39,7 @@
             this.label5.AutoSize = true;
             this.label5.Font = new System.Drawing.Font("Segoe UI Semilight", 8.25F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
             this.label5.Location = new System.Drawing.Point(10, 10);
-            this.label5.Name = "label5";
             this.label5.Size = new System.Drawing.Size(229, 13);
-            this.label5.TabIndex = 15;
             this.label5.Text = "The following files will be deleted. Are you sure?";
             // 
             // buttonCancel
@@ -49,9 +47,7 @@
             this.buttonCancel.Anchor = System.Windows.Forms.AnchorStyles.Bottom;
             this.buttonCancel.Font = new System.Drawing.Font("Segoe UI", 8.25F);
             this.buttonCancel.Location = new System.Drawing.Point(114, 301);
-            this.buttonCancel.Name = "buttonCancel";
             this.buttonCancel.Size = new System.Drawing.Size(86, 35);
-            this.buttonCancel.TabIndex = 30;
             this.buttonCancel.Text = "Cancel";
             this.buttonCancel.UseVisualStyleBackColor = true;
             this.buttonCancel.Click += new System.EventHandler(this.buttonCancel_Click);
@@ -61,9 +57,7 @@
             this.buttonOK.Anchor = System.Windows.Forms.AnchorStyles.Bottom;
             this.buttonOK.Font = new System.Drawing.Font("Segoe UI", 8.25F);
             this.buttonOK.Location = new System.Drawing.Point(210, 301);
-            this.buttonOK.Name = "buttonOK";
             this.buttonOK.Size = new System.Drawing.Size(86, 35);
-            this.buttonOK.TabIndex = 31;
             this.buttonOK.Text = "OK";
             this.buttonOK.UseVisualStyleBackColor = true;
             this.buttonOK.Click += new System.EventHandler(this.buttonOK_Click);
@@ -72,27 +66,21 @@
             // 
             this.textConfirm.Location = new System.Drawing.Point(13, 36);
             this.textConfirm.Multiline = true;
-            this.textConfirm.Name = "textConfirm";
             this.textConfirm.ReadOnly = true;
             this.textConfirm.ScrollBars = System.Windows.Forms.ScrollBars.Vertical;
             this.textConfirm.Size = new System.Drawing.Size(283, 248);
-            this.textConfirm.TabIndex = 32;
             // 
             // formCleanup
             // 
-            this.AutoScaleDimensions = new System.Drawing.SizeF(96F, 96F);
-            this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Dpi;
             this.ClientSize = new System.Drawing.Size(308, 348);
             this.Controls.Add(this.textConfirm);
             this.Controls.Add(this.buttonCancel);
             this.Controls.Add(this.buttonOK);
             this.Controls.Add(this.label5);
-            this.Font = new System.Drawing.Font("Segoe UI", 8.25F);
             this.FormBorderStyle = System.Windows.Forms.FormBorderStyle.FixedDialog;
             this.Icon = global::Gw2Launcher.Properties.Resources.Gw2Launcher;
             this.MaximizeBox = false;
             this.MinimizeBox = false;
-            this.Name = "formCleanup";
             this.ShowIcon = false;
             this.ShowInTaskbar = false;
             this.StartPosition = System.Windows.Forms.FormStartPosition.CenterParent;

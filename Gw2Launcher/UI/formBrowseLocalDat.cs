@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Data;
@@ -11,7 +11,7 @@ using System.IO;
 
 namespace Gw2Launcher.UI
 {
-    public partial class formBrowseLocalDat : Form
+    public partial class formBrowseLocalDat : Base.StackFormBase
     {
         private Client.FileManager.FileType fileType;
 
@@ -52,13 +52,14 @@ namespace Gw2Launcher.UI
                 {
                     try
                     {
-                        System.IO.File.Move(this.Path, this.movedFrom);
+                        Util.FileUtil.MoveFile(this.Path, this.movedFrom, false, true);
                     }
                     catch (Exception ex)
                     {
                         Util.Logging.Log(ex);
                     }
                     movedFrom = null;
+                    Path = null;
                 }
                 else if (this.Path != null)
                 {
@@ -72,23 +73,20 @@ namespace Gw2Launcher.UI
                     }
                 }
             }
+
+            public void Update(string path)
+            {
+                this.Path = path;
+            }
         }
 
         public formBrowseLocalDat(Client.FileManager.FileType type, Settings.IAccount account)
         {
-            InitializeComponent();
-
-            var scale = this.CurrentAutoScaleDimensions.Width / 96f;
-            if (scale != 1)
-            {
-                foreach (DataGridViewColumn col in gridAccounts.Columns)
-                {
-                    if (col.AutoSizeMode != DataGridViewAutoSizeColumnMode.Fill)
-                        col.Width = (int)(col.Width * scale + 0.5f);
-                }
-            }
+            InitializeComponents();
 
             radioAccountShare.Enabled = Client.FileManager.IsDataLinkingSupported;
+
+            Util.CheckedButton.Group(radioAccountCopy, radioAccountShare, radioCreateNew, radioFileCopy, radioFileMove);
 
             this.fileType = type;
 
@@ -108,67 +106,63 @@ namespace Gw2Launcher.UI
             var shared = new Dictionary<string, KeyValuePair<int, List<DataGridViewRow>>>();
             var hiddenRows = 0;
 
-            foreach (var uid in Settings.Accounts.GetKeys())
+            foreach (var a in Util.Accounts.GetGw2Accounts())
             {
-                var _account = Settings.Accounts[uid];
-                if (_account.HasValue)
+                Settings.IFile file;
+                switch (type)
                 {
-                    Settings.IFile file;
-                    switch (type)
+                    case Client.FileManager.FileType.Dat:
+
+                        file = a.DatFile;
+
+                        break;
+                    case Client.FileManager.FileType.Gfx:
+
+                        file = a.GfxFile;
+
+                        break;
+                    default:
+
+                        file = null;
+
+                        break;
+                }
+
+                if (file != null && !string.IsNullOrEmpty(file.Path))
+                {
+                    var row = gridAccounts.Rows[gridAccounts.Rows.Add()];
+                    row.Tag = a;
+
+                    string user = a.WindowsAccount;
+                    if (string.IsNullOrEmpty(user))
+                        user = "(current user)";
+                    row.Cells[columnName.Index].Value = a.Name;
+                    row.Cells[columnUser.Index].Value = user;
+
+                    KeyValuePair<int, List<DataGridViewRow>> sharedWith;
+                    if (shared.TryGetValue(file.Path, out sharedWith))
                     {
-                        case Client.FileManager.FileType.Dat:
+                        row.Cells[columnShared.Index].Value = sharedWith.Key;
+                        row.Cells[columnShared.Index].Tag = sharedWith.Value;
 
-                            file = _account.Value.DatFile;
-
-                            break;
-                        case Client.FileManager.FileType.Gfx:
-
-                            file = _account.Value.GfxFile;
-
-                            break;
-                        default:
-
-                            file = null;
-
-                            break;
+                        if (sharedWith.Value.Count == 1)
+                        {
+                            sharedWith.Value[0].Cells[columnShared.Index].Value = sharedWith.Key;
+                            sharedWith.Value[0].Cells[columnShared.Index].Tag = sharedWith.Value;
+                        }
+                    }
+                    else
+                    {
+                        shared[file.Path] = sharedWith = new KeyValuePair<int, List<DataGridViewRow>>(shared.Count + 1, new List<DataGridViewRow>());
                     }
 
-                    if (file != null && !string.IsNullOrEmpty(file.Path))
+                    if (account != null && a == account)
                     {
-                        var row = gridAccounts.Rows[gridAccounts.Rows.Add()];
-                        row.Tag = _account.Value;
-
-                        string user = _account.Value.WindowsAccount;
-                        if (string.IsNullOrEmpty(user))
-                            user = "(current user)";
-                        row.Cells[columnName.Index].Value = _account.Value.Name;
-                        row.Cells[columnUser.Index].Value = user;
-
-                        KeyValuePair<int, List<DataGridViewRow>> sharedWith;
-                        if (shared.TryGetValue(file.Path, out sharedWith))
-                        {
-                            row.Cells[columnShared.Index].Value = sharedWith.Key;
-                            row.Cells[columnShared.Index].Tag = sharedWith.Value;
-
-                            if (sharedWith.Value.Count == 1)
-                            {
-                                sharedWith.Value[0].Cells[columnShared.Index].Value = sharedWith.Key;
-                                sharedWith.Value[0].Cells[columnShared.Index].Tag = sharedWith.Value;
-                            }
-                        }
-                        else
-                        {
-                            shared[file.Path] = sharedWith = new KeyValuePair<int, List<DataGridViewRow>>(shared.Count + 1, new List<DataGridViewRow>());
-                        }
-
-                        if (account != null && uid == account.UID)
-                        {
-                            row.Visible = false;
-                            hiddenRows++;
-                        }
-
-                        sharedWith.Value.Add(row);
+                        row.Visible = false;
+                        hiddenRows++;
                     }
+
+                    sharedWith.Value.Add(row);
                 }
             }
 
@@ -189,6 +183,14 @@ namespace Gw2Launcher.UI
                 radioAccountShare.Enabled = false;
                 radioFileCopy.Checked = true;
             }
+        }
+
+        protected override void OnInitializeComponents()
+        {
+            base.OnInitializeComponents();
+
+            InitializeComponent();
+
         }
 
         private void radio_CheckedChanged(object sender, EventArgs e)
@@ -279,16 +281,16 @@ namespace Gw2Launcher.UI
 
             if (radioAccountShare.Checked)
             {
-                var account = ((Settings.IAccount)gridAccounts.SelectedRows[0].Tag);
+                var gw2 = ((Settings.IGw2Account)gridAccounts.SelectedRows[0].Tag);
                 Settings.IFile file;
 
                 switch (fileType)
                 {
                     case Client.FileManager.FileType.Dat:
-                        file = account.DatFile;
+                        file = gw2.DatFile;
                         break;
                     case Client.FileManager.FileType.Gfx:
-                        file = account.GfxFile;
+                        file = gw2.GfxFile;
                         break;
                     default:
                         return;
@@ -300,14 +302,14 @@ namespace Gw2Launcher.UI
             }
             else if (radioAccountCopy.Checked)
             {
-                var account = ((Settings.IAccount)gridAccounts.SelectedRows[0].Tag);
+                var gw2 = ((Settings.IGw2Account)gridAccounts.SelectedRows[0].Tag);
                 switch (fileType)
                 {
                     case Client.FileManager.FileType.Dat:
-                        path = account.DatFile.Path;
+                        path = gw2.DatFile.Path;
                         break;
                     case Client.FileManager.FileType.Gfx:
-                        path = account.GfxFile.Path;
+                        path = gw2.GfxFile.Path;
                         break;
                     default:
                         return;
@@ -415,7 +417,7 @@ namespace Gw2Launcher.UI
                     {
                         Util.Logging.Log(ex);
                     }
-                    File.Move(path, temp);
+                    Util.FileUtil.MoveFile(path, temp, false, true);
 
                     this.Result = new SelectedFile(temp, path);
                 }

@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Runtime.InteropServices;
 
 namespace Gw2Launcher.Windows.Native
@@ -33,12 +33,6 @@ namespace Gw2Launcher.Windows.Native
         SWP_NOSENDCHANGING = 0x400,
         SWP_DEFERERASE = 0x2000,
         SWP_ASYNCWINDOWPOS = 0x4000,
-    }
-
-    public struct POINTAPI
-    {
-        public int x;
-        public int y;
     }
 
     public struct RECT
@@ -77,10 +71,10 @@ namespace Gw2Launcher.Windows.Native
     public struct WINDOWPLACEMENT
     {
         public int length;
-        public int flags;
+        public WindowPlacementFlags flags;
         public ShowWindowCommands showCmd;
-        public POINTAPI ptMinPosition;
-        public POINTAPI ptMaxPosition;
+        public System.Drawing.Point ptMinPosition;
+        public System.Drawing.Point ptMaxPosition;
         public RECT rcNormalPosition;
     }
 
@@ -93,6 +87,7 @@ namespace Gw2Launcher.Windows.Native
 
     public enum SYSTEM_INFORMATION_CLASS
     {
+        SystemHandleInformation = 0x0010,
         SystemExtendedHandleInformation = 0x0040,
     }
 
@@ -104,7 +99,9 @@ namespace Gw2Launcher.Windows.Native
         NoMoreEntries = 0x8000001a,
 
         Error = 0xc0000000,
+        InvalidInfoClass = 0xC0000003,
         InfoLengthMismatch = 0xc0000004,
+        BufferOverflow = 0x80000005,
     }
 
     public enum ObjectInformationClass : int
@@ -161,9 +158,38 @@ namespace Gw2Launcher.Windows.Native
     [StructLayout(LayoutKind.Sequential)]
     public struct UNICODE_STRING
     {
+        public UNICODE_STRING(string s)
+        {
+            Length = (ushort)(s.Length * 2);
+            MaximumLength = (ushort)(Length + 2);
+            Buffer = Marshal.StringToHGlobalUni(s);
+        }
+
         public ushort Length;
         public ushort MaximumLength;
         public IntPtr Buffer;
+
+        public void Free()
+        {
+            if (Buffer != IntPtr.Zero)
+            {
+                Marshal.FreeHGlobal(Buffer);
+                Buffer = IntPtr.Zero;
+                Length = 0;
+            }
+        }
+
+        public override string ToString()
+        {
+            if (Length > 0)
+            {
+                return Marshal.PtrToStringUni(Buffer, Length >> 1);
+            }
+            else
+            {
+                return string.Empty;
+            }
+        }
     }
 
     [StructLayout(LayoutKind.Sequential)]
@@ -179,7 +205,28 @@ namespace Gw2Launcher.Windows.Native
         public uint Reserved;
     }
 
-    public enum ShowWindowCommands
+    [StructLayout(LayoutKind.Sequential)]
+    public struct SYSTEM_HANDLE_TABLE_ENTRY_INFO
+    {
+        public ushort UniqueProcessId;
+        public ushort CreatorBackTraceIndex;
+        public byte ObjectTypeIndex;
+        public byte HandleAttributes;
+        public ushort HandleValue;
+        public IntPtr Object;
+        public uint GrantedAccess;
+    }
+
+    [Flags]
+    public enum WindowPlacementFlags : uint
+    {
+        None = 0,
+        WPF_SETMINPOSITION = 0x0001,
+        WPF_RESTORETOMAXIMIZED = 0x0002,
+        WPF_ASYNCWINDOWPLACEMENT = 0x0004,
+    }
+
+    public enum ShowWindowCommands : uint
     {
         /// <summary>
         /// Hides the window and activates another window.
@@ -247,13 +294,14 @@ namespace Gw2Launcher.Windows.Native
         ForceMinimize = 11
     }
 
-    public enum WindowMessages
+    public enum WindowMessages : uint
     {
         WM_MOVING = 0x0216,
         WM_SIZING = 0x0214,
         WM_ENTERSIZEMOVE = 0x231,
         WM_EXITSIZEMOVE = 0x0232,
         WM_NCHITTEST = 0x84,
+        WM_NCCALCSIZE = 0x83,
         WM_NCRBUTTONUP = 0x00A5,
         WM_GETTEXT = 0x0D,
         WM_GETTEXTLENGTH = 0x0E,
@@ -282,6 +330,11 @@ namespace Gw2Launcher.Windows.Native
         WM_INVALIDATEDRAGIMAGE = 0x403,
         WM_NCLBUTTONDBLCLK = 0x00A3,
         WM_CANCELMODE = 0x001F,
+        WM_MOUSEACTIVATE = 0x0021,
+        WM_GETTITLEBARINFOEX = 0x033F,
+        WM_CHAR = 0x0102,
+        WM_GETICON = 0x007F,
+        WM_SETICON = 0x0080,
     }
 
     public enum Sizing
@@ -332,8 +385,11 @@ namespace Gw2Launcher.Windows.Native
         WS_EX_LAYERED = 0x00080000,
         WS_EX_TRANSPARENT = 0x00000020,
         WS_EX_NOACTIVATE = 0x08000000,
-        
+
         WS_MAXIMIZEBOX = 0x00010000,
+        WS_MINIMIZEBOX = 0x00020000,
+        WS_DISABLED = 0x8000000,
+        WS_EX_NOREDIRECTIONBITMAP = 0x00200000,
     }
 
     public enum WindowZOrder
@@ -1131,4 +1187,300 @@ namespace Gw2Launcher.Windows.Native
         GWL_USERDATA = (-21),
         GWL_ID = (-12)
     }
+
+    public enum TitleBarElement
+    {
+        TitleBar = 0,
+        Minimize = 2,
+        Maximize = 3,
+        Help = 4,
+        Close = 5,
+    }
+
+    [Flags]
+    public enum TitleBarElementState : uint
+    {
+        Focusable = 0x00100000,
+        Invisible = 0x00008000,
+        Offscreen = 0x00010000,
+        Unavailable = 0x00000001,
+        Pressed = 0x00000008,
+    }
+
+    [StructLayout(LayoutKind.Sequential)]
+    internal struct TITLEBARINFOEX
+    {
+        public const int CCHILDREN_TITLEBAR = 5;
+
+        public int cbSize;
+        public RECT rcTitleBar;
+        [MarshalAs(UnmanagedType.ByValArray, SizeConst = CCHILDREN_TITLEBAR + 1)]
+        public TitleBarElementState[] rgstate;
+        [MarshalAs(UnmanagedType.ByValArray, SizeConst = CCHILDREN_TITLEBAR + 1)]
+        public RECT[] rgrect;
+    }
+
+    internal enum DWMWINDOWATTRIBUTE : uint
+    {
+        NCRenderingEnabled = 1,
+        NCRenderingPolicy,
+        TransitionsForceDisabled,
+        AllowNCPaint,
+        CaptionButtonBounds,
+        NonClientRtlLayout,
+        ForceIconicRepresentation,
+        Flip3DPolicy,
+        ExtendedFrameBounds,
+        HasIconicBitmap,
+        DisallowPeek,
+        ExcludedFromPeek,
+        Cloak,
+        Cloaked,
+        FreezeRepresentation
+    }
+
+    internal enum DWMNCRENDERINGPOLICY
+    {
+        DWMNCRP_USEWINDOWSTYLE,
+        DWMNCRP_DISABLED,
+        DWMNCRP_ENABLED,
+        DWMNCRP_LAST
+    }
+
+    [StructLayout(LayoutKind.Sequential)]
+    public struct MARGINS
+    {
+        public int leftWidth;
+        public int rightWidth;
+        public int topHeight;
+        public int bottomHeight;
+    }
+
+    public enum CopyProgressResult : uint
+    {
+        PROGRESS_CONTINUE = 0,
+        PROGRESS_CANCEL = 1,
+        PROGRESS_STOP = 2,
+        PROGRESS_QUIET = 3
+    }
+
+    public enum CopyProgressCallbackReason : uint
+    {
+        CALLBACK_CHUNK_FINISHED = 0x00000000,
+        CALLBACK_STREAM_SWITCH = 0x00000001
+    }
+
+    [Flags]
+    public enum CopyFileFlags : uint
+    {
+        COPY_FILE_FAIL_IF_EXISTS = 0x00000001,
+        COPY_FILE_RESTARTABLE = 0x00000002,
+        COPY_FILE_OPEN_SOURCE_FOR_WRITE = 0x00000004,
+        COPY_FILE_ALLOW_DECRYPTED_DESTINATION = 0x00000008
+    }
+
+    public enum FILE_INFO_BY_HANDLE_CLASS
+    {
+        FileBasicInfo = 0,
+        FileStandardInfo = 1,
+        FileNameInfo = 2,
+        FileRenameInfo = 3,
+        FileDispositionInfo = 4,
+        FileAllocationInfo = 5,
+        FileEndOfFileInfo = 6,
+        FileStreamInfo = 7,
+        FileCompressionInfo = 8,
+        FileAttributeTagInfo = 9,
+        FileIdBothDirectoryInfo = 10,
+        FileIdBothDirectoryRestartInfo = 11,
+        FileIoPriorityHintInfo = 12,
+        FileRemoteProtocolInfo = 13,
+        FileFullDirectoryInfo = 14,
+        FileFullDirectoryRestartInfo = 15,
+        FileStorageInfo = 16,
+        FileAlignmentInfo = 17,
+        FileIdInfo = 18,
+        FileIdExtdDirectoryInfo = 19,
+        FileIdExtdDirectoryRestartInfo = 20,
+        MaximumFileInfoByHandlesClass
+    }
+
+    [StructLayout(LayoutKind.Explicit, Size = 8)]
+    public struct LARGE_INTEGER
+    {
+        [FieldOffset(0)]
+        public UInt32 LowPart;
+        [FieldOffset(4)]
+        public Int32 HighPart;
+        [FieldOffset(0)]
+        public Int64 QuadPart;
+    }
+
+    [StructLayout(LayoutKind.Sequential)]
+    public struct FILE_STANDARD_INFO
+    {
+        public LARGE_INTEGER AllocationSize;
+        public LARGE_INTEGER EndOfFile;
+        public uint NumberOfLinks;
+        [MarshalAsAttribute(UnmanagedType.Bool)]
+        public bool DeletePending;
+        [MarshalAsAttribute(UnmanagedType.Bool)]
+        public bool Directory;
+    }
+
+    [StructLayout(LayoutKind.Sequential, Pack = 0)]
+    public struct OBJECT_ATTRIBUTES
+    {
+        public Int32 Length;
+        public IntPtr RootDirectory;
+        public IntPtr ObjectName;
+        public uint Attributes;
+        public IntPtr SecurityDescriptor;
+        public IntPtr SecurityQualityOfService;
+    }
+
+    [StructLayout(LayoutKind.Sequential, Pack = 0)]
+    public struct IO_STATUS_BLOCK
+    {
+        public uint status;
+        public IntPtr information;
+    }
+
+    [StructLayout(LayoutKind.Sequential)]
+    public struct SHFILEINFO
+    {
+        public IntPtr hIcon;
+        public int iIcon;
+        public uint dwAttributes;
+        [MarshalAs(UnmanagedType.ByValTStr, SizeConst = 260)]
+        public string szDisplayName;
+        [MarshalAs(UnmanagedType.ByValTStr, SizeConst = 80)]
+        public string szTypeName;
+    };
+
+
+    [StructLayout(LayoutKind.Sequential)]
+    public struct IMAGELISTDRAWPARAMS
+    {
+        public int cbSize;
+        public IntPtr himl;
+        public int i;
+        public IntPtr hdcDst;
+        public int x;
+        public int y;
+        public int cx;
+        public int cy;
+        public int xBitmap;    // x offest from the upperleft of bitmap
+        public int yBitmap;    // y offset from the upperleft of bitmap
+        public int rgbBk;
+        public int rgbFg;
+        public int fStyle;
+        public int dwRop;
+        public int fState;
+        public int Frame;
+        public int crEffect;
+    }
+
+    [StructLayout(LayoutKind.Sequential)]
+    public struct IMAGEINFO
+    {
+        public IntPtr hbmImage;
+        public IntPtr hbmMask;
+        public int Unused1;
+        public int Unused2;
+        public RECT rcImage;
+    }
+
+    [ComImportAttribute()]
+    [GuidAttribute("46EB5926-582E-4017-9FDF-E8998DAA0950")]
+    [InterfaceTypeAttribute(ComInterfaceType.InterfaceIsIUnknown)]
+    public interface IImageList
+    {
+        [PreserveSig]
+        int Add(IntPtr hbmImage, IntPtr hbmMask, ref int pi);
+
+        [PreserveSig]
+        int ReplaceIcon(int i, IntPtr hicon, ref int pi);
+
+        [PreserveSig]
+        int SetOverlayImage(int iImage, int iOverlay);
+
+        [PreserveSig]
+        int Replace(int i, IntPtr hbmImage, IntPtr hbmMask);
+
+        [PreserveSig]
+        int AddMasked(IntPtr hbmImage, int crMask, ref int pi);
+
+        [PreserveSig]
+        int Draw(ref IMAGELISTDRAWPARAMS pimldp);
+
+        [PreserveSig]
+        int Remove(int i);
+
+        [PreserveSig]
+        int GetIcon(int i, int flags, ref IntPtr picon);
+
+        [PreserveSig]
+        int GetImageInfo(int i, ref IMAGEINFO pImageInfo);
+
+        [PreserveSig]
+        int Copy(int iDst, IImageList punkSrc, int iSrc, int uFlags);
+
+        [PreserveSig]
+        int Merge(int i1, IImageList punk2, int i2, int dx, int dy, ref Guid riid, ref IntPtr ppv);
+
+        [PreserveSig]
+        int Clone(ref Guid riid, ref IntPtr ppv);
+
+        [PreserveSig]
+        int GetImageRect(int i, ref RECT prc);
+
+        [PreserveSig]
+        int GetIconSize(ref int cx, ref int cy);
+
+        [PreserveSig]
+        int SetIconSize(int cx, int cy);
+
+        [PreserveSig]
+        int GetImageCount(ref int pi);
+
+        [PreserveSig]
+        int SetImageCount(int uNewCount);
+
+        [PreserveSig]
+        int SetBkColor(int clrBk, ref int pclr);
+
+        [PreserveSig]
+        int GetBkColor(ref int pclr);
+
+        [PreserveSig]
+        int BeginDrag(int iTrack, int dxHotspot, int dyHotspot);
+
+        [PreserveSig]
+        int EndDrag();
+
+        [PreserveSig]
+        int DragEnter(IntPtr hwndLock, int x, int y);
+
+        [PreserveSig]
+        int DragLeave(IntPtr hwndLock);
+
+        [PreserveSig]
+        int DragMove(int x, int y);
+
+        [PreserveSig]
+        int SetDragCursorImage(ref IImageList punk, int iDrag, int dxHotspot, int dyHotspot);
+
+        [PreserveSig]
+        int DragShowNolock(int fShow);
+
+        [PreserveSig]
+        int GetDragImage(ref System.Drawing.Point ppt, ref System.Drawing.Point pptHotspot, ref Guid riid, ref IntPtr ppv);
+
+        [PreserveSig]
+        int GetItemFlags(int i, ref int dwFlags);
+
+        [PreserveSig]
+        int GetOverlayImage(int iOverlay, ref int piIndex);
+    };
 }

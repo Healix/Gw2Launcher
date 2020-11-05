@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Data;
@@ -11,34 +11,41 @@ using System.IO;
 
 namespace Gw2Launcher.UI
 {
-    public partial class formBrowseLocalDatQuick : Form
+    public partial class formBrowseLocalDatQuick : Base.StackFormBase
     {
         public formBrowseLocalDatQuick(bool showDat, bool showGfx)
         {
+            InitializeComponents();
+
+            Util.CheckedButton.Group(radioDatCopyDefault, radioDatNew, radioDatShareDefault);
+            Util.CheckedButton.Group(radioGfxCopyDefault, radioGfxNew, radioGfxShareDefault);
+
+            if (!showDat || !showGfx)
+            {
+                this.SuspendLayout();
+
+                if (!showDat)
+                {
+                    this.Controls.Remove(panelDat);
+                    panelDat.Dispose();
+                }
+
+                if (!showGfx)
+                {
+                    this.Controls.Remove(panelGfx);
+                    panelGfx.Dispose();
+                }
+
+                this.ResumeLayout(false);
+                this.PerformLayout();
+            }
+        }
+
+        protected override void OnInitializeComponents()
+        {
+            base.OnInitializeComponents();
+
             InitializeComponent();
-
-            int _space = buttonOK.Location.X - buttonCancel.Bounds.Right;
-            buttonCancel.Location = new Point(this.ClientSize.Width / 2 - (buttonOK.Bounds.Right - buttonCancel.Bounds.Left) / 2, buttonCancel.Location.Y);
-            buttonOK.Location = new Point(buttonCancel.Bounds.Right + _space, buttonCancel.Location.Y);
-
-            var h = 0;
-
-            if (!showDat)
-            {
-                panelDat.Visible = false;
-                h += panelDat.Height;
-
-                panelGfx.Top -= panelDat.Height;
-            }
-
-            if (!showGfx)
-            {
-                panelGfx.Visible = false;
-                h += panelGfx.Height;
-            }
-
-            if (h > 0)
-                this.Height -= h;
         }
 
         public Settings.IDatFile DatFile
@@ -63,7 +70,7 @@ namespace Gw2Launcher.UI
             string dat = null,
                    gfx = null;
 
-            if (panelDat.Visible)
+            if (!panelDat.IsDisposed && panelDat.Visible)
             {
                 if (radioDatNew.Checked)
                 {
@@ -105,7 +112,7 @@ namespace Gw2Launcher.UI
                 }
             }
 
-            if (panelGfx.Visible)
+            if (!panelGfx.IsDisposed && panelGfx.Visible)
             {
                 if (radioGfxNew.Checked)
                 {

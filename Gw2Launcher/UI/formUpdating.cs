@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Data;
@@ -13,7 +13,7 @@ using System.Diagnostics;
 
 namespace Gw2Launcher.UI
 {
-    public partial class formUpdating : Form
+    public partial class formUpdating : Base.BaseForm
     {
         private Dictionary<Settings.IAccount, AccountItem> accounts;
         private int remaining, total;
@@ -46,7 +46,7 @@ namespace Gw2Launcher.UI
 
         public formUpdating(List<Settings.IAccount> accounts, bool alreadyQueued, bool closeOnCompletion)
         {
-            InitializeComponent();
+            InitializeComponents();
 
             this.processChanged = new ManualResetEvent(false);
             this.result = DialogResult.OK;
@@ -85,7 +85,7 @@ namespace Gw2Launcher.UI
             Client.Launcher.AccountProcessActivated += Launcher_AccountProcessActivated;
             Client.Launcher.AllQueuedLaunchesComplete += Launcher_AllQueuedLaunchesComplete;
 
-            Settings.GW2Path.ValueChanged += GW2Path_ValueChanged;
+            Settings.GuildWars2.Path.ValueChanged += GW2Path_ValueChanged;
             GW2Path_ValueChanged(null, EventArgs.Empty);
             
             if (!alreadyQueued)
@@ -95,6 +95,13 @@ namespace Gw2Launcher.UI
         public formUpdating(List<Settings.IAccount> accounts)
             : this(accounts, false, true)
         {
+        }
+
+        protected override void OnInitializeComponents()
+        {
+            base.OnInitializeComponents();
+
+            InitializeComponent();
         }
 
         public void AddAccount(Settings.IAccount account)
@@ -124,7 +131,7 @@ namespace Gw2Launcher.UI
 
         void GW2Path_ValueChanged(object sender, EventArgs e)
         {
-            string path = Settings.GW2Path.Value;
+            string path = Settings.GuildWars2.Path.Value;
             if (!string.IsNullOrEmpty(path))
             {
                 datPath = Path.Combine(Path.GetDirectoryName(path), "Gw2.dat");
@@ -205,8 +212,20 @@ namespace Gw2Launcher.UI
                 Util.Logging.Log(ex);
                 return;
             }
-            if (remaining > 0 && Client.Launcher.GetPendingLaunchCount() == 0 && Client.Launcher.GetActiveProcesses().Count == 0)
+
+            if (remaining > 0 && Client.Launcher.GetPendingLaunchCount() == 0)
             {
+                foreach (var a in Client.Launcher.GetActiveProcesses())
+                {
+                    switch (Client.Launcher.GetState(a))
+                    {
+                        case Client.Launcher.AccountState.Updating:
+                        case Client.Launcher.AccountState.UpdatingVisible:
+
+                            return;
+                    }
+                }
+
                 OnComplete();
             }  
         }
@@ -649,7 +668,7 @@ namespace Gw2Launcher.UI
             //                {
             //                    try
             //                    {
-            //                        int h = p.MainWindowHandle.ToInt32();
+        //                        int h = Windows.FindWindow.FindMainWindow(p).ToInt32();
             //                        if (h != 0)
             //                        {
             //                            SetWindowLong(t.Handle, -8, h);
@@ -719,7 +738,7 @@ namespace Gw2Launcher.UI
                 proxy.RequestDataReceived -= proxy_RequestDataReceived;
             }
 
-            Settings.GW2Path.ValueChanged -= GW2Path_ValueChanged;
+            Settings.GuildWars2.Path.ValueChanged -= GW2Path_ValueChanged;
             Client.Launcher.AccountStateChanged -= Launcher_AccountStateChanged;
             Client.Launcher.AccountProcessActivated -= Launcher_AccountProcessActivated;
             Client.Launcher.AllQueuedLaunchesComplete -= Launcher_AllQueuedLaunchesComplete;
@@ -742,7 +761,7 @@ namespace Gw2Launcher.UI
             {
                 result = DialogResult.Abort;
                 if (remaining != total)
-                    Client.Launcher.CancelAndKillActiveLaunches();
+                    Client.Launcher.CancelAndKillActiveLaunches(Client.Launcher.AccountType.GuildWars2, Client.Launcher.LaunchMode.Update, Client.Launcher.LaunchMode.UpdateVisible);
                 else
                     Client.Launcher.CancelPendingLaunches();
             }
@@ -755,9 +774,7 @@ namespace Gw2Launcher.UI
             labelAbort.Enabled = false;
             labelAbort.ForeColor = SystemColors.GrayText;
             this.result = DialogResult.Abort;
-            //Client.Launcher.CancelPendingLaunches();
-            //Client.Launcher.KillActiveLaunches();
-            Client.Launcher.CancelAndKillActiveLaunches();
+            Client.Launcher.CancelAndKillActiveLaunches(Client.Launcher.AccountType.GuildWars2, Client.Launcher.LaunchMode.Update, Client.Launcher.LaunchMode.UpdateVisible);
         }
 
         private void formUpdating_Load(object sender, EventArgs e)

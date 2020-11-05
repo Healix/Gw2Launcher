@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Data;
@@ -10,13 +10,13 @@ using System.Windows.Forms;
 
 namespace Gw2Launcher.UI
 {
-    partial class formNetworkAuthorizationRequired : Form
+    partial class formNetworkAuthorizationRequired : Base.FlatBase
     {
         private Client.Launcher.NetworkAuthorizationRequiredEventsArgs auth;
 
         public formNetworkAuthorizationRequired(Client.Launcher.NetworkAuthorizationRequiredEventsArgs e)
         {
-            InitializeComponent();
+            InitializeComponents();
 
             auth = e;
 
@@ -35,6 +35,13 @@ namespace Gw2Launcher.UI
             }
 
             labelEmail.Text = e.Account.Email;
+        }
+
+        protected override void OnInitializeComponents()
+        {
+            base.OnInitializeComponents();
+
+            InitializeComponent();
         }
 
         private async void buttonOK_Click(object sender, EventArgs e)
@@ -105,13 +112,30 @@ namespace Gw2Launcher.UI
 
         private void textCode_KeyDown(object sender, KeyEventArgs e)
         {
-            if (e.KeyCode == Keys.Enter)
+            switch (e.KeyCode)
             {
-                e.Handled = true;
-                e.SuppressKeyPress = true;
+                case Keys.Enter:
 
-                buttonOK_Click(sender, e);
+                    e.Handled = true;
+                    e.SuppressKeyPress = true;
+
+                    buttonOK_Click(sender, e);
+
+                    break;
+                case Keys.Escape:
+
+                    e.Handled = true;
+                    e.SuppressKeyPress = true;
+
+                    buttonCancel_Click(sender, e);
+
+                    break;
             }
+        }
+
+        private void buttonCancel_Click(object sender, EventArgs e)
+        {
+            this.DialogResult = System.Windows.Forms.DialogResult.Cancel;
         }
     }
 }

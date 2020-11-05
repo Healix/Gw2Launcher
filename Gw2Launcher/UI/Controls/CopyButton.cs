@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -48,12 +48,13 @@ namespace Gw2Launcher.UI.Controls
 
         protected override void Dispose(bool disposing)
         {
+            base.Dispose(disposing);
+
             if (disposing)
             {
                 pen.Dispose();
                 tooltip.Dispose();
             }
-            base.Dispose(disposing);
         }
 
         public string Tooltip

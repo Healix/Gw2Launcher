@@ -1,4 +1,4 @@
-﻿namespace Gw2Launcher.Util
+namespace Gw2Launcher.Util
 {
     static class NumericUpDown
     {

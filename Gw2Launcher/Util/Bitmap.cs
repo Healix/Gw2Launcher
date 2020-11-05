@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -151,6 +151,19 @@ namespace Gw2Launcher.Util
             {
                 image.UnlockBits(data);
             }
+        }
+
+        public static Image CreateErrorImage(int width, int height)
+        {
+            var i = new System.Drawing.Bitmap(width, height);
+            using (var g = Graphics.FromImage(i))
+            {
+                g.Clear(System.Drawing.Color.White);
+                g.DrawRectangle(Pens.Red, 0, 0, width - 1, height - 1);
+                g.DrawLine(Pens.Red, 0, 0, width - 1, height - 1);
+                g.DrawLine(Pens.Red, 0, height - 1, width - 1, 0);
+            }
+            return i;
         }
     }
 }

@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Data;
@@ -13,7 +13,7 @@ using Gw2Launcher.Windows.Native;
 
 namespace Gw2Launcher.UI
 {
-    public partial class formDailies : Form
+    public partial class formDailies : Base.BaseForm
     {
         private class Popup : Form
         {
@@ -176,8 +176,7 @@ namespace Gw2Launcher.UI
 
                 var h = this.Handle; //force
 
-                var scale = owner.CurrentAutoScaleDimensions.Width / 96f;
-                this.Size = new System.Drawing.Size((int)(18 * scale + 0.5f), (int)(66 * scale + 0.5f));
+                this.Size = new System.Drawing.Size(owner.Scale(18), owner.Scale(66));
 
                 this.alignment = owner.alignment;
 
@@ -188,7 +187,7 @@ namespace Gw2Launcher.UI
                     Anchor = AnchorStyles.Top | AnchorStyles.Left | AnchorStyles.Bottom | AnchorStyles.Right,
                     Location = new Point(1, 1),
                     Size = new Size(this.Width - 2, this.Height - 2),
-                    ShapeSize = new Size(5, 9),
+                    ShapeSize = new Size(4, 8),
                     BackColorHovered = SystemColors.ControlLight,
                     ForeColor = SystemColors.GrayText,
                     ForeColorHovered = Util.Color.Darken(SystemColors.GrayText, 0.5f),
@@ -211,7 +210,7 @@ namespace Gw2Launcher.UI
             void buttonMinimize_MouseHover(object sender, EventArgs e)
             {
                 if (!Settings.ShowDailies.Value.HasFlag(Settings.DailiesMode.Positioned))
-                    owner.Show(false);
+                    owner.Show(parent.ContainsFocus);
             }
 
             protected override bool ShowWithoutActivation
@@ -227,6 +226,15 @@ namespace Gw2Launcher.UI
                 base.OnPaintBackground(e);
 
                 e.Graphics.DrawRectangle(SystemPens.WindowFrame, 0, 0, this.Width - 1, this.Height - 1);
+            }
+
+            protected override void OnFormClosing(FormClosingEventArgs e)
+            {
+                if (e.CloseReason == CloseReason.UserClosing)
+                {
+                    e.Cancel = true;
+                }
+                base.OnFormClosing(e);
             }
 
             void buttonMinimize_Click(object sender, EventArgs e)
@@ -471,7 +479,7 @@ namespace Gw2Launcher.UI
 
         public formDailies(Form parent)
         {
-            InitializeComponent();
+            InitializeComponents();
 
             SetStyle(ControlStyles.ResizeRedraw, true);
 
@@ -484,7 +492,7 @@ namespace Gw2Launcher.UI
             fontName = new System.Drawing.Font("Segoe UI Semibold", 9f, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
             fontDescription = new System.Drawing.Font("Segoe UI Semilight", 8.25f, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
 
-            if (!NativeMethods.IsDwmCompositionEnabled())
+            if (parent.FormBorderStyle == System.Windows.Forms.FormBorderStyle.None || !NativeMethods.IsDwmCompositionEnabled())
                 padding = 5;
 
             //padding = (parent.Width - parent.ClientSize.Width) / 2;
@@ -516,6 +524,13 @@ namespace Gw2Launcher.UI
                 loadOnShow = true;
 
             parent.VisibleChanged += parent_VisibleChanged;
+        }
+        
+        protected override void OnInitializeComponents()
+        {
+            base.OnInitializeComponents();
+
+            InitializeComponent();
         }
 
         void parent_VisibleChanged(object sender, EventArgs e)
@@ -807,9 +822,9 @@ namespace Gw2Launcher.UI
                         BackColor = Color.White,
                         NameVisible = true,
                         NameFont = fontName,
-                        IconSize = new Size(32, 32),
+                        IconSize = new Size(Scale(32),Scale(32)),
                         IconVisible = true,
-                        Size = new Size(panelContent.Width, 50),
+                        Size = new Size(panelContent.Width, Scale(50)),
                         Anchor = AnchorStyles.Left | AnchorStyles.Right | AnchorStyles.Top,
                     };
 
@@ -826,7 +841,7 @@ namespace Gw2Launcher.UI
                     {
                         Font = fontBar,
                         BackColor = SystemColors.ControlLight,
-                        Size = new Size(panelContent.Width, 35),
+                        Size = new Size(panelContent.Width, Scale(35)),
                         Anchor = AnchorStyles.Left | AnchorStyles.Right | AnchorStyles.Top,
                     };
 
@@ -904,7 +919,7 @@ namespace Gw2Launcher.UI
 
                 bar.Tag = lowlevel;
                 bar.SetState(lowlevel.collapsed);
-                bar.Text = "Pre level 80";
+                bar.Text = "Before level 80";
             }
 
             if (!addedLow)
@@ -1431,12 +1446,12 @@ namespace Gw2Launcher.UI
             {
                 case FlatShapeButton.IconShape.Arrow:
 
-                    button.ShapeSize = new Size(5, 9);
+                    button.ShapeSize = new Size(4, 8);
 
                     break;
                 case FlatShapeButton.IconShape.Ellipse:
 
-                    button.ShapeSize = new Size(6, 6);
+                    button.ShapeSize = new Size(5, 5);
 
                     break;
             }
@@ -1490,6 +1505,16 @@ namespace Gw2Launcher.UI
             if (i < 0)
                 return -i;
             return i;
+        }
+
+        protected override void OnFormClosing(FormClosingEventArgs e)
+        {
+            if (e.CloseReason== CloseReason.UserClosing)
+            {
+                e.Cancel = true;
+                Minimize(true);
+            }
+            base.OnFormClosing(e);
         }
 
         protected override void WndProc(ref Message m)
@@ -1627,7 +1652,11 @@ namespace Gw2Launcher.UI
 
                     sizing = false;
 
-                    var l = (this.Left == parent.Right + padding || this.Right == parent.Left - padding);
+                    bool l;
+                    if (Settings.IsRunningWine)
+                        l = this.Top < parent.Bottom && this.Bottom > parent.Top && (Abs(parent.Right + padding - this.Left) < 10 || Abs(parent.Left - padding - this.Right) < 10);
+                    else
+                        l = (this.Left == parent.Right + padding || this.Right == parent.Left - padding);
                     if (l && l == linkedToParent)
                         PositionToParent();
                     else

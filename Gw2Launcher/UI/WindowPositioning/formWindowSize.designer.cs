@@ -1,4 +1,4 @@
-﻿namespace Gw2Launcher.UI
+namespace Gw2Launcher.UI.WindowPositioning
 {
     partial class formWindowSize
     {
@@ -36,6 +36,7 @@
             this.showOtherAccountsToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.toolStripMenuItem1 = new System.Windows.Forms.ToolStripSeparator();
             this.includeFrameSizeInDisplayedValuesToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.enforceLimitationsToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.snapToToolStripMenuItem = new Gw2Launcher.UI.Controls.ToolStripMenuItemStayOpenOnClick();
             this.gridToolStripMenuItem = new Gw2Launcher.UI.Controls.ToolStripMenuItemStayOpenOnClick();
             this.screenToolStripMenuItem = new Gw2Launcher.UI.Controls.ToolStripMenuItemStayOpenOnClick();
@@ -50,6 +51,9 @@
             this.toolStripMenuItem5 = new System.Windows.Forms.ToolStripSeparator();
             this.keep43RatioToolStripMenuItem = new Gw2Launcher.UI.Controls.ToolStripMenuItemStayOpenOnClick();
             this.keep169RatioToolStripMenuItem = new Gw2Launcher.UI.Controls.ToolStripMenuItemStayOpenOnClick();
+            this.toolStripMenuItem6 = new System.Windows.Forms.ToolStripSeparator();
+            this.useTemplateToolStripMenuItem = new Gw2Launcher.UI.Controls.ToolStripMenuItemStayOpenOnClick();
+            this.templatesToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.toolStripMenuItem4 = new System.Windows.Forms.ToolStripSeparator();
             this.matchProcessToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.applyBoundsToProcessToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
@@ -67,15 +71,17 @@
             this.showOtherAccountsToolStripMenuItem,
             this.toolStripMenuItem1,
             this.includeFrameSizeInDisplayedValuesToolStripMenuItem,
+            this.enforceLimitationsToolStripMenuItem,
             this.snapToToolStripMenuItem,
             this.autoArrangeToolStripMenuItem,
+            this.templatesToolStripMenuItem,
             this.toolStripMenuItem4,
             this.matchProcessToolStripMenuItem,
             this.applyBoundsToProcessToolStripMenuItem,
             this.toolStripMenuItem3,
             this.cancelToolStripMenuItem});
             this.contextMenu.Name = "contextMenuStrip1";
-            this.contextMenu.Size = new System.Drawing.Size(295, 226);
+            this.contextMenu.Size = new System.Drawing.Size(295, 270);
             // 
             // saveToolStripMenuItem
             // 
@@ -98,6 +104,7 @@
             // 
             // showOtherAccountsToolStripMenuItem
             // 
+            this.showOtherAccountsToolStripMenuItem.Enabled = false;
             this.showOtherAccountsToolStripMenuItem.Name = "showOtherAccountsToolStripMenuItem";
             this.showOtherAccountsToolStripMenuItem.Size = new System.Drawing.Size(294, 22);
             this.showOtherAccountsToolStripMenuItem.Text = "Show other accounts";
@@ -114,6 +121,13 @@
             this.includeFrameSizeInDisplayedValuesToolStripMenuItem.Size = new System.Drawing.Size(294, 22);
             this.includeFrameSizeInDisplayedValuesToolStripMenuItem.Text = "Include window frame in displayed values";
             this.includeFrameSizeInDisplayedValuesToolStripMenuItem.Click += new System.EventHandler(this.includeFrameSizeInDisplayedValuesToolStripMenuItem_Click);
+            // 
+            // enforceLimitationsToolStripMenuItem
+            // 
+            this.enforceLimitationsToolStripMenuItem.Name = "enforceLimitationsToolStripMenuItem";
+            this.enforceLimitationsToolStripMenuItem.Size = new System.Drawing.Size(294, 22);
+            this.enforceLimitationsToolStripMenuItem.Text = "Enforce limitations";
+            this.enforceLimitationsToolStripMenuItem.Click += new System.EventHandler(this.enforceLimitationsToolStripMenuItem_Click);
             // 
             // snapToToolStripMenuItem
             // 
@@ -184,7 +198,9 @@
             this.onThisScreenToolStripMenuItem,
             this.toolStripMenuItem5,
             this.keep43RatioToolStripMenuItem,
-            this.keep169RatioToolStripMenuItem});
+            this.keep169RatioToolStripMenuItem,
+            this.toolStripMenuItem6,
+            this.useTemplateToolStripMenuItem});
             this.autoArrangeToolStripMenuItem.Name = "autoArrangeToolStripMenuItem";
             this.autoArrangeToolStripMenuItem.Size = new System.Drawing.Size(294, 22);
             this.autoArrangeToolStripMenuItem.StayOpenOnClick = false;
@@ -235,6 +251,26 @@
             this.keep169RatioToolStripMenuItem.Text = "Keep 16:9 screen ratio";
             this.keep169RatioToolStripMenuItem.Click += new System.EventHandler(this.keep169RatioToolStripMenuItem_Click);
             // 
+            // toolStripMenuItem6
+            // 
+            this.toolStripMenuItem6.Name = "toolStripMenuItem6";
+            this.toolStripMenuItem6.Size = new System.Drawing.Size(185, 6);
+            // 
+            // useTemplateToolStripMenuItem
+            // 
+            this.useTemplateToolStripMenuItem.Name = "useTemplateToolStripMenuItem";
+            this.useTemplateToolStripMenuItem.Size = new System.Drawing.Size(188, 22);
+            this.useTemplateToolStripMenuItem.StayOpenOnClick = true;
+            this.useTemplateToolStripMenuItem.Text = "Use template";
+            this.useTemplateToolStripMenuItem.Click += new System.EventHandler(this.useTemplateToolStripMenuItem_Click);
+            // 
+            // templatesToolStripMenuItem
+            // 
+            this.templatesToolStripMenuItem.Name = "templatesToolStripMenuItem";
+            this.templatesToolStripMenuItem.Size = new System.Drawing.Size(294, 22);
+            this.templatesToolStripMenuItem.Text = "Templates...";
+            this.templatesToolStripMenuItem.Click += new System.EventHandler(this.templatesToolStripMenuItem_Click);
+            // 
             // toolStripMenuItem4
             // 
             this.toolStripMenuItem4.Name = "toolStripMenuItem4";
@@ -268,8 +304,6 @@
             // 
             // formWindowSize
             // 
-            this.AutoScaleDimensions = new System.Drawing.SizeF(96F, 96F);
-            this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Dpi;
             this.BackColor = System.Drawing.Color.White;
             this.ClientSize = new System.Drawing.Size(276, 225);
             this.Cursor = System.Windows.Forms.Cursors.SizeAll;
@@ -319,5 +353,9 @@
         private Controls.ToolStripMenuItemStayOpenOnClick keep169RatioToolStripMenuItem;
         private System.Windows.Forms.ToolStripMenuItem allToThisScreenToolStripMenuItem;
         private System.Windows.Forms.ToolStripMenuItem onlyOnThisScreenToolStripMenuItem;
+        private System.Windows.Forms.ToolStripMenuItem enforceLimitationsToolStripMenuItem;
+        private System.Windows.Forms.ToolStripMenuItem templatesToolStripMenuItem;
+        private System.Windows.Forms.ToolStripSeparator toolStripMenuItem6;
+        private Controls.ToolStripMenuItemStayOpenOnClick useTemplateToolStripMenuItem;
     }
 }

@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Data;
@@ -10,7 +10,7 @@ using System.Windows.Forms;
 
 namespace Gw2Launcher.UI
 {
-    public partial class formNote : Form
+    public partial class formNote : Base.BaseForm
     {
         private enum ExpiresType
         {
@@ -93,7 +93,7 @@ namespace Gw2Launcher.UI
 
         public formNote()
         {
-            InitializeComponent();
+            InitializeComponents();
 
             //ensure the textbox isn't overlapping if it was scaled
             while (textMessage.Bottom > label74.Top)
@@ -195,7 +195,14 @@ namespace Gw2Launcher.UI
 
             checkNotify.Checked = notify;
         }
-        
+
+        protected override void OnInitializeComponents()
+        {
+            base.OnInitializeComponents();
+
+            InitializeComponent();
+        }
+
         public string Message
         {
             get;

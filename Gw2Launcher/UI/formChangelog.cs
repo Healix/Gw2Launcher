@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Data;
@@ -16,7 +16,7 @@ using Gw2Launcher.Windows.Native;
 
 namespace Gw2Launcher.UI
 {
-    public partial class formChangelog : Form
+    public partial class formChangelog : Base.BaseForm
     {
         private class BulletLabel : Label
         {
@@ -58,7 +58,7 @@ namespace Gw2Launcher.UI
 
         public formChangelog()
         {
-            InitializeComponent();
+            InitializeComponents();
 
             try
             {
@@ -86,12 +86,16 @@ namespace Gw2Launcher.UI
             }
         }
 
+        protected override void OnInitializeComponents()
+        {
+            base.OnInitializeComponents();
+
+            InitializeComponent();
+        }
+
         protected override void OnMouseWheel(MouseEventArgs e)
         {
-            if (e.Delta > 0)
-                scrollV.Value -= panelContainer.Height / 3;
-            else
-                scrollV.Value += panelContainer.Height / 3;
+            scrollV.DoMouseWheel(e);
 
             base.OnMouseWheel(e);
         }

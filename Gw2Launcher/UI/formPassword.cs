@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Data;
@@ -7,70 +7,100 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using System.Windows.Forms;
+using System.Security;
 
 namespace Gw2Launcher.UI
 {
-    public partial class formPassword : Form
+    public partial class formPassword : Base.FlatBase
     {
-        public formPassword()
+        private SecureString existing;
+
+        private formPassword()
         {
+            InitializeComponents();
+            textPassword.Select();
+        }
+
+        /// <summary>
+        /// For password verification
+        /// </summary>
+        public formPassword(string username, SecureString password)
+            : this()
+        {
+            textUsername.Text = username;
+            existing = password;
+        }
+
+        /// <summary>
+        /// For password entry
+        /// </summary>
+        public formPassword(string username)
+            : this(username, null)
+        {
+        }
+
+        protected override void OnInitializeComponents()
+        {
+            base.OnInitializeComponents();
+
             InitializeComponent();
-            this.Disposed += formPassword_Disposed;
         }
 
-        public formPassword(string caption) : this()
+        private void buttonCancel_Click(object sender, EventArgs e)
         {
-            label1.Text = caption;
+            this.DialogResult = System.Windows.Forms.DialogResult.Cancel;
         }
 
-        protected override void OnShown(EventArgs e)
-        {
-            base.OnShown(e);
-            textPassword.Focus();
-            textPassword.SelectAll();
-            if (this.Password != null)
-                this.Password.Dispose();
-        }
-
-        void formPassword_Disposed(object sender, EventArgs e)
-        {
-            if (this.Password != null)
-                this.Password.Dispose();
-        }
-
-        public System.Security.SecureString Password
+        public SecureString Password
         {
             get;
             private set;
         }
 
-        private void formPassword_Load(object sender, EventArgs e)
-        {
-            
-        }
-
         private void buttonOK_Click(object sender, EventArgs e)
         {
-            this.Password = textPassword.Password;
-            this.DialogResult = DialogResult.OK;
-        }
-
-        private void textPassword_KeyUp(object sender, KeyEventArgs e)
-        {
-            if (e.KeyCode == Keys.Enter)
+            if (existing == null)
             {
-                e.SuppressKeyPress = true;
-                e.Handled = true;
-                buttonOK_Click(sender, EventArgs.Empty);
+                this.Password = textPassword.Password;
+                this.DialogResult = System.Windows.Forms.DialogResult.OK;
+            }
+            else
+            {
+                using (var p = textPassword.Password)
+                {
+                    if (Gw2Launcher.Security.Credentials.Compare(existing, p))
+                    {
+                        this.DialogResult = System.Windows.Forms.DialogResult.OK;
+                    }
+                    else
+                    {
+                        MessageBox.Show(this, "Unable to verify password", "Failed", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                        textPassword.Select();
+                    }
+                }
             }
         }
 
         private void textPassword_KeyDown(object sender, KeyEventArgs e)
         {
-            if (e.KeyCode == Keys.Enter)
+            switch (e.KeyCode)
             {
-                e.SuppressKeyPress = true;
-                e.Handled = true;
+                case Keys.Enter:
+
+                    e.Handled = true;
+                    e.SuppressKeyPress = true;
+
+                    buttonOK_Click(sender, e);
+
+                    break;
+                case Keys.Escape:
+
+                    e.Handled = true;
+                    e.SuppressKeyPress = true;
+
+                    buttonCancel_Click(sender, e);
+
+                    break;
             }
         }
     }

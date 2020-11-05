@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -69,6 +69,9 @@ namespace Gw2Launcher.Api
 
                 HeartOfThorns = 2,
                 PathOfFire = 4,
+                EndOfDragons = 8,
+
+                Unknown = 16, //placeholder for future expansions
             }
 
             public uint ID
@@ -114,6 +117,12 @@ namespace Gw2Launcher.Api
             }
 
             public AccessCondition Access
+            {
+                get;
+                set;
+            }
+
+            public string UnknownName
             {
                 get;
                 set;
@@ -328,6 +337,14 @@ namespace Gw2Launcher.Api
                         break;
                     default:
                         throw new IOException();
+                }
+            }
+
+            public IEqualityComparer<ItemID> Comparer
+            {
+                get 
+                {
+                    return null;
                 }
             }
         }
@@ -660,8 +677,13 @@ namespace Gw2Launcher.Api
                 case "PathOfFire":
                     c = Daily.AccessCondition.PathOfFire;
                     break;
+                case "EndOfDragons":
+                    c = Daily.AccessCondition.EndOfDragons;
+                    break;
                 default:
-                    throw new NotSupportedException("Unknown product \"" + product + "\"");
+                    c = Daily.AccessCondition.Unknown;
+                    Util.Logging.Log("Unknown product: " + product);
+                    break;
             }
 
             switch (condition)
@@ -727,8 +749,14 @@ namespace Gw2Launcher.Api
                         if (ddata.TryGetValue("required_access", out o))
                         {
                             var rdata = (Dictionary<string, object>)o;
+                            var product = (string)rdata["product"];
 
-                            d.Access = ParseAccessCondition((string)rdata["product"], (string)rdata["condition"]);
+                            d.Access = ParseAccessCondition(product, (string)rdata["condition"]);
+
+                            if ((d.Access & Daily.AccessCondition.Unknown) != 0)
+                            {
+                                d.UnknownName = CreateUnknownName(product);
+                            }
                         }
                     }
                     catch (Exception ex)
@@ -741,6 +769,28 @@ namespace Gw2Launcher.Api
             }
 
             return ids;
+        }
+
+        private string CreateUnknownName(string n)
+        {
+            if (string.IsNullOrEmpty(n))
+                return null;
+
+            var l = n.Length;
+            var chars = new char[l];
+            var count = 0;
+
+            for (var i = 0; i < l; i++)
+            {
+                if (char.IsUpper(n, i))
+                {
+                    chars[count++] = n[i];
+                }
+            }
+
+            if (count <= 1)
+                return n.Substring(0, l > 3 ? 3 : 0);
+            return new string(chars, 0, count < 6 ? count : 6);
         }
 
         private async Task PopulateAchievements(HashSet<ItemID> achievementIds, Dictionary<ItemID, Achievement> achievements, Dictionary<ItemID, Icon> icons)

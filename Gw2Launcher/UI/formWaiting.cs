@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Data;
@@ -10,10 +10,8 @@ using System.Windows.Forms;
 
 namespace Gw2Launcher.UI
 {
-    public partial class formWaiting : Form
+    public partial class formWaiting : Base.BaseForm
     {
-        private Rectangle circleRect;
-        private DateTime startTime;
         private Form parent;
 
         public formWaiting(Form parent)
@@ -23,12 +21,10 @@ namespace Gw2Launcher.UI
 
         public formWaiting(Form parent, string message)
         {
-            InitializeComponent();
+            InitializeComponents();
 
             //this.Owner = parent;
             this.parent = parent;
-            this.startTime = DateTime.UtcNow;
-            this.DoubleBuffered = true;
             this.StartPosition = FormStartPosition.Manual;
             this.SizeChanged += formWaiting_SizeChanged;
 
@@ -39,7 +35,7 @@ namespace Gw2Launcher.UI
             if (message != null)
                 label8.Text = message;
 
-            formWaiting_SizeChanged(null, EventArgs.Empty);
+            formWaiting_SizeChanged(null, null);
 
             parent.SizeChanged += parent_SizeChanged;
             parent.LocationChanged += parent_LocationChanged;
@@ -47,6 +43,13 @@ namespace Gw2Launcher.UI
             label8.SizeChanged += label8_SizeChanged;
 
             this.Disposed += formWaiting_Disposed;
+        }
+
+        protected override void OnInitializeComponents()
+        {
+            base.OnInitializeComponents();
+
+            InitializeComponent();
         }
 
         void formWaiting_Disposed(object sender, EventArgs e)
@@ -58,7 +61,7 @@ namespace Gw2Launcher.UI
 
         void label8_SizeChanged(object sender, EventArgs e)
         {
-            label8.Location = new Point(this.Width / 2 - label8.Width / 2, this.Height - label8.Height - 20);
+            formWaiting_SizeChanged(null, null);
         }
 
         protected override bool ShowWithoutActivation
@@ -102,32 +105,26 @@ namespace Gw2Launcher.UI
 
         void formWaiting_SizeChanged(object sender, EventArgs e)
         {
-            label8.Location = new Point(this.Width / 2 - label8.Width / 2, this.Height - label8.Height - 20);
+            label8.Location = new Point((this.Width - label8.Width) / 2, this.Height - label8.Height - Scale(20));
 
-            int w = this.Width / 2;
-            if (!circleRect.IsEmpty)
-                this.Invalidate(circleRect);
-            circleRect = new Rectangle(this.Width / 2 - w / 2, this.Height / 2 - 10, w, 10);
-        }
+            var w = this.Width / 2;
+            var h = Scale(12);
+            var y = (this.Height - h) / 2;
 
-        protected override void OnShown(EventArgs e)
-        {
-            Animate();
+            if (y + h > label8.Top)
+                y = label8.Top - h;
 
-            base.OnShown(e);
+            waitingBounce1.Bounds = new Rectangle((this.Width - w) / 2, y, w, h);
         }
 
         public void SetMessage(string message)
         {
-            if (this.InvokeRequired)
-            {
-                this.Invoke(new MethodInvoker(
-                    delegate
-                    {
-                        SetMessage(message);
-                    }));
+            if (Util.Invoke.IfRequired(this,
+                delegate
+                {
+                    SetMessage(message);
+                }))
                 return;
-            }
 
             label8.Text = message;
         }
@@ -135,26 +132,6 @@ namespace Gw2Launcher.UI
         private void formWaiting_Load(object sender, EventArgs e)
         {
 
-        }
-
-        private async void Animate()
-        {
-            while (!this.IsDisposed)
-            {
-                this.Invalidate(circleRect);
-                await Task.Delay(50);
-            }
-        }
-
-        protected override void OnPaint(PaintEventArgs e)
-        {
-            base.OnPaint(e);
-
-            float ms = (float)DateTime.UtcNow.Subtract(startTime).TotalMilliseconds;
-            int x = circleRect.X + (int)((circleRect.Width - 8) * (Math.Sin((ms / 500) % 360) + 1) / 2);
-
-            e.Graphics.SmoothingMode = System.Drawing.Drawing2D.SmoothingMode.AntiAlias;
-            e.Graphics.FillEllipse(Brushes.White, x, circleRect.Y, 8, 8);
         }
     }
 }

@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -75,6 +75,9 @@ namespace Gw2Launcher.UI.Controls
         {
             var previous = selectedPanel;
             selectedPanel = panel;
+
+            if (previous != null)
+                previous.BringToFront();
 
             panel.Visible = true;
             panel.Select();
@@ -304,6 +307,14 @@ namespace Gw2Launcher.UI.Controls
         protected override void Dispose(bool disposing)
         {
             base.Dispose(disposing);
+        }
+
+        public Panel SelectedPanel
+        {
+            get
+            {
+                return selectedPanel;
+            }
         }
     }
 }

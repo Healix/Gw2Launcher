@@ -1,4 +1,4 @@
-﻿namespace Gw2Launcher.UI
+namespace Gw2Launcher.UI
 {
     partial class formExtendedTextBox
     {
@@ -28,10 +28,8 @@
             this.textText.Font = new System.Drawing.Font("Segoe UI", 8.25F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
             this.textText.Location = new System.Drawing.Point(0, 0);
             this.textText.Multiline = true;
-            this.textText.Name = "textText";
             this.textText.ScrollBars = System.Windows.Forms.ScrollBars.Both;
             this.textText.Size = new System.Drawing.Size(284, 261);
-            this.textText.TabIndex = 56;
             this.textText.WordWrap = false;
             // 
             // buttonResize
@@ -40,9 +38,7 @@
             this.buttonResize.Cursor = System.Windows.Forms.Cursors.SizeNWSE;
             this.buttonResize.Enabled = false;
             this.buttonResize.Location = new System.Drawing.Point(271, 248);
-            this.buttonResize.Name = "buttonResize";
             this.buttonResize.Size = new System.Drawing.Size(12, 12);
-            this.buttonResize.TabIndex = 57;
             this.buttonResize.TabStop = false;
             // 
             // formExtendedTextBox
@@ -53,7 +49,6 @@
             this.Controls.Add(this.buttonResize);
             this.Controls.Add(this.textText);
             this.FormBorderStyle = System.Windows.Forms.FormBorderStyle.None;
-            this.Name = "formExtendedTextBox";
             this.ShowInTaskbar = false;
             this.StartPosition = System.Windows.Forms.FormStartPosition.Manual;
             this.ResumeLayout(false);

@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -61,55 +61,91 @@ namespace Gw2Launcher.Client
                 }
             }
 
-            public class Events
+            private class RegisteredEvent : IDisposable
             {
-                private class RegisteredEvent : IDisposable
-                {
-                    private WinEventDelegate proc;
-                    private IntPtr handle;
+                private WinEventDelegate proc;
+                private IntPtr handle;
+                private SynchronizationContext context;
 
-                    public RegisteredEvent(int pid, uint eventMin, uint eventMax, WinEventDelegate proc)
+                public RegisteredEvent(int pid, uint eventMin, uint eventMax, WinEventDelegate proc)
+                    : this(null, pid, eventMin, eventMax, proc)
+                {
+                }
+
+                public RegisteredEvent(SynchronizationContext context, int pid, uint eventMin, uint eventMax, WinEventDelegate proc)
+                {
+                    this.context = context;
+                    this.proc = proc;
+
+                    if (context != null && SynchronizationContext.Current != context)
                     {
-                        this.proc = proc;
+                        context.Send(
+                            delegate
+                            {
+                                this.handle = NativeMethods.SetWinEventHook(eventMin, eventMax, IntPtr.Zero, proc, (uint)pid, 0, 0);
+                            }, null);
+                    }
+                    else
+                    {
                         this.handle = NativeMethods.SetWinEventHook(eventMin, eventMax, IntPtr.Zero, proc, (uint)pid, 0, 0);
                     }
+                }
 
-                    ~RegisteredEvent()
+                ~RegisteredEvent()
+                {
+                    Dispose();
+                }
+
+                public void Dispose()
+                {
+                    GC.SuppressFinalize(this);
+
+                    if (handle != IntPtr.Zero)
                     {
-                        Dispose();
-                    }
-
-                    public void Dispose()
-                    {
-                        GC.SuppressFinalize(this);
-
-                        if (handle != IntPtr.Zero)
+                        try
                         {
-                            try
+                            if (context != null && SynchronizationContext.Current != context)
                             {
-                                if (!NativeMethods.UnhookWinEvent(handle))
-                                    throw new System.ComponentModel.Win32Exception(System.Runtime.InteropServices.Marshal.GetLastWin32Error());
-                                handle = IntPtr.Zero;
-
+                                context.Send(
+                                    delegate
+                                    {
+                                        Release();
+                                    }, null);
                             }
-                            catch (Exception e)
+                            else
                             {
-                                Util.Logging.Log(e);
+                                Release();
                             }
+                        }
+                        catch (Exception e)
+                        {
+                            Util.Logging.Log(e);
                         }
                     }
                 }
 
+                private void Release()
+                {
+                    if (!NativeMethods.UnhookWinEvent(handle))
+                        throw new System.ComponentModel.Win32Exception(System.Runtime.InteropServices.Marshal.GetLastWin32Error());
+                    handle = IntPtr.Zero;
+                }
+            }
+
+            public class Events
+            {
                 public event EventHandler<WindowEventsEventArgs> MinimizeStart,
                                                                  MinimizeEnd,
                                                                  ForegroundChanged,
                                                                  MoveSizeEnd,
                                                                  MoveSizeBegin,
-                                                                 LocationChanged;
+                                                                 LocationChanged,
+                                                                 HandleChanged;
 
                 private Account account;
                 private RegisteredEvent[] events;
                 private WinEventDelegate proc;
+                private IntPtr window;
 
                 public Events(Account account)
                 {
@@ -154,6 +190,17 @@ namespace Gw2Launcher.Client
 
                 private void WinEventProc(IntPtr hWinEventHook, uint eventType, IntPtr hwnd, int idObject, int idChild, uint dwEventThread, uint dwmsEventTime)
                 {
+                    if (idObject == 0 && window != hwnd)
+                    {
+                        if (window != IntPtr.Zero)
+                        {
+                            if (HandleChanged != null)
+                                HandleChanged(this, new WindowEventsEventArgs(account, hwnd, eventType, idObject, idChild, dwEventThread));
+                        }
+
+                        window = hwnd;
+                    }
+
                     switch (eventType)
                     {
                         case 0x000A: //EVENT_SYSTEM_MOVESIZEBEGIN
@@ -273,6 +320,13 @@ namespace Gw2Launcher.Client
                 context = SynchronizationContext.Current;
                 contextId = Thread.CurrentThread.ManagedThreadId;
                 System.Windows.Forms.Application.ThreadExit += Application_ThreadExit;
+            }
+
+            public IDisposable Register(int pid, uint eventMin, uint eventMax, WinEventDelegate proc)
+            {
+                var e = new RegisteredEvent(context, pid, eventMin, eventMax, proc);
+
+                return e;
             }
 
             public Events Add(int pid, Account account)

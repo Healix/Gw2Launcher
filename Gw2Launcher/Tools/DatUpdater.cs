@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -13,11 +13,13 @@ namespace Gw2Launcher.Tools
 {
     class DatUpdater
     {
+        public const string CUSTOM_GW2CACHE_FOLDER_NAME = "gw2cache"; //CreateGw2Cache
 
         private const int ID_LOCAL = 16,
                           ID_CACHE = 12,
                           INDEX_ENTRIES = 2,
-                          INDEX_IDS = 1;
+                          INDEX_IDS = 1,
+                          INDEX_HEADER = 0;
 
         private event EventHandler<Settings.IDatFile> DatComplete;
         public event EventHandler Complete;
@@ -185,6 +187,30 @@ namespace Gw2Launcher.Tools
             return du;
         }
 
+        public static int GetBuild(Settings.IDatFile dat)
+        {
+            try
+            {
+                using (var r = new BinaryReader(new BufferedStream(File.Open(dat.Path, FileMode.Open, FileAccess.Read, FileShare.Read))))
+                {
+                    var mft = Dat.DatFile.ReadMft(r);
+
+                    foreach (var entry in mft.entries)
+                    {
+                        switch (entry.baseId)
+                        {
+                            case ID_LOCAL:
+
+                                return ReadBuild(new Archive(), r.BaseStream, entry);
+                        }
+                    }
+                }
+            }
+            catch { }
+
+            return 0;
+        }
+
         private void Initialize(Session s)
         {
             const byte RESERVED = 15; //first 15 indexes are reserved
@@ -201,7 +227,7 @@ namespace Gw2Launcher.Tools
             s.queue = queue;
             s.queued = hs;
 
-            var modifyGw2Cache = Settings.UseCustomGw2Cache.Value;
+            var modifyGw2Cache = Settings.GuildWars2.UseCustomGw2Cache.Value;
 
             using (var r = new BinaryReader(new BufferedStream(File.Open(s.master.Path, FileMode.Open, modifyGw2Cache ? FileAccess.ReadWrite : FileAccess.Read, FileShare.Read))))
             {
@@ -339,7 +365,7 @@ namespace Gw2Launcher.Tools
 
                 Array.Copy(mft.header, buffer, mft.header.Length);
 
-                for (i = 3; i < count; i++)
+                for (i = INDEX_ENTRIES + 1; i < count; i++)
                 {
                     var e = entries[i];
 
@@ -380,7 +406,7 @@ namespace Gw2Launcher.Tools
                         else
                         {
                             r.BaseStream.Position = 0;
-                            UpdateCache(r);
+                            UpdateCache(r, s.build);
                         }
                     }
                 }
@@ -398,20 +424,165 @@ namespace Gw2Launcher.Tools
             return null;
         }
 
-        public void UpdateCache(Settings.IDatFile dat)
+        /// <summary>
+        /// Updates the gw2cache location
+        /// </summary>
+        /// <param name="build">Optionally supply the build, otherwise it'll be found within the dat or looked up</param>
+        public bool UpdateCache(Settings.IDatFile dat, int build = 0)
         {
-            using (var r = new BinaryReader(new BufferedStream(File.Open(dat.Path, FileMode.Open, FileAccess.ReadWrite, FileShare.Read))))
+            using (var bs = new BufferedStream(File.Open(dat.Path, FileMode.Open, FileAccess.ReadWrite, FileShare.Read)))
             {
-                UpdateCache(r);
+                var applied = false;
+
+                if (bs.Length > 0)
+                {
+                    using (var r = new BinaryReader(bs))
+                    {
+                        applied = UpdateCache(r, build);
+                    }
+                }
+                else
+                {
+                    if (build == 0)
+                        build = Tools.Gw2Build.Build;
+                    var buffer = CreateNew(build);
+                    bs.Write(buffer, 0, buffer.Length);
+                    applied = build != 0;
+                }
+
+                return applied;
             }
         }
 
-        private void UpdateCache(BinaryReader r)
+        /// <summary>
+        /// Updates the dat file using the master
+        /// </summary>
+        public static bool Create(Settings.IDatFile master, Settings.IDatFile dat)
+        {
+            return Create(master).Update(dat);
+        }
+
+        /// <summary>
+        /// Creates a bare Local.dat file
+        /// </summary>
+        /// <param name="build">If > 0, sets the gw2cache location</param>
+        /// <returns>Local.dat file in bytes</returns>
+        public static byte[] CreateNew(int build = 0)
+        {
+            int blockSize = 512;
+
+            using (var ms = new MemoryStream(blockSize * (build > 0 ? 4 : 2))) //4 blocks: header, entries, cache, ids (cache + ids only needed if build is set)
+            {
+                using (var fs = new Dat.Compression.IO.FileStream(ms, true, false, false))
+                {
+                    using (var w = new BinaryWriter(fs))
+                    {
+                        DatFile.MftEntry e;
+                        var entries = new DatFile.MftEntry[build > 0 ? 16 : 15]; //first 15 entries are reserved
+                        long ofs = 0;
+
+                        entries[INDEX_HEADER] = new DatFile.MftEntry()
+                        {
+                            flags = 3,
+                            size = 40,
+                        };
+                        ofs += blockSize;
+
+                        if (build > 0)
+                        {
+                            var indexCache = entries.Length - 1;
+
+                            e = entries[indexCache] = new DatFile.MftEntry()
+                            {
+                                offset = ofs,
+                                compression = 8,
+                                flags = 3,
+                                crc = 1214729159, //note the crc is always the same because the file ends with a crc, which cancels out when crc'd again
+                            };
+
+                            w.BaseStream.Position = ofs;
+                            w.Write(CreateGw2Cache(new Archive(), build, true));
+                            e.size = (int)(w.BaseStream.Position - ofs);
+                            ofs += (e.size / blockSize + 1) * blockSize;
+
+                            e = entries[INDEX_IDS] = new DatFile.MftEntry()
+                            {
+                                offset = ofs,
+                                flags = 3,
+                            };
+
+                            w.BaseStream.Position = ofs;
+                            fs.ComputeCRC = true;
+
+                            w.Write(ID_CACHE);
+                            w.Write(indexCache + 1);
+
+                            e.size = (int)(w.BaseStream.Position - ofs);
+                            e.crc = fs.CRC;
+                            fs.ComputeCRC = false;
+                            fs.ResetCRC();
+                            ofs += blockSize;
+                        }
+
+                        e = entries[INDEX_ENTRIES] = new DatFile.MftEntry()
+                        {
+                            offset = ofs,
+                            flags = 3,
+                        };
+
+                        w.BaseStream.Position = e.offset;
+                        fs.ComputeCRC = true;
+
+                        w.Write(443835981U);
+                        w.Write(0L);
+                        w.Write(entries.Length + 1); //this header is included in the count
+                        w.Write(0L);
+
+                        for (var i = 0; i < INDEX_ENTRIES; i++)
+                        {
+                            WriteEntry(w, entries[i]);
+                        }
+
+                        w.BaseStream.Position += 24; //INDEX_ENTRIES is written last
+
+                        for (var i = INDEX_ENTRIES + 1; i < entries.Length; i++)
+                        {
+                            WriteEntry(w, entries[i]);
+                        }
+
+                        e.size = (int)(w.BaseStream.Position - e.offset);
+                        e.crc = fs.CRC;
+                        fs.ComputeCRC = false;
+                        fs.ResetCRC();
+                        ofs += blockSize;
+
+                        w.BaseStream.Position = e.offset + (INDEX_ENTRIES + 1) * 24;
+
+                        WriteEntry(w, entries[INDEX_ENTRIES]);
+
+                        w.BaseStream.Position = 0;
+
+                        w.Write(441336215U);
+                        w.Write(entries[INDEX_HEADER].size);
+                        w.Write(3401187329U);
+                        w.Write(blockSize);
+                        w.Write(2396038944U);
+                        w.Write(0);
+                        w.Write(entries[INDEX_ENTRIES].offset);
+                        w.Write(entries[INDEX_ENTRIES].size);
+                        w.Write(0);
+                    }
+                }
+
+                return ms.ToArray();
+            }
+        }
+
+        private bool UpdateCache(BinaryReader r, int build = 0)
         {
             var mft = DatFile.ReadMft(r);
             var s = session;
             CustomEntry c = null;
-            var build = 0;
             var counter = 2;
 
             for (var i = mft.entries.Length - 1; i >= 0; --i)
@@ -433,7 +604,10 @@ namespace Gw2Launcher.Tools
                         break;
                     case ID_LOCAL:
 
-                        build = ReadBuild(s.compressor, r.BaseStream, e);
+                        if (build == 0)
+                        {
+                            build = ReadBuild(s.compressor, r.BaseStream, e);
+                        }
                         if (--counter == 0)
                             i = 1;
 
@@ -576,7 +750,11 @@ namespace Gw2Launcher.Tools
                 }
 
                 UpdateCache(s, r, mft, c);
+
+                return true;
             }
+
+            return false;
         }
 
         private void UpdateCache(Session s, BinaryReader r, DatFile.Mft mft, CustomEntry c)
@@ -625,6 +803,9 @@ namespace Gw2Launcher.Tools
             return r >= space;
         }
 
+        /// <summary>
+        /// Updates the Local.dat file based on the supplied master file
+        /// </summary>
         public bool Update(Settings.IDatFile dat)
         {
             try
@@ -697,6 +878,9 @@ namespace Gw2Launcher.Tools
             }
         }
 
+        /// <summary>
+        /// Updates all dat files in the background
+        /// </summary>
         public bool Update()
         {
             try
@@ -757,7 +941,7 @@ namespace Gw2Launcher.Tools
             }
         }
 
-        private void WriteEntry(BinaryWriter w, DatFile.MftEntry e)
+        private static void WriteEntry(BinaryWriter w, DatFile.MftEntry e)
         {
             if (e == null)
             {
@@ -838,7 +1022,19 @@ namespace Gw2Launcher.Tools
         {
             using (var r = new BinaryReader(new BufferedStream(System.IO.File.Open(dat.Path, FileMode.Open, FileAccess.ReadWrite, FileShare.Read))))
             {
-                var mft = DatFile.ReadMft(r);
+                DatFile.Mft mft;
+                int mftEntries;
+
+                if (r.BaseStream.Length > 0)
+                {
+                    mft = DatFile.ReadMft(r);
+                    mftEntries = mft.entries.Length;
+                }
+                else
+                {
+                    mft = null;
+                    mftEntries = 0;
+                }
                 var blockSize = s.BlockSize;
                 var custom = new Dictionary<int, CustomEntry>();
                 var entries = s.entries;
@@ -847,7 +1043,7 @@ namespace Gw2Launcher.Tools
                 var changed = false;
                 var size = 0;
 
-                for (var i = 0; i < mft.entries.Length; i++)
+                for (var i = 0; i < mftEntries; i++)
                 {
                     var entry = mft.entries[i];
 
@@ -929,7 +1125,7 @@ namespace Gw2Launcher.Tools
                 if (!changed && remaining == 0)
                     return;
 
-                size += ((s.entriesCount + count) / blockSize + 4) * blockSize; //add padding for entries and IDs
+                size += ((s.entriesCount + count) * 40 / blockSize + 1) * blockSize; //add padding for entries and IDs (24 bytes per entry, 8-16 bytes per id)
 
                 Array.Sort(entries, s.entriesCount, count - s.entriesCount, Comparer<DatFile.MftEntry>.Create(
                     delegate(DatFile.MftEntry a, DatFile.MftEntry b)
@@ -1066,7 +1262,7 @@ namespace Gw2Launcher.Tools
             while (count > 0);
         }
 
-        private byte[] CreateGw2Cache(Dat.Compression.Archive compressor, int build, bool compress)
+        private static byte[] CreateGw2Cache(Dat.Compression.Archive compressor, int build, bool compress)
         {
             var buffer = new byte[532];
             var b = BitConverter.GetBytes(build);
@@ -1078,6 +1274,15 @@ namespace Gw2Launcher.Tools
 
             buffer[4] = b[0];
             buffer[5] = b[1];
+
+            //null terminated unicode string
+
+            //int i = 6;
+            //foreach (char c in CUSTOM_GW2CACHE_FOLDER_NAME)
+            //{
+            //    buffer[i] = (byte)c;
+            //    i += 2;
+            //}
 
             buffer[6] = (byte)'g';
             buffer[8] = (byte)'w';
@@ -1108,14 +1313,14 @@ namespace Gw2Launcher.Tools
             }
         }
 
-        private int ReadBuild(Archive compressor, Stream stream, DatFile.MftEntry e)
+        private static int ReadBuild(Archive compressor, Stream stream, DatFile.MftEntry e)
         {
             byte[] data;
             int position;
             return ReadBuild(compressor, stream, e, out data, out position);
         }
 
-        private int ReadBuild(Archive compressor, Stream stream, DatFile.MftEntry e, out byte[] data, out int position)
+        private static int ReadBuild(Archive compressor, Stream stream, DatFile.MftEntry e, out byte[] data, out int position)
         {
             stream.Position = e.offset;
 
@@ -1157,6 +1362,9 @@ namespace Gw2Launcher.Tools
             throw new FileNotFoundException();
         }
 
+        /// <summary>
+        /// Waits for a dat file being updated in the background to complete
+        /// </summary>
         public void Wait(Settings.IDatFile dat)
         {
             ManualResetEvent waiter = null;

@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Data;
@@ -12,14 +12,14 @@ using System.Threading;
 
 namespace Gw2Launcher.UI
 {
-    public partial class formFileScan : Form
+    public partial class formFileScan : Base.BaseForm
     {
         private FileInfo file;
         private CancellationTokenSource cancelToken;
 
         public formFileScan(FileInfo fi)
         {
-            InitializeComponent();
+            InitializeComponents();
 
             labelStatus.Tag = labelStatus.Height;
 
@@ -33,6 +33,13 @@ namespace Gw2Launcher.UI
             this.file = fi;
 
             this.Shown += formFileScan_Shown;
+        }
+
+        protected override void OnInitializeComponents()
+        {
+            base.OnInitializeComponents();
+
+            InitializeComponent();
         }
 
         void labelStatus_SizeChanged(object sender, EventArgs e)

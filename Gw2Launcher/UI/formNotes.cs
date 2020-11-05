@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Data;
@@ -13,7 +13,7 @@ using Gw2Launcher.Windows.Native;
 
 namespace Gw2Launcher.UI
 {
-    public partial class formNotes : Form
+    public partial class formNotes : Base.BaseForm
     {
         public event EventHandler<Settings.Notes.Note> NoteChanged;
 
@@ -26,7 +26,7 @@ namespace Gw2Launcher.UI
 
         public formNotes(Settings.IAccount account)
         {
-            InitializeComponent();
+            InitializeComponents();
 
             SetStyle(ControlStyles.ResizeRedraw, true);
 
@@ -45,6 +45,13 @@ namespace Gw2Launcher.UI
             selectedTab = buttonMessages;
 
             LoadAccount(account);
+        }
+
+        protected override void OnInitializeComponents()
+        {
+            base.OnInitializeComponents();
+
+            InitializeComponent();
         }
 
         protected override void OnShown(EventArgs e)
@@ -410,7 +417,7 @@ namespace Gw2Launcher.UI
                 var notes = account.Notes;
                 if (notes != null && notes.Remove(note))
                 {
-                    var n = new Settings.Notes.Note(DateTime.UtcNow, note.SID, false);
+                    var n = new Settings.Notes.Note(DateTime.UtcNow.Subtract(new TimeSpan(0, 1, 0)), note.SID, false);
                     notes.Add(n);
                     c.Tag = n;
 

@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -26,7 +26,7 @@ namespace Gw2Launcher.Tools
                 {
                     try
                     {
-                        Directory.Delete(d, true);
+                        DeleteCacheFolder(d, DateTime.MinValue);
                     }
                     catch { }
                 }
@@ -75,22 +75,18 @@ namespace Gw2Launcher.Tools
                 Util.Logging.Log(ex);
             }
 
-            foreach (ushort uid in Settings.Accounts.GetKeys())
+            foreach (var a in Util.Accounts.GetGw2Accounts())
             {
-                var account = Settings.Accounts[uid];
-                if (account.HasValue)
+                var username = Util.Users.GetUserName(a.WindowsAccount);
+                if (users.Add(username))
                 {
-                    string username = Util.Users.GetUserName(account.Value.WindowsAccount);
-                    if (users.Add(username))
+                    try
                     {
-                        try
-                        {
-                            Delete(username);
-                        }
-                        catch (Exception ex)
-                        {
-                            Util.Logging.Log(ex);
-                        }
+                        Delete(username);
+                    }
+                    catch (Exception ex)
+                    {
+                        Util.Logging.Log(ex);
                     }
                 }
             }
@@ -98,7 +94,7 @@ namespace Gw2Launcher.Tools
 
         public static DirectoryInfo[] GetFolders(string username)
         {
-            Security.Impersonation.IImpersonationToken impersonation;
+            IDisposable impersonation;
             if (username == USERNAME_GW2LAUNCHER || Util.Users.IsCurrentUser(username))
                 impersonation = null;
             else
@@ -126,11 +122,14 @@ namespace Gw2Launcher.Tools
                     searchOption = SearchOption.TopDirectoryOnly;
                 }
 
-                var folders = new DirectoryInfo(path).GetDirectories(GW2CACHE, searchOption);
+                var _folders = new List<DirectoryInfo>();
 
-                if (impersonation != null)
+                foreach (var folder in new DirectoryInfo(path).EnumerateDirectories(GW2CACHE, searchOption))
                 {
-                    foreach (var folder in folders)
+                    if ((folder.Attributes & FileAttributes.ReparsePoint) != FileAttributes.ReparsePoint)
+                        _folders.Add(folder);
+
+                    if (impersonation != null)
                     {
                         try
                         {
@@ -143,12 +142,61 @@ namespace Gw2Launcher.Tools
                     }
                 }
 
-                return folders;
+                //var folders = new DirectoryInfo(path).GetDirectories(GW2CACHE, searchOption);
+
+                return _folders.ToArray();
             }
             finally
             {
                 if (impersonation != null)
                     impersonation.Dispose();
+            }
+        }
+
+        /// <summary>
+        /// Deletes the cache folder if it was last used past the specified date
+        /// </summary>
+        /// <param name="date">Any folders written to past this date will be ignored; use DateTime.MinValue to not check</param>
+        public static bool DeleteCacheFolder(string path, DateTime date)
+        {
+            try
+            {
+                var user = Path.Combine(path, "user");
+
+                for (var i = 0; i < 2; i++)
+                {
+                    var index = Path.Combine(user, "Cache", "index");
+
+                    if (File.Exists(index))
+                    {
+                        if (date.Ticks == 0 || File.GetLastWriteTimeUtc(Path.Combine(user, "Cache", "data_1")) < date)
+                        {
+                            File.Delete(index);
+                        }
+                        else
+                        {
+                            return false;
+                        }
+
+                        break;
+                    }
+                    else if (!object.ReferenceEquals(user, path))
+                    {
+                        user = path;
+                    }
+                    else
+                    {
+                        break;
+                    }
+                }
+
+                Util.FileUtil.DeleteDirectory(path, true);
+
+                return true;
+            }
+            catch 
+            {
+                return false;
             }
         }
 
@@ -158,25 +206,42 @@ namespace Gw2Launcher.Tools
             //but it will forgotten with the next patch. If gw2 can't update Local.dat, the
             //cache folder will be recreated every time
 
-            var time = DateTime.UtcNow.AddMinutes(-1);
+            var time = DateTime.UtcNow.AddMinutes(-5);
 
             foreach (var d in folders)
             {
+                DeleteCacheFolder(d.FullName, time);
+            }
+        }
+
+        /// <summary>
+        /// Returns the path to the gw2cache folder currently being used, or null if not available
+        /// </summary>
+        public static string FindPath(ushort uid)
+        {
+            foreach (var root in Directory.GetDirectories(Path.Combine(DataPath.AppDataAccountDataTemp, uid.ToString()), GW2CACHE, SearchOption.TopDirectoryOnly))
+            {
+                var path = Path.Combine(root, "user", "Cache", "index");
+
                 try
                 {
-                    if (d.LastWriteTimeUtc < time)
+                    using (File.Open(path, FileMode.Open, FileAccess.Read, FileShare.None))
                     {
-                        var index = Path.Combine(d.FullName, "user", "Cache", "index");
-                        if (File.Exists(index))
-                            File.Delete(index);
-                        d.Delete(true);
                     }
                 }
-                catch (Exception e)
+                catch (IOException e)
                 {
-                    Util.Logging.Log(e);
+                    switch (e.HResult & 0xFFFF)
+                    {
+                        case 32: //ERROR_SHARING_VIOLATION
+
+                            return root;
+                    }
                 }
+                catch { }
             }
+
+            return null;
         }
     }
 }

@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Text;
 using System.Windows.Forms;
 using System.Drawing;
@@ -554,14 +554,14 @@ namespace Gw2Launcher.UI.Controls
 
         protected override void Dispose(bool disposing)
         {
+            base.Dispose(disposing);
+
             if (disposing)
             {
                 brushKey.Dispose();
                 brush.Dispose();
                 penClose.Dispose();
             }
-
-            base.Dispose(disposing);
         }
     }
 }

@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Data;
@@ -10,21 +10,11 @@ using System.Windows.Forms;
 
 namespace Gw2Launcher.UI
 {
-    public partial class formManagedInactiveUsers : Form
+    public partial class formManagedInactiveUsers : Base.BaseForm
     {
         public formManagedInactiveUsers()
         {
-            InitializeComponent();
-
-            var scale = this.CurrentAutoScaleDimensions.Width / 96f;
-            if (scale != 1)
-            {
-                foreach (DataGridViewColumn col in gridUsers.Columns)
-                {
-                    if (col.AutoSizeMode != DataGridViewAutoSizeColumnMode.Fill)
-                        col.Width = (int)(col.Width * scale + 0.5f);
-                }
-            }
+            InitializeComponents();
 
             int _space = buttonOK.Location.X - buttonCancel.Bounds.Right;
             buttonCancel.Location = new Point(this.ClientSize.Width / 2 - (buttonOK.Bounds.Right - buttonCancel.Bounds.Left) / 2, buttonCancel.Location.Y);
@@ -32,13 +22,9 @@ namespace Gw2Launcher.UI
 
             HashSet<string> users = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
 
-            foreach (ushort uid in Settings.Accounts.GetKeys())
+            foreach (var a in Util.Accounts.GetAccounts())
             {
-                var account = Settings.Accounts[uid];
-                if (account.HasValue)
-                {
-                    users.Add(Util.Users.GetUserName(account.Value.WindowsAccount));
-                }
+                users.Add(Util.Users.GetUserName(a.WindowsAccount));
             }
 
             foreach (string user in Settings.HiddenUserAccounts.GetKeys())
@@ -66,6 +52,13 @@ namespace Gw2Launcher.UI
             }
 
             gridUsers.Rows.AddRange(rows);
+        }
+
+        protected override void OnInitializeComponents()
+        {
+            base.OnInitializeComponents();
+
+            InitializeComponent();
         }
 
         private void formManagedInactiveUsers_Load(object sender, EventArgs e)

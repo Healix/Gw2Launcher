@@ -1,4 +1,4 @@
-﻿namespace Gw2Launcher.UI
+namespace Gw2Launcher.UI
 {
     partial class formVersionUpdate
     {
@@ -37,18 +37,14 @@
             // progressUpdating
             // 
             this.progressUpdating.Location = new System.Drawing.Point(13, 36);
-            this.progressUpdating.Name = "progressUpdating";
             this.progressUpdating.Size = new System.Drawing.Size(342, 31);
-            this.progressUpdating.TabIndex = 21;
             // 
             // labelName
             // 
             this.labelName.AutoSize = true;
             this.labelName.Font = new System.Drawing.Font("Segoe UI Semilight", 8.25F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
             this.labelName.Location = new System.Drawing.Point(10, 10);
-            this.labelName.Name = "labelName";
             this.labelName.Size = new System.Drawing.Size(137, 13);
-            this.labelName.TabIndex = 22;
             this.labelName.Text = "Downloading Gw2Launcher";
             // 
             // labelStatus
@@ -56,9 +52,7 @@
             this.labelStatus.AutoSize = true;
             this.labelStatus.Font = new System.Drawing.Font("Segoe UI Semilight", 8.25F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
             this.labelStatus.Location = new System.Drawing.Point(60, 88);
-            this.labelStatus.Name = "labelStatus";
             this.labelStatus.Size = new System.Drawing.Size(69, 13);
-            this.labelStatus.TabIndex = 30;
             this.labelStatus.Text = "Downloading";
             // 
             // label3
@@ -66,15 +60,11 @@
             this.label3.AutoSize = true;
             this.label3.Font = new System.Drawing.Font("Segoe UI Semibold", 8.25F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
             this.label3.Location = new System.Drawing.Point(10, 88);
-            this.label3.Name = "label3";
             this.label3.Size = new System.Drawing.Size(38, 13);
-            this.label3.TabIndex = 29;
             this.label3.Text = "Status";
             // 
             // formVersionUpdate
             // 
-            this.AutoScaleDimensions = new System.Drawing.SizeF(96F, 96F);
-            this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Dpi;
             this.ClientSize = new System.Drawing.Size(368, 113);
             this.Controls.Add(this.labelStatus);
             this.Controls.Add(this.label3);
@@ -85,7 +75,6 @@
             this.Icon = global::Gw2Launcher.Properties.Resources.Gw2Launcher;
             this.MaximizeBox = false;
             this.MinimizeBox = false;
-            this.Name = "formVersionUpdate";
             this.ShowIcon = false;
             this.ShowInTaskbar = false;
             this.StartPosition = System.Windows.Forms.FormStartPosition.CenterParent;

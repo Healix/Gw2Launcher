@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -8,8 +8,173 @@ namespace Gw2Launcher.Client
 {
     static partial class Launcher
     {
-        private class Account : IDisposable
+        private class Account
         {
+            public class LaunchSession : IDisposable
+            {
+                public LaunchSession(LaunchMode mode, string args = null)
+                {
+                    this.Mode = mode;
+                    this.Args = args;
+                }
+
+                ~LaunchSession()
+                {
+                    Dispose();
+                }
+
+                public LaunchMode Mode
+                {
+                    get;
+                    private set;
+                }
+
+                public string Args
+                {
+                    get;
+                    private set;
+                }
+
+                public NetworkAuthorization.ISession AuthSession
+                {
+                    get;
+                    set;
+                }
+
+                private Tools.Icons _Icons;
+                public Tools.Icons Icons
+                {
+                    get
+                    {
+                        return _Icons;
+                    }
+                    set
+                    {
+                        lock (this)
+                        {
+                            if (_Icons != value)
+                            {
+                                if (_Icons != null)
+                                    _Icons.Dispose();
+                                _Icons = value;
+                            }
+                        }
+                    }
+                }
+
+                private FileManager.FileLocker.ISharedFile _GfxLock;
+                public FileManager.FileLocker.ISharedFile GfxLock
+                {
+                    get
+                    {
+                        return _GfxLock;
+                    }
+                    set
+                    {
+                        lock (this)
+                        {
+                            if (_GfxLock != value)
+                            {
+                                if (_GfxLock != null)
+                                    _GfxLock.Dispose();
+                                _GfxLock = value;
+                            }
+                        }
+                    }
+                }
+
+                private WindowWatcher _Watcher;
+                public WindowWatcher Watcher
+                {
+                    get
+                    {
+                        return _Watcher;
+                    }
+                    set
+                    {
+                        lock (this)
+                        {
+                            if (_Watcher != value)
+                            {
+                                if (_Watcher != null)
+                                    _Watcher.Dispose();
+                                _Watcher = value;
+                            }
+                        }
+                    }
+                }
+
+                private Limiter.ISession _Limiter;
+                public Limiter.ISession Limiter
+                {
+                    get
+                    {
+                        return _Limiter;
+                    }
+                    set
+                    {
+                        lock(this)
+                        {
+                            if (_Limiter != value)
+                            {
+                                if (_Limiter != null)
+                                    _Limiter.Dispose();
+                                _Limiter = value;
+                            }
+                        }
+                    }
+                }
+
+                private RunAfterManager _RunAfter;
+                public RunAfterManager RunAfter
+                {
+                    get
+                    {
+                        return _RunAfter;
+                    }
+                    set
+                    {
+                        lock (this)
+                        {
+                            if (_RunAfter != value)
+                            {
+                                if (_RunAfter != null)
+                                    _RunAfter.Dispose();
+                                _RunAfter = value;
+                            }
+                        }
+                    }
+                }
+                
+                public bool IsDisposed
+                {
+                    get;
+                    private set;
+                }
+
+                public void Dispose()
+                {
+                    GC.SuppressFinalize(this);
+
+                    lock (this)
+                    {
+                        GfxLock = null;
+                        Icons = null;
+                        Watcher = null;
+                        Limiter = null;
+                        RunAfter = null;
+
+                        if (AuthSession != null)
+                        {
+                            AuthSession.Release();
+                            AuthSession = null;
+                        }
+
+                        IsDisposed = true;
+                    }
+                }
+            }
+
             public event EventHandler<Account> Exited;
 
             public Account(Settings.IAccount settings)
@@ -22,48 +187,11 @@ namespace Gw2Launcher.Client
             public byte inQueueCount;
             public byte errors;
 
-            public WindowWatcher watcher;
-
-            public WindowWatcher Watcher
-            {
-                get
-                {
-                    return watcher;
-                }
-                set
-                {
-                    if (watcher != value)
-                    {
-                        if (watcher != null)
-                            watcher.Dispose();
-                        watcher = value;
-                    }
-                }
-            }
-
-            private FileLocker.SharedFile gfxLock;
-            public FileLocker.SharedFile GfxLock
-            {
-                get
-                {
-                    return gfxLock;
-                }
-                set
-                {
-                    if (gfxLock != value)
-                    {
-                        if (gfxLock != null)
-                            gfxLock.Release();
-                        gfxLock = value;
-                    }
-                }
-            }
-
-            public void Dispose()
-            {
-                if (watcher != null)
-                    watcher.Dispose();
-            }
+            //public void Dispose()
+            //{
+            //    if (watcher != null)
+            //        watcher.Dispose();
+            //}
 
             //public bool InUse
             //{
@@ -88,6 +216,22 @@ namespace Gw2Launcher.Client
             //    set;
             //}
 
+            public AccountType Type
+            {
+                get
+                {
+                    switch (Settings.Type)
+                    {
+                        case Gw2Launcher.Settings.AccountType.GuildWars2:
+                            return AccountType.GuildWars2;
+                        case Gw2Launcher.Settings.AccountType.GuildWars1:
+                            return AccountType.GuildWars1;
+                    }
+
+                    return AccountType.Unknown;
+                }
+            }
+
             public Settings.IAccount Settings
             {
                 get;
@@ -106,10 +250,22 @@ namespace Gw2Launcher.Client
                 private set;
             }
 
-            public Tools.Icons Icons
+            private LaunchSession session;
+            public LaunchSession Session
             {
-                get;
-                set;
+                get
+                {
+                    return session;
+                }
+                set
+                {
+                    if (session != value)
+                    {
+                        if (session != null)
+                            session.Dispose();
+                        session = value;
+                    }
+                }
             }
 
             public bool IsActive
@@ -160,7 +316,8 @@ namespace Gw2Launcher.Client
 
             public void OnExited()
             {
-                this.GfxLock = null;
+                this.Session = null;
+
                 if (Exited != null)
                     Exited(this, this);
             }

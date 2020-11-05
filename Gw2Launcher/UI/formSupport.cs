@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Data;
@@ -16,7 +16,7 @@ using System.Net.NetworkInformation;
 
 namespace Gw2Launcher.UI
 {
-    public partial class formSupport : Form
+    public partial class formSupport : Base.BaseForm
     {
         private const string PATCH_SERVER = Net.AssetProxy.ProxyServer.PATCH_SERVER;
         private const string AUTH_NA_SERVER = "auth1.101.ArenaNetworks.com";
@@ -76,20 +76,7 @@ namespace Gw2Launcher.UI
 
         public formSupport()
         {
-            InitializeComponent();
-
-            var scale = this.CurrentAutoScaleDimensions.Width / 96f;
-            if (scale != 1)
-            {
-                foreach (var gv in new DataGridView[] { gridLoginServers, gridPatchServers })
-                {
-                    foreach (DataGridViewColumn col in gv.Columns)
-                    {
-                        if (col.AutoSizeMode != DataGridViewAutoSizeColumnMode.Fill)
-                            col.Width = (int)(col.Width * scale + 0.5f);
-                    }
-                }
-            }
+            InitializeComponents();
 
             cancelToken = new CancellationTokenSource();
 
@@ -121,15 +108,15 @@ namespace Gw2Launcher.UI
             //progressLoginServer.Location = new Point(gridLoginServers.Location.X + gridLoginServers.Width / 2 - progressLoginServer.Width / 2, gridLoginServers.Location.Y + gridLoginServers.Height / 2 - progressLoginServer.Height / 2);
             labelLoginServerNoIPs.Location = new Point(gridLoginServers.Location.X + gridLoginServers.Width / 2 - labelLoginServerNoIPs.Width / 2, gridLoginServers.Location.Y + gridLoginServers.Height / 2 - labelLoginServerNoIPs.Height / 2);
             
-            if (Settings.GW2Arguments.HasValue && !string.IsNullOrEmpty(Settings.GW2Arguments.Value))
+            if (Settings.GuildWars2.Arguments.HasValue && !string.IsNullOrEmpty(Settings.GuildWars2.Arguments.Value))
             {
                 string existing;
 
-                existing = Util.Args.GetValue(Settings.GW2Arguments.Value, "assetsrv");
+                existing = Util.Args.GetValue(Settings.GuildWars2.Arguments.Value, "assetsrv");
                 if (!string.IsNullOrEmpty(existing))
                     IPAddress.TryParse(existing, out existingAsset);
 
-                existing = Util.Args.GetValue(Settings.GW2Arguments.Value, "authsrv");
+                existing = Util.Args.GetValue(Settings.GuildWars2.Arguments.Value, "authsrv");
                 if (!string.IsNullOrEmpty(existing))
                     IPAddress.TryParse(existing, out existingLogin);
             }
@@ -142,7 +129,7 @@ namespace Gw2Launcher.UI
 
         protected formSupport(GridType t, DataGridView grid, Form parent)
         {
-            InitializeComponent();
+            InitializeComponents();
 
             this.FormBorderStyle = System.Windows.Forms.FormBorderStyle.Sizable;
 
@@ -160,7 +147,7 @@ namespace Gw2Launcher.UI
                 this.Text = "Authentication Servers";
             }
 
-            Settings.GW2Arguments.ValueChanged += GW2Arguments_ValueChanged;
+            Settings.GuildWars2.Arguments.ValueChanged += GW2Arguments_ValueChanged;
 
             grid1.AdvancedCellBorderStyle.All = DataGridViewAdvancedCellBorderStyle.None;
 
@@ -217,6 +204,13 @@ namespace Gw2Launcher.UI
             if (x + this.Width > screen.Width)
                 x = screen.X + screen.Width - this.Width;
             this.Location = new Point(x, y);
+        }
+
+        protected override void OnInitializeComponents()
+        {
+            base.OnInitializeComponents();
+
+            InitializeComponent();
         }
 
         void GW2Arguments_ValueChanged(object sender, EventArgs e)
@@ -334,7 +328,7 @@ namespace Gw2Launcher.UI
 
         private void buttonOK_Click(object sender, EventArgs e)
         {
-            string args = Settings.GW2Arguments.Value;
+            string args = Settings.GuildWars2.Arguments.Value;
             if (string.IsNullOrEmpty(args))
                 args = "";
 
@@ -354,7 +348,7 @@ namespace Gw2Launcher.UI
                     args = Util.Args.AddOrReplace(args, "assetsrv", "");
             }
 
-            Settings.GW2Arguments.Value = args;
+            Settings.GuildWars2.Arguments.Value = args;
 
             this.DialogResult = System.Windows.Forms.DialogResult.OK;
         }
@@ -386,7 +380,7 @@ namespace Gw2Launcher.UI
                 }
             }
 
-            if (Client.Launcher.GetActiveProcessCount() > 0)
+            if (Client.Launcher.GetActiveProcessCount(Client.Launcher.AccountType.GuildWars2) > 0)
                 return true;
 
             return false;
@@ -400,7 +394,7 @@ namespace Gw2Launcher.UI
             {
                 if (MessageBox.Show(this, "All clients will be closed.\n\nAre you sure?", "Close GW2 to continue", MessageBoxButtons.YesNo, MessageBoxIcon.Exclamation) == DialogResult.Yes)
                 {
-                    Client.Launcher.KillAllActiveProcesses();
+                    Client.Launcher.KillAllActiveProcesses(Client.Launcher.AccountType.GuildWars2);
 
                     if (activeProcess != null)
                     {
@@ -421,11 +415,11 @@ namespace Gw2Launcher.UI
 
             FileInfo fi = null;
 
-            if (Settings.GW2Path.HasValue && !string.IsNullOrEmpty(Settings.GW2Path.Value))
+            if (Settings.GuildWars2.Path.HasValue && !string.IsNullOrEmpty(Settings.GuildWars2.Path.Value))
             {
                 try
                 {
-                    fi = new FileInfo(Settings.GW2Path.Value);
+                    fi = new FileInfo(Settings.GuildWars2.Path.Value);
                 }
                 catch (Exception e)
                 {
@@ -457,7 +451,7 @@ namespace Gw2Launcher.UI
                     try
                     {
                         fi = new FileInfo(f.FileName);
-                        Settings.GW2Path.Value = f.FileName;
+                        Settings.GuildWars2.Path.Value = f.FileName;
                     }
                     catch (Exception e)
                     {
@@ -590,13 +584,13 @@ namespace Gw2Launcher.UI
 
         private void buttonClean_Click(object sender, EventArgs e)
         {
-            if (!Settings.GW2Path.HasValue || string.IsNullOrEmpty(Settings.GW2Path.Value))
+            if (!Settings.GuildWars2.Path.HasValue || string.IsNullOrEmpty(Settings.GuildWars2.Path.Value))
                 return;
 
             DirectoryInfo di;
             try
             {
-                var fi = new FileInfo(Settings.GW2Path.Value);
+                var fi = new FileInfo(Settings.GuildWars2.Path.Value);
                 if (fi.Exists)
                     di = fi.Directory;
                 else
@@ -688,7 +682,7 @@ namespace Gw2Launcher.UI
         {
             try
             {
-                var fi = new FileInfo(Settings.GW2Path.Value);
+                var fi = new FileInfo(Settings.GuildWars2.Path.Value);
                 if (fi.Exists)
                 {
                     var path = Path.Combine(fi.Directory.FullName, "Gw2.dat");
@@ -1426,7 +1420,7 @@ namespace Gw2Launcher.UI
 
                 if (inGridView == GridType.Asset)
                 {
-                    var s = Settings.GW2Arguments;
+                    var s = Settings.GuildWars2.Arguments;
                     string args = s.Value;
                     if (args == null)
                         args = "";
@@ -1452,35 +1446,31 @@ namespace Gw2Launcher.UI
             List<AccountData<FileInfo>> accounts = new List<AccountData<FileInfo>>();
             FileInfo fi;
 
-            var keys = Settings.Accounts.GetKeys();
-            foreach (var k in keys)
+            //not checking gw1
+
+            foreach (var gw2 in Util.Accounts.GetGw2Accounts())
             {
-                var v = Settings.Accounts[k];
-                if (v.HasValue)
+                if (gw2.DatFile != null && gw2.DatFile.IsInitialized)
                 {
-                    var account = v.Value;
-                    if (account.DatFile != null && account.DatFile.IsInitialized)
+                    try
                     {
-                        try
+                        DirectoryInfo di = new FileInfo(gw2.DatFile.Path).Directory;
+                        if (di.Exists)
                         {
-                            DirectoryInfo di = new FileInfo(account.DatFile.Path).Directory;
-                            if (di.Exists)
+                            fi = new FileInfo(Path.Combine(di.FullName, "ArenaNet.log"));
+                            if (fi.Exists && files.Add(fi.FullName))
                             {
-                                fi = new FileInfo(Path.Combine(di.FullName, "ArenaNet.log"));
-                                if (fi.Exists && files.Add(fi.FullName))
+                                accounts.Add(new AccountData<FileInfo>()
                                 {
-                                    accounts.Add(new AccountData<FileInfo>()
-                                    {
-                                        account = account,
-                                        data = fi
-                                    });
-                                }
+                                    account = gw2,
+                                    data = fi
+                                });
                             }
                         }
-                        catch (Exception ex)
-                        {
-                            Util.Logging.Log(ex);
-                        }
+                    }
+                    catch (Exception ex)
+                    {
+                        Util.Logging.Log(ex);
                     }
                 }
             }
@@ -1631,7 +1621,7 @@ namespace Gw2Launcher.UI
 
                 if (inGridView == GridType.Login)
                 {
-                    var s = Settings.GW2Arguments;
+                    var s = Settings.GuildWars2.Arguments;
                     string args = s.Value;
                     if (args == null)
                         args = "";

@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -36,6 +36,8 @@ namespace Gw2Launcher.Tools
 
         public void Dispose()
         {
+            GC.SuppressFinalize(this);
+
             if (this.Small != null)
             {
                 this.Small.Dispose();

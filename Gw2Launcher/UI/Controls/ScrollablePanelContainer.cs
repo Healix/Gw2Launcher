@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Drawing;
@@ -20,7 +20,7 @@ namespace Gw2Launcher.UI.Controls
             InitializeComponent();
 
             border = true;
-            panelContainer.MouseWheel += panel_MouseWheel;
+            //panel.MouseWheel += panel_MouseWheel;
         }
 
         [DefaultValue(true)]
@@ -44,7 +44,7 @@ namespace Gw2Launcher.UI.Controls
         {
             this.content = panel;
 
-            panel.MouseWheel += panel_MouseWheel;
+            //panel.MouseWheel += panel_MouseWheel;
             panel.Location = new Point(0, 0);
             panelContainer.Controls.Add(panel);
 
@@ -59,6 +59,7 @@ namespace Gw2Launcher.UI.Controls
             {
                 scrollV.Visible = true;
                 scrollV.Maximum = h;
+                scrollV.BringToFront();
             }
         }
 
@@ -75,23 +76,21 @@ namespace Gw2Launcher.UI.Controls
             {
                 scrollV.Visible = true;
                 scrollV.Maximum = h;
+                scrollV.BringToFront();
             }
         }
 
-        void panel_MouseWheel(object sender, MouseEventArgs e)
+        protected override void OnMouseWheel(MouseEventArgs e)
         {
-            if (e.Delta > 0)
-            {
-                scrollV.Value -= this.Height / 10;
-            }
-            else if (e.Delta < 0)
-            {
-                scrollV.Value += this.Height / 10;
-            }
+            base.OnMouseWheel(e);
 
-            if (e is HandledMouseEventArgs)
-                ((HandledMouseEventArgs)e).Handled = true;
+            scrollV.DoMouseWheel(e);
         }
+
+        //void panel_MouseWheel(object sender, MouseEventArgs e)
+        //{
+        //    scrollV.DoMouseWheel(e);
+        //}
 
         protected override void OnPaintBackground(PaintEventArgs e)
         {

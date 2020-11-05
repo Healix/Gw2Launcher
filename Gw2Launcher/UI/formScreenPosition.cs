@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Data;
@@ -10,7 +10,7 @@ using System.Windows.Forms;
 
 namespace Gw2Launcher.UI
 {
-    public partial class formScreenPosition : Form
+    public partial class formScreenPosition : Base.BaseForm
     {
         public event EventHandler<ScreenPositionChangedEventArgs> ScreenPositionChanged;
 
@@ -39,6 +39,7 @@ namespace Gw2Launcher.UI
         {
             Patch,
             Note,
+            Screenshot
         }
 
         private ushort focus;
@@ -48,10 +49,11 @@ namespace Gw2Launcher.UI
         private Tools.BackgroundPatcher.DownloadProgressEventArgs pe;
         private bool sample;
         private NotificationType type;
+        private Image image;
 
         public formScreenPosition(NotificationType type, int screen, Settings.ScreenAnchor anchor)
         {
-            InitializeComponent();
+            InitializeComponents();
 
             this.type = type;
 
@@ -69,6 +71,9 @@ namespace Gw2Launcher.UI
 
                     break;
                 case NotificationType.Note:
+                    break;
+                case NotificationType.Screenshot:
+
                     break;
             }
 
@@ -108,6 +113,13 @@ namespace Gw2Launcher.UI
                     r.CheckedChanged += radio_CheckedChanged;
                 }
             }
+        }
+
+        protected override void OnInitializeComponents()
+        {
+            base.OnInitializeComponents();
+
+            InitializeComponent();
         }
 
         public int SelectedScreen
@@ -171,6 +183,38 @@ namespace Gw2Launcher.UI
 
         }
 
+        private async void ShowScreenshot()
+        {
+            try
+            {
+                var image = this.image;
+                var screen = Screen.AllScreens[currentScreen].Bounds;
+
+                if (this.image == null || this.image.Size != screen.Size)
+                {
+                    image = await Task.Run<Image>(new Func<Image>(
+                        delegate
+                        {
+                            var i = new Bitmap(screen.Width, screen.Height);
+                            using (var g = Graphics.FromImage(i))
+                            {
+                                g.CopyFromScreen(0, 0, 0, 0, i.Size);
+                            }
+                            return i;
+                        }));
+
+                    if (this.image != null)
+                    {
+                        using (this.image) { }
+                    }
+                }
+                this.image = image;
+            }
+            catch { }
+
+            formNotify.ShowImage(currentScreen, currentAnchor, "", this.image, false);
+        }
+
         private void ShowSample()
         {
             switch (type)
@@ -191,6 +235,11 @@ namespace Gw2Launcher.UI
                     else
                         message = "Sample message...\n\n1\n2\n3";
                     formNotify.ShowNote(currentScreen, currentAnchor, message, "Example");
+
+                    break;
+                case NotificationType.Screenshot:
+
+                    ShowScreenshot();
 
                     break;
             }
@@ -231,10 +280,15 @@ namespace Gw2Launcher.UI
             {
                 if (components != null)
                     components.Dispose();
+            }
 
+            base.Dispose(disposing);
+
+            if (disposing)
+            {
+                using (this.image) { }
                 ScreenPositionChanged = null;
             }
-            base.Dispose(disposing);
         }
     }
 }

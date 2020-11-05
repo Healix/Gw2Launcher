@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -13,20 +13,172 @@ namespace Gw2Launcher.Security
     static class Credentials
     {
         private static readonly object _lock = new object();
-        private static readonly byte[] KEY = new byte[] { 99, 12, 55, 17, 45, 97, 83, 64, 38 };
 
-        private const ushort FILE_HEADER = 942;
+        private const int FILE_HEADER = 1920161100;
+        private const byte VERSION = 1;
+        private const ushort FILE_HEADER_V0 = 942;
         private const string FILE = "users.dat";
+        private const string KEY_SETTINGS = "@";
 
-        private static bool storeCredentials;
+        private enum StorageState : byte
+        {
+            None = 0,
+            Pending = 1,
+            Initialized = 2,
+        }
 
+        private static StorageState state;
+
+        static Credentials()
+        {
+            Settings.Encryption.ValueChanged += Encryption_ValueChanged;
+        }
+
+        static void Encryption_ValueChanged(object sender, EventArgs e)
+        {
+            Task.Run(
+                delegate
+                {
+                    try
+                    {
+                        lock (_lock)
+                        {
+                            OnCryptoChanged();
+                        }
+                    }
+                    catch { }
+                });
+        }
+
+        private static Tools.DataCache<string> storage;
         private static Dictionary<string, SecureString> cache;
+
+        private class DataItem : Tools.DataCache.ICacheItem<string>
+        {
+            public string ID
+            {
+                get;
+                set;
+            }
+
+            public byte[] Data
+            {
+                get;
+                set;
+            }
+
+            public void ReadFrom(BinaryReader reader, uint length)
+            {
+                this.Data = reader.ReadBytes((int)length);
+            }
+
+            public void WriteTo(BinaryWriter writer)
+            {
+                if (this.Data != null)
+                    writer.Write(this.Data);
+            }
+        }
+
+        private static bool Upgrade(int header, ushort version)
+        {
+            List<DataItem> items;
+
+            using (BinaryReader reader = new BinaryReader(new BufferedStream(File.OpenRead(StoragePath), 1024)))
+            {
+                if (reader.ReadUInt16() != FILE_HEADER_V0)
+                    return false;
+
+                var key = new byte[] { 99, 12, 55, 17, 45, 97, 83, 64, 38 };
+                var count = reader.ReadUInt16();
+                var scope = Settings.EncryptionScope.CurrentUser;
+                var o = Settings.Encryption.Value;
+                if (o != null)
+                    scope = o.Scope;
+
+                items = new List<DataItem>(count + 1);
+
+                using (var crypto = new Cryptography.Crypto())
+                {
+                    for (int i = 0; i < count; i++)
+                    {
+                        var name = reader.ReadString();
+                        var length = reader.ReadUInt16();
+                        var data = reader.ReadBytes(length);
+
+                        data = ProtectedData.Unprotect(data, key, DataProtectionScope.CurrentUser);
+
+                        try
+                        {
+                            items.Add(new DataItem()
+                                {
+                                    ID = name,
+                                    Data = crypto.Compress(crypto.Encrypt(scope, data), Cryptography.Crypto.CryptoCompressionFlags.All),
+                                });
+                        }
+                        finally
+                        {
+                            Array.Clear(data, 0, data.Length);
+                        }
+                    }
+                }
+            }
+
+            if (items.Count == 0)
+                return false;
+
+            GetStorage().Write<DataItem>(items);
+
+            return true;
+        }
+
+        private static void OnCryptoChanged()
+        {
+            var store = GetStorage();
+            var items = new List<DataItem>();
+            var o = Settings.Encryption.Value;
+            var scope = o != null ? o.Scope : Settings.EncryptionScope.CurrentUser;
+
+            using (var crypto = new Cryptography.Crypto())
+            {
+                try
+                {
+                    foreach (var item in store.ReadAll<DataItem>())
+                    {
+                        try
+                        {
+                            if (crypto.GetScope(item.Data) == scope)
+                                continue;
+
+                            var data = crypto.Decrypt(item.Data);
+
+                            try
+                            {
+                                items.Add(new DataItem()
+                                {
+                                    ID = item.ID,
+                                    Data = crypto.Compress(crypto.Encrypt(scope, data), Cryptography.Crypto.CryptoCompressionFlags.All),
+                                });
+                            }
+                            finally
+                            {
+                                Array.Clear(data, 0, data.Length);
+                            }
+                        }
+                        catch (Exception e)
+                        {
+                            Util.Logging.Log(e);
+                        }
+                    }
+                }
+                catch { }
+            }
+
+            if (items.Count > 0)
+                store.Write<DataItem>(items);
+        }
 
         public static SecureString GetPassword(string username)
         {
-            string path = Path.Combine(DataPath.AppData, FILE);
-            SecureString password = null;
-
             lock (_lock)
             {
                 if (cache != null)
@@ -40,121 +192,52 @@ namespace Gw2Launcher.Security
                     cache = new Dictionary<string, SecureString>(StringComparer.OrdinalIgnoreCase);
                 }
 
-                if (storeCredentials)
+                if (state != StorageState.None)
                 {
                     try
                     {
-                        using (BinaryReader reader = new BinaryReader(File.OpenRead(path)))
+                        var i = GetStorage().Read<DataItem>(username);
+
+                        using (var crypto = new Cryptography.Crypto())
                         {
-                            if (reader.ReadUInt16() != FILE_HEADER)
-                                return null;
+                            SecureString s;
 
-                            ushort count = reader.ReadUInt16();
-
-                            for (int i = 0; i < count; i++)
+                            if (i.Data.Length > 0)
                             {
-                                string name = reader.ReadString();
-                                ushort length = reader.ReadUInt16();
+                                var data = crypto.Decrypt(i.Data);
 
-                                if (cache.ContainsKey(name))
+                                try
                                 {
-                                    reader.BaseStream.Position += length;
+                                    s = FromByteArray(data);
                                 }
-                                else
+                                finally
                                 {
-                                    if (length > 0)
-                                    {
-                                        byte[] data = reader.ReadBytes(length);
-
-                                        try
-                                        {
-                                            data = ProtectedData.Unprotect(data, KEY, DataProtectionScope.CurrentUser);
-                                            SecureString s = new SecureString();
-
-                                            for (int p = 0; p < data.Length; p += 2)
-                                            {
-                                                //data[p] + (data[p + 1] << 8);
-                                                s.AppendChar(BitConverter.ToChar(data, p));
-                                            }
-
-                                            s.MakeReadOnly();
-
-                                            cache.Add(name, s);
-
-                                            if (username.Equals(name, StringComparison.OrdinalIgnoreCase))
-                                            {
-                                                password = s;
-                                            }
-                                        }
-                                        catch (Exception e)
-                                        {
-                                            Util.Logging.Log(e);
-                                        }
-                                        finally
-                                        {
-                                            Array.Clear(data, 0, data.Length);
-                                        }
-                                    }
-                                    else
-                                    {
-                                        SecureString s = new SecureString();
-                                        s.MakeReadOnly();
-
-                                        cache.Add(name, s);
-
-                                        if (username.Equals(name, StringComparison.OrdinalIgnoreCase))
-                                        {
-                                            password = s;
-                                        }
-                                    }
+                                    Array.Clear(data, 0, data.Length);
                                 }
                             }
+                            else
+                            {
+                                s = new SecureString();
+                                s.MakeReadOnly();
+                            }
+
+                            cache.Add(username, s);
+
+                            return s;
                         }
                     }
-                    catch (Exception ex)
+                    catch (Exception e)
                     {
-                        Util.Logging.Log(ex);
+                        Util.Logging.Log(e);
                     }
                 }
             }
 
-            return password;
+            return null;
         }
 
         public static void SetPassword(string username, SecureString password)
         {
-            string path = Path.Combine(DataPath.AppData, FILE);
-
-            byte[] passwordData;
-
-            if (password.Length > 0)
-            {
-                byte[] buffer = new byte[2 * password.Length];
-                IntPtr ptr = Marshal.SecureStringToBSTR(password);
-
-                try
-                {
-                    Marshal.Copy(ptr, buffer, 0, buffer.Length);
-                }
-                finally
-                {
-                    Marshal.ZeroFreeBSTR(ptr);
-                }
-
-                try
-                {
-                    passwordData = ProtectedData.Protect(buffer, KEY, DataProtectionScope.CurrentUser);
-                }
-                finally
-                {
-                    Array.Clear(buffer, 0, buffer.Length);
-                }
-            }
-            else
-            {
-                passwordData = new byte[0];
-            }
-
             lock (_lock)
             {
                 try
@@ -162,7 +245,7 @@ namespace Gw2Launcher.Security
                     if (cache == null)
                         cache = new Dictionary<string, SecureString>(StringComparer.OrdinalIgnoreCase);
 
-                    SecureString s = password.Copy();
+                    var s = password.Copy();
                     s.MakeReadOnly();
 
                     cache[username] = s;
@@ -172,94 +255,84 @@ namespace Gw2Launcher.Security
                     Util.Logging.Log(ex);
                 }
 
-                if (storeCredentials)
+                if (state != StorageState.None)
                 {
                     try
                     {
-                        using (BinaryReader reader = new BinaryReader(File.Open(path, FileMode.OpenOrCreate, FileAccess.Read, FileShare.ReadWrite)))
+                        byte[] data;
+
+                        if (password.Length > 0)
                         {
-                            using (BinaryWriter writer = new BinaryWriter(File.Open(path, FileMode.OpenOrCreate, FileAccess.Write, FileShare.ReadWrite)))
+                            var buffer = ToByteArray(password);
+
+                            try
                             {
-                                bool hasHeader = false;
+                                var scope = Settings.EncryptionScope.CurrentUser;
+                                var o = Settings.Encryption.Value;
+                                if (o != null)
+                                    scope = o.Scope;
 
-                                try
+                                using (var crypto = new Cryptography.Crypto())
                                 {
-                                    hasHeader = reader.ReadUInt16() == FILE_HEADER;
-                                    if (!hasHeader)
-                                        reader.BaseStream.Position = 0;
-                                }
-                                catch (Exception ex)
-                                {
-                                    Util.Logging.Log(ex);
-                                }
-
-                                ushort count;
-
-                                if (hasHeader)
-                                {
-                                    long position = reader.BaseStream.Position;
-                                    bool hasUsername = false;
-                                    count = reader.ReadUInt16();
-
-                                    for (int i = 0; i < count; i++)
-                                    {
-                                        if (!hasUsername)
-                                            writer.BaseStream.Position = reader.BaseStream.Position;
-
-                                        string name = reader.ReadString();
-                                        ushort length = reader.ReadUInt16();
-                                        byte[] data = reader.ReadBytes(length);
-
-                                        if (hasUsername)
-                                        {
-                                            writer.Write(name);
-                                            writer.Write(length);
-                                            writer.Write(data);
-                                        }
-                                        else if (name.Equals(username, StringComparison.OrdinalIgnoreCase))
-                                        {
-                                            //all users past this user will be shifted up
-                                            //this user will be moved to the end of the file
-                                            hasUsername = true;
-                                        }
-                                    }
-
-                                    if (!hasUsername)
-                                        writer.BaseStream.Position = reader.BaseStream.Position;
-
-                                    writer.Write(username);
-                                    writer.Write((ushort)passwordData.Length);
-                                    writer.Write(passwordData);
-
-                                    if (writer.BaseStream.Position < writer.BaseStream.Length)
-                                        writer.BaseStream.SetLength(writer.BaseStream.Position);
-
-                                    if (!hasUsername)
-                                    {
-                                        count++;
-
-                                        writer.BaseStream.Position = position;
-                                        writer.Write(count);
-                                    }
-                                }
-                                else
-                                {
-                                    writer.Write(FILE_HEADER);
-                                    writer.Write((ushort)1);
-
-                                    writer.Write(username);
-                                    writer.Write((ushort)passwordData.Length);
-                                    writer.Write(passwordData);
+                                    data = crypto.Compress(crypto.Encrypt(scope, buffer), Cryptography.Crypto.CryptoCompressionFlags.All);
                                 }
                             }
+                            finally
+                            {
+                                Array.Clear(buffer, 0, buffer.Length);
+                            }
                         }
+                        else
+                        {
+                            data = new byte[0];
+                        }
+
+                        var item = new DataItem()
+                        {
+                            ID = username,
+                            Data = data,
+                        };
+
+                        GetStorage().Write<DataItem>(item);
                     }
-                    catch (Exception ex)
+                    catch (Exception e)
                     {
-                        Util.Logging.Log(ex);
+                        Util.Logging.Log(e);
                     }
                 }
             }
+        }
+
+        private static Tools.DataCache<string> GetStorage()
+        {
+            var store = new Tools.DataCache<string>(FILE_HEADER, VERSION, StoragePath, Tools.DataCache.Utf8IgnoreCase);
+
+            if (state == StorageState.Pending)
+            {
+                state = StorageState.Initialized;
+
+                try
+                {
+                    try
+                    {
+                        store.Verify();
+                    }
+                    catch (Tools.DataCache.UnknownHeaderException e)
+                    {
+                        Upgrade(e.Header, e.Version);
+                    }
+                }
+                catch 
+                {
+                    try
+                    {
+                        File.Delete(StoragePath);
+                    }
+                    catch { }
+                }
+            }
+
+            return store;
         }
 
         public static void Clear()
@@ -312,24 +385,40 @@ namespace Gw2Launcher.Security
             }
         }
 
+        private static string StoragePath
+        {
+            get
+            {
+                return Path.Combine(DataPath.AppData, FILE);
+            }
+        }
+
         public static bool StoreCredentials
         {
             get
             {
-                return storeCredentials;
+                return state != StorageState.None;
             }
             set
             {
-                storeCredentials = value;
-
-                if (!value)
+                if (value)
+                {
+                    lock (_lock)
+                    {
+                        if (state == StorageState.None)
+                            state = StorageState.Pending;
+                    }
+                }
+                else
                 {
                     try
                     {
                         lock (_lock)
                         {
-                            if (File.Exists(FILE))
-                                File.Delete(FILE);
+                            state = StorageState.None;
+                            string path = Path.Combine(DataPath.AppData, FILE);
+                            if (File.Exists(path))
+                                File.Delete(path);
                         }
                     }
                     catch (Exception ex)
@@ -340,46 +429,48 @@ namespace Gw2Launcher.Security
             }
         }
 
-        public static SecureString FromString(ref string s)
+        public static SecureString FromString(ref string str)
         {
-            var ss = new SecureString();
-            foreach (var c in s)
-                ss.AppendChar(c);
-            ss.MakeReadOnly();
-            return ss;
+            var s = new SecureString();
+            foreach (var c in str)
+                s.AppendChar(c);
+            s.MakeReadOnly();
+            return s;
         }
 
-        public static SecureString FromProtectedByteArray(byte[] data)
+        public static SecureString FromByteArray(byte[] data)
         {
-            byte[] buffer = null;
-            try
+            var s = new SecureString();
+
+            for (int p = 0; p < data.Length; p += 2)
             {
-                buffer = ProtectedData.Unprotect(data, KEY, DataProtectionScope.CurrentUser);
-                var s = new SecureString();
-
-                for (int p = 0; p < buffer.Length; p += 2)
-                {
-                    s.AppendChar(BitConverter.ToChar(buffer, p));
-                }
-
-                s.MakeReadOnly();
-
-                return s;
+                //data[p] + (data[p + 1] << 8);
+                s.AppendChar(BitConverter.ToChar(data, p));
             }
-            finally
-            {
-                if (buffer != null)
-                    Array.Clear(buffer, 0, buffer.Length);
-            }
+
+            s.MakeReadOnly();
+
+            return s;
         }
 
-        public static byte[] ToProtectedByteArray(SecureString s)
+        public static SecureString FromCharArray(char[] data)
         {
-            if (s.Length == 0)
-                return new byte[0];
+            var s = new SecureString();
 
-            byte[] buffer = new byte[2 * s.Length];
-            IntPtr ptr = Marshal.SecureStringToBSTR(s);
+            foreach (var c in data)
+            {
+                s.AppendChar(c);
+            }
+
+            s.MakeReadOnly();
+
+            return s;
+        }
+
+        public static byte[] ToByteArray(SecureString s)
+        {
+            var buffer = new byte[2 * s.Length];
+            var ptr = Marshal.SecureStringToBSTR(s);
 
             try
             {
@@ -390,29 +481,12 @@ namespace Gw2Launcher.Security
                 Marshal.ZeroFreeBSTR(ptr);
             }
 
-            try
-            {
-                return ProtectedData.Protect(buffer, KEY, DataProtectionScope.CurrentUser);
-            }
-            finally
-            {
-                Array.Clear(buffer, 0, buffer.Length);
-            }
+            return buffer;
         }
 
         public static char[] ToCharArray(SecureString s)
         {
-            byte[] buffer = new byte[2 * s.Length];
-            IntPtr ptr = Marshal.SecureStringToBSTR(s);
-
-            try
-            {
-                Marshal.Copy(ptr, buffer, 0, buffer.Length);
-            }
-            finally
-            {
-                Marshal.ZeroFreeBSTR(ptr);
-            }
+            var buffer = ToByteArray(s);
 
             try
             {

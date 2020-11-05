@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -29,6 +29,14 @@ namespace Gw2Launcher.Tools
 
         }
 
+        /// <summary>
+        /// Session is not valid; login required
+        /// </summary>
+        public class SessionExpiredException : Exception
+        {
+
+        }
+
         public enum AuthenticationType
         {
             Unknown,
@@ -36,6 +44,8 @@ namespace Gw2Launcher.Tools
             SMS,
             TOTP
         }
+
+        public static event EventHandler<int> LoginResponseDuration;
 
         public class AuthorizedNetwork
         {
@@ -60,17 +70,24 @@ namespace Gw2Launcher.Tools
 
         private CookieContainer cookies;
         private DateTime dateSet, dateServer;
+        private string session;
 
         private ArenaAccount()
         {
         }
 
+        /// <summary>
+        /// True if an authentication code is required to complete the login
+        /// </summary>
         public bool RequiresAuthentication
         {
             get;
             private set;
         }
 
+        /// <summary>
+        /// Type of authentication the login is requiring
+        /// </summary>
         public AuthenticationType Authentication
         {
             get;
@@ -92,6 +109,91 @@ namespace Gw2Launcher.Tools
             {
                 dateServer = value;
                 dateSet = DateTime.UtcNow;
+            }
+        }
+
+        public bool HasSession
+        {
+            get
+            {
+                return cookies != null;
+            }
+        }
+
+        public bool IsExpired
+        {
+            get
+            {
+                if (dateServer != DateTime.MinValue)
+                {
+                    return DateTime.UtcNow.Subtract(dateSet).TotalMinutes > 10 || cookies == null;
+                }
+
+                return false;
+            }
+        }
+
+        private string GetRedirect(string data)
+        {
+            var i = data.IndexOf("\"redirect\":\"");
+
+            if (i != -1)
+            {
+                i += 12;
+                var j = data.IndexOf('"', i);
+                var redirect = data.Substring(i, j - i);
+
+                return redirect;
+            }
+
+            return null;
+        }
+
+        private bool OnHeadersReceived(WebHeaderCollection headers)
+        {
+            var cookie = headers[HttpResponseHeader.SetCookie];
+            if (cookie != null && cookie.StartsWith("s="))
+            {
+                var key = cookie.Substring(2, cookie.IndexOf(';') - 2);
+
+                if (session.Equals(key, StringComparison.Ordinal))
+                {
+                    return true;
+                }
+                else
+                {
+                    this.cookies = null;
+                    throw new SessionExpiredException();
+                }
+            }
+            return false;
+        }
+
+        private bool IsLoginRequired(string data)
+        {
+            var redirect = GetRedirect(data);
+
+            return redirect != null && redirect.StartsWith("/login");
+        }
+
+        private void ThrowForWebException(WebException e)
+        {
+            if (e.Response == null || !(e.Response is HttpWebResponse))
+                return;
+
+            using (var response = (HttpWebResponse)e.Response)
+            {
+                switch (response.StatusCode)
+                {
+                    case HttpStatusCode.BadRequest:
+                        throw new AuthenticationException();
+                    case HttpStatusCode.NotFound:
+                    case HttpStatusCode.Redirect:
+                    case HttpStatusCode.MovedPermanently:
+                    case HttpStatusCode.TemporaryRedirect:
+                    case HttpStatusCode.Forbidden:
+                        throw new UnexpectedResponseException();
+                }
             }
         }
 
@@ -132,17 +234,15 @@ namespace Gw2Launcher.Tools
             {
                 using (var response = await request.GetResponseAsync())
                 {
+                    OnHeadersReceived(response.Headers);
+
                     using (var reader = new StreamReader(response.GetResponseStream(), Encoding.UTF8))
                     {
                         var data = await reader.ReadToEndAsync();
-                        var i = data.IndexOf("\"redirect\":\"");
+                        var redirect = GetRedirect(data);
 
-                        if (i != -1)
+                        if (redirect != null)
                         {
-                            i += 12;
-                            var j = data.IndexOf('"', i);
-                            var redirect = data.Substring(i, j - i);
-
                             if (redirect.StartsWith("/overview", StringComparison.OrdinalIgnoreCase))
                             {
                                 this.RequiresAuthentication = false;
@@ -161,20 +261,8 @@ namespace Gw2Launcher.Tools
             }
             catch (WebException e)
             {
-                if (e.Response == null)
-                    throw;
-
-                using (var response = (HttpWebResponse)e.Response)
-                {
-                    switch (response.StatusCode)
-                    {
-                        case HttpStatusCode.BadRequest:
-                            throw new AuthenticationException();
-                        case HttpStatusCode.NotFound:
-                        case HttpStatusCode.RequestTimeout:
-                            break;
-                    }
-                }
+                ThrowForWebException(e);
+                throw;
             }
 
             return false;
@@ -184,23 +272,33 @@ namespace Gw2Launcher.Tools
         {
             var request = CreateHttp(URL_BASE + "security/settings.json", URL_BASE + "overview", this.cookies);
 
-            using (var response = await request.GetResponseAsync())
+            try
             {
-                using (var reader = new StreamReader(response.GetResponseStream(), Encoding.UTF8))
+                using (var response = await request.GetResponseAsync())
                 {
-                    var data = await reader.ReadToEndAsync();
-                    var json = (Dictionary<string, object>)Api.Json.Decode(data);
-                    var whitelist = (List<object>)json["whitelist"];
-                    var networks = new AuthorizedNetwork[whitelist.Count];
-                    int i = 0;
+                    OnHeadersReceived(response.Headers);
 
-                    foreach (Dictionary<string, object> entry in whitelist)
+                    using (var reader = new StreamReader(response.GetResponseStream(), Encoding.UTF8))
                     {
-                        networks[i++] = new AuthorizedNetwork((string)entry["address"], int.Parse((string)entry["network_prefix"]));
-                    }
+                        var data = await reader.ReadToEndAsync();
+                        var json = (Dictionary<string, object>)Api.Json.Decode(data);
+                        var whitelist = (List<object>)json["whitelist"];
+                        var networks = new AuthorizedNetwork[whitelist.Count];
+                        int i = 0;
 
-                    return networks;
+                        foreach (Dictionary<string, object> entry in whitelist)
+                        {
+                            networks[i++] = new AuthorizedNetwork((string)entry["address"], int.Parse((string)entry["network_prefix"]));
+                        }
+
+                        return networks;
+                    }
                 }
+            }
+            catch (WebException e)
+            {
+                ThrowForWebException(e);
+                throw;
             }
         }
 
@@ -215,19 +313,83 @@ namespace Gw2Launcher.Tools
                 rs.Write(buffer, 0, buffer.Length);
             }
 
-            using (var response = await request.GetResponseAsync())
+            try
             {
-                using (var reader = new StreamReader(response.GetResponseStream(), Encoding.UTF8))
+                using (var response = await request.GetResponseAsync())
                 {
-                    var data = await reader.ReadToEndAsync();
+                    OnHeadersReceived(response.Headers);
+
+                    using (var reader = new StreamReader(response.GetResponseStream(), Encoding.UTF8))
+                    {
+                        var data = await reader.ReadToEndAsync();
+                    }
                 }
             }
+            catch (WebException e)
+            {
+                ThrowForWebException(e);
+                throw;
+            }
+        }
+
+        /// <summary>
+        /// Checks if the session is still valid
+        /// </summary>
+        public async Task<bool> Ping()
+        {
+            if (this.cookies == null)
+                return false;
+
+            var request = CreateHttp(URL_BASE + "login.json", URL_BASE + "overview", this.cookies);
+
+            try
+            {
+                using (var response = await request.GetResponseAsync())
+                {
+                    OnHeadersReceived(response.Headers);
+
+                    var date = response.Headers[HttpResponseHeader.Date];
+                    if (!string.IsNullOrEmpty(date))
+                    {
+                        try
+                        {
+                            this.Date = DateTime.Parse(date, null, System.Globalization.DateTimeStyles.AdjustToUniversal);
+                        }
+                        catch (Exception e)
+                        {
+                            Util.Logging.Log(e);
+                        }
+                    }
+
+                    using (var reader = new StreamReader(response.GetResponseStream(), Encoding.UTF8))
+                    {
+                        var data = await reader.ReadToEndAsync();
+                        var redirect = GetRedirect(data);
+
+                        if (redirect != null && redirect.StartsWith("/overview", StringComparison.OrdinalIgnoreCase))
+                        {
+                            return true;
+                        }
+                    }
+                }
+            }
+            catch (WebException e)
+            {
+                using (e.Response) { }
+            }
+            catch { }
+
+            return false;
         }
 
         public async Task<bool> Login(string email, SecureString password)
         {
             var cookies = new CookieContainer(1);
             var request = CreateHttp(URL_BASE + "login.json", URL_BASE + "login", cookies);
+
+            var start = Environment.TickCount;
+
+            this.cookies = null;
 
             try
             {
@@ -236,32 +398,15 @@ namespace Gw2Launcher.Tools
                     var cookie = response.Headers[HttpResponseHeader.SetCookie];
                     if (cookie.StartsWith("s="))
                     {
-                        var key = cookie.Substring(2, cookie.IndexOf(';') - 2);
+                        var key = session = cookie.Substring(2, cookie.IndexOf(';') - 2);
                         cookies.Add(new Cookie("s", key, "/", "arena.net"));
                     }
                 }
             }
             catch (WebException e)
             {
-                if (e.Response == null)
-                    throw;
-
-                using (var response = e.Response as HttpWebResponse)
-                {
-                    switch (response.StatusCode)
-                    {
-                        case HttpStatusCode.BadRequest:
-                            throw new AuthenticationException();
-                        case HttpStatusCode.NotFound:
-                        case HttpStatusCode.Redirect:
-                        case HttpStatusCode.MovedPermanently:
-                        case HttpStatusCode.TemporaryRedirect:
-                        case HttpStatusCode.Forbidden:
-                            throw new UnexpectedResponseException();
-                    }
-                }
-
-                return false;
+                ThrowForWebException(e);
+                throw;
             }
 
             request = CreateHttpJsonPost(URL_BASE + "login.json", URL_BASE + "login", cookies);
@@ -316,22 +461,27 @@ namespace Gw2Launcher.Tools
                             }
                         }
 
+                        if (LoginResponseDuration != null)
+                        {
+                            try
+                            {
+                                LoginResponseDuration(null, Environment.TickCount - start);
+                            }
+                            catch { }
+                        }
+
                         var data = await reader.ReadToEndAsync();
-                        var i = data.IndexOf("\"redirect\":\"");
+                        var redirect = GetRedirect(data);
 
                         var cookie = response.Headers[HttpResponseHeader.SetCookie];
                         if (cookie.StartsWith("s="))
                         {
-                            var key = cookie.Substring(2, cookie.IndexOf(';') - 2);
+                            var key = session = cookie.Substring(2, cookie.IndexOf(';') - 2);
                             cookies.Add(new Cookie("s", key, "/", "arena.net"));
                         }
 
-                        if (i != -1)
+                        if (redirect != null)
                         {
-                            i += 12;
-                            var j = data.IndexOf('"', i);
-                            var redirect = data.Substring(i, j - i);
-
                             if (redirect.StartsWith("/overview", StringComparison.OrdinalIgnoreCase))
                             {
                                 //authenticated
@@ -341,7 +491,7 @@ namespace Gw2Launcher.Tools
                             }
                             else if (redirect.StartsWith("/login/wait/", StringComparison.OrdinalIgnoreCase))
                             {
-                                j = 12;
+                                var j = 12;
                                 var l = redirect.IndexOf('?', j);
                                 if (l == -1)
                                     l = redirect.Length - j;
@@ -379,23 +529,8 @@ namespace Gw2Launcher.Tools
             }
             catch (WebException e)
             {
-                if (e.Response == null)
-                    throw;
-
-                using (var response = e.Response as HttpWebResponse)
-                {
-                    switch (response.StatusCode)
-                    {
-                        case HttpStatusCode.BadRequest:
-                            throw new AuthenticationException();
-                        case HttpStatusCode.NotFound:
-                        case HttpStatusCode.Redirect:
-                        case HttpStatusCode.MovedPermanently:
-                        case HttpStatusCode.TemporaryRedirect:
-                        case HttpStatusCode.Forbidden:
-                            throw new UnexpectedResponseException();
-                    }
-                }
+                ThrowForWebException(e);
+                throw;
             }
 
             return false;
@@ -403,14 +538,29 @@ namespace Gw2Launcher.Tools
 
         public async Task Logout()
         {
+            if (cookies == null)
+                return;
+
             var request = CreateHttp(URL_BASE + "logout.json", URL_BASE + "overview", cookies);
 
-            using (var response = await request.GetResponseAsync())
+            cookies = null;
+
+            try
             {
-                using (var reader = new StreamReader(response.GetResponseStream(), Encoding.UTF8))
+                using (var response = await request.GetResponseAsync())
                 {
-                    var data = await reader.ReadToEndAsync();
+                    using (var reader = new StreamReader(response.GetResponseStream(), Encoding.UTF8))
+                    {
+                        var data = await reader.ReadToEndAsync();
+                    }
                 }
+            }
+            catch (WebException e)
+            {
+                using (e.Response) { }
+            }
+            catch
+            {
             }
         }
 
@@ -438,7 +588,7 @@ namespace Gw2Launcher.Tools
             var request = HttpWebRequest.CreateHttp(url);
             request.AutomaticDecompression = DecompressionMethods.GZip;
             request.AllowAutoRedirect = false;
-            request.Timeout = 10000;
+            //request.Timeout = 60000;
             request.Referer = referer;
             request.CookieContainer = cookies;
             request.ServicePoint.Expect100Continue = false;

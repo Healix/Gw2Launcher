@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -112,8 +112,8 @@ namespace Gw2Launcher.Client
         static ProxyLauncher()
         {
             InitializePath();
-            Settings.GW2Path.ValueChanged += GW2Path_ValueChanged;
-            Settings.LocalizeAccountExecution.ValueChanged += LocalizeAccountExecution_ValueChanged;
+            Settings.GuildWars2.Path.ValueChanged += GW2Path_ValueChanged;
+            Settings.GuildWars2.LocalizeAccountExecution.ValueChanged += LocalizeAccountExecution_ValueChanged;
         }
 
         static void LocalizeAccountExecution_ValueChanged(object sender, EventArgs e)
@@ -196,30 +196,38 @@ namespace Gw2Launcher.Client
             return new FileInfo(Path.Combine(path, name + ".lnk"));
         }
 
-        public static Process Launch(Settings.IAccount account, Launcher.ProcessOptions options)
+        /// <summary>
+        /// Launches using a proxy
+        /// </summary>
+        /// <param name="shortcut">True to launch using a shortcut</param>
+        public static Process Launch(Settings.IAccount account, Launcher.ProcessOptions options, bool shortcut)
         {
-            var link = GetLink(account, options);
-            try
-            {
-                var di = link.Directory;
-                if (!di.Exists)
-                    di.Create();
-            }
-            catch (Exception e)
-            {
-                Util.Logging.Log(e);
-            }
-            if (!link.Exists)
-            {
-                new Windows.Shortcut(options.FileName, "")
-                {
-                    AppUserModelID = "Gw2Launcher." + account.UID,
-                    PreventPinning = true
-                }.Save(link.FullName);
-            }
-
             var po = new ProxyOptions(options);
-            po.FileName = link.FullName;
+
+            if (shortcut)
+            {
+                var link = GetLink(account, options);
+                try
+                {
+                    var di = link.Directory;
+                    if (!di.Exists)
+                        di.Create();
+                }
+                catch (Exception e)
+                {
+                    Util.Logging.Log(e);
+                }
+                if (!link.Exists)
+                {
+                    new Windows.Shortcut(options.FileName, "")
+                    {
+                        AppUserModelID = "Gw2Launcher." + account.UID,
+                        PreventPinning = true
+                    }.Save(link.FullName);
+                }
+
+                po.FileName = link.FullName;
+            }
 
             int pid;
             using (var p = Process.GetCurrentProcess())

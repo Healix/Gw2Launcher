@@ -1,4 +1,4 @@
-﻿namespace Gw2Launcher.UI
+namespace Gw2Launcher.UI
 {
     partial class formChangelog
     {
@@ -50,17 +50,13 @@
             this.panelBottom.Controls.Add(this.buttonNo);
             this.panelBottom.Controls.Add(this.buttonYes);
             this.panelBottom.Location = new System.Drawing.Point(0, 315);
-            this.panelBottom.Name = "panelBottom";
             this.panelBottom.Size = new System.Drawing.Size(479, 47);
-            this.panelBottom.TabIndex = 20;
             // 
             // buttonNo
             // 
             this.buttonNo.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Right)));
             this.buttonNo.Location = new System.Drawing.Point(382, 12);
-            this.buttonNo.Name = "buttonNo";
             this.buttonNo.Size = new System.Drawing.Size(85, 23);
-            this.buttonNo.TabIndex = 1;
             this.buttonNo.Text = "No";
             this.buttonNo.UseVisualStyleBackColor = true;
             this.buttonNo.Click += new System.EventHandler(this.buttonNo_Click);
@@ -69,9 +65,7 @@
             // 
             this.buttonYes.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Right)));
             this.buttonYes.Location = new System.Drawing.Point(291, 12);
-            this.buttonYes.Name = "buttonYes";
             this.buttonYes.Size = new System.Drawing.Size(85, 23);
-            this.buttonYes.TabIndex = 0;
             this.buttonYes.Text = "Yes";
             this.buttonYes.UseVisualStyleBackColor = true;
             this.buttonYes.Click += new System.EventHandler(this.buttonYes_Click);
@@ -81,9 +75,7 @@
             this.label1.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left) 
             | System.Windows.Forms.AnchorStyles.Right)));
             this.label1.Location = new System.Drawing.Point(60, 9);
-            this.label1.Name = "label1";
             this.label1.Size = new System.Drawing.Size(407, 59);
-            this.label1.TabIndex = 21;
             this.label1.Text = "A new version of Gw2Launcher is available. Would you like to update now?";
             this.label1.TextAlign = System.Drawing.ContentAlignment.MiddleLeft;
             // 
@@ -93,16 +85,12 @@
             | System.Windows.Forms.AnchorStyles.Right)));
             this.panel1.BackColor = System.Drawing.SystemColors.Control;
             this.panel1.Location = new System.Drawing.Point(0, 71);
-            this.panel1.Name = "panel1";
             this.panel1.Size = new System.Drawing.Size(479, 5);
-            this.panel1.TabIndex = 23;
             // 
             // pictureIcon
             // 
             this.pictureIcon.Location = new System.Drawing.Point(17, 22);
-            this.pictureIcon.Name = "pictureIcon";
             this.pictureIcon.Size = new System.Drawing.Size(32, 32);
-            this.pictureIcon.TabIndex = 24;
             this.pictureIcon.TabStop = false;
             // 
             // panelContainer
@@ -112,18 +100,14 @@
             | System.Windows.Forms.AnchorStyles.Right)));
             this.panelContainer.Controls.Add(this.panelContent);
             this.panelContainer.Location = new System.Drawing.Point(12, 82);
-            this.panelContainer.Name = "panelContainer";
             this.panelContainer.Size = new System.Drawing.Size(447, 227);
-            this.panelContainer.TabIndex = 25;
             // 
             // panelContent
             // 
             this.panelContent.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left) 
             | System.Windows.Forms.AnchorStyles.Right)));
             this.panelContent.Location = new System.Drawing.Point(0, 0);
-            this.panelContent.Name = "panelContent";
             this.panelContent.Size = new System.Drawing.Size(447, 38);
-            this.panelContent.TabIndex = 26;
             // 
             // scrollV
             // 
@@ -131,16 +115,12 @@
             | System.Windows.Forms.AnchorStyles.Right)));
             this.scrollV.Location = new System.Drawing.Point(465, 82);
             this.scrollV.Maximum = 100;
-            this.scrollV.Name = "scrollV";
             this.scrollV.Size = new System.Drawing.Size(8, 227);
-            this.scrollV.TabIndex = 26;
             this.scrollV.Value = 0;
             this.scrollV.ValueChanged += new System.EventHandler<int>(this.scrollV_ValueChanged);
             // 
             // formChangelog
             // 
-            this.AutoScaleDimensions = new System.Drawing.SizeF(96F, 96F);
-            this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Dpi;
             this.BackColor = System.Drawing.Color.White;
             this.ClientSize = new System.Drawing.Size(479, 362);
             this.Controls.Add(this.scrollV);
@@ -154,7 +134,6 @@
             this.MaximizeBox = false;
             this.MinimizeBox = false;
             this.MinimumSize = new System.Drawing.Size(495, 200);
-            this.Name = "formChangelog";
             this.ShowIcon = false;
             this.ShowInTaskbar = false;
             this.StartPosition = System.Windows.Forms.FormStartPosition.CenterScreen;

@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -10,15 +10,74 @@ namespace Gw2Launcher.Windows
 {
     static class FindWindow
     {
-        [DllImport(NativeMethods.DLL.USER32)]
+        [DllImport(NativeMethods.USER32)]
         [return: MarshalAs(UnmanagedType.Bool)]
-        private static extern bool EnumWindows(EnumWindowsProc lpEnumFunc, ref SearchData data);
+        private static extern bool EnumWindows(EnumWindowsProc lpEnumFunc, IntPtr lParam);
 
-        [DllImport(NativeMethods.DLL.USER32)]
+        [DllImport(NativeMethods.USER32)]
         [return: MarshalAs(UnmanagedType.Bool)]
-        public static extern bool EnumChildWindows(IntPtr hwndParent, EnumWindowsProc lpEnumFunc, ref SearchData data);
+        private static extern bool EnumThreadWindows(uint dwThreadId, EnumWindowsProc lpfn, IntPtr lParam);
 
-        public delegate bool EnumWindowsProc(IntPtr hWnd, ref SearchData data);
+        [DllImport(NativeMethods.USER32)]
+        [return: MarshalAs(UnmanagedType.Bool)]
+        private static extern bool EnumChildWindows(IntPtr hwndParent, EnumWindowsProc lpEnumFunc, IntPtr lParam);
+
+        [DllImport(NativeMethods.USER32, SetLastError = true)]
+        private static extern IntPtr GetWindow(IntPtr hWnd, GetWindowType uCmd);
+
+        private enum GetWindowType : uint
+        {
+            /// <summary>
+            /// The retrieved handle identifies the window of the same type that is highest in the Z order.
+            /// <para/>
+            /// If the specified window is a topmost window, the handle identifies a topmost window.
+            /// If the specified window is a top-level window, the handle identifies a top-level window.
+            /// If the specified window is a child window, the handle identifies a sibling window.
+            /// </summary>
+            GW_HWNDFIRST = 0,
+            /// <summary>
+            /// The retrieved handle identifies the window of the same type that is lowest in the Z order.
+            /// <para />
+            /// If the specified window is a topmost window, the handle identifies a topmost window.
+            /// If the specified window is a top-level window, the handle identifies a top-level window.
+            /// If the specified window is a child window, the handle identifies a sibling window.
+            /// </summary>
+            GW_HWNDLAST = 1,
+            /// <summary>
+            /// The retrieved handle identifies the window below the specified window in the Z order.
+            /// <para />
+            /// If the specified window is a topmost window, the handle identifies a topmost window.
+            /// If the specified window is a top-level window, the handle identifies a top-level window.
+            /// If the specified window is a child window, the handle identifies a sibling window.
+            /// </summary>
+            GW_HWNDNEXT = 2,
+            /// <summary>
+            /// The retrieved handle identifies the window above the specified window in the Z order.
+            /// <para />
+            /// If the specified window is a topmost window, the handle identifies a topmost window.
+            /// If the specified window is a top-level window, the handle identifies a top-level window.
+            /// If the specified window is a child window, the handle identifies a sibling window.
+            /// </summary>
+            GW_HWNDPREV = 3,
+            /// <summary>
+            /// The retrieved handle identifies the specified window's owner window, if any.
+            /// </summary>
+            GW_OWNER = 4,
+            /// <summary>
+            /// The retrieved handle identifies the child window at the top of the Z order,
+            /// if the specified window is a parent window; otherwise, the retrieved handle is NULL.
+            /// The function examines only child windows of the specified window. It does not examine descendant windows.
+            /// </summary>
+            GW_CHILD = 5,
+            /// <summary>
+            /// The retrieved handle identifies the enabled popup window owned by the specified window (the
+            /// search uses the first such window found using GW_HWNDNEXT); otherwise, if there are no enabled
+            /// popup windows, the retrieved handle is that of the specified window.
+            /// </summary>
+            GW_ENABLEDPOPUP = 6
+        }
+
+        public delegate bool EnumWindowsProc(IntPtr hWnd, IntPtr lParam);
         public delegate bool TextComparer(string name, StringBuilder value);
         
         public class SearchData
@@ -115,13 +174,13 @@ namespace Gw2Launcher.Windows
             }
         }
 
-        public static IntPtr Find(int processId, string className)
+        public static IntPtr Find(int processId, string className, StringBuilder buffer = null)
         {
             SearchData sd = new SearchData
             {
                 limit = 1,
                 processId = (uint)processId,
-                buffer = new StringBuilder(className == null ? 250 : className.Length + 1),
+                buffer = buffer != null ? buffer : new StringBuilder(className == null ? 250 : className.Length + 1),
                 results = new List<SearchResult>()
             };
 
@@ -134,7 +193,16 @@ namespace Gw2Launcher.Windows
                     });
             }
 
-            EnumWindows(new EnumWindowsProc(EnumWindow), ref sd);
+            var h = GCHandle.Alloc(sd);
+            try
+            {
+                EnumWindows(new EnumWindowsProc(EnumWindow), GCHandle.ToIntPtr(h));
+            }
+            finally
+            {
+                if (h.IsAllocated)
+                    h.Free();
+            }
 
             if (sd.results.Count > 0)
                 return sd.results[0].Handle;
@@ -158,13 +226,125 @@ namespace Gw2Launcher.Windows
                 results = new List<SearchResult>()
             };
 
-            EnumChildWindows(parent, new EnumWindowsProc(EnumWindow), ref sd);
+            var h = GCHandle.Alloc(sd);
+            try
+            {
+                EnumChildWindows(parent, new EnumWindowsProc(EnumWindow),  GCHandle.ToIntPtr(h));
+            }
+            finally
+            {
+                if (h.IsAllocated)
+                    h.Free();
+            }
 
             return sd.results;
         }
-
-        private static bool EnumWindow(IntPtr hWnd, ref SearchData data)
+                
+        /// <summary>
+        /// Returns the main window handle; additionally searches when running Wine
+        /// </summary>
+        public static IntPtr FindMainWindow(System.Diagnostics.Process p)
         {
+            var h = p.MainWindowHandle;
+            if (h == IntPtr.Zero && Settings.IsRunningWine)
+            {
+                h = Find(p);
+            }
+            return h;
+        }
+        
+        /// <summary>
+        /// Enumerates the threads of the specified process to find a window
+        /// </summary>
+        public static IntPtr Find(System.Diagnostics.Process p)
+        {
+            var windows = new List<IntPtr>();
+            var found = false;
+            var threads = p.Threads;
+
+            var proc = new EnumWindowsProc(
+                delegate(IntPtr hwnd, IntPtr lparam)
+                {
+                    if (NativeMethods.IsWindowVisible(hwnd))
+                    {
+                        windows.Add(hwnd);
+
+                        if (GetWindow(hwnd, GetWindowType.GW_OWNER) == IntPtr.Zero)
+                        {
+                            found = true;
+                            return false;
+                        }
+
+                        return false;
+                    }
+
+                    return true;
+                });
+
+            for (int i = 0, count = threads.Count; i < count; ++i)
+            {
+                EnumThreadWindows((uint)threads[i].Id, proc, IntPtr.Zero);
+                if (found)
+                    break;
+            }
+
+            if (found)
+            {
+                return windows[windows.Count - 1];
+            }
+            else if (windows.Count > 0)
+            {
+                return windows[0];
+            }
+
+            return IntPtr.Zero;
+        }
+
+        /// <summary>
+        /// Enumerates all windows to find a window for the specified process
+        /// </summary>
+        public static IntPtr Find(int processId)
+        {
+            var windows = new List<IntPtr>();
+            var found = false;
+
+            EnumWindows(new EnumWindowsProc(
+                delegate(IntPtr hwnd, IntPtr lparam)
+                {
+                    uint pid;
+                    NativeMethods.GetWindowThreadProcessId(hwnd, out pid);
+
+                    if (pid == processId && NativeMethods.IsWindowVisible(hwnd))
+                    {
+                        windows.Add(hwnd);
+
+                        if (GetWindow(hwnd, GetWindowType.GW_OWNER) == IntPtr.Zero)
+                        {
+                            found = true;
+                            return false;
+                        }
+                    }
+
+                    return true;
+                }), IntPtr.Zero);
+
+            if (found)
+            {
+                return windows[windows.Count - 1];
+            }
+            else if (windows.Count > 0)
+            {
+                return windows[0];
+            }
+
+            return IntPtr.Zero;
+        }
+
+
+        private static bool EnumWindow(IntPtr hWnd, IntPtr lParam)
+        {
+            var data = (SearchData)GCHandle.FromIntPtr(lParam).Target;
+
             if (data.processId != 0)
             {
                 uint processId;
@@ -198,45 +378,50 @@ namespace Gw2Launcher.Windows
             return data.limit == 0 || data.limit < data.results.Count;
         }
 
-        public static string GetWindowTitle(IntPtr hwnd)
-        {
-            int length = NativeMethods.GetWindowTextLength(hwnd);
-            if (length == 0)
-                return "";
-
-            StringBuilder buffer = new StringBuilder(length);
-            NativeMethods.GetWindowText(hwnd, buffer, length + 1);
-
-            return buffer.ToString();
-        }
-
-        //public static bool EnumProc(IntPtr hWnd, ref SearchData data)
-        //{
-        //    uint processId;
-        //    GetWindowThreadProcessId(hWnd, out processId);
-
-        //    if (processId == data.processId)
-        //    {
-        //        data.buffer.Length = 0;
-        //        GetClassName(hWnd, data.buffer, data.buffer.Capacity + 1);
-
-        //        if (data.className == null || data.className.Length == data.buffer.Length && data.className.Equals(data.buffer.ToString()))
-        //        {
-        //            data.hWnd = hWnd;
-        //            return false;
-        //        }
-        //    }
-
-        //    return true;
-        //}
-
-        public static void FocusWindow(IntPtr handle)
+        public static bool FocusWindow(IntPtr handle, bool force = false)
         {
             var p = WindowSize.GetWindowPlacement(handle);
             if (p.showCmd == ShowWindowCommands.ShowMinimized)
                 NativeMethods.ShowWindow(handle, ShowWindowCommands.Restore);
             if (!NativeMethods.SetForegroundWindow(handle))
+            {
                 NativeMethods.BringWindowToTop(handle);
+
+                if (force)
+                    return ForceWindowToFront(handle);
+            }
+
+            return true;
+        }
+
+        public static Task<bool> FocusWindowAsync(IntPtr handle, bool force = false)
+        {
+            return Task.Run<bool>(
+                delegate
+                {
+                    return FocusWindow(handle, force);
+                });
+        }
+
+        public static bool FocusWindow(System.Diagnostics.Process p, bool force = false)
+        {
+            var h = Windows.FindWindow.FindMainWindow(p);
+            if (h != IntPtr.Zero)
+                return FocusWindow(h, force);
+            return false;
+        }
+
+        public static bool ForceWindowToFront(IntPtr handle)
+        {
+            if (!WindowLong.HasValue(handle, GWL.GWL_EXSTYLE, WindowStyle.WS_EX_TOPMOST))
+            {
+                NativeMethods.SetWindowPos(handle, (IntPtr)WindowZOrder.HWND_TOPMOST, 0, 0, 0, 0, SetWindowPosFlags.SWP_ASYNCWINDOWPOS | SetWindowPosFlags.SWP_NOMOVE | SetWindowPosFlags.SWP_NOOWNERZORDER | SetWindowPosFlags.SWP_NOSENDCHANGING | SetWindowPosFlags.SWP_NOSIZE);
+                NativeMethods.SetWindowPos(handle, (IntPtr)WindowZOrder.HWND_NOTOPMOST, 0, 0, 0, 0, SetWindowPosFlags.SWP_ASYNCWINDOWPOS | SetWindowPosFlags.SWP_NOMOVE | SetWindowPosFlags.SWP_NOOWNERZORDER | SetWindowPosFlags.SWP_NOSENDCHANGING | SetWindowPosFlags.SWP_NOSIZE);
+
+                return true;
+            }
+
+            return false;
         }
     }
 }

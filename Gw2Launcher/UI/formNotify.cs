@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Data;
@@ -11,7 +11,7 @@ using Gw2Launcher.Windows.Native;
 
 namespace Gw2Launcher.UI
 {
-    public partial class formNotify : ShowWithoutActivationForm
+    public partial class formNotify : Base.BaseForm
     {
         public enum NotifyType
         {
@@ -24,7 +24,7 @@ namespace Gw2Launcher.UI
 
         private const float BACKGROUND_OPACITY = 0.95f;
 
-        private ShowWithoutActivationForm background;
+        private Base.ShowWithoutActivationForm background;
         private bool animate, attached;
         private Tools.BackgroundPatcher.DownloadProgressEventArgs progress;
         private NotifyType notifyType;
@@ -34,7 +34,7 @@ namespace Gw2Launcher.UI
 
         private formNotify(NotifyType t, int screen, Settings.ScreenAnchor anchor)
         {
-            InitializeComponent();
+            InitializeComponents();
 
             notifyType = t;
 
@@ -45,6 +45,39 @@ namespace Gw2Launcher.UI
                 this.screen = screens[screen];
 
             this.anchor = anchor;
+        }
+
+        private formNotify(NotifyType t, int screen, Settings.ScreenAnchor anchor, Image image, bool dispose)
+            : this(t, screen, anchor)
+        {
+            this.Controls.Clear();
+
+            var b = this.screen.Bounds;
+            var ms = new System.Drawing.Size(b.Width / 5, b.Height / 5);
+            var size = Util.RectangleConstraint.Scale(image.Size, ms);
+
+            var p = new PictureBox()
+            {
+                Location = new Point(2, 2),
+                Size = new Size(size.Width - 4, size.Height - 4),
+                SizeMode = PictureBoxSizeMode.StretchImage,
+                Image = image,
+            };
+
+            if (dispose)
+            {
+                this.Disposed += delegate
+                {
+                    image.Dispose();
+                };
+            }
+
+            this.Controls.Add(p);
+
+            var _h = this.Handle; //force
+            this.Size = size;
+
+            Initialize(t);
         }
 
         private formNotify(NotifyType t, int screen, Settings.ScreenAnchor anchor, string text1, string text2)
@@ -173,13 +206,28 @@ namespace Gw2Launcher.UI
             Initialize(t);
         }
 
+        protected override void OnInitializeComponents()
+        {
+            base.OnInitializeComponents();
+
+            InitializeComponent();
+        }
+
+        protected override bool ShowWithoutActivation
+        {
+            get
+            {
+                return true;
+            }
+        }
+
         protected override CreateParams CreateParams
         {
             get
             {
-                CreateParams cp = base.CreateParams;
-                cp.ExStyle |= (int)(WindowStyle.WS_EX_LAYERED);
-                return cp;
+                var createParams = base.CreateParams;
+                createParams.ExStyle |= (int)(WindowStyle.WS_EX_TOPMOST | WindowStyle.WS_EX_TOOLWINDOW | WindowStyle.WS_EX_NOACTIVATE | WindowStyle.WS_EX_LAYERED);
+                return createParams;
             }
         }
 
@@ -190,7 +238,7 @@ namespace Gw2Launcher.UI
 
         private void Initialize(NotifyType t)
         {
-            background = new ShowWithoutActivationForm()
+            background = new Base.ShowWithoutActivationForm()
             {
                 BackColor = Color.Black,
                 Opacity = BACKGROUND_OPACITY,
@@ -344,6 +392,11 @@ namespace Gw2Launcher.UI
         public static void ShowNote(int screen, Settings.ScreenAnchor anchor, string text, string accountName)
         {
             Show(new formNotify(NotifyType.Note, screen, anchor, text, accountName));
+        }
+
+        public static void ShowImage(int screen, Settings.ScreenAnchor anchor, string text, Image image, bool dispose)
+        {
+            Show(new formNotify(NotifyType.Note, screen, anchor, image, dispose));
         }
 
         private void formNotify_Load(object sender, EventArgs e)
@@ -515,7 +568,7 @@ namespace Gw2Launcher.UI
 
         protected async void FadeOut(int duration)
         {
-            DateTime start = DateTime.UtcNow;
+            var start = Environment.TickCount;
 
             do
             {
@@ -524,7 +577,8 @@ namespace Gw2Launcher.UI
                 if (this.IsDisposed)
                     return;
 
-                var p = DateTime.UtcNow.Subtract(start).TotalMilliseconds / duration;
+                var p = (double)(Environment.TickCount - start) / duration;
+
                 if (p >= 1)
                 {
                     this.Close();
@@ -541,13 +595,14 @@ namespace Gw2Launcher.UI
 
         protected async void FadeIn(int duration)
         {
-            DateTime start = DateTime.UtcNow;
+            var start = Environment.TickCount;
 
             do
             {
                 await Task.Delay(10);
 
-                var p = DateTime.UtcNow.Subtract(start).TotalMilliseconds / duration;
+                var p = (double)(Environment.TickCount - start) / duration;
+
                 if (p >= 1)
                 {
                     this.Opacity = 1;

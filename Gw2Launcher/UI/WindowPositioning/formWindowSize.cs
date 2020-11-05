@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Data;
@@ -10,23 +10,10 @@ using System.Threading.Tasks;
 using System.Runtime.InteropServices;
 using Gw2Launcher.Windows.Native;
 
-namespace Gw2Launcher.UI
+namespace Gw2Launcher.UI.WindowPositioning
 {
-    public partial class formWindowSize : Form
+    public partial class formWindowSize : Base.BaseForm
     {
-        protected static event EventHandler<SharedOption> SharedOptionChanged;
-
-        protected static bool
-            includeFrame,
-            snapToGrid,
-            snapToScreen;
-
-        protected static SnapType snapToAccounts;
-
-        protected static ScreenRatio ratio;
-
-        protected static HashSet<formWindowSize> activeWindows;
-
         private const int 
             MIN_WIDTH = 200,
             MIN_HEIGHT = 150,
@@ -38,6 +25,7 @@ namespace Gw2Launcher.UI
         {
             All,
             IncludeFrame,
+            EnforceLimiations,
             SnapToGrid,
             SnapToAccounts,
             SnapToScreen,
@@ -160,6 +148,33 @@ namespace Gw2Launcher.UI
 
         private TextOverlay overlaySize, overlayLocation, overlayInfo;
 
+        protected class SharedOptions
+        {
+            public event EventHandler<SharedOption> SharedOptionChanged;
+
+            public bool
+                includeFrame,
+                enforceLimitations,
+                snapToGrid,
+                snapToScreen;
+
+            public SnapType snapToAccounts;
+
+            public ScreenRatio ratio;
+
+            public HashSet<formWindowSize> activeWindows;
+
+            public formTemplates.TemplateDisplayManager templateManager;
+
+            public void InvokeSharedOptionChanged(SharedOption o)
+            {
+                if (SharedOptionChanged != null)
+                    SharedOptionChanged(this, o);
+            }
+        }
+
+        protected static SharedOptions options;
+
         private int
             borderSize,
             padding,
@@ -181,24 +196,31 @@ namespace Gw2Launcher.UI
 
         private bool showContextMenu;
         protected Settings.IAccount account;
+        protected Settings.AccountType type;
+        private formTemplates templates;
+        private byte moving;
 
         static formWindowSize()
         {
-            includeFrame = true;
-            snapToAccounts = SnapType.EdgeToEdge;
-            snapToScreen = false;
-
-            activeWindows = new HashSet<formWindowSize>();
+            //settings used between windows and sessions
+            options = new SharedOptions()
+            {
+                includeFrame = true,
+                snapToAccounts = SnapType.EdgeToEdge,
+                snapToScreen = false,
+                activeWindows = new HashSet<formWindowSize>(),
+                enforceLimitations = true,
+            };
         }
 
-        public formWindowSize(bool showContextMenu, Settings.IAccount account, string name)
-            : this(showContextMenu, true, Color.White, account, name)
+        public formWindowSize(bool showContextMenu, Settings.AccountType type, Settings.IAccount account, string name)
+            : this(showContextMenu, true, Color.White, type, account, name)
         {
         }
 
-        public formWindowSize(bool showContextMenu, bool showInfo, Color backColor, Settings.IAccount account, string name)
+        public formWindowSize(bool showContextMenu, bool showInfo, Color backColor, Settings.AccountType type, Settings.IAccount account, string name)
         {
-            InitializeComponent();
+            InitializeComponents();
 
             SetStyle(ControlStyles.UserPaint, true);
             SetStyle(ControlStyles.AllPaintingInWmPaint, true);
@@ -206,26 +228,28 @@ namespace Gw2Launcher.UI
 
             this.showContextMenu = showContextMenu;
             this.account = account;
+            this.type = type;
 
             this.Text = name;
             this.FormBorderStyle = System.Windows.Forms.FormBorderStyle.Sizable;
-            this.MaximizeBox = true;
+            this.MaximizeBox = false;
             this.MinimizeBox = false;
             this.BackColor = backColor;
             this.Cursor = Cursors.SizeAll;
             this.MinimumSize = new System.Drawing.Size(MIN_WIDTH, MIN_HEIGHT);
             this.Opacity = 0;
 
-            var hasAccounts = false;
-            foreach (var uid in Settings.Accounts.GetKeys())
+            if (showContextMenu)
             {
-                if (account == null || uid != account.UID)
+                foreach (var a in Util.Accounts.GetAccounts())
                 {
-                    hasAccounts = true;
-                    break;
+                    if (account == null || a.UID != account.UID)
+                    {
+                        showOtherAccountsToolStripMenuItem.Enabled = true;
+                        break;
+                    }
                 }
             }
-            showOtherAccountsToolStripMenuItem.Enabled = hasAccounts;
 
             var b = this.Bounds;
             var c = this.ClientRectangle;
@@ -267,23 +291,39 @@ namespace Gw2Launcher.UI
 
             OnSharedOptionChanged(SharedOption.All);
 
-            SharedOptionChanged += formWindowSize_SharedOptionChanged;
+            options.SharedOptionChanged += formWindowSize_SharedOptionChanged;
 
             this.SizeChanged += formWindowSize_SizeChanged;
             this.LocationChanged += formWindowSize_LocationChanged;
             this.Disposed += formWindowSize_Disposed;
         }
 
+        protected override void OnInitializeComponents()
+        {
+            base.OnInitializeComponents();
+
+            InitializeComponent();
+        }
+
         void formWindowSize_Disposed(object sender, EventArgs e)
         {
-            activeWindows.Remove(this);
-            SharedOptionChanged -= formWindowSize_SharedOptionChanged;
+            options.activeWindows.Remove(this);
+            options.SharedOptionChanged -= formWindowSize_SharedOptionChanged;
         }
 
         void formWindowSize_LocationChanged(object sender, EventArgs e)
         {
             UpdateLocations();
             OnLocationChanged();
+
+            if (Settings.IsRunningWine)
+            {
+                if (moving == 1)
+                {
+                    moving = 2;
+                    OnBeginMove();
+                }
+            }
         }
 
         void formWindowSize_SizeChanged(object sender, EventArgs e)
@@ -308,7 +348,7 @@ namespace Gw2Launcher.UI
         private void OnLocationChanged()
         {
             Point location;
-            if (includeFrame)
+            if (options.includeFrame)
                 location = this.Location;
             else
                 location = this.PointToScreen(Point.Empty);
@@ -318,11 +358,71 @@ namespace Gw2Launcher.UI
         private void OnSizeChanged()
         {
             Size size;
-            if (includeFrame)
+            if (options.includeFrame)
                 size = this.Size;
             else
                 size = this.ClientSize;
             overlaySize.Text = size.Width + " x " + size.Height;
+        }
+
+        private void OnBeginMove()
+        {
+            if (options.templateManager != null)
+            {
+                options.templateManager.Enabled = true;
+            }
+        }
+
+        private void OnExitSizeMove()
+        {
+            if (options.templateManager != null)
+            {
+                var t = options.templateManager;
+                if (t.Enabled && t.IsHovered)
+                {
+                    if (t.SnapToEdge)
+                    {
+                        var hb = t.HoveredBounds;
+                        var border = (this.Width - this.ClientSize.Width) / 2 - 1;
+                        this.Bounds = new Rectangle(hb.Left - border, hb.Top, hb.Width + border * 2, hb.Height + border);
+                    }
+                    else
+                    {
+                        this.Bounds = t.HoveredBounds;
+                    }
+                }
+                t.Enabled = false;
+            }
+
+            if (options.enforceLimitations)
+            {
+                var screen = Screen.FromControl(this);
+                Rectangle bounds;
+
+                switch (this.type)
+                {
+                    case Settings.AccountType.GuildWars1:
+
+                        //gw1 cannot go above the top of the screen it's on
+                        bounds = screen.Bounds;
+                        if (this.Top < bounds.Top)
+                        {
+                            this.Top = bounds.Top;
+                        }
+
+                        break;
+                    case Settings.AccountType.GuildWars2:
+
+                        //gw2 cannot be larger than the working area
+                        bounds = screen.WorkingArea;
+                        if (this.Width > bounds.Width || this.Height > bounds.Height)
+                        {
+                            this.Size = new Size(this.Width > bounds.Width ? bounds.Width : this.Width, this.Height > bounds.Height ? bounds.Height : this.Height);
+                        }
+
+                        break;
+                }
+            }
         }
 
         private int Abs(int x)
@@ -343,7 +443,7 @@ namespace Gw2Launcher.UI
             r.left = sizingBounds.left + p.X;
             r.top = sizingBounds.top + p.Y;
 
-            if (snapToGrid)
+            if (options.snapToGrid)
             {
                 pe = r.left % gridSize;
                 if (pe >= gridSize / 2)
@@ -361,7 +461,7 @@ namespace Gw2Launcher.UI
             r.right = r.left + w;
             r.bottom = r.top + h;
 
-            if (snapToAccounts != SnapType.None)
+            if (options.snapToAccounts != SnapType.None)
             {
                 if (snappedX && Abs(r.left - snapX) > snapSize)
                     snappedX = false;
@@ -383,7 +483,7 @@ namespace Gw2Launcher.UI
                             {
                                 dX = d;
                                 snapX = s.left - w;
-                                if (snapToAccounts == SnapType.EdgeToEdge || s.type == Snap.FrameType.Container)
+                                if (options.snapToAccounts == SnapType.EdgeToEdge || s.type == Snap.FrameType.Container)
                                     snapX += borderSize - 1;
                                 snappedX = true;
                             }
@@ -394,7 +494,7 @@ namespace Gw2Launcher.UI
                             {
                                 dX = d;
                                 snapX = s.right;
-                                if (snapToAccounts == SnapType.EdgeToEdge || s.type == Snap.FrameType.Container)
+                                if (options.snapToAccounts == SnapType.EdgeToEdge || s.type == Snap.FrameType.Container)
                                     snapX -= borderSize - 1;
                                 snappedX = true;
                             }
@@ -407,7 +507,7 @@ namespace Gw2Launcher.UI
                                 {
                                     dX = d;
                                     snapX = s.left;
-                                    if (snapToAccounts == SnapType.EdgeToEdge || snapToAccounts == SnapType.EdgeToBorder || s.type == Snap.FrameType.Container)
+                                    if (options.snapToAccounts == SnapType.EdgeToEdge || options.snapToAccounts == SnapType.EdgeToBorder || s.type == Snap.FrameType.Container)
                                         snapX -= borderSize;
                                     snappedX = true;
                                 }
@@ -418,7 +518,7 @@ namespace Gw2Launcher.UI
                                 {
                                     dX = d;
                                     snapX = s.right - w;
-                                    if (snapToAccounts == SnapType.EdgeToEdge || snapToAccounts == SnapType.EdgeToBorder || s.type == Snap.FrameType.Container)
+                                    if (options.snapToAccounts == SnapType.EdgeToEdge || options.snapToAccounts == SnapType.EdgeToBorder || s.type == Snap.FrameType.Container)
                                         snapX += borderSize;
                                     snappedX = true;
                                 }
@@ -434,7 +534,7 @@ namespace Gw2Launcher.UI
                             {
                                 dY = d;
                                 snapY = s.top - h;
-                                if (snapToAccounts == SnapType.EdgeToEdge || s.type == Snap.FrameType.Container)
+                                if (options.snapToAccounts == SnapType.EdgeToEdge || s.type == Snap.FrameType.Container)
                                     snapY += borderSize;
                                 snappedY = true;
                             }
@@ -465,7 +565,7 @@ namespace Gw2Launcher.UI
                                 {
                                     dY = d;
                                     snapY = s.bottom - h;
-                                    if (snapToAccounts == SnapType.EdgeToEdge || s.type == Snap.FrameType.Container)
+                                    if (options.snapToAccounts == SnapType.EdgeToEdge || s.type == Snap.FrameType.Container)
                                         snapY += borderSize;
                                     snappedY = true;
                                 }
@@ -504,7 +604,7 @@ namespace Gw2Launcher.UI
 
                     r.right = sizingBounds.right + p.X;
 
-                    if (snapToGrid)
+                    if (options.snapToGrid)
                     {
                         pe = (r.right - r.left) % gridSize;
                         if (pe >= gridSize / 2)
@@ -528,7 +628,7 @@ namespace Gw2Launcher.UI
 
                     r.left = sizingBounds.left + p.X;
 
-                    if (snapToGrid)
+                    if (options.snapToGrid)
                     {
                         pe = r.left % gridSize;
                         if (pe >= gridSize / 2)
@@ -556,7 +656,7 @@ namespace Gw2Launcher.UI
 
                     r.bottom = sizingBounds.bottom + p.Y;
 
-                    if (snapToGrid)
+                    if (options.snapToGrid)
                     {
                         pe = (r.bottom - r.top) % gridSize;
                         if (pe >= gridSize / 2)
@@ -580,7 +680,7 @@ namespace Gw2Launcher.UI
 
                     r.top = sizingBounds.top + p.Y;
 
-                    if (snapToGrid)
+                    if (options.snapToGrid)
                     {
                         pe = r.top % gridSize;
                         if (pe >= gridSize / 2)
@@ -598,7 +698,7 @@ namespace Gw2Launcher.UI
                     break;
             }
 
-            if (snapToAccounts != SnapType.None)
+            if (options.snapToAccounts != SnapType.None)
             {
                 int dX = Int32.MaxValue,
                     dY = Int32.MaxValue,
@@ -621,7 +721,7 @@ namespace Gw2Launcher.UI
                                     if (d < dX)
                                     {
                                         snapX = s.left;
-                                        if (snapToAccounts == SnapType.EdgeToEdge || s.type == Snap.FrameType.Container)
+                                        if (options.snapToAccounts == SnapType.EdgeToEdge || s.type == Snap.FrameType.Container)
                                             snapX += borderSize - 1;
                                         snappedX = true;
                                     }
@@ -633,7 +733,7 @@ namespace Gw2Launcher.UI
                                         if (d < dX)
                                         {
                                             snapX = s.right;
-                                            if (snapToAccounts == SnapType.EdgeToEdge || snapToAccounts == SnapType.EdgeToBorder || s.type == Snap.FrameType.Container)
+                                            if (options.snapToAccounts == SnapType.EdgeToEdge || options.snapToAccounts == SnapType.EdgeToBorder || s.type == Snap.FrameType.Container)
                                                 snapX += borderSize;
                                             snappedX = true;
                                         }
@@ -652,7 +752,7 @@ namespace Gw2Launcher.UI
                                     if (d < dX)
                                     {
                                         snapX = s.right;
-                                        if (snapToAccounts == SnapType.EdgeToEdge || s.type == Snap.FrameType.Container)
+                                        if (options.snapToAccounts == SnapType.EdgeToEdge || s.type == Snap.FrameType.Container)
                                             snapX -= borderSize - 1;
                                         snappedX = true;
                                     }
@@ -664,7 +764,7 @@ namespace Gw2Launcher.UI
                                         if (d < dX)
                                         {
                                             snapX = s.left;
-                                            if (snapToAccounts == SnapType.EdgeToEdge || snapToAccounts == SnapType.EdgeToBorder || s.type == Snap.FrameType.Container)
+                                            if (options.snapToAccounts == SnapType.EdgeToEdge || options.snapToAccounts == SnapType.EdgeToBorder || s.type == Snap.FrameType.Container)
                                                 snapX -= borderSize;
                                             snappedX = true;
                                         }
@@ -690,7 +790,7 @@ namespace Gw2Launcher.UI
                                     if (d < dY)
                                     {
                                         snapY = s.top;
-                                        if (snapToAccounts == SnapType.EdgeToEdge || s.type == Snap.FrameType.Container)
+                                        if (options.snapToAccounts == SnapType.EdgeToEdge || s.type == Snap.FrameType.Container)
                                             snapY += borderSize;
                                         snappedY = true;
                                     }
@@ -702,7 +802,7 @@ namespace Gw2Launcher.UI
                                         if (d < dY)
                                         {
                                             snapY = s.bottom;
-                                            if (snapToAccounts == SnapType.EdgeToEdge || s.type == Snap.FrameType.Container)
+                                            if (options.snapToAccounts == SnapType.EdgeToEdge || s.type == Snap.FrameType.Container)
                                                 snapY += borderSize;
                                             snappedY = true;
                                         }
@@ -799,20 +899,20 @@ namespace Gw2Launcher.UI
         {
             Screen[] screens;
 
-            if (snapToScreen)
+            if (options.snapToScreen)
                 screens = Screen.AllScreens;
             else
                 screens = new Screen[0];
 
-            var snaps = new Snap[activeWindows.Count - 1 + screens.Length];
+            var snaps = new Snap[options.activeWindows.Count - 1 + screens.Length];
             int i = 0;
 
-            foreach (var f in activeWindows)
+            foreach (var f in options.activeWindows)
             {
                 if (f == this)
                     continue;
 
-                if (snapToAccounts == SnapType.BorderToBorder)
+                if (options.snapToAccounts == SnapType.BorderToBorder)
                 {
                     snaps[i++] = new Snap()
                     {
@@ -830,7 +930,7 @@ namespace Gw2Launcher.UI
                         left = f.Left + borderSize,
                         top = f.Top,
                         right = f.Right - borderSize,
-                        bottom = snapToAccounts == SnapType.EdgeToBorder ? f.Bottom : f.Bottom - borderSize,
+                        bottom = options.snapToAccounts == SnapType.EdgeToBorder ? f.Bottom : f.Bottom - borderSize,
                         type = Snap.FrameType.Window,
                     };
                 }
@@ -910,7 +1010,7 @@ namespace Gw2Launcher.UI
                             {
                                 m.Result = (IntPtr)HitTest.Right;
                             }
-                            else
+                            else if (!Settings.IsRunningWine)
                             {
                                 m.Result = (IntPtr)HitTest.Caption;
                             }
@@ -933,13 +1033,14 @@ namespace Gw2Launcher.UI
                         bottom = this.Bottom,
                     };
                     snappedX = snappedY = false;
+                    moving = 1;
 
                     break;
                 case WindowMessages.WM_SIZING:
 
                     base.WndProc(ref m);
 
-                    if (snapToGrid || snapToAccounts != SnapType.None)
+                    if (options.snapToGrid || options.snapToAccounts != SnapType.None)
                     {
                         var r = (RECT)m.GetLParam(typeof(RECT));
                         if (OnSizing((Sizing)m.WParam.GetValue(), ref r))
@@ -951,12 +1052,26 @@ namespace Gw2Launcher.UI
 
                     base.WndProc(ref m);
 
-                    if (snapToGrid || snapToAccounts != SnapType.None)
+                    if (options.snapToGrid || options.snapToAccounts != SnapType.None)
                     {
                         var r = (RECT)m.GetLParam(typeof(RECT));
                         if (OnMoving(ref r))
                             Marshal.StructureToPtr(r, m.LParam, false);
                     }
+
+                    if (moving == 1)
+                    {
+                        moving = 2;
+                        OnBeginMove();
+                    }
+
+                    break;
+                case WindowMessages.WM_EXITSIZEMOVE:
+
+                    base.WndProc(ref m);
+
+                    OnExitSizeMove();
+                    moving = 0;
 
                     break;
                 default:
@@ -978,15 +1093,9 @@ namespace Gw2Launcher.UI
 
             this.Opacity = 0.9;
 
-            activeWindows.Add(this);
+            options.activeWindows.Add(this);
             
             base.OnShown(e);
-        }
-
-        void InvokeSharedOptionChanged(SharedOption o)
-        {
-            if (SharedOptionChanged != null)
-                SharedOptionChanged(this, o);
         }
 
         void OnSharedOptionChanged(SharedOption o)
@@ -995,48 +1104,55 @@ namespace Gw2Launcher.UI
             {
                 case SharedOption.All:
 
-                    includeFrameSizeInDisplayedValuesToolStripMenuItem.Checked = includeFrame;
-                    gridToolStripMenuItem.Checked = snapToGrid;
-                    fromEdgeToEdgeToolStripMenuItem.Checked = snapToAccounts == SnapType.EdgeToEdge;
-                    fromEdgeToBorderToolStripMenuItem.Checked = snapToAccounts == SnapType.EdgeToBorder;
-                    fromBorderToBorderToolStripMenuItem.Checked = snapToAccounts == SnapType.BorderToBorder;
-                    otherAccountsToolStripMenuItem.Checked = snapToAccounts != SnapType.None;
-                    screenToolStripMenuItem.Checked = snapToScreen;
-                    keep169RatioToolStripMenuItem.Checked = ratio == ScreenRatio.Widescreen16_9;
-                    keep43RatioToolStripMenuItem.Checked = ratio == ScreenRatio.Box4_3;
+                    includeFrameSizeInDisplayedValuesToolStripMenuItem.Checked = options.includeFrame;
+                    enforceLimitationsToolStripMenuItem.Checked = options.enforceLimitations;
+                    gridToolStripMenuItem.Checked = options.snapToGrid;
+                    fromEdgeToEdgeToolStripMenuItem.Checked = options.snapToAccounts == SnapType.EdgeToEdge;
+                    fromEdgeToBorderToolStripMenuItem.Checked = options.snapToAccounts == SnapType.EdgeToBorder;
+                    fromBorderToBorderToolStripMenuItem.Checked = options.snapToAccounts == SnapType.BorderToBorder;
+                    otherAccountsToolStripMenuItem.Checked = options.snapToAccounts != SnapType.None;
+                    screenToolStripMenuItem.Checked = options.snapToScreen;
+                    keep169RatioToolStripMenuItem.Checked = options.ratio == ScreenRatio.Widescreen16_9;
+                    keep43RatioToolStripMenuItem.Checked = options.ratio == ScreenRatio.Box4_3;
 
                     break;
-
                 case SharedOption.IncludeFrame:
 
-                    includeFrameSizeInDisplayedValuesToolStripMenuItem.Checked = includeFrame;
+                    includeFrameSizeInDisplayedValuesToolStripMenuItem.Checked = options.includeFrame;
 
                     OnLocationChanged();
                     OnSizeChanged();
 
                     break;
+                case SharedOption.EnforceLimiations:
+
+                    enforceLimitationsToolStripMenuItem.Checked = options.enforceLimitations;
+
+                    OnExitSizeMove();
+
+                    break;
                 case SharedOption.SnapToAccounts:
-                    
-                    fromEdgeToEdgeToolStripMenuItem.Checked = snapToAccounts == SnapType.EdgeToEdge;
-                    fromEdgeToBorderToolStripMenuItem.Checked = snapToAccounts == SnapType.EdgeToBorder;
-                    fromBorderToBorderToolStripMenuItem.Checked = snapToAccounts == SnapType.BorderToBorder;
-                    otherAccountsToolStripMenuItem.Checked = snapToAccounts != SnapType.None;
+
+                    fromEdgeToEdgeToolStripMenuItem.Checked = options.snapToAccounts == SnapType.EdgeToEdge;
+                    fromEdgeToBorderToolStripMenuItem.Checked = options.snapToAccounts == SnapType.EdgeToBorder;
+                    fromBorderToBorderToolStripMenuItem.Checked = options.snapToAccounts == SnapType.BorderToBorder;
+                    otherAccountsToolStripMenuItem.Checked = options.snapToAccounts != SnapType.None;
 
                     break;
                 case SharedOption.SnapToGrid:
 
-                    gridToolStripMenuItem.Checked = snapToGrid;
+                    gridToolStripMenuItem.Checked = options.snapToGrid;
 
                     break;
                 case SharedOption.SnapToScreen:
 
-                    screenToolStripMenuItem.Checked = snapToScreen;
+                    screenToolStripMenuItem.Checked = options.snapToScreen;
 
                     break;
                 case SharedOption.Ratio:
 
-                    keep169RatioToolStripMenuItem.Checked = ratio == ScreenRatio.Widescreen16_9;
-                    keep43RatioToolStripMenuItem.Checked = ratio == ScreenRatio.Box4_3;
+                    keep169RatioToolStripMenuItem.Checked = options.ratio == ScreenRatio.Widescreen16_9;
+                    keep43RatioToolStripMenuItem.Checked = options.ratio == ScreenRatio.Box4_3;
 
                     break;
             }
@@ -1069,23 +1185,12 @@ namespace Gw2Launcher.UI
 
         public void SetWindowLocation(Rectangle rect)
         {
-            if (this.InvokeRequired)
-            {
-                try
+            if (Util.Invoke.IfRequired(this,
+                delegate
                 {
-                    this.Invoke(new MethodInvoker(
-                        delegate
-                        {
-                            SetWindowLocation(rect);
-                        }));
-                }
-                catch (Exception ex)
-                {
-                    Util.Logging.Log(ex);
-                }
-
+                    SetWindowLocation(rect);
+                }))
                 return;
-            }
 
             var min = MOVE_SIZE * 2;
             if (rect.Width < min)
@@ -1120,7 +1225,7 @@ namespace Gw2Launcher.UI
                     var p = Client.Launcher.FindProcess(account);
                     if (p != null && !p.HasExited)
                     {
-                        handle = p.MainWindowHandle;
+                        handle = Windows.FindWindow.FindMainWindow(p);
                         if (!NativeMethods.IsWindow(handle))
                             handle = IntPtr.Zero;
                     }
@@ -1136,6 +1241,16 @@ namespace Gw2Launcher.UI
             applyBoundsToProcessToolStripMenuItem.Enabled = handle != IntPtr.Zero;
 
             contextMenu.Show(Cursor.Position);
+        }
+
+        protected override void OnMouseDown(MouseEventArgs e)
+        {
+            base.OnMouseDown(e);
+
+            if (e.Button == System.Windows.Forms.MouseButtons.Left && Settings.IsRunningWine)
+            {
+                NativeMethods.SendMessage(this.Handle, 0x112, 0xf012, 0);
+            }
         }
 
         private void formWindowSize_MouseUp(object sender, MouseEventArgs e)
@@ -1216,61 +1331,109 @@ namespace Gw2Launcher.UI
             this.DialogResult = DialogResult.Cancel;
         }
 
+        private void ShowOtherAccounts(List<Settings.IAccount> accounts)
+        {
+            Form last = null;
+
+            var existing = new Dictionary<ushort, Rectangle>(options.activeWindows.Count);
+
+            foreach (var w in options.activeWindows)
+            {
+                if (w.account != null)
+                    existing[w.account.UID] = w.Bounds;
+            }
+
+            if (existing.Count > 1)
+                CloseForms();
+
+            foreach (var account in accounts)
+            {
+                if (account == this.account)
+                    continue;
+
+                var f = new formWindowSize(false, false, Color.LightGray, account.Type, account, account.Name);
+
+                var owner = this.Owner;
+                this.Owner = f;
+
+                f.PreviousForm = this.PreviousForm;
+                if (f.PreviousForm != null)
+                {
+                    f.PreviousForm.NextForm = f;
+                    f.Owner = owner;// f.PreviousForm;
+                }
+                else
+                    f.Owner = owner;
+
+                f.NextForm = this;
+                this.PreviousForm = f;
+
+                f.FormClosed += f_FormClosed;
+
+                Rectangle b;
+                if (existing.TryGetValue(account.UID, out b))
+                    f.Bounds = b;
+                else if (!account.WindowBounds.IsEmpty)
+                    f.Bounds = account.WindowBounds;
+                else
+                    f.StartPosition = FormStartPosition.WindowsDefaultBounds;
+                f.Show();
+
+                last = f;
+            }
+
+            if (last != null)
+            {
+                last.Shown += delegate
+                {
+                    this.BringToFront();
+                    this.Focus();
+                };
+            }
+        }
+
+        private IEnumerable<KeyValuePair<Settings.IAccount, bool>> GetShowOtherAccountsEnumerable()
+        {
+            foreach (var a in Util.Accounts.GetAccounts())
+            {
+                if (a.UID == account.UID)
+                    continue;
+
+                var b = a.Type == account.Type && a.Windowed;
+
+                yield return new KeyValuePair<Settings.IAccount, bool>(a, b);
+            }
+        }
+
         private void showOtherAccountsToolStripMenuItem_Click(object sender, EventArgs e)
         {
-            if (showOtherAccountsToolStripMenuItem.Checked = !showOtherAccountsToolStripMenuItem.Checked)
+            var c = (ToolStripMenuItem)sender;
+            var b = !c.Checked;
+
+            if (b)
             {
-                Form last = null;
+                List<Settings.IAccount> selected;
 
-                var accounts = Settings.Accounts;
-                foreach (var uid in accounts.GetKeys())
+                using (var f = new formAccountSelect("Select which accounts to show", GetShowOtherAccountsEnumerable(), true))
                 {
-                    var account = accounts[uid].Value;
-
-                    if (account != null && account.Windowed && !account.WindowBounds.IsEmpty)
+                    if (f.ShowDialog(this) == System.Windows.Forms.DialogResult.OK)
                     {
-                        if (account == this.account)
-                            continue;
-
-                        var f = new formWindowSize(false, false, Color.LightGray, account, account.Name);
-
-                        var owner = this.Owner;
-                        this.Owner = f;
-
-                        f.PreviousForm = this.PreviousForm;
-                        if (f.PreviousForm != null)
-                        {
-                            f.PreviousForm.NextForm = f;
-                            f.Owner = owner;// f.PreviousForm;
-                        }
-                        else
-                            f.Owner = owner;
-
-                        f.NextForm = this;
-                        this.PreviousForm = f;
-
-                        f.FormClosed += f_FormClosed;
-
-                        f.Bounds = account.WindowBounds;
-                        f.Show();
-
-                        last = f;
+                        selected = f.Selected;
+                    }
+                    else
+                    {
+                        return;
                     }
                 }
 
-                if (last != null)
-                {
-                    last.Shown += delegate
-                    {
-                        this.BringToFront();
-                        this.Focus();
-                    };
-                }
+                ShowOtherAccounts(selected);
             }
             else
             {
                 CloseForms();
             }
+
+            c.Checked = b;
         }
 
         void f_FormClosed(object sender, FormClosedEventArgs e)
@@ -1278,15 +1441,17 @@ namespace Gw2Launcher.UI
             var f = (formWindowSize)sender;
 
             if (this.PreviousForm == null)
+            {
                 showOtherAccountsToolStripMenuItem.Checked = false;
+            }
         }
 
         private void CloseForms()
         {
-            this.Owner = null;
-
             var f = this;
-            Form owner = null;
+            Form owner = this.Owner;
+
+            this.Owner = null;
 
             do
             {
@@ -1328,8 +1493,8 @@ namespace Gw2Launcher.UI
         {
             try
             {
-                var rect = Windows.WindowSize.GetWindowRect((IntPtr)matchProcessToolStripMenuItem.Tag);
-                this.Bounds = rect;
+                var p = Windows.WindowSize.GetWindowPlacement((IntPtr)matchProcessToolStripMenuItem.Tag);
+                this.Bounds = Util.ScreenUtil.FromDesktopBounds(p.rcNormalPosition.ToRectangle());
             }
             catch { }
         }
@@ -1338,7 +1503,8 @@ namespace Gw2Launcher.UI
         {
             try
             {
-                Windows.WindowSize.SetWindowPlacement((IntPtr)matchProcessToolStripMenuItem.Tag, this.Bounds, ShowWindowCommands.ShowNormal);
+                if (!Client.Launcher.ApplyWindowedBounds(account, this.Bounds))
+                    Windows.WindowSize.SetWindowPlacement((IntPtr)matchProcessToolStripMenuItem.Tag, Util.ScreenUtil.ToDesktopBounds(this.Bounds), ShowWindowCommands.ShowNormal);
             }
             catch { }
         }
@@ -1354,44 +1520,62 @@ namespace Gw2Launcher.UI
 
         private void includeFrameSizeInDisplayedValuesToolStripMenuItem_Click(object sender, EventArgs e)
         {
-            includeFrame = !((ToolStripMenuItem)sender).Checked;
-            InvokeSharedOptionChanged(SharedOption.IncludeFrame);
+            options.includeFrame = !((ToolStripMenuItem)sender).Checked;
+            options.InvokeSharedOptionChanged(SharedOption.IncludeFrame);
         }
 
         private void gridToolStripMenuItem_Click(object sender, EventArgs e)
         {
-            snapToGrid = !((ToolStripMenuItem)sender).Checked;
-            InvokeSharedOptionChanged(SharedOption.SnapToGrid);
+            options.snapToGrid = !((ToolStripMenuItem)sender).Checked;
+            options.InvokeSharedOptionChanged(SharedOption.SnapToGrid);
         }
 
         private void fromEdgeToEdgeToolStripMenuItem_Click(object sender, EventArgs e)
         {
-            snapToAccounts = !((ToolStripMenuItem)sender).Checked ? SnapType.EdgeToEdge : SnapType.None;
-            InvokeSharedOptionChanged(SharedOption.SnapToAccounts);
+            options.snapToAccounts = !((ToolStripMenuItem)sender).Checked ? SnapType.EdgeToEdge : SnapType.None;
+            options.InvokeSharedOptionChanged(SharedOption.SnapToAccounts);
         }
 
         private void fromEdgeToBorderToolStripMenuItem_Click(object sender, EventArgs e)
         {
-            snapToAccounts = !((ToolStripMenuItem)sender).Checked ? SnapType.EdgeToBorder : SnapType.None;
-            InvokeSharedOptionChanged(SharedOption.SnapToAccounts);
+            options.snapToAccounts = !((ToolStripMenuItem)sender).Checked ? SnapType.EdgeToBorder : SnapType.None;
+            options.InvokeSharedOptionChanged(SharedOption.SnapToAccounts);
         }
 
         private void fromBorderToBorderToolStripMenuItem_Click(object sender, EventArgs e)
         {
-            snapToAccounts = !((ToolStripMenuItem)sender).Checked ? SnapType.BorderToBorder : SnapType.None;
-            InvokeSharedOptionChanged(SharedOption.SnapToAccounts);
+            options.snapToAccounts = !((ToolStripMenuItem)sender).Checked ? SnapType.BorderToBorder : SnapType.None;
+            options.InvokeSharedOptionChanged(SharedOption.SnapToAccounts);
         }
 
         private void otherAccountsToolStripMenuItem_Click(object sender, EventArgs e)
         {
-            snapToAccounts = !((ToolStripMenuItem)sender).Checked ? SnapType.EdgeToBorder : SnapType.None;
-            InvokeSharedOptionChanged(SharedOption.SnapToAccounts);
+            options.snapToAccounts = !((ToolStripMenuItem)sender).Checked ? SnapType.EdgeToBorder : SnapType.None;
+            options.InvokeSharedOptionChanged(SharedOption.SnapToAccounts);
         }
 
         private void screenToolStripMenuItem_Click(object sender, EventArgs e)
         {
-            snapToScreen = !((ToolStripMenuItem)sender).Checked;
-            InvokeSharedOptionChanged(SharedOption.SnapToScreen);
+            options.snapToScreen = !((ToolStripMenuItem)sender).Checked;
+            options.InvokeSharedOptionChanged(SharedOption.SnapToScreen);
+        }
+
+        private void keep43RatioToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            options.ratio = !((ToolStripMenuItem)sender).Checked ? ScreenRatio.Box4_3 : ScreenRatio.None;
+            options.InvokeSharedOptionChanged(SharedOption.Ratio);
+        }
+
+        private void keep169RatioToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            options.ratio = !((ToolStripMenuItem)sender).Checked ? ScreenRatio.Widescreen16_9 : ScreenRatio.None;
+            options.InvokeSharedOptionChanged(SharedOption.Ratio);
+        }
+
+        private void enforceLimitationsToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            options.enforceLimitations = !((ToolStripMenuItem)sender).Checked;
+            options.InvokeSharedOptionChanged(SharedOption.EnforceLimiations);
         }
 
         private void AutoArrange(Rectangle screen, ICollection<formWindowSize> windows)
@@ -1412,7 +1596,7 @@ namespace Gw2Launcher.UI
                 sra;
 
 
-            switch (ratio)
+            switch (options.ratio)
             {
                 case ScreenRatio.Box4_3:
                     sra = 4f / 3f;
@@ -1429,7 +1613,7 @@ namespace Gw2Launcher.UI
                 delegate(int width, int defaultHeight)
                 {
                     int _h;
-                    switch (ratio)
+                    switch (options.ratio)
                     {
                         case ScreenRatio.Box4_3:
                             _h = (width - 1) * 3 / 4 + captionHeight + 1;
@@ -1503,7 +1687,7 @@ namespace Gw2Launcher.UI
                 {
                     lh = screen.Height;
 
-                    switch (ratio)
+                    switch (options.ratio)
                     {
                         case ScreenRatio.Box4_3:
                             lw = (lh - borderSize - captionHeight) * 4 / 3 + 1;
@@ -1536,21 +1720,14 @@ namespace Gw2Launcher.UI
         {
         }
 
-        private void keep43RatioToolStripMenuItem_Click(object sender, EventArgs e)
-        {
-            ratio = !((ToolStripMenuItem)sender).Checked ? ScreenRatio.Box4_3 : ScreenRatio.None;
-            InvokeSharedOptionChanged(SharedOption.Ratio);
-        }
-
-        private void keep169RatioToolStripMenuItem_Click(object sender, EventArgs e)
-        {
-            ratio = !((ToolStripMenuItem)sender).Checked ? ScreenRatio.Widescreen16_9 : ScreenRatio.None;
-            InvokeSharedOptionChanged(SharedOption.Ratio);
-        }
-
         private void allToThisScreenToolStripMenuItem_Click(object sender, EventArgs e)
         {
-            AutoArrange(Screen.FromControl(this).Bounds, activeWindows);
+            var screen = Screen.FromControl(this).Bounds;
+
+            if (useTemplateToolStripMenuItem.Checked && AutoArrageByTemplate(screen, options.activeWindows))
+                return;
+
+            AutoArrange(screen, options.activeWindows);
         }
 
         private void onlyOnThisScreenToolStripMenuItem_Click(object sender, EventArgs e)
@@ -1558,13 +1735,134 @@ namespace Gw2Launcher.UI
             var screen = Screen.FromControl(this).Bounds;
             var windows = new List<formWindowSize>();
 
-            foreach (var f in activeWindows)
+            foreach (var f in options.activeWindows)
             {
                 if (screen.IntersectsWith(f.DesktopBounds))
                     windows.Add(f);
             }
 
+            if (useTemplateToolStripMenuItem.Checked && AutoArrageByTemplate(screen, windows))
+                return;
+
             AutoArrange(screen, windows);
+        }
+
+        private bool AutoArrageByTemplate(Rectangle screen, ICollection<formWindowSize> windows)
+        {
+            var t = options.templateManager;
+
+            if (t != null)
+            {
+                var rects = t.GetArea(screen);
+                if (rects.Count > 0)
+                {
+                    var i = 0;
+
+                    rects.Sort(new Comparison<Rectangle>(
+                        delegate(Rectangle a, Rectangle b)
+                        {
+                            var c = a.X.CompareTo(b.X);
+
+                            if (c == 0 
+                                && (c = a.Y.CompareTo(b.Y)) == 0 
+                                && (c = a.Width.CompareTo(b.Width)) == 0 
+                                && (c = a.Height.CompareTo(b.Height)) == 0)
+                            {
+                                return 0;
+                            }
+
+                            return c;
+                        }));
+
+                    foreach (var w in windows)
+                    {
+                        if (t.SnapToEdge)
+                        {
+                            var r = rects[i++];
+                            var border = (this.Width - this.ClientSize.Width) / 2 - 1;
+                            w.Bounds = new Rectangle(r.Left - border, r.Top, r.Width + border * 2, r.Height + border);
+                        }
+                        else
+                        {
+                            w.Bounds = rects[i++];
+                        }
+
+                        if (i == rects.Count)
+                            break;
+                    }
+
+                    return true;
+                }
+            }
+
+            return false;
+        }
+
+        void templates_TemplateDisplayManagerChanged(object sender, formTemplates.TemplateDisplayManager e)
+        {
+            options.templateManager = e;
+
+            if (e != null)
+            {
+                e.TopLevelChanged += templates_TopLevelChanged;
+            }
+        }
+
+        void templates_TopLevelChanged(object sender, Form e)
+        {
+            var f = GetLowest();
+            if (e != null)
+                f.Owner = null;
+            f.Owner = e;
+            useTemplateToolStripMenuItem.Enabled = e != null;
+        }
+
+        private void templatesToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            if (templates == null || templates.IsDisposed)
+            {
+                var screen = Screen.FromControl(this).WorkingArea;
+
+                templates = new formTemplates(this);
+                templates.TemplateDisplayManagerChanged += templates_TemplateDisplayManagerChanged;
+                templates.Location = new Point(screen.Right - templates.Width, screen.Bottom - templates.Height);
+                templates.FormClosed += templates_FormClosed;
+                templates.Show(this);
+            }
+            else
+            {
+                if (!templates.Visible)
+                    templates.Show(this);
+                else
+                    templates.BringToFront();
+            }
+        }
+
+        void templates_FormClosed(object sender, FormClosedEventArgs e)
+        {
+            options.templateManager = null;
+            templates.Dispose();
+            templates = null;
+        }
+
+        public ICollection<formWindowSize> GetWindows()
+        {
+            return options.activeWindows;
+        }
+
+        public formWindowSize GetLowest()
+        {
+            var f = this;
+            while (f.PreviousForm != null)
+            {
+                f = f.PreviousForm;
+            }
+            return f;
+        }
+
+        private void useTemplateToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            useTemplateToolStripMenuItem.Checked = !useTemplateToolStripMenuItem.Checked;
         }
     }
 }

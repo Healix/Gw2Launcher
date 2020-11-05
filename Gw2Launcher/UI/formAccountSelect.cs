@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Data;
@@ -11,7 +11,7 @@ using System.Net;
 
 namespace Gw2Launcher.UI
 {
-    public partial class formAccountSelect : Form
+    public partial class formAccountSelect : Base.BaseForm
     {
         private struct AccountCell
         {
@@ -34,25 +34,56 @@ namespace Gw2Launcher.UI
         private int labelHeight;
         private DataGridViewCell lastSelected;
         private bool multiSelect;
-
-        public formAccountSelect(string title, IEnumerable<Settings.IAccount> accounts, bool isDefaultChecked, bool multiSelect)
+        
+        private formAccountSelect(string title, bool multiSelect)
         {
-            InitializeComponent();
-
-            var scale = this.CurrentAutoScaleDimensions.Width / 96f;
-            if (scale != 1)
-            {
-                foreach (DataGridViewColumn col in gridAccounts.Columns)
-                {
-                    if (col.AutoSizeMode != DataGridViewAutoSizeColumnMode.Fill)
-                        col.Width = (int)(col.Width * scale + 0.5f);
-                }
-            }
+            InitializeComponents();
 
             this.multiSelect = multiSelect;
             labelHeight = labelTitle.Height;
 
+            gridAccounts.RowTemplate.Height = gridAccounts.Font.Height * 3 / 2;
             gridAccounts.AdvancedCellBorderStyle.All = DataGridViewAdvancedCellBorderStyle.None;
+
+            var row = (DataGridViewRow)gridAccounts.RowTemplate.Clone();
+            row.CreateCells(gridAccounts);
+            row.Cells[columnCheck.Index].Value = false;
+            gridAccounts.Rows.Add(row);
+
+            labelTitle.MaximumSize = new Size(this.ClientSize.Width - labelTitle.Location.X * 2, this.Height);
+            labelTitle.Text = title;
+        }
+
+        public formAccountSelect(string title, IEnumerable<KeyValuePair<Settings.IAccount, bool>> accounts, bool multiSelect)
+            : this(title, multiSelect)
+        {
+            gridAccounts.SuspendLayout();
+
+            foreach (var kv in accounts)
+            {
+                var row = (DataGridViewRow)gridAccounts.RowTemplate.Clone();
+                row.CreateCells(gridAccounts);
+
+                bool isChecked = kv.Value && (multiSelect || lastSelected == null);
+
+                row.Cells[columnCheck.Index].Value = isChecked;
+                row.Cells[columnName.Index].Value = new AccountCell(kv.Key);
+
+                if (isChecked)
+                    lastSelected = row.Cells[columnCheck.Index];
+
+                gridAccounts.Rows.Add(row);
+            }
+
+            gridAccounts.ResumeLayout();
+
+            ResizeGrid();
+        }
+
+        public formAccountSelect(string title, IEnumerable<Settings.IAccount> accounts, bool isDefaultChecked, bool multiSelect)
+            : this(title, multiSelect)
+        {
+            gridAccounts.SuspendLayout();
 
             foreach (var account in accounts)
             {
@@ -70,8 +101,27 @@ namespace Gw2Launcher.UI
                 gridAccounts.Rows.Add(row);
             }
 
-            labelTitle.MaximumSize = new Size(this.ClientSize.Width - labelTitle.Location.X, this.Height);
-            labelTitle.Text = title;
+            gridAccounts.ResumeLayout();
+
+            ResizeGrid();
+        }
+
+        protected override void OnInitializeComponents()
+        {
+            base.OnInitializeComponents();
+
+            InitializeComponent();
+        }
+
+        private void ResizeGrid()
+        {
+            var h = gridAccounts.Rows.Count * gridAccounts.RowTemplate.Height;
+            var sz = gridAccounts.GetPreferredSize(new Size(gridAccounts.Width, int.MaxValue));
+
+            if (sz.Height < gridAccounts.Height)
+            {
+                this.Height -= gridAccounts.Height - sz.Height;
+            }
         }
 
         public List<Settings.IAccount> Selected
@@ -114,9 +164,23 @@ namespace Gw2Launcher.UI
             if (e.RowIndex >= 0)
             {
                 var c = gridAccounts.Rows[e.RowIndex].Cells[columnCheck.Index];
-                if (!multiSelect && lastSelected != c && lastSelected != null)
-                    lastSelected.Value = false;
-                c.Value = !(bool)c.Value;
+                var b = !(bool)c.Value;
+                
+                c.Value = b;
+
+                if (multiSelect && e.RowIndex == 0)
+                {
+                    for (var i = gridAccounts.Rows.Count - 1; i > 0; --i)
+                    {
+                        gridAccounts.Rows[i].Cells[columnCheck.Index].Value = b;
+                    }
+                }
+                else
+                {
+                    if (!multiSelect && lastSelected != c && lastSelected != null)
+                        lastSelected.Value = false;
+                    lastSelected = c;
+                }
             }
         }
 

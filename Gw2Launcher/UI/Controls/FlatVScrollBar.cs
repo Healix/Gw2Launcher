@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -22,7 +22,7 @@ namespace Gw2Launcher.UI.Controls
         private int originY;
         private Color colorBar, colorSlider, colorSliderHighlight;
         private SolidBrush brush;
-        private bool highlighted, sliding;
+        private bool highlighted, sliding, hovered;
 
         public FlatVScrollBar()
             : base()
@@ -72,11 +72,12 @@ namespace Gw2Launcher.UI.Controls
 
         protected override void Dispose(bool disposing)
         {
+            base.Dispose(disposing);
+
             if (disposing)
             {
                 brush.Dispose();
             }
-            base.Dispose(disposing);
         }
 
         [System.ComponentModel.Browsable(false)]
@@ -243,8 +244,7 @@ namespace Gw2Launcher.UI.Controls
         {
             base.OnMouseUp(e);
 
-            if (sliding && e.Button == System.Windows.Forms.MouseButtons.Left)
-                sliding = false;
+            sliding = false;
 
             if (highlighted)
             {
@@ -261,11 +261,18 @@ namespace Gw2Launcher.UI.Controls
         {
             base.OnMouseLeave(e);
 
+            hovered = false;
             if (!sliding && highlighted)
             {
                 highlighted = false;
                 this.Invalidate();
             }
+        }
+
+        protected override void OnMouseEnter(EventArgs e)
+        {
+            base.OnMouseEnter(e);
+            hovered = true;
         }
 
         protected override void OnKeyDown(KeyEventArgs e)
@@ -278,11 +285,11 @@ namespace Gw2Launcher.UI.Controls
                 {
                     case Keys.Up:
                     case Keys.Left:
-                        this.Value -= barH / 10;
+                        this.Value -= barH / 3;
                         break;
                     case Keys.Down:
                     case Keys.Right:
-                        this.Value += barH / 10;
+                        this.Value += barH / 3;
                         break;
                 }
             }
@@ -292,17 +299,25 @@ namespace Gw2Launcher.UI.Controls
         {
             base.OnMouseWheel(e);
 
+            if (hovered)
+            {
+                if (e is HandledMouseEventArgs)
+                    ((HandledMouseEventArgs)e).Handled = true;
+
+                DoMouseWheel(e);
+            }
+        }
+
+        public void DoMouseWheel(MouseEventArgs e)
+        {
             if (e.Delta > 0)
             {
-                this.Value -= barH / 10;
+                this.Value -= barH / 3;
             }
             else if (e.Delta < 0)
             {
-                this.Value += barH / 10;
+                this.Value += barH / 3;
             }
-
-            if (e is HandledMouseEventArgs)
-                ((HandledMouseEventArgs)e).Handled = true;
         }
 
         protected override void OnPreviewKeyDown(PreviewKeyDownEventArgs e)

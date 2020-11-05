@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Text;
 using System.Windows.Forms;
 using System.Drawing;
@@ -18,6 +18,8 @@ namespace Gw2Launcher.UI.Controls
         {
             SetStyle(ControlStyles.UserPaint, true);
             SetStyle(ControlStyles.AllPaintingInWmPaint, true);
+
+            alignment = HorizontalAlignment.Left;
         }
 
         protected void OnRedrawRequired()
@@ -77,9 +79,17 @@ namespace Gw2Launcher.UI.Controls
             set
             {
                 isSelected = value;
-                if (value)
-                    isHovered = false;
+                //if (value)
+                //    isHovered = false;
                 OnRedrawRequired();
+            }
+        }
+
+        public bool IsHovered
+        {
+            get
+            {
+                return isHovered;
             }
         }
 
@@ -95,7 +105,7 @@ namespace Gw2Launcher.UI.Controls
                 if (borderColor != value)
                 {
                     borderColor = value;
-                    this.Invalidate();
+                    OnRedrawRequired();
                 }
             }
         }
@@ -186,6 +196,42 @@ namespace Gw2Launcher.UI.Controls
             }
         }
 
+        protected AnchorStyles borderStyle;
+        [System.ComponentModel.DefaultValue(AnchorStyles.None)]
+        public AnchorStyles BorderStyle
+        {
+            get
+            {
+                return borderStyle;
+            }
+            set
+            {
+                if (borderStyle != value)
+                {
+                    borderStyle = value;
+                    OnRedrawRequired();
+                }
+            }
+        }
+
+        protected HorizontalAlignment alignment;
+        [System.ComponentModel.DefaultValue(HorizontalAlignment.Left)]
+        public HorizontalAlignment Alignment
+        {
+            get
+            {
+                return alignment;
+            }
+            set
+            {
+                if (alignment != value)
+                {
+                    alignment = value;
+                    OnRedrawRequired();
+                }
+            }
+        }
+
         protected override void OnPaddingChanged(EventArgs e)
         {
             base.OnPaddingChanged(e);
@@ -194,12 +240,24 @@ namespace Gw2Launcher.UI.Controls
 
         protected virtual BufferedGraphics AllocateBuffer(Graphics g)
         {
-            return BufferedGraphicsManager.Current.Allocate(g, this.DisplayRectangle);
+            return BufferedGraphicsManager.Current.Allocate(g, this.ClientRectangle);
         }
 
         protected virtual void DrawText(Graphics g, string text, int x, int y, int w, int h)
         {
-            TextRenderer.DrawText(g, text, this.Font, new Rectangle(x, y, w, h), ForeColorCurrent, BackColorCurrent, TextFormatFlags.WordBreak | TextFormatFlags.EndEllipsis | TextFormatFlags.VerticalCenter);
+            var f = TextFormatFlags.WordBreak | TextFormatFlags.EndEllipsis | TextFormatFlags.VerticalCenter;
+
+            switch (alignment)
+            {
+                case HorizontalAlignment.Center:
+                    f |= TextFormatFlags.HorizontalCenter;
+                    break;
+                case HorizontalAlignment.Right:
+                    f |= TextFormatFlags.Right;
+                    break;
+            }
+
+            TextRenderer.DrawText(g, text, this.Font, new Rectangle(x, y, w, h), ForeColorCurrent, BackColorCurrent, f);
         }
 
         protected virtual Size GetScaledDimensions(Image image, int maxW, int maxH)
@@ -216,7 +274,7 @@ namespace Gw2Launcher.UI.Controls
                 w = (int)(w * r + 0.5f);
                 h = (int)(h * r + 0.5f);
             }
-
+            
             return new Size(w, h);
         }
 
@@ -246,19 +304,31 @@ namespace Gw2Launcher.UI.Controls
 
         protected virtual void OnPaintBuffer(Graphics g)
         {
+            int w = this.Width;
+            int h = this.Height;
+            int px;
+
+            switch (alignment)
+            {
+                case HorizontalAlignment.Center:
+                    px = 0;
+                    break;
+                default:
+                    px = (int)(10 * g.DpiX / 96f + 0.5f);
+                    break;
+            }
+
             Image image;
             if ((image = this.BackgroundImage) != null)
             {
                 try
                 {
-                    int w = this.Width,
-                        h = this.Height;
                     var sz = GetScaledDimensions(image, w, h);
 
                     if (this.Text != null)
                     {
                         g.DrawImage(image, this.Padding.Left, (h - sz.Height) / 2, sz.Width, sz.Height);
-                        DrawText(g, this.Text, this.Padding.Left + 10 + sz.Width, this.Padding.Top, this.Width - this.Padding.Horizontal - 10 - sz.Width, this.Height - this.Padding.Vertical);
+                        DrawText(g, this.Text, this.Padding.Left + px + sz.Width, this.Padding.Top, w - this.Padding.Horizontal - px * 2 - sz.Width, h - this.Padding.Vertical);
                     }
                     else
                     {
@@ -269,7 +339,7 @@ namespace Gw2Launcher.UI.Controls
             }
             else
             {
-                DrawText(g, this.Text, this.Padding.Left + 10, this.Padding.Top, this.Width - this.Padding.Horizontal, this.Height - this.Padding.Vertical);
+                DrawText(g, this.Text, this.Padding.Left + px, this.Padding.Top, w - this.Padding.Horizontal - px * 2, h - this.Padding.Vertical);
             }
         }
 
@@ -277,23 +347,62 @@ namespace Gw2Launcher.UI.Controls
         {
             g.Clear(BackColorCurrent);
 
-            if (borderColor.A > 0)
+            if (borderStyle != AnchorStyles.None && borderColor.A > 0)
             {
-                using (var p = new Pen(borderColor,1))
+                var pw = (int)(g.DpiX / 96f + 0.5f);
+
+                using (var p = new Pen(borderColor, pw))
                 {
-                    g.DrawRectangle(p, 0, 0, this.Width - 1, this.Height - 1);
+                    int x = 0,
+                        y = 0,
+                        w = this.Width - 1,
+                        h = this.Height - 1;
+
+                    switch (borderStyle & (AnchorStyles.Left | AnchorStyles.Right))
+                    {
+                        case AnchorStyles.Left: //only left
+                            w += pw;
+                            break;
+                        case AnchorStyles.Right: //only right
+                            x -= pw;
+                            w += pw;
+                            break;
+                        case AnchorStyles.None:
+                            x -= pw;
+                            w += pw * 2;
+                            break;
+                    }
+
+                    switch (borderStyle & (AnchorStyles.Top | AnchorStyles.Bottom))
+                    {
+                        case AnchorStyles.Top: //only top
+                            h += pw;
+                            break;
+                        case AnchorStyles.Bottom: //only bottom
+                            y -= pw;
+                            h += pw;
+                            break;
+                        case AnchorStyles.None:
+                            y -= pw;
+                            h += pw * 2;
+                            break;
+                    }
+
+                    g.DrawRectangle(p, x, y, w, h);
                 }
             }
         }
 
         protected override void OnPaint(PaintEventArgs e)
         {
-            var g = e.Graphics;
-
             if (redraw)
             {
                 redraw = false;
 
+                if (buffer == null)
+                    buffer = AllocateBuffer(e.Graphics);
+
+                OnPaintBackgroundBuffer(buffer.Graphics);
                 OnPaintBuffer(buffer.Graphics);
             }
 
@@ -304,13 +413,6 @@ namespace Gw2Launcher.UI.Controls
 
         protected override void OnPaintBackground(PaintEventArgs e)
         {
-            if (redraw)
-            {
-                if (buffer == null)
-                    buffer = AllocateBuffer(e.Graphics);
-
-                OnPaintBackgroundBuffer(buffer.Graphics);
-            }
         }
 
         protected override void OnMouseEnter(EventArgs e)
@@ -331,6 +433,8 @@ namespace Gw2Launcher.UI.Controls
 
         protected override void Dispose(bool disposing)
         {
+            base.Dispose(disposing);
+
             if (disposing)
             {
                 if (buffer != null)
@@ -339,7 +443,6 @@ namespace Gw2Launcher.UI.Controls
                     buffer = null;
                 }
             }
-            base.Dispose(disposing);
         }
     }
 }

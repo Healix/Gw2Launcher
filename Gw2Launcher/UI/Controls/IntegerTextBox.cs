@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -10,6 +10,12 @@ namespace Gw2Launcher.UI.Controls
 {
     class IntegerTextBox : TextBox
     {
+        public event EventHandler ValueChanged;
+
+        private int _value;
+        private bool cached;
+        private bool _locked;
+
         public IntegerTextBox()
         {
             base.Text = "0";
@@ -21,9 +27,11 @@ namespace Gw2Launcher.UI.Controls
         {
             get
             {
-                int v;
-                int.TryParse(base.Text,out v);
-                return v;
+                if (cached)
+                    return _value;
+                if (int.TryParse(base.Text, out _value))
+                    cached = true;
+                return _value;
             }
             set
             {
@@ -31,7 +39,19 @@ namespace Gw2Launcher.UI.Controls
                     value = _Maximum;
                 else if (value < _Minimum)
                     value = _Minimum;
+
+                if (cached && _value == value)
+                    return;
+
+                cached = true;
+                _value = value;
+
+                _locked = true;
                 base.Text = value.ToString();
+                _locked = false;
+
+                if (ValueChanged != null)
+                    ValueChanged(this, EventArgs.Empty);
             }
         }
 
@@ -84,21 +104,75 @@ namespace Gw2Launcher.UI.Controls
             }
         }
 
+        private bool _ReverseMouseWheelDirection;
+        public bool ReverseMouseWheelDirection
+        {
+            get
+            {
+                return _ReverseMouseWheelDirection;
+            }
+            set
+            {
+                _ReverseMouseWheelDirection = value;
+            }
+        }
+
         protected override void OnMouseWheel(MouseEventArgs e)
         {
             base.OnMouseWheel(e);
 
-            if (e.Delta > 0)
+            bool b;
+            if (_ReverseMouseWheelDirection)
+                b = e.Delta < 0;
+            else
+                b = e.Delta > 0;
+
+            if (b)
             {
                 this.Value += Increment;
             }
-            else if (e.Delta < 0)
+            else
             {
                 this.Value -= Increment;
             }
 
             if (e is HandledMouseEventArgs)
                 ((HandledMouseEventArgs)e).Handled = true;
+        }
+
+        protected override void OnTextChanged(EventArgs e)
+        {
+            base.OnTextChanged(e);
+
+            if (_locked)
+                return;
+
+            int v;
+            if (int.TryParse(base.Text, out v))
+            {
+                if (cached && _value == v)
+                    return;
+                if (v > _Maximum)
+                {
+                    var i = base.SelectionStart;
+                    base.Text = _Maximum.ToString();
+                    base.SelectionStart = i;
+                    return;
+                }
+                if (v < _Minimum)
+                {
+                    var i = base.SelectionStart;
+                    base.Text = _Minimum.ToString();
+                    base.SelectionStart = i;
+                    return;
+                }
+                _value = v;
+                cached = true;
+                if (ValueChanged != null)
+                    ValueChanged(this, EventArgs.Empty);
+            }
+            else
+                cached = false;
         }
 
         protected override void OnKeyPress(System.Windows.Forms.KeyPressEventArgs e)
@@ -131,15 +205,26 @@ namespace Gw2Launcher.UI.Controls
                     {
                         Value = _Minimum;
                     }
+                    else if (cached && _value == v)
+                    {
+                        return;
+                    }
+                    else
+                    {
+                        cached = true;
+                        _value = v;
+                        if (ValueChanged != null)
+                            ValueChanged(this, EventArgs.Empty);
+                    }
                 }
                 else
                 {
-                    Value = 0;
+                    Value = _Minimum;
                 }
             }
             else
             {
-                Value = 0;
+                Value = _Minimum;
             }
         }
 

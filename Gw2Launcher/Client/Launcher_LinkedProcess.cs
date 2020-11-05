@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -71,27 +71,82 @@ namespace Gw2Launcher.Client
                 }
             }
 
-            public static int GetActiveCount()
+            public static IEnumerable<LinkedProcess> GetActiveEnumerable()
             {
                 lock (activeProcesses)
                 {
-                    return activeProcesses.Count;
+                    var values = activeProcesses.Values;
+
+                    foreach (var p in activeProcesses.Values)
+                    {
+                        yield return p;
+                    }
+                }
+            }
+
+            public static int GetActiveCount()
+            {
+                return GetActiveCount(AccountType.Any);
+            }
+
+            public static int GetActiveCount(AccountType type)
+            {
+                lock (activeProcesses)
+                {
+                    Settings.AccountType t;
+
+                    switch (type)
+                    {
+                        case AccountType.GuildWars2:
+
+                            t = Settings.AccountType.GuildWars2;
+
+                            break;
+                        case AccountType.GuildWars1:
+
+                            t = Settings.AccountType.GuildWars1;
+
+                            break;
+                        case AccountType.Any:
+
+                            return activeProcesses.Count;
+
+                        default:
+
+                            throw new NotSupportedException();
+                    }
+
+                    int count = 0;
+
+                    foreach (var p in activeProcesses.Values)
+                    {
+                        if (p.account != null && p.account.Settings.Type == t)
+                            count++;
+                    }
+
+                    return count;
                 }
             }
 
             public static Account GetAccount(Process p)
             {
-                LinkedProcess l;
-                if (activeProcesses.TryGetValue(p.Id, out l))
+                lock (activeProcesses)
                 {
-                    return l.account;
+                    LinkedProcess l;
+                    if (activeProcesses.TryGetValue(p.Id, out l))
+                    {
+                        return l.account;
+                    }
+                    return null;
                 }
-                return null;
             }
 
             public static bool Contains(Process p)
             {
-                return activeProcesses.ContainsKey(p.Id);
+                lock (activeProcesses)
+                {
+                    return activeProcesses.ContainsKey(p.Id);
+                }
             }
 
             public LinkedProcess(Account account)
@@ -305,7 +360,20 @@ namespace Gw2Launcher.Client
                     //    }
                     //}
 
-                    if (b)
+                    IDisposable token = null;
+                    if (!Util.Users.IsCurrentEnvironmentUser())
+                    {
+                        try
+                        {
+                            token = Security.Impersonation.Impersonate();
+                        }
+                        catch (Exception ex)
+                        {
+                            Util.Logging.Log(ex);
+                        }
+                    }
+
+                    using (token)
                     {
                         if (Exited != null)
                             Exited(this, this.account);
@@ -365,7 +433,7 @@ namespace Gw2Launcher.Client
                     catch (Exception e)
                     {
                         Util.Logging.Log(e);
-                        Util.ProcessUtil.KillMutexWindow(this.Process.Id, username, password);
+                        Util.ProcessUtil.KillMutexWindow(account.Settings.Type, this.Process.Id, username, password);
                     }
                 }
                 else if (!_KillMutex())
@@ -382,10 +450,11 @@ namespace Gw2Launcher.Client
             {
                 var p = this.Process;
                 var hasWindow = false;
+                var name = Util.ProcessUtil.GetMutexName(this.account.Settings.Type);
 
                 do
                 {
-                    var handle = Windows.Win32Handles.GetHandle(p.Id, "AN-Mutex-Window-Guild Wars 2", false);
+                    var handle = Windows.Win32Handles.GetHandle(p.Id, name, Windows.Win32Handles.MatchMode.EndsWith);
 
                     if (handle != null)
                     {
@@ -397,13 +466,15 @@ namespace Gw2Launcher.Client
                         return true;
                     }
 
+                    //wait for the window to be created before checking the mutex
+
                     try
                     {
                         var limit = DateTime.UtcNow.AddSeconds(30);
 
                         do
                         {
-                            var h = p.MainWindowHandle;
+                            var h = Windows.FindWindow.FindMainWindow(p);
                             if (h != IntPtr.Zero)
                             {
                                 hasWindow = true;
@@ -416,9 +487,14 @@ namespace Gw2Launcher.Client
                         }
                         while (!p.WaitForExit(500));
                     }
-                    catch { }
+                    catch 
+                    {
+                        return false;
+                    }
                 }
-                while (true);
+                while (hasWindow);
+
+                return false;
             }
 
             public void Dispose()

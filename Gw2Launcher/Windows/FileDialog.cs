@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Runtime.InteropServices;
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices.ComTypes;
@@ -47,7 +47,7 @@ namespace Gw2Launcher.Windows.Dialogs
 
     public abstract class FileDialog
     {
-        [DllImport(Windows.Native.NativeMethods.DLL.SHELL32, CharSet = CharSet.Unicode, PreserveSig = false)]
+        [DllImport(Windows.Native.NativeMethods.SHELL32, CharSet = CharSet.Unicode, PreserveSig = false)]
         internal static extern void SHCreateItemFromParsingName(
             [In][MarshalAs(UnmanagedType.LPWStr)] string pszPath,
             [In] IntPtr pbc,

@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -19,9 +19,42 @@ namespace Gw2Launcher.Net.AssetProxy
         static ServerController()
         {
             Settings.LocalAssetServerEnabled.ValueChanged += LocalAssetServerEnabled_ValueChanged;
-            Settings.GW2Arguments.ValueChanged += GW2Arguments_ValueChanged;
+            Settings.GuildWars2.Arguments.ValueChanged += GW2Arguments_ValueChanged;
+            Settings.PatchingPort.ValueChanged += PatchingPort_ValueChanged;
+            Settings.PatchingOptions.ValueChanged += PatchingOptions_ValueChanged;
 
             LocalAssetServerEnabled_ValueChanged(Settings.LocalAssetServerEnabled, null);
+        }
+
+        static void PatchingOptions_ValueChanged(object sender, EventArgs e)
+        {
+            SetPort();
+        }
+
+        static void PatchingPort_ValueChanged(object sender, EventArgs e)
+        {
+            SetPort();
+        }
+
+        private static void SetPort()
+        {
+            if (server == null)
+                return;
+
+            var options = Settings.PatchingOptions.Value;
+            var port = Settings.PatchingPort.Value;
+            ushort p;
+
+            if (options.HasFlag(Settings.PatchingFlags.OverrideHosts))
+            {
+                p = 80;
+            }
+            else
+            {
+                p = port;
+            }
+
+            server.DefaultPort = p;
         }
 
         static void LocalAssetServerEnabled_ValueChanged(object sender, EventArgs e)
@@ -33,11 +66,12 @@ namespace Gw2Launcher.Net.AssetProxy
                 if (server == null)
                 {
                     server = new ProxyServer();
+                    SetPort();
                     if (Created != null)
                         Created(null, server);
                 }
 
-                GW2Arguments_ValueChanged(Settings.GW2Arguments, null);
+                GW2Arguments_ValueChanged(Settings.GuildWars2.Arguments, null);
             }
 
             if (server != null && !isEnabled && isEnabled != ServerController.isEnabled)
@@ -61,14 +95,25 @@ namespace Gw2Launcher.Net.AssetProxy
 
             if (!string.IsNullOrEmpty(args) && server != null)
             {
-                IPEndPoint remoteEp;
                 string assetsrv = Util.Args.GetValue(args, "assetsrv");
+                EndPoint remoteEp = null;
+
                 if (!string.IsNullOrEmpty(assetsrv))
                 {
-                    Util.IPEndPoint.TryParse(assetsrv, 80, out remoteEp);
+                    IPEndPoint ipEp;
+                    if (Util.IPEndPoint.TryParse(assetsrv, 80, out ipEp))
+                    {
+                        remoteEp = ipEp;
+                    }
+                    else
+                    {
+                        DnsEndPoint dnsEp;
+                        if (Util.DnsEndPoint.TryParse(assetsrv, 80, out dnsEp))
+                        {
+                            remoteEp = dnsEp;
+                        }
+                    }
                 }
-                else
-                    remoteEp = null;
 
                 server.RemoteEP = remoteEp;
             }
@@ -85,16 +130,16 @@ namespace Gw2Launcher.Net.AssetProxy
                 if (isEnabled != value)
                 {
                     //string args;
-                    //if (Settings.GW2Arguments.HasValue)
+                    //if (Settings.GuildWars2.Arguments.HasValue)
                     //{
-                    //    args = Settings.GW2Arguments.Value;
+                    //    args = Settings.GuildWars2.Arguments.Value;
                     //    if (args==null)
                     //        args="";
                     //}
                     //else
                     //    args="";
 
-                    //Settings.GW2Arguments.Value = Util.Args.AddOrReplace(args, "l:assetsrv", value ? "-l:assetsrv" : "");
+                    //Settings.GuildWars2.Arguments.Value = Util.Args.AddOrReplace(args, "l:assetsrv", value ? "-l:assetsrv" : "");
 
                     Settings.LocalAssetServerEnabled.Value = value;
 

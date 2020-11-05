@@ -1,8 +1,9 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using System.Windows.Forms;
 
 namespace Gw2Launcher.Util
 {
@@ -26,6 +27,32 @@ namespace Gw2Launcher.Util
             {
                 return bytes + " bytes";
             }
+        }
+
+        public static TextFormatFlags GetAlignmentFlags(System.Drawing.ContentAlignment alignment)
+        {
+            switch (alignment)
+            {
+                case System.Drawing.ContentAlignment.BottomCenter:
+                    return TextFormatFlags.HorizontalCenter | TextFormatFlags.Bottom;
+                case System.Drawing.ContentAlignment.BottomLeft:
+                    return TextFormatFlags.Left | TextFormatFlags.Bottom;
+                case System.Drawing.ContentAlignment.BottomRight:
+                    return TextFormatFlags.Right | TextFormatFlags.Bottom;
+                case System.Drawing.ContentAlignment.MiddleCenter:
+                    return TextFormatFlags.HorizontalCenter | TextFormatFlags.VerticalCenter;
+                case System.Drawing.ContentAlignment.MiddleLeft:
+                    return TextFormatFlags.Left | TextFormatFlags.VerticalCenter;
+                case System.Drawing.ContentAlignment.MiddleRight:
+                    return TextFormatFlags.Right | TextFormatFlags.HorizontalCenter | TextFormatFlags.VerticalCenter;
+                case System.Drawing.ContentAlignment.TopCenter:
+                    return TextFormatFlags.HorizontalCenter | TextFormatFlags.Top;
+                case System.Drawing.ContentAlignment.TopLeft:
+                    return TextFormatFlags.Left | TextFormatFlags.Top;
+                case System.Drawing.ContentAlignment.TopRight:
+                    return TextFormatFlags.Right | TextFormatFlags.Top;
+            }
+            return TextFormatFlags.Default;
         }
     }
 }

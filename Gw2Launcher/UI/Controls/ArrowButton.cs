@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -41,6 +41,41 @@ namespace Gw2Launcher.UI.Controls
             SetStyle(ControlStyles.OptimizedDoubleBuffer, true);
         }
 
+        public Color ColorArrow
+        {
+            get
+            {
+                return colorArrow;
+            }
+            set
+            {
+                colorArrow = value;
+                OnColorChanged();
+            }
+        }
+
+        public Color ColorHighlight
+        {
+            get
+            {
+                return colorHighlight;
+            }
+            set
+            {
+                colorHighlight = value;
+                OnColorChanged();
+            }
+        }
+
+        protected void OnColorChanged()
+        {
+            if (highlighted)
+                pen.Color = brush.Color = colorHighlight;
+            else
+                pen.Color = brush.Color = colorArrow;
+            this.Invalidate();
+        }
+
         [System.ComponentModel.Browsable(false)]
         public override string Text
         {
@@ -70,12 +105,13 @@ namespace Gw2Launcher.UI.Controls
 
         protected override void Dispose(bool disposing)
         {
+            base.Dispose(disposing);
+
             if (disposing)
             {
                 pen.Dispose();
                 brush.Dispose();
             }
-            base.Dispose(disposing);
         }
 
         protected override void OnSizeChanged(EventArgs e)
@@ -131,8 +167,22 @@ namespace Gw2Launcher.UI.Controls
                 }
             }
 
-            g.FillClosedCurve(brush, points);
-            g.DrawLines(pen, points);
+            if (this.Enabled)
+            {
+                g.FillClosedCurve(brush, points);
+                g.DrawLines(pen, points);
+            }
+            else
+            {
+                using (var brush = new SolidBrush(Util.Color.Lighten(colorArrow, 0.5f)))
+                {
+                    g.FillClosedCurve(brush, points);
+                    using (var pen = new Pen(brush))
+                    {
+                        g.DrawLines(pen, points);
+                    }
+                }
+            }
         }
     }
 }

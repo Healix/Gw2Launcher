@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Data;
@@ -15,7 +15,7 @@ using System.Diagnostics;
 
 namespace Gw2Launcher.UI
 {
-    public partial class formVersionUpdate : Form
+    public partial class formVersionUpdate : Base.BaseForm
     {
         public const string UPDATE_BASE_URL = "https://raw.githubusercontent.com/Healix/Gw2Launcher/master/Gw2Launcher/update/";
 
@@ -24,9 +24,16 @@ namespace Gw2Launcher.UI
 
         public formVersionUpdate()
         {
-            InitializeComponent();
+            InitializeComponents();
 
             this.Shown += formVersionUpdate_Shown;
+        }
+
+        protected override void OnInitializeComponents()
+        {
+            base.OnInitializeComponents();
+
+            InitializeComponent();
         }
 
         private string GetTempName(string path)

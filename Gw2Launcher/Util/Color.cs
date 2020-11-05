@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -66,7 +66,9 @@ namespace Gw2Launcher.Util
         {
             try
             {
-                return System.Drawing.Color.FromArgb(Windows.Native.NativeMethods.ColorHLSToRGB(h, l, s) | -16777216);
+                var hls = Windows.Native.NativeMethods.ColorHLSToRGB(h, l, s);
+
+                return System.Drawing.Color.FromArgb(255 << 24 | (hls & 0xff) << 16 | (hls >> 8 & 0xff) << 8 | (hls >> 16) & 0xff);
             }
             catch
             {

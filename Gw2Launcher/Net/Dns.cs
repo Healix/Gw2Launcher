@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -8,6 +8,7 @@ using System.Net.Sockets;
 using System.IO;
 using System.Runtime.InteropServices;
 using System.Reflection;
+using System.Net.NetworkInformation;
 
 namespace Gw2Launcher.Net
 {
@@ -578,7 +579,16 @@ namespace Gw2Launcher.Net
 
         public static IPAddress[] GetHostAddresses(string host)
         {
-            return System.Net.Dns.GetHostAddresses(host);
+            var ips = System.Net.Dns.GetHostAddresses(host);
+
+            if (ips.Length == 1 && IPAddress.IsLoopback(ips[0])) //probably being overriden
+            {
+                var h = GetHostAddresses(host, GetDefaultDnsAddresses(true));
+                if (h.Count > 0)
+                    ips = h.ToArray<IPAddress>();
+            }
+
+            return ips;
         }
 
         public static IPAddress[] GetHostAddresses(string host, string serverIp)
@@ -672,6 +682,39 @@ namespace Gw2Launcher.Net
                 });
 
             return ips;
+        }
+
+        /// <summary>
+        /// Returns system DNS addresses
+        /// </summary>
+        /// <param name="fallback">If true and no servers were found, 8.8.8.8 and 1.1.1.1 will be used</param>
+        public static IEnumerable<IPAddress> GetDefaultDnsAddresses(bool fallback = false)
+        {
+            var count = 0;
+
+            foreach (var i in NetworkInterface.GetAllNetworkInterfaces())
+            {
+                if (i.NetworkInterfaceType != NetworkInterfaceType.Loopback && i.OperationalStatus == OperationalStatus.Up && !i.IsReceiveOnly)
+                {
+                    foreach (var ip in i.GetIPProperties().DnsAddresses)
+                    {
+                        if (ip.AddressFamily == AddressFamily.InterNetwork)
+                        {
+                            if (!IPAddress.IsLoopback(ip))
+                            {
+                                ++count;
+                                yield return ip;
+                            }
+                        }
+                    }
+                }
+            }
+
+            if (fallback && count == 0)
+            {
+                yield return new IPAddress(new byte[] { 8, 8, 8, 8 });
+                yield return new IPAddress(new byte[] { 1, 1, 1, 1 });
+            }
         }
     }
 }

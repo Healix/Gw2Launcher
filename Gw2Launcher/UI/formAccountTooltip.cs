@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Data;
@@ -12,11 +12,11 @@ using Gw2Launcher.Windows.Native;
 
 namespace Gw2Launcher.UI
 {
-    public partial class formAccountTooltip : Form
+    public partial class formAccountTooltip : Base.BaseForm
     {
-        private const int INNER_PADDING = 10;
-        private const int ARROW_SIZE_BASE = 20;
-        private const int ARROW_SIZE_HEIGHT = ARROW_SIZE_BASE / 2;
+        //private const int INNER_PADDING = 10;
+        //private const int ARROW_SIZE_BASE = 20;
+        //private const int ARROW_SIZE_HEIGHT = ARROW_SIZE_BASE / 2;
 
         private bool invoking;
         private CancellationTokenSource cancelToken;
@@ -31,6 +31,8 @@ namespace Gw2Launcher.UI
 
         private Pen pen;
         private SolidBrush brush;
+        private BufferedGraphics buffer;
+        private bool redraw;
 
         private Rectangle attachedRect;
         private Control attachedTo;
@@ -40,10 +42,9 @@ namespace Gw2Launcher.UI
 
         public formAccountTooltip()
         {
-            InitializeComponent();
+            InitializeComponents();
 
             SetStyle(ControlStyles.AllPaintingInWmPaint, true);
-            SetStyle(ControlStyles.OptimizedDoubleBuffer, true);
             SetStyle(ControlStyles.UserPaint, true);
 
             brush = new SolidBrush(Color.Black);
@@ -53,6 +54,14 @@ namespace Gw2Launcher.UI
             this.TransparencyKey = Color.Red;
 
             arrowAnchor = AnchorStyles.Left;
+            redraw = true;
+        }
+
+        protected override void OnInitializeComponents()
+        {
+            base.OnInitializeComponents();
+
+            InitializeComponent();
         }
 
         protected override CreateParams CreateParams
@@ -79,12 +88,41 @@ namespace Gw2Launcher.UI
         {
             if (disposing)
             {
-                pen.Dispose();
-                brush.Dispose();
                 if (components != null)
                     components.Dispose();
             }
+
             base.Dispose(disposing);
+
+            if (disposing)
+            {
+                pen.Dispose();
+                brush.Dispose();
+                if (buffer != null)
+                    buffer.Dispose();
+            }
+        }
+
+        protected override void OnSizeChanged(EventArgs e)
+        {
+            base.OnSizeChanged(e);
+
+            if (buffer != null)
+            {
+                buffer.Dispose();
+                buffer = null;
+            }
+
+            OnRedrawRequired();
+        }
+
+        private void OnRedrawRequired()
+        {
+            if (redraw)
+                return;
+
+            redraw = true;
+            this.Invalidate();
         }
 
         /// <summary>
@@ -131,7 +169,9 @@ namespace Gw2Launcher.UI
         {
             const int LIMIT = 20;
 
-            var start = DateTime.UtcNow;
+            var sw = new System.Diagnostics.Stopwatch();
+            sw.Start();
+
             this.Opacity = from;
 
             while (true)
@@ -140,7 +180,7 @@ namespace Gw2Launcher.UI
 
                 if (duration > 0)
                 {
-                    int remaining = duration - (int)DateTime.UtcNow.Subtract(start).TotalMilliseconds;
+                    var remaining = (int)(duration - sw.ElapsedMilliseconds);
                     try
                     {
                         if (remaining > LIMIT)
@@ -153,7 +193,7 @@ namespace Gw2Launcher.UI
                         Util.Logging.Log(ex);
                         return;
                     }
-                    progress = DateTime.UtcNow.Subtract(start).TotalMilliseconds / duration;
+                    progress = (double)sw.ElapsedMilliseconds / duration;
                 }
                 else
                 {
@@ -261,12 +301,21 @@ namespace Gw2Launcher.UI
                 else
                     screen = Screen.FromRectangle(attachedRect);
                 int maxWidth = screen.WorkingArea.Width / 4;
+                int maxHeight = screen.WorkingArea.Height / 2;
                 if (maxWidth < 100)
                     maxWidth = 100;
-                SizeF size = g.MeasureString(message, this.Font, maxWidth);
-                clientAreaSize = new Size((int)(size.Width + 1.5f), (int)(size.Height + 1.5f));
+                if (maxHeight < 100)
+                    maxHeight = 100;
+
+                var size = TextRenderer.MeasureText(g, message, this.Font, new Size(maxWidth, maxHeight), TextFormatFlags.WordBreak | TextFormatFlags.WordEllipsis | TextFormatFlags.EndEllipsis);
+
+                clientAreaSize = new Size(size.Width, maxHeight > size.Height ? size.Height : maxHeight);
             }
-            this.message = message;
+            if (!object.ReferenceEquals(this.message, message))
+            {
+                this.message = message;
+                OnRedrawRequired();
+            }
             OnAttachedLocationChanged();
         }
 
@@ -391,6 +440,11 @@ namespace Gw2Launcher.UI
                 var screen = Screen.FromRectangle(Rectangle.FromLTRB(l, t, r, b)).WorkingArea;
                 var anchor = AnchorStyles.None;
 
+                int INNER_PADDING = Scale(10);
+                int ARROW_SIZE_BASE = Scale(20);
+                int ARROW_SIZE_HEIGHT = ARROW_SIZE_BASE / 2;
+                int pw = Scale(1);
+
                 //estimated size with an empty space for both a vertical and horizontal arrow (only one will be used)
                 Size size = new Size(clientAreaSize.Width + INNER_PADDING * 2 + ARROW_SIZE_HEIGHT, clientAreaSize.Height + INNER_PADDING * 2 + ARROW_SIZE_HEIGHT);
 
@@ -449,6 +503,7 @@ namespace Gw2Launcher.UI
                 Rectangle clientArea;
                 Rectangle bounds;
                 Rectangle arrowBounds;
+                var space = Scale(5);
 
                 if (anchor == AnchorStyles.Left || anchor == AnchorStyles.Right)
                 {
@@ -461,10 +516,10 @@ namespace Gw2Launcher.UI
                         y = screen.Bottom - size.Height;
 
                     int aY = (t + (b - t) / 2) - y - ARROW_SIZE_BASE / 2;
-                    if (aY < 5)
-                        aY = 5;
-                    else if (aY + ARROW_SIZE_BASE + 5 > size.Height)
-                        aY = size.Height - ARROW_SIZE_BASE - 5;
+                    if (aY < space)
+                        aY = space;
+                    else if (aY + ARROW_SIZE_BASE + space > size.Height)
+                        aY = size.Height - ARROW_SIZE_BASE - space;
 
                     if (anchor == AnchorStyles.Left)
                     {
@@ -496,10 +551,10 @@ namespace Gw2Launcher.UI
                         x = screen.Right - size.Width;
 
                     int aX = (l + (r - l) / 2) - x - ARROW_SIZE_BASE / 2;
-                    if (aX < 5)
-                        aX = 5;
-                    else if (aX + ARROW_SIZE_BASE + 5 > size.Width)
-                        aX = size.Width - ARROW_SIZE_BASE - 5;
+                    if (aX < space)
+                        aX = space;
+                    else if (aX + ARROW_SIZE_BASE + space > size.Width)
+                        aX = size.Width - ARROW_SIZE_BASE - space;
 
                     if (anchor == AnchorStyles.Top)
                     {
@@ -540,8 +595,8 @@ namespace Gw2Launcher.UI
                 {
                     this.arrowAnchor = anchor;
                     this.arrowBounds = arrowBounds;
-                    GenerateBounds();
-                    this.Invalidate();
+                    background = null;
+                    OnRedrawRequired();
                 }
             }
             catch (Exception ex)
@@ -550,10 +605,13 @@ namespace Gw2Launcher.UI
             }
         }
 
-        private void GenerateBounds()
+        private void GenerateBounds(int pw)
         {
-            int w = this.Width - 1,
-                h = this.Height - 1;
+            int pw2 = pw / 2;
+            int l = pw2,
+                t = pw2,
+                r = this.Width - (pw + 1) / 2,
+                b = this.Height - (pw + 1) / 2;
 
             switch (arrowAnchor)
             {
@@ -561,28 +619,29 @@ namespace Gw2Launcher.UI
 
                     background = new Point[]
                     {
-                        new Point(arrowBounds.Right, 0),
-                        new Point(w, 0),
-                        new Point(w, h),
-                        new Point(arrowBounds.Right, h),
-                        new Point(arrowBounds.Right, arrowBounds.Bottom),
-                        new Point(arrowBounds.Left, arrowBounds.Top + arrowBounds.Height / 2),
-                        new Point(arrowBounds.Right, arrowBounds.Top)
+                        new Point(arrowBounds.Right + pw2, t),
+                        new Point(r, t),
+                        new Point(r, b),
+                        new Point(arrowBounds.Right + pw2, b),
+                        new Point(arrowBounds.Right + pw2, arrowBounds.Bottom),
+                        new Point(arrowBounds.Left + pw2, arrowBounds.Top + arrowBounds.Height / 2),
+                        new Point(arrowBounds.Right + pw2, arrowBounds.Top)
                     };
 
                     break;
 
                 case AnchorStyles.Right:
 
+                    pw2 = (pw + 1) / 2;
                     background = new Point[]
                     {
-                        new Point(0, 0),
-                        new Point(arrowBounds.Left, 0),
-                        new Point(arrowBounds.Left, arrowBounds.Top),
-                        new Point(arrowBounds.Right, arrowBounds.Top + arrowBounds.Height / 2),
-                        new Point(arrowBounds.Left, arrowBounds.Bottom),
-                        new Point(arrowBounds.Left, h),
-                        new Point(0, h)
+                        new Point(l, t),
+                        new Point(arrowBounds.Left - pw2, t),
+                        new Point(arrowBounds.Left - pw2, arrowBounds.Top),
+                        new Point(arrowBounds.Right - pw2, arrowBounds.Top + arrowBounds.Height / 2),
+                        new Point(arrowBounds.Left - pw2, arrowBounds.Bottom),
+                        new Point(arrowBounds.Left - pw2, b),
+                        new Point(l, b)
                     };
 
                     break;
@@ -591,28 +650,29 @@ namespace Gw2Launcher.UI
 
                     background = new Point[]
                     {
-                        new Point(0, arrowBounds.Bottom),
-                        new Point(arrowBounds.Left,arrowBounds.Bottom),
-                        new Point(arrowBounds.Left + arrowBounds.Width / 2, arrowBounds.Top),
-                        new Point(arrowBounds.Right, arrowBounds.Bottom),
-                        new Point(w, arrowBounds.Bottom),
-                        new Point(w, h),
-                        new Point(0,h)
+                        new Point(l, arrowBounds.Bottom + pw2),
+                        new Point(arrowBounds.Left,arrowBounds.Bottom + pw2),
+                        new Point(arrowBounds.Left + arrowBounds.Width / 2, arrowBounds.Top + pw2),
+                        new Point(arrowBounds.Right, arrowBounds.Bottom + pw2),
+                        new Point(r, arrowBounds.Bottom + pw2),
+                        new Point(r, b),
+                        new Point(l,b)
                     };
 
                     break;
 
                 case AnchorStyles.Bottom:
 
+                    pw2 = (pw + 1) / 2;
                     background = new Point[]
                     {
-                        new Point(0,0),
-                        new Point(w,0),
-                        new Point(w,arrowBounds.Top),
-                        new Point(arrowBounds.Right,arrowBounds.Top),
-                        new Point(arrowBounds.Left + arrowBounds.Width / 2, arrowBounds.Bottom),
-                        new Point(arrowBounds.Left,arrowBounds.Top),
-                        new Point(0,arrowBounds.Top)
+                        new Point(l,t),
+                        new Point(r,t),
+                        new Point(r,arrowBounds.Top - pw2),
+                        new Point(arrowBounds.Right,arrowBounds.Top - pw2),
+                        new Point(arrowBounds.Left + arrowBounds.Width / 2, arrowBounds.Bottom - pw2),
+                        new Point(arrowBounds.Left,arrowBounds.Top - pw2),
+                        new Point(l,arrowBounds.Top - pw2)
                     };
 
                     break;
@@ -621,38 +681,47 @@ namespace Gw2Launcher.UI
 
                     background = new Point[]
                     {
-                        new Point(0,0),
-                        new Point(w,0),
-                        new Point(w,h),
-                        new Point(0,h)
+                        new Point(l,t),
+                        new Point(r,t),
+                        new Point(r,b),
+                        new Point(l,b)
                     };
 
                     break;
             }
         }
 
-        protected override void OnPaint(PaintEventArgs e)
-        {
-            var g = e.Graphics;
-
-            if (message != null)
-            {
-                brush.Color = Color.Black;
-                g.DrawString(message, this.Font, brush, clientArea);
-            }
-        }
-
         protected override void OnPaintBackground(PaintEventArgs e)
         {
-            var g = e.Graphics;
+            if (redraw)
+            {
+                redraw = false;
 
-            g.Clear(this.TransparencyKey);
+                if (buffer == null)
+                    buffer = BufferedGraphicsManager.Current.Allocate(e.Graphics, this.ClientRectangle);
 
-            brush.Color = this.BackColor;
-            g.FillPolygon(brush, background);
+                var g = buffer.Graphics;
+                var pw = (int)(g.DpiX / 96f + 0.5f);
 
-            pen.Color = Color.Gray;
-            g.DrawPolygon(pen, background);
+                g.Clear(this.TransparencyKey);
+
+                if (background == null)
+                    GenerateBounds(pw);
+
+                brush.Color = this.BackColor;
+                g.FillPolygon(brush, background);
+
+                pen.Color = Color.Gray;
+                pen.Width = pw;
+                g.DrawPolygon(pen, background);
+
+                if (message != null)
+                {
+                    TextRenderer.DrawText(g, message, this.Font, clientArea, Color.Black, this.BackColor, TextFormatFlags.WordBreak | TextFormatFlags.WordEllipsis | TextFormatFlags.EndEllipsis);
+                }
+            }
+
+            buffer.Render(e.Graphics);
         }
 
         private void formAccountTooltip_Load(object sender, EventArgs e)

@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Drawing;
@@ -62,11 +62,16 @@ namespace Gw2Launcher.UI.Controls
         {
             if (disposing)
             {
-                penBorder.Dispose();
                 if (components != null)
                     components.Dispose();
             }
+
             base.Dispose(disposing);
+
+            if (disposing)
+            {
+                penBorder.Dispose();
+            }
         }
 
         public Color ArrowColor
@@ -234,10 +239,52 @@ namespace Gw2Launcher.UI.Controls
 
         public void SelectPanel(Panel panel)
         {
+            var i = GetIndex(panel);
+            if (i != -1)
+            {
+                if (this.selected == null)
+                    this.Selected = true;
+
+                if (i > 0)
+                {
+                    selected = labels[i - 1];
+                }
+                else
+                {
+                    selected = label;
+                }
+
+                this.Invalidate();
+
+                if (SubitemSelected != null)
+                    SubitemSelected(this, selected.index);
+            }
+        }
+
+        private int GetIndex(Panel panel)
+        {
             int i = 0;
             foreach (var p in this.Panels)
             {
                 if (p == panel)
+                {
+                    return i;
+                }
+                i++;
+            }
+            return -1;
+        }
+
+        /// <summary>
+        /// Selects an unlabeled panel while showing the parent as selected
+        /// </summary>
+        public void SelectPanel(Panel parent, Panel child)
+        {
+            var i = GetIndex(parent);
+            if (i != -1)
+            {
+                var j = GetIndex(child);
+                if (j > 0)
                 {
                     if (this.selected == null)
                         this.Selected = true;
@@ -245,13 +292,17 @@ namespace Gw2Launcher.UI.Controls
                     if (i > 0)
                     {
                         selected = labels[i - 1];
-                        this.Invalidate();
-
-                        if (SubitemSelected != null)
-                            SubitemSelected(this, selected.index);
                     }
+
+                    selected = new Label()
+                    {
+                        bounds = selected.bounds,
+                        index = selected.index,
+                    };
+
+                    if (SubitemSelected != null)
+                        SubitemSelected(this, j);
                 }
-                i++;
             }
         }
 

@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -9,23 +9,30 @@ namespace Gw2Launcher
 {
     static class DataPath
     {
+        private static readonly string appdata;
+
+        static DataPath()
+        {
+            appdata = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData, Environment.SpecialFolderOption.Create), "Gw2Launcher");
+        }
+
         public static string AppData
         {
             get
             {
-                var di = new DirectoryInfo(Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData, Environment.SpecialFolderOption.Create), "Gw2Launcher"));
-                if (!di.Exists)
+                if (!Directory.Exists(appdata))
                 {
                     try
                     {
-                        di.Create();
+                        Directory.CreateDirectory(appdata);
                     }
                     catch (Exception ex)
                     {
                         Util.Logging.Log(ex);
                     }
                 }
-                return di.FullName;
+
+                return appdata;
             }
         }
 
@@ -33,21 +40,23 @@ namespace Gw2Launcher
         {
             get
             {
-                var di = new DirectoryInfo(Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData, Environment.SpecialFolderOption.Create), "Gw2Launcher", "data"));
-                if (!di.Exists)
+                var path = Path.Combine(appdata, "data");
+
+                if (!Directory.Exists(path))
                 {
                     try
                     {
-                        di.Create();
+                        Directory.CreateDirectory(path);
 
-                        Util.FileUtil.AllowFolderAccess(di.FullName, System.Security.AccessControl.FileSystemRights.Modify);
+                        Util.FileUtil.AllowFolderAccess(path, System.Security.AccessControl.FileSystemRights.Modify);
                     }
                     catch (Exception ex)
                     {
                         Util.Logging.Log(ex);
                     }
                 }
-                return di.FullName;
+
+                return path;
             }
         }
 
@@ -56,6 +65,7 @@ namespace Gw2Launcher
             get
             {
                 var path = Path.Combine(AppDataAccountData, "temp");
+
                 if (!Directory.Exists(path))
                 {
                     try

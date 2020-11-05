@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Text;
 using System.Windows.Forms;
 using System.Threading.Tasks;
@@ -9,7 +9,7 @@ namespace Gw2Launcher.UI.Controls
     class WaitingBounce : Control
     {
         private bool enabled;
-        private long startTicks;
+        private int startTime;
         private SolidBrush brushF, brushB;
         private Rectangle ball;
         private Timer timer;
@@ -25,7 +25,7 @@ namespace Gw2Launcher.UI.Controls
             brushB = new SolidBrush(this.BackColor);
             timer = new Timer()
             {
-                Interval = 50,
+                Interval = 25,
                 Enabled = false,
             };
             timer.Tick += timer_Tick;
@@ -87,24 +87,31 @@ namespace Gw2Launcher.UI.Controls
         {
             timer.Enabled = enabled = this.Enabled && this.Visible;
             if (enabled)
-                startTicks = DateTime.UtcNow.Ticks;
+                startTime = Environment.TickCount;
         }
 
         protected override void Dispose(bool disposing)
         {
             if (disposing)
             {
+                timer.Dispose();
+            }
+
+            base.Dispose(disposing);
+
+            if (disposing)
+            {
                 brushF.Dispose();
                 brushB.Dispose();
-                timer.Dispose();
                 if (buffer != null)
                     buffer.Dispose();
             }
-            base.Dispose(disposing);
         }
 
         protected override void OnPaint(PaintEventArgs e)
         {
+            base.OnPaint(e);
+
             if (enabled)
             {
                 if (buffer == null)
@@ -115,19 +122,21 @@ namespace Gw2Launcher.UI.Controls
 
                 var g = buffer.Graphics;
 
+                g.SmoothingMode = System.Drawing.Drawing2D.SmoothingMode.HighSpeed;
                 g.FillRectangle(brushB, ball);
 
-                int h = this.Height - 3;
-                float ms = (DateTime.UtcNow.Ticks - startTicks) / 10000f;
-                int x = (int)((this.Width - h) * (Math.Sin((ms / 500) % 360) + 1) / 2);
-                ball = new Rectangle(x - 2, 0, h + 4, h + 3);
+                var px = (int)(g.DpiX / 96f + 0.5f);
+                var h = this.Height - px * 3;
+                var ms = Environment.TickCount - startTime;
+                var x = (int)((this.Width - h) * (Math.Sin((ms / 500f) % 360) + 1) / 2);
+
+                ball = new Rectangle(x - px * 2, 0, h + px * 4, this.Height);
+
                 g.SmoothingMode = System.Drawing.Drawing2D.SmoothingMode.AntiAlias;
-                g.FillEllipse(brushF, x, 1, h, h);
+                g.FillEllipse(brushF, x, px, h, h);
 
                 buffer.Render(e.Graphics);
             }
-
-            base.OnPaint(e);
         }
     }
 }

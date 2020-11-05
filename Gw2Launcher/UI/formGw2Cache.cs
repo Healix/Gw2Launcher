@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Data;
@@ -12,7 +12,7 @@ using System.Diagnostics;
 
 namespace Gw2Launcher.UI
 {
-    public partial class formGw2Cache : Form
+    public partial class formGw2Cache : Base.BaseForm
     {
         private Dictionary<string, DataGridViewRow> rows;
         private List<DirectoryInfo> folders;
@@ -20,17 +20,7 @@ namespace Gw2Launcher.UI
 
         public formGw2Cache()
         {
-            InitializeComponent();
-
-            var scale = this.CurrentAutoScaleDimensions.Width / 96f;
-            if (scale != 1)
-            {
-                foreach (DataGridViewColumn col in gridCache.Columns)
-                {
-                    if (col.AutoSizeMode != DataGridViewAutoSizeColumnMode.Fill)
-                        col.Width = (int)(col.Width * scale + 0.5f);
-                }
-            }
+            InitializeComponents();
 
             labelSize.Text = "";
             buttonDelete.Enabled = false;
@@ -43,6 +33,13 @@ namespace Gw2Launcher.UI
             this.Disposed += formGw2Cache_Disposed;
 
             Settings.DeleteCacheOnLaunch.ValueChanged += DeleteCacheOnLaunch_ValueChanged;
+        }
+
+        protected override void OnInitializeComponents()
+        {
+            base.OnInitializeComponents();
+
+            InitializeComponent();
         }
 
         void formGw2Cache_Disposed(object sender, EventArgs e)
@@ -85,31 +82,27 @@ namespace Gw2Launcher.UI
                 rows.Add(Tools.Gw2Cache.USERNAME_GW2LAUNCHER, row);
             }
 
-            foreach (ushort uid in Settings.Accounts.GetKeys())
+            foreach (var a in Util.Accounts.GetGw2Accounts())
             {
-                var account = Settings.Accounts[uid];
-                if (account.HasValue)
+                string username = Util.Users.GetUserName(a.WindowsAccount);
+                if (!rows.ContainsKey(username))
                 {
-                    string username = Util.Users.GetUserName(account.Value.WindowsAccount);
-                    if (!rows.ContainsKey(username))
-                    {
-                        DataGridViewRow row = new DataGridViewRow();
-                        row.CreateCells(gridCache);
-                        row.Height = gridCache.RowTemplate.Height;
+                    DataGridViewRow row = new DataGridViewRow();
+                    row.CreateCells(gridCache);
+                    row.Height = gridCache.RowTemplate.Height;
 
-                        row.Cells[columnUser.Index].Value = username;
-                        DataGridViewCell cell;
-                        cell = row.Cells[columnSize.Index];
-                        cell.Value = "...";
-                        cell.Style.ForeColor = Color.Gray;
-                        cell = row.Cells[columnFolders.Index];
-                        cell.Value = "...";
-                        cell.Style.ForeColor = Color.Gray;
+                    row.Cells[columnUser.Index].Value = username;
+                    DataGridViewCell cell;
+                    cell = row.Cells[columnSize.Index];
+                    cell.Value = "...";
+                    cell.Style.ForeColor = Color.Gray;
+                    cell = row.Cells[columnFolders.Index];
+                    cell.Value = "...";
+                    cell.Style.ForeColor = Color.Gray;
 
-                        gridCache.Rows.Add(row);
+                    gridCache.Rows.Add(row);
 
-                        rows.Add(username, row);
-                    }
+                    rows.Add(username, row);
                 }
             }
 

@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -154,8 +154,15 @@ namespace Gw2Launcher.Tools
 
             archive = null;
 
-            if (Complete != null)
-                Complete(this, e);
+            try
+            {
+                if (Complete != null)
+                    Complete(this, e);
+            }
+            catch (Exception ex)
+            {
+                Util.Logging.Log(ex);
+            }
 
             if (progress.manifestsDownloaded + progress.filesDownloaded > 0 && progress.manifestsDownloaded == progress.manifestsTotal && progress.filesDownloaded == progress.filesTotal)
             {
@@ -409,11 +416,11 @@ namespace Gw2Launcher.Tools
                 {
                     Dictionary<int, int> ids = new Dictionary<int, int>();
 
-                    if (!string.IsNullOrEmpty(Settings.GW2Path.Value))
+                    if (!string.IsNullOrEmpty(Settings.GuildWars2.Path.Value))
                     {
                         try
                         {
-                            var path = Path.Combine(Path.GetDirectoryName(Settings.GW2Path.Value), "Gw2.dat");
+                            var path = Path.Combine(Path.GetDirectoryName(Settings.GuildWars2.Path.Value), "Gw2.dat");
                             if (File.Exists(path))
                             {
                                 var entries = Dat.DatFile.Read(path);
@@ -464,7 +471,7 @@ namespace Gw2Launcher.Tools
             if (is64 = Environment.Is64BitOperatingSystem)
             {
                 //check if the 32-bit executable is being used with the -32 option
-                if (!string.IsNullOrEmpty(Settings.GW2Arguments.Value) && Settings.GW2Arguments.Value.IndexOf("-32") != -1 && File.Exists(Settings.GW2Path.Value) && Util.FileUtil.Is32BitExecutable(Settings.GW2Path.Value))
+                if (!string.IsNullOrEmpty(Settings.GuildWars2.Arguments.Value) && Settings.GuildWars2.Arguments.Value.IndexOf("-32") != -1 && File.Exists(Settings.GuildWars2.Path.Value) && Util.FileUtil.Is32BitExecutable(Settings.GuildWars2.Path.Value))
                     is64 = false;
             }
 

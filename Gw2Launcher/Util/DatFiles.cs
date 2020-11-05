@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -31,16 +31,15 @@ namespace Gw2Launcher.Util
         /// </summary>
         /// <param name="dat"></param>
         /// <returns></returns>
-        public static List<Settings.IAccount> GetAccounts(Settings.IDatFile dat)
+        public static List<Settings.IGw2Account> GetAccounts(Settings.IDatFile dat)
         {
-            List<Settings.IAccount> accounts = new List<Settings.IAccount>();
+            var accounts = new List<Settings.IGw2Account>();
 
-            foreach (ushort uid in Settings.Accounts.GetKeys())
+            foreach (var a in Util.Accounts.GetGw2Accounts())
             {
-                var account = Settings.Accounts[uid];
-                if (account.HasValue && account.Value.DatFile == dat)
+                if (a.DatFile == dat)
                 {
-                    accounts.Add(account.Value);
+                    accounts.Add(a);
                 }
             }
 

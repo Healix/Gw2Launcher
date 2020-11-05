@@ -1,8 +1,9 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using System.Threading;
 using System.IO;
 using System.Drawing;
 using System.Drawing.Imaging;
@@ -11,6 +12,8 @@ namespace Gw2Launcher.Tools
 {
     class Screenshots : IDisposable
     {
+        public event EventHandler<string> ScreenshotProcessed;
+
         public class Formatter
         {
             public class FormatPart
@@ -444,7 +447,10 @@ namespace Gw2Launcher.Tools
                 }
                 catch
                 {
-                    watcher.Dispose();
+                    using (watcher)
+                    {
+                        watcher = null;
+                    }
 
                     if (Error != null)
                         Error(this, EventArgs.Empty);
@@ -565,6 +571,7 @@ namespace Gw2Launcher.Tools
                     byte retry = 10;
 
                     var path = Path.Combine(this.path, first.value);
+                    string finalpath = null;
                     var canConvert = false;
                     var success = false;
                     string tmp = null;
@@ -617,6 +624,8 @@ namespace Gw2Launcher.Tools
                                                 File.SetCreationTimeUtc(tmp, File.GetCreationTimeUtc(path));
                                             }
                                             catch { }
+
+                                            finalpath = tmp;
                                         }
                                         catch (Exception ex)
                                         {
@@ -741,6 +750,8 @@ namespace Gw2Launcher.Tools
                                 {
                                     File.Move(from, to);
 
+                                    finalpath = to;
+
                                     if (tmp != null && converter.DeleteOriginal)
                                     {
                                         try
@@ -791,6 +802,8 @@ namespace Gw2Launcher.Tools
 
                     #endregion
 
+                    parent.OnScreenshotProcessed(finalpath);
+
                     lock (this)
                     {
                         if (first.next == null)
@@ -812,8 +825,10 @@ namespace Gw2Launcher.Tools
                     Settings.ScreenshotConversion.ValueChanged -= ScreenshotSetting_ValueChanged;
                     Settings.ScreenshotNaming.ValueChanged -= ScreenshotSetting_ValueChanged;
 
-                    watcher.Dispose();
-                    watcher = null;
+                    using (watcher)
+                    {
+                        watcher = null;
+                    }
                 }
             }
         }
@@ -925,6 +940,7 @@ namespace Gw2Launcher.Tools
         private Dictionary<ushort, Watcher> accounts;
         private Node first, last;
         private Task task;
+        private bool disposing;
 
         public Screenshots()
         {
@@ -966,9 +982,14 @@ namespace Gw2Launcher.Tools
 
         void watcher_Error(object sender, EventArgs e)
         {
-            //this watcher can no longer monitory - remove it
+            //prevent deadlock when watcher raises an error while disposing
+            while (!Monitor.TryEnter(watchers, 100))
+            {
+                if (disposing)
+                    return;
+            }
 
-            lock (watchers)
+            try
             {
                 var watcher = (Watcher)sender;
                 var keys = new ushort[accounts.Count];
@@ -984,8 +1005,10 @@ namespace Gw2Launcher.Tools
                     accounts.Remove(keys[i]);
 
                 watchers.Remove(watcher.path);
-
-                watcher.Dispose();
+            }
+            finally
+            {
+                Monitor.Exit(watchers);
             }
         }
 
@@ -1015,10 +1038,11 @@ namespace Gw2Launcher.Tools
         {
             if (!string.IsNullOrEmpty(account.ScreenshotsLocation))
                 return account.ScreenshotsLocation;
-            
-            if (Settings.ScreenshotsLocation.HasValue)
+
+            var s = Settings.GetSettings(account.Type);
+            if (s.ScreenshotsLocation.HasValue)
             {
-                var path = Settings.ScreenshotsLocation.Value;
+                var path = s.ScreenshotsLocation.Value;
                 if (!string.IsNullOrEmpty(path))
                     return path;
             }
@@ -1049,9 +1073,21 @@ namespace Gw2Launcher.Tools
 
             if (doQueue)
             {
-                if (task != null)
+                if (task != null && task.IsCompleted)
                     task.Dispose();
                 task = Task.Run(new Action(DoQueue));
+            }
+        }
+
+        private void OnScreenshotProcessed(string path)
+        {
+            if (ScreenshotProcessed != null)
+            {
+                try
+                {
+                    ScreenshotProcessed(this, path);
+                }
+                catch { }
             }
         }
 
@@ -1075,7 +1111,7 @@ namespace Gw2Launcher.Tools
                 }
             }
 
-            if (Settings.ScreenshotsFormat.HasValue)
+            if (Settings.GuildWars2.ScreenshotsFormat.HasValue || Settings.GuildWars1.ScreenshotsFormat.HasValue)
             {
                 var options = Settings.ScreenshotConversion.Value;
                 if (options.Format != Settings.ScreenshotConversionOptions.ImageFormat.None)
@@ -1396,16 +1432,19 @@ namespace Gw2Launcher.Tools
 
         public void Dispose()
         {
+            disposing = true;
+
             lock(watchers)
             {
                 foreach (var watcher in watchers.Values)
-                    watcher.Dispose();
-                if (task != null)
                 {
-                    if (task.IsCompleted)
-                        task.Dispose();
-                    task = null;
+                    watcher.Dispose();
                 }
+                if (task != null && task.IsCompleted)
+                {
+                    task.Dispose();
+                }
+                task = null;
             }
         }
     }

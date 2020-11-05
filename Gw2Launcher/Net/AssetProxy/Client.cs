@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -77,22 +77,29 @@ namespace Gw2Launcher.Net.AssetProxy
             nextId = 1;
         }
 
-        public Client(TcpClient client, IPEndPoint remote, IPPool ipPool)
+        public Client(TcpClient client, EndPoint remote, IPPool ipPool)
         {
             lock (_lock)
             {
                 id = nextId++;
             }
 
-            if (remote == null)
+            if (remote == null || !(remote is IPEndPoint))
             {
+                int port;
+                if (Settings.PatchingOptions.Value.HasFlag(Settings.PatchingFlags.UseHttps))
+                    port = 443;
+                else if (remote != null && remote is DnsEndPoint)
+                    port = ((DnsEndPoint)remote).Port;
+                else
+                    port = 80;
                 doIPPool = true;
                 this.ipPool = ipPool;
-                remote = new IPEndPoint(ipPool.GetIP(), Settings.PatchingUseHttps.Value ? 443 : 80);
+                remote = new IPEndPoint(ipPool.GetIP(), port);
             }
 
-            remoteEP = remote;
-
+            remoteEP = (IPEndPoint)remote;
+            
             clientIn = client;
             clientIn.ReceiveTimeout = CONNECTION_KEEPALIVE_TIMEOUT_SECONDS * 1000;
             clientIn.SendTimeout = CONNECTION_TIMEOUT_SECONDS * 1000;
@@ -102,9 +109,6 @@ namespace Gw2Launcher.Net.AssetProxy
 
         public void Dispose()
         {
-            if (clientOut != null)
-                clientOut.Close();
-
             Close();
 
             if (task != null && task.IsCompleted)
@@ -130,9 +134,24 @@ namespace Gw2Launcher.Net.AssetProxy
         public void Close()
         {
             if (clientIn != null)
+            {
                 clientIn.Close();
+                using (clientIn.Client) { }
+                clientIn = null;
+            }
+
             if (clientSwap != null)
+            {
                 clientSwap.Close();
+                using (clientSwap.Client) { }
+                clientSwap = null;
+            }
+            if (clientOut != null)
+            {
+                clientOut.Close();
+                using (clientOut.Client) { }
+                clientOut = null;
+            }
         }
 
         public void Start()
@@ -229,7 +248,10 @@ namespace Gw2Launcher.Net.AssetProxy
                                 else if (clientSwap != null && clientSwap.Connected)
                                 {
                                     if (clientOut != null)
+                                    {
                                         clientOut.Close();
+                                        using (clientOut.Client) { }
+                                    }
                                     clientOut = clientSwap;
                                     clientSwap = null;
                                     remoteEP = (IPEndPoint)clientOut.Client.RemoteEndPoint;
@@ -393,7 +415,7 @@ namespace Gw2Launcher.Net.AssetProxy
                                             };
                                             try
                                             {
-                                                if (!clientSwap.ConnectAsync(ip, Settings.PatchingUseHttps.Value ? 443 : 80).Wait(CONNECTION_TIMEOUT_SECONDS * 1000))
+                                                if (!clientSwap.ConnectAsync(ip, Settings.PatchingOptions.Value.HasFlag(Settings.PatchingFlags.UseHttps) ? 443 : 80).Wait(CONNECTION_TIMEOUT_SECONDS * 1000))
                                                 {
                                                     throw new TimeoutException();
                                                 }
@@ -403,7 +425,10 @@ namespace Gw2Launcher.Net.AssetProxy
                                             catch (Exception e)
                                             {
                                                 Util.Logging.Log(e);
+
                                                 clientSwap.Close();
+                                                using (clientSwap.Client) { }
+                                                clientSwap = null;
 
                                                 return ip;
                                             }
@@ -446,12 +471,7 @@ namespace Gw2Launcher.Net.AssetProxy
                 if (bpsShare != null)
                     bpsShare.Dispose();
 
-                if (clientIn != null)
-                    clientIn.Close();
-                if (clientOut != null)
-                    clientOut.Close();
-                if (clientSwap != null)
-                    clientSwap.Close();
+                Close();
 
                 if (Closed != null)
                     Closed(this, EventArgs.Empty);

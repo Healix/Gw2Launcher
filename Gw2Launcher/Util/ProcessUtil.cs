@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -12,154 +12,29 @@ namespace Gw2Launcher.Util
 {
     class ProcessUtil
     {
-        private class ApplicationObject : IDisposable
+
+        public const string VAR_PARENT_PID = "l:PID";
+
+        private static string GetPath()
         {
-            public ApplicationObject()
-            {
-
-            }
-
-            public string Path
-            {
-                get
-                {
-                    return Assembly.GetExecutingAssembly().Location;
-                }
-            }
-
-            public void Dispose()
-            {
-
-            }
-
-            /*//ProcessUtil.exe (no longer used)
-            protected static object _lock;
-            protected static int references;
-
-            static ApplicationObject()
-            {
-                references = 0;
-                _lock = new object();
-            }
-
-            public ApplicationObject()
-            {
-                lock (_lock)
-                {
-                    references++;
-                    Create();
-                }
-            }
-
-            private void Create()
-            {
-                string path = System.IO.Path.Combine(DataPath.AppData, "ProcessUtil.exe");
-                Assembly assembly = Assembly.GetExecutingAssembly();
-                
-                using (Stream stream = assembly.GetManifestResourceStream(typeof(Program).Namespace + ".Resources.ProcessUtil.exe"))
-                {
-                    FileInfo fi = new FileInfo(path);
-
-                    if (fi.Exists)
-                    {
-                        int i = 0;
-
-                        do
-                        {
-                            if (fi.Exists)
-                            {
-                                if (fi.Length == stream.Length)
-                                {
-                                    this.Path = path;
-                                    return;
-                                }
-                                else
-                                {
-                                    try
-                                    {
-                                        fi.Delete();
-                                        break;
-                                    }
-                                    catch { }
-
-                                    path = System.IO.Path.Combine(DataPath.AppData, "ProcessUtil." + ++i + ".exe");
-                                    fi = new FileInfo(path);
-                                }
-                            }
-                            else
-                                break;
-                        }
-                        while (true);
-                    }
-
-                    int retries = 0;
-
-                    do
-                    {
-                        try
-                        {
-                            using (Stream output = File.Create(path))
-                            {
-
-                                int read;
-                                byte[] buffer = new byte[stream.Length];
-                                while ((read = stream.Read(buffer, 0, buffer.Length)) > 0)
-                                {
-                                    output.Write(buffer, 0, read);
-                                }
-                            }
-
-                            this.Path = path;
-                            return;
-                        }
-                        catch 
-                        {
-                            try
-                            {
-                                File.Delete(path);
-                            }
-                            catch { }
-                        }
-
-                        path = System.IO.Path.Combine(DataPath.AppData, "ProcessUtil." + ++retries + ".exe");
-
-                        if (retries > 5)
-                        {
-                            this.Path = null;
-                            return;
-                        }
-                    }
-                    while (true);
-                }
-            }
-
-            public string Path
-            {
-                get;
-                private set;
-            }
-
-            public void Dispose()
-            {
-                lock (_lock)
-                {
-                    references--;
-                    if (references == 0)
-                    {
-                        try
-                        {
-                            File.Delete(this.Path);
-                        }
-                        catch { }
-                    }
-                }
-            }
-            */
+            return Assembly.GetExecutingAssembly().Location;
         }
 
-        static ProcessUtil()
+        /// <summary>
+        /// Launches with the specified args
+        /// </summary>
+        public static bool Execute(string args, bool admin)
         {
+            var p = new ProcessStartInfo(GetPath(), args);
+            p.UseShellExecute = true;
+            if (admin)
+                p.Verb = "runas";
 
+            using (var proc = Process.Start(p))
+            {
+                proc.WaitForExit();
+                return proc.ExitCode == 0;
+            }
         }
 
         /// <summary>
@@ -170,18 +45,7 @@ namespace Gw2Launcher.Util
         /// <param name="password"></param>
         public static void CreateAccount(string name, string password)
         {
-            using (ApplicationObject a = new ApplicationObject())
-            {
-                ProcessStartInfo p = new ProcessStartInfo(a.Path, "-pu -user -u \"" + name + "\" -p \"" + password + "\"");
-                p.UseShellExecute = true;
-                p.Verb = "runas";
-
-                Process proc = Process.Start(p);
-                if (proc != null)
-                {
-                    proc.WaitForExit();
-                }
-            }
+            Execute("-pu -user -u \"" + name + "\" -p \"" + password + "\"", true);
         }
 
         /// <summary>
@@ -191,30 +55,31 @@ namespace Gw2Launcher.Util
         /// <param name="password"></param>
         public static void InitializeAccount(string username, System.Security.SecureString password)
         {
-            using (ApplicationObject a = new ApplicationObject())
+            var path = GetPath();
+
+            try
             {
-                try
-                {
-                    //other users will be using this
-                    Util.FileUtil.AllowFileAccess(a.Path, System.Security.AccessControl.FileSystemRights.Modify);
-                }
-                catch (Exception ex)
-                {
-                    Util.Logging.Log(ex);
-                }
+                //other users will be using this
+                Util.FileUtil.AllowFileAccess(path, System.Security.AccessControl.FileSystemRights.Modify);
+            }
+            catch (Exception ex)
+            {
+                Util.Logging.Log(ex);
+            }
 
-                ProcessStartInfo p = new ProcessStartInfo(a.Path, "-pu -userinit");
+            var p = new ProcessStartInfo(path, "-pu -userinit");
 
-                p.UseShellExecute = false;
-                p.UserName = username;
-                p.LoadUserProfile = true;
-                p.Password = password;
-                p.WorkingDirectory = DataPath.AppDataAccountData; //Path.GetPathRoot(a.Path);
+            p.UseShellExecute = false;
+            p.UserName = username;
+            p.LoadUserProfile = true;
+            p.Password = password;
+            p.WorkingDirectory = DataPath.AppDataAccountData; //Path.GetPathRoot(a.Path);
 
-                //creating the user's profile will be handled by Windows
-                //the process doesn't actually do anything itself
+            //creating the user's profile will be handled by Windows
+            //the process doesn't actually do anything itself
 
-                Process proc = Process.Start(p);
+            using (var proc = Process.Start(p))
+            {
                 if (proc != null)
                 {
                     proc.WaitForExit();
@@ -222,142 +87,112 @@ namespace Gw2Launcher.Util
             }
         }
 
+        public static string GetMutexName(Settings.AccountType type)
+        {
+            switch (type)
+            {
+                case Settings.AccountType.GuildWars1:
+
+                    return "AN-Mutex-Window-Guild Wars";
+
+                case Settings.AccountType.GuildWars2:
+
+                    return "AN-Mutex-Window-Guild Wars 2";
+
+                default:
+
+                    throw new NotSupportedException();
+            }
+        }
+
         /// <summary>
-        /// Finds all processes that match the path and attempts to kill "AN-Mutex-Window-Guild Wars 2"
+        /// Finds all processes that match the path and attempts to kill the specified type of mutex
+        /// Runs as an administrator
+        /// </summary>
+        public static void KillMutexWindow(Settings.AccountType type, string gw2Path)
+        {
+            Execute("-pu -handle -p \"" + gw2Path + "\" \"" + GetMutexName(type) + "\" " + (byte)Windows.Win32Handles.MatchMode.EndsWith, true);
+        }
+
+        /// <summary>
+        /// Finds all processes under the directory and attempts to kill the specified type of mutex
         /// Runs as an administrator
         /// </summary>
         /// <param name="gw2Path"></param>
-        public static void KillMutexWindow(string gw2Path)
+        public static void KillMutexWindowByDirectory(Settings.AccountType type, string gw2Path)
         {
-            using (ApplicationObject a = new ApplicationObject())
-            {
-                ProcessStartInfo p = new ProcessStartInfo(a.Path, "-pu -handle -p \"" + gw2Path + "\" \"AN-Mutex-Window-Guild Wars 2\" 0");
-                p.UseShellExecute = true;
-                p.Verb = "runas";
-
-                Process proc = Process.Start(p);
-                if (proc != null)
-                {
-                    proc.WaitForExit();
-                }
-            }
+            Execute("-pu -handle -d \"" + gw2Path + "\" \"" + GetMutexName(type) + "\" " + (byte)Windows.Win32Handles.MatchMode.EndsWith, true);
         }
 
         /// <summary>
-        /// Finds all processes under the directory and attempts to kill "AN-Mutex-Window-Guild Wars 2"
-        /// Runs as an administrator
-        /// </summary>
-        /// <param name="gw2Path"></param>
-        public static void KillMutexWindowByDirectory(string gw2Path)
-        {
-            using (ApplicationObject a = new ApplicationObject())
-            {
-                ProcessStartInfo p = new ProcessStartInfo(a.Path, "-pu -handle -d \"" + gw2Path + "\" \"AN-Mutex-Window-Guild Wars 2\" 0");
-                p.UseShellExecute = true;
-                p.Verb = "runas";
-
-                Process proc = Process.Start(p);
-                if (proc != null)
-                {
-                    proc.WaitForExit();
-                }
-            }
-        }
-
-        /// <summary>
-        /// Finds all processes that match the name and attempts to kill "AN-Mutex-Window-Guild Wars 2"
+        /// Finds all processes that match the name and attempts to kill the specified type of mutex
         /// Runs as an administrator
         /// </summary>
         /// <param name="name"></param>
-        public static void KillMutexWindowByProcessName(string name)
+        public static void KillMutexWindowByProcessName(Settings.AccountType type, string name)
         {
-            using (ApplicationObject a = new ApplicationObject())
-            {
-                ProcessStartInfo p = new ProcessStartInfo(a.Path, "-pu -handle -n \"" + name + "\" \"AN-Mutex-Window-Guild Wars 2\" 0");
-                p.UseShellExecute = true;
-                p.Verb = "runas";
-
-                Process proc = Process.Start(p);
-                if (proc != null)
-                {
-                    proc.WaitForExit();
-                }
-            }
+            Execute("-pu -handle -n \"" + name + "\" \"" + GetMutexName(type) + "\" " + (byte)Windows.Win32Handles.MatchMode.EndsWith, true);
         }
 
         /// <summary>
-        /// Scans entire system and attempts to kill "AN-Mutex-Window-Guild Wars 2"
+        /// Scans entire system and attempts to kill the specified mutex type ("AN-Mutex-Window-Guild Wars 2" or "AN-Mutex-Window-Guild Wars")
         /// </summary>
-        public static bool KillMutexWindow()
+        public static bool KillMutexWindow(Settings.AccountType type)
         {
-            return KillMutexWindow(true);
+            return KillMutexWindow(type, true);
         }
 
-        public static bool KillMutexWindow(bool runAsAdmin)
+        public static bool KillMutexWindow(Settings.AccountType type, bool runAsAdmin)
         {
-            using (ApplicationObject a = new ApplicationObject())
-            {
-                ProcessStartInfo p = new ProcessStartInfo(a.Path, "-pu -handle -pid 0 \"AN-Mutex-Window-Guild Wars 2\" 0");
-                p.UseShellExecute = true;
-                if (runAsAdmin)
-                    p.Verb = "runas";
-
-                Process proc = Process.Start(p);
-                if (proc != null)
-                {
-                    proc.WaitForExit();
-
-                    return proc.ExitCode == 0;
-                }
-
-                return false;
-            }
+            return Execute("-pu -handle -pid 0 \"" + GetMutexName(type) + "\" " + (byte)Windows.Win32Handles.MatchMode.EndsWith, runAsAdmin);
         }
 
         /// <summary>
-        /// Finds the process with the ID and attempts to kill "AN-Mutex-Window-Guild Wars 2"
+        /// Finds the process with the ID and attempts to kill the specified mutex type
         /// Specify a null username to run as an administrator
         /// </summary>
         /// <param name="pid"></param>
         /// <param name="username"></param>
         /// <param name="password">The password for the username or null to run as the current user</param>
-        public static void KillMutexWindow(int pid, string username, System.Security.SecureString password)
+        public static void KillMutexWindow(Settings.AccountType type, int pid, string username, System.Security.SecureString password)
         {
-            using (ApplicationObject a = new ApplicationObject())
+            string n;
+            if (type == Settings.AccountType.GuildWars1)
+                n = "Guild Wars";
+            else
+                n = "Guild Wars 2";
+            var path = GetPath();
+            var p = new ProcessStartInfo(path, "-pu -handle -pid " + pid + " \"" + GetMutexName(type) + "\" " + (byte)Windows.Win32Handles.MatchMode.EndsWith);
+            if (username != null)
             {
-                ProcessStartInfo p = new ProcessStartInfo(a.Path, "-pu -handle -pid " + pid + " \"AN-Mutex-Window-Guild Wars 2\" 0");
-                if (username != null)
+                p.UseShellExecute = false;
+                if (password != null)
                 {
-                    p.UseShellExecute = false;
-                    if (password != null)
+                    try
                     {
-                        try
-                        {
-                            //other users will be using this
-                            Util.FileUtil.AllowFileAccess(a.Path, System.Security.AccessControl.FileSystemRights.Modify);
-                        }
-                        catch (Exception ex)
-                        {
-                            Util.Logging.Log(ex);
-                        }
-
-                        p.UserName = username;
-                        p.LoadUserProfile = true;
-                        p.Password = password;
-                        p.WorkingDirectory = Path.GetPathRoot(a.Path);
+                        //other users will be using this
+                        Util.FileUtil.AllowFileAccess(path, System.Security.AccessControl.FileSystemRights.Modify);
                     }
-                }
-                else
-                {
-                    p.UseShellExecute = true;
-                    p.Verb = "runas";
-                }
+                    catch (Exception ex)
+                    {
+                        Util.Logging.Log(ex);
+                    }
 
-                Process proc = Process.Start(p);
-                if (proc != null)
-                {
-                    proc.WaitForExit();
+                    p.UserName = username;
+                    p.LoadUserProfile = true;
+                    p.Password = password;
+                    p.WorkingDirectory = Path.GetPathRoot(path); //the user may not have access to default working directory
                 }
+            }
+            else
+            {
+                p.UseShellExecute = true;
+                p.Verb = "runas";
+            }
+
+            using (var proc = Process.Start(p))
+            {
+                proc.WaitForExit();
             }
         }
 
@@ -367,29 +202,18 @@ namespace Gw2Launcher.Util
         /// <param name="roots">Folders containing gw2cache folders</param>
         public static void DeleteCacheFolders(IEnumerable<string> roots)
         {
-            using (ApplicationObject a = new ApplicationObject())
+            var args = new StringBuilder(512);
+
+            args.Append("-pu -delgw2cache");
+
+            foreach (string root in roots)
             {
-                StringBuilder args = new StringBuilder(512);
-
-                args.Append("-pu -delgw2cache");
-
-                foreach (string root in roots)
-                {
-                    args.Append(" \"");
-                    args.Append(root);
-                    args.Append('"');
-                }
-
-                ProcessStartInfo p = new ProcessStartInfo(a.Path, args.ToString());
-                p.UseShellExecute = true;
-                p.Verb = "runas";
-
-                Process proc = Process.Start(p);
-                if (proc != null)
-                {
-                    proc.WaitForExit();
-                }
+                args.Append(" \"");
+                args.Append(root);
+                args.Append('"');
             }
+
+            Execute(args.ToString(), true);
         }
 
         /// <summary>
@@ -399,61 +223,47 @@ namespace Gw2Launcher.Util
         /// </summary>
         public static bool CreateInactiveUsersTask()
         {
-            using (ApplicationObject a = new ApplicationObject())
-            {
-                string path1 = Path.GetTempFileName();
-                string path2 = Path.GetTempFileName();
+            var path1 = Path.GetTempFileName();
+            var path2 = Path.GetTempFileName();
 
+            try
+            {
+                string _xml1, _xml2;
+
+                _xml1 = Properties.Resources.Task.Replace("{path}", Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location));
+
+                _xml2 = _xml1.Replace("{args}", "-users:active:no");
+                _xml1 = _xml1.Replace("{args}", "-users:active:yes");
+
+                File.WriteAllText(path1, _xml1);
+                File.WriteAllText(path2, _xml2);
+
+                StringBuilder args = new StringBuilder(512);
+                args.Append("-pu -task -create \"gw2launcher-users-active-yes\" \"");
+                args.Append(path1);
+                args.Append("\" \"gw2launcher-users-active-no\" \"");
+                args.Append(path2);
+                args.Append('"');
+
+                return Execute(args.ToString(), true);
+            }
+            finally
+            {
                 try
                 {
-                    string _xml1, _xml2;
-
-                    _xml1 = Properties.Resources.Task.Replace("{path}", Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location));
-
-                    _xml2 = _xml1.Replace("{args}", "-users:active:no");
-                    _xml1 = _xml1.Replace("{args}", "-users:active:yes");
-
-                    File.WriteAllText(path1, _xml1);
-                    File.WriteAllText(path2, _xml2);
-
-                    StringBuilder args = new StringBuilder(512);
-                    args.Append("-pu -task -create \"gw2launcher-users-active-yes\" \"");
-                    args.Append(path1);
-                    args.Append("\" \"gw2launcher-users-active-no\" \"");
-                    args.Append(path2);
-                    args.Append('"');
-
-                    ProcessStartInfo p = new ProcessStartInfo(a.Path, args.ToString());
-                    p.UseShellExecute = true;
-                    p.Verb = "runas";
-
-                    Process proc = Process.Start(p);
-                    if (proc != null)
-                    {
-                        proc.WaitForExit();
-                        return proc.ExitCode == 0;
-                    }
-
-                    return false;
+                    File.Delete(path1);
                 }
-                finally
+                catch (Exception ex)
                 {
-                    try
-                    {
-                        File.Delete(path1);
-                    }
-                    catch (Exception ex)
-                    {
-                        Util.Logging.Log(ex);
-                    }
-                    try
-                    {
-                        File.Delete(path2);
-                    }
-                    catch (Exception ex)
-                    {
-                        Util.Logging.Log(ex);
-                    }
+                    Util.Logging.Log(ex);
+                }
+                try
+                {
+                    File.Delete(path2);
+                }
+                catch (Exception ex)
+                {
+                    Util.Logging.Log(ex);
                 }
             }
         }
@@ -464,17 +274,7 @@ namespace Gw2Launcher.Util
         /// <param name="name">The name of the task</param>
         public static void RunTask(string name)
         {
-            using (ApplicationObject a = new ApplicationObject())
-            {
-                ProcessStartInfo p = new ProcessStartInfo(a.Path, "-pu -task -run \"" + name + "\"");
-                p.UseShellExecute = true;
-
-                Process proc = Process.Start(p);
-                if (proc != null)
-                {
-                    proc.WaitForExit();
-                }
-            }
+            Execute("-pu -task -run \"" + name + "\"", false);
         }
 
         /// <summary>
@@ -483,27 +283,18 @@ namespace Gw2Launcher.Util
         /// <param name="names">The name of the task</param>
         public static void DeleteTask(IEnumerable<string> names)
         {
-            using (ApplicationObject a = new ApplicationObject())
+            var args = new StringBuilder(512);
+
+            args.Append("-pu -task -delete");
+
+            foreach (string name in names)
             {
-                StringBuilder args = new StringBuilder(512);
-                args.Append("-pu -task -delete");
-                foreach (string name in names)
-                {
-                    args.Append(" \"");
-                    args.Append(name);
-                    args.Append('"');
-                }
-
-                ProcessStartInfo p = new ProcessStartInfo(a.Path, args.ToString());
-                p.UseShellExecute = true;
-                p.Verb = "runas";
-
-                Process proc = Process.Start(p);
-                if (proc != null)
-                {
-                    proc.WaitForExit();
-                }
+                args.Append(" \"");
+                args.Append(name);
+                args.Append('"');
             }
+
+            Execute(args.ToString(), true);
         }
 
         /// <summary>
@@ -513,32 +304,23 @@ namespace Gw2Launcher.Util
         /// <param name="activate"></param>
         public static void ActivateUsers(IEnumerable<string> users, bool activate)
         {
-            using (ApplicationObject a = new ApplicationObject())
+            var args = new StringBuilder(512);
+
+            args.Append("-pu -users -activate:");
+
+            if (activate)
+                args.Append("yes");
+            else
+                args.Append("no");
+
+            foreach (string user in users)
             {
-                StringBuilder args = new StringBuilder(512);
-                args.Append("-pu -users -activate:");
-                if (activate)
-                    args.Append("yes");
-                else
-                    args.Append("no");
-
-                foreach (string user in users)
-                {
-                    args.Append(" \"");
-                    args.Append(user);
-                    args.Append('"');
-                }
-
-                ProcessStartInfo p = new ProcessStartInfo(a.Path, args.ToString());
-                p.UseShellExecute = true;
-                p.Verb = "runas";
-
-                Process proc = Process.Start(p);
-                if (proc != null)
-                {
-                    proc.WaitForExit();
-                }
+                args.Append(" \"");
+                args.Append(user);
+                args.Append('"');
             }
+
+            Execute(args.ToString(), true);
         }
 
         /// <summary>
@@ -546,63 +328,29 @@ namespace Gw2Launcher.Util
         /// </summary>
         public static bool CreateJunction(string link, string target)
         {
-            using (ApplicationObject a = new ApplicationObject())
-            {
-                StringBuilder args = new StringBuilder(512);
+            var args = new StringBuilder(512);
 
-                args.Append("-pu -junction \"");
-                args.Append(link);
-                args.Append("\" \"");
-                args.Append(target);
-                args.Append('"');
+            args.Append("-pu -junction \"");
+            args.Append(link);
+            args.Append("\" \"");
+            args.Append(target);
+            args.Append('"');
 
-                ProcessStartInfo p = new ProcessStartInfo(a.Path, args.ToString());
-                p.UseShellExecute = true;
-                p.Verb = "runas";
-
-                Process proc = Process.Start(p);
-                if (proc != null)
-                {
-                    proc.WaitForExit();
-
-                    return proc.ExitCode == 0;
-                }
-                else
-                {
-                    return false;
-                }
-            }
+            return Execute(args.ToString(), true);
         }
 
         /// <summary>
-        /// Creates the folder with all users modify rights
+        /// Creates the folder (if it doesn't exist) and gives modify rights to all users
         /// </summary>
         public static bool CreateFolder(string path)
         {
-            using (ApplicationObject a = new ApplicationObject())
-            {
-                StringBuilder args = new StringBuilder(512);
+            var args = new StringBuilder(512);
 
-                args.Append("-pu -folder \"");
-                args.Append(path);
-                args.Append('"');
+            args.Append("-pu -folder \"");
+            args.Append(path);
+            args.Append('"');
 
-                ProcessStartInfo p = new ProcessStartInfo(a.Path, args.ToString());
-                p.UseShellExecute = true;
-                p.Verb = "runas";
-
-                Process proc = Process.Start(p);
-                if (proc != null)
-                {
-                    proc.WaitForExit();
-
-                    return proc.ExitCode == 0;
-                }
-                else
-                {
-                    return false;
-                }
-            }
+            return Execute(args.ToString(), true);
         }
 
         /// <summary>
@@ -610,22 +358,59 @@ namespace Gw2Launcher.Util
         /// </summary>
         public static bool QueryPerformanceCounters(int pid)
         {
-            using (ApplicationObject a = new ApplicationObject())
+            return Execute("-pu -perfcounter " + pid, false);
+        }
+
+        /// <summary>
+        /// Shows the quick launch
+        /// </summary>
+        public static void ShowQuickLaunch()
+        {
+            Execute("-quicklaunch", false);
+        }
+
+        /// <summary>
+        /// Adds or updates the entry to the hosts file
+        /// </summary>
+        public static bool AddHostsEntry(string hostname, string address)
+        {
+            return Execute("-pu -hosts -add \"" + hostname + "\" \"" + address + "\"", true);
+        }
+
+        /// <summary>
+        /// Removes the entry from the host file
+        /// </summary>
+        public static bool RemoveHostsEntry(string hostname, string address = null)
+        {
+            return Execute("-pu -hosts -remove \"" + hostname + (address == null ? "\"" : "\" \"" + address + "\""), true);
+        }
+
+        /// <summary>
+        /// Shows a window mask for the specified process and window
+        /// </summary>
+        public static Process ShowWindowMask(Process process, IntPtr window, UI.formMaskOverlay.EnableFlags flags)
+        {
+            using (var self = Process.GetCurrentProcess())
             {
-                ProcessStartInfo p = new ProcessStartInfo(a.Path, "-pu -perfcounter " + pid);
-                p.UseShellExecute = true;
-
-                Process proc = Process.Start(p);
-                if (proc != null)
+                var p = new Process()
                 {
-                    proc.WaitForExit();
+                    StartInfo = new ProcessStartInfo(GetPath(), "-pu -windowmask " + self.Id + " " + process.Id + " " + window + " " + (byte)flags)
+                    {
+                        UseShellExecute = false,
+                    },
+                };
 
-                    return proc.ExitCode == pid;
-                }
-                else
+                try
                 {
-                    return false;
+                    p.Start();
                 }
+                catch
+                {
+                    p.Dispose();
+                    throw;
+                }
+
+                return p;
             }
         }
     }

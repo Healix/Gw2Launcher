@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -12,14 +12,14 @@ namespace Gw2Launcher.Windows
     {
         [ComImport]
         [Guid("00021401-0000-0000-C000-000000000046")]
-        private class ShellLink
+        public class ShellLink
         {
         }
 
         [ComImport]
         [InterfaceType(ComInterfaceType.InterfaceIsIUnknown)]
         [Guid("000214F9-0000-0000-C000-000000000046")]
-        private interface IShellLink
+        internal interface IShellLink
         {
             void GetPath([Out, MarshalAs(UnmanagedType.LPWStr)] StringBuilder pszFile, int cchMaxPath, out IntPtr pfd, int fFlags);
             void GetIDList(out IntPtr ppidl);

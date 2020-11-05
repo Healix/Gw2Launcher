@@ -1,4 +1,4 @@
-﻿namespace Gw2Launcher.UI
+namespace Gw2Launcher.UI
 {
     partial class formGw2Cache
     {
@@ -34,7 +34,7 @@
             System.Windows.Forms.DataGridViewCellStyle dataGridViewCellStyle3 = new System.Windows.Forms.DataGridViewCellStyle();
             this.labelSize = new System.Windows.Forms.Label();
             this.buttonDelete = new System.Windows.Forms.Button();
-            this.gridCache = new System.Windows.Forms.DataGridView();
+            this.gridCache = new Controls.ScaledDataGridView();
             this.columnUser = new System.Windows.Forms.DataGridViewTextBoxColumn();
             this.columnFolders = new System.Windows.Forms.DataGridViewTextBoxColumn();
             this.columnSize = new System.Windows.Forms.DataGridViewTextBoxColumn();
@@ -51,18 +51,14 @@
             this.labelSize.AutoSize = true;
             this.labelSize.Font = new System.Drawing.Font("Segoe UI Semilight", 8.25F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
             this.labelSize.Location = new System.Drawing.Point(9, 269);
-            this.labelSize.Name = "labelSize";
             this.labelSize.Size = new System.Drawing.Size(86, 13);
-            this.labelSize.TabIndex = 19;
             this.labelSize.Text = "0 MB in 0 folders";
             // 
             // buttonDelete
             // 
             this.buttonDelete.Font = new System.Drawing.Font("Segoe UI", 8.25F);
             this.buttonDelete.Location = new System.Drawing.Point(304, 247);
-            this.buttonDelete.Name = "buttonDelete";
             this.buttonDelete.Size = new System.Drawing.Size(110, 35);
-            this.buttonDelete.TabIndex = 21;
             this.buttonDelete.Text = "Delete Cache";
             this.buttonDelete.UseVisualStyleBackColor = true;
             this.buttonDelete.Click += new System.EventHandler(this.buttonDelete_Click);
@@ -85,13 +81,11 @@
             this.gridCache.EditMode = System.Windows.Forms.DataGridViewEditMode.EditProgrammatically;
             this.gridCache.Location = new System.Drawing.Point(12, 85);
             this.gridCache.MultiSelect = false;
-            this.gridCache.Name = "gridCache";
             this.gridCache.ReadOnly = true;
             this.gridCache.RowHeadersVisible = false;
             this.gridCache.RowTemplate.Height = 24;
             this.gridCache.SelectionMode = System.Windows.Forms.DataGridViewSelectionMode.FullRowSelect;
             this.gridCache.Size = new System.Drawing.Size(400, 144);
-            this.gridCache.TabIndex = 26;
             this.gridCache.CellContentClick += new System.Windows.Forms.DataGridViewCellEventHandler(this.gridCache_CellContentClick);
             this.gridCache.CellMouseClick += new System.Windows.Forms.DataGridViewCellMouseEventHandler(this.gridCache_CellMouseClick);
             this.gridCache.SelectionChanged += new System.EventHandler(this.gridCache_SelectionChanged);
@@ -103,7 +97,6 @@
             dataGridViewCellStyle1.Padding = new System.Windows.Forms.Padding(5, 0, 0, 0);
             this.columnUser.DefaultCellStyle = dataGridViewCellStyle1;
             this.columnUser.HeaderText = "User";
-            this.columnUser.Name = "columnUser";
             this.columnUser.ReadOnly = true;
             // 
             // columnFolders
@@ -111,7 +104,6 @@
             dataGridViewCellStyle2.Alignment = System.Windows.Forms.DataGridViewContentAlignment.MiddleRight;
             this.columnFolders.DefaultCellStyle = dataGridViewCellStyle2;
             this.columnFolders.HeaderText = "Folders";
-            this.columnFolders.Name = "columnFolders";
             this.columnFolders.ReadOnly = true;
             this.columnFolders.Width = 80;
             // 
@@ -121,7 +113,6 @@
             dataGridViewCellStyle3.Padding = new System.Windows.Forms.Padding(0, 0, 5, 0);
             this.columnSize.DefaultCellStyle = dataGridViewCellStyle3;
             this.columnSize.HeaderText = "Size";
-            this.columnSize.Name = "columnSize";
             this.columnSize.ReadOnly = true;
             this.columnSize.Width = 80;
             // 
@@ -129,9 +120,7 @@
             // 
             this.label1.Font = new System.Drawing.Font("Segoe UI Semilight", 8.25F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
             this.label1.Location = new System.Drawing.Point(10, 10);
-            this.label1.Name = "label1";
             this.label1.Size = new System.Drawing.Size(404, 34);
-            this.label1.TabIndex = 28;
             this.label1.Text = "The web browser used within the game may create a new cache folder with every lau" +
     "nch. These files can be safely deleted.";
             // 
@@ -140,9 +129,7 @@
             this.checkDeleteCacheOnLaunch.AutoSize = true;
             this.checkDeleteCacheOnLaunch.Font = new System.Drawing.Font("Segoe UI", 8.25F);
             this.checkDeleteCacheOnLaunch.Location = new System.Drawing.Point(18, 52);
-            this.checkDeleteCacheOnLaunch.Name = "checkDeleteCacheOnLaunch";
             this.checkDeleteCacheOnLaunch.Size = new System.Drawing.Size(303, 17);
-            this.checkDeleteCacheOnLaunch.TabIndex = 29;
             this.checkDeleteCacheOnLaunch.Text = "Automatically delete old cache folders on each launch";
             this.checkDeleteCacheOnLaunch.UseVisualStyleBackColor = true;
             this.checkDeleteCacheOnLaunch.CheckedChanged += new System.EventHandler(this.checkDeleteCacheOnLaunch_CheckedChanged);
@@ -151,20 +138,16 @@
             // 
             this.contextMenu.Items.AddRange(new System.Windows.Forms.ToolStripItem[] {
             this.showInExplorerToolStripMenuItem});
-            this.contextMenu.Name = "contextMenu";
-            this.contextMenu.Size = new System.Drawing.Size(162, 26);
+            this.contextMenu.Size = new System.Drawing.Size(163, 26);
             // 
             // showInExplorerToolStripMenuItem
             // 
-            this.showInExplorerToolStripMenuItem.Name = "showInExplorerToolStripMenuItem";
-            this.showInExplorerToolStripMenuItem.Size = new System.Drawing.Size(161, 22);
+            this.showInExplorerToolStripMenuItem.Size = new System.Drawing.Size(162, 22);
             this.showInExplorerToolStripMenuItem.Text = "Show in Explorer";
             this.showInExplorerToolStripMenuItem.Click += new System.EventHandler(this.showInExplorerToolStripMenuItem_Click);
             // 
             // formGw2Cache
             // 
-            this.AutoScaleDimensions = new System.Drawing.SizeF(96F, 96F);
-            this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Dpi;
             this.ClientSize = new System.Drawing.Size(426, 295);
             this.Controls.Add(this.checkDeleteCacheOnLaunch);
             this.Controls.Add(this.label1);
@@ -176,7 +159,6 @@
             this.Icon = global::Gw2Launcher.Properties.Resources.Gw2Launcher;
             this.MaximizeBox = false;
             this.MinimizeBox = false;
-            this.Name = "formGw2Cache";
             this.ShowIcon = false;
             this.ShowInTaskbar = false;
             this.StartPosition = System.Windows.Forms.FormStartPosition.CenterParent;
@@ -192,7 +174,7 @@
 
         private System.Windows.Forms.Label labelSize;
         private System.Windows.Forms.Button buttonDelete;
-        private System.Windows.Forms.DataGridView gridCache;
+        private Controls.ScaledDataGridView gridCache;
         private System.Windows.Forms.Label label1;
         private System.Windows.Forms.CheckBox checkDeleteCacheOnLaunch;
         private System.Windows.Forms.DataGridViewTextBoxColumn columnUser;

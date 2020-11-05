@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Drawing;
@@ -7,10 +7,11 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using System.Windows.Forms;
+using Gw2Launcher.Windows.Native;
 
 namespace Gw2Launcher.UI.Controls
 {
-    public partial class SizeDragButton : Control
+    public class SizeDragButton : Control
     {
         public event EventHandler<Point> DragOffsetChanged;
         public event EventHandler BeginDrag;
@@ -21,10 +22,19 @@ namespace Gw2Launcher.UI.Controls
 
         public SizeDragButton()
         {
-            InitializeComponent();
-
             SetStyle(ControlStyles.Selectable, false);
+            SetStyle(ControlStyles.ResizeRedraw, true);
+
+            this.Cursor = System.Windows.Forms.Cursors.SizeNWSE;
             this.Size = new Size(SystemInformation.VerticalScrollBarWidth, SystemInformation.HorizontalScrollBarHeight);
+            this.ForeColor = Color.DarkGray;
+            this.Padding = new Padding(0, 0, 2, 2);
+        }
+
+        public bool Transparent
+        {
+            get;
+            set;
         }
 
         [System.ComponentModel.Browsable(false)]
@@ -40,29 +50,32 @@ namespace Gw2Launcher.UI.Controls
             }
         }
 
-        protected override void OnSizeChanged(EventArgs e)
+        protected override void OnPaint(PaintEventArgs e)
         {
-            base.OnSizeChanged(e);
-            this.Invalidate();
-        }
-
-        protected override void OnPaintBackground(PaintEventArgs e)
-        {
-            base.OnPaintBackground(e);
+            base.OnPaint(e);
 
             var g = e.Graphics;
-            var w = this.Width;
-            var h = this.Height;
+            var scale = g.DpiX / 96f;
+            var px = (int)(scale + 0.5f);
+            var sz = px * 2;
 
-            for (var ix = 0; ix < 3; ix++)
+            using (var brush = new SolidBrush(this.ForeColor))
             {
-                var x = w - 4 - ix * 3;
+                var x = this.Width - this.Padding.Right - sz;
+                var h = this.Height - this.Padding.Bottom - sz;
 
-                for (var iy = 2-ix; iy >= 0; iy--)
+                for (var ix = 0; ix < 3; ++ix)
                 {
-                    var y = h - 4 - iy * 3;
+                    var y = h;
 
-                    g.FillRectangle(Brushes.DarkGray, x, y, 2, 2);
+                    for (var iy = 2 - ix; iy >= 0; --iy)
+                    {
+                        g.FillRectangle(brush, x, y, sz, sz);
+
+                        y -= px + sz;
+                    }
+
+                    x -= px + sz;
                 }
             }
         }
@@ -106,14 +119,17 @@ namespace Gw2Launcher.UI.Controls
             }
         }
 
-        protected override void Dispose(bool disposing)
+        protected override void WndProc(ref Message m)
         {
-            if (disposing)
+            base.WndProc(ref m);
+
+            if (m.Msg == (int)WindowMessages.WM_NCHITTEST)
             {
-                if (components != null)
-                    components.Dispose();
+                if (Transparent)
+                {
+                    m.Result = (IntPtr)HitTest.Transparent;
+                }
             }
-            base.Dispose(disposing);
         }
     }
 }

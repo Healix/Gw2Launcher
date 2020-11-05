@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -20,7 +20,7 @@ namespace Gw2Launcher.Util
             try
             {
                 var fi = new FileInfo(PATH);
-                if (fi.Exists && fi.Length > 5120000)
+                if (fi.Exists && fi.Length > 1048576)
                     fi.Delete();
             }
             catch { }
@@ -28,7 +28,7 @@ namespace Gw2Launcher.Util
 
         public static void Log(Exception e)
         {
-            #if DEBUG
+#if DEBUG
             try
             {
                 var methodBase = new StackTrace().GetFrame(1).GetMethod();
@@ -38,12 +38,12 @@ namespace Gw2Launcher.Util
             {
                 Console.WriteLine(ex.ToString());
             }
-            #endif
+#endif
         }
 
         public static void Log(string message)
         {
-            #if DEBUG
+#if DEBUG
             try
             {
                 var methodBase = new StackTrace().GetFrame(1).GetMethod();
@@ -53,17 +53,29 @@ namespace Gw2Launcher.Util
             {
                 Console.WriteLine(ex.ToString());
             }
-            #endif
+#endif
         }
 
         public static bool Crash(Exception e)
         {
+#if DEBUG
+            Log(e);
+            Debugger.Break();
+            return true;
+#else
             return Write(e.ToString());
+#endif
         }
 
         public static bool Crash(string message)
         {
+#if DEBUG
+            Log(message + "\r\n" + new StackTrace(1).ToString());
+            Debugger.Break();
+            return true;
+#else
             return Write(message + "\r\n" + new StackTrace(1).ToString());
+#endif
         }
 
         public static bool Write(string message)

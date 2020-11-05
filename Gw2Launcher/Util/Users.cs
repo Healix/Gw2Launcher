@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -32,10 +32,10 @@ namespace Gw2Launcher.Util
             return user.Equals(UserName, StringComparison.OrdinalIgnoreCase);
         }
 
-        public static bool IsCurrentEnvironmentUser(string user)
+        public static bool IsCurrentEnvironmentUser(string user = null)
         {
             if (string.IsNullOrEmpty(user))
-                return UserName.Equals(Environment.UserName, StringComparison.OrdinalIgnoreCase);
+                return UserName.Equals(Environment.UserName, StringComparison.Ordinal);
 
             return user.Equals(Environment.UserName, StringComparison.OrdinalIgnoreCase);
         }

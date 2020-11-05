@@ -1,4 +1,4 @@
-﻿namespace Gw2Launcher.UI
+namespace Gw2Launcher.UI
 {
     partial class formNote
     {
@@ -54,9 +54,7 @@
             this.label74.AutoSize = true;
             this.label74.Font = new System.Drawing.Font("Segoe UI Semilight", 8.25F);
             this.label74.Location = new System.Drawing.Point(12, 124);
-            this.label74.Name = "label74";
             this.label74.Size = new System.Drawing.Size(70, 13);
-            this.label74.TabIndex = 104;
             this.label74.Text = "Expires after...";
             // 
             // textMessage
@@ -65,19 +63,15 @@
             | System.Windows.Forms.AnchorStyles.Right)));
             this.textMessage.Location = new System.Drawing.Point(12, 12);
             this.textMessage.Multiline = true;
-            this.textMessage.Name = "textMessage";
             this.textMessage.ScrollBars = System.Windows.Forms.ScrollBars.Vertical;
             this.textMessage.Size = new System.Drawing.Size(366, 99);
-            this.textMessage.TabIndex = 0;
             // 
             // buttonOK
             // 
             this.buttonOK.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Right)));
             this.buttonOK.Font = new System.Drawing.Font("Segoe UI", 8.25F);
             this.buttonOK.Location = new System.Drawing.Point(292, 204);
-            this.buttonOK.Name = "buttonOK";
             this.buttonOK.Size = new System.Drawing.Size(86, 35);
-            this.buttonOK.TabIndex = 5;
             this.buttonOK.Text = "OK";
             this.buttonOK.UseVisualStyleBackColor = true;
             this.buttonOK.Click += new System.EventHandler(this.buttonOK_Click);
@@ -87,9 +81,7 @@
             this.comboExpires.DropDownStyle = System.Windows.Forms.ComboBoxStyle.DropDownList;
             this.comboExpires.FormattingEnabled = true;
             this.comboExpires.Location = new System.Drawing.Point(18, 145);
-            this.comboExpires.Name = "comboExpires";
             this.comboExpires.Size = new System.Drawing.Size(162, 21);
-            this.comboExpires.TabIndex = 1;
             this.comboExpires.SelectedIndexChanged += new System.EventHandler(this.comboExpires_SelectedIndexChanged);
             // 
             // dateCustom
@@ -97,9 +89,7 @@
             this.dateCustom.CustomFormat = "MM/dd/yyyy HH:mm:ss";
             this.dateCustom.Format = System.Windows.Forms.DateTimePickerFormat.Custom;
             this.dateCustom.Location = new System.Drawing.Point(0, 0);
-            this.dateCustom.Name = "dateCustom";
             this.dateCustom.Size = new System.Drawing.Size(147, 22);
-            this.dateCustom.TabIndex = 0;
             // 
             // comboZone
             // 
@@ -109,9 +99,7 @@
             "Local",
             "UTC"});
             this.comboZone.Location = new System.Drawing.Point(153, 0);
-            this.comboZone.Name = "comboZone";
             this.comboZone.Size = new System.Drawing.Size(65, 21);
-            this.comboZone.TabIndex = 1;
             // 
             // panelDuration
             // 
@@ -124,18 +112,14 @@
             this.panelDuration.Controls.Add(this.label1);
             this.panelDuration.Controls.Add(this.numericDays);
             this.panelDuration.Location = new System.Drawing.Point(18, 175);
-            this.panelDuration.Name = "panelDuration";
             this.panelDuration.Size = new System.Drawing.Size(238, 41);
-            this.panelDuration.TabIndex = 3;
             this.panelDuration.Visible = false;
             // 
             // label4
             // 
             this.label4.Font = new System.Drawing.Font("Segoe UI Semilight", 8.25F);
             this.label4.Location = new System.Drawing.Point(168, 25);
-            this.label4.Name = "label4";
             this.label4.Size = new System.Drawing.Size(50, 13);
-            this.label4.TabIndex = 130;
             this.label4.Text = "seconds";
             this.label4.TextAlign = System.Drawing.ContentAlignment.MiddleCenter;
             // 
@@ -145,9 +129,8 @@
             this.numericSeconds.Location = new System.Drawing.Point(168, 0);
             this.numericSeconds.Maximum = 1000;
             this.numericSeconds.Minimum = 0;
-            this.numericSeconds.Name = "numericSeconds";
+            this.numericSeconds.ReverseMouseWheelDirection = false;
             this.numericSeconds.Size = new System.Drawing.Size(50, 22);
-            this.numericSeconds.TabIndex = 3;
             this.numericSeconds.Text = "0";
             this.numericSeconds.TextAlign = System.Windows.Forms.HorizontalAlignment.Center;
             this.numericSeconds.Value = 0;
@@ -156,9 +139,7 @@
             // 
             this.label3.Font = new System.Drawing.Font("Segoe UI Semilight", 8.25F);
             this.label3.Location = new System.Drawing.Point(112, 25);
-            this.label3.Name = "label3";
             this.label3.Size = new System.Drawing.Size(50, 13);
-            this.label3.TabIndex = 128;
             this.label3.Text = "minutes";
             this.label3.TextAlign = System.Drawing.ContentAlignment.MiddleCenter;
             // 
@@ -168,9 +149,8 @@
             this.numericMinutes.Location = new System.Drawing.Point(112, 0);
             this.numericMinutes.Maximum = 1000;
             this.numericMinutes.Minimum = 0;
-            this.numericMinutes.Name = "numericMinutes";
+            this.numericMinutes.ReverseMouseWheelDirection = false;
             this.numericMinutes.Size = new System.Drawing.Size(50, 22);
-            this.numericMinutes.TabIndex = 2;
             this.numericMinutes.Text = "0";
             this.numericMinutes.TextAlign = System.Windows.Forms.HorizontalAlignment.Center;
             this.numericMinutes.Value = 0;
@@ -179,9 +159,7 @@
             // 
             this.label2.Font = new System.Drawing.Font("Segoe UI Semilight", 8.25F);
             this.label2.Location = new System.Drawing.Point(56, 25);
-            this.label2.Name = "label2";
             this.label2.Size = new System.Drawing.Size(50, 13);
-            this.label2.TabIndex = 126;
             this.label2.Text = "hours";
             this.label2.TextAlign = System.Drawing.ContentAlignment.MiddleCenter;
             // 
@@ -191,9 +169,8 @@
             this.numericHours.Location = new System.Drawing.Point(56, 0);
             this.numericHours.Maximum = 1000;
             this.numericHours.Minimum = 0;
-            this.numericHours.Name = "numericHours";
+            this.numericHours.ReverseMouseWheelDirection = false;
             this.numericHours.Size = new System.Drawing.Size(50, 22);
-            this.numericHours.TabIndex = 1;
             this.numericHours.Text = "0";
             this.numericHours.TextAlign = System.Windows.Forms.HorizontalAlignment.Center;
             this.numericHours.Value = 0;
@@ -202,9 +179,7 @@
             // 
             this.label1.Font = new System.Drawing.Font("Segoe UI Semilight", 8.25F);
             this.label1.Location = new System.Drawing.Point(3, 25);
-            this.label1.Name = "label1";
             this.label1.Size = new System.Drawing.Size(47, 13);
-            this.label1.TabIndex = 124;
             this.label1.Text = "days";
             this.label1.TextAlign = System.Drawing.ContentAlignment.MiddleCenter;
             // 
@@ -214,9 +189,8 @@
             this.numericDays.Location = new System.Drawing.Point(0, 0);
             this.numericDays.Maximum = 1000;
             this.numericDays.Minimum = 0;
-            this.numericDays.Name = "numericDays";
+            this.numericDays.ReverseMouseWheelDirection = false;
             this.numericDays.Size = new System.Drawing.Size(50, 22);
-            this.numericDays.TabIndex = 0;
             this.numericDays.Text = "0";
             this.numericDays.TextAlign = System.Windows.Forms.HorizontalAlignment.Center;
             this.numericDays.Value = 0;
@@ -226,9 +200,7 @@
             this.panelSpecific.Controls.Add(this.dateCustom);
             this.panelSpecific.Controls.Add(this.comboZone);
             this.panelSpecific.Location = new System.Drawing.Point(18, 175);
-            this.panelSpecific.Name = "panelSpecific";
             this.panelSpecific.Size = new System.Drawing.Size(238, 22);
-            this.panelSpecific.TabIndex = 2;
             this.panelSpecific.Visible = false;
             // 
             // checkNotify
@@ -236,17 +208,13 @@
             this.checkNotify.AutoSize = true;
             this.checkNotify.Font = new System.Drawing.Font("Segoe UI", 8.25F);
             this.checkNotify.Location = new System.Drawing.Point(18, 225);
-            this.checkNotify.Name = "checkNotify";
             this.checkNotify.Size = new System.Drawing.Size(130, 17);
-            this.checkNotify.TabIndex = 4;
             this.checkNotify.Text = "Notify when expired";
             this.checkNotify.UseVisualStyleBackColor = true;
             this.checkNotify.CheckedChanged += new System.EventHandler(this.checkNotify_CheckedChanged);
             // 
             // formNote
             // 
-            this.AutoScaleDimensions = new System.Drawing.SizeF(96F, 96F);
-            this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Dpi;
             this.ClientSize = new System.Drawing.Size(390, 251);
             this.Controls.Add(this.panelSpecific);
             this.Controls.Add(this.comboExpires);
@@ -260,7 +228,6 @@
             this.Icon = global::Gw2Launcher.Properties.Resources.Gw2Launcher;
             this.MaximizeBox = false;
             this.MinimizeBox = false;
-            this.Name = "formNote";
             this.ShowIcon = false;
             this.ShowInTaskbar = false;
             this.StartPosition = System.Windows.Forms.FormStartPosition.CenterParent;

@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -21,6 +21,8 @@ namespace Gw2Launcher.Messaging
             Launch = 2,
             LaunchMap = 3,
             UpdateMap = 4,
+            QuickLaunch = 5,
+            TotpCode = 6,
         }
 
         public static bool Post(IntPtr hWnd, MessageType type, int value)

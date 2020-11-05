@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -10,10 +10,11 @@ using Gw2Launcher.Windows.Native;
 
 namespace Gw2Launcher.UI
 {
-    class formSizingBox : ShowWithoutActivationForm
+    class formSizingBox : Base.ShowWithoutActivationForm
     {
         private Form form;
         private short offsetLocation, offsetSize;
+        private int barSize;
 
         public formSizingBox(Form form)
         {
@@ -40,106 +41,139 @@ namespace Gw2Launcher.UI
             this.Bounds = new Rectangle(form.Left - offsetLocation, form.Top - offsetLocation, form.Width + offsetSize, form.Height + offsetSize);
         }
 
+        protected override void OnScale(float scale)
+        {
+            base.OnScale(scale);
+
+            barSize = Scale(20);
+        }
+
+        protected override void OnFormClosing(FormClosingEventArgs e)
+        {
+            if (e.CloseReason == CloseReason.UserClosing)
+            {
+                e.Cancel = true;
+            }
+            base.OnFormClosing(e);
+        }
+
         protected override void OnPaintBackground(PaintEventArgs e)
         {
             var g = e.Graphics;
+            var scale = g.DpiX / 96f;
+
             g.Clear(Color.Red);
 
-            var p = Pens.Black;
             var b = Brushes.DarkGray;
 
             var w = this.Width;
             var h = this.Height;
+            var bthickness = (int)(11 * scale + 0.5f);
+            var bsize = (int)(25 * scale + 0.5f);
+            var border = bthickness - bthickness / 3 * 2; //bthickness - (int)(3 * scale + 0.5f) * 2;
+            var btb2 = (bthickness - border) / 2;
 
-            g.DrawRectangle(Pens.Black, 4, 4, w - 9, h - 9);
-            g.DrawRectangle(Pens.Black, 6, 6, w - 13, h - 13);
-            g.DrawRectangle(Pens.White, 5, 5, w - 11, h - 11);
-
-            var bh = 25;
-            //left bar
-            g.FillRectangle(b, 0, h / 2 - bh / 2, 11, bh);
-            //right bar
-            g.FillRectangle(b, w - 11, h / 2 - bh / 2, 11, bh);
-            //top bar
-            g.FillRectangle(b, w / 2 - bh / 2, 0, bh, 11);
-            //bottom bar
-            g.FillRectangle(b, w / 2 - bh / 2, h - 11, bh, 11);
-
-            var y = h / 2;
-            var x = 10 / 2;
+            //left border
+            g.FillRectangle(Brushes.Black, btb2, bthickness, border, h - bthickness * 2);
+            //right border
+            g.FillRectangle(Brushes.Black, w - border - btb2, bthickness, border, h - bthickness * 2);
+            //top border
+            g.FillRectangle(Brushes.Black, bthickness, btb2, w - bthickness * 2, border);
+            //bottom border
+            g.FillRectangle(Brushes.Black, bthickness, h - border - btb2, w - bthickness * 2, border);
 
             //left bar
-            g.DrawLine(p, x - 2, y - 2, x + 2, y - 2);
-            g.DrawLine(p, x - 2, y, x + 2, y);
-            g.DrawLine(p, x - 2, y + 2, x + 2, y + 2);
-
+            g.FillRectangle(b, 0, h / 2 - bsize / 2, bthickness, bsize);
             //right bar
-            x = w - 10 / 2 - 1;
-            g.DrawLine(p, x - 2, y - 2, x + 2, y - 2);
-            g.DrawLine(p, x - 2, y, x + 2, y);
-            g.DrawLine(p, x - 2, y + 2, x + 2, y + 2);
-
+            g.FillRectangle(b, w - bthickness, h / 2 - bsize / 2, bthickness, bsize);
             //top bar
-            y = 11 / 2;
-            x = w / 2;
-            g.DrawLine(p, x - 2, y - 2, x - 2, y + 2);
-            g.DrawLine(p, x, y - 2, x, y + 2);
-            g.DrawLine(p, x + 2, y - 2, x + 2, y + 2);
-
+            g.FillRectangle(b, w / 2 - bsize / 2, 0, bsize, bthickness);
             //bottom bar
-            y = h - 11 / 2 - 1;
-            g.DrawLine(p, x - 2, y - 2, x - 2, y + 2);
-            g.DrawLine(p, x, y - 2, x, y + 2);
-            g.DrawLine(p, x + 2, y - 2, x + 2, y + 2);
+            g.FillRectangle(b, w / 2 - bsize / 2, h - bthickness, bsize, bthickness);
 
             //top left
-            g.FillRectangle(b, 0, 0, 20, 11);
-            g.FillRectangle(b, 0, 11, 11, 9);
+            g.FillRectangle(b, 0, 0, bthickness * 2, bthickness);
+            g.FillRectangle(b, 0, bthickness, bthickness, bthickness);
 
             //top right
-            g.FillRectangle(b, w - 20, 0, 20, 11);
-            g.FillRectangle(b, w - 11, 11, 11, 9);
+            g.FillRectangle(b, w - bthickness * 2, 0, bthickness * 2, bthickness);
+            g.FillRectangle(b, w - bthickness, bthickness, bthickness, bthickness);
 
             //bottom left
-            g.FillRectangle(b, 0, h - 11, 20, 11);
-            g.FillRectangle(b, 0, h - 20, 11, 9);
+            g.FillRectangle(b, 0, h - bthickness, bthickness * 2, bthickness);
+            g.FillRectangle(b, 0, h - bthickness * 2, bthickness, bthickness);
 
             //bottom right
-            g.FillRectangle(b, w - 20, h - 11, 20, 11);
-            g.FillRectangle(b, w - 11, h - 20, 11, 9);
+            g.FillRectangle(b, w - bthickness * 2, h - bthickness, bthickness * 2, bthickness);
+            g.FillRectangle(b, w - bthickness, h - bthickness * 2, bthickness, bthickness);
 
             b = Brushes.Black;
 
+            var bt2 = bthickness / 2;
+            var bspacing = (bthickness - bt2) / 2;
+            var px = (int)(scale + 0.5f);
+            var px2 = px * 2;
+            int x , y;
+
+            bsize = bthickness - bspacing * 2;
+            y = h / 2 - px / 2;
+
+            //left bar
+            x = bspacing;
+            g.FillRectangle(b, x, y - px2, bsize, px);
+            g.FillRectangle(b, x, y, bsize, px);
+            g.FillRectangle(b, x, y + px2, bsize, px);
+
+            //right bar
+            x = w - bthickness + bspacing;
+            g.FillRectangle(b, x, y - px2, bsize, px);
+            g.FillRectangle(b, x, y, bsize, px);
+            g.FillRectangle(b, x, y + px2, bsize, px);
+
+            x = w / 2 - px / 2;
+
+            //top bar
+            g.FillRectangle(b, x - px2, bspacing, px, bsize);
+            g.FillRectangle(b, x, bspacing, px, bsize);
+            g.FillRectangle(b, x + px2, bspacing, px, bsize);
+
+            //bottom bar
+            y = h - bthickness + bspacing;
+            g.FillRectangle(b, x - px2, y, px, bsize);
+            g.FillRectangle(b, x, y, px, bsize);
+            g.FillRectangle(b, x + px2, y, px, bsize);
+
+
             //top left arrow
-            g.FillPolygon(Brushes.Black, new Point[]
+            g.FillPolygon(b, new Point[]
             {
-                new Point(5,5),
-                new Point(10,5),
-                new Point(5,10),
+                new Point(bt2,bt2),
+                new Point(bthickness,bt2),
+                new Point(bt2,bthickness),
             });
 
             //top right arrow
             g.FillPolygon(b, new Point[]
             {
-                new Point(w-5,5),
-                new Point(w-5,10),
-                new Point(w-10,5),
+                new Point(w-bt2,bt2),
+                new Point(w-bt2,bthickness),
+                new Point(w-bthickness,bt2),
             });
 
             //bottom left arrow
             g.FillPolygon(b, new Point[]
             {
-                new Point(5,h-5),
-                new Point(10,h-5),
-                new Point(5,h-10),
+                new Point(bt2,h-bt2),
+                new Point(bthickness+1,h-bt2),
+                new Point(bt2,h-bthickness-1),
             });
 
             //bottom right arrow
             g.FillPolygon(b, new Point[] 
             {
-                new Point(w-5,h-5),
-                new Point(w-5,h-10),
-                new Point(w-10,h-5) 
+                new Point(w-bt2,h-bt2),
+                new Point(w-bt2,h-bthickness-1),
+                new Point(w-bthickness-1,h-bt2) 
             });
         }
 
@@ -162,20 +196,20 @@ namespace Gw2Launcher.UI
                     var p = this.PointToClient(new Point(m.LParam.GetValue32()));
                     var size = this.ClientSize;
 
-                    if (p.X <= 20)
+                    if (p.X <= barSize)
                     {
-                        if (p.Y <= 20)
+                        if (p.Y <= barSize)
                             m.Result = (IntPtr)HitTest.TopLeft;
-                        else if (p.Y >= size.Height - 20)
+                        else if (p.Y >= size.Height - barSize)
                             m.Result = (IntPtr)HitTest.BottomLeft;
                         else
                             m.Result = (IntPtr)HitTest.Caption;
                     }
-                    else if (p.X >= size.Width - 20)
+                    else if (p.X >= size.Width - barSize)
                     {
-                        if (p.Y <= 20)
+                        if (p.Y <= barSize)
                             m.Result = (IntPtr)HitTest.TopRight;
-                        else if (p.Y >= size.Height - 20)
+                        else if (p.Y >= size.Height - barSize)
                             m.Result = (IntPtr)HitTest.BottomRight;
                         else
                             m.Result = (IntPtr)HitTest.Caption;

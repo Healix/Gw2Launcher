@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -14,7 +14,7 @@ namespace Gw2Launcher.Tools
         {
             private QueuedAccountApi source;
 
-            public DataEventArgs(QueuedAccountApi source, Settings.IAccount account, Api.Account response, Api.Account responsePrevious, byte attempt, DateTime dateScheduled, DateTime dateRequested, object data)
+            public DataEventArgs(QueuedAccountApi source, Settings.IGw2Account account, Api.Account response, Api.Account responsePrevious, byte attempt, DateTime dateScheduled, DateTime dateRequested, object data)
             {
                 this.source = source;
                 this.Account = account;
@@ -26,7 +26,7 @@ namespace Gw2Launcher.Tools
                 this.Data = data;
             }
 
-            public Settings.IAccount Account
+            public Settings.IGw2Account Account
             {
                 get;
                 private set;
@@ -96,7 +96,7 @@ namespace Gw2Launcher.Tools
 
         private class QueuedAccount : IEquatable<QueuedAccount>
         {
-            public Settings.IAccount account;
+            public Settings.IGw2Account account;
             public byte retry;
             public long ticks;
             public byte attempt;
@@ -104,7 +104,7 @@ namespace Gw2Launcher.Tools
             public object data;
             public Api.Account response;
 
-            public QueuedAccount(Settings.IAccount account)
+            public QueuedAccount(Settings.IGw2Account account)
             {
                 this.account = account;
             }
@@ -143,7 +143,7 @@ namespace Gw2Launcher.Tools
         /// Adding an account that is already queued will overwrite it, unless it has a unique data object attached.
         /// </summary>
         /// <param name="data">Optional data that will be returned with the response</param>
-        public void Schedule(Settings.IAccount account, object data, int millisDelay)
+        public void Schedule(Settings.IGw2Account account, object data, int millisDelay)
         {
             var now = DateTime.UtcNow;
             var q = new QueuedAccount(account)

@@ -1,7 +1,8 @@
-﻿using System;
+using System;
 using System.Text;
 using System.Windows.Forms;
 using System.Drawing;
+using System.ComponentModel;
 
 namespace Gw2Launcher.UI.Controls
 {
@@ -13,13 +14,19 @@ namespace Gw2Launcher.UI.Controls
             Diamond,
             Square,
             Ellipse,
-            X
+            X,
+            Plus,
+            Minus,
+            MenuLines,
+            DoubleArrow,
+            ArrowAndLine,
+            Underscore,
         }
 
         public FlatShapeButton()
             : base()
         {
-
+            lineSize = 2;
         }
 
         [System.ComponentModel.Browsable(false)]
@@ -36,6 +43,7 @@ namespace Gw2Launcher.UI.Controls
         }
 
         protected ContentAlignment shapeAlignment;
+        [DefaultValue(ContentAlignment.MiddleCenter)]
         public ContentAlignment ShapeAlignment
         {
             get
@@ -58,7 +66,7 @@ namespace Gw2Launcher.UI.Controls
             get
             {
                 if (shapeSize.IsEmpty)
-                    return new Size(5, 9);
+                    shapeSize = new Size(4, 8);
                 return shapeSize;
             }
             set
@@ -71,7 +79,26 @@ namespace Gw2Launcher.UI.Controls
             }
         }
 
+        protected int lineSize;
+        [DefaultValue(2)]
+        public int LineSize
+        {
+            get
+            {
+                return lineSize;
+            }
+            set
+            {
+                if (lineSize != value)
+                {
+                    lineSize = value;
+                    OnRedrawRequired();
+                }
+            }
+        }
+
         protected ArrowDirection shapeDirection;
+        [DefaultValue(ArrowDirection.Left)]
         public ArrowDirection ShapeDirection
         {
             get
@@ -89,6 +116,7 @@ namespace Gw2Launcher.UI.Controls
         }
 
         protected IconShape shape;
+        [DefaultValue(IconShape.Arrow)]
         public IconShape Shape
         {
             get
@@ -170,12 +198,9 @@ namespace Gw2Launcher.UI.Controls
                     };
         }
 
-        protected override void OnPaintBuffer(Graphics g)
+        private Point GetPosition(int w, int h)
         {
-            float x, y, w, h;
-
-            w = shapeSize.Width - 1;
-            h = shapeSize.Height - 1;
+            int x, y;
 
             switch (shapeAlignment)
             {
@@ -198,7 +223,7 @@ namespace Gw2Launcher.UI.Controls
                 case ContentAlignment.TopCenter:
                 default:
 
-                    x = this.Width / 2f - w / 2f;
+                    x = Padding.Left + (this.Width - Padding.Horizontal - w) / 2;
 
                     break;
             }
@@ -224,22 +249,238 @@ namespace Gw2Launcher.UI.Controls
                 case ContentAlignment.MiddleRight:
                 default:
 
-                    y = this.Height / 2f - h / 2f;
+                    y = Padding.Top + (this.Height - Padding.Vertical - h) / 2;
 
                     break;
             }
 
+            return new Point(x, y);
+        }
+
+        protected override void OnPaintBuffer(Graphics g)
+        {
+            var scale = g.DpiX / 96f;
+            int w = (int)(shapeSize.Width * scale + 0.5f),
+                h = (int)(shapeSize.Height * scale + 0.5f),
+                lineSize;
+            Point p;
+
             switch (shape)
             {
+                case IconShape.ArrowAndLine:
+
+                    using (var brush = new SolidBrush(ForeColorCurrent))
+                    {
+                        using (var pen = new Pen(brush))
+                        {
+                            lineSize = (int)(this.lineSize * scale + 0.5f);
+
+                            switch (shapeDirection)
+                            {
+                                case ArrowDirection.Up:
+                                case ArrowDirection.Down:
+                                    p = GetPosition(w, h + lineSize);
+                                    break;
+                                case ArrowDirection.Right:
+                                case ArrowDirection.Left:
+                                default:
+                                    p = GetPosition(w + lineSize, h);
+                                    break;
+                            }
+
+                            var points1 = GetShapeArrow(p.X, p.Y, w, h);
+
+                            g.SmoothingMode = System.Drawing.Drawing2D.SmoothingMode.AntiAlias;
+                            g.FillPolygon(brush, points1);
+                            g.DrawPolygon(pen, points1);
+
+                            g.SmoothingMode = System.Drawing.Drawing2D.SmoothingMode.Default;
+
+                            switch (shapeDirection)
+                            {
+                                case ArrowDirection.Left:
+                                    g.FillRectangle(brush, p.X - lineSize, p.Y, lineSize, h + 1);
+                                    break;
+                                case ArrowDirection.Right:
+                                    g.FillRectangle(brush, p.X + w, p.Y, lineSize, h + 1);
+                                    break;
+                                case ArrowDirection.Up:
+                                    g.FillRectangle(brush, p.X, p.Y - lineSize, w + 1, lineSize);
+                                    break;
+                                case ArrowDirection.Down:
+                                    g.FillRectangle(brush, p.X, p.Y + h, w + 1, lineSize);
+                                    break;
+                            }
+                        }
+                    }
+
+                    break;
+                case IconShape.DoubleArrow:
+
+                    using (var brush = new SolidBrush(ForeColorCurrent))
+                    {
+                        using (var pen = new Pen(brush))
+                        {
+                            switch (shapeDirection)
+                            {
+                                case ArrowDirection.Up:
+                                case ArrowDirection.Down:
+                                    p = GetPosition(w, h * 2);
+                                    break;
+                                case ArrowDirection.Right:
+                                case ArrowDirection.Left:
+                                default:
+                                    p = GetPosition(w * 2, h);
+                                    break;
+                            }
+
+                            PointF[] points1;
+
+                            g.SmoothingMode = System.Drawing.Drawing2D.SmoothingMode.AntiAlias;
+
+                            points1 = GetShapeArrow(p.X, p.Y, w, h);
+                            g.FillPolygon(brush, points1);
+                            g.DrawPolygon(pen, points1);
+
+                            switch (shapeDirection)
+                            {
+                                case ArrowDirection.Up:
+                                case ArrowDirection.Down:
+                                    points1 = GetShapeArrow(p.X, p.Y + h, w, h);
+                                    break;
+                                case ArrowDirection.Right:
+                                case ArrowDirection.Left:
+                                default:
+                                    points1 = GetShapeArrow(p.X + w, p.Y, w, h);
+                                    break;
+                            }
+
+                            g.FillPolygon(brush, points1);
+                            g.DrawPolygon(pen, points1);
+                        }
+                    }
+
+                    break;
+                case IconShape.Underscore:
+
+                    lineSize = (int)(this.lineSize * scale + 0.5f);
+
+                    using (var pen = new Pen(ForeColorCurrent, lineSize))
+                    {
+                        pen.StartCap = System.Drawing.Drawing2D.LineCap.Flat;
+                        pen.EndCap = System.Drawing.Drawing2D.LineCap.Flat;
+
+                        p = GetPosition(w, h);
+
+                        var y = p.Y + h - this.lineSize * scale / 2f;
+                        if (borderColor.A > 0)
+                        {
+                            g.SmoothingMode = System.Drawing.Drawing2D.SmoothingMode.AntiAlias;
+                            pen.Color = borderColor;
+                            pen.Width = lineSize + 1f;
+
+                            g.DrawLine(pen, p.X - 0.5f, y - 0.5f, p.X + w + 0.5f, y - 0.5f);
+
+                            pen.Color = ForeColorCurrent;
+                            pen.Width = lineSize;
+                        }
+
+                        g.SmoothingMode = System.Drawing.Drawing2D.SmoothingMode.Default;
+                        g.DrawLine(pen, p.X, y, p.X + w, y);
+                    }
+
+                    break;
+                case IconShape.Minus:
+
+                    using (var brush = new SolidBrush(ForeColorCurrent))
+                    {
+                        lineSize = (int)(this.lineSize * scale + 0.5f);
+                        p = GetPosition(w, lineSize);
+
+                        g.SmoothingMode = System.Drawing.Drawing2D.SmoothingMode.Default;
+                        g.FillRectangle(brush, p.X, p.Y, w, lineSize);
+                    }
+
+                    break;
+                case IconShape.Plus:
+
+                    lineSize = (int)(this.lineSize * scale + 0.5f);
+
+                    using (var pen = new Pen(ForeColorCurrent, lineSize))
+                    {
+                        pen.Alignment = System.Drawing.Drawing2D.PenAlignment.Center;
+                        w = (w - lineSize) / 2;
+                        h = (h - lineSize) / 2;
+
+                        p = GetPosition(w * 2 + lineSize, h * 2 + lineSize);
+
+                        if (borderColor.A > 0)
+                        {
+                            g.SmoothingMode = System.Drawing.Drawing2D.SmoothingMode.AntiAlias;
+                            pen.Color = borderColor;
+                            pen.Width = lineSize + 1f;
+
+                            float xf, yf;
+
+                            xf = p.X + w + lineSize / 2f - 0.5f;
+                            yf = p.Y + h * 2 + lineSize;
+                            g.DrawLine(pen, xf, p.Y - 0.5f, xf, yf);
+
+                            xf = p.X + w * 2 + lineSize;
+                            yf = p.Y + h + lineSize / 2f - 0.5f;
+                            g.DrawLine(pen, p.X - 0.5f, yf, xf, yf);
+
+                            pen.Color = ForeColorCurrent;
+                            pen.Width = lineSize;
+                        }
+
+                        g.SmoothingMode = System.Drawing.Drawing2D.SmoothingMode.Default;
+
+                        int x, y;
+                        x = p.X + w + lineSize / 2;
+                        y = p.Y + h * 2 + lineSize;
+                        if (lineSize == 1)
+                            --y;
+                        g.DrawLine(pen, x, p.Y, x, y);
+
+                        x = p.X + w * 2 + lineSize;
+                        y = p.Y + h + lineSize / 2;
+                        if (lineSize == 1)
+                            --x;
+                        g.DrawLine(pen, p.X, y, x, y);
+                    }
+
+                    break;
+                case IconShape.MenuLines:
+
+                    using (var brush = new SolidBrush(ForeColorCurrent))
+                    {
+                        lineSize = (int)(this.lineSize * scale + 0.5f);
+                        h = (h - lineSize * 3) / 2;
+                        p = GetPosition(w, h * 2 + lineSize * 3);
+
+                        g.SmoothingMode = System.Drawing.Drawing2D.SmoothingMode.Default;
+
+                        var y = p.Y;
+                        g.FillRectangle(brush, p.X, y, w, lineSize);
+                        y += lineSize + h;
+                        g.FillRectangle(brush, p.X, y, w, lineSize);
+                        y += lineSize + h;
+                        g.FillRectangle(brush, p.X, y, w, lineSize);
+                    }
+
+                    break;
                 case IconShape.Ellipse:
 
                     using (var brush = new SolidBrush(ForeColorCurrent))
                     {
                         using (var pen = new Pen(brush))
                         {
+                            p = GetPosition(w, h);
+
                             g.SmoothingMode = System.Drawing.Drawing2D.SmoothingMode.AntiAlias;
-                            g.FillEllipse(brush, x, y, w, h);
-                            g.DrawEllipse(pen, x, y, w, h);
+                            g.FillEllipse(brush, p.X, p.Y, w, h);
+                            g.DrawEllipse(pen, p.X, p.Y, w, h);
                         }
                     }
 
@@ -248,64 +489,60 @@ namespace Gw2Launcher.UI.Controls
 
                     using (var brush = new SolidBrush(ForeColorCurrent))
                     {
-                        using (var pen = new Pen(brush, 2f))
+                        lineSize = (int)(this.lineSize * scale + 0.5f);
+
+                        using (var pen = new Pen(brush, lineSize))
                         {
+                            p = GetPosition(w, h);
+
+                            g.SmoothingMode = System.Drawing.Drawing2D.SmoothingMode.AntiAlias;
                             pen.StartCap = System.Drawing.Drawing2D.LineCap.Flat;
                             pen.EndCap = System.Drawing.Drawing2D.LineCap.Flat;
 
-                            g.SmoothingMode = System.Drawing.Drawing2D.SmoothingMode.AntiAlias;
-
                             if (borderColor.A > 0)
                             {
-                                pen.Width = 3.5f;
+                                pen.Width = lineSize + 1.5f;
                                 pen.Color = borderColor;
 
-                                x -= 0.5f;
-                                y -= 0.5f;
-                                w += 1f;
-                                h += 1f;
+                                var xf = p.X - 0.5f;
+                                var yf = p.Y - 0.5f;
+                                var wf = w + 1f;
+                                var hf = h + 1f;
 
-                                g.DrawLine(pen, x, y, x + w, y + h);
-                                g.DrawLine(pen, x, y + h, x + w, y);
+                                g.DrawLine(pen, xf, yf, xf + wf, yf + hf);
+                                g.DrawLine(pen, xf, yf + hf, xf + wf, yf);
 
-                                pen.Width = 2f;
+                                pen.Width = lineSize;
                                 pen.Color = ForeColorCurrent;
-
-                                x += 0.5f;
-                                y += 0.5f;
-                                w -= 1f;
-                                h -= 1f;
-
-                                g.DrawLine(pen, x, y, x + w, y + h);
-                                g.DrawLine(pen, x, y + h, x + w, y);
                             }
 
-                            g.DrawLine(pen, x, y, x + w, y + h);
-                            g.DrawLine(pen, x, y + h, x + w, y);
+                            g.DrawLine(pen, p.X, p.Y, p.X + w, p.Y + h);
+                            g.DrawLine(pen, p.X, p.Y + h, p.X + w, p.Y);
                         }
                     }
 
                     break;
                 default:
 
+                    p = GetPosition(w, h);
                     PointF[] points;
 
                     switch (shape)
                     {
                         case FlatShapeButton.IconShape.Diamond:
 
-                            points = GetShapeDiamond(x, y, w, h);
+                            points = GetShapeDiamond(p.X, p.Y, w, h);
 
                             break;
                         case FlatShapeButton.IconShape.Square:
 
-                            points = GetShapeSquare(x, y, w, h);
+                            points = GetShapeSquare(p.X, p.Y, w, h);
 
                             break;
                         case FlatShapeButton.IconShape.Arrow:
                         default:
 
-                            points = GetShapeArrow(x, y, w, h);
+                            points = GetShapeArrow(p.X, p.Y, w, h);
 
                             break;
                     }
@@ -315,6 +552,18 @@ namespace Gw2Launcher.UI.Controls
                         using (var pen = new Pen(brush))
                         {
                             g.SmoothingMode = System.Drawing.Drawing2D.SmoothingMode.AntiAlias;
+
+                            if (borderColor.A > 0 && shape == IconShape.Arrow)
+                            {
+                                pen.Width = 1.5f;
+                                pen.Color = borderColor;
+
+                                g.DrawPolygon(pen, GetShapeArrow(p.X - 0.5f, p.Y - 0.5f, w + 1f, h + 1f));
+
+                                pen.Width = 1f;
+                                pen.Color = ForeColorCurrent;
+                            }
+
                             g.FillPolygon(brush, points);
                             g.DrawPolygon(pen, points);
                         }

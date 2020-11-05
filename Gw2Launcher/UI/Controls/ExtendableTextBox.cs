@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -55,12 +55,13 @@ namespace Gw2Launcher.UI.Controls
             }
 
             extendedWindow.MaximumSize = this.MaximumExtendedSize;
+            extendedWindow.MinimumSize = this.Size;
 
             if (this.ExtendedSize.IsEmpty)
                 extendedWindow.Height = this.Height * 2;
             else
                 extendedWindow.Size = this.ExtendedSize;
-
+            
             extendedWindow.Show(this.FindForm(), focus);
         }
 

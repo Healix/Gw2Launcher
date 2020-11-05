@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -12,7 +12,7 @@ namespace Gw2Launcher.Tools
     {
         private const int BUILD_RECACHE_TIME = 60000;
         private const string URL_BUILD_API = "https://api.guildwars2.com/v2/build";
-        private const string URL_LATEST = "http://" + Settings.ASSET_HOST + "/latest64/101";
+        private const string URL_LATEST = "http://{0}/latest64/101";
 
         private static readonly object _lock;
         private static int build;
@@ -75,7 +75,9 @@ namespace Gw2Launcher.Tools
         {
             try
             {
-                HttpWebRequest request = HttpWebRequest.CreateHttp(URL_LATEST);
+                var url = string.Format(URL_LATEST, Net.Dns.GetHostAddresses(Settings.ASSET_HOST)[0]);
+                var request = HttpWebRequest.CreateHttp(url);
+                request.Host = Settings.ASSET_HOST;
                 request.Headers.Add(HttpRequestHeader.Cookie, Settings.ASSET_COOKIE);
                 request.Timeout = 5000;
 

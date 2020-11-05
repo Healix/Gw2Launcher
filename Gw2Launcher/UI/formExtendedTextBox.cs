@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Data;
@@ -216,6 +216,12 @@ namespace Gw2Launcher.UI
         {
             this.Location = source.Parent.PointToScreen(source.Location);
             this.Owner = parent;
+
+            var screen = Screen.FromControl(this).WorkingArea;
+            if (this.Right > screen.Right)
+                this.Width = screen.Right - this.Left;
+            if (this.Bottom > screen.Bottom)
+                this.Height = screen.Bottom - this.Top;
 
             textText.Text = source.Text;
             textText.SelectionStart = source.SelectionStart;

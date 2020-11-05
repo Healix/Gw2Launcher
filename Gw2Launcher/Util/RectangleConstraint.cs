@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -37,13 +37,31 @@ namespace Gw2Launcher.Util
 
         public static Rectangle ConstrainToScreen(Rectangle bounds)
         {
-            Screen screen = Screen.FromPoint(bounds.Location);
+            Screen screen = Screen.FromRectangle(bounds);
             return Constrain(screen.Bounds, bounds);
         }
 
         public static Rectangle ConstrainToScreen(Point location, Size size)
         {
             return ConstrainToScreen(new Rectangle(location, size));
+        }
+
+        public static Size Scale(Size size, Size max)
+        {
+            int w = size.Width,
+                h = size.Height;
+
+            float rw = (float)max.Width / w,
+                  rh = (float)max.Height / h,
+                  r = rw < rh ? rw : rh;
+
+            if (r < 1)
+            {
+                w = (int)(w * r + 0.5f);
+                h = (int)(h * r + 0.5f);
+            }
+
+            return new Size(w, h);
         }
     }
 }

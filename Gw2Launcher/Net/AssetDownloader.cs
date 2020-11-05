@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -354,7 +354,7 @@ namespace Gw2Launcher.Net
                                 }
                                 else if (cache.CanWrite)
                                 {
-                                    int port = Settings.PatchingUseHttps.Value ? 443 : 80;
+                                    int port = Settings.PatchingOptions.Value.HasFlag(Settings.PatchingFlags.UseHttps) ? 443 : 80;
 
                                     #region Remote connection
 
@@ -1144,7 +1144,7 @@ namespace Gw2Launcher.Net
                     if (ips.Length == 0)
                         throw new IndexOutOfRangeException();
 
-                    var args = Settings.GW2Arguments.Value;
+                    var args = Settings.GuildWars2.Arguments.Value;
                     if (!string.IsNullOrEmpty(args))
                     {
                         var existing = Util.Args.GetValue(args, "assetsrv");

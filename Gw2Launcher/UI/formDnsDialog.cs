@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Data;
@@ -11,7 +11,7 @@ using System.Net;
 
 namespace Gw2Launcher.UI
 {
-    public partial class formDnsDialog : Form
+    public partial class formDnsDialog : Base.BaseForm
     {
         private int selectedCount;
         
@@ -23,17 +23,7 @@ namespace Gw2Launcher.UI
 
         public formDnsDialog(IEnumerable<IPAddress> selected)
         {
-            InitializeComponent();
-
-            var scale = this.CurrentAutoScaleDimensions.Width / 96f;
-            if (scale != 1)
-            {
-                foreach (DataGridViewColumn col in gridServers.Columns)
-                {
-                    if (col.AutoSizeMode != DataGridViewAutoSizeColumnMode.Fill)
-                        col.Width = (int)(col.Width * scale + 0.5f);
-                }
-            }
+            InitializeComponents();
 
             gridServers.AdvancedCellBorderStyle.All = DataGridViewAdvancedCellBorderStyle.None;
 
@@ -69,6 +59,13 @@ namespace Gw2Launcher.UI
                 c.Value = CheckState.Unchecked;
             else
                 c.Value = CheckState.Indeterminate;
+        }
+
+        protected override void OnInitializeComponents()
+        {
+            base.OnInitializeComponents();
+
+            InitializeComponent();
         }
 
         public List<IPAddress> IPs

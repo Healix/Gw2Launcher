@@ -1,4 +1,4 @@
-﻿namespace Gw2Launcher.UI.Controls
+namespace Gw2Launcher.UI.Controls
 {
     partial class SidebarButton
     {
@@ -24,7 +24,6 @@
             this.BackColor = System.Drawing.Color.White;
             this.Cursor = System.Windows.Forms.Cursors.Hand;
             this.Font = new System.Drawing.Font("Segoe UI", 8.25F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            this.Name = "SidebarButton";
             this.Size = new System.Drawing.Size(242, 93);
             this.Load += new System.EventHandler(this.SidebarButton_Load);
             this.ResumeLayout(false);

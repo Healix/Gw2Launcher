@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -79,12 +79,26 @@ namespace Gw2Launcher.Client
 
                 public override object GetData(string format)
                 {
+                    var DataRequested = this.DataRequested;
                     if (DataRequested != null)
-                        DataRequested(this, EventArgs.Empty);
+                    {
+                        DataRequested.BeginInvoke(this, EventArgs.Empty,
+                           delegate(IAsyncResult r)
+                           {
+                               try
+                               {
+                                   DataRequested.EndInvoke(r);
+                               }
+                               catch { }
+                           }, null);
+                    }
+
                     return base.GetData(format);
                 }
             }
-            
+
+            public event EventHandler<Account> LoginEntered;
+
             private uint coordClient, coordPlay;
 
             private SynchronizationContext context;
@@ -97,9 +111,8 @@ namespace Gw2Launcher.Client
             {
                 context = SynchronizationContext.Current;
                 contextId = Thread.CurrentThread.ManagedThreadId;
-                queue = new Queue<QueuedAccount>();
 
-                Settings.LauncherAutologinPoints.ValueChanged += LauncherAutologinPoints_ValueChanged;
+                Settings.GuildWars2.LauncherAutologinPoints.ValueChanged += LauncherAutologinPoints_ValueChanged;
             }
 
             void LauncherAutologinPoints_ValueChanged(object sender, EventArgs e)
@@ -126,17 +139,17 @@ namespace Gw2Launcher.Client
                     try
                     {
                         var q = new QueuedAccount(account, p);
-                        var s = account.Settings;
+                        var gw2 = (Settings.IGw2Account)account.Settings;
 
-                        if (s.AutomaticLogin && s.HasCredentials)
+                        if (gw2.AutomaticLogin && gw2.HasCredentials)
                         {
                             q.State = AccountState.WaitingOnLogin;
                         }
-                        else if (s.AutomaticPlay && !Settings.DisableAutomaticLogins)
+                        else if (gw2.AutomaticPlay && !Settings.DisableAutomaticLogins)
                         {
                             q.State = AccountState.WaitingOnPlay;
                             q.Time = DateTime.UtcNow;
-                            q.Limit = q.Time.AddSeconds(30);
+                            q.Limit = q.Time.AddSeconds(60);
                         }
                         else
                         {
@@ -149,7 +162,7 @@ namespace Gw2Launcher.Client
                         }
                         else
                         {
-                            q.Handle = p.MainWindowHandle;
+                            q.Handle = Windows.FindWindow.FindMainWindow(p);
                             if (q.Handle == IntPtr.Zero)
                                 return;
                         }
@@ -159,6 +172,8 @@ namespace Gw2Launcher.Client
                         if (!buffer.ToString().Equals(LAUNCHER_WINDOW_CLASSNAME))
                             return;
 
+                        if (queue == null)
+                            queue = new Queue<QueuedAccount>();
                         queue.Enqueue(q);
                         queued = true;
                     }
@@ -168,13 +183,17 @@ namespace Gw2Launcher.Client
                             p.Dispose();
                     }
 
-                    if (task == null || task.IsCompleted)
-                        task = Task.Factory.StartNew(DoQueue);
+                    if (queued && (task == null || task.IsCompleted))
+                    {
+                        task = DoQueue();
+                    }
                 }
             }
 
-            private async void DoQueue()
+            private async Task DoQueue()
             {
+                //note logins could be prioritized to allow for more accurate entry, however, this causes other problems (delayed launches, failure to login due to too many connection)
+
                 var _queue = new Queue<QueuedAccount>();
 
                 while (true)
@@ -188,6 +207,7 @@ namespace Gw2Launcher.Client
 
                         if (_queue.Count == 0)
                         {
+                            queue = null;
                             task = null;
                             return;
                         }
@@ -201,7 +221,7 @@ namespace Gw2Launcher.Client
 
                         try
                         {
-                            var h = p.MainWindowHandle;
+                            var h = Windows.FindWindow.FindMainWindow(p);
                             if (p.HasExited || q.Handle != h)
                             {
                                 p.Dispose();
@@ -218,20 +238,29 @@ namespace Gw2Launcher.Client
                                     {
                                         if (await DoLogin(q))
                                         {
-                                            if (Settings.DisableAutomaticLogins || !q.Account.Settings.AutomaticPlay)
+                                            if (Settings.DisableAutomaticLogins || !((Settings.IGw2Account)q.Account.Settings).AutomaticPlay)
                                             {
                                                 p.Dispose();
                                                 continue;
                                             }
 
+                                            if (LoginEntered != null)
+                                            {
+                                                try
+                                                {
+                                                    LoginEntered(this, q.Account);
+                                                }
+                                                catch { }
+                                            }
+
                                             q.State = AccountState.WaitingOnPlay;
                                             q.Time = DateTime.UtcNow;
-                                            q.Limit = q.Time.AddSeconds(30);
+                                            q.Limit = q.Time.AddSeconds(60);
                                             q.Attempts = 0;
                                         }
                                         else
                                         {
-                                            if (++q.Attempts > 3)
+                                            if (++q.Attempts > 10)
                                             {
                                                 p.Dispose();
                                                 continue;
@@ -287,20 +316,30 @@ namespace Gw2Launcher.Client
                 var p = q.Process;
                 p.Refresh();
 
-                return q.Handle == p.MainWindowHandle;
+                return q.Handle == Windows.FindWindow.FindMainWindow(p);
+            }
+
+            private async Task<bool> WaitForKeys(System.Windows.Forms.Keys keys, int limit)
+            {
+                var start = Environment.TickCount;
+
+                while ((System.Windows.Forms.Form.ModifierKeys & keys) != 0)
+                {
+                    if (Environment.TickCount - start > limit)
+                        return false;
+                    await Task.Delay(100);
+                }
+
+                return true;
             }
 
             private async Task<bool> DoLogin(QueuedAccount q)
             {
-                //note: this makes a lot of assumptions and doesn't check anything. a simple test would
-                //to be watch for the login and play buttons to change color, confirming that 1) the credentials were entered
-                //and 2) the login was successful
-
                 #region Find client area
 
                 if (coordClient == 0)
                 {
-                    var v = Settings.LauncherAutologinPoints.Value;
+                    var v = Settings.GuildWars2.LauncherAutologinPoints.Value;
 
                     if (v != null && !v.EmptyArea.IsEmpty)
                     {
@@ -353,79 +392,178 @@ namespace Gw2Launcher.Client
 
                 var handle = q.Handle;
 
-                //"click" the background area to remove focus - this wouldn't be needed if the email was blank
-                NativeMethods.SendMessage(handle, 0x0201, 1, coordClient); //WM_LBUTTONDOWN
-                NativeMethods.SendMessage(handle, 0x0202, 0, coordClient); //WM_LBUTTONUP
+                //disabling to prevent interference from clicking (changes focus) - it'll still process keyboard input
+                Windows.WindowLong.Add(handle, GWL.GWL_STYLE, WindowStyle.WS_DISABLED);
 
-                //tab back to the email field, which will highlight any existing text
-                NativeMethods.SendMessage(handle, 0x0100, 0x09, 0); //WM_KEYDOWN (VK_TAB)
-
-                //paste
                 try
                 {
-                    NativeMethods.keybd_event(0x11, 0, 0, 0); //VK_CONTROL down
+                    Action wait = delegate
+                    {
+                        NativeMethods.SendMessage(handle, 0, 0, 0);
+                    };
 
-                    if (!await DoClipboard(handle, q.Account.Settings.Email, false))
+                    //"click" the background area to remove focus - this wouldn't be needed if the email was blank
+                    NativeMethods.SendMessage(handle, 0x0201, 1, coordClient); //WM_LBUTTONDOWN
+                    NativeMethods.SendMessage(handle, 0x0202, 0, coordClient); //WM_LBUTTONUP
+
+                    wait();
+
+                    if (!await WaitForKeys(System.Windows.Forms.Keys.Shift | System.Windows.Forms.Keys.Control, 5000))
                         return false;
-                }
-                finally
-                {
-                    NativeMethods.keybd_event(0x11, 0, 2, 0); //VK_CONTROL up
-                }
 
-                //tab to the password field
-                NativeMethods.SendMessage(handle, 0x0100, 0x09, 0); //WM_KEYDOWN (VK_TAB)
+                    //tab back to the email field, which will highlight any existing text
+                    NativeMethods.SendMessage(handle, WindowMessages.WM_KEYDOWN, (IntPtr)0x09, IntPtr.Zero); //VK_TAB
 
-                //make sure the window hasn't changed
-                if (!IsHandleOkay(q))
-                    return false;
+                    wait();
 
-                //paste
-                try
-                {
-                    NativeMethods.keybd_event(0x11, 0, 0, 0); //VK_CONTROL down
-                    var c = Security.Credentials.ToCharArray(q.Account.Settings.Password);
-                    var p = new string(c);
-                    Array.Clear(c, 0, c.Length);
-                    if (!await DoClipboard(handle, p, true))
+                    var clipboard = await GetClipboardText();
+
+                    //paste
+                    if (!await DoClipboard(handle, q.Account.Settings.Email, false, q))
+                    {
+                        await SetClipboardText(clipboard);
+
+                        q.Process.Refresh();
+                        
                         return false;
-                }
-                finally
-                {
-                    NativeMethods.keybd_event(0x11, 0, 2, 0); //VK_CONTROL up
-                }
+                    }
 
-                if (!Settings.DisableAutomaticLogins)
-                {
-                    //using the home key to serve as an update
-                    NativeMethods.SendMessage(handle, 0x0100, 0x24, 0); //WM_KEYDOWN (VK_HOME)
+                    wait();
 
-                    //make sure the window hasn't changed, specifically here as it could auto submit a crash report
+                    if (!await WaitForKeys(System.Windows.Forms.Keys.Shift | System.Windows.Forms.Keys.Control, 5000))
+                        return false;
+
+                    //tab to the password field
+                    NativeMethods.SendMessage(handle, WindowMessages.WM_KEYDOWN, (IntPtr)0x09, IntPtr.Zero); //VK_TAB
+
+                    //make sure the window hasn't changed
                     if (!IsHandleOkay(q))
+                    {
+                        await SetClipboardText(clipboard);
+
                         return false;
+                    }
 
-                    //enter to login
-                    NativeMethods.PostMessage(handle, 0x0100, 0x0D, 0); //WM_KEYDOWN (VK_RETURN)
+                    //paste
+                    var c = Security.Credentials.ToCharArray(q.Account.Settings.Password.ToSecureString());
+
+                    try
+                    {
+                        #region Password via posting
+
+                        //pasting an empty character to verying it's processing text input
+                        if (!await DoClipboard(handle, null, false, q))
+                        {
+                            await SetClipboardText(clipboard);
+
+                            return false;
+                        }
+
+                        //first posted character will be ignored due to the prior keydown message without a following keyup
+                        NativeMethods.PostMessage(handle, WindowMessages.WM_CHAR, IntPtr.Zero, IntPtr.Zero);
+
+                        foreach (var ch in c)
+                        {
+                            NativeMethods.PostMessage(handle, WindowMessages.WM_CHAR, (IntPtr)ch, IntPtr.Zero);
+                        }
+
+                        await Task.Delay(500);
+
+                        #endregion
+
+                        #region Password via clipboard
+
+                        //using the clipboard is more reliable, but makes the password visible
+
+                        //var p = new string(c);
+                        //if (!await DoClipboard(handle, p, true, q))
+                        //{
+                        //    return false;
+                        //}
+
+                        #endregion
+                    }
+                    finally
+                    {
+                        Array.Clear(c, 0, c.Length);
+                    }
+
+                    await SetClipboardText(clipboard);
+                    
+                    if (!Settings.DisableAutomaticLogins)
+                    {
+                        wait();
+
+                        //using the home key to serve as an input update
+                        //NativeMethods.SendMessage(handle, WindowMessages.WM_KEYDOWN, (IntPtr)0x24, IntPtr.Zero); //VK_HOME
+
+                        if (!await WaitForKeys(System.Windows.Forms.Keys.Alt | System.Windows.Forms.Keys.Control, 5000))
+                            return false;
+
+                        //make sure the window hasn't changed, specifically here as it could auto submit a crash report
+                        if (!IsHandleOkay(q))
+                            return false;
+
+                        //enter to login
+                        NativeMethods.PostMessage(handle, WindowMessages.WM_KEYDOWN, (IntPtr)0x0D, IntPtr.Zero); //VK_RETURN
+                    }
+
+                    return true;
                 }
+                finally
+                {
+                    Windows.WindowLong.Remove(handle, GWL.GWL_STYLE, WindowStyle.WS_DISABLED);
+                }
+            }
+            
 
-                return true;
+            private async Task<string> GetClipboardText(int timeout = 1000)
+            {
+                var contains = false;
+                string text = null;
+                var start = Environment.TickCount;
+
+                while (true)
+                {
+                    try
+                    {
+                        context.Send(
+                            delegate
+                            {
+                                contains = System.Windows.Forms.Clipboard.ContainsText();
+                                if (contains)
+                                    text = System.Windows.Forms.Clipboard.GetText();
+                            }, null);
+                    }
+                    catch
+                    {
+                        contains = true;
+                        text = null;
+                    }
+
+                    if (contains)
+                    {
+                        if (!string.IsNullOrEmpty(text))
+                            return text;
+                    }
+                    else
+                    {
+                        return null;
+                    }
+
+                    if (Environment.TickCount - start > timeout)
+                        return null;
+
+                    await Task.Delay(100);
+                }
             }
 
-            private async Task<bool> DoClipboard(IntPtr handle, string text, bool clear)
+            private async Task<bool> SetClipboardData(DataObject data, int timeout = 1000)
             {
-                using (var cancel = new CancellationTokenSource())
+                var start = Environment.TickCount;
+
+                do
                 {
-                    var data = new DataObject();
-
-                    data.SetText(text);
-
-                    EventHandler onRequested = delegate
-                    {
-                        if (cancel != null)
-                            cancel.Cancel();
-                    };
-                    data.DataRequested += onRequested;
-
                     try
                     {
                         context.Send(
@@ -433,44 +571,117 @@ namespace Gw2Launcher.Client
                             {
                                 System.Windows.Forms.Clipboard.SetDataObject(data);
                             }, null);
+
+                        return true;
                     }
-                    catch
+                    catch { }
+
+                    if (Environment.TickCount - start > timeout)
+                        return false;
+
+                    await Task.Delay(100);
+                }
+                while (true);
+            }
+
+            private async Task<bool> SetClipboardText(string text, int timeout = 1000)
+            {
+                var start = Environment.TickCount;
+
+                do
+                {
+                    try
+                    {
+                        context.Send(
+                            delegate
+                            {
+                                if (string.IsNullOrEmpty(text))
+                                    System.Windows.Forms.Clipboard.Clear();
+                                else
+                                    System.Windows.Forms.Clipboard.SetText(text);
+                            }, null);
+
+                        return true;
+                    }
+                    catch { }
+
+                    if (Environment.TickCount - start > timeout)
+                        return false;
+
+                    await Task.Delay(100);
+                }
+                while (true);
+            }
+
+            private async Task<bool> DoClipboard(IntPtr handle, string text, bool reset, QueuedAccount q)
+            {
+                using (var cancel = new CancellationTokenSource())
+                {
+                    var data = new DataObject();
+
+                    if (text != null)
+                    {
+                        data.SetText(text);
+                    }
+                    else
+                    {
+                        data.SetData(System.Windows.Forms.DataFormats.Text, "");
+                    }
+
+                    var ctext = reset ? await GetClipboardText() : null;
+                    if (!await SetClipboardData(data))
                     {
                         return false;
                     }
 
-                    NativeMethods.SendMessage(handle, 0x0100, 0x56, 0); //WM_KEYDOWN (V)
-
                     var completed = false;
+                    var isWaiting = true;
+
+                    EventHandler onRequested = delegate
+                    {
+                        if (isWaiting)
+                        {
+                            cancel.Cancel(); //could fail, but will be caught by the event
+                        }
+                    };
+
+                    data.DataRequested += onRequested;
 
                     try
                     {
-                        await Task.Delay(1000, cancel.Token);
+                        NativeMethods.keybd_event(0x11, 0, 0, 0); //VK_CONTROL down
+                        NativeMethods.SendMessage(handle, WindowMessages.WM_KEYDOWN, (IntPtr)0x56, IntPtr.Zero); //V
+                    }
+                    finally
+                    {
+                        NativeMethods.keybd_event(0x11, 0, 2, 0); //VK_CONTROL up
+                    }
+
+                    try
+                    {
+                        //gw2 could potentially take more than 5s to use the clipboard
+                        await Task.Delay(5000, cancel.Token);
                     }
                     catch
                     {
                         completed = true;
                     }
 
+                    isWaiting = false;
+                    data.DataRequested -= onRequested;
+
                     if (completed)
                     {
-                        await Task.Delay(1);
+                        await Task.Delay(100);
                     }
 
-                    if (clear)
+                    if (reset)
                     {
-                        try
+                        if (!await SetClipboardText(ctext))
                         {
-                            context.Send(
-                                delegate
-                                {
-                                    System.Windows.Forms.Clipboard.Clear();
-                                }, null);
+                            //failed to restore clipboard
                         }
-                        catch { }
                     }
-
-                    data.DataRequested -= onRequested;
 
                     return completed;
                 }
@@ -482,7 +693,7 @@ namespace Gw2Launcher.Client
 
                 if (coordPlay == 0)
                 {
-                    var v = Settings.LauncherAutologinPoints.Value;
+                    var v = Settings.GuildWars2.LauncherAutologinPoints.Value;
 
                     if (v != null && !v.PlayButton.IsEmpty)
                     {

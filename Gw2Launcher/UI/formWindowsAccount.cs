@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Data;
@@ -17,16 +17,23 @@ using System.Runtime.InteropServices;
 
 namespace Gw2Launcher.UI
 {
-    public partial class formWindowsAccount : Form
+    public partial class formWindowsAccount : Base.StackFormBase
     {
         public formWindowsAccount()
         {
-            InitializeComponent();
+            InitializeComponents();
 
             listAccounts.Enabled = false;
             listAccounts.Items.Add("Loading...");
 
             Task.Factory.StartNew(new Action(LoadAccounts));
+        }
+
+        protected override void OnInitializeComponents()
+        {
+            base.OnInitializeComponents();
+
+            InitializeComponent();
         }
 
         public formWindowsAccount(string username) : this()
@@ -198,12 +205,14 @@ namespace Gw2Launcher.UI
                             formPassword f;
                             System.Security.SecureString password;
 
-                            using (f = new formPassword("New password"))
+                            using (f = new formPassword(textAccountName.Text))
                             {
+                                f.Text = "New password";
+
                                 if (f.ShowDialog(this) != DialogResult.OK)
                                     return;
 
-                                password = f.Password.Copy();
+                                password = f.Password;
 
                                 if (password.Length == 0)
                                 {
@@ -215,16 +224,18 @@ namespace Gw2Launcher.UI
 
                             using (password)
                             {
-                                using (f = new formPassword("Confirm password"))
+                                using (f = new formPassword(textAccountName.Text, password))
                                 {
+                                    f.Text = "Confirm password";
+
                                     if (f.ShowDialog(this) != DialogResult.OK)
                                         return;
 
-                                    if (!Security.Credentials.Compare(password, f.Password))
-                                    {
-                                        MessageBox.Show(this, "Passwords do not match", "Wrong password", MessageBoxButtons.OK, MessageBoxIcon.Exclamation);
-                                        return;
-                                    }
+                                    //if (!Security.Credentials.Compare(password, f.Password))
+                                    //{
+                                    //    MessageBox.Show(this, "Passwords do not match", "Wrong password", MessageBoxButtons.OK, MessageBoxIcon.Exclamation);
+                                    //    return;
+                                    //}
                                 }
 
                                 if (!CreateAccount(textAccountName.Text, password))

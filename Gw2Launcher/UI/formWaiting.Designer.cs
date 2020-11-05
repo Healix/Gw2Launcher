@@ -1,4 +1,4 @@
-﻿namespace Gw2Launcher.UI
+namespace Gw2Launcher.UI
 {
     partial class formWaiting
     {
@@ -29,6 +29,7 @@
         private void InitializeComponent()
         {
             this.label8 = new System.Windows.Forms.Label();
+            this.waitingBounce1 = new Gw2Launcher.UI.Controls.WaitingBounce();
             this.SuspendLayout();
             // 
             // label8
@@ -36,22 +37,25 @@
             this.label8.AutoSize = true;
             this.label8.Font = new System.Drawing.Font("Segoe UI Semilight", 9.75F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
             this.label8.ForeColor = System.Drawing.Color.White;
-            this.label8.Location = new System.Drawing.Point(115, 38);
-            this.label8.Name = "label8";
+            this.label8.Location = new System.Drawing.Point(121, 55);
             this.label8.Size = new System.Drawing.Size(51, 17);
-            this.label8.TabIndex = 24;
             this.label8.Text = "Waiting";
+            // 
+            // waitingBounce1
+            // 
+            this.waitingBounce1.ForeColor = System.Drawing.Color.White;
+            this.waitingBounce1.Location = new System.Drawing.Point(73, 40);
+            this.waitingBounce1.Size = new System.Drawing.Size(147, 12);
             // 
             // formWaiting
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(96F, 96F);
-            this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Dpi;
             this.BackColor = System.Drawing.Color.Black;
             this.ClientSize = new System.Drawing.Size(294, 92);
+            this.Controls.Add(this.waitingBounce1);
             this.Controls.Add(this.label8);
             this.FormBorderStyle = System.Windows.Forms.FormBorderStyle.None;
             this.Icon = global::Gw2Launcher.Properties.Resources.Gw2Launcher;
-            this.Name = "formWaiting";
             this.ShowInTaskbar = false;
             this.StartPosition = System.Windows.Forms.FormStartPosition.CenterParent;
             this.Text = "Waiting...";
@@ -64,5 +68,6 @@
         #endregion
 
         private System.Windows.Forms.Label label8;
+        private Controls.WaitingBounce waitingBounce1;
     }
 }

@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -15,31 +15,36 @@ namespace Gw2Launcher.Tools
         {
             if (Client.FileManager.IsDataLinkingSupported)
             {
-                foreach (var uid in Settings.Accounts.GetKeys())
+                foreach (var account in Util.Accounts.GetGw2Accounts())
                 {
-                    var a = Settings.Accounts[uid];
-                    if (!a.HasValue)
-                        continue;
-                    var account = a.Value;
-
-                    DeleteFile(Path.Combine(Client.FileManager.GetPath(Client.FileManager.SpecialPath.AppData, account), CRASH_LOG_NAME));
+                    DeleteFiles(Client.FileManager.GetPath(Client.FileManager.SpecialPath.AppData, account));
                 }
 
-                DeleteFile(Path.Combine(Client.FileManager.GetPath(Client.FileManager.SpecialPath.AppData), CRASH_LOG_NAME));
+                //DeleteFile(Path.Combine(Client.FileManager.GetPath(Client.FileManager.SpecialPath.AppData), CRASH_LOG_NAME));
                 DeleteFolder(Path.Combine(Client.FileManager.GetPath(Client.FileManager.SpecialPath.Dumps)));
             }
             else
             {
-                foreach (var uid in Settings.Accounts.GetKeys())
+                foreach (var account in Util.Accounts.GetGw2Accounts())
                 {
-                    var a = Settings.Accounts[uid];
-                    if (!a.HasValue)
-                        continue;
-                    var account = a.Value;
-
-                    DeleteFile(Path.Combine(Client.FileManager.GetPath(Client.FileManager.SpecialPath.AppData, account), CRASH_LOG_NAME));
+                    //DeleteFile(Path.Combine(Client.FileManager.GetPath(Client.FileManager.SpecialPath.AppData, account), CRASH_LOG_NAME));
                     DeleteFolder(Path.Combine(Client.FileManager.GetPath(Client.FileManager.SpecialPath.Dumps, account)));
                 }
+            }
+        }
+
+        private static void DeleteFiles(string path)
+        {
+            try
+            {
+                foreach (var f in Directory.GetFiles(path, "*.log"))
+                {
+                    DeleteFile(f);
+                }
+            }
+            catch (Exception e)
+            {
+                Util.Logging.Log(e);
             }
         }
 
@@ -48,8 +53,31 @@ namespace Gw2Launcher.Tools
             try
             {
                 var fi = new FileInfo(path);
-                if (fi.Exists && DateTime.UtcNow.Subtract(fi.LastWriteTimeUtc).TotalDays >= 3)
-                    File.Delete(path);
+                if (fi.Exists && DateTime.UtcNow.Subtract(fi.LastWriteTimeUtc).TotalDays >= 1 && fi.Length > 0)
+                {
+                    bool isLinked;
+
+                    try
+                    {
+                        isLinked = Windows.Symlink.IsHardLinked(fi.FullName);
+                    }
+                    catch
+                    {
+                        isLinked=false;
+                    }
+
+                    if (isLinked)
+                    {
+                        using (var f = File.Open(fi.FullName, FileMode.Truncate, FileAccess.Write, FileShare.ReadWrite))
+                        {
+
+                        }
+                    }
+                    else
+                    {
+                        File.Delete(path);
+                    }
+                }
             }
             catch (Exception e)
             {

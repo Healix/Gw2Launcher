@@ -1,4 +1,4 @@
-﻿namespace Gw2Launcher.UI.Controls
+namespace Gw2Launcher.UI.Controls
 {
     partial class ProgressGraph
     {
@@ -25,7 +25,6 @@
             this.DoubleBuffered = true;
             this.Font = new System.Drawing.Font("Segoe UI", 6.25F);
             this.Margin = new System.Windows.Forms.Padding(2, 3, 2, 3);
-            this.Name = "ProgressGraph";
             this.Size = new System.Drawing.Size(257, 136);
             this.Load += new System.EventHandler(this.ProgressGraph_Load);
             this.ResumeLayout(false);

@@ -1,4 +1,4 @@
-﻿namespace Gw2Launcher.UI.Controls
+namespace Gw2Launcher.UI.Controls
 {
     partial class ScrollablePanelContainer
     {
@@ -38,9 +38,7 @@
             | System.Windows.Forms.AnchorStyles.Left) 
             | System.Windows.Forms.AnchorStyles.Right)));
             this.panelContainer.Location = new System.Drawing.Point(3, 3);
-            this.panelContainer.Name = "panelContainer";
             this.panelContainer.Size = new System.Drawing.Size(323, 236);
-            this.panelContainer.TabIndex = 1;
             // 
             // scrollV
             // 
@@ -48,9 +46,7 @@
             | System.Windows.Forms.AnchorStyles.Right)));
             this.scrollV.Location = new System.Drawing.Point(330, 3);
             this.scrollV.Maximum = 100;
-            this.scrollV.Name = "scrollV";
             this.scrollV.Size = new System.Drawing.Size(8, 236);
-            this.scrollV.TabIndex = 0;
             this.scrollV.Value = 0;
             this.scrollV.ValueChanged += new System.EventHandler<int>(this.scrollV_ValueChanged);
             // 
@@ -59,7 +55,6 @@
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Inherit;
             this.Controls.Add(this.panelContainer);
             this.Controls.Add(this.scrollV);
-            this.Name = "ScrollablePanelContainer";
             this.Size = new System.Drawing.Size(340, 242);
             this.ResumeLayout(false);
 

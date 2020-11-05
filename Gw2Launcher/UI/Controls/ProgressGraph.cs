@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Drawing;
@@ -54,15 +54,20 @@ namespace Gw2Launcher.UI.Controls
         {
             if (disposing)
             {
+                if (components != null)
+                    components.Dispose();
+            }
+
+            base.Dispose(disposing);
+
+            if (disposing)
+            {
                 penGraph.Dispose();
                 penLine.Dispose();
                 brushGraph.Dispose();
                 brushText.Dispose();
                 pathGraph.Dispose();
-                if (components != null)
-                    components.Dispose();
             }
-            base.Dispose(disposing);
         }
 
         private void ProgressGraph_Load(object sender, EventArgs e)

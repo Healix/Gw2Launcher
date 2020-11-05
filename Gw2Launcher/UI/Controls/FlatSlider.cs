@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -10,7 +10,7 @@ namespace Gw2Launcher.UI.Controls
 {
     public class FlatSlider : Control
     {
-        public event EventHandler<float> ValueChanged;
+        public event EventHandler ValueChanged;
 
         private enum MouseWheelState : byte
         {
@@ -101,11 +101,12 @@ namespace Gw2Launcher.UI.Controls
 
         protected override void Dispose(bool disposing)
         {
+            base.Dispose(disposing);
+
             if (disposing)
             {
                 brush.Dispose();
             }
-            base.Dispose(disposing);
         }
 
         protected override void OnSizeChanged(EventArgs e)
@@ -169,7 +170,7 @@ namespace Gw2Launcher.UI.Controls
                 this.Invalidate();
 
                 if (ValueChanged != null)
-                    ValueChanged(this, this.Value);
+                    ValueChanged(this, EventArgs.Empty);
             }
         }
 

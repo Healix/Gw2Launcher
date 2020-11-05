@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -87,14 +87,15 @@ namespace Gw2Launcher.Windows
 
         public static void CreateJunction(string link, string target)
         {
-            var di = new DirectoryInfo(link);
-            if (di.Exists)
+            if (Directory.Exists(link))
             {
-                if (di.GetFiles().Length > 0 || di.GetDirectories().Length > 0)
+                foreach (var f in Directory.EnumerateFileSystemEntries(link))
+                {
                     throw new IOException("Directory already exists and is not empty");
+                }
             }
             else
-                di.Create();
+                Directory.CreateDirectory(link);
 
             using (SafeFileHandle handle = OpenReparsePoint(link, EFileAccess.GenericWrite))
             {
@@ -126,9 +127,91 @@ namespace Gw2Launcher.Windows
                 } 
                 finally 
                 {
+                    Marshal.DestroyStructure(_buffer, typeof(REPARSE_DATA_BUFFER));
                     Marshal.FreeHGlobal(_buffer);
                 }
             }
+        }
+
+        public static void CreateSymbolicDirectory(string link, string target)
+        {
+            if (Directory.Exists(link))
+                Directory.Delete(link);
+
+            if (!NativeMethods.CreateSymbolicLink(link, target, SymbolicLink.Directory))
+                throw new IOException("Failed to create link", Marshal.GetExceptionForHR(Marshal.GetHRForLastWin32Error()));
+
+            if (!Directory.Exists(link))
+                throw new IOException("Unable to create link");
+        }
+
+        /// <summary>
+        /// Returns if the path has hard links, throwing an error if it can't be determined
+        /// </summary>
+        public static bool IsHardLinked(string path)
+        {
+            const uint READ_CONTROL = 0x00020000;
+            const uint OBJ_CASE_INSENSITIVE = 0x40;
+
+            //trying NtOpenFile first, which is capable of opening locked file
+
+            var objectName = new UNICODE_STRING(VIRTUAL_NTFS_PATH_PREFIX + path);
+            var _objectName = IntPtr.Zero;
+
+            try
+            {
+                _objectName = Marshal.AllocHGlobal(Marshal.SizeOf(objectName));
+
+                var attributes = new OBJECT_ATTRIBUTES()
+                {
+                    Length = Marshal.SizeOf(typeof(OBJECT_ATTRIBUTES)),
+                    Attributes = OBJ_CASE_INSENSITIVE,
+                    ObjectName = _objectName,
+                };
+
+                Marshal.StructureToPtr(objectName, attributes.ObjectName, false);
+
+                IO_STATUS_BLOCK io;
+                Microsoft.Win32.SafeHandles.SafeFileHandle handle;
+
+                if (NativeMethods.NtOpenFile(out handle, READ_CONTROL, ref attributes, out io, FileShare.ReadWrite | FileShare.Delete, 0) == 0)
+                {
+                    using (handle)
+                    {
+                        FILE_STANDARD_INFO info;
+                        if (NativeMethods.GetFileInformationByHandleEx(handle.DangerousGetHandle(), FILE_INFO_BY_HANDLE_CLASS.FileStandardInfo, out info, (uint)Marshal.SizeOf(typeof(FILE_STANDARD_INFO))))
+                        {
+                            return info.NumberOfLinks > 1;
+                        }
+                    }
+                }
+            }
+            catch (Exception e)
+            {
+                Util.Logging.Log(e);
+            }
+            finally
+            {
+                if (_objectName != IntPtr.Zero)
+                {
+                    Marshal.DestroyStructure(_objectName, typeof(UNICODE_STRING));
+                    Marshal.FreeHGlobal(_objectName);
+                }
+                objectName.Free();
+            }
+
+            //fallback
+
+            using (var f = File.Open(path, FileMode.Open, FileAccess.Read, FileShare.ReadWrite | FileShare.Delete))
+            {
+                FILE_STANDARD_INFO info;
+                if (NativeMethods.GetFileInformationByHandleEx(f.SafeFileHandle.DangerousGetHandle(), FILE_INFO_BY_HANDLE_CLASS.FileStandardInfo, out info, (uint)Marshal.SizeOf(typeof(FILE_STANDARD_INFO))))
+                {
+                    return info.NumberOfLinks > 1;
+                }
+            }
+
+            return false;
         }
     }
 }

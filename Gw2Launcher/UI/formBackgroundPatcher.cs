@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Data;
@@ -11,7 +11,7 @@ using System.Windows.Forms;
 
 namespace Gw2Launcher.UI
 {
-    public partial class formBackgroundPatcher : Form
+    public partial class formBackgroundPatcher : Base.BaseForm
     {
         private readonly string[] LANG = new string[] { "EN", "DE", "ES", "FR" };
         private const int SPEED_LIMIT_MIN_0 = 102400;
@@ -35,7 +35,7 @@ namespace Gw2Launcher.UI
 
         public formBackgroundPatcher()
         {
-            InitializeComponent();
+            InitializeComponents();
 
             taskBar = new Windows.Taskbar();
 
@@ -64,15 +64,22 @@ namespace Gw2Launcher.UI
                 sliderThreads.Value = (float)(10 - THREADS_MIN) / THREADS_MAX;
 
             PatchingSpeedLimit_ValueChanged(Settings.PatchingSpeedLimit, null);
-            PatchingUseHttps_ValueChanged(Settings.PatchingUseHttps, null);
+            PatchingOptions_ValueChanged(Settings.PatchingOptions, null);
 
             Settings.BackgroundPatchingEnabled.ValueChanged += BackgroundPatchingEnabled_ValueChanged;
             Settings.PatchingSpeedLimit.ValueChanged += PatchingSpeedLimit_ValueChanged;
-            Settings.PatchingUseHttps.ValueChanged += PatchingUseHttps_ValueChanged;
+            Settings.PatchingOptions.ValueChanged += PatchingOptions_ValueChanged;
 
             UpdateStatus();
 
             this.Disposed += formBackgroundPatcher_Disposed;
+        }
+
+        protected override void OnInitializeComponents()
+        {
+            base.OnInitializeComponents();
+
+            InitializeComponent();
         }
 
         void formBackgroundPatcher_Disposed(object sender, EventArgs e)
@@ -107,16 +114,13 @@ namespace Gw2Launcher.UI
             if (e != DateTime.MinValue)
             {
                 nextAutoUpdate = e;
-                if (this.InvokeRequired)
+
+                if (Util.Invoke.IfRequired(this, DoTimer))
                 {
-                    try
-                    {
-                        this.Invoke(new MethodInvoker(DoTimer));
-                    }
-                    catch { }
+                    return;
                 }
-                else
-                    DoTimer();
+
+                DoTimer();
             }
             else
                 UpdateTime(null);
@@ -129,38 +133,30 @@ namespace Gw2Launcher.UI
             UpdateStatus();
         }
 
-        void PatchingUseHttps_ValueChanged(object sender, EventArgs e)
+        void PatchingOptions_ValueChanged(object sender, EventArgs e)
         {
-            if (this.InvokeRequired)
-            {
-                try
+            if (Util.Invoke.IfRequired(this,
+                delegate
                 {
-                    this.Invoke(new MethodInvoker(
-                        delegate
-                        {
-                            PatchingUseHttps_ValueChanged(sender, e);
-                        }));
-                }
-                catch { }
+                    PatchingOptions_ValueChanged(sender, e);
+                }))
+            {
                 return;
             }
 
-            checkUseHttps.Checked = ((Settings.ISettingValue<bool>)sender).Value;
+            var v = ((Settings.ISettingValue<Settings.PatchingFlags>)sender).Value;
+
+            checkUseHttps.Checked = v.HasFlag(Settings.PatchingFlags.UseHttps);
         }
 
         void PatchingSpeedLimit_ValueChanged(object sender, EventArgs e)
         {
-            if (this.InvokeRequired)
-            {
-                try
+            if (Util.Invoke.IfRequired(this,
+                delegate
                 {
-                    this.Invoke(new MethodInvoker(
-                        delegate
-                        {
-                            PatchingSpeedLimit_ValueChanged(sender, e);
-                        }));
-                }
-                catch { }
+                    PatchingSpeedLimit_ValueChanged(sender, e);
+                }))
+            {
                 return;
             }
 
@@ -231,17 +227,12 @@ namespace Gw2Launcher.UI
 
         private void UpdateTime(string text)
         {
-            if (this.InvokeRequired)
-            {
-                try
+            if (Util.Invoke.IfRequired(this,
+                delegate
                 {
-                    this.Invoke(new MethodInvoker(
-                        delegate
-                        {
-                            UpdateTime(text);
-                        }));
-                }
-                catch { }
+                    UpdateTime(text);
+                }))
+            {
                 return;
             }
 
@@ -253,17 +244,8 @@ namespace Gw2Launcher.UI
 
         private void UpdateStatus()
         {
-            if (this.InvokeRequired)
+            if (Util.Invoke.IfRequired(this, UpdateStatus))
             {
-                try
-                {
-                    this.Invoke(new MethodInvoker(UpdateStatus));
-                }
-                catch (Exception e)
-                {
-                    Util.Logging.Log(e);
-                }
-
                 return;
             }
 
@@ -314,21 +296,12 @@ namespace Gw2Launcher.UI
 
         void bp_StateChanged(object sender, EventArgs e)
         {
-            if (this.InvokeRequired)
+            if (Util.Invoke.IfRequired(this,
+                delegate
+                {
+                    bp_StateChanged(sender, e);
+                }))
             {
-                try
-                {
-                    this.Invoke(new MethodInvoker(
-                        delegate
-                        {
-                            bp_StateChanged(sender, e);
-                        }));
-                }
-                catch (Exception ex)
-                {
-                    Util.Logging.Log(ex);
-                }
-
                 return;
             }
 
@@ -337,21 +310,12 @@ namespace Gw2Launcher.UI
 
         void bp_Starting(object sender, EventArgs e)
         {
-            if (this.InvokeRequired)
+            if (Util.Invoke.IfRequired(this,
+                delegate
+                {
+                    bp_Starting(sender, e);
+                }))
             {
-                try
-                {
-                    this.Invoke(new MethodInvoker(
-                        delegate
-                        {
-                            bp_Starting(sender, e);
-                        }));
-                }
-                catch (Exception ex)
-                {
-                    Util.Logging.Log(ex);
-                }
-
                 return;
             }
 
@@ -383,21 +347,12 @@ namespace Gw2Launcher.UI
 
         void bp_Complete(object sender, EventArgs e)
         {
-            if (this.InvokeRequired)
+            if (Util.Invoke.IfRequired(this,
+                delegate
+                {
+                    bp_Complete(sender, e);
+                }))
             {
-                try
-                {
-                    this.Invoke(new MethodInvoker(
-                        delegate
-                        {
-                            bp_Complete(sender, e);
-                        }));
-                }
-                catch (Exception ex)
-                {
-                    Util.Logging.Log(ex);
-                }
-
                 return;
             }
 
@@ -426,21 +381,12 @@ namespace Gw2Launcher.UI
 
         void bp_Error(object sender, string e, Exception ex)
         {
-            if (this.InvokeRequired)
+            if (Util.Invoke.IfRequired(this,
+                delegate
+                {
+                    bp_Error(sender, e, ex);
+                }))
             {
-                try
-                {
-                    this.Invoke(new MethodInvoker(
-                        delegate
-                        {
-                            bp_Error(sender, e, ex);
-                        }));
-                }
-                catch (Exception exc)
-                {
-                    Util.Logging.Log(exc);
-                }
-
                 return;
             }
 
@@ -454,21 +400,12 @@ namespace Gw2Launcher.UI
 
         void bp_DownloadProgress(object sender, Tools.BackgroundPatcher.DownloadProgressEventArgs e)
         {
-            if (this.InvokeRequired)
+            if (Util.Invoke.IfRequired(this,
+                delegate
+                {
+                    bp_DownloadProgress(sender, e);
+                }))
             {
-                try
-                {
-                    this.Invoke(new MethodInvoker(
-                        delegate
-                        {
-                            bp_DownloadProgress(sender, e);
-                        }));
-                }
-                catch (Exception exc)
-                {
-                    Util.Logging.Log(exc);
-                }
-
                 return;
             }
 
@@ -614,7 +551,7 @@ namespace Gw2Launcher.UI
         {
             Settings.BackgroundPatchingEnabled.ValueChanged -= BackgroundPatchingEnabled_ValueChanged;
             Settings.PatchingSpeedLimit.ValueChanged -= PatchingSpeedLimit_ValueChanged;
-            Settings.PatchingUseHttps.ValueChanged -= PatchingUseHttps_ValueChanged;
+            Settings.PatchingOptions.ValueChanged -= PatchingOptions_ValueChanged;
 
             Tools.AutoUpdate.NextCheckChanged -= AutoUpdate_NextCheckChanged;
 
@@ -649,9 +586,10 @@ namespace Gw2Launcher.UI
             labelTime.Location = new Point(labelStatus.Location.X + labelStatus.Width + 5, labelStatus.Location.Y);
         }
 
-        private void sliderThreads_ValueChanged(object sender, float e)
+        private void sliderThreads_ValueChanged(object sender, EventArgs e)
         {
-            labelThreads.Text = ((int)(THREADS_MIN + e * THREADS_MAX + 0.5f)).ToString();
+            var v = ((UI.Controls.FlatSlider)sender).Value;
+            labelThreads.Text = ((int)(THREADS_MIN + v * THREADS_MAX + 0.5f)).ToString();
         }
 
         private void checkSpeedLimit_CheckedChanged(object sender, EventArgs e)
@@ -659,12 +597,13 @@ namespace Gw2Launcher.UI
             sliderSpeedLimit.Enabled = checkSpeedLimit.Checked;
         }
 
-        private void sliderSpeedLimit_ValueChanged(object sender, float e)
+        private void sliderSpeedLimit_ValueChanged(object sender, EventArgs e)
         {
-            if (e >= 0.5f)
-                labelSpeedLimit.Text = Util.Text.FormatBytes(SPEED_LIMIT_MIN_1 + (int)(SPEED_LIMIT_MAX_1 * (e - 0.5f) / 0.5f + 0.5f)) + "/s";
+            var v = ((UI.Controls.FlatSlider)sender).Value;
+            if (v >= 0.5f)
+                labelSpeedLimit.Text = Util.Text.FormatBytes(SPEED_LIMIT_MIN_1 + (int)(SPEED_LIMIT_MAX_1 * (v - 0.5f) / 0.5f + 0.5f)) + "/s";
             else
-                labelSpeedLimit.Text = Util.Text.FormatBytes(SPEED_LIMIT_MIN_0 + (int)(SPEED_LIMIT_MAX_0 * e / 0.5f + 0.5f)) + "/s";
+                labelSpeedLimit.Text = Util.Text.FormatBytes(SPEED_LIMIT_MIN_0 + (int)(SPEED_LIMIT_MAX_0 * v / 0.5f + 0.5f)) + "/s";
         }
 
         private async void labelAdvanced_Click(object sender, EventArgs e)
@@ -683,7 +622,18 @@ namespace Gw2Launcher.UI
                 Settings.PatchingSpeedLimit.Clear();
 
             Settings.BackgroundPatchingMaximumThreads.Value = (byte)(THREADS_MIN + sliderThreads.Value * THREADS_MAX + 0.5f);
-            Settings.PatchingUseHttps.Value = checkUseHttps.Checked;
+
+            var options = Settings.PatchingOptions.Value;
+
+            if (checkUseHttps.Checked)
+                options |= Settings.PatchingFlags.UseHttps;
+            else
+                options &= ~Settings.PatchingFlags.UseHttps;
+
+            if (options != Settings.PatchingFlags.None)
+                Settings.PatchingOptions.Value = options;
+            else
+                Settings.PatchingOptions.Clear();
         }
 
         private async Task ShowPanel(Label label, Control panel)

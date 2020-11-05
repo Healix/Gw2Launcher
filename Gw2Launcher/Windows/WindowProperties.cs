@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -10,7 +10,7 @@ namespace Gw2Launcher.Windows
 {
     class WindowProperties
     {
-        [DllImport(NativeMethods.DLL.SHELL32)]
+        [DllImport(NativeMethods.SHELL32)]
         private static extern int SHGetPropertyStoreForWindow(
             IntPtr hwnd,
             ref Guid iid,
@@ -26,7 +26,7 @@ namespace Gw2Launcher.Windows
             void Commit();
         }
 
-        [DllImport(NativeMethods.DLL.OLE32, PreserveSig = false)] // returns hresult
+        [DllImport(NativeMethods.OLE32, PreserveSig = false)] // returns hresult
         private extern static void PropVariantClear([In, Out] PropVariant pvar);
 
         public enum StartPinOptions
@@ -68,6 +68,11 @@ namespace Gw2Launcher.Windows
             [FieldOffset(8)] short iVal;
             [FieldOffset(8)] uint uintVal;
             [FieldOffset(8)] short boolVal;
+            
+            public PropVariant()
+            {
+
+            }
 
             public PropVariant(string value)
             {
@@ -85,6 +90,20 @@ namespace Gw2Launcher.Windows
             {
                 varType = (ushort)VarEnum.VT_UI4;
                 uintVal = value;
+            }
+
+            public object GetValue()
+            {
+                switch ((VarEnum)varType)
+                {
+                    case VarEnum.VT_LPWSTR:
+                        return Marshal.PtrToStringUni(pszVal);
+                    case VarEnum.VT_BOOL:
+                        return boolVal == -1;
+                    case VarEnum.VT_UI4:
+                        return uintVal;
+                }
+                return null;
             }
 
             public void Dispose()

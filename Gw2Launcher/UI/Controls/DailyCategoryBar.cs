@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Text;
 using System.Collections.Generic;
 using System.Windows.Forms;
@@ -201,6 +201,8 @@ namespace Gw2Launcher.UI.Controls
 
         protected override void Dispose(bool disposing)
         {
+            base.Dispose(disposing);
+
             if (disposing)
             {
                 if (buffer != null)
@@ -209,7 +211,6 @@ namespace Gw2Launcher.UI.Controls
                     buffer = null;
                 }
             }
-            base.Dispose(disposing);
         }
     }
 }

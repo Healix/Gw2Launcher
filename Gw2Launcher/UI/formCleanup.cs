@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Data;
@@ -11,16 +11,16 @@ using System.IO;
 
 namespace Gw2Launcher.UI
 {
-    public partial class formCleanup : Form
+    public partial class formCleanup : Base.BaseForm
     {
         public formCleanup(IEnumerable<FileInfo> files)
         {
-            InitializeComponent();
+            InitializeComponents();
 
             string path = null;
             try
             {
-                path = Path.GetDirectoryName(Settings.GW2Path.Value);
+                path = Path.GetDirectoryName(Settings.GuildWars2.Path.Value);
             }
             catch (Exception e)
             {
@@ -39,6 +39,13 @@ namespace Gw2Launcher.UI
             textConfirm.Text = sb.ToString();
 
             textConfirm.Select(0, 0);
+        }
+
+        protected override void OnInitializeComponents()
+        {
+            base.OnInitializeComponents();
+
+            InitializeComponent();
         }
 
         private void buttonCancel_Click(object sender, EventArgs e)

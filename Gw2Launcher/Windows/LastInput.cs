@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using Gw2Launcher.Windows.Native;
 
 namespace Gw2Launcher.Windows

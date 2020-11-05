@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Data;
@@ -11,17 +11,40 @@ using Gw2Launcher.Windows.Native;
 
 namespace Gw2Launcher.UI
 {
-    public partial class formAutologinConfig : Form
+    public partial class formAutologinConfig : Base.StackFormBase
     {
         public formAutologinConfig(Settings.Point<ushort> empty, Settings.Point<ushort> play)
         {
-            InitializeComponent();
+            InitializeComponents();
 
             checkEmpty.Checked = !empty.IsEmpty;
             checkPlay.Checked = !play.IsEmpty;
 
             textEmpty.Text = empty.X + ", " + empty.Y;
             textPlay.Text = play.X + ", " + play.Y;
+        }
+
+        protected override void OnInitializeComponents()
+        {
+            base.OnInitializeComponents();
+
+            InitializeComponent();
+        }
+
+        protected override void OnLayout(LayoutEventArgs levent)
+        {
+            var w = this.ClientSize.Width;
+            var h = this.ClientSize.Height;
+
+            stackPanel1.MaximumSize = new Size(w - stackPanel1.Margin.Horizontal, 0);
+
+            base.OnLayout(levent);
+
+            var _h = stackPanel1.Height + stackPanel1.Margin.Vertical;
+            if (_h != h)
+            {
+                this.ClientSize = new Size(w, _h);
+            }
         }
 
         public Settings.Point<ushort> PlayLocation

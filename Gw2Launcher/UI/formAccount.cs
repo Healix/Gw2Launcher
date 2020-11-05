@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Data;
@@ -13,7 +13,7 @@ using Gw2Launcher.Windows.Native;
 
 namespace Gw2Launcher.UI
 {
-    public partial class formAccount : Form
+    public partial class formAccount : Base.BaseForm
     {
         private enum ArgsState : byte
         {
@@ -33,21 +33,22 @@ namespace Gw2Launcher.UI
                 NotEligible
             }
 
-            public ApiRequirements(Control parent, Api.TokenInfo.Permissions[] required, Func<ApiKeyData, ApiState> onVerify)
+            public ApiRequirements(Label l, Api.TokenInfo.Permissions[] required, Func<ApiKeyData, ApiState> onVerify)
             {
-                var x = parent.Right + 2;
+                //var x = parent.Right + 2;
 
-                var l = new Label()
-                {
-                    ForeColor = SystemColors.GrayText,
-                    AutoSize = true,
-                    AutoEllipsis = true,
-                    Location = new Point(x, parent.Top + 1),
-                    MaximumSize = new Size(parent.Parent.Width - x, 0),
-                    Font = new System.Drawing.Font("Segoe UI Semilight", 8.25F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0))),
-                };
+                //var l = new Label()
+                //{
+                //    ForeColor = SystemColors.GrayText,
+                //    AutoSize = true,
+                //    AutoEllipsis = true,
+                //    Location = new Point(x, parent.Top + 1),
+                //    MaximumSize = new Size(parent.Parent.Width - x, 0),
+                //    Font = new System.Drawing.Font("Segoe UI Semilight", 8.25F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0))),
+                //    Margin = new Padding(6, 1, 0, 0),
+                //};
 
-                parent.Parent.Controls.Add(l);
+                //parent.Parent.Controls.Add(l);
 
                 this.required = required;
                 this.label = l;
@@ -204,11 +205,49 @@ namespace Gw2Launcher.UI
             }
         }
 
+        private class ButtonImages
+        {
+            public ButtonImages()
+            {
+                paths = new string[2];
+            }
+
+            public string[] paths;
+            public Settings.ImagePlacement imagePlacement;
+
+            public string Image
+            {
+                get
+                {
+                    return paths[0];
+                }
+                set
+                {
+                    paths[0] = value;
+                }
+            }
+
+            public string Background
+            {
+                get
+                {
+                    return paths[1];
+                }
+                set
+                {
+                    paths[1] = value;
+                }
+            }
+        }
+
         private event EventHandler AuthenticatorKeyChanged;
 
         private Settings.IAccount account;
+        private IList<Settings.IAccount> accounts;
+        private Settings.AccountType accountType;
         private formBrowseLocalDat.SelectedFile selectedDatFile, selectedGfxFile;
-        private Settings.IFile datFile, gfxFile;
+        private formBrowseGwDat.SelectedFile selectedGwDatFile;
+        private Settings.IFile[] _files;
         private CheckBox[] checkArgs;
         private ArgsState argsState;
         private Tools.Gfx.Xml xmlGfx;
@@ -216,38 +255,32 @@ namespace Gw2Launcher.UI
         private Dictionary<string, ApiKeyData> apikeys;
         private Task taskTotp;
         private bool totpChanged;
-        private Rectangle boundsEmail, boundsPassword;
         private CheckBox[] checkProcessorAffinity;
-        private AutoScrollContainerPanel containerGeneral, containerApi, containerLaunchOptions, containerLaunchOptionsAdvanced,
-            containerLocalDat, containerGraphics, containerSecurity, containerStatistics, containerLaunchOptionsProcess;
         private ApiRequirements[] apiRequirements;
         private ApiKeyData kdCurrent;
+        private TextBox[] textAccountNames;
+        private Dictionary<string, object> iconsRunAfter;
+        private Windows.ShellIcons shellIcons;
 
-        public formAccount()
-            : this(false)
+        public formAccount(Settings.AccountType type)
+            : this(type, false)
         {
         }
 
-        public formAccount(bool hasData)
+        private formAccount(Settings.AccountType type, bool hasData)
         {
-            InitializeComponent();
+            InitializeComponents();
 
-            this.MaximumSize = new Size(this.MinimumSize.Width, int.MaxValue);
+            this.accountType = type;
 
             var sbounds = Settings.WindowBounds[typeof(formSettings)];
             if (sbounds.HasValue)
                 this.Size = sbounds.Value.Size;
 
             apikeys = new Dictionary<string, ApiKeyData>(StringComparer.OrdinalIgnoreCase);
+            iconsRunAfter = new Dictionary<string, object>();
 
-            progressTotpTime.BackColor = Util.Color.Darken(this.BackColor, 0.05f);
-            progressTotpTime.ForeColor = Util.Color.Darken(this.BackColor, 0.15f);
             progressTotpTime.Value = 0;
-
-            textAutoLoginEmail.Visible = textAutoLoginPassword.Visible = false;
-
-            boundsEmail = textEmail.Bounds;
-            boundsPassword = textPassword.Bounds;
 
             labelCreatedDate.Text = "n/a";
             labelLastLaunch.Text = "never";
@@ -264,69 +297,92 @@ namespace Gw2Launcher.UI
 
             textWindowed.Text = ToString(r);
 
-            if (!Client.FileManager.IsDataLinkingSupported)
+            if (!Client.FileManager.IsFolderLinkingSupported)
             {
                 checkScreenshotsLocation.Enabled = false;
                 buttonScreenshotsLocation.Enabled = false;
             }
 
-            checkArgs = formSettings.InitializeArguments(panelLaunchOptionsAdvanced, labelArgsTemplateHeader, checkArgsTemplate, labelArgsTemplateSwitch, labelArgsTemplateDesc, checkArgs_CheckedChanged);
+            checkArgs = formSettings.InitializeArguments(type, panelArgs, labelArgsTemplateHeader, checkArgsTemplate, labelArgsTemplateSwitch, labelArgsTemplateDesc, checkArgs_CheckedChanged);
 
-            apiRequirements = new ApiRequirements[]
+            if (type == Settings.AccountType.GuildWars1)
             {
-                new ApiRequirements(checkTrackDailyCompletionApi,
-                    new Api.TokenInfo.Permissions[]
-                    {
-                        Api.TokenInfo.Permissions.Account,
-                        Api.TokenInfo.Permissions.Progression
-                    }, 
-                    delegate(ApiKeyData kd)
-                    {
-                        int totalAp = -1;
-                        if (kd.useAccountData)
+                labelShowDailyLoginApi.Visible = false;
+                label59.Visible = false;
+                checkShowDailyCompletion.Parent.Visible = false;
+                panelAutoLoginGw2.Visible = false;
+                checkMuteMusic.Visible = false;
+                checkMuteVoices.Visible = false;
+                panelClientPortGw2.Visible = false;
+                panelMumbleNameGw2.Visible = false;
+                panelAutomaticLauncherLoginGw2.Visible = false;
+                labelAutologinConfigure.Visible = false;
+
+                panelAutoLoginGw1.Visible = true;
+                labelAutoLoginCharacter.Visible = true;
+                textAutoLoginCharacter.Visible = true;
+            }
+            else
+            {
+                apiRequirements = new ApiRequirements[]
+                {
+                    new ApiRequirements(labelTrackDailyCompletionApi,
+                        new Api.TokenInfo.Permissions[]
                         {
-                            if (account.ApiData != null && account.ApiData.DailyPoints != null)
-                                totalAp = account.ApiData.DailyPoints.Value;
-                        }
-                        else
-                            totalAp = kd.account.DailyAP + kd.account.MonthlyAP;
-                        if (totalAp >= Api.Account.MAX_AP)
-                            return ApiRequirements.ApiState.NotEligible;
-                        return ApiRequirements.ApiState.OK;
-                    }),
-                new ApiRequirements(checkTrackPlayedApi,
-                    new Api.TokenInfo.Permissions[]
-                    {
-                        Api.TokenInfo.Permissions.Account,
-                    }, 
-                    null),
-            };
+                            Api.TokenInfo.Permissions.Account,
+                            Api.TokenInfo.Permissions.Progression
+                        }, 
+                        delegate(ApiKeyData kd)
+                        {
+                            int totalAp = -1;
+                            if (kd.useAccountData)
+                            {
+                                var gw2 = (Settings.IGw2Account)account;
+                                if (gw2.ApiData != null && gw2.ApiData.DailyPoints != null)
+                                    totalAp = gw2.ApiData.DailyPoints.Value;
+                            }
+                            else
+                                totalAp = kd.account.DailyAP + kd.account.MonthlyAP;
+                            if (totalAp >= Api.Account.MAX_AP)
+                                return ApiRequirements.ApiState.NotEligible;
+                            return ApiRequirements.ApiState.OK;
+                        }),
+                    new ApiRequirements(labelTrackPlayedApi,
+                        new Api.TokenInfo.Permissions[]
+                        {
+                            Api.TokenInfo.Permissions.Account,
+                        }, 
+                        null),
+                };
 
-            LinkCheckBox(checkShowDailyCompletion, checkTrackDailyCompletionApi);
-            LinkCheckBox(checkShowDailyLogin, checkTrackPlayedApi);
+                LinkCheckBox(checkShowDailyCompletion, checkTrackDailyCompletionApi);
+                LinkCheckBox(checkShowDailyLogin, checkTrackPlayedApi);
 
-            containerGeneral = CreateContainer(panelGeneral);
-            containerApi = CreateContainer(panelApi);
-            containerLaunchOptions = CreateContainer(panelLaunchOptions);
-            containerLaunchOptionsAdvanced = CreateContainer(panelLaunchOptionsAdvanced);
-            containerLocalDat = CreateContainer(panelLocalDat);
-            containerGraphics = CreateContainer(panelGraphics);
-            containerSecurity = CreateContainer(panelSecurity);
-            containerStatistics = CreateContainer(panelStatistics);
-            containerLaunchOptionsProcess = CreateContainer(panelLaunchOptionsProcess);
+                panelGraphics.PreVisiblePropertyChanged += panelGraphics_PreVisiblePropertyChanged;
+            }
+            
+            panelSecurity.PreVisiblePropertyChanged += panelSecurity_PreVisiblePropertyChanged;
+            panelLaunchOptionsAdvanced.PreVisiblePropertyChanged += panelLaunchOptionsAdvanced_PreVisiblePropertyChanged;
 
-            buttonGeneral.Panels = new Panel[] { containerGeneral, containerApi };
-            buttonGeneral.SubItems = new string[] { "API usage" };
+            buttonGeneral.Panels = new Panel[] { panelGeneral, panelApi };
+            buttonLaunchOptions.Panels = new Panel[] { panelLaunchOptions, panelLaunchOptionsProcess, panelLaunchOptionsAdvanced };
+            buttonSecurity.Panels = new Panel[] { panelSecurity };
+            buttonStatistics.Panels = new Panel[] { panelStatistics };
 
-            buttonLaunchOptions.Panels = new Panel[] { containerLaunchOptions, containerLaunchOptionsAdvanced, containerLaunchOptionsProcess };
-            buttonLaunchOptions.SubItems = new string[] { "Advanced", "Processor" };
+            buttonLaunchOptions.SubItems = new string[] { "Processor" };
 
-            buttonLocalDat.Panels = new Panel[] { containerLocalDat, containerGraphics };
-            buttonLocalDat.SubItems = new string[] { "Graphics" };
+            if (type == Settings.AccountType.GuildWars1)
+            {
+                buttonLocalDat.Text = "Gw.dat";
+                buttonLocalDat.Panels = new Panel[] { panelGwDat };
+            }
+            else
+            {
+                buttonLocalDat.Panels = new Panel[] { panelLocalDat, panelGraphics };
 
-            buttonSecurity.Panels = new Panel[] { containerSecurity };
-
-            buttonStatistics.Panels = new Panel[] { containerStatistics };
+                buttonGeneral.SubItems = new string[] { "API usage" };
+                buttonLocalDat.SubItems = new string[] { "Graphics" };
+            }
 
             sidebarPanel1.Initialize(new SidebarButton[]
                 {
@@ -341,11 +397,6 @@ namespace Gw2Launcher.UI
 
             argsState = ArgsState.Changed;
 
-            containerGraphics.PreVisiblePropertyChanged += containerGraphics_PreVisiblePropertyChanged;
-            containerSecurity.PreVisiblePropertyChanged += containerSecurity_PreVisiblePropertyChanged;
-            containerLaunchOptions.PreVisiblePropertyChanged += containerLaunchOptions_PreVisiblePropertyChanged;
-            containerLaunchOptionsAdvanced.PreVisiblePropertyChanged += containerLaunchOptionsAdvanced_PreVisiblePropertyChanged;
-
             comboProcessPriority.Items.AddRange(new object[]
                 {
                     new Util.ComboItem<Settings.ProcessPriorityClass>(Settings.ProcessPriorityClass.High, "High"),
@@ -357,20 +408,61 @@ namespace Gw2Launcher.UI
 
             Util.ComboItem<Settings.ProcessPriorityClass>.Select(comboProcessPriority, Settings.ProcessPriorityClass.Normal);
 
-            checkProcessorAffinity = formSettings.InitializeProcessorAffinity(panelProcessAffinity, checkProcessAffinityAll, label76);
+            panelProcessAffinity.SuspendLayout();
+            checkProcessorAffinity = formSettings.InitializeProcessorAffinity(panelProcessAffinity, checkProcessAffinityAll, label36);
             checkProcessAffinityAll.Checked = true;
+            panelProcessAffinity.AutoSize = true;
+            panelProcessAffinity.ResumeLayout();
 
             if (!hasData)
             {
                 panelIdentifierColor.BackColor = Util.Color.FromUID(Settings.GetNextUID());
-                SetIcon(CreateIcon(Settings.IconType.None));
+                SetIcon(CreateIcon(Settings.IconType.None, type));
             }
 
-            labelAutologin_SizeChanged(null, null);
+            textEmail.TextBox.TextChanged += credentials_TextChanged;
+            textPassword.PasswordBox.TextChanged += credentials_TextChanged;
+            textAutoLoginEmail.TextBox.TextChanged += credentials_TextChanged;
+            textAutoLoginPassword.PasswordBox.TextChanged += credentials_TextChanged;
+            textAuthenticatorKey.TextBox.TextChanged += textAuthenticatorKey_TextChanged;
+
+            if (!hasData)
+            {
+                textEmail.TextVisible = true;
+                textAutoLoginEmail.TextVisible = true;
+                textPassword.TextVisible = true;
+                textAutoLoginPassword.TextVisible = true;
+                textAuthenticatorKey.TextVisible = true;
+                textAutoLoginCharacter.TextVisible = true;
+            }
+
+            if (Settings.FontName.HasValue)
+                buttonSample.FontName = Settings.FontName.Value;
+            else
+                buttonSample.FontName = UI.Controls.AccountGridButton.FONT_NAME;
+
+            if (Settings.FontStatus.HasValue)
+                buttonSample.FontStatus = Settings.FontStatus.Value;
+            else
+                buttonSample.FontStatus = UI.Controls.AccountGridButton.FONT_STATUS;
+
+            if (Settings.FontUser.HasValue)
+                buttonSample.FontUser = Settings.FontUser.Value;
+            else
+                buttonSample.FontUser = UI.Controls.AccountGridButton.FONT_USER;
+
+            buttonSample.ShowAccount = !Settings.StyleShowAccount.HasValue || Settings.StyleShowAccount.Value;
+            buttonSample.ShowColorKey = Settings.StyleShowColor.Value;
+            buttonSample.AccountType = type;
+
+            if (Settings.StyleColors.HasValue)
+            {
+                buttonSample.Colors = Settings.StyleColors.Value;
+            }
         }
 
         public formAccount(Settings.IAccount account)
-            : this(true)
+            : this(account.Type, true)
         {
             this.account = account;
 
@@ -399,13 +491,21 @@ namespace Gw2Launcher.UI
             labelExportRecordedLaunch.Visible = File.Exists(Path.Combine(DataPath.AppData, "statistics.dat"));
             checkRecordLaunch.Checked = account.RecordLaunches;
 
-            checkAutomaticLogin.Checked = account.AutomaticLogin;
-            checkAutomaticLoginPlay.Checked = account.AutomaticPlay;
-
             if (!string.IsNullOrEmpty(account.Email))
-                textEmail.Text = account.Email;
-            if (account.Password != null)
-                textPassword.Password = account.Password;
+            {
+                textEmail.TextBox.Text = account.Email;
+                textAutoLoginEmail.TextBox.Text = account.Email;
+            }
+            else
+            {
+                textEmail.TextVisible = true;
+                textAutoLoginEmail.TextVisible = true;
+            }
+            if (account.Password == null)
+            {
+                textPassword.TextVisible = true;
+                textAutoLoginPassword.TextVisible = true;
+            }
 
             textAccountName.Text = account.Name;
             textWindowsAccount.Text = account.WindowsAccount;
@@ -427,27 +527,93 @@ namespace Gw2Launcher.UI
                 textWindowed.Text = ToString(account.WindowBounds);
 
                 checkWindowedPreventChanges.Checked = account.WindowOptions.HasFlag(Settings.WindowOptions.PreventChanges);
+                checkWindowedDisableTitleButtons.Checked = account.WindowOptions.HasFlag(Settings.WindowOptions.DisableTitleBarButtons);
                 checkWindowedUpdateOnChange.Checked = account.WindowOptions.HasFlag(Settings.WindowOptions.RememberChanges);
                 checkWindowedTopMost.Checked = account.WindowOptions.HasFlag(Settings.WindowOptions.TopMost);
             }
 
             checkShowDailyLogin.Checked = account.ShowDailyLogin;
 
-            if (account.DatFile != null)
+            if (account.Type == Settings.AccountType.GuildWars1)
             {
-                textLocalDat.Text = account.DatFile.Path;
-                textLocalDat.Select(textLocalDat.TextLength, 0);
-            }
-            else
-                textLocalDat.Text = "";
+                var gw1 = (Settings.IGw1Account)account;
 
-            if (account.GfxFile != null)
+                checkAutomaticLoginGw1.Checked = gw1.AutomaticLogin;
+
+                if (!string.IsNullOrEmpty(gw1.CharacterName))
+                {
+                    textAutoLoginCharacter.TextBox.Text = gw1.CharacterName;
+                }
+                else
+                {
+                    textAutoLoginCharacter.TextVisible = true;
+                }
+
+                if (gw1.DatFile != null)
+                {
+                    textGwDat.Text = gw1.DatFile.Path;
+                    textGwDat.Select(textGwDat.TextLength, 0);
+                }
+            }
+            else if (account.Type == Settings.AccountType.GuildWars2)
             {
-                textGfxSettings.Text = account.GfxFile.Path;
-                textGfxSettings.Select(textGfxSettings.TextLength, 0);
+                var gw2 = (Settings.IGw2Account)account;
+
+                checkAutomaticLogin.Checked = gw2.AutomaticLogin;
+                checkAutomaticLoginPlay.Checked = gw2.AutomaticPlay;
+
+                if (gw2.DatFile != null)
+                {
+                    textLocalDat.Text = gw2.DatFile.Path;
+                    textLocalDat.Select(textLocalDat.TextLength, 0);
+                }
+
+                if (gw2.GfxFile != null)
+                {
+                    textGfxSettings.Text = gw2.GfxFile.Path;
+                    textGfxSettings.Select(textGfxSettings.TextLength, 0);
+                }
+
+                checkAutomaticLauncherLogin.Checked = gw2.AutomaticRememberedLogin;
+                checkPort80.Checked = gw2.ClientPort == 80;
+                checkPort443.Checked = gw2.ClientPort == 443;
+
+                checkShowDailyCompletion.Checked = gw2.ShowDailyCompletion;
+                textApiKey.Text = gw2.ApiKey;
+
+                if (gw2.ApiData != null)
+                {
+                    if (!string.IsNullOrEmpty(gw2.ApiKey))
+                    {
+                        var kd = new ApiKeyData();
+                        kd.useAccountData = true;
+
+                        kdCurrent = kd;
+                        foreach (var ar in apiRequirements)
+                        {
+                            ar.Verify(kd);
+                        }
+
+                        apikeys[gw2.ApiKey] = kd;
+                    }
+
+                    if (gw2.ApiData.DailyPoints != null)
+                        checkTrackDailyCompletionApi.Checked = true;
+
+                    if (gw2.ApiData.Played != null)
+                        checkTrackPlayedApi.Checked = true;
+                }
+
+                if (gw2.MumbleLinkName != null)
+                {
+                    checkGw2MumbleName.Checked = true;
+                    textGw2MumbleName.Text = gw2.MumbleLinkName;
+                }
             }
             else
-                textGfxSettings.Text = "";
+            {
+                throw new NotSupportedException();
+            }
 
             if (account.VolumeEnabled)
             {
@@ -457,20 +623,13 @@ namespace Gw2Launcher.UI
             else
                 sliderVolume.Value = 1f;
 
-            if (!string.IsNullOrEmpty(account.RunAfterLaunching))
-                textRunAfterLaunch.Text = account.RunAfterLaunching;
-
-            checkAutomaticLauncherLogin.Checked = account.AutomaticRememberedLogin;
-
             checkMuteAll.Checked = account.Mute.HasFlag(Settings.MuteOptions.All);
             checkMuteMusic.Checked = account.Mute.HasFlag(Settings.MuteOptions.Music);
             checkMuteVoices.Checked = account.Mute.HasFlag(Settings.MuteOptions.Voices);
 
-            checkPort80.Checked = account.ClientPort == 80;
-            checkPort443.Checked = account.ClientPort == 443;
             checkScreenshotsBmp.Checked = account.ScreenshotsFormat == Settings.ScreenshotFormat.Bitmap;
 
-            if (Client.FileManager.IsDataLinkingSupported)
+            if (Client.FileManager.IsFolderLinkingSupported)
             {
                 if (checkScreenshotsLocation.Checked = account.ScreenshotsLocation != null)
                 {
@@ -479,45 +638,12 @@ namespace Gw2Launcher.UI
                 }
             }
 
-            checkShowDailyCompletion.Checked = account.ShowDailyCompletion;
-            textApiKey.Text = account.ApiKey;
-
-            if (account.ApiData != null)
-            {
-                if (!string.IsNullOrEmpty(account.ApiKey))
-                {
-                    var kd = new ApiKeyData();
-                    kd.useAccountData = true;
-
-                    kdCurrent = kd;
-                    foreach (var ar in apiRequirements)
-                    {
-                        ar.Verify(kd);
-                    }
-
-                    apikeys[account.ApiKey] = kd;
-                }
-
-                if (account.ApiData.DailyPoints != null)
-                    checkTrackDailyCompletionApi.Checked = true;
-
-                if (account.ApiData.Played != null)
-                    checkTrackPlayedApi.Checked = true;
-            }
             checkEnableNetworkAuthorization.Checked = account.NetworkAuthorizationState != Settings.NetworkAuthorizationState.Disabled;
 
             if (account.TotpKey != null)
-            {
-                try
-                {
-                    textAuthenticatorKey.Text = Tools.Totp.Encode(account.TotpKey);
-                    textAuthenticatorKey.Tag = account.TotpKey;
-                }
-                catch (Exception e)
-                {
-                    Util.Logging.Log(e);
-                }
-            }
+                textAuthenticatorKey.Tag = account.TotpKey;
+            else
+                textAuthenticatorKey.TextVisible = true;
 
             if (account.ProcessPriority != Settings.ProcessPriorityClass.None)
             {
@@ -543,7 +669,10 @@ namespace Gw2Launcher.UI
             }
 
             if (account.ColorKey != Color.Empty)
+            {
                 panelIdentifierColor.BackColor = account.ColorKey;
+                menuColorUseDefaultToolStripMenuItem.Checked = false;
+            }
             else
                 panelIdentifierColor.BackColor = Util.Color.FromUID(account.UID);
 
@@ -566,15 +695,280 @@ namespace Gw2Launcher.UI
                 case Settings.IconType.ColorKey:
                 case Settings.IconType.Gw2LauncherColorKey:
 
-                    icon = CreateIcon(account.IconType);
+                    icon = CreateIcon(account.IconType, account.Type);
 
                     break;
             }
 
             if (icon == null)
-                icon = CreateIcon(Settings.IconType.None);
+                icon = CreateIcon(Settings.IconType.None, account.Type);
 
             SetIcon(icon);
+
+            checkDisableJumpList.Checked = account.JumpListPinning == Settings.JumpListPinning.Disabled;
+
+            var images = new ButtonImages();
+
+            if (account.Image != null)
+            {
+                buttonSample.ImagePlacement = account.Image.Placement;
+
+                try
+                {
+                    buttonSample.Image = Bitmap.FromFile(account.Image.Path);
+                }
+                catch 
+                {
+                    buttonSample.Image = Util.Bitmap.CreateErrorImage(32, 32);
+                }
+
+                images.Image = account.Image.Path;
+                images.imagePlacement = account.Image.Placement;
+
+                shiftImageToolStripMenuItem.Checked = images.imagePlacement == Settings.ImagePlacement.Shift;
+                overflowImageToolStripMenuItem.Checked = images.imagePlacement == Settings.ImagePlacement.Overflow;
+
+                menuImageDefaultToolStripMenuItem.Checked = false;
+            }
+
+            if (account.BackgroundImage != null)
+            {
+                try
+                {
+                    buttonSample.BackgroundImage = Bitmap.FromFile(account.BackgroundImage);
+                }
+                catch
+                {
+                    buttonSample.BackgroundImage = Util.Bitmap.CreateErrorImage(buttonSample.Width, buttonSample.Height);
+                }
+
+                images.Background = account.BackgroundImage;
+                menuImageBackgroundDefaultToolStripMenuItem.Checked = false;
+            }
+
+            buttonSample.Tag = images;
+
+            if (account.RunAfter != null)
+            {
+                panelRunAfterPrograms.SuspendLayout();
+                foreach (var r in account.RunAfter)
+                {
+                    CreateRunAfterButton(r, panelRunAfterPrograms, labelRunAfterProgramsAdd, labelRunAfterProgram_Click);
+                }
+                panelRunAfterPrograms.ResumeLayout();
+            }
+
+
+
+            //basic mode warnings
+            if (accountType == Settings.AccountType.GuildWars2 && Settings.GuildWars2.ProfileMode.HasValue && Settings.GuildWars2.ProfileMode.Value == Settings.ProfileMode.Basic)
+            {
+                labelScreenshotsLocationBasicWarning.Visible = true;
+            }
+        }
+
+        public formAccount(IList<Settings.IAccount> accounts)
+            : this(accounts[0])
+        {
+            var count = accounts.Count;
+
+            if (count > 1)
+            {
+                this.accounts = accounts;
+
+                automaticApplyAllToolStripMenuItem.Checked = true;
+
+                this.textAccountNames = new TextBox[count];
+                this.textAccountNames[0] = textAccountName;
+
+                var panelAccountNames = textAccountName.Parent;
+                panelAccountNames.SuspendLayout();
+                for (var i = 1; i < count; i++)
+                {
+                    var t = new TextBox()
+                    {
+                        Margin = textAccountName.Margin,
+                        Size = textAccountName.Size,
+                        Font = textAccountName.Font,
+                        Text = accounts[i].Name,
+                    };
+                    this.textAccountNames[i] = t;
+                    panelAccountNames.Controls.Add(t);
+                }
+                panelAccountNames.ResumeLayout();
+
+                foreach (var c in EnumerateApplyAllCheckBoxes(this))
+                {
+                    c.Enabled = true;
+                    c.Visible = true;
+                    c.MouseDown += applyAll_MouseDown;
+
+                    EventHandler e = delegate
+                    {
+                        OnAutoApplyValueChanged(c);
+                    };
+
+                    if (c.DefaultState)
+                    {
+                        foreach (var c1 in EnumerateControls(c.Parent))
+                        {
+                            if (c1 is CheckBox)
+                            {
+                                ((CheckBox)c1).CheckedChanged += e;
+                            }
+                            else if (c1 is RadioButton)
+                            {
+                                ((RadioButton)c1).CheckedChanged += e;
+                            }
+                            else if (c1 is TextBox)
+                            {
+                                ((TextBox)c1).TextChanged += e;
+                            }
+                            else if (c1 is ComboBox)
+                            {
+                                ((ComboBox)c1).SelectedIndexChanged += e;
+                            }
+                            else if (c1 is Controls.FlatSlider)
+                            {
+                                ((FlatSlider)c1).ValueChanged += e;
+                            }
+                        }
+                    }
+                }
+
+                panelIdentifierColor.BackColorChanged += delegate
+                {
+                    OnAutoApplyValueChanged(aaIdentifierColor);
+                };
+
+                panelIdentifierIcon.BackgroundImageChanged += delegate
+                {
+                    OnAutoApplyValueChanged(aaIdentifierIcon);
+                };
+            }
+        }
+
+        protected override void OnInitializeComponents()
+        {
+            base.OnInitializeComponents();
+
+            InitializeComponent();
+
+            if (Settings.IsRunningWine)
+            {
+                ctimerTotpTime.Visible = false;
+            }
+        }
+
+        private void OnAutoApplyValueChanged(ApplyAllCheckBox c)
+        {
+            if (automaticApplyAllToolStripMenuItem.Checked && !c.Clicked)
+                c.Checked = true;
+        }
+
+        private IEnumerable<Control> EnumerateControls(Control parent)
+        {
+            var queue = new Queue<Control>();
+
+            queue.Enqueue(parent);
+
+            do
+            {
+                var p = queue.Dequeue();
+
+                if (p.Controls.Count == 0)
+                {
+                    yield return p;
+                }
+                else
+                {
+                    foreach (Control c in p.Controls)
+                    {
+                        queue.Enqueue(c);
+                    }
+                }
+            }
+            while (queue.Count > 0);
+        }
+
+        private IEnumerable<ApplyAllCheckBox> EnumerateApplyAllCheckBoxes(Control parent)
+        {
+            var queue = new Queue<Control>();
+
+            queue.Enqueue(parent);
+
+            do
+            {
+                var p = queue.Dequeue();
+
+                if (p is ApplyAllCheckBox)
+                {
+                    yield return (ApplyAllCheckBox)p;
+                }
+
+                foreach (Control c in p.Controls)
+                {
+                    queue.Enqueue(c);
+                }
+            }
+            while (queue.Count > 0);
+        }
+
+        public AccountGridButton SampleButton
+        {
+            get
+            {
+                return buttonSample;
+            }
+        }
+
+        private void OnAccountTypeChanged(Settings.AccountType type)
+        {
+            var b = type == Settings.AccountType.GuildWars2;
+        }
+
+        void credentials_TextChanged(object sender, EventArgs e)
+        {
+            var t = (TextBox)sender;
+
+            if (t.ContainsFocus)
+            {
+                t.TextChanged -= credentials_TextChanged;
+                t.LostFocus += credentials_LostFocus;
+            }
+        }
+
+        void credentials_LostFocus(object sender, EventArgs e)
+        {
+            var t = (TextBox)sender;
+
+            t.TextChanged += credentials_TextChanged;
+            t.LostFocus -= credentials_LostFocus;
+
+            if (sender is PasswordBox)
+            {
+                var t1 = (PasswordBox)sender;
+                var t2 = textPassword.PasswordBox;
+
+                if (t1 == t2)
+                {
+                    t2 = textAutoLoginPassword.PasswordBox;
+                }
+
+                t2.Password = t1.Password;
+            }
+            else
+            {
+                var t1 = t;
+                var t2 = textEmail.TextBox;
+
+                if (t1 == t2)
+                {
+                    t2 = textAutoLoginEmail.TextBox;
+                }
+
+                t2.Text = t1.Text;
+            }
         }
 
         protected override void OnShown(EventArgs e)
@@ -585,7 +979,7 @@ namespace Gw2Launcher.UI
                 textAccountName.Focus();
         }
 
-        private IconValue CreateIcon(Settings.IconType type)
+        private IconValue CreateIcon(Settings.IconType type, Settings.AccountType accountType)
         {
             switch (type)
             {
@@ -621,9 +1015,19 @@ namespace Gw2Launcher.UI
 
                     try
                     {
-                        using (var iconGw2 = Properties.Resources.Gw2)
+                        if (accountType == Settings.AccountType.GuildWars1)
                         {
-                            return new IconValue(Settings.IconType.None, iconGw2.ToBitmap());
+                            using (var iconGw1 = Properties.Resources.Gw1)
+                            {
+                                return new IconValue(Settings.IconType.None, iconGw1.ToBitmap());
+                            }
+                        }
+                        else
+                        {
+                            using (var iconGw2 = Properties.Resources.Gw2)
+                            {
+                                return new IconValue(Settings.IconType.None, iconGw2.ToBitmap());
+                            }
                         }
                     }
                     catch
@@ -654,16 +1058,7 @@ namespace Gw2Launcher.UI
             }
         }
 
-        private AutoScrollContainerPanel CreateContainer(Panel panel)
-        {
-            var container = new AutoScrollContainerPanel(panel);
-            
-            this.Controls.Add(container);
-
-            return container;
-        }
-
-        void containerLaunchOptionsAdvanced_PreVisiblePropertyChanged(object sender, bool e)
+        void panelLaunchOptionsAdvanced_PreVisiblePropertyChanged(object sender, bool e)
         {
             if (e)
             {
@@ -688,29 +1083,18 @@ namespace Gw2Launcher.UI
             }
         }
 
-        void containerSecurity_PreVisiblePropertyChanged(object sender, bool e)
+        void panelSecurity_PreVisiblePropertyChanged(object sender, bool e)
         {
-            if (e)
-            {
-                textEmail.Bounds = boundsEmail;
-                textPassword.Bounds = boundsPassword;
-                textEmail.Enabled = textPassword.Enabled = true;
-
-                panelSecurity.Controls.AddRange(new Control[]
-                    {
-                        textEmail,
-                        textPassword
-                    });
-
-                if (textAuthenticatorKey.Tag != null)
-                    taskTotp = RefreshTotp();
-            }
+            if (e && textAuthenticatorKey.Tag != null)
+                taskTotp = RefreshTotp();
         }
 
-        void containerGraphics_PreVisiblePropertyChanged(object sender, bool e)
+        void panelGraphics_PreVisiblePropertyChanged(object sender, bool e)
         {
             if (e && xmlGfx == null)
             {
+                var gw2 = (Settings.IGw2Account)this.account;
+
                 string path;
                 if (selectedGfxFile != null)
                 {
@@ -721,9 +1105,9 @@ namespace Gw2Launcher.UI
                     else
                         path = null;
                 }
-                else if (account != null && account.GfxFile != null)
+                else if (gw2 != null && gw2.GfxFile != null)
                 {
-                    path = account.GfxFile.Path;
+                    path = gw2.GfxFile.Path;
                 }
                 else
                 {
@@ -734,22 +1118,6 @@ namespace Gw2Launcher.UI
                 {
                     LoadGraphics(path);
                 }
-            }
-        }
-
-        void containerLaunchOptions_PreVisiblePropertyChanged(object sender, bool e)
-        {
-            if (e)
-            {
-                textEmail.Bounds = textAutoLoginEmail.Bounds;
-                textPassword.Bounds = textAutoLoginPassword.Bounds;
-                textEmail.Enabled = textPassword.Enabled = checkAutomaticLogin.Checked;
-
-                panelLaunchOptions.Controls.AddRange(new Control[]
-                    {
-                        textEmail,
-                        textPassword
-                    });
             }
         }
 
@@ -778,25 +1146,20 @@ namespace Gw2Launcher.UI
             }
         }
 
-        private void formAccount_Load(object sender, EventArgs e)
-        {
-            textAccountName.Focus();
-        }
-
         private void checkAutomaticLogin_CheckedChanged(object sender, EventArgs e)
         {
-            textEmail.Enabled = textPassword.Enabled = checkAutomaticLogin.Checked;
-        }
-
-        private void labelLaunchCount_SizeChanged(object sender, EventArgs e)
-        {
-            labelLaunchCountEnd.Location = new Point(labelLaunchCount.Location.X + labelLaunchCount.Width + 6, labelLaunchCountEnd.Location.Y);
+            textAutoLoginEmail.Enabled = textAutoLoginPassword.Enabled = checkAutomaticLogin.Checked;
         }
 
         protected override void OnFormClosing(FormClosingEventArgs e)
         {
             base.OnFormClosing(e);
 
+            ReleaseFiles();
+        }
+
+        private void ReleaseFiles()
+        {
             if (selectedDatFile != null)
             {
                 selectedDatFile.Cancel();
@@ -807,6 +1170,34 @@ namespace Gw2Launcher.UI
             {
                 selectedGfxFile.Cancel();
                 selectedGfxFile = null;
+            }
+
+            if (selectedGwDatFile != null)
+            {
+                selectedGwDatFile.Cancel();
+                selectedGwDatFile = null;
+            }
+
+            if (_files != null)
+            {
+                foreach (var f in _files)
+                {
+                    if (f == null)
+                        continue;
+                    try
+                    {
+                        File.Delete(f.Path);
+                    }
+                    catch { }
+
+                    if (f is Settings.IDatFile)
+                        Settings.DatFiles[f.UID].Clear();
+                    else if (f is Settings.IGfxFile)
+                        Settings.GfxFiles[f.UID].Clear();
+                    else if (f is Settings.IGwDatFile)
+                        Settings.GwDatFiles[f.UID].Clear();
+                }
+                _files = null;
             }
         }
 
@@ -821,254 +1212,349 @@ namespace Gw2Launcher.UI
 
         private Settings.IFile GetFile(Client.FileManager.FileType type)
         {
-            formBrowseLocalDat.SelectedFile selectedFile;
             Settings.IFile file;
-            string ext;
 
-            switch (type)
+            if (accountType == Settings.AccountType.GuildWars2)
             {
-                case Client.FileManager.FileType.Dat:
-                    selectedFile = selectedDatFile;
-                    file = datFile;
-                    ext = ".dat";
-                    break;
-                case Client.FileManager.FileType.Gfx:
-                    selectedFile = selectedGfxFile;
-                    file = gfxFile;
-                    ext = ".xml";
-                    break;
-                default:
+                var gw2 = (Settings.IGw2Account)this.account;
+                if (_files == null)
+                    _files = new Settings.IFile[2];
+                int _index = -1;
+                formBrowseLocalDat.SelectedFile selectedFile;
+                string ext;
+
+                switch (type)
+                {
+                    case Client.FileManager.FileType.Dat:
+
+                        selectedFile = selectedDatFile;
+                        file = _files[_index = 0];
+                        ext = ".dat";
+
+                        break;
+                    case Client.FileManager.FileType.Gfx:
+
+                        selectedFile = selectedGfxFile;
+                        file = _files[_index = 1];
+                        ext = ".xml";
+
+                        break;
+                    default:
+                        return null;
+                }
+
+                if (selectedFile == null)
+                {
+                    if (file != null)
+                        return file;
+
+                    if (gw2 != null)
+                    {
+                        switch (type)
+                        {
+                            case Client.FileManager.FileType.Dat:
+                                return gw2.DatFile;
+                            case Client.FileManager.FileType.Gfx:
+                                return gw2.GfxFile;
+                            default:
+                                return null;
+                        }
+                    }
+                    else
+                        return null;
+                }
+                else if (selectedFile.File != null)
+                {
+                    return selectedFile.File;
+                }
+                else if (selectedFile.Path == null)
+                {
                     return null;
-            }
+                }
 
-            if (selectedFile == null)
-            {
-                if (account != null)
+                #region No longer using other user folders
+
+                //Security.Impersonation.IImpersonationToken impersonation = null;
+
+                //string username = Util.Users.GetUserName(textWindowsAccount.Text);
+                //bool isCurrent = Util.Users.IsCurrentUser(username);
+                //bool userExists = isCurrent;
+                //bool wasMoved = false;
+
+                //string path = null;
+
+                //if (!isCurrent)
+                //{
+                //    try
+                //    {
+                //        using (var user = Util.Users.GetPrincipal(username))
+                //        {
+                //            userExists = user != null;
+                //        }
+                //    }
+                //    catch (Exception ex)
+                //    {
+                //        Util.Logging.Log(ex);
+                //    }
+
+                //    if (userExists)
+                //    {
+                //        var password = Security.Credentials.GetPassword(username);
+
+                //        while (true)
+                //        {
+                //            if (password == null)
+                //            {
+                //                using (formPassword f = new formPassword("Password for " + username))
+                //                {
+                //                    if (f.ShowDialog(this) == DialogResult.OK)
+                //                    {
+                //                        password = f.Password;
+                //                        Security.Credentials.SetPassword(username, password);
+                //                    }
+                //                    else
+                //                    {
+                //                        break;
+                //                    }
+                //                }
+                //            }
+
+                //            try
+                //            {
+                //                impersonation = Security.Impersonation.Impersonate(username, Security.Credentials.GetPassword(username));
+                //                break;
+                //            }
+                //            catch (Win32Exception ex)
+                //            {
+                //                Util.Logging.Log(ex);
+
+                //                if (ex.NativeErrorCode == 1326)
+                //                {
+                //                    password = null;
+                //                    continue;
+                //                }
+
+                //                break;
+                //            }
+                //            catch (Exception ex)
+                //            {
+                //                Util.Logging.Log(ex);
+                //                break;
+                //            }
+                //        }
+                //    }
+                //}
+
+                //if (isCurrent || impersonation != null)
+                //{
+                //    try
+                //    {
+                //        string folder = Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData, Environment.SpecialFolderOption.Create);
+                //        if (!string.IsNullOrWhiteSpace(folder))
+                //        {
+                //            folder = Path.Combine(folder, "Guild Wars 2");
+                //            if (!Directory.Exists(folder))
+                //                Directory.CreateDirectory(folder);
+
+                //            path = Util.FileUtil.GetTemporaryFileName(folder);
+
+                //            try
+                //            {
+                //                File.Move(selectedDatFile.Path, path);
+                //                wasMoved = true;
+                //            }
+                //            catch (Exception ex)
+                //            {
+                //                Util.Logging.Log(ex);
+
+                //                try
+                //                {
+                //                    File.Copy(selectedDatFile.Path, path, true);
+                //                }
+                //                catch (Exception e)
+                //                {
+                //                    Util.Logging.Log(e);
+                //                    throw;
+                //                }
+                //            }
+                //        }
+                //        else
+                //        {
+                //            //the user exists, but the account hasn't been set up yet
+                //        }
+                //    }
+                //    finally
+                //    {
+                //        if (impersonation != null)
+                //            impersonation.Dispose();
+                //    }
+                //}
+
+                //string folder = Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData, Environment.SpecialFolderOption.Create);
+                //if (!string.IsNullOrWhiteSpace(folder))
+                //{
+                //    folder = Path.Combine(folder, "Guild Wars 2");
+                //    if (!Directory.Exists(folder))
+                //        Directory.CreateDirectory(folder);
+
+                //    path = Util.FileUtil.GetTemporaryFileName(folder);
+
+                //    try
+                //    {
+                //        File.Move(selectedDatFile.Path, path);
+                //        wasMoved = true;
+                //    }
+                //    catch (Exception ex)
+                //    {
+                //        Util.Logging.Log(ex);
+
+                //        try
+                //        {
+                //            File.Copy(selectedDatFile.Path, path, true);
+                //        }
+                //        catch (Exception e)
+                //        {
+                //            Util.Logging.Log(e);
+                //            throw;
+                //        }
+                //    }
+                //}
+                //else
+                //{
+                //    //the user exists, but the account hasn't been set up yet
+                //}
+
+                #endregion
+
+                if (file == null)
                 {
                     switch (type)
                     {
                         case Client.FileManager.FileType.Dat:
-                            return account.DatFile;
+
+                            _files[_index] = file = Settings.CreateDatFile();
+
+                            break;
                         case Client.FileManager.FileType.Gfx:
-                            return account.GfxFile;
-                        default:
-                            return null;
+
+                            _files[_index] = file = Settings.CreateGfxFile();
+
+                            break;
                     }
                 }
-                else
-                    return null;
-            }
-            else if (selectedFile.File != null)
-            {
-                return selectedFile.File;
-            }
-            else if (selectedFile.Path == null)
-            {
-                return null;
-            }
 
-            #region No longer using other user folders
-
-            //Security.Impersonation.IImpersonationToken impersonation = null;
-
-            //string username = Util.Users.GetUserName(textWindowsAccount.Text);
-            //bool isCurrent = Util.Users.IsCurrentUser(username);
-            //bool userExists = isCurrent;
-            //bool wasMoved = false;
-
-            //string path = null;
-
-            //if (!isCurrent)
-            //{
-            //    try
-            //    {
-            //        using (var user = Util.Users.GetPrincipal(username))
-            //        {
-            //            userExists = user != null;
-            //        }
-            //    }
-            //    catch (Exception ex)
-            //    {
-            //        Util.Logging.Log(ex);
-            //    }
-
-            //    if (userExists)
-            //    {
-            //        var password = Security.Credentials.GetPassword(username);
-
-            //        while (true)
-            //        {
-            //            if (password == null)
-            //            {
-            //                using (formPassword f = new formPassword("Password for " + username))
-            //                {
-            //                    if (f.ShowDialog(this) == DialogResult.OK)
-            //                    {
-            //                        password = f.Password;
-            //                        Security.Credentials.SetPassword(username, password);
-            //                    }
-            //                    else
-            //                    {
-            //                        break;
-            //                    }
-            //                }
-            //            }
-
-            //            try
-            //            {
-            //                impersonation = Security.Impersonation.Impersonate(username, Security.Credentials.GetPassword(username));
-            //                break;
-            //            }
-            //            catch (Win32Exception ex)
-            //            {
-            //                Util.Logging.Log(ex);
-
-            //                if (ex.NativeErrorCode == 1326)
-            //                {
-            //                    password = null;
-            //                    continue;
-            //                }
-
-            //                break;
-            //            }
-            //            catch (Exception ex)
-            //            {
-            //                Util.Logging.Log(ex);
-            //                break;
-            //            }
-            //        }
-            //    }
-            //}
-
-            //if (isCurrent || impersonation != null)
-            //{
-            //    try
-            //    {
-            //        string folder = Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData, Environment.SpecialFolderOption.Create);
-            //        if (!string.IsNullOrWhiteSpace(folder))
-            //        {
-            //            folder = Path.Combine(folder, "Guild Wars 2");
-            //            if (!Directory.Exists(folder))
-            //                Directory.CreateDirectory(folder);
-
-            //            path = Util.FileUtil.GetTemporaryFileName(folder);
-
-            //            try
-            //            {
-            //                File.Move(selectedDatFile.Path, path);
-            //                wasMoved = true;
-            //            }
-            //            catch (Exception ex)
-            //            {
-            //                Util.Logging.Log(ex);
-
-            //                try
-            //                {
-            //                    File.Copy(selectedDatFile.Path, path, true);
-            //                }
-            //                catch (Exception e)
-            //                {
-            //                    Util.Logging.Log(e);
-            //                    throw;
-            //                }
-            //            }
-            //        }
-            //        else
-            //        {
-            //            //the user exists, but the account hasn't been set up yet
-            //        }
-            //    }
-            //    finally
-            //    {
-            //        if (impersonation != null)
-            //            impersonation.Dispose();
-            //    }
-            //}
-
-            //string folder = Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData, Environment.SpecialFolderOption.Create);
-            //if (!string.IsNullOrWhiteSpace(folder))
-            //{
-            //    folder = Path.Combine(folder, "Guild Wars 2");
-            //    if (!Directory.Exists(folder))
-            //        Directory.CreateDirectory(folder);
-
-            //    path = Util.FileUtil.GetTemporaryFileName(folder);
-
-            //    try
-            //    {
-            //        File.Move(selectedDatFile.Path, path);
-            //        wasMoved = true;
-            //    }
-            //    catch (Exception ex)
-            //    {
-            //        Util.Logging.Log(ex);
-
-            //        try
-            //        {
-            //            File.Copy(selectedDatFile.Path, path, true);
-            //        }
-            //        catch (Exception e)
-            //        {
-            //            Util.Logging.Log(e);
-            //            throw;
-            //        }
-            //    }
-            //}
-            //else
-            //{
-            //    //the user exists, but the account hasn't been set up yet
-            //}
-
-            #endregion
-
-            if (file == null)
-            {
-                switch (type)
-                {
-                    case Client.FileManager.FileType.Dat:
-                        file = datFile = Settings.CreateDatFile();
-                        break;
-                    case Client.FileManager.FileType.Gfx:
-                        file = gfxFile = Settings.CreateGfxFile();
-                        break;
-                }
-            }
-
-            var wasMoved = false;
-            var path = Path.Combine(DataPath.AppDataAccountData, file.UID + ext);
-
-            try
-            {
-                File.Move(selectedFile.Path, path);
-                wasMoved = true;
-            }
-            catch (Exception ex)
-            {
-                Util.Logging.Log(ex);
+                var wasMoved = false;
+                var path = Path.Combine(DataPath.AppDataAccountData, file.UID + ext);
 
                 try
                 {
-                    File.Copy(selectedFile.Path, path, true);
-                }
-                catch (Exception e)
-                {
-                    Util.Logging.Log(e);
-                    throw;
-                }
-            }
-
-            file.Path = path;
-
-            if (!wasMoved)
-            {
-                try
-                {
-                    File.Delete(selectedFile.Path);
+                    Util.FileUtil.MoveFile(selectedFile.Path, path, false, true);
+                    selectedFile.Update(path);
+                    wasMoved = true;
                 }
                 catch (Exception ex)
                 {
                     Util.Logging.Log(ex);
+
                 }
+
+                if (!wasMoved)
+                {
+                    try
+                    {
+                        File.Copy(selectedFile.Path, path, true);
+                    }
+                    catch (Exception e)
+                    {
+                        Util.Logging.Log(e);
+                        throw;
+                    }
+
+                    try
+                    {
+                        File.Delete(selectedFile.Path);
+                    }
+                    catch (Exception ex)
+                    {
+                        Util.Logging.Log(ex);
+                    }
+                }
+
+                file.Path = path;
+            }
+            else if (accountType == Settings.AccountType.GuildWars1)
+            {
+                var gw1 = (Settings.IGw1Account)this.account;
+                if (_files == null)
+                    _files = new Settings.IFile[1];
+                int _index = -1;
+                formBrowseGwDat.SelectedFile selectedFile;
+
+                switch (type)
+                {
+                    case Client.FileManager.FileType.GwDat:
+                        selectedFile = selectedGwDatFile;
+                        file = _files[_index = 0]; 
+                        break;
+                    default:
+                        return null;
+                }
+
+                if (selectedFile == null)
+                {
+                    if (file != null)
+                        return file;
+
+                    if (gw1 != null)
+                    {
+                        switch (type)
+                        {
+                            case Client.FileManager.FileType.GwDat:
+                                return gw1.DatFile;
+                            default:
+                                return null;
+                        }
+                    }
+                    else
+                        return null;
+                }
+                else if (selectedFile.File != null)
+                {
+                    return selectedFile.File;
+                }
+                else if (selectedFile.Path == null)
+                {
+                    return null;
+                }
+
+                var path = selectedFile.Path;
+
+                if (file == null)
+                {
+                    _files[_index] = file = Settings.CreateGwDatFile();
+                }
+
+                if (selectedFile.Flags.HasFlag(formBrowseGwDat.SelectedFile.FileFlags.Created))
+                {
+                    try
+                    {
+                        var n = Path.GetFileName(path);
+                        var d = Path.GetDirectoryName(path);
+                        var newpath = Path.Combine(Path.GetDirectoryName(d), file.UID.ToString());
+
+                        Directory.Move(d, newpath);
+
+                        path = Path.Combine(newpath, n);
+                        selectedFile.Cancel();
+                    }
+                    catch { }
+                }
+
+                file.Path = path;
+            }
+            else
+            {
+                file = null;
             }
 
             return file;
@@ -1380,7 +1866,7 @@ namespace Gw2Launcher.UI
             }
             else
             {
-                if (!containerGraphics.Visible)
+                if (!panelGraphics.Visible)
                     await Task.Delay(100);
                 xmlGfx = await Task.Run<Tools.Gfx.Xml>(
                     delegate
@@ -1411,6 +1897,8 @@ namespace Gw2Launcher.UI
 
                     if (panelGraphicsXml.Visible)
                     {
+                        var gw2 = (Settings.IGw2Account)this.account;
+
                         bool isShared = false,
                              isDefault = path.Equals(Client.FileManager.GetDefaultPath(Client.FileManager.FileType.Gfx), StringComparison.OrdinalIgnoreCase);
 
@@ -1418,9 +1906,9 @@ namespace Gw2Launcher.UI
                         {
                             isShared = selectedGfxFile.File != null && selectedGfxFile.File.References > 0;    
                         }
-                        else if (account != null && account.GfxFile != null)
+                        else if (gw2 != null && gw2.GfxFile != null)
                         {
-                            isShared = account.GfxFile.References > 1;
+                            isShared = gw2.GfxFile.References > 1;
                         }
 
                         if (isDefault)
@@ -1434,10 +1922,10 @@ namespace Gw2Launcher.UI
                             labelGfxFileInfo.Visible = true;
                         }
 
-                        if (labelGfxFileInfo.Visible)
-                            panelGraphicsXml.Top = labelGfxFileInfo.Bottom + 10;
-                        else
-                            panelGraphicsXml.Top = labelGfxSettingsTitleSub.Bottom + 10;
+                        //if (labelGfxFileInfo.Visible)
+                        //    panelGraphicsXml.Top = labelGfxFileInfo.Bottom + 10;
+                        //else
+                        //    panelGraphicsXml.Top = labelGfxSettingsTitleSub.Bottom + 10;
                     }
                 }
                 catch (Exception e)
@@ -1619,7 +2107,7 @@ namespace Gw2Launcher.UI
             }
         }
 
-        void sliderGfx_ValueChanged(object sender, float e)
+        void sliderGfx_ValueChanged(object sender, EventArgs e)
         {
             if (!panelGraphicsXml.Visible)
                 return;
@@ -1630,7 +2118,7 @@ namespace Gw2Launcher.UI
 
             if (!text.ContainsFocus)
             {
-                var value = ofloat.MinValue + e * (ofloat.MaxValue - ofloat.MinValue);
+                var value = ofloat.MinValue + slider.Value * (ofloat.MaxValue - ofloat.MinValue);
 
                 text.Text = string.Format("{0:0.##}", value);
                 ofloat.Value = value;
@@ -1659,228 +2147,226 @@ namespace Gw2Launcher.UI
             obool.Value = checkbox.Checked;
         }
 
+        private IEnumerable<Settings.IAccount> GetAccounts()
+        {
+            yield return account;
+
+            if (accounts != null)
+            {
+                foreach (var a in accounts)
+                {
+                    if (!object.ReferenceEquals(a, this.account))
+                        yield return a;
+                }
+            }
+        }
+
         private void buttonOK_Click(object sender, EventArgs e)
         {
-            if (textAccountName.Text.Length == 0)
+            foreach (var t in textAccountNames != null ? textAccountNames : new TextBox[] { textAccountName })
             {
-                buttonGeneral.Selected = true;
-                textAccountName.Focus();
-                MessageBox.Show(this, "An identifier / account or display name is required", "Identifier / name required", MessageBoxButtons.OK, MessageBoxIcon.Exclamation);
-                return;
-            }
-
-            Rectangle windowBounds;
-
-            if (checkWindowed.Checked)
-            {
-                Rectangle r = ParseWindowSize(textWindowed.Text);
-                windowBounds = FixSize(r);
-            }
-            else
-            {
-                if (account != null)
-                    windowBounds = account.WindowBounds;
-                else
-                    windowBounds = Rectangle.Empty;
+                if (t.TextLength == 0)
+                {
+                    buttonGeneral.Selected = true;
+                    t.Focus();
+                    MessageBox.Show(this, "An identifier / account or display name is required", "Identifier / name required", MessageBoxButtons.OK, MessageBoxIcon.Exclamation);
+                    return;
+                }
             }
 
             Settings.IDatFile datFile;
-
-            try
-            {
-                datFile = (Settings.IDatFile)GetFile(Client.FileManager.FileType.Dat);
-            }
-            catch (Exception ex)
-            {
-                Util.Logging.Log(ex);
-                MessageBox.Show(this, "An error occured while handling Local.dat.\n\n" + ex.Message, "Failed to handle Local.dat", MessageBoxButtons.OK, MessageBoxIcon.Error);
-                return;
-            }
-
             Settings.IGfxFile gfxFile;
+            Settings.IGwDatFile gwdatFile;
 
-            try
+            if (accountType == Settings.AccountType.GuildWars2)
             {
-                gfxFile = (Settings.IGfxFile)GetFile(Client.FileManager.FileType.Gfx);
-            }
-            catch (Exception ex)
-            {
-                Util.Logging.Log(ex);
-                MessageBox.Show(this, "An error occured while handling GFXSettings.xml.\n\n" + ex.Message, "Failed to handle GFXSettings.xml", MessageBoxButtons.OK, MessageBoxIcon.Error);
-                return;
-            }
+                gwdatFile = null;
 
-            if (xmlGfx != null && xmlGfx.IsModified)
-            {
-                //if the xml was modified, save it to a new location to prevent it from being overwritten
-                // - this file will be moved to the proper location on the next launch
-
-                var defaultPath = Client.FileManager.GetDefaultPath(Client.FileManager.FileType.Gfx);
-                string path;
-                if (gfxFile != null)
-                    path = gfxFile.Path;
-                else
+                try
                 {
-                    path = defaultPath;
-                    gfxFile = (Settings.IGfxFile)Client.FileManager.FindFile(Client.FileManager.FileType.Gfx, defaultPath);
+                    datFile = (Settings.IDatFile)GetFile(Client.FileManager.FileType.Dat);
                 }
-                bool isDefault;
-
-                if (isDefault = defaultPath.Equals(path))
+                catch (Exception ex)
                 {
-                    #region ask to overwrite default file? (disabled)
-
-                    //bool copy = false;
-
-                    //switch (MessageBox.Show(this, "You are about to modify the default GFXSettings.xml file used by Guild Wars 2.\n\nWould you like to make a copy instead?", "Make a copy instead?", MessageBoxButtons.YesNoCancel, MessageBoxIcon.Exclamation))
-                    //{
-                    //    case System.Windows.Forms.DialogResult.Yes:
-                    //        copy = true;
-                    //        break;
-                    //    case System.Windows.Forms.DialogResult.No:
-                    //        copy = false;
-                    //        break;
-                    //    case System.Windows.Forms.DialogResult.Cancel:
-                    //        return;
-                    //}
-
-                    //if (copy)
-                    //{
-                    //    if (gfxFile == null || gfxFile.References == 0 || account != null && account.GfxFile == gfxFile && gfxFile.References == 1)
-                    //    {
-                    //        //this file is not being used
-                    //    }
-                    //    else
-                    //    {
-                    //        gfxFile = Settings.CreateGfxFile();
-                    //    }
-
-                    //    gfxFile.Path = path = Path.Combine(DataPath.AppDataAccountData, gfxFile.UID + ".xml");
-                    //}
-
-                    #endregion
+                    Util.Logging.Log(ex);
+                    MessageBox.Show(this, "An error occured while handling Local.dat.\n\n" + ex.Message, "Failed to handle Local.dat", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                    return;
                 }
 
-                var inUse = false;
-
-                if (gfxFile != null && gfxFile.References > 0)
+                try
                 {
-                    foreach (var a in Client.Launcher.GetActiveProcesses())
+                    gfxFile = (Settings.IGfxFile)GetFile(Client.FileManager.FileType.Gfx);
+                }
+                catch (Exception ex)
+                {
+                    Util.Logging.Log(ex);
+                    MessageBox.Show(this, "An error occured while handling GFXSettings.xml.\n\n" + ex.Message, "Failed to handle GFXSettings.xml", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                    return;
+                }
+
+                if (xmlGfx != null && xmlGfx.IsModified)
+                {
+                    //if the xml was modified, save it to a new location to prevent it from being overwritten
+                    // - this file will be moved to the proper location on the next launch
+
+                    var defaultPath = Client.FileManager.GetDefaultPath(Client.FileManager.FileType.Gfx);
+                    string path;
+                    if (gfxFile != null)
+                        path = gfxFile.Path;
+                    else
                     {
-                        if (a.GfxFile == gfxFile)
-                        {
-                            inUse = true;
-                            break;
-                        }
+                        path = defaultPath;
+                        gfxFile = (Settings.IGfxFile)Client.FileManager.FindFile(Client.FileManager.FileType.Gfx, defaultPath);
                     }
-                }
+                    bool isDefault;
 
-                if (inUse && isDefault)
-                {
-                    while (inUse)
+                    if (isDefault = defaultPath.Equals(path))
                     {
-                        var r = MessageBox.Show(this, "The default GFXSettings.xml file is currently in use and cannot be modified", "File in use", MessageBoxButtons.AbortRetryIgnore, MessageBoxIcon.Error, MessageBoxDefaultButton.Button2);
-                        if (r == System.Windows.Forms.DialogResult.Ignore)
-                        {
-                            inUse = false;
-                            break;
-                        }
-                        else if (r == System.Windows.Forms.DialogResult.Cancel)
-                            return;
+                        #region ask to overwrite default file? (disabled)
 
-                        inUse = false;
+                        //bool copy = false;
 
+                        //switch (MessageBox.Show(this, "You are about to modify the default GFXSettings.xml file used by Guild Wars 2.\n\nWould you like to make a copy instead?", "Make a copy instead?", MessageBoxButtons.YesNoCancel, MessageBoxIcon.Exclamation))
+                        //{
+                        //    case System.Windows.Forms.DialogResult.Yes:
+                        //        copy = true;
+                        //        break;
+                        //    case System.Windows.Forms.DialogResult.No:
+                        //        copy = false;
+                        //        break;
+                        //    case System.Windows.Forms.DialogResult.Cancel:
+                        //        return;
+                        //}
+
+                        //if (copy)
+                        //{
+                        //    if (gfxFile == null || gfxFile.References == 0 || account != null && account.GfxFile == gfxFile && gfxFile.References == 1)
+                        //    {
+                        //        //this file is not being used
+                        //    }
+                        //    else
+                        //    {
+                        //        gfxFile = Settings.CreateGfxFile();
+                        //    }
+
+                        //    gfxFile.Path = path = Path.Combine(DataPath.AppDataAccountData, gfxFile.UID + ".xml");
+                        //}
+
+                        #endregion
+                    }
+
+                    var inUse = false;
+
+                    if (gfxFile != null && gfxFile.References > 0)
+                    {
                         foreach (var a in Client.Launcher.GetActiveProcesses())
                         {
-                            if (a.GfxFile == gfxFile)
+                            if (a.Type == Settings.AccountType.GuildWars2 && ((Settings.IGw2Account)a).GfxFile == gfxFile)
                             {
                                 inUse = true;
                                 break;
                             }
                         }
                     }
+
+                    if (inUse && isDefault)
+                    {
+                        while (inUse)
+                        {
+                            var r = MessageBox.Show(this, "The default GFXSettings.xml file is currently in use and cannot be modified", "File in use", MessageBoxButtons.AbortRetryIgnore, MessageBoxIcon.Error, MessageBoxDefaultButton.Button2);
+                            if (r == System.Windows.Forms.DialogResult.Ignore)
+                            {
+                                inUse = false;
+                                break;
+                            }
+                            else if (r == System.Windows.Forms.DialogResult.Cancel)
+                                return;
+
+                            inUse = false;
+
+                            foreach (var a in Client.Launcher.GetActiveProcesses())
+                            {
+                                if (a.Type == Settings.AccountType.GuildWars2 && ((Settings.IGw2Account)a).GfxFile == gfxFile)
+                                {
+                                    inUse = true;
+                                    break;
+                                }
+                            }
+                        }
+                    }
+
+                    try
+                    {
+                        if (inUse)
+                        {
+                            //will be temporarily saved as #.tmp.xml
+                            var name = Path.GetFileNameWithoutExtension(path);
+                            var ext = ".tmp";
+                            if (!name.EndsWith(ext, StringComparison.OrdinalIgnoreCase))
+                                path = Path.Combine(Path.GetDirectoryName(path), name + ext + Path.GetExtension(path));
+                            xmlGfx.SaveTo(path);
+
+                            gfxFile.Path = path;
+                        }
+                        else
+                        {
+                            xmlGfx.SaveTo(path);
+                        }
+                    }
+                    catch (Exception ex)
+                    {
+                        Util.Logging.Log(ex);
+                    }
                 }
 
-                try
+                if (gfxFile == null || datFile == null)
                 {
-                    if (inUse)
+                    bool gfx, dat;
+                    using (var f = new formBrowseLocalDatQuick(dat = datFile == null, gfx = gfxFile == null))
                     {
-                        //will be temporarily saved as #.tmp.xml
-                        var name = Path.GetFileNameWithoutExtension(path);
-                        var ext = ".tmp";
-                        if (!name.EndsWith(ext, StringComparison.OrdinalIgnoreCase))
-                            path = Path.Combine(Path.GetDirectoryName(path), name + ext + Path.GetExtension(path));
-                        xmlGfx.SaveTo(path);
-
-                        gfxFile.Path = path;
+                        if (f.ShowDialog(this) == System.Windows.Forms.DialogResult.OK)
+                        {
+                            if (dat)
+                                datFile = f.DatFile;
+                            if (gfx)
+                                gfxFile = f.GfxFile;
+                        }
+                        else
+                        {
+                            if (dat)
+                                buttonLocalDat.SelectPanel(panelLocalDat);
+                            else
+                                buttonLocalDat.SelectPanel(panelGraphics);
+                            return;
+                        }
                     }
-                    else
-                    {
-                        xmlGfx.SaveTo(path);
-                    }
-                }
-                catch (Exception ex)
-                {
-                    Util.Logging.Log(ex);
                 }
             }
-
-            if (gfxFile == null || datFile == null)
+            else if (accountType == Settings.AccountType.GuildWars1)
             {
-                bool gfx,dat;
-                using (var f = new formBrowseLocalDatQuick(dat = datFile == null, gfx = gfxFile == null))
+                datFile = null;
+                gfxFile = null;
+
+                gwdatFile = (Settings.IGwDatFile)GetFile(Client.FileManager.FileType.GwDat);
+
+                if (gwdatFile == null)
                 {
-                    if (f.ShowDialog(this) == System.Windows.Forms.DialogResult.OK)
-                    {
-                        if (dat)
-                            datFile = f.DatFile;
-                        if (gfx)
-                            gfxFile = f.GfxFile;
-                    }
-                    else
-                    {
-                        if (dat)
-                            buttonLocalDat.SelectPanel(containerLocalDat);
-                        else
-                            buttonLocalDat.SelectPanel(containerGraphics);
-                        return;
-                    }
+                    buttonLocalDat.SelectPanel(panelGwDat);
+                    MessageBox.Show(this, "Choose a Gw.dat file to use with this account", "Gw.dat not selected", MessageBoxButtons.OK, MessageBoxIcon.Exclamation);
+                    return;
                 }
+            }
+            else
+            {
+                datFile = null;
+                gfxFile = null;
+                gwdatFile = null;
             }
 
             selectedDatFile = null;
             selectedGfxFile = null;
-
-            if (this.account == null)
-            {
-                this.account = Settings.CreateAccount();
-                this.account.LastUsedUtc = DateTime.MinValue;
-                this.account.CreatedUtc = DateTime.UtcNow;
-            }
-
-            if (checkWindowed.Checked)
-            {
-                var windowed = Settings.WindowOptions.Windowed;
-                if (checkWindowedPreventChanges.Checked)
-                    windowed |= Settings.WindowOptions.PreventChanges;
-                if (checkWindowedUpdateOnChange.Checked)
-                    windowed |= Settings.WindowOptions.RememberChanges;
-                if (checkWindowedTopMost.Checked)
-                    windowed |= Settings.WindowOptions.TopMost;
-                this.account.WindowOptions = windowed;
-            }
-            else
-            {
-                this.account.WindowOptions = Settings.WindowOptions.None;
-            }
-
-            this.account.Name = textAccountName.Text;
-            this.account.WindowsAccount = textWindowsAccount.Text;
-            this.account.Arguments = textArguments.Text;
-            this.account.DatFile = datFile;
-            this.account.GfxFile = gfxFile;
-            this.account.WindowBounds = windowBounds;
-            this.account.RecordLaunches = checkRecordLaunch.Checked;
+            selectedGwDatFile = null;
+            _files = null;
 
             try
             {
@@ -1889,219 +2375,502 @@ namespace Gw2Launcher.UI
             }
             catch { }
 
-            if (textEmail.TextLength > 0)
-                this.account.Email = textEmail.Text;
-            else
-                this.account.Email = null;
+            var accounts = this.accounts;
+            var master = this.account;
 
-            if (textEmail.TextLength > 0 && textPassword.TextLength > 0)
+            if (master == null)
             {
-                var pold = this.account.Password;
-                var pnew = textPassword.Password;
+                this.account = master = Settings.CreateAccount(accountType);
+                //this.account.LastUsedUtc = DateTime.MinValue;
+                //this.account.CreatedUtc = DateTime.UtcNow;
 
-                if (!Security.Credentials.Compare(pnew, pold))
+                if (accounts != null)
                 {
-                    if (pold != null)
-                        pold.Dispose();
-                    this.account.Password = pnew;
-                }
-                else
-                {
-                    pnew.Dispose();
-                }
-            }
-            else
-            {
-                var pold = this.account.Password;
-                if (pold != null)
-                    pold.Dispose();
-                this.account.Password = null;
-            }
+                    //this shouldn't be possible (creating a new account while editing others)
 
-            this.account.AutomaticLogin = checkAutomaticLogin.Checked && this.account.HasCredentials;
-            this.account.AutomaticPlay = checkAutomaticLoginPlay.Checked;
+                    accounts = new Settings.IAccount[accounts.Count + 1];
+                    accounts[0] = master;
 
-            if (checkVolume.Checked)
-                this.account.Volume = sliderVolume.Value;
-            else
-                this.account.VolumeEnabled = false;
-
-            if (!string.IsNullOrEmpty(textRunAfterLaunch.Text))
-                this.account.RunAfterLaunching = textRunAfterLaunch.Text;
-            else
-                this.account.RunAfterLaunching = null;
-
-            this.account.AutomaticRememberedLogin = checkAutomaticLauncherLogin.Checked;
-
-            var mute = Settings.MuteOptions.None;
-            if (checkMuteAll.Checked)
-                mute |= Settings.MuteOptions.All;
-            if (checkMuteMusic.Checked)
-                mute |= Settings.MuteOptions.Music;
-            if (checkMuteVoices.Checked)
-                mute |= Settings.MuteOptions.Voices;
-            this.account.Mute = mute;
-
-            if (checkPort80.Checked)
-                this.account.ClientPort = 80;
-            else if (checkPort443.Checked)
-                this.account.ClientPort = 443;
-            else
-                this.account.ClientPort = 0;
-
-            if (checkScreenshotsBmp.Checked)
-                this.account.ScreenshotsFormat = Settings.ScreenshotFormat.Bitmap;
-            else
-                this.account.ScreenshotsFormat = Settings.ScreenshotFormat.Default;
-
-            if (checkScreenshotsLocation.Checked && Directory.Exists(textScreenshotsLocation.Text))
-            {
-                var path = Util.FileUtil.GetTrimmedDirectoryPath(textScreenshotsLocation.Text);
-                if (string.IsNullOrEmpty(path))
-                    Settings.ScreenshotsLocation.Clear();
-                else
-                    Settings.ScreenshotsLocation.Value = path;
-                this.account.ScreenshotsLocation = path;
-            }
-            else
-                this.account.ScreenshotsLocation = null;
-
-            var apiKeyChanged = !textApiKey.Text.Equals(account.ApiKey, StringComparison.OrdinalIgnoreCase);
-
-            this.account.ShowDailyCompletion = checkShowDailyCompletion.Checked;
-
-            if (checkShowDailyCompletion.Checked && checkTrackDailyCompletionApi.Checked && !string.IsNullOrEmpty(textApiKey.Text))
-            {
-                if (account.ApiData == null)
-                    account.ApiData = account.CreateApiData();
-
-                if (account.ApiData.DailyPoints == null)
-                {
-                    var points = account.ApiData.DailyPoints = account.ApiData.CreateValue<ushort>();
-                    points.State = Settings.ApiCacheState.None;
-                }
-                else if (apiKeyChanged)
-                    account.ApiData.DailyPoints.State = Settings.ApiCacheState.None;
-
-                if (account.ApiData.DailyPoints.State == Settings.ApiCacheState.None && textApiKey.Tag != null)
-                {
-                    var kd = (ApiKeyData)textApiKey.Tag;
-                    if (kd.account != null)
+                    int i = 0;
+                    foreach (var a in this.accounts)
                     {
-                        var total = kd.account.DailyAP + kd.account.MonthlyAP;
-                        if (total < 0)
-                            total = ushort.MaxValue;
-                        var points = account.ApiData.DailyPoints;
-                        points.Value = (ushort)total;
-                        points.State = Settings.ApiCacheState.OK;
-                        points.LastChange = account.LastUsedUtc;
-                        account.LastDailyCompletionUtc = account.LastUsedUtc;
+                        accounts[++i] = a;
                     }
                 }
             }
-            else if (account.ApiData != null && account.ApiData.DailyPoints != null)
-                account.ApiData.DailyPoints = null;
 
-            this.account.ShowDailyLogin = checkShowDailyLogin.Checked;
+            if (accounts == null)
+                accounts = new Settings.IAccount[] { master };
 
-            if (checkShowDailyLogin.Checked && checkTrackPlayedApi.Checked && !string.IsNullOrEmpty(textApiKey.Text))
+            for (int i = 0, count = accounts.Count; i < count; i++)
             {
-                if (account.ApiData == null)
-                    account.ApiData = account.CreateApiData();
+                var a = accounts[i];
+                var isMaster = i == 0;
 
-                if (account.ApiData.Played == null)
+                if (isMaster)
                 {
-                    var played = account.ApiData.Played = account.ApiData.CreateValue<int>();
-                    played.State = Settings.ApiCacheState.None;
-                }
-                else if (apiKeyChanged)
-                    account.ApiData.Played.State = Settings.ApiCacheState.None;
-
-                if (account.ApiData.Played.State == Settings.ApiCacheState.None && textApiKey.Tag != null)
-                {
-                    var kd = (ApiKeyData)textApiKey.Tag;
-                    if (kd.account != null)
+                    if (checkWindowed.Checked)
                     {
-                        var played = account.ApiData.Played;
-                        played.Value = kd.account.Age;
-                        played.State = Settings.ApiCacheState.Pending;
-                        played.LastChange = account.LastUsedUtc;
+                        var windowed = Settings.WindowOptions.Windowed;
+                        if (checkWindowedPreventChanges.Checked)
+                            windowed |= Settings.WindowOptions.PreventChanges;
+                        if (checkWindowedDisableTitleButtons.Checked)
+                            windowed |= Settings.WindowOptions.DisableTitleBarButtons;
+                        if (checkWindowedUpdateOnChange.Checked)
+                            windowed |= Settings.WindowOptions.RememberChanges;
+                        if (checkWindowedTopMost.Checked)
+                            windowed |= Settings.WindowOptions.TopMost;
+
+                        a.WindowOptions = windowed;
+                    }
+                    else
+                    {
+                        a.WindowOptions = Settings.WindowOptions.None;
                     }
                 }
-            }
-            else if (account.ApiData != null && account.ApiData.Played != null)
-                account.ApiData.Played = null;
+                else if (aaWindowedOptions.Checked)
+                {
+                    if (master.WindowOptions == Settings.WindowOptions.None || !a.WindowBounds.IsEmpty || aaWindowed.Checked)
+                    {
+                        a.WindowOptions = master.WindowOptions;
+                    }
+                }
 
-            if (account.ApiData != null)
-            {
-                if (account.ApiData.Played == null && account.ApiData.DailyPoints == null)
-                    account.ApiData = null;
-            }
-
-            account.ApiKey = textApiKey.Text;
-
-            if (checkEnableNetworkAuthorization.Checked)
-            {
-                if (account.NetworkAuthorizationState == Settings.NetworkAuthorizationState.Disabled)
-                    account.NetworkAuthorizationState = Settings.NetworkAuthorizationState.Unknown;
-            }
-            else if (account.NetworkAuthorizationState != Settings.NetworkAuthorizationState.Disabled)
-                account.NetworkAuthorizationState = Settings.NetworkAuthorizationState.Disabled;
-
-            if (totpChanged)
-            {
-                byte[] totp;
-                if (Tools.Totp.IsValid(textAuthenticatorKey.Text))
-                    totp = Tools.Totp.Decode(textAuthenticatorKey.Text);
+                if (textAccountNames != null)
+                {
+                    a.Name = textAccountNames[i].Text;
+                }
                 else
-                    totp = null;
-                account.TotpKey = totp;
-            }
-
-            if (checkProcessPriority.Checked && comboProcessPriority.SelectedIndex >= 0)
-                account.ProcessPriority = Util.ComboItem<Settings.ProcessPriorityClass>.SelectedValue(comboProcessPriority);
-            else
-                account.ProcessPriority = Settings.ProcessPriorityClass.None;
-
-            if (!checkProcessAffinityAll.Checked)
-            {
-                long bits = 0;
-                var count = checkProcessorAffinity.Length;
-                if (count > 64)
-                    count = 64;
-                for (int i = 0; i < count; i++)
                 {
-                    if (checkProcessorAffinity[i].Checked)
-                        bits |= ((long)1 << i);
+                    a.Name = textAccountName.Text;
                 }
 
-                account.ProcessAffinity = bits;
-            }
-            else
-                account.ProcessAffinity = 0;
-
-            if (panelIdentifierIcon.Tag is IconValue)
-            {
-                var icon = (IconValue)panelIdentifierIcon.Tag;
-                account.Icon = icon.Path;
-                account.IconType = icon.Type;
-            }
-            else
-            {
-                account.Icon = null;
-                account.IconType = Settings.IconType.None;
-            }
-
-            if (panelIdentifierColor.Tag != null)
-            {
-                var c = (Color)panelIdentifierColor.Tag;
-                try
+                if (isMaster || aaWindowsAccount.Checked)
                 {
-                    if (c == Util.Color.FromUID(account.UID))
-                        c=Color.Empty;
+                    a.WindowsAccount = textWindowsAccount.Text;
                 }
-                catch { }
-                account.ColorKey = c;
+
+                if (isMaster || aaArguments.Checked)
+                {
+                    a.Arguments = textArguments.Text;
+                }
+
+                if (checkWindowed.Checked)
+                {
+                    if (isMaster)
+                    {
+                        a.WindowBounds = FixSize(ParseWindowSize(textWindowed.Text));
+                    }
+                    else if (aaWindowed.Checked)
+                    {
+                        a.WindowBounds = master.WindowBounds;
+                    }
+                }
+
+                if (isMaster || aaRecordLaunch.Checked)
+                {
+                    a.RecordLaunches = checkRecordLaunch.Checked;
+                }
+
+                if (isMaster || aaAuthorization.Checked)
+                {
+                    if (textEmail.TextBox.TextLength > 0)
+                    {
+                        a.Email = textEmail.TextBox.Text;
+
+                        if (textPassword.TextVisible)
+                        {
+                            if (a.Password != null)
+                                a.Password.Dispose();
+                            a.Password = textPassword.PasswordBox.TextLength > 0 ? Settings.PasswordString.Create(textPassword.PasswordBox.Password) : null;
+                        }
+                    }
+                    else
+                    {
+                        if (a.Password != null)
+                            a.Password.Dispose();
+                        a.Email = null;
+                        a.Password = null;
+                    }
+                }
+
+                if (isMaster || aaVolume.Checked)
+                {
+                    if (checkVolume.Checked)
+                        a.Volume = sliderVolume.Value;
+                    else
+                        a.VolumeEnabled = false;
+                }
+
+                if (isMaster)
+                {
+                    var mute = Settings.MuteOptions.None;
+                    if (checkMuteAll.Checked)
+                        mute |= Settings.MuteOptions.All;
+                    if (a.Type == Settings.AccountType.GuildWars2)
+                    {
+                        if (checkMuteMusic.Checked)
+                            mute |= Settings.MuteOptions.Music;
+                        if (checkMuteVoices.Checked)
+                            mute |= Settings.MuteOptions.Voices;
+                    }
+                    a.Mute = mute;
+                }
+                else if (aaMute.Checked)
+                {
+                    if (a.Type != master.Type && a.Type == Settings.AccountType.GuildWars1)
+                    {
+                        a.Mute = master.Mute & Settings.MuteOptions.All;
+                    }
+                    else
+                    {
+                        a.Mute = master.Mute;
+                    }
+                }
+
+                if (isMaster || aaScreenshotsBmp.Checked)
+                {
+                    if (checkScreenshotsBmp.Checked)
+                        a.ScreenshotsFormat = Settings.ScreenshotFormat.Bitmap;
+                    else
+                        a.ScreenshotsFormat = Settings.ScreenshotFormat.Default;
+                }
+
+                if (isMaster)
+                {
+                    if (checkScreenshotsLocation.Checked && Directory.Exists(textScreenshotsLocation.Text))
+                        a.ScreenshotsLocation = Util.FileUtil.GetTrimmedDirectoryPath(textScreenshotsLocation.Text);
+                    else
+                        a.ScreenshotsLocation = null;
+                }
+                else if (aaScreenshotsLocation.Checked)
+                {
+                    a.ScreenshotsLocation = master.ScreenshotsLocation;
+                }
+
+                if (isMaster || aaShowDailyLogin.Checked)
+                {
+                    a.ShowDailyLogin = checkShowDailyLogin.Checked;
+                }
+
+                if (a.Type == accountType)
+                {
+                    switch (a.Type)
+                    {
+                        case Settings.AccountType.GuildWars2:
+
+                            var gw2 = (Settings.IGw2Account)a;
+
+                            if (isMaster || aaLocalDat.Checked)
+                            {
+                                gw2.DatFile = datFile;
+                            }
+
+                            if (isMaster || aaGfxSettings.Checked)
+                            {
+                                gw2.GfxFile = gfxFile;
+                            }
+
+                            if (isMaster || aaAutoLoginGw2.Checked)
+                            {
+                                gw2.AutomaticLogin = checkAutomaticLogin.Checked && a.HasCredentials;
+                                gw2.AutomaticPlay = checkAutomaticLoginPlay.Checked;
+                            }
+
+                            if (isMaster || aaAutomaticLauncherLogin.Checked)
+                            {
+                                gw2.AutomaticRememberedLogin = checkAutomaticLauncherLogin.Checked;
+                            }
+
+                            if (isMaster || aaPort.Checked)
+                            {
+                                if (checkPort80.Checked)
+                                    gw2.ClientPort = 80;
+                                else if (checkPort443.Checked)
+                                    gw2.ClientPort = 443;
+                                else
+                                    gw2.ClientPort = 0;
+                            }
+
+                            if (isMaster || aaShowDailyCompletion.Checked || aaShowDailyLogin.Checked || aaApiKey.Checked || aaTrackDailyCompletionApi.Checked)
+                            {
+                                if (isMaster || aaShowDailyCompletion.Checked)
+                                {
+                                    gw2.ShowDailyCompletion = checkShowDailyCompletion.Checked;
+
+                                    if (gw2.ApiData != null && !gw2.ShowDailyCompletion && gw2.ApiData.DailyPoints != null)
+                                    {
+                                        gw2.ApiData.DailyPoints = null;
+                                    }
+                                }
+
+                                if (isMaster || aaShowDailyLogin.Checked)
+                                {
+                                    gw2.ShowDailyLogin = checkShowDailyLogin.Checked;
+
+                                    if (gw2.ApiData != null && !gw2.ShowDailyLogin && gw2.ApiData.Played != null)
+                                    {
+                                        gw2.ApiData.Played = null;
+                                    }
+                                }
+
+                                bool keyChanged;
+                                string apiKey;
+
+                                if (isMaster || aaApiKey.Checked)
+                                {
+                                    apiKey = textApiKey.Text;
+                                    keyChanged = !textApiKey.Text.Equals(gw2.ApiKey, StringComparison.OrdinalIgnoreCase);
+
+                                    gw2.ApiKey = apiKey;
+                                }
+                                else
+                                {
+                                    apiKey = gw2.ApiKey;
+                                    keyChanged = false;
+                                }
+
+                                if (isMaster || aaTrackDailyCompletionApi.Checked)
+                                {
+                                    if (gw2.ShowDailyCompletion && checkTrackDailyCompletionApi.Checked && !string.IsNullOrEmpty(apiKey))
+                                    {
+                                        if (gw2.ApiData == null)
+                                            gw2.ApiData = gw2.CreateApiData();
+
+                                        if (gw2.ApiData.DailyPoints == null)
+                                        {
+                                            var points = gw2.ApiData.DailyPoints = gw2.ApiData.CreateValue<ushort>();
+                                            points.State = Settings.ApiCacheState.None;
+                                        }
+                                        else if (keyChanged)
+                                            gw2.ApiData.DailyPoints.State = Settings.ApiCacheState.None;
+
+                                        if (gw2.ApiData.DailyPoints.State == Settings.ApiCacheState.None && textApiKey.Tag != null && (isMaster || aaApiKey.Checked))
+                                        {
+                                            var kd = (ApiKeyData)textApiKey.Tag;
+                                            if (kd.account != null)
+                                            {
+                                                var total = kd.account.DailyAP + kd.account.MonthlyAP;
+                                                if (total < 0)
+                                                    total = ushort.MaxValue;
+                                                var points = gw2.ApiData.DailyPoints;
+                                                points.Value = (ushort)total;
+                                                points.State = Settings.ApiCacheState.OK;
+                                                points.LastChange = account.LastUsedUtc;
+                                                gw2.LastDailyCompletionUtc = account.LastUsedUtc;
+                                            }
+                                        }
+                                    }
+                                    else if (gw2.ApiData != null && gw2.ApiData.DailyPoints != null)
+                                        gw2.ApiData.DailyPoints = null;
+                                }
+
+                                if (isMaster || aaTrackPlayedApi.Checked)
+                                {
+                                    if (gw2.ShowDailyLogin && checkTrackPlayedApi.Checked && !string.IsNullOrEmpty(apiKey))
+                                    {
+                                        if (gw2.ApiData == null)
+                                            gw2.ApiData = gw2.CreateApiData();
+
+                                        if (gw2.ApiData.Played == null)
+                                        {
+                                            var played = gw2.ApiData.Played = gw2.ApiData.CreateValue<int>();
+                                            played.State = Settings.ApiCacheState.None;
+                                        }
+                                        else if (keyChanged)
+                                            gw2.ApiData.Played.State = Settings.ApiCacheState.None;
+
+                                        if (gw2.ApiData.Played.State == Settings.ApiCacheState.None && textApiKey.Tag != null && (isMaster || aaApiKey.Checked))
+                                        {
+                                            var kd = (ApiKeyData)textApiKey.Tag;
+                                            if (kd.account != null)
+                                            {
+                                                var played = gw2.ApiData.Played;
+                                                played.Value = kd.account.Age;
+                                                played.State = Settings.ApiCacheState.Pending;
+                                                played.LastChange = gw2.LastUsedUtc;
+                                            }
+                                        }
+                                    }
+                                    else if (gw2.ApiData != null && gw2.ApiData.Played != null)
+                                        gw2.ApiData.Played = null;
+                                }
+                            }
+
+                            if (gw2.ApiData != null)
+                            {
+                                if (gw2.ApiData.Played == null && gw2.ApiData.DailyPoints == null)
+                                    gw2.ApiData = null;
+                            }
+
+                            if (isMaster)
+                            {
+                                if (checkGw2MumbleName.Checked && !string.IsNullOrWhiteSpace(textGw2MumbleName.Text))
+                                    gw2.MumbleLinkName = textGw2MumbleName.Text;
+                                else
+                                    gw2.MumbleLinkName = null;
+                            }
+                            else if (aaGw2MumbleName.Checked)
+                            {
+                                gw2.MumbleLinkName = ((Settings.IGw2Account)master).MumbleLinkName;
+                            }
+
+                            break;
+                        case Settings.AccountType.GuildWars1:
+
+                            var gw1 = (Settings.IGw1Account)a;
+
+                            if (isMaster || aaGwDat.Checked)
+                            {
+                                gw1.DatFile = gwdatFile;
+                            }
+
+                            if (isMaster || aaAuthorization.Checked)
+                            {
+                                gw1.CharacterName = textAutoLoginCharacter.TextBox.Text;
+                            }
+
+                            if (isMaster || aaAutoLoginGw1.Checked)
+                            {
+                                gw1.AutomaticLogin = checkAutomaticLoginGw1.Checked && gw1.HasCredentials && !string.IsNullOrEmpty(gw1.CharacterName);
+                            }
+
+                            break;
+                    }
+                }
+
+                if (isMaster || aaEnableNetworkAuthorization.Checked)
+                {
+                    if (checkEnableNetworkAuthorization.Checked)
+                    {
+                        if (a.NetworkAuthorizationState == Settings.NetworkAuthorizationState.Disabled)
+                            a.NetworkAuthorizationState = Settings.NetworkAuthorizationState.Unknown;
+                    }
+                    else if (a.NetworkAuthorizationState != Settings.NetworkAuthorizationState.Disabled)
+                        a.NetworkAuthorizationState = Settings.NetworkAuthorizationState.Disabled;
+                }
+
+                if (isMaster)
+                {
+                    if (totpChanged)
+                    {
+                        byte[] totp;
+                        if (Tools.Totp.IsValid(textAuthenticatorKey.TextBox.Text))
+                            totp = Tools.Totp.Decode(textAuthenticatorKey.TextBox.Text);
+                        else
+                            totp = null;
+                        a.TotpKey = totp;
+                    }
+                }
+                else if (aaAuthenticatorKey.Checked)
+                {
+                    a.TotpKey = master.TotpKey;
+                }
+
+                if (isMaster || aaProcessPriority.Checked)
+                {
+                    if (checkProcessPriority.Checked && comboProcessPriority.SelectedIndex >= 0)
+                        a.ProcessPriority = Util.ComboItem<Settings.ProcessPriorityClass>.SelectedValue(comboProcessPriority);
+                    else
+                        a.ProcessPriority = Settings.ProcessPriorityClass.None;
+                }
+
+                if (isMaster)
+                {
+                    long bits = 0;
+
+                    if (!checkProcessAffinityAll.Checked)
+                    {
+                        var processors = checkProcessorAffinity.Length;
+                        if (processors > 64)
+                            processors = 64;
+                        for (int j = 0; j < processors; j++)
+                        {
+                            if (checkProcessorAffinity[j].Checked)
+                                bits |= ((long)1 << j);
+                        }
+                    }
+
+                    a.ProcessAffinity = bits;
+                }
+                else if (aaProcessAffinity.Checked)
+                {
+                    a.ProcessAffinity = master.ProcessAffinity;
+                }
+
+                if (isMaster || aaIdentifierIcon.Checked)
+                {
+                    if (panelIdentifierIcon.Tag is IconValue)
+                    {
+                        var icon = (IconValue)panelIdentifierIcon.Tag;
+                        a.Icon = icon.Path;
+                        a.IconType = icon.Type;
+                    }
+                    else
+                    {
+                        a.Icon = null;
+                        a.IconType = Settings.IconType.None;
+                    }
+                }
+
+                if (isMaster || aaIdentifierColor.Checked)
+                {
+                    if (panelIdentifierColor.Tag != null)
+                    {
+                        a.ColorKey = (Color)panelIdentifierColor.Tag;
+                    }
+                    else
+                    {
+                        a.ColorKey = Color.Empty;
+                    }
+                }
+
+                if (isMaster || aaDisableJumpList.Checked)
+                {
+                    a.JumpListPinning = checkDisableJumpList.Checked ? Settings.JumpListPinning.Disabled : Settings.JumpListPinning.None;
+                }
+
+                if (isMaster || aaImages.Checked)
+                {
+                    if (buttonSample.Tag != null)
+                    {
+                        var images = (ButtonImages)buttonSample.Tag;
+                        a.Image = images.Image != null ? new Settings.ImageOptions(images.Image, images.imagePlacement) : null;
+                        a.BackgroundImage = images.Background;
+                    }
+                    else
+                    {
+                        a.Image = null;
+                        a.BackgroundImage = null;
+                    }
+                }
+
+                if (isMaster)
+                {
+                    if (panelRunAfterPrograms.Controls.Count > 0)
+                    {
+                        var controls = panelRunAfterPrograms.Controls;
+                        var ra = new Settings.RunAfter[controls.Count];
+                        var existing = a.RunAfter;
+                        var changed = existing == null || ra.Length != existing.Length;
+
+                        for (var j = 0; j < ra.Length; j++)
+                        {
+                            ra[j] = (Settings.RunAfter)controls[j].Tag;
+                            if (!changed)
+                                changed = !existing[j].Equals(ra[j]);
+                        }
+
+                        if (changed)
+                            a.RunAfter = ra;
+                    }
+                    else
+                        a.RunAfter = null;
+                }
+                else if (aaRunAfterPrograms.Checked)
+                {
+                    a.RunAfter = master.RunAfter;
+                }
             }
 
             this.DialogResult = System.Windows.Forms.DialogResult.OK;
@@ -2112,9 +2881,7 @@ namespace Gw2Launcher.UI
             var b = checkWindowed.Checked;
             textWindowed.Enabled = b;
             buttonWindowed.Enabled = b;
-            checkWindowedPreventChanges.Enabled = b;
-            checkWindowedUpdateOnChange.Enabled = b;
-            checkWindowedTopMost.Enabled = b;
+            panelWindowOptions.Enabled = b;
         }
 
         private string ToString(Rectangle r)
@@ -2193,25 +2960,29 @@ namespace Gw2Launcher.UI
 
         private Rectangle FixSize(Rectangle r)
         {
-            if (r.Width < 50)
-                r.Width = 50;
-            if (r.Height < 50)
-                r.Height = 50;
+            if (r.Width < 150)
+                r.Width = 150;
+            if (r.Height < 100)
+                r.Height = 100;
 
             return r;
         }
 
         private void buttonWindowed_Click(object sender, EventArgs e)
         {
-            using (formWindowSize f = new formWindowSize(true, account, textAccountName.Text))
+            using (var f = new WindowPositioning.formWindowSize(true, accountType, account, textAccountName.Text))
             {
-                Rectangle r = FixSize(ParseWindowSize(textWindowed.Text));
-                
-                f.SetBounds(r.X, r.Y, r.Width, r.Height);
-                if (f.ShowDialog() == DialogResult.OK)
-                    textWindowed.Text = ToString(f.Bounds);
+                using (var o = new formCompassOverlay(this, f))
+                {
+                    Rectangle r = FixSize(ParseWindowSize(textWindowed.Text));
 
-                this.Focus();
+                    f.SetBounds(r.X, r.Y, r.Width, r.Height);
+                    o.Show(this);
+                    if (f.ShowDialog() == DialogResult.OK)
+                        textWindowed.Text = ToString(f.Bounds);
+
+                    this.Focus();
+                }
             }
         }
 
@@ -2296,24 +3067,14 @@ namespace Gw2Launcher.UI
             labelExportRecordedLaunch.Enabled = true;
         }
 
-        private void labelViewRecordedLaunch_Click(object sender, EventArgs e)
-        {
-
-        }
-
-        private void label30_Click(object sender, EventArgs e)
-        {
-            textRunAfterLaunch.SelectedText = ((Label)sender).Text;
-        }
-
         private void checkVolume_CheckedChanged(object sender, EventArgs e)
         {
             sliderVolume.Enabled = checkVolume.Checked;
         }
 
-        private void sliderVolume_ValueChanged(object sender, float e)
+        private void sliderVolume_ValueChanged(object sender, EventArgs e)
         {
-            labelVolume.Text = (int)(e * 100 + 0.5f) + "%";
+            labelVolume.Text = (int)(((FlatSlider)sender).Value * 100 + 0.5f) + "%";
         }
 
         private void buttonGfxSettings_Click(object sender, EventArgs e)
@@ -2536,19 +3297,6 @@ namespace Gw2Launcher.UI
                 Util.ScheduledEvents.Register(OnApiKeyTextChangedCallback, 500);
         }
 
-        private void labelApiPermissions_SizeChanged(object sender, EventArgs e)
-        {
-            var b = labelApiPermissions.Bottom;
-            var b2 = buttonApiVerify.Bottom;
-            if (b2 > b)
-                b = b2;
-            panelApiContent.Top = b + 13;
-        }
-
-        private void checkEnableNetworkAuthorization_CheckedChanged(object sender, EventArgs e)
-        {
-        }
-
         private void textAuthenticatorKey_TextChanged(object sender, EventArgs e)
         {
             if (textAuthenticatorKey.ContainsFocus)
@@ -2565,7 +3313,7 @@ namespace Gw2Launcher.UI
 
             EventHandler onEvent = delegate
             {
-                if (this.IsDisposed || !panelSecurity.Visible)
+                if (!this.Visible || !panelSecurity.Visible)
                     isActive = false;
             };
 
@@ -2577,6 +3325,8 @@ namespace Gw2Launcher.UI
             this.AuthenticatorKeyChanged += onKeyChanged;
             this.Disposed += onEvent;
             panelSecurity.VisibleChanged += onEvent;
+
+            ctimerTotpTime.Start();
 
             do
             {
@@ -2605,6 +3355,8 @@ namespace Gw2Launcher.UI
             }
             while (isActive);
 
+            ctimerTotpTime.Stop();
+
             this.AuthenticatorKeyChanged -= onKeyChanged;
             this.Disposed -= onEvent;
             panelSecurity.VisibleChanged -= onEvent;
@@ -2612,9 +3364,9 @@ namespace Gw2Launcher.UI
 
         private int OnAuthenticatorKeyTextChanged()
         {
-            if (Tools.Totp.IsValid(textAuthenticatorKey.Text))
+            if (Tools.Totp.IsValid(textAuthenticatorKey.TextBox.Text))
             {
-                var key = Tools.Totp.Decode(textAuthenticatorKey.Text);
+                var key = Tools.Totp.Decode(textAuthenticatorKey.TextBox.Text);
                 textAuthenticatorKey.Tag = key;
                 if (AuthenticatorKeyChanged != null)
                     AuthenticatorKeyChanged(this, EventArgs.Empty);
@@ -2643,15 +3395,34 @@ namespace Gw2Launcher.UI
                 Util.ScheduledEvents.Unregister(OnApiKeyTextChangedCallback);
                 Util.ScheduledEvents.Unregister(OnAuthenticatorKeyTextChanged);
 
+                ReleaseFiles();
+
+                using (panelIdentifierIconLarge.BackgroundImage) { }
+                using (panelIdentifierIcon.BackgroundImage) { }
+                using (buttonSample.Image) { }
+                using (buttonSample.BackgroundImage) { }
+
                 if (components != null)
                     components.Dispose();
             }
+
             base.Dispose(disposing);
+
+            if (disposing)
+            {
+                foreach (object o in iconsRunAfter.Values)
+                {
+                    if (o is Icon)
+                    {
+                        ((Icon)o).Dispose();
+                    }
+                }
+            }
         }
 
         private void labelShowDailyCompletionApi_Click(object sender, EventArgs e)
         {
-            buttonGeneral.SelectPanel(containerApi);
+            buttonGeneral.SelectPanel(panelApi);
             checkTrackDailyCompletionApi.Focus();
         }
 
@@ -2709,7 +3480,7 @@ namespace Gw2Launcher.UI
 
         private void labelShowDailyLoginApi_Click(object sender, EventArgs e)
         {
-            buttonGeneral.SelectPanel(containerApi);
+            buttonGeneral.SelectPanel(panelApi);
             checkTrackPlayedApi.Focus();
         }
 
@@ -2742,49 +3513,12 @@ namespace Gw2Launcher.UI
 
         private void checkProcessAffinityAll_CheckedChanged(object sender, EventArgs e)
         {
-            panelProcessAffinity.Visible = !checkProcessAffinityAll.Checked;
+            panelProcessAffinityContainer.Visible = !checkProcessAffinityAll.Checked;
         }
 
         private void panelIdentifierColor_Click(object sender, EventArgs e)
         {
-            using (var f = new ColorDialog())
-            {
-                f.AnyColor = true;
-                f.FullOpen = true;
-
-                try
-                {
-                    Color c;
-                    if (account != null)
-                        c = Util.Color.FromUID(account.UID);
-                    else
-                        c = Util.Color.FromUID(Settings.GetNextUID());
-                    f.CustomColors = new int[] { c.R | c.G << 8 | c.B << 16 };
-                }
-                catch { }
-
-                f.Color = panelIdentifierColor.BackColor;
-
-                if (f.ShowDialog(this) == System.Windows.Forms.DialogResult.OK)
-                {
-                    panelIdentifierColor.BackColor = f.Color;
-                    panelIdentifierColor.Tag = f.Color;
-
-                    if (panelIdentifierIcon.Tag is IconValue)
-                    {
-                        var type = ((IconValue)panelIdentifierIcon.Tag).Type;
-                        switch (type)
-                        {
-                            case Settings.IconType.ColorKey:
-                            case Settings.IconType.Gw2LauncherColorKey:
-
-                                SetIcon(CreateIcon(type));
-
-                                break;
-                        }
-                    }
-                }
-            }
+            contextColor.Show(Cursor.Position);
         }
 
         private void panelIdentifierIcon_Click(object sender, EventArgs e)
@@ -2794,20 +3528,7 @@ namespace Gw2Launcher.UI
 
         protected Size GetScaledDimensions(Image image, int maxW, int maxH)
         {
-            int w = image.Width,
-                h = image.Height;
-
-            float rw = (float)maxW / w,
-                  rh = (float)maxH / h,
-                  r = rw < rh ? rw : rh;
-
-            if (r < 1)
-            {
-                w = (int)(w * r + 0.5f);
-                h = (int)(h * r + 0.5f);
-            }
-
-            return new Size(w, h);
+            return Util.RectangleConstraint.Scale(image.Size, new Size(maxW, maxH));
         }
 
         private void panelIdentifierIcon_MouseEnter(object sender, EventArgs e)
@@ -2816,6 +3537,7 @@ namespace Gw2Launcher.UI
 
             if (panelIdentifierIconLarge.BackgroundImage != image)
             {
+                using (panelIdentifierIconLarge.BackgroundImage) { }
                 panelIdentifierIconLarge.Size = Size.Empty;
                 panelIdentifierIconLarge.BackgroundImage = image;
 
@@ -2832,7 +3554,14 @@ namespace Gw2Launcher.UI
             }
 
             if (!panelIdentifierIconLarge.Size.IsEmpty && panelIdentifierIconLarge.BackgroundImage != null)
+            {
+                panelIdentifierIconLarge.BringToFront();
+                var p1 = panelIdentifierIcon.PointToScreen(Point.Empty);
+                var p2 = this.PointToScreen(Point.Empty);
+
+                panelIdentifierIconLarge.Location = new Point(p1.X - p2.X - 1 + panelIdentifierIcon.Width + panelIdentifierIconLarge.Margin.Left, p1.Y - p2.Y - 1);
                 panelIdentifierIconLarge.Visible = true;
+            }
         }
 
         private void panelIdentifierIcon_MouseLeave(object sender, EventArgs e)
@@ -2848,23 +3577,23 @@ namespace Gw2Launcher.UI
 
                     base.WndProc(ref m);
                     
-                    switch ((HitTest)m.Result.GetValue())
-                    {
-                        case HitTest.BottomLeft:
-                        case HitTest.BottomRight:
+                    //switch ((HitTest)m.Result.GetValue())
+                    //{
+                    //    case HitTest.BottomLeft:
+                    //    case HitTest.BottomRight:
 
-                            m.Result = (IntPtr)HitTest.Bottom;
+                    //        m.Result = (IntPtr)HitTest.Bottom;
 
-                            break;
-                        case HitTest.Left:
-                        case HitTest.Right:
-                        case HitTest.TopLeft:
-                        case HitTest.TopRight:
+                    //        break;
+                    //    case HitTest.Left:
+                    //    case HitTest.Right:
+                    //    case HitTest.TopLeft:
+                    //    case HitTest.TopRight:
 
-                            m.Result = (IntPtr)HitTest.Border;
+                    //        m.Result = (IntPtr)HitTest.Border;
 
-                            break;
-                    }
+                    //        break;
+                    //}
 
                     break;
                 case WindowMessages.WM_EXITSIZEMOVE:
@@ -2897,20 +3626,17 @@ namespace Gw2Launcher.UI
 
                 if (f.ShowDialog(this) == System.Windows.Forms.DialogResult.OK)
                 {
-                    using (panelIdentifierIcon.BackgroundImage)
+                    try
                     {
-                        try
-                        {
-                            SetIcon(new IconValue(f.FileName, Image.FromFile(f.FileName)));
-                        }
-                        catch (Exception ex)
-                        {
-                            panelIdentifierIcon.BackgroundImage = null;
-                            panelIdentifierIcon.Tag = null;
-                            OnIconChanged();
+                        SetIcon(new IconValue(f.FileName, Image.FromFile(f.FileName)));
+                    }
+                    catch (Exception ex)
+                    {
+                        panelIdentifierIcon.BackgroundImage = null;
+                        panelIdentifierIcon.Tag = null;
+                        OnIconChanged();
 
-                            MessageBox.Show(this, "The selected image could not be used\n\n" + ex.Message, "Unable to use image", MessageBoxButtons.OK, MessageBoxIcon.Error);
-                        }
+                        MessageBox.Show(this, "The selected image could not be used\n\n" + ex.Message, "Unable to use image", MessageBoxButtons.OK, MessageBoxIcon.Error);
                     }
                 }
             }
@@ -2935,26 +3661,26 @@ namespace Gw2Launcher.UI
 
         private void menuIconUseDefaultToolStripMenuItem_Click(object sender, EventArgs e)
         {
-            SetIcon(CreateIcon(Settings.IconType.None));
+            SetIcon(CreateIcon(Settings.IconType.None, accountType));
         }
 
         private void menuIconUseColorToolStripMenuItem_Click(object sender, EventArgs e)
         {
-            SetIcon(CreateIcon(Settings.IconType.Gw2LauncherColorKey));
+            SetIcon(CreateIcon(Settings.IconType.Gw2LauncherColorKey, accountType));
         }
 
         private void menuIconUseSolidColorToolStripMenuItem_Click(object sender, EventArgs e)
         {
-            SetIcon(CreateIcon(Settings.IconType.ColorKey));
+            SetIcon(CreateIcon(Settings.IconType.ColorKey, accountType));
         }
 
         private void labelAutologinConfigure_Click(object sender, EventArgs e)
         {
             Settings.Point<ushort> empty, play;
 
-            if (Settings.LauncherAutologinPoints.HasValue)
+            if (Settings.GuildWars2.LauncherAutologinPoints.HasValue)
             {
-                var v = Settings.LauncherAutologinPoints.Value;
+                var v = Settings.GuildWars2.LauncherAutologinPoints.Value;
                 empty = v.EmptyArea;
                 play = v.PlayButton;
             }
@@ -2979,11 +3705,11 @@ namespace Gw2Launcher.UI
             {
                 if (f.EmptyLocation.IsEmpty && f.PlayLocation.IsEmpty)
                 {
-                    Settings.LauncherAutologinPoints.Clear();
+                    Settings.GuildWars2.LauncherAutologinPoints.Clear();
                 }
                 else
                 {
-                    Settings.LauncherAutologinPoints.Value = new Settings.LauncherPoints()
+                    Settings.GuildWars2.LauncherAutologinPoints.Value = new Settings.LauncherPoints()
                     {
                         EmptyArea = f.EmptyLocation,
                         PlayButton = f.PlayLocation,
@@ -2997,9 +3723,630 @@ namespace Gw2Launcher.UI
             this.Select();
         }
 
-        private void labelAutologin_SizeChanged(object sender, EventArgs e)
+        private void checkWindowedPreventChanges_CheckedChanged(object sender, EventArgs e)
         {
-            labelAutologinConfigure.Location = new Point(labelAutologin.Right + 1, labelAutologin.Top + (labelAutologin.Height - labelAutologinConfigure.Height) / 2);
+            checkWindowedDisableTitleButtons.Enabled = checkWindowedPreventChanges.Checked;
+        }
+
+        private void radioTypeGw2_CheckedChanged(object sender, EventArgs e)
+        {
+            if (((RadioButton)sender).Checked)
+            {
+                OnAccountTypeChanged(Settings.AccountType.GuildWars2);
+            }
+        }
+
+        private void radioTypeGw1_CheckedChanged(object sender, EventArgs e)
+        {
+            if (((RadioButton)sender).Checked)
+            {
+                OnAccountTypeChanged(Settings.AccountType.GuildWars1);
+            }
+        }
+
+        private void buttonGwDat_Click(object sender, EventArgs e)
+        {
+            Settings.IGwDatFile dat = null;
+            string path = null;
+
+            if (selectedGwDatFile != null)
+            {
+                if (selectedGwDatFile.File != null)
+                {
+                    dat = selectedGwDatFile.File;
+                }
+                else
+                {
+                    path = selectedGwDatFile.Path;
+                }
+            }
+            else if (account != null)
+            {
+                dat = ((Settings.IGw1Account)account).DatFile;
+            }
+            else
+            {
+                dat = null;
+            }
+
+            using (var f = new formBrowseGwDat(path, dat))
+            {
+                if (f.ShowDialog(this) == DialogResult.OK)
+                {
+                    if (selectedGwDatFile != null)
+                    {
+                        selectedGwDatFile.Cancel();
+                    }
+
+                    selectedGwDatFile = f.Result;
+
+                    if (selectedGwDatFile.File != null)
+                        path = selectedGwDatFile.File.Path;
+                    else
+                        path = selectedGwDatFile.Path;
+                    textGwDat.Text = path;
+                    textGwDat.Select(textGwDat.TextLength, 0);
+                }
+            }
+        }
+
+        private void checkAutomaticLoginGw1_CheckedChanged(object sender, EventArgs e)
+        {
+            textAutoLoginCharacter.Enabled = textAutoLoginEmail.Enabled = textAutoLoginPassword.Enabled = checkAutomaticLoginGw1.Checked;
+        }
+
+        private void checkGw2MumbleName_CheckedChanged(object sender, EventArgs e)
+        {
+            textGw2MumbleName.Enabled = checkGw2MumbleName.Checked;
+            labelGw2MumbleNameVariables.Enabled = checkGw2MumbleName.Checked;
+        }
+
+        private void ShowVariables(TextBox text, object label, AnchorStyles anchor, params Client.Variables.VariableType[] type)
+        {
+            var f = new formVariables(Client.Variables.GetVariables(type));
+
+            f.VariableSelected += delegate(object o, Client.Variables.Variable v)
+            {
+                text.SelectedText = v.Name;
+            };
+
+            f.Show(this, (Control)label, anchor);
+        }
+
+        private void labelGw2MumbleNameVariables_Click(object sender, EventArgs e)
+        {
+            ShowVariables(textGw2MumbleName, sender, AnchorStyles.Top, Client.Variables.VariableType.Account);
+        }
+
+        private void labelLaunchOptionsAdvanced_Click(object sender, EventArgs e)
+        {
+            buttonLaunchOptions.SelectPanel(panelLaunchOptions, panelLaunchOptionsAdvanced);
+        }
+
+        private void labelLaunchOptionsAdvancedBack_Click(object sender, EventArgs e)
+        {
+            buttonLaunchOptions.SelectPanel(panelLaunchOptions);
+        }
+
+        private void buttonSample_Click(object sender, EventArgs e)
+        {
+            contextImage.Show(Cursor.Position);
+        }
+
+        private void menuImageBrowseToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            OnStyleImageClicked(0);
+        }
+
+        private void menuImageDefaultToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            if (!menuImageDefaultToolStripMenuItem.Checked)
+            {
+                menuImageDefaultToolStripMenuItem.Checked = true;
+                using (buttonSample.Image) { }
+                buttonSample.Image = null;
+                var images = (ButtonImages)buttonSample.Tag;
+                if (images != null)
+                {
+                    images.Image = null;
+                }
+                if (aaImages.Visible)
+                    OnAutoApplyValueChanged(aaImages);
+            }
+        }
+
+        private void panelIdentifierColor_BackColorChanged(object sender, EventArgs e)
+        {
+            buttonSample.ColorKey = panelIdentifierColor.BackColor;
+        }
+
+        private void SetPasswordVisibility(bool visible)
+        {
+            textAutoLoginPassword.Parent.SuspendLayout();
+            textAutoLoginPassword.TextVisible = visible;
+            labelAutoLoginPasswordRevert.Visible = visible;
+            textAutoLoginPassword.Parent.ResumeLayout();
+
+            textPassword.Parent.SuspendLayout();
+            textPassword.TextVisible = visible;
+            labelPasswordRevert.Visible = visible;
+            textPassword.Parent.ResumeLayout();
+        }
+
+        private void labelPasswordRevert_Click(object sender, EventArgs e)
+        {
+            SetPasswordVisibility(false);
+            ((Control)sender).Parent.Select();
+        }
+
+        private void textPassword_BeforeShowTextBoxClicked(object sender, EventArgs e)
+        {
+            var p = ((BoxedLabelPasswordBox)sender).PasswordBox;
+            SetPasswordVisibility(true);
+        }
+
+        private void textEmail_BeforeShowTextBoxClicked(object sender, EventArgs e)
+        {
+            textEmail.TextBox.Select(textEmail.TextBox.TextLength, 0);
+            textEmail.TextVisible = true;
+
+            textAutoLoginEmail.TextBox.Select(textAutoLoginEmail.TextBox.TextLength, 0);
+            textAutoLoginEmail.TextVisible = true;
+        }
+
+        private void textAutoLoginCharacter_BeforeShowTextBoxClicked(object sender, EventArgs e)
+        {
+            var t = ((BoxedLabelTextBox)sender).TextBox;
+
+            t.Select(t.TextLength, 0);
+        }
+
+        private void textAuthenticatorKey_BeforeShowTextBoxClicked(object sender, EventArgs e)
+        {
+            var p = (BoxedLabelTextBox)sender;
+            var t = p.TextBox;
+
+            try
+            {
+                t.Text = Tools.Totp.Encode((byte[])p.Tag);
+            }
+            catch (Exception ex)
+            {
+                Util.Logging.Log(ex);
+            }
+
+            t.Select(t.TextLength, 0);
+            p.TextVisible = true;
+        }
+        
+        private void OnStyleImageClicked(int index)
+        {
+            using (var f = new OpenFileDialog())
+            {
+                f.Filter = "Images|*.bmp;*.jpg;*.jpeg;*.png";
+
+                var images = (ButtonImages)buttonSample.Tag;
+                if (images == null)
+                    buttonSample.Tag = images = new ButtonImages();
+                if (!string.IsNullOrEmpty(images.paths[index]))
+                    f.FileName = images.paths[index];
+
+                if (f.ShowDialog(this) == System.Windows.Forms.DialogResult.OK)
+                {
+                    try
+                    {
+                        var i = Bitmap.FromFile(f.FileName);
+
+                        switch (index)
+                        {
+                            case 0:
+
+                                using (buttonSample.Image) { }
+                                buttonSample.Image = i;
+                                menuImageDefaultToolStripMenuItem.Checked = false;
+
+                                break;
+                            case 1:
+
+                                using (buttonSample.BackgroundImage) { }
+                                buttonSample.BackgroundImage = i;
+                                menuImageBackgroundDefaultToolStripMenuItem.Checked = false;
+
+                                break;
+                            default:
+
+                                i.Dispose();
+                                return;
+                        }
+
+                        if (aaImages.Visible)
+                            OnAutoApplyValueChanged(aaImages);
+
+                        images.paths[index] = f.FileName;
+                    }
+                    catch (Exception ex)
+                    {
+                        MessageBox.Show(this, ex.Message, "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                    }
+                }
+            }
+        }
+
+        private void menuImageBackgroundToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            OnStyleImageClicked(1);
+        }
+
+        private void menuImageBackgroundDefaultToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            if (!menuImageBackgroundDefaultToolStripMenuItem.Checked)
+            {
+                menuImageBackgroundDefaultToolStripMenuItem.Checked = true;
+                using (buttonSample.BackgroundImage) { }
+                buttonSample.BackgroundImage = null;
+                var images = (ButtonImages)buttonSample.Tag;
+                if (images != null)
+                {
+                    images.Background = null;
+                }
+                if (aaImages.Visible)
+                    OnAutoApplyValueChanged(aaImages);
+            }
+        }
+
+        private void applyAll_MouseDown(object sender, MouseEventArgs e)
+        {
+            if (e.Button == System.Windows.Forms.MouseButtons.Right)
+            {
+                var b = ((ApplyAllCheckBox)sender).Checked;
+
+                applyAllApplyToolStripMenuItem.Checked = b;
+                applyPageApplyToolStripMenuItem.Checked = b;
+
+                contextApplyAll.Tag = sender;
+                contextApplyAll.Show(Cursor.Position);
+            }
+        }
+
+        private Control FindContainer(Control c)
+        {
+            while (true)
+            {
+                var p = c.Parent;
+                if (p == this || p == null)
+                    break;
+                c = p;
+            }
+            return c;
+        }
+
+        private void applyPageInvertToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            foreach (var c in EnumerateApplyAllCheckBoxes(FindContainer(((Control)contextApplyAll.Tag).Parent)))
+            {
+                c.Checked = !c.Checked;
+            }
+        }
+
+        private void applyPageResetToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            foreach (var c in EnumerateApplyAllCheckBoxes(FindContainer(((Control)contextApplyAll.Tag).Parent)))
+            {
+                c.Checked = false;
+            }
+        }
+
+        private void applyAllInvertToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            foreach (var c in EnumerateApplyAllCheckBoxes(this))
+            {
+                c.Checked = !c.Checked;
+            }
+        }
+
+        private void applyAllResetToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            foreach (var c in EnumerateApplyAllCheckBoxes(this))
+            {
+                c.Checked = false;
+            }
+        }
+
+        private void applyAllApplyToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            var b = !applyPageApplyToolStripMenuItem.Checked;
+            applyPageApplyToolStripMenuItem.Checked = b;
+            applyAllApplyToolStripMenuItem.Checked = b;
+
+            foreach (var c in EnumerateApplyAllCheckBoxes(this))
+            {
+                c.Checked = b;
+            }
+        }
+
+        private void applyPageApplyToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            var b = !applyPageApplyToolStripMenuItem.Checked;
+            applyPageApplyToolStripMenuItem.Checked = b;
+            applyAllApplyToolStripMenuItem.Checked = b;
+
+            foreach (var c in EnumerateApplyAllCheckBoxes(FindContainer(((Control)contextApplyAll.Tag).Parent)))
+            {
+                c.Checked = b;
+            }
+        }
+
+        private void SetColor(Color c)
+        {
+            panelIdentifierColor.Tag = c;
+            if (c.IsEmpty)
+            {
+                try
+                {
+                    if (account != null)
+                        c = Util.Color.FromUID(account.UID);
+                    else
+                        c = Util.Color.FromUID(Settings.GetNextUID());
+                }
+                catch { }
+            }
+            panelIdentifierColor.BackColor = c;
+
+            if (panelIdentifierIcon.Tag is IconValue)
+            {
+                var type = ((IconValue)panelIdentifierIcon.Tag).Type;
+                switch (type)
+                {
+                    case Settings.IconType.ColorKey:
+                    case Settings.IconType.Gw2LauncherColorKey:
+
+                        SetIcon(CreateIcon(type, accountType));
+
+                        break;
+                }
+            }
+        }
+
+        private void menuColorUseDefaultToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            if (!menuColorUseDefaultToolStripMenuItem.Checked)
+            {
+                menuColorUseDefaultToolStripMenuItem.Checked = true;
+                SetColor(Color.Empty);
+            }
+        }
+
+        private void menuColorBrowseToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            using (var f = new ColorPicker.formColorDialog())
+            {
+                f.AllowAlphaTransparency = false;
+                f.Color = panelIdentifierColor.BackColor;
+
+                if (f.ShowDialog(this) == System.Windows.Forms.DialogResult.OK)
+                {
+                    menuColorUseDefaultToolStripMenuItem.Checked = false;
+                    SetColor(f.Color);
+                }
+            }
+        }
+
+        private void automaticApplyAllToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            if (automaticApplyAllToolStripMenuItem.Checked = !automaticApplyAllToolStripMenuItem.Checked)
+            {
+                foreach (var c in EnumerateApplyAllCheckBoxes(this))
+                {
+                    c.Clicked = false;
+                }
+            }
+        }
+
+        private void menuImageDefaultToolStripMenuItem_CheckedChanged(object sender, EventArgs e)
+        {
+            iconPlacementToolStripMenuItem.Enabled = !menuImageDefaultToolStripMenuItem.Checked;
+        }
+
+        private void OnStyleImagePlacementChanged(Settings.ImagePlacement placement)
+        {
+            if (buttonSample.Tag == null)
+                return;
+
+            var images = (ButtonImages)buttonSample.Tag;
+            images.imagePlacement = placement;
+
+            buttonSample.ImagePlacement = placement;
+
+            shiftImageToolStripMenuItem.Checked = placement == Settings.ImagePlacement.Shift;
+            overflowImageToolStripMenuItem.Checked = placement == Settings.ImagePlacement.Overflow;
+
+            if (aaImages.Visible)
+                OnAutoApplyValueChanged(aaImages);
+        }
+
+        private void shiftImageToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            OnStyleImagePlacementChanged(Settings.ImagePlacement.Shift);
+        }
+
+        private void overflowImageToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            OnStyleImagePlacementChanged(Settings.ImagePlacement.Overflow);
+        }
+
+        private async void LoadIconAsync(UI.Controls.LinkLabel l, Settings.RunAfter r)
+        {
+            var path = r.GetPath();
+            Icon icon;
+            Size sz;
+
+            if (!string.IsNullOrEmpty(path))
+            {
+                object o;
+
+                if (shellIcons == null)
+                    shellIcons = new Windows.ShellIcons();
+                sz = shellIcons.GetSize(Windows.ShellIcons.IconSize.Small);
+
+                l.Padding = new Padding(sz.Width + Scale(3), 0, 0, 0);
+                l.MinimumSize = new Size(0, sz.Height + 2);
+
+                if (!iconsRunAfter.TryGetValue(path, out o))
+                {
+                    var t = Task.Run<Icon>(
+                        delegate
+                        {
+                            try
+                            {
+                                return shellIcons.GetIcon(path, Windows.ShellIcons.IconSize.Small);
+                            }
+                            catch
+                            {
+                                return null;
+                            }
+                        });
+
+                    using (t)
+                    {
+                        iconsRunAfter[path] = t;
+
+                        icon = await t;
+
+                        if (this.IsDisposed && icon != null)
+                        {
+                            icon.Dispose();
+                            return;
+                        }
+
+                        iconsRunAfter[path] = icon;
+                    }
+                }
+                else if (o is Task<Icon>)
+                {
+                    icon = await (Task<Icon>)o;
+
+                    if (this.IsDisposed)
+                    {
+                        return;
+                    }
+                }
+                else
+                {
+                    icon = (Icon)o;
+                }
+            }
+            else
+            {
+                icon = null;
+                sz = Size.Empty;
+            }
+
+            if (l.Icon != icon && l.Tag == r)
+            {
+                l.Icon = icon;
+
+                if (icon != null)
+                {
+                    if (icon.Size != sz)
+                    {
+                        l.Padding = new Padding(icon.Width + Scale(3), 0, 0, 0);
+                        l.MinimumSize = new Size(0, icon.Height + 2);
+                    }
+                }
+                else
+                {
+                    l.Padding = Padding.Empty;
+                }
+            }
+        }
+
+        private Label CreateRunAfterButton(Settings.RunAfter r, Panel container, Label template, EventHandler onClick)
+        {
+            var l = new Controls.LinkLabel()
+            {
+                AutoSize = template.AutoSize,
+                Margin = new Padding(0, 0, 0, panelRunAfterPrograms.Margin.Left),
+                TextAlign = ContentAlignment.MiddleLeft,
+            };
+            l.Click += onClick;
+            container.Controls.Add(l);
+
+            if (container.Controls.Count == 1)
+            {
+                panelRunAfterProgramsAddSeperator.Visible = true;
+                container.Visible = true;
+            }
+
+            UpdateRunAfterButton(l, r);
+
+            return l;
+        }
+
+        private void UpdateRunAfterButton(UI.Controls.LinkLabel l, Settings.RunAfter r)
+        {
+            l.Text = r.GetName();
+            l.Tag = r;
+
+            if ((r.Options & Settings.RunAfter.RunAfterOptions.Enabled) == 0)
+                l.ForeColor = SystemColors.GrayText;
+            else
+                l.ResetForeColor();
+
+            LoadIconAsync(l, r);
+        }
+
+        private void labelRunAfterProgram_Click(object sender, EventArgs e)
+        {
+            contextRunAfterProgram.Tag = sender;
+            contextRunAfterProgram.Show(Cursor.Position);
+        }
+
+        private void editRunAfterToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            var l = (UI.Controls.LinkLabel)contextRunAfterProgram.Tag;
+            var r = (Settings.RunAfter)l.Tag;
+
+            using (var f = new formRunAfter(r))
+            {
+                if (f.ShowDialog(this) == System.Windows.Forms.DialogResult.OK)
+                {
+                    UpdateRunAfterButton(l, f.Result);
+                    OnAutoApplyValueChanged(aaRunAfterPrograms);
+                }
+            }
+        }
+
+        private void deleteRunAfterToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            var label = (Label)contextRunAfterProgram.Tag;
+            var r = (Settings.RunAfter)label.Tag;
+            var panel = (Panel)label.Parent;
+
+            panel.Controls.Remove(label);
+            if (panel.Controls.Count == 0)
+            {
+                panel.Parent.SuspendLayout();
+                panelRunAfterProgramsAddSeperator.Visible = false;
+                panel.Visible = false;
+                panel.Parent.ResumeLayout();
+            }
+            label.Dispose();
+
+            OnAutoApplyValueChanged(aaRunAfterPrograms);
+        }
+
+        private void labelRunAfterProgramsAdd_Click(object sender, EventArgs e)
+        {
+            using (var f = new formRunAfter())
+            {
+                if (f.ShowDialog(this) == System.Windows.Forms.DialogResult.OK)
+                {
+                    CreateRunAfterButton(f.Result, panelRunAfterPrograms, labelRunAfterProgramsAdd, labelRunAfterProgram_Click);
+                    OnAutoApplyValueChanged(aaRunAfterPrograms);
+
+                    panelLaunchOptions.ScrollControlIntoView(labelRunAfterProgramsAdd);
+                }
+            }
         }
     }
 }

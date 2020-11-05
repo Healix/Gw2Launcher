@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Data;
@@ -12,7 +12,7 @@ using System.IO;
 
 namespace Gw2Launcher.UI
 {
-    public partial class formAssetProxy : Form
+    public partial class formAssetProxy : Base.BaseForm
     {
         private const int SPEED_LIMIT_MIN_0 = 102400;
         private const int SPEED_LIMIT_MAX_0 = 1048576 - SPEED_LIMIT_MIN_0;
@@ -30,6 +30,7 @@ namespace Gw2Launcher.UI
         private CancellationTokenSource cancelToken;
         private long cacheStorage;
         private Net.AssetProxy.Cache.PurgeProgressEventArgs purgeProgress;
+        private bool forceShowPanel;
 
         private class DataRecord
         {
@@ -44,17 +45,7 @@ namespace Gw2Launcher.UI
 
         public formAssetProxy()
         {
-            InitializeComponent();
-
-            var scale = this.CurrentAutoScaleDimensions.Width / 96f;
-            if (scale != 1)
-            {
-                foreach (DataGridViewColumn col in gridRecord.Columns)
-                {
-                    if (col.AutoSizeMode != DataGridViewAutoSizeColumnMode.Fill)
-                        col.Width = (int)(col.Width * scale + 0.5f);
-                }
-            }
+            InitializeComponents();
 
             try
             {
@@ -91,11 +82,19 @@ namespace Gw2Launcher.UI
             checkEnabled.CheckedChanged += checkEnabled_CheckedChanged;
 
             PatchingSpeedLimit_ValueChanged(Settings.PatchingSpeedLimit, null);
-            PatchingUseHttps_ValueChanged(Settings.PatchingUseHttps, null);
+            PatchingOptions_ValueChanged(Settings.PatchingOptions, null);
+            PatchingPort_ValueChanged(Settings.PatchingPort, null);
 
             UpdateStatus();
 
             this.Shown += formAssetProxy_Shown;
+        }
+
+        protected override void OnInitializeComponents()
+        {
+            base.OnInitializeComponents();
+
+            InitializeComponent();
         }
 
         void formAssetProxy_Shown(object sender, EventArgs e)
@@ -113,7 +112,8 @@ namespace Gw2Launcher.UI
             Net.AssetProxy.Cache.PurgeProgress += Cache_PurgeProgress;
 
             Settings.PatchingSpeedLimit.ValueChanged += PatchingSpeedLimit_ValueChanged;
-            Settings.PatchingUseHttps.ValueChanged += PatchingUseHttps_ValueChanged;
+            Settings.PatchingOptions.ValueChanged += PatchingOptions_ValueChanged;
+            Settings.PatchingPort.ValueChanged += PatchingPort_ValueChanged;
 
             cancelToken = new CancellationTokenSource();
             UpdateStats(cancelToken.Token);
@@ -126,12 +126,12 @@ namespace Gw2Launcher.UI
 
         void Cache_CachePurged(object sender, EventArgs e)
         {
-            this.Invoke(new MethodInvoker(
+            Util.Invoke.Required(this,
                 delegate
                 {
                     labelCached.Text = Util.Text.FormatBytes(cacheStorage);
                     labelCached.Enabled = true;
-                }));
+                });
         }
 
         void Cache_CacheStorage(long bytes)
@@ -253,21 +253,12 @@ namespace Gw2Launcher.UI
 
         private void UpdateCell(DataGridViewCell cell, Color foreColor, object value, string tooltip)
         {
-            if (this.InvokeRequired)
+            if (Util.Invoke.IfRequired(this,
+                delegate
+                {
+                    UpdateCell(cell, foreColor, value, tooltip);
+                }))
             {
-                try
-                {
-                    this.Invoke(new MethodInvoker(
-                        delegate
-                        {
-                            UpdateCell(cell, foreColor, value, tooltip);
-                        }));
-                }
-                catch (Exception e)
-                {
-                    Util.Logging.Log(e);
-                }
-
                 return;
             }
 
@@ -278,21 +269,12 @@ namespace Gw2Launcher.UI
 
         private void UpdateCell(DataGridViewLinkCell cell, bool enabled)
         {
-            if (this.InvokeRequired)
+            if (Util.Invoke.IfRequired(this,
+                delegate
+                {
+                    UpdateCell(cell, enabled);
+                }))
             {
-                try
-                {
-                    this.Invoke(new MethodInvoker(
-                        delegate
-                        {
-                            UpdateCell(cell, enabled);
-                        }));
-                }
-                catch (Exception e)
-                {
-                    Util.Logging.Log(e);
-                }
-
                 return;
             }
 
@@ -311,21 +293,12 @@ namespace Gw2Launcher.UI
 
         private void AddRow(DataGridViewRow row)
         {
-            if (this.InvokeRequired)
+            if (Util.Invoke.IfRequired(this,
+                delegate
+                {
+                    AddRow(row);
+                }))
             {
-                try
-                {
-                    this.Invoke(new MethodInvoker(
-                        delegate
-                        {
-                            AddRow(row);
-                        }));
-                }
-                catch (Exception e)
-                {
-                    Util.Logging.Log(e);
-                }
-
                 return;
             }
 
@@ -349,7 +322,23 @@ namespace Gw2Launcher.UI
             e.RequestDataReceived += server_RequestDataReceived;
             e.ServerStarted += server_ServerStarted;
             e.ServerStopped += server_ServerStopped;
+            e.ServerRestarted += server_ServerRestarted;
+            e.ServerError += server_ServerError;
 
+            UpdateStatus();
+        }
+
+        void server_ServerError(object sender, Exception e)
+        {
+            Util.Invoke.Required(labelError,
+                delegate
+                {
+                    labelError.Visible = true;
+                });
+        }
+
+        void server_ServerRestarted(object sender, EventArgs e)
+        {
             UpdateStatus();
         }
 
@@ -638,17 +627,8 @@ namespace Gw2Launcher.UI
 
         private void UpdateStatus()
         {
-            if (this.InvokeRequired)
+            if (Util.Invoke.IfRequired(this, UpdateStatus))
             {
-                try
-                {
-                    this.Invoke(new MethodInvoker(UpdateStatus));
-                }
-                catch (Exception e)
-                {
-                    Util.Logging.Log(e);
-                }
-
                 return;
             }
 
@@ -660,7 +640,8 @@ namespace Gw2Launcher.UI
             {
                 if (server != null && server.IsListening)
                 {
-                    status = "Listening on port " + server.Port;
+                    status = "Listening on port " + server.CurrentPort;
+                    labelError.Visible = false;
                 }
                 else
                 {
@@ -670,7 +651,10 @@ namespace Gw2Launcher.UI
                 }
             }
             else
+            {
                 status = "Disabled";
+                labelError.Visible = false;
+            }
 
             labelStatus.Cursor = cursor;
             labelStatus.ForeColor = color;
@@ -682,38 +666,49 @@ namespace Gw2Launcher.UI
             checkRecordData.Enabled = checkRecord.Checked;
         }
 
-        void PatchingUseHttps_ValueChanged(object sender, EventArgs e)
+        void PatchingPort_ValueChanged(object sender, EventArgs e)
         {
-            if (this.InvokeRequired)
-            {
-                try
+            if (Util.Invoke.IfRequired(this,
+                delegate
                 {
-                    this.Invoke(new MethodInvoker(
-                        delegate
-                        {
-                            PatchingUseHttps_ValueChanged(sender, e);
-                        }));
-                }
-                catch { }
+                    PatchingPort_ValueChanged(sender, e);
+                }))
+            {
                 return;
             }
 
-            checkUseHttps.Checked = ((Settings.ISettingValue<bool>)sender).Value;
+            var v = ((Settings.ISettingValue<ushort>)sender);
+
+            checkPort.Checked = v.HasValue;
+            if (v.HasValue)
+                Util.NumericUpDown.SetValue(numericPort, v.Value);
+        }
+
+        void PatchingOptions_ValueChanged(object sender, EventArgs e)
+        {
+            if (Util.Invoke.IfRequired(this,
+                delegate
+                {
+                    PatchingOptions_ValueChanged(sender, e);
+                }))
+            {
+                return;
+            }
+
+            var v = ((Settings.ISettingValue<Settings.PatchingFlags>)sender).Value;
+
+            checkUseHttps.Checked = v.HasFlag(Settings.PatchingFlags.UseHttps);
+            checkOverrideHosts.Checked = v.HasFlag(Settings.PatchingFlags.OverrideHosts);
         }
 
         void PatchingSpeedLimit_ValueChanged(object sender, EventArgs e)
         {
-            if (this.InvokeRequired)
-            {
-                try
+            if (Util.Invoke.IfRequired(this,
+                delegate
                 {
-                    this.Invoke(new MethodInvoker(
-                        delegate
-                        {
-                            PatchingSpeedLimit_ValueChanged(sender, e);
-                        }));
-                }
-                catch { }
+                    PatchingSpeedLimit_ValueChanged(sender, e);
+                }))
+            {
                 return;
             }
 
@@ -736,7 +731,8 @@ namespace Gw2Launcher.UI
         private void formAssetProxy_FormClosing(object sender, FormClosingEventArgs e)
         {
             Settings.PatchingSpeedLimit.ValueChanged -= PatchingSpeedLimit_ValueChanged;
-            Settings.PatchingUseHttps.ValueChanged -= PatchingUseHttps_ValueChanged;
+            Settings.PatchingOptions.ValueChanged -= PatchingOptions_ValueChanged;
+            Settings.PatchingPort.ValueChanged -= PatchingPort_ValueChanged;
 
             if (cancelToken != null)
                 cancelToken.Cancel();
@@ -751,6 +747,8 @@ namespace Gw2Launcher.UI
                 server.RequestDataReceived -= server_ResponseDataReceived;
                 server.ServerStarted -= server_ServerStarted;
                 server.ServerStopped -= server_ServerStopped;
+                server.ServerRestarted -= server_ServerRestarted;
+                server.ServerError -= server_ServerError;
             }
 
             Net.AssetProxy.ServerController.EnabledChanged -= ServerController_EnabledChanged;
@@ -898,7 +896,7 @@ namespace Gw2Launcher.UI
                     break;
                 }
             }
-            while (r.Contains(Cursor.Position) || Control.MouseButtons.HasFlag(MouseButtons.Left));
+            while (forceShowPanel || r.Contains(Cursor.Position) || Control.MouseButtons.HasFlag(MouseButtons.Left));
 
             panel.VisibleChanged -= visibleChanged;
 
@@ -926,7 +924,27 @@ namespace Gw2Launcher.UI
             else
                 Settings.PatchingSpeedLimit.Clear();
 
-            Settings.PatchingUseHttps.Value = checkUseHttps.Checked;
+            var options = Settings.PatchingOptions.Value;
+
+            if (checkUseHttps.Checked)
+                options |= Settings.PatchingFlags.UseHttps;
+            else
+                options &= ~Settings.PatchingFlags.UseHttps;
+
+            if (checkOverrideHosts.Checked)
+                options |= Settings.PatchingFlags.OverrideHosts;
+            else
+                options &= ~Settings.PatchingFlags.OverrideHosts;
+
+            if (checkPort.Checked)
+                Settings.PatchingPort.Value = (ushort)numericPort.Value;
+            else
+                Settings.PatchingPort.Clear();
+
+            if (options != Settings.PatchingFlags.None)
+                Settings.PatchingOptions.Value = options;
+            else
+                Settings.PatchingOptions.Clear();
         }
 
         private void checkUseHttps_Click(object sender, EventArgs e)
@@ -937,17 +955,103 @@ namespace Gw2Launcher.UI
             }
         }
 
-        private void sliderSpeedLimit_ValueChanged(object sender, float e)
+        private void sliderSpeedLimit_ValueChanged(object sender, EventArgs e)
         {
-            if (e >= 0.5f)
-                labelSpeedLimit.Text = Util.Text.FormatBytes(SPEED_LIMIT_MIN_1 + (int)(SPEED_LIMIT_MAX_1 * (e - 0.5f) / 0.5f + 0.5f)) + "/s";
+            var v = ((UI.Controls.FlatSlider)sender).Value;
+            if (v >= 0.5f)
+                labelSpeedLimit.Text = Util.Text.FormatBytes(SPEED_LIMIT_MIN_1 + (int)(SPEED_LIMIT_MAX_1 * (v - 0.5f) / 0.5f + 0.5f)) + "/s";
             else
-                labelSpeedLimit.Text = Util.Text.FormatBytes(SPEED_LIMIT_MIN_0 + (int)(SPEED_LIMIT_MAX_0 * e / 0.5f + 0.5f)) + "/s";
+                labelSpeedLimit.Text = Util.Text.FormatBytes(SPEED_LIMIT_MIN_0 + (int)(SPEED_LIMIT_MAX_0 * v / 0.5f + 0.5f)) + "/s";
         }
 
         private void checkSpeedLimit_CheckedChanged(object sender, EventArgs e)
         {
             sliderSpeedLimit.Enabled = checkSpeedLimit.Checked;
+        }
+
+        private void checkPort_CheckedChanged(object sender, EventArgs e)
+        {
+            numericPort.Enabled = checkPort.Checked;
+        }
+
+        private void checkOverrideHosts_CheckedChanged(object sender, EventArgs e)
+        {
+            checkPort.Parent.Enabled = !checkOverrideHosts.Checked;
+        }
+
+        private Task<bool> SetHostsOverride(bool enabled)
+        {
+            return Task.Run<bool>(
+                delegate
+                {
+                    var b = true;
+
+                    var address = "127.0.0.1";
+                    var host = Settings.ASSET_HOST;
+
+                    if (enabled)
+                    {
+                        if (!Windows.Hosts.Contains(host, address))
+                        {
+                            try
+                            {
+                                b = Util.ProcessUtil.AddHostsEntry(host, address);
+                            }
+                            catch
+                            {
+                                b = false;
+                            }
+                        }
+                    }
+                    else 
+                    {
+                        if (Windows.Hosts.Contains(host, address))
+                        {
+                            try
+                            {
+                                b = Util.ProcessUtil.RemoveHostsEntry(host, address);
+                            }
+                            catch
+                            {
+                                b = false;
+                            }
+                        }
+                    }
+
+                    return b;
+                });
+        }
+
+        private async void checkOverrideHosts_Click(object sender, EventArgs e)
+        {
+            checkOverrideHosts.Enabled = false;
+
+            bool b;
+
+            try
+            {
+                forceShowPanel = true;
+
+                try
+                {
+                    b = await SetHostsOverride(checkOverrideHosts.Checked);
+                }
+                catch
+                {
+                    b = false;
+                }
+
+                if (!b)
+                {
+                    checkOverrideHosts.Checked = !checkOverrideHosts.Checked;
+                }
+            }
+            finally
+            {
+                forceShowPanel = false;
+            }
+
+            checkOverrideHosts.Enabled = true;
         }
     }
 }

@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
@@ -16,20 +16,19 @@ namespace Gw2Launcher
 {
     static class Program
     {
-        public const byte RELEASE_VERSION = 12;
+        public const byte RELEASE_VERSION = 13;
+        public const uint BUILD = 6427;
+        public const long RELEASE_TIMESTAMP = 5249087330427387904;
 
-        /// <summary>
-        /// The main entry point for the application.
-        /// </summary>
         [STAThread]
         static int Main(string[] args)
         {
+            List<Action<IntPtr>> messages = null;
+
             #region Launcher proxy
 
             if (args.Length > 1 && args[0] == "-pl")
             {
-                //launches an account through a secondary instance, which takes on the environment changes so that GW2 can be launched by the shell
-
                 int pid;
                 if (!Int32.TryParse(args[1], out pid))
                     return -1;
@@ -138,7 +137,7 @@ namespace Gw2Launcher
             {
                 if (args[1] == "-handle")
                 {
-                    #region -handle [-pid|-p|-n|-d] [processId|"path to exe"|"process name"|"directory of exe"] "objectName" [exactMatch (0|1)]
+                    #region -handle [-pid|-p|-n|-d] [processId|"path to exe"|"process name"|"directory of exe"] "objectName" [match (#)]
 
                     if (args.Length != 6 || args[2] != "-pid" && args[2] != "-p" && args[2] != "-n" && args[2] != "-d")
                         return new ArgumentException().HResult;
@@ -148,7 +147,8 @@ namespace Gw2Launcher
                     bool isDir = args[2] == "-d";
                     string path = args[3];
                     string name = args[4];
-                    bool exactMatch = args[5] == "1";
+                    byte match;
+                    byte.TryParse(args[5], out match);
                     int pid = -1;
 
                     if (!isId)
@@ -200,7 +200,7 @@ namespace Gw2Launcher
                                 {
                                     if (!p.HasExited)
                                     {
-                                        if ((isName || string.Equals(p.MainModule.FileName, fi.FullName, StringComparison.OrdinalIgnoreCase)) || (isDir && Path.GetDirectoryName(p.MainModule.FileName).Equals(di.FullName, StringComparison.OrdinalIgnoreCase)))
+                                        if (isName || (!isDir && string.Equals(p.MainModule.FileName, fi.FullName, StringComparison.OrdinalIgnoreCase)) || (isDir && Path.GetDirectoryName(p.MainModule.FileName).Equals(di.FullName, StringComparison.OrdinalIgnoreCase)))
                                         {
                                             if (p.StartTime > newest)
                                             {
@@ -233,7 +233,7 @@ namespace Gw2Launcher
                     {
                         try
                         {
-                            Win32Handles.IObjectHandle handle = Win32Handles.GetHandle(pid, name, exactMatch);
+                            Win32Handles.IObjectHandle handle = Win32Handles.GetHandle(pid, name, (Win32Handles.MatchMode)match);
                             if (handle != null)
                             {
                                 handle.Kill();
@@ -266,8 +266,6 @@ namespace Gw2Launcher
                     try
                     {
                         ProcessStartInfo p = new ProcessStartInfo("net");
-                        //p.RedirectStandardInput = true;
-                        //p.RedirectStandardOutput = true;
                         p.UseShellExecute = false;
                         p.CreateNoWindow = true;
 
@@ -277,33 +275,12 @@ namespace Gw2Launcher
 
                         using (Process cmd = Process.Start(p))
                         {
-                            //StreamReader reader = cmd.StandardOutput;
-
-                            //while (!reader.EndOfStream)
-                            //{
-                            //    string line = reader.ReadLine().ToLower();
-                            //}
-
                             cmd.WaitForExit();
 
                             exitCode = cmd.ExitCode;
                         }
 
-                        //p.Arguments = "localgroup Administrators /add \"" + username + "\"";
-
-                        //using (Process cmd = Process.Start(p))
-                        //{
-                        //    StreamReader reader = cmd.StandardOutput;
-
-                        //    while (!reader.EndOfStream)
-                        //    {
-                        //        string line = reader.ReadLine().ToLower();
-                        //    }
-                        //}
-
                         p = new ProcessStartInfo("wmic");
-                        //p.RedirectStandardInput = true;
-                        //p.RedirectStandardOutput = true;
                         p.UseShellExecute = false;
                         p.CreateNoWindow = true;
 
@@ -311,13 +288,6 @@ namespace Gw2Launcher
 
                         using (Process cmd = Process.Start(p))
                         {
-                            //StreamReader reader = cmd.StandardOutput;
-
-                            //while (!reader.EndOfStream)
-                            //{
-                            //    string line = reader.ReadLine().ToLower();
-                            //}
-
                             cmd.WaitForExit();
                         }
 
@@ -527,7 +497,6 @@ namespace Gw2Launcher
                         return e.HResult;
                     }
 
-
                     #endregion
                 }
                 else if (args[1] == "-folder")
@@ -552,7 +521,6 @@ namespace Gw2Launcher
                         return e.HResult;
                     }
 
-
                     #endregion
                 }
                 else if (args[1] == "-perfcounter")
@@ -576,6 +544,78 @@ namespace Gw2Launcher
 
                         return pid;
                     }
+
+                    #endregion
+                }
+                else if (args[1] == "-hosts")
+                {
+                    #region -hosts [-add|-remove] ["hostname"] ["address"]
+
+                    if (args.Length > 3)
+                    {
+                        var remove = false;
+                        if (args[2] == "-add" || (remove = args[2] == "-remove"))
+                        {
+                            string address = null;
+                            if (args.Length > 4)
+                                address = args[4];
+
+                            try
+                            {
+                                if (remove)
+                                {
+                                    Windows.Hosts.Remove(args[3], address);
+                                }
+                                else
+                                {
+                                    if (address == null)
+                                        address = "127.0.0.1";
+                                    Windows.Hosts.Add(args[3], address);
+                                }
+                            }
+                            catch (Exception e)
+                            {
+                                return e.HResult;
+                            }
+                        }
+                    }
+
+                    #endregion
+                }
+                else if (args[1] == "-windowmask")
+                {
+                    #region -windowmask [parent_pid] [pid] [window] [flags]
+
+                    try
+                    {
+                        var w = IntPtr.Size == 4 ? (IntPtr)int.Parse(args[4]) : (IntPtr)long.Parse(args[4]);
+                        var flags = (UI.formMaskOverlay.EnableFlags)byte.Parse(args[5]);
+
+                        using (var p = Process.GetProcessById(int.Parse(args[3])))
+                        {
+                            using (var parent = Process.GetProcessById(int.Parse(args[2])))
+                            {
+                                EventHandler onExit = delegate
+                                {
+                                    Application.Exit();
+                                };
+                                parent.Exited += onExit;
+                                parent.EnableRaisingEvents = true;
+
+                                if (p.HasExited || parent.HasExited)
+                                    return 0;
+
+                                Application.Run(new UI.formMaskOverlay(p, w, flags));
+                            }
+                        }
+                    }
+                    catch (Exception e)
+                    {
+                        Util.Logging.Log(e);
+                        return e.HResult;
+                    }
+
+                    return 0;
 
                     #endregion
                 }
@@ -611,7 +651,6 @@ namespace Gw2Launcher
 
             #region -update [path] [path] [etc]
 
-            Messaging.UpdateMessage update = null;
             if (args.Length > 0 && args[0] == "-update")
             {
                 var files = new List<string>();
@@ -646,8 +685,18 @@ namespace Gw2Launcher
 
                 if (files.Count > 0)
                 {
-                    update = new Messaging.UpdateMessage(files.Count);
+                    var update = new Messaging.UpdateMessage(files.Count);
+
                     update.files.AddRange(files);
+
+                    Add(ref messages, delegate(IntPtr handle)
+                    {
+                        if (handle == IntPtr.Zero)
+                            update.Send();
+                        else
+                            update.Send(handle);
+                    });
+
                     Settings.Silent = true;
                 }
                 else
@@ -660,9 +709,9 @@ namespace Gw2Launcher
 
             #region Launch from args
 
-            Messaging.LaunchMessage launch = null;
             if (args.Length > 0)
             {
+                Messaging.LaunchMessage launch = null;
                 bool hasArgs = false;
 
                 foreach (var arg in args)
@@ -671,12 +720,30 @@ namespace Gw2Launcher
                         Settings.Silent = true;
                     else if (arg.StartsWith("-l:uid:"))
                     {
-                        ushort uid;
-                        if (UInt16.TryParse(arg.Substring(7), out uid))
+                        var i = 7;
+                        var limit = arg.IndexOf(' ', i);
+                        if (limit == -1)
+                            limit = arg.Length;
+
+                        while (true)
                         {
-                            if (launch == null)
-                                launch = new Messaging.LaunchMessage(1);
-                            launch.accounts.Add(uid);
+                            var j = arg.IndexOf(',', i, limit - i);
+                            if (j == -1)
+                                j = limit;
+
+                            ushort uid;
+                            if (ushort.TryParse(arg.Substring(i, j - i), out uid))
+                            {
+                                if (launch == null)
+                                    launch = new Messaging.LaunchMessage(1);
+                                launch.accounts.Add(uid);
+                            }
+                            else
+                                break;
+
+                            i = ++j;
+                            if (i >= limit)
+                                break;
                         }
                     }
                     else
@@ -735,7 +802,62 @@ namespace Gw2Launcher
                             launch.args = sb.ToString();
                         }
                     }
+
+                    Add(ref messages, delegate(IntPtr handle)
+                    {
+                        if (handle == IntPtr.Zero)
+                            launch.Send();
+                        else
+                            launch.Send(handle);
+                    });
                 }
+            }
+
+            #endregion
+
+            #region QuickLaunch
+
+            if (args.Length > 0 && args[0] == "-quicklaunch")
+            {
+                int v = -1;
+                if (args.Length > 1)
+                {
+                    switch (args[1].ToLower())
+                    {
+                        case "gw1":
+                            v = (int)Settings.AccountType.GuildWars1;
+                            break;
+                        case "gw2":
+                            v = (int)Settings.AccountType.GuildWars2;
+                            break;
+                    }
+                }
+
+                Add(ref messages, delegate(IntPtr handle)
+                {
+                    if (handle == IntPtr.Zero)
+                        Messaging.Messager.Post(Messaging.Messager.MessageType.QuickLaunch, v);
+                    else
+                        Messaging.Messager.Post(handle, Messaging.Messager.MessageType.QuickLaunch, v);
+                });
+
+                Settings.Silent = true;
+            }
+
+            #endregion
+
+            #region TOTP code
+
+            if (args.Length > 0 && args[0] == "-totpcode")
+            {
+                Add(ref messages, delegate(IntPtr handle)
+                {
+                    if (handle == IntPtr.Zero)
+                        Messaging.Messager.Post(Messaging.Messager.MessageType.TotpCode, 0);
+                    else
+                        Messaging.Messager.Post(handle, Messaging.Messager.MessageType.TotpCode, 0);
+                });
+                Settings.Silent = true;
             }
 
             #endregion
@@ -768,59 +890,16 @@ namespace Gw2Launcher
 
                     #region By process
 
-                    //required for some situations
-
-                    //try
-                    //{
-                    //    using (Process current = Process.GetCurrentProcess())
-                    //    {
-                    //        FileInfo fi = new FileInfo(current.MainModule.FileName);
-                    //        Process[] ps = Process.GetProcessesByName(fi.Name.Substring(0, fi.Name.Length - fi.Extension.Length));
-                    //        foreach (Process p in ps)
-                    //        {
-                    //            using (p)
-                    //            {
-                    //                try
-                    //                {
-                    //                    if (p.Id != current.Id && !p.HasExited)
-                    //                    {
-                    //                        if (string.Equals(p.MainModule.FileName, fi.FullName, StringComparison.OrdinalIgnoreCase))
-                    //                        {
-                    //                            IntPtr ptr = Windows.FindWindow.Find(p.Id, null);
-
-                    //                            if (ptr != IntPtr.Zero)
-                    //                            {
-                    //                                Windows.FindWindow.ShowWindow(ptr, 5);
-                    //                                Windows.FindWindow.BringWindowToTop(ptr);
-                    //                                Windows.FindWindow.SetForegroundWindow(ptr);
-                    //                            }
-
-                    //                            //var placement = Windows.WindowSize.GetWindowPlacement(ptr);
-
-                    //                            //if (placement.showCmd == (int)Windows.WindowSize.WindowState.SW_SHOWMINIMIZED)
-                    //                            //    Windows.WindowSize.SetWindowPlacement(ptr, Rectangle.FromLTRB(placement.rcNormalPosition.left, placement.rcNormalPosition.top, placement.rcNormalPosition.right, placement.rcNormalPosition.bottom), Windows.WindowSize.WindowState.SW_RESTORE);
-
-                    //                            //SetForegroundWindow(ptr);
-
-                    //                            break;
-                    //                        }
-                    //                    }
-                    //                }
-                    //                catch { }
-                    //            }
-                    //        }
-                    //    }
-                    //}
-                    //catch { }
-
                     #endregion
                 }
 
-                if (launch != null)
-                    launch.Send();
-
-                if (update != null)
-                    update.Send();
+                if (messages != null)
+                {
+                    foreach (var m in messages)
+                    {
+                        m(IntPtr.Zero);
+                    }
+                }
 
                 mutex.Dispose();
                 return 0;
@@ -843,10 +922,33 @@ namespace Gw2Launcher
             {
                 if (Util.Users.UserName == null)
                 {
-                    //init
                 }
 
                 Settings.Load();
+
+                #region Wine detection
+
+                try
+                {
+                    var l = NativeMethods.LoadLibrary("ntdll.dll");
+                    if (l != IntPtr.Zero)
+                    {
+                        try
+                        {
+                            Settings.IsRunningWine = NativeMethods.GetProcAddress(l, "wine_get_version") != IntPtr.Zero;
+                        }
+                        finally
+                        {
+                            NativeMethods.FreeLibrary(l);
+                        }
+                    }
+                }
+                catch(Exception e)
+                {
+                    Util.Logging.Log(e);
+                }
+
+                #endregion
 
                 var store = Settings.StoreCredentials;
                 store.ValueChanged += StoredCredentials_ValueChanged;
@@ -855,33 +957,29 @@ namespace Gw2Launcher
                 Application.EnableVisualStyles();
                 Application.SetCompatibleTextRenderingDefault(false);
 
+                if (!Settings.Silent && Settings.Accounts.Count == 0 || args.Length > 0 && args[0] == "-quickstart")
+                {
+                    using (var quickstart = new UI.QuickStart.formQuickStart())
+                    {
+                        Application.Run(quickstart);
+                    }
+                }
+
                 var f = new UI.formMain();
 
                 Util.Users.Activate(true);
 
-                if (Settings.Silent)
-                {
-                    f.WindowState = FormWindowState.Minimized;
-                    if (Settings.ShowTray.Value && Settings.MinimizeToTray.Value)
-                        f.DisableNextVisibilityChange = true;
-                }
-
-                if (launch != null || update != null)
+                if (messages != null)
                 {
                     Task.Run(
                         delegate
                         {
-                            if (launch != null)
+                            foreach (var m in messages)
                             {
-                                launch.Send(f.Handle);
-                                launch = null;
+                                m(f.Handle);
                             }
 
-                            if (update != null)
-                            {
-                                update.Send(f.Handle);
-                                update = null;
-                            }
+                            messages = null;
                         });
                 }
 
@@ -889,11 +987,13 @@ namespace Gw2Launcher
 
                 OnExit();
             }
+#if !DEBUG
             catch (Exception e)
             {
                 Util.Logging.Crash(e);
                 return -1;
             }
+#endif
             finally
             {
                 mutex.ReleaseMutex();
@@ -903,11 +1003,17 @@ namespace Gw2Launcher
             return 0;
         }
 
+        private static void Add(ref List<Action<IntPtr>> l, Action<IntPtr> action)
+        {
+            if (l == null)
+                l = new List<Action<IntPtr>>();
+            l.Add(action);
+        }
+
         private static void OnExit()
         {
             try
             {
-                //if any recorded accounts are still active, add a record for exiting the program (ID 0)
                 var active = Client.Launcher.GetActiveProcesses();
                 foreach (var account in active)
                 {
@@ -928,7 +1034,6 @@ namespace Gw2Launcher
 
             Util.Users.Activate(false);
         }
-
 
 #if x86
 
@@ -1035,7 +1140,7 @@ namespace Gw2Launcher
                 PassedLaunch l = new PassedLaunch();
 
                 var count = Marshal.ReadByte(ptr);
-                
+
                 var i = 1;
                 for (var j = 0; j < count; j++, i += 2)
                     l.accounts.Add((ushort)Marshal.ReadInt16(ptr, i));

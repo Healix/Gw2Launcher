@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Text;
 using System.Windows.Forms;
 using System.Drawing;
@@ -475,19 +475,37 @@ namespace Gw2Launcher.UI.Controls
                     int w = this.Width,
                         h = this.Height;
                     var hasAccess = (daily.Access & DailyAchievements.Daily.AccessCondition.HasAccess) == DailyAchievements.Daily.AccessCondition.HasAccess;
+                    Bitmap icon;
 
                     switch (daily.Access & ~DailyAchievements.Daily.AccessCondition.HasAccess)
                     {
                         case DailyAchievements.Daily.AccessCondition.HeartOfThorns:
 
-                            DrawImage(g, Properties.Resources.hot32, w - 32 - 5, (h - 32) / 2, 32, 32, hasAccess ? (byte)220 : (byte)180, !hasAccess);
+                            icon = Properties.Resources.hot32;
 
                             break;
                         case DailyAchievements.Daily.AccessCondition.PathOfFire:
 
-                            DrawImage(g, Properties.Resources.pof32, w - 32 - 5, (h - 32) / 2, 32, 32, hasAccess ? (byte)220 : (byte)180, !hasAccess);
+                            icon = Properties.Resources.pof32;
 
                             break;
+                        case DailyAchievements.Daily.AccessCondition.EndOfDragons:
+
+                            icon = Properties.Resources.eod32;
+
+                            break;
+                        default:
+                        case DailyAchievements.Daily.AccessCondition.Unknown:
+
+                            icon = null;
+                            TextRenderer.DrawText(g, daily.UnknownName != null ? daily.UnknownName : "?", new Font(this.Font.FontFamily, 8f), new Rectangle(0, 0, w - 5, h), hasAccess ? Color.FromArgb(60, 60, 60) : Color.FromArgb(180, 180, 180), TextFormatFlags.Right | TextFormatFlags.VerticalCenter);
+
+                            break;
+                    }
+
+                    if (icon != null)
+                    {
+                        DrawImage(g, icon, w - 32 - 5, (h - 32) / 2, 32, 32, hasAccess ? (byte)220 : (byte)180, !hasAccess);
                     }
                 }
             }
@@ -495,6 +513,8 @@ namespace Gw2Launcher.UI.Controls
 
         protected override void Dispose(bool disposing)
         {
+            base.Dispose(disposing);
+
             if (disposing)
             {
                 if (buffer != null)
@@ -503,7 +523,6 @@ namespace Gw2Launcher.UI.Controls
                     buffer = null;
                 }
             }
-            base.Dispose(disposing);
         }
     }
 }

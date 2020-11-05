@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Runtime.InteropServices;
 using System.Diagnostics;
@@ -8,6 +8,16 @@ namespace Gw2Launcher.Windows
 {
     static class Win32Handles
     {
+        public enum MatchMode : byte
+        {
+            Contains = 0,
+            Exact = 1,
+            StartsWith = 2,
+            EndsWith = 3,
+        }
+
+        private const byte THREADS = 4;
+
         public interface IObjectHandle
         {
             void Kill();
@@ -15,93 +25,150 @@ namespace Gw2Launcher.Windows
 
         private class ObjectHandle : IObjectHandle
         {
-            protected SYSTEM_HANDLE_TABLE_ENTRY_INFO_EX handleInfo;
+            protected UIntPtr processId, handle;
 
-            public ObjectHandle(SYSTEM_HANDLE_TABLE_ENTRY_INFO_EX info)
+            public ObjectHandle(UIntPtr processId, UIntPtr handle)
             {
-                this.handleInfo = info;
-            }
-
-            public SYSTEM_HANDLE_TABLE_ENTRY_INFO_EX Info
-            {
-                get
-                {
-                    return this.handleInfo;
-                }
+                this.processId = processId;
+                this.handle = handle;
             }
 
             public void Kill()
             {
-                using (var p = Process.GetProcessById((int)handleInfo.UniqueProcessId.GetValue()))
+                using (var p = Process.GetProcessById((int)processId.GetValue()))
                 {
-                    IntPtr handle = IntPtr.Zero;
+                    IntPtr h = IntPtr.Zero;
                     try
                     {
-                        if (!NativeMethods.DuplicateHandle(p.Handle, handleInfo.HandleValue, NativeMethods.GetCurrentProcess(), out handle, 0, false, DuplicateOptions.DUPLICATE_CLOSE_SOURCE))
+                        if (!NativeMethods.DuplicateHandle(p.Handle, handle, NativeMethods.GetCurrentProcess(), out h, 0, false, DuplicateOptions.DUPLICATE_CLOSE_SOURCE))
                             throw new System.ComponentModel.Win32Exception(Marshal.GetLastWin32Error());
                     }
                     finally
                     {
-                        if (handle != IntPtr.Zero)
-                            NativeMethods.CloseHandle(handle);
+                        if (h != IntPtr.Zero)
+                            NativeMethods.CloseHandle(h);
                     }
                 }
             }
         }
 
-        public static string GetObjectName(SYSTEM_HANDLE_TABLE_ENTRY_INFO_EX handle)
+        private class Buffer : IDisposable
         {
-            IntPtr _processHandle = NativeMethods.OpenProcess(ProcessAccessFlags.All, false, handle.UniqueProcessId);
-            IntPtr _handle = IntPtr.Zero;
+            public Buffer(int length)
+            {
+                handle = Marshal.AllocHGlobal(this.length = length);
+            }
+
+            public IntPtr handle;
+            public int length;
+
+            public void ReAlloc(int length)
+            {
+                handle = Marshal.ReAllocHGlobal(handle, (IntPtr)(this.length = length));
+            }
+
+            public void Dispose()
+            {
+                if (handle != IntPtr.Zero)
+                {
+                    Marshal.FreeHGlobal(handle);
+                    handle = IntPtr.Zero;
+                }
+            }
+        }
+
+        private static string GetObjectName(Buffer buffer, UIntPtr processId, UIntPtr handle, bool queryInfo)
+        {
+            var _processHandle = NativeMethods.OpenProcess(ProcessAccessFlags.All, false, processId);
+            var _handle = IntPtr.Zero;
 
             try
             {
-                if (!NativeMethods.DuplicateHandle(_processHandle, handle.HandleValue, NativeMethods.GetCurrentProcess(), out _handle, 0, false, DuplicateOptions.DUPLICATE_SAME_ACCESS))
+                if (!NativeMethods.DuplicateHandle(_processHandle, handle, NativeMethods.GetCurrentProcess(), out _handle, 0, false, DuplicateOptions.DUPLICATE_SAME_ACCESS))
                     return null;
 
-                IntPtr _basic = IntPtr.Zero;
-                int nameLength = 0;
+                int nameLength;
 
-                try
+                if (queryInfo)
                 {
-                    OBJECT_BASIC_INFORMATION basicInfo = new OBJECT_BASIC_INFORMATION();
-                    _basic = Marshal.AllocHGlobal(Marshal.SizeOf(basicInfo));
+                    OBJECT_BASIC_INFORMATION basicInfo;
+                    nameLength = 0;
 
-                    NativeMethods.NtQueryObject(_handle, (int)ObjectInformationClass.ObjectBasicInformation, _basic, Marshal.SizeOf(basicInfo), ref nameLength);
-                    basicInfo = (OBJECT_BASIC_INFORMATION)Marshal.PtrToStructure(_basic, basicInfo.GetType());
+                    if (NativeMethods.NtQueryObject(_handle, ObjectInformationClass.ObjectBasicInformation, out basicInfo, Marshal.SizeOf(typeof(OBJECT_BASIC_INFORMATION)), ref nameLength) != NtStatus.Success)
+                        return null;
+
                     nameLength = basicInfo.NameInformationLength;
-                }
-                finally
-                {
-                    if (_basic != IntPtr.Zero)
-                        Marshal.FreeHGlobal(_basic);
-                }
 
-                if (nameLength == 0)
-                {
-                    return null;
-                }
+                    //var _basic = IntPtr.Zero;
+                    //OBJECT_BASIC_INFORMATION basicInfo = new OBJECT_BASIC_INFORMATION();
+                    //nameLength = 0;
 
-                OBJECT_NAME_INFORMATION nameInfo = new OBJECT_NAME_INFORMATION();
-                IntPtr _objectName = Marshal.AllocHGlobal(nameLength);
+                    //try
+                    //{
+                    //    _basic = Marshal.AllocHGlobal(Marshal.SizeOf(basicInfo));
 
-                try
-                {
-                    while (NativeMethods.NtQueryObject(_handle, (int)ObjectInformationClass.ObjectNameInformation, _objectName, nameLength, ref nameLength) == NtStatus.InfoLengthMismatch)
+                    //    if (NativeMethods.NtQueryObject(_handle, ObjectInformationClass.ObjectBasicInformation, _basic, Marshal.SizeOf(basicInfo), ref nameLength) != NtStatus.Success)
+                    //        return null;
+
+                    //    basicInfo = (OBJECT_BASIC_INFORMATION)Marshal.PtrToStructure(_basic, basicInfo.GetType());
+                    //    nameLength = basicInfo.NameInformationLength;
+                    //}
+                    //finally
+                    //{
+                    //    if (_basic != IntPtr.Zero)
+                    //        Marshal.FreeHGlobal(_basic);
+                    //}
+
+                    if (nameLength > buffer.length)
                     {
-                        Marshal.FreeHGlobal(_objectName);
-                        _objectName = Marshal.AllocHGlobal(nameLength);
+                        buffer.ReAlloc(nameLength);
                     }
-                    nameInfo = (OBJECT_NAME_INFORMATION)Marshal.PtrToStructure(_objectName, nameInfo.GetType());
+                    else if (nameLength == 0)
+                    {
+                        return null;
+                    }
                 }
-                finally
+                else
                 {
-                    Marshal.FreeHGlobal(_objectName);
+                    nameLength = buffer.length;
                 }
+
+                var querying = true;
+
+                do
+                {
+                    var r = NativeMethods.NtQueryObject(_handle, ObjectInformationClass.ObjectNameInformation, buffer.handle, buffer.length, ref nameLength);
+
+                    switch (r)
+                    {
+                        case NtStatus.Success:
+
+                            querying = false;
+
+                            break;
+                        case NtStatus.InvalidInfoClass:
+                        case NtStatus.BufferOverflow:
+
+                            if (nameLength > buffer.length)
+                                buffer.ReAlloc(nameLength);
+                            else
+                                return null;
+
+                            break;
+                        default:
+
+                            return null;
+                    }
+                }
+                while (querying);
+
+                var nameInfo = (OBJECT_NAME_INFORMATION)Marshal.PtrToStructure(buffer.handle, typeof(OBJECT_NAME_INFORMATION));
 
                 try
                 {
-                    return Marshal.PtrToStringUni(nameInfo.Name.Buffer, nameInfo.Name.Length >> 1);
+                    if (nameInfo.Name.Length == 0)
+                        return null;
+                    return nameInfo.Name.ToString();
                 }
                 catch (Exception e)
                 {
@@ -112,92 +179,191 @@ namespace Gw2Launcher.Windows
             }
             finally
             {
-                if (_handle != IntPtr.Zero) //moved from Marshal.FreeHGlobal(_objectName);
+                if (_handle != IntPtr.Zero)
                     NativeMethods.CloseHandle(_handle);
                 if (_processHandle != IntPtr.Zero)
                     NativeMethods.CloseHandle(_processHandle);
             }
         }
 
-        public static IObjectHandle GetHandle(int processId, string objectName, bool exactMatch)
+        public static IObjectHandle GetHandle(int processId, string objectName, MatchMode match)
         {
+            Func<string, bool> f;
+
+            switch (match)
+            {
+                case MatchMode.Contains:
+                    f = delegate(string s)
+                    {
+                        return s.IndexOf(objectName) != -1;
+                    };
+                    break;
+                case MatchMode.EndsWith:
+                    f = delegate(string s)
+                    {
+                        return s.EndsWith(objectName, StringComparison.Ordinal);
+                    };
+                    break;
+                case MatchMode.Exact:
+                    f = delegate(string s)
+                    {
+                        return s.Equals(objectName);
+                    };
+                    break;
+                case MatchMode.StartsWith:
+                    f = delegate(string s)
+                    {
+                        return s.StartsWith(objectName, StringComparison.Ordinal);
+                    };
+                    break;
+                default:
+                    throw new NotSupportedException();
+            }
+
+            return GetHandle(processId, objectName, f);
+        }
+
+        public static IObjectHandle GetHandle(int processId, string objectName, Func<string, bool> objectNameCallback)
+        {
+            var infoClass = SYSTEM_INFORMATION_CLASS.SystemExtendedHandleInformation;
             int infoLength = 0x10000;
-            int length = 0;
-            IntPtr _info = Marshal.AllocHGlobal(infoLength);
-            IntPtr _handle = IntPtr.Zero;
-            long handleCount = 0;
+            var _processId = (UIntPtr)processId;
+            Buffer[] buffers = null;
+
+            var _info = Marshal.AllocHGlobal(infoLength);
 
             try
             {
                 //CNST_SYSTEM_HANDLE_INFORMATION is limited to 16-bit process IDs
-                while (NativeMethods.NtQuerySystemInformation(SYSTEM_INFORMATION_CLASS.SystemExtendedHandleInformation, _info, infoLength, ref length) == NtStatus.InfoLengthMismatch)
-                {
-                    infoLength = length;
-                    Marshal.FreeHGlobal(_info);
-                    _info = Marshal.AllocHGlobal(infoLength);
-                }
+                var querying = true;
+                var length = 0;
 
-#if x86
-                handleCount = Marshal.ReadInt32(_info);
-                _handle = new IntPtr(_info.ToInt32() + 8);
-#elif x64
-                handleCount = Marshal.ReadInt64(_info);
-                _handle = new IntPtr(_info.ToInt64() + 16);
-#else
-                if (IntPtr.Size == 4)
+                do
                 {
+                    var r = NativeMethods.NtQuerySystemInformation(infoClass, _info, infoLength, ref length);
+
+                    switch (r)
+                    {
+                        case NtStatus.Success:
+
+                            querying = false;
+
+                            break;
+                        case NtStatus.InfoLengthMismatch:
+
+                            _info = Marshal.ReAllocHGlobal(_info, (IntPtr)(infoLength = length));
+
+                            break;
+                        case NtStatus.InvalidInfoClass:
+
+                            if (infoClass == SYSTEM_INFORMATION_CLASS.SystemExtendedHandleInformation)
+                            {
+                                infoClass = SYSTEM_INFORMATION_CLASS.SystemHandleInformation;
+                            }
+                            else
+                            {
+                                throw new NotSupportedException("SystemHandleInformation not supported");
+                            }
+
+                            break;
+                        default:
+
+                            throw new Exception(r.ToString("x"));
+                    }
+                }
+                while (querying);
+
+                IntPtr _handle;
+                long handleCount;
+                Type infoType;
+
+                if (infoClass == SYSTEM_INFORMATION_CLASS.SystemExtendedHandleInformation)
+                {
+#if x86
                     handleCount = Marshal.ReadInt32(_info);
-                    _handle = new IntPtr(_info.ToInt32() + 8);
+#elif x64
+                    handleCount = Marshal.ReadInt64(_info);
+#else
+                    if (IntPtr.Size == 4)
+                        handleCount = Marshal.ReadInt32(_info);
+                    else
+                        handleCount = Marshal.ReadInt64(_info);
+#endif
+                    _handle = _info + IntPtr.Size * 2;
+                    infoType = typeof(SYSTEM_HANDLE_TABLE_ENTRY_INFO_EX);
                 }
                 else
                 {
-                    handleCount = Marshal.ReadInt64(_info);
-                    _handle = new IntPtr(_info.ToInt64() + 16);
+                    //SystemHandleInformation count is 32bit
+                    handleCount = Marshal.ReadInt32(_info);
+
+                    _handle = _info + IntPtr.Size;
+                    infoType = typeof(SYSTEM_HANDLE_TABLE_ENTRY_INFO);
                 }
-#endif
 
-                var handleInfo = new SYSTEM_HANDLE_TABLE_ENTRY_INFO_EX();
-                var infoSize = Marshal.SizeOf(handleInfo);
-                var infoType = handleInfo.GetType();
+                var infoSize = Marshal.SizeOf(infoType);
 
-                for (long i = 0; i < handleCount; i++)
+                buffers = new Buffer[THREADS];
+
+                for (var j = 0; j < THREADS; j++)
                 {
-                    handleInfo = (SYSTEM_HANDLE_TABLE_ENTRY_INFO_EX)Marshal.PtrToStructure(_handle, infoType);
-#if x86
-                    _handle = new IntPtr(_handle.ToInt32() + infoSize);
-#elif x64
-                    _handle = new IntPtr(_handle.ToInt64() + infoSize);
-#else
-                    if (IntPtr.Size == 4)
-                        _handle = new IntPtr(_handle.ToInt32() + infoSize);
-                    else
-                        _handle = new IntPtr(_handle.ToInt64() + infoSize);
-#endif
-
-                    if (processId > 0 && handleInfo.UniqueProcessId.ToUInt32() != processId)
-                        continue;
-
-                    string name = GetObjectName(handleInfo);
-                    if (name == null)
-                        continue;
-
-                    if (exactMatch)
-                    {
-                        if (!name.Equals(objectName, StringComparison.Ordinal))
-                            continue;
-                    }
-                    else if (name.IndexOf(objectName, StringComparison.Ordinal) == -1)
-                        continue;
-
-                    return new ObjectHandle(handleInfo);
+                    buffers[j] = new Buffer(256);
                 }
+
+                //warning: NtQueryObject can cause a deadlock when querying an item that is waiting
+
+                var loop = Util.Loop.For(0, handleCount, THREADS, 1000,
+                    delegate(byte thread, long i, Util.Loop.IState state)
+                    {
+                        var handleInfo = Marshal.PtrToStructure((IntPtr)(_handle.GetValue() + i * infoSize), infoType);
+                        
+                        UIntPtr pid, h;
+
+                        if (infoClass == SYSTEM_INFORMATION_CLASS.SystemExtendedHandleInformation)
+                        {
+                            var info = (SYSTEM_HANDLE_TABLE_ENTRY_INFO_EX)handleInfo;
+
+                            pid = info.UniqueProcessId;
+                            h = info.HandleValue;
+                        }
+                        else
+                        {
+                            var info = (SYSTEM_HANDLE_TABLE_ENTRY_INFO)handleInfo;
+
+                            //try to recover 32-bit processId from 16-bit info
+                            if (info.UniqueProcessId == (ushort)processId)
+                                pid = (UIntPtr)processId;
+                            else
+                                pid = (UIntPtr)info.UniqueProcessId;
+                            h = (UIntPtr)info.HandleValue;
+                        }
+
+                        if (processId > 0 && pid != _processId)
+                            return;
+
+                        var name = GetObjectName(buffers[thread], pid, h, infoClass == SYSTEM_INFORMATION_CLASS.SystemExtendedHandleInformation);
+
+                        if (name != null && objectNameCallback(name))
+                        {
+                            state.Return(new ObjectHandle(pid, h));
+                        }
+                    });
+
+                loop.Wait();
+
+                return (ObjectHandle)loop.Result;
             }
             finally
             {
                 Marshal.FreeHGlobal(_info);
+                if (buffers != null)
+                {
+                    foreach (var b in buffers)
+                    {
+                        using (b) { }
+                    }
+                }
             }
-
-            return null;
         }
     }
 }
