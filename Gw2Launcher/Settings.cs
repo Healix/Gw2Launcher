@@ -7268,24 +7268,35 @@ namespace Gw2Launcher
                                         {
                                             puid = 0;
 
-                                            var buffer = crypto.Decrypt(EncryptionScope.CurrentUser, data, null, new byte[] { 99, 12, 55, 17, 45, 97, 83, 64, 38 });
+                                            byte[] buffer = null;
+
                                             try
                                             {
+                                                buffer = crypto.Decrypt(EncryptionScope.CurrentUser, data, null, new byte[] { 99, 12, 55, 17, 45, 97, 83, 64, 38 });
                                                 data = crypto.Compress(crypto.Encrypt(buffer));
+                                            }
+                                            catch (Exception e)
+                                            {
+                                                data = null;
+                                                Util.Logging.Log(e);
                                             }
                                             finally
                                             {
-                                                Array.Clear(buffer, 0, buffer.Length);
+                                                if (buffer != null)
+                                                    Array.Clear(buffer, 0, buffer.Length);
                                             }
                                         }
 
-                                        try
+                                        if (data != null)
                                         {
-                                            account._Password = new ProtectedString(crypto, data, puid);
-                                        }
-                                        catch (Exception e)
-                                        {
-                                            Util.Logging.Log(e);
+                                            try
+                                            {
+                                                account._Password = new ProtectedString(crypto, data, puid);
+                                            }
+                                            catch (Exception e)
+                                            {
+                                                Util.Logging.Log(e);
+                                            }
                                         }
                                     }
                                 }
