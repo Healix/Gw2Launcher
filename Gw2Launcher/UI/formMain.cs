@@ -873,7 +873,7 @@ namespace Gw2Launcher.UI
                     {
                         Application.SetUnhandledExceptionMode(UnhandledExceptionMode.ThrowException);
 
-                        var f = fv.Form = new formBackgroundPatcher();
+                        var f = fv.Form = new formBackgroundPatcher(this);
 
                         if (this.WindowState != FormWindowState.Minimized)
                         {
@@ -1478,6 +1478,7 @@ namespace Gw2Launcher.UI
             Tools.AutoUpdate.Initialize();
 
             this.TopMost = Settings.TopMost.Value;
+            mpWindow.TopMost = Settings.TopMost.Value;
 
             if (Settings.LastProgramVersion.HasValue)
             {
@@ -1968,7 +1969,7 @@ namespace Gw2Launcher.UI
                     break;
                 case Client.Launcher.AccountWindowEventEventArgs.EventType.WindowLoaded:
 
-                    if (account.WindowOptions.HasFlag(Settings.WindowOptions.Windowed | Settings.WindowOptions.PreventChanges) && !account.WindowBounds.IsEmpty && !Settings.IsRunningWine)
+                    if (account.WindowOptions.HasFlag(Settings.WindowOptions.Windowed | Settings.WindowOptions.PreventChanges) && !Settings.IsRunningWine) //&& !account.WindowBounds.IsEmpty
                     {
                         lock (this)
                         {
@@ -2596,6 +2597,7 @@ namespace Gw2Launcher.UI
             var setting = sender as Settings.ISettingValue<bool>;
 
             this.TopMost = setting.Value;
+            mpWindow.TopMost = setting.Value;
         }
 
         void ScreenshotSettings_ValueChanged(object sender, EventArgs e)
@@ -2859,6 +2861,18 @@ namespace Gw2Launcher.UI
 
                 SetSorting(o.Sorting.Mode, o.Sorting.Descending, false);
                 SetGrouping(o.Grouping.Mode, o.Grouping.Descending, true);
+            }
+            else
+            {
+                foreach (var b in buttons.Values)
+                {
+                    if (b.Pinned)
+                    {
+                        gridContainer.Sort(Settings.Sorting.Value);
+
+                        break;
+                    }
+                }
             }
 
             ScreenshotSettings_ValueChanged(Settings.ScreenshotConversion, EventArgs.Empty);
@@ -3387,11 +3401,15 @@ namespace Gw2Launcher.UI
         {
             if (e.Button == MouseButtons.Right)
             {
+                var button = sender as AccountGridButton;
                 var selected = gridContainer.GetSelected();
+
                 clearSelectionToolStripMenuItem.Enabled = true;
                 selectedToolStripMenuItem.Tag = selected;
 
                 applyWindowedBoundsToolStripMenuItem.Enabled = false;
+                pinToTopToolStripMenuItem.Checked = button != null && button.Pinned;
+
                 foreach (var b in selected)
                 {
                     var a = b.AccountData;
@@ -3472,6 +3490,8 @@ namespace Gw2Launcher.UI
                 toolStripMenuItemCancelSep.Visible = pending > 0;
                 //disableAutomaticLoginsToolStripMenuItem1.Enabled = (int)disableAutomaticLoginsToolStripMenuItem1.Tag > 0;
                 applyWindowedBoundsToolStripMenuItem1.Enabled = (int)applyWindowedBoundsToolStripMenuItem1.Tag > 0;
+
+                pinToTopToolStripMenuItem.Checked = button.Pinned;
 
                 contextMenu.Tag = button;
 
@@ -6060,7 +6080,9 @@ namespace Gw2Launcher.UI
         private void buttonMenu_MouseDown(object sender, MouseEventArgs e)
         {
             if (!mpWindow.Visible)
+            {
                 mpWindow.Show(this, buttonMenu);
+            }
         }
 
         private void buttonMenu_Click(object sender, EventArgs e)
@@ -6231,6 +6253,33 @@ namespace Gw2Launcher.UI
             if (button != null && button.AccountData != null)
             {
                 OnEditAccount(button, selected);
+            }
+        }
+
+        private void pinToTopToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            var selected = GetSelected();
+            if (selected.Count == 0)
+                return;
+
+            var pinned = !pinToTopToolStripMenuItem.Checked;
+            var changed = false;
+
+            foreach (var b in selected)
+            {
+                if (b.Pinned != pinned)
+                {
+                    b.Pinned = pinned;
+                    changed = true;
+                }
+            }
+
+            if (changed)
+            {
+                gridContainer.Sort(Settings.Sorting.Value);
+
+                if (jumplist != null)
+                    jumplist.RefreshAsync();
             }
         }
     }

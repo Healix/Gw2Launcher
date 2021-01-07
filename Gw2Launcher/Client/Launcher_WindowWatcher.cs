@@ -608,7 +608,7 @@ namespace Gw2Launcher.Client
 
             private Process process;
             private Task watcher;
-            private bool watchBounds, canReadMemory;
+            private bool canReadMemory;
             private bool processWasAlreadyStarted;
 
             static WindowWatcher()
@@ -626,12 +626,12 @@ namespace Gw2Launcher.Client
             /// <summary>
             /// Watches the process and reports when the DX window is created
             /// </summary>
-            public WindowWatcher(Account account, Process p, bool isProcessStarter, bool watchBounds, Account.LaunchSession session)
+            public WindowWatcher(Account account, Process p, bool isProcessStarter, bool windowed, Account.LaunchSession session)
             {
                 this.process = p;
                 this.processWasAlreadyStarted = !isProcessStarter;
                 this.Account = account;
-                this.watchBounds = watchBounds;
+                //this.watchBounds = watchBounds;
                 //this.watchAutologin = account.Settings.AutomaticLogin && account.Settings.HasCredentials && !Settings.DisableAutomaticLogins;
                 this.Session = session;
 
@@ -1196,20 +1196,26 @@ namespace Gw2Launcher.Client
 
                                     if (isGw2)
                                     {
-                                        //coherentui's child process will exit after loading a character, making this unsuitable for clients that were already started
-                                        FindCoherentChildProcess(_handle, pidChild,
-                                            delegate
-                                            {
-                                                //alternatively look for loaded modules; icm32.dll is loaded after CoherentUI, but before it's finished loading
-                                                //either way, character select is loaded at this point
+                                        using (var pi = new Windows.ProcessInfo())
+                                        {
+                                            var modules = new string[] { "icm32.dll", "mscms.dll" };
+                                            var canRead = pi.Open(process.Id);
 
-                                                if (FindModule("icm32.dll"))
+                                            //coherentui's child process will exit after loading a character, making this unsuitable for clients that were already started
+                                            FindCoherentChildProcess(_handle, pidChild,
+                                                delegate
                                                 {
-                                                    return false;
-                                                }
+                                                    //alternatively look for loaded modules; icm32.dll is loaded after CoherentUI, but before it's finished loading
+                                                    //either way, character select is loaded at this point
 
-                                                return true;
-                                            });
+                                                    if (FindModules(canRead ? pi : null, modules, false))
+                                                    {
+                                                        return false;
+                                                    }
+
+                                                    return true;
+                                                });
+                                        }
                                     }
 
                                     if (WindowChanged != null && !process.HasExited)
@@ -1606,6 +1612,76 @@ namespace Gw2Launcher.Client
                         break;
 
                     process.Refresh();
+                }
+
+                return false;
+            }
+
+            /// <summary>
+            /// Finds the specified modules
+            /// </summary>
+            /// <param name="pi">Process info</param>
+            /// <param name="modules">Modules to find</param>
+            /// <param name="all">True to find all of the specified modules, otherwise only 1</param>
+            /// <param name="limit">Timeout in milliseconds; 0 to run once, -1 to run until found</param>
+            /// <returns>True if found</returns>
+            private bool FindModules(Windows.ProcessInfo pi, string[] modules, bool all, int limit = 0)
+            {
+                if (pi == null)
+                {
+                    return FindModules(modules, all, limit);
+                }
+
+                var start = limit > 0 ? Environment.TickCount : 0;
+                var hasRead = false;
+
+                while (true)
+                {
+                    try
+                    {
+                        var pm = pi.GetModules();
+                        var count = modules.Length;
+
+                        if (pm.Length > 0)
+                            hasRead = true;
+
+                        for (var i = pm.Length - 1; i >= 0; --i)
+                        {
+                            var n = Path.GetFileName(pm[i]);
+                            for (var j = modules.Length - 1; j >= 0; --j)
+                            {
+                                if (modules[j].Equals(n, StringComparison.OrdinalIgnoreCase))
+                                {
+                                    if (all)
+                                    {
+                                        if (--count == 0)
+                                            return true;
+                                    }
+                                    else
+                                    {
+                                        return true;
+                                    }
+                                }
+                            }
+                        }
+                    }
+                    catch (System.ComponentModel.Win32Exception e)
+                    {
+                        switch (e.NativeErrorCode)
+                        {
+                            case 5:     //access denied
+                            case 299:   //32-bit can't read 64-bit
+
+                                return false;
+                        }
+                    }
+                    catch { }
+
+                    if (!hasRead && FindModules(modules, all, 0))
+                        return true;
+
+                    if (limit == 0 || limit > 0 && Environment.TickCount - start > limit || process.WaitForExit(500))
+                        break;
                 }
 
                 return false;

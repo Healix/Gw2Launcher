@@ -18,6 +18,7 @@ namespace Gw2Launcher.Windows.Native
         public const string SHLWAPI = "shlwapi.dll";
         public const string DWMAPI = "dwmapi.dll";
         public const string UXTHEME = "uxtheme.dll";
+        public const string PSAPI = "psapi.dll";
 
         [DllImport(USER32, SetLastError = true)]
         [return: MarshalAs(UnmanagedType.Bool)]
@@ -430,5 +431,11 @@ namespace Gw2Launcher.Windows.Native
 
         [DllImport(SHELL32)]
         internal static extern int SHGetImageList(int iImageList, ref Guid riid, out IImageList ppv);
+
+        [DllImport(PSAPI, SetLastError = true)]
+        internal static extern int EnumProcessModulesEx(IntPtr hProcess, IntPtr lphModule, int cb, out int lpcbNeeded, uint dwFilterFlag);
+
+        [DllImport(PSAPI)]
+        internal static extern uint GetModuleFileNameEx(IntPtr hProcess, IntPtr hModule, [Out] StringBuilder lpBaseName, [In] [MarshalAs(UnmanagedType.U4)] int nSize);
     }
 }

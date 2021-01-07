@@ -32,10 +32,14 @@ namespace Gw2Launcher.UI
         private Windows.Taskbar taskBar;
         private DateTime nextAutoUpdate;
         private CancellationTokenSource cancelTime;
+        private Form parent;
 
-        public formBackgroundPatcher()
+        public formBackgroundPatcher(Form parent)
         {
             InitializeComponents();
+
+            this.parent = parent;
+            var h = this.Handle;
 
             taskBar = new Windows.Taskbar();
 
@@ -495,7 +499,13 @@ namespace Gw2Launcher.UI
         {
             var bp = Tools.BackgroundPatcher.Instance;
             if (checkEnabled.Checked && bp != null && !bp.IsActive)
-                bp.Start();
+            {
+                Util.Invoke.Async(parent,
+                    delegate
+                    {
+                        bp.Start();
+                    });
+            }
         }
 
         private void checkEnabled_CheckedChanged(object sender, EventArgs e)
@@ -692,7 +702,13 @@ namespace Gw2Launcher.UI
 
             var bp = Tools.BackgroundPatcher.Instance;
             if (checkEnabled.Checked && bp != null && !bp.IsActive)
-                bp.Start(true);
+            {
+                Util.Invoke.Async(parent,
+                    delegate
+                    {
+                        bp.Start(true);
+                    });
+            }
         }
 
         private void checkUseHttps_Click(object sender, EventArgs e)

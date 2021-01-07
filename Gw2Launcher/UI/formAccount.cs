@@ -524,7 +524,7 @@ namespace Gw2Launcher.UI
             }
             else
             {
-                textWindowed.Text = ToString(account.WindowBounds);
+                textWindowed.Text = account.WindowBounds.Width > 0 ? ToString(account.WindowBounds) : "";
 
                 checkWindowedPreventChanges.Checked = account.WindowOptions.HasFlag(Settings.WindowOptions.PreventChanges);
                 checkWindowedDisableTitleButtons.Checked = account.WindowOptions.HasFlag(Settings.WindowOptions.DisableTitleBarButtons);
@@ -2459,7 +2459,7 @@ namespace Gw2Launcher.UI
                 {
                     if (isMaster)
                     {
-                        a.WindowBounds = FixSize(ParseWindowSize(textWindowed.Text));
+                        a.WindowBounds = textWindowed.TextLength > 0 ? FixSize(ParseWindowSize(textWindowed.Text)) : Rectangle.Empty;
                     }
                     else if (aaWindowed.Checked)
                     {

@@ -3494,7 +3494,7 @@ namespace Gw2Launcher.Client
         /// <returns></returns>
         public static IProfileInformation Activate(string dat)
         {
-            var pd = new PathData();
+            var pd = new PathData(false);
             if (!pd.IsAppDataInUserFolder)
                 throw new NotSupportedException();
             var path = Util.FileUtil.GetTemporaryFolderName(Path.GetDirectoryName(dat), "temp-{0}");

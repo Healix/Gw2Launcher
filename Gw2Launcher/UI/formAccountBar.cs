@@ -253,6 +253,14 @@ namespace Gw2Launcher.UI
             {
                 int result;
 
+                if (a.account.Pinned != b.account.Pinned)
+                {
+                    if (a.account.Pinned)
+                        return -1;
+                    else
+                        return 1;
+                }
+
                 if (grouping != Settings.GroupMode.None)
                 {
                     result = 0;
@@ -339,6 +347,7 @@ namespace Gw2Launcher.UI
         private Snap[] snaps;
         private Rectangle boundsBar;
         private Settings.ScreenAnchor boundsBarType;
+        private bool delayedSorting;
 
         private Panel panelContent, panelContainer;
         private ContextMenuStrip contextMenu;
@@ -1918,6 +1927,11 @@ namespace Gw2Launcher.UI
             }
         }
 
+        void account_PinnedChanged(object sender, EventArgs e)
+        {
+            SortButtonsDelayed();
+        }
+
         private Orientation LayoutOrientation
         {
             get
@@ -2258,6 +2272,7 @@ namespace Gw2Launcher.UI
             account.ColorKeyChanged += account_ColorKeyChanged;
             account.IconChanged += account_IconChanged;
             account.IconTypeChanged += account_IconTypeChanged;
+            account.PinnedChanged += account_PinnedChanged;
 
             return b;
         }
@@ -2444,6 +2459,8 @@ namespace Gw2Launcher.UI
 
         private void SortButtons()
         {
+            delayedSorting = false;
+
             buttons.Sort(new AccountButtonComparer(sorting));
 
             for (int i = 0, count = buttons.Count; i < count; i++)
@@ -2452,6 +2469,15 @@ namespace Gw2Launcher.UI
             }
 
             OnButtonsChanged();
+        }
+
+        private void SortButtonsDelayed()
+        {
+            if (delayedSorting)
+                return;
+            delayedSorting = true;
+
+            this.BeginInvoke(new Action(SortButtons));
         }
 
         protected override void OnPaintBackground(PaintEventArgs e)
@@ -2707,6 +2733,7 @@ namespace Gw2Launcher.UI
                         account.ColorKeyChanged -= account_ColorKeyChanged;
                         account.IconChanged -= account_IconChanged;
                         account.IconTypeChanged -= account_IconTypeChanged;
+                        account.PinnedChanged -= account_PinnedChanged;
                     }
                 }
 

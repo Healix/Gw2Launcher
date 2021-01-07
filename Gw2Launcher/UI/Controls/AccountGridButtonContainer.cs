@@ -42,6 +42,14 @@ namespace Gw2Launcher.UI.Controls
             {
                 int result;
 
+                if (a.Pinned != b.Pinned)
+                {
+                    if (a.Pinned)
+                        return -1;
+                    else
+                        return 1;
+                }
+
                 if (groupingEnabled)
                 {
                     result = 0;
@@ -2658,7 +2666,9 @@ namespace Gw2Launcher.UI.Controls
                 else
                 {
                     if (pageChanged && b.Paging != null)
+                    {
                         b.Paging.Current = null;
+                    }
                     v = true;
                 }
 
@@ -2675,11 +2685,26 @@ namespace Gw2Launcher.UI.Controls
                 }
             }
 
-            if (pageChanged)
+            if (pageChanged && count > 0)
             {
-                if (count > 0 && comparer != null && comparer.IsSortingCustom)
+                if (comparer != null)
                     Sort(comparer.Options);
+                else
+                    Sort(Settings.Sorting.Value);
             }
+
+            //if (sort)
+            //{
+            //    if (comparer != null)
+            //        Sort(comparer.Options);
+            //    else
+            //        Sort(Settings.Sorting.Value);
+            //}
+            //else if (pageChanged && count > 0)
+            //{
+            //    if (comparer != null && comparer.IsSortingCustom)
+            //        Sort(comparer.Options);
+            //}
 
             if (filtered || comparer == null || comparer.Options.Sorting.Mode != Settings.SortMode.CustomGrid)
             {

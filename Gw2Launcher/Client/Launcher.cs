@@ -4070,7 +4070,7 @@ namespace Gw2Launcher.Client
 
         private static bool IsWindowed(Settings.IAccount account)
         {
-            return account.Windowed && !account.WindowBounds.IsEmpty;
+            return account.Windowed;// && !account.WindowBounds.IsEmpty;
         }
 
         /// <summary>
@@ -5497,7 +5497,7 @@ namespace Gw2Launcher.Client
 
                         if (!r.IsEmpty)
                         {
-                            watcher.SetBounds(account.Settings, watcher.Process, e.Handle, r, 30000, watcher.Events,
+                            watcher.SetBounds(account.Settings, watcher.Process, e.Handle, r, 1000, watcher.Events,
                                 delegate(IntPtr w)
                                 {
                                     OnWindowStateChanged(w, account);
@@ -5742,12 +5742,15 @@ namespace Gw2Launcher.Client
                                 //this is only a backup and will only happen if the cancel message failed
                                 //note that the window bounds cannot be set until the actual operation finishes
 
-                                WindowWatcher.SetBounds(e.Account.Settings, e.Account.Process.Process, handle, bounds, 5000, (WindowEvents.Events)sender,
-                                    delegate(IntPtr w)
-                                    {
-                                        OnWindowStateChanged(w, e.Account);
-                                    },
-                                    true, (options & Settings.WindowOptions.TopMost) == Settings.WindowOptions.TopMost);
+                                if (!bounds.IsEmpty)
+                                {
+                                    WindowWatcher.SetBounds(e.Account.Settings, e.Account.Process.Process, handle, bounds, 5000, (WindowEvents.Events)sender,
+                                        delegate(IntPtr w)
+                                        {
+                                            OnWindowStateChanged(w, e.Account);
+                                        },
+                                        true, (options & Settings.WindowOptions.TopMost) == Settings.WindowOptions.TopMost);
+                                }
 
                                 break;
                         }

@@ -128,6 +128,7 @@ namespace Gw2Launcher.UI
             this.buttonFilterClose = new Gw2Launcher.UI.Controls.FlatShapeButton();
             this.sizeDragButton1 = new Gw2Launcher.UI.Controls.SizeDragButton();
             this.contextSelection = new Gw2Launcher.UI.Controls.ContextMenuStripStayOpenOnClick(this.components);
+            this.pinToTopToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.panelContainer.SuspendLayout();
             this.contextMenu.SuspendLayout();
             this.contextNotify.SuspendLayout();
@@ -193,7 +194,7 @@ namespace Gw2Launcher.UI
             this.newToolStripMenuItem,
             this.settingsToolStripMenuItem,
             this.toolsToolStripMenuItem1});
-            this.contextMenu.Size = new System.Drawing.Size(208, 326);
+            this.contextMenu.Size = new System.Drawing.Size(208, 348);
             // 
             // cancelPendingLaunchesToolStripMenuItem
             // 
@@ -342,6 +343,7 @@ namespace Gw2Launcher.UI
             this.toolStripMenuItem27,
             this.createShortcutSelectedToolStripMenuItem,
             this.showOnPageToolStripMenuItem,
+            this.pinToTopToolStripMenuItem,
             this.cloneToolStripMenuItem,
             this.toolStripMenuItem8,
             this.clearSelectionToolStripMenuItem});
@@ -1031,6 +1033,12 @@ namespace Gw2Launcher.UI
             this.contextSelection.StayOpenOnClick = true;
             this.contextSelection.Closed += new System.Windows.Forms.ToolStripDropDownClosedEventHandler(this.contextSelection_Closed);
             // 
+            // pinToTopToolStripMenuItem
+            // 
+            this.pinToTopToolStripMenuItem.Size = new System.Drawing.Size(206, 22);
+            this.pinToTopToolStripMenuItem.Text = "Pin to top";
+            this.pinToTopToolStripMenuItem.Click += new System.EventHandler(this.pinToTopToolStripMenuItem_Click);
+            // 
             // formMain
             // 
             this.AllowDrop = true;
@@ -1172,5 +1180,6 @@ namespace Gw2Launcher.UI
         private System.Windows.Forms.ToolStripMenuItem editmultipleToolStripMenuItem;
         private System.Windows.Forms.ToolStripMenuItem showOnPageToolStripMenuItem;
         private Controls.FlatShapeButton buttonLaunchAll;
+        private System.Windows.Forms.ToolStripMenuItem pinToTopToolStripMenuItem;
     }
 }

@@ -11,7 +11,7 @@ namespace Gw2Launcher
 {
     public static class Settings
     {
-        private const ushort VERSION = 10;
+        private const ushort VERSION = 11;
 
         public const string ASSET_HOST = "assetcdn.101.arenanetworks.com";
         public const string ASSET_COOKIE = "authCookie=access=/latest/*!/manifest/program/*!/program/*~md5=4e51ad868f87201ad93e428ff30c6691";
@@ -329,6 +329,12 @@ namespace Gw2Launcher
             }
 
             public ushort SortKey
+            {
+                get;
+                set;
+            }
+
+            public bool Pinned
             {
                 get;
                 set;
@@ -1172,7 +1178,8 @@ namespace Gw2Launcher
                                IconTypeChanged,
                                ColorKeyChanged,
                                LastUsedUtcChanged,
-                               JumpListPinningChanged;
+                               JumpListPinningChanged,
+                               PinnedChanged;
 
             /// <summary>
             /// Unique identifier
@@ -1517,6 +1524,15 @@ namespace Gw2Launcher
             /// Pages account is displayed on
             /// </summary>
             PageData[] Pages
+            {
+                get;
+                set;
+            }
+
+            /// <summary>
+            /// Pin to top
+            /// </summary>
+            bool Pinned
             {
                 get;
                 set;
@@ -2576,7 +2592,8 @@ namespace Gw2Launcher
                                       IconTypeChanged,
                                       ColorKeyChanged,
                                       LastUsedUtcChanged,
-                                      JumpListPinningChanged;
+                                      JumpListPinningChanged,
+                                      PinnedChanged;
 
             public Account(AccountType type, ushort uid)
                 : this(type)
@@ -3265,6 +3282,26 @@ namespace Gw2Launcher
                 }
             }
 
+            public bool _Pinned;
+            public bool Pinned
+            {
+                get
+                {
+                    return _Pinned;
+                }
+                set
+                {
+                    if (_Pinned != value)
+                    {
+                        _Pinned = value;
+                        OnValueChanged();
+
+                        if (PinnedChanged != null)
+                            PinnedChanged(this, EventArgs.Empty);
+                    }
+                }
+            }
+
             protected void CloneTo(Account a)
             {
                 a._Arguments = _Arguments;
@@ -3299,6 +3336,7 @@ namespace Gw2Launcher
                 a._Image = _Image;
                 a._BackgroundImage = _BackgroundImage;
                 //_Pages is not included
+                //_Pinned is not included
 
                 a._PendingFiles = _PendingFiles;
 
@@ -5840,24 +5878,25 @@ namespace Gw2Launcher
                                     account.VolumeEnabled,
                                     account._RunAfter != null,
                                     !string.IsNullOrEmpty(account._Email),
+                                    //8
                                     account._Password != null && !account._Password.Data.IsEmpty,
                                     !string.IsNullOrEmpty(account._BackgroundImage),
-                                    //10
                                     account._Image != null,
                                     account._PendingFiles,
                                     !string.IsNullOrEmpty(account._ScreenshotsLocation),
                                     account._Pages != null, //!string.IsNullOrEmpty(account._ApiKey),
                                     account._TotpKey != null && account._TotpKey.Length > 0,
-                                    false, //account._ApiData != null,
+                                    account._Pinned, //account._ApiData != null,
+                                    //16
                                     !account._WindowBounds.IsEmpty,
                                     false, //(byte)account._ProcessPriority > 0,
                                     false, //account._ClientPort != 0,
                                     false, //account._LastDailyCompletionUtc.Ticks != 1,
-                                    //20
                                     account._Mute  != 0,
                                     account._ScreenshotsFormat != 0,
                                     account._NetworkAuthorizationState != NetworkAuthorizationState.Disabled,
                                     account._ProcessPriority != ProcessPriorityClass.None,
+                                    //24
                                     account._ProcessAffinity != 0,
                                     account._Notes != null && account._Notes.Count > 0,
                                     !account._ColorKey.IsEmpty,
@@ -5952,6 +5991,7 @@ namespace Gw2Launcher
                                     {
                                         writer.Write(pages[j].Page);
                                         writer.Write(pages[j].SortKey);
+                                        writer.Write(pages[j].Pinned);
                                     }
                                 }
 
@@ -7338,6 +7378,9 @@ namespace Gw2Launcher
                                         for (var j = 0; j < pages.Length; j++)
                                         {
                                             pages[j] = new PageData(reader.ReadByte(), reader.ReadUInt16());
+
+                                            if (version >= 11)
+                                                pages[j].Pinned = reader.ReadBoolean();
                                         }
 
                                         if (pages.Length == 0)
@@ -7355,14 +7398,11 @@ namespace Gw2Launcher
                                 if (booleans[14])
                                     account._TotpKey = reader.ReadBytes(reader.ReadByte());
 
-                                if (version >= 10)
+                                if (version >= 11)
                                 {
-                                    if (booleans[15])
-                                    {
-                                        //notused
-                                    }
+                                    account._Pinned = booleans[15];
                                 }
-                                else
+                                else if (version <= 9)
                                 {
                                     if (booleans[15])
                                     {
@@ -9136,11 +9176,11 @@ namespace Gw2Launcher
             {
                 case AccountType.GuildWars1:
 
-                    return new Account(0);
+                    return new Gw1Account(0);
 
                 default:
 
-                    return new Account(0);
+                    return new Gw2Account(0);
             }
         }
 

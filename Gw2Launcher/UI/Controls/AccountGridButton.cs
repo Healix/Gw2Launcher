@@ -182,6 +182,8 @@ namespace Gw2Launcher.UI.Controls
 
         public class PagingData
         {
+            public event EventHandler PageChanged;
+
             public PagingData(Settings.PageData[] pages)
             {
                 _Pages = pages;
@@ -212,10 +214,11 @@ namespace Gw2Launcher.UI.Controls
                 set
                 {
                     _Current = value;
+
                     if (value == null)
-                        _Page = 0;
+                        Page = 0;
                     else
-                        _Page = value.Page;
+                        Page = value.Page;
                 }
             }
 
@@ -228,14 +231,20 @@ namespace Gw2Launcher.UI.Controls
                 }
                 set
                 {
-                    _Page = value;
+                    if (_Page != value)
+                    {
+                        _Page = value;
+
+                        if (PageChanged != null)
+                            PageChanged(this, EventArgs.Empty);
+                    }
                 }
             }
 
             public bool SetCurrent(byte page)
             {
                 _Current = Find(page);
-                _Page = page;
+                Page = page;
 
                 return _Current != null;
             }
@@ -1292,6 +1301,23 @@ namespace Gw2Launcher.UI.Controls
                         brush.Color = _ColorKey;
                         g.FillRectangle(brush, 0, 0, (int)(g.DpiX / 96f * 5), height);
                     }
+
+                    if (_Pinned)
+                    {
+                        var scale = g.DpiX / 96f;
+                        var sz = scale * 5;
+                        var ofs = scale * 5;
+
+                        g.SmoothingMode = SmoothingMode.AntiAlias;
+
+                        brush.Color = background.A < 255 ? _Colors[ColorNames.BackColorDefault] : background;
+                        g.FillEllipse(brush, width - BORDER_SIZE - sz - ofs - 1, BORDER_SIZE + ofs - 1, sz + 2, sz + 2);
+
+                        brush.Color = Util.Color.Gradient(brush.Color, _Colors[ColorNames.Name], 0.5f);
+                        g.FillEllipse(brush, width - BORDER_SIZE - sz - ofs, BORDER_SIZE + ofs, sz, sz);
+
+                        g.SmoothingMode = SmoothingMode.None;
+                    }
                 }
             }
         }
@@ -1453,6 +1479,43 @@ namespace Gw2Launcher.UI.Controls
                 else if (_AccountData != null)
                 {
                     _AccountData.SortKey = value;
+                }
+            }
+        }
+
+        private bool _Pinned;
+        public bool Pinned
+        {
+            get
+            {
+                if (_Paging != null && _Paging.Page > 0)
+                {
+                    if (_Paging.Current != null)
+                        return _Paging.Current.Pinned;
+                }
+                else if (_AccountData != null)
+                {
+                    return _AccountData.Pinned;
+                }
+
+                return false;
+            }
+            set
+            {
+                if (_Paging != null && _Paging.Page > 0)
+                {
+                    if (_Paging.Current != null)
+                        _Paging.Current.Pinned = value;
+                }
+                else if (_AccountData != null)
+                {
+                    _AccountData.Pinned = value;
+                }
+
+                if (_Pinned != value)
+                {
+                    _Pinned = value;
+                    OnRedrawRequired();
                 }
             }
         }
@@ -1701,9 +1764,15 @@ namespace Gw2Launcher.UI.Controls
                     this.AccountName = value.WindowsAccount;
                     this.AccountType = value.Type;
                     if (value.Pages == null)
+                    {
                         this.Paging = null;
+                        Paging_PageChanged(null, null);
+                    }
                     else
+                    {
                         this.Paging = new PagingData(value.Pages);
+                        Paging_PageChanged(null, null);
+                    }
                     if (changed || value.LastUsedUtc > _LastUsed)
                         this.LastUsedUtc = value.LastUsedUtc;
                     this.ShowDailyLogin = value.ShowDailyLogin;
@@ -1997,7 +2066,27 @@ namespace Gw2Launcher.UI.Controls
             }
             set
             {
-                _Paging = value;
+                if (!object.ReferenceEquals(_Paging, value))
+                {
+                    if (_Paging != null)
+                        _Paging.PageChanged -= Paging_PageChanged;
+
+                    _Paging = value;
+
+                    if (value != null)
+                        value.PageChanged += Paging_PageChanged;
+                }
+            }
+        }
+
+        void Paging_PageChanged(object sender, EventArgs e)
+        {
+            var b = Pinned;
+
+            if (_Pinned != b)
+            {
+                _Pinned = b;
+                OnRedrawRequired();
             }
         }
 

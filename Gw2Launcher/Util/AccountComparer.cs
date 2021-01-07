@@ -72,6 +72,14 @@ namespace Gw2Launcher.Util
 
         public virtual int Compare(Settings.IAccount a, Settings.IAccount b)
         {
+            if (a.Pinned != b.Pinned)
+            {
+                if (a.Pinned)
+                    return -1;
+                else
+                    return 1;
+            }
+
             int result;
 
             if (groupingEnabled)

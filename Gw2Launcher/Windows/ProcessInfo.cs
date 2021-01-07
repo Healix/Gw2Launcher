@@ -14,6 +14,7 @@ namespace Gw2Launcher.Windows
         private int _size;
         private IntPtr _buffer;
         private IntPtr _process;
+        private StringBuilder _sb;
 
         private int sizeofPBI;
         private int sizeofPEB;
@@ -213,6 +214,54 @@ namespace Gw2Launcher.Windows
             while (true);
 
             return null;
+        }
+
+        public string[] GetModules()
+        {
+            var sz = IntPtr.Size;
+            var cb = _size;
+
+            if (cb < 256)
+            {
+                _size = cb = sz * 100;
+                _buffer = Marshal.ReAllocHGlobal(_buffer, (IntPtr)_size);
+            }
+
+            do
+            {
+                if (NativeMethods.EnumProcessModulesEx(_process, _buffer, cb, out cb, 3) != 1)
+                    throw new System.ComponentModel.Win32Exception(Marshal.GetLastWin32Error());
+                else if (cb == 0)
+                    return new string[0];
+
+                if (cb <= _size)
+                    break;
+
+                _size = cb = cb + sz * 10;
+                _buffer = Marshal.ReAllocHGlobal(_buffer, (IntPtr)_size);
+            }
+            while (true);
+
+            if (_sb == null)
+                _sb = new StringBuilder(256);
+            else
+                _sb.EnsureCapacity(256);
+
+            var count = cb / sz;
+            var modules = new string[count];
+            var ofs = 0;
+
+            for (var i = 0; i < count; i++)
+            {
+                var h = Marshal.ReadIntPtr(_buffer, ofs);
+                ofs += sz;
+
+                NativeMethods.GetModuleFileNameEx(_process, h, _sb, 256);
+
+                modules[i] = _sb.ToString();
+            }
+
+            return modules;
         }
 
         public void Dispose()

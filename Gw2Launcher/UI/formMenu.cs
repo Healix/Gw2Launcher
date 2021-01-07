@@ -516,18 +516,25 @@ namespace Gw2Launcher.UI
             var sw = new System.Diagnostics.Stopwatch();
             sw.Start();
 
-            EventHandler e = delegate
+            EventHandler onChange = delegate
             {
                 abort = true;
             };
 
-            this.Disposed += e;
-            this.Fading += e;
-            this.VisibleChanged += e;
+            EventHandler onVisibleChanged = delegate
+            {
+                if (!this.Visible)
+                    abort = true;
+            };
+
+            this.Disposed += onChange;
+            this.Fading += onChange;
+            this.VisibleChanged += onVisibleChanged;
 
             do
             {
-                await Task.Delay(10);
+                if (duration > 0)
+                    await Task.Delay(10);
 
                 if (abort)
                     break;
@@ -571,19 +578,19 @@ namespace Gw2Launcher.UI
             }
             while (true);
 
-            this.Disposed -= e;
-            this.Fading -= e;
-            this.VisibleChanged -= e;
+            this.Disposed -= onChange;
+            this.Fading -= onChange;
+            this.VisibleChanged -= onVisibleChanged;
 
             return !abort;
         }
 
         private void OnMenuItemSelected(MenuItem i)
         {
+            OnHide();
+
             if (MenuItemSelected != null)
                 MenuItemSelected(this, i);
-
-            OnHide();
         }
 
         private void labelSearch_Click(object sender, EventArgs e)
