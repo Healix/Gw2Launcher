@@ -1424,8 +1424,11 @@ namespace Gw2Launcher.UI
 
         private void Initialize()
         {
-            var s = Settings.WindowBounds[typeof(UI.formMain)];
+            var page = Settings.SelectedPage.Value;
+            if (page > 0 && page < mpWindow.Pages)
+                mpWindow.Page = page;
 
+            var s = Settings.WindowBounds[typeof(UI.formMain)];
             Point location;
             Size size;
 
@@ -1458,10 +1461,6 @@ namespace Gw2Launcher.UI
 
                 location = l;
             }
-
-            var page = Settings.SelectedPage.Value;
-            if (page > 0 && page < mpWindow.Pages)
-                mpWindow.Page = page;
 
             if (this.AutoSizeGrid)
             {
@@ -4092,11 +4091,11 @@ namespace Gw2Launcher.UI
             //replace the old file instead of creating a new one if possible
             var replace = false;
 
-            if (fileBefore != null && fileAfter != null && fileBefore.References == 0 && fileAfter.References == 1 && fileBefore.UID != fileAfter.UID)
+            if (fileBefore != null && fileAfter != null && fileBefore.References == 0 && fileAfter.References == 1 && fileBefore.UID != fileAfter.UID && !string.Equals(Client.FileManager.GetDefaultPath(type), fileBefore.Path, StringComparison.OrdinalIgnoreCase))
             {
                 string existing = null;
 
-                if (!string.IsNullOrEmpty(fileBefore.Path) && File.Exists(fileBefore.Path))
+                if (!string.IsNullOrEmpty(fileBefore.Path) && !Client.FileManager.IsDefaultPath(type, fileBefore.Path) && File.Exists(fileBefore.Path))
                 {
                     try
                     {

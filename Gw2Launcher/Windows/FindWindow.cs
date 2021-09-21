@@ -174,6 +174,49 @@ namespace Gw2Launcher.Windows
             }
         }
 
+        public static IntPtr Find(int processId, string[] classNames, StringBuilder buffer = null)
+        {
+            SearchData sd = new SearchData
+            {
+                limit = 1,
+                processId = (uint)processId,
+                buffer = buffer != null ? buffer : new StringBuilder(classNames == null ? 250 : classNames[0].Length + 1),
+                results = new List<SearchResult>()
+            };
+
+            if (classNames != null)
+            {
+                sd.className = new TextComparer(
+                    delegate(string cn, StringBuilder sb)
+                    {
+                        for (var i = classNames.Length - 1; i >= 0;--i)
+                        {
+                            if (sb.Length == classNames[i].Length && sb.ToString().Equals(classNames[i]))
+                            {
+                                return true;
+                            }
+                        }
+                        return false;
+                    });
+            }
+
+            var h = GCHandle.Alloc(sd);
+            try
+            {
+                EnumWindows(new EnumWindowsProc(EnumWindow), GCHandle.ToIntPtr(h));
+            }
+            finally
+            {
+                if (h.IsAllocated)
+                    h.Free();
+            }
+
+            if (sd.results.Count > 0)
+                return sd.results[0].Handle;
+
+            return IntPtr.Zero;
+        }
+
         public static IntPtr Find(int processId, string className, StringBuilder buffer = null)
         {
             SearchData sd = new SearchData

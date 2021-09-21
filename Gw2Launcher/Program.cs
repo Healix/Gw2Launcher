@@ -17,8 +17,8 @@ namespace Gw2Launcher
     static class Program
     {
         public const byte RELEASE_VERSION = 14;
-        public const uint BUILD = 6453;
-        public const long RELEASE_TIMESTAMP = 5249141762427387904;
+        public const uint BUILD = 6500;
+        public const long RELEASE_TIMESTAMP = 5249363810427387904;
 
         [STAThread]
         static int Main(string[] args)

@@ -3202,7 +3202,7 @@ namespace Gw2Launcher.Client
 
                     #region Activate localized path
 
-                    if (Settings.GuildWars2.LocalizeAccountExecution.Value.HasFlag(Settings.LocalizeAccountExecutionOptions.Enabled))
+                    if (!isUpdate && Settings.GuildWars2.LocalizeAccountExecution.Value.HasFlag(Settings.LocalizeAccountExecutionOptions.Enabled))
                     {
                         try
                         {

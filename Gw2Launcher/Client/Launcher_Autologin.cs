@@ -6,6 +6,7 @@ using System.Threading.Tasks;
 using System.Threading;
 using System.Diagnostics;
 using System.Drawing;
+using System.IO;
 using Gw2Launcher.Windows.Native;
 
 namespace Gw2Launcher.Client
@@ -100,6 +101,7 @@ namespace Gw2Launcher.Client
             public event EventHandler<Account> LoginEntered;
 
             private uint coordClient, coordPlay;
+            private byte launcherType;
 
             private SynchronizationContext context;
             private int contextId;
@@ -335,6 +337,22 @@ namespace Gw2Launcher.Client
 
             private async Task<bool> DoLogin(QueuedAccount q)
             {
+                #region Launcher type
+
+                if (launcherType == 0)
+                {
+                    try
+                    {
+                        if (Directory.Exists(Path.Combine(Path.GetDirectoryName(Settings.GuildWars2.Path.Value), "Gw2.dat")))
+                            launcherType = 2;
+                        else
+                            launcherType = 1;
+                    }
+                    catch { }
+                }
+
+                #endregion
+
                 #region Find client area
 
                 if (coordClient == 0)
@@ -357,10 +375,18 @@ namespace Gw2Launcher.Client
                             var x = w * 4 / 5;
                             var y = h / 2;// -100;
 
+                            if (launcherType == 2)
+                            {
+                                x = w * 9 / 10;
+                                y = h * 5 / 6;
+                            }
+
                             if (coordPlay == 0)
                             {
                                 if (v != null && !v.PlayButton.IsEmpty)
                                     coordPlay = (uint)v.EmptyArea.Y << 16 | v.EmptyArea.X;
+                                else if (launcherType == 2)
+                                    coordPlay = (uint)(((uint)(h * 0.766f) << 16) | (uint)(w * 0.905f));
                                 else
                                     coordPlay = (uint)(((uint)(h * 0.725f) << 16) | (uint)(w * 0.738f));
                             }
@@ -395,6 +421,15 @@ namespace Gw2Launcher.Client
                 //disabling to prevent interference from clicking (changes focus) - it'll still process keyboard input
                 Windows.WindowLong.Add(handle, GWL.GWL_STYLE, WindowStyle.WS_DISABLED);
 
+                if (launcherType == 2)
+                {
+                    //"click" to show the login box
+                    NativeMethods.SendMessage(handle, 0x0201, 1, coordPlay); //WM_LBUTTONDOWN
+                    NativeMethods.SendMessage(handle, 0x0202, 0, coordPlay); //WM_LBUTTONUP
+
+                    await Task.Delay(100);
+                }
+
                 try
                 {
                     Action wait = delegate
@@ -412,7 +447,10 @@ namespace Gw2Launcher.Client
                         return false;
 
                     //tab back to the email field, which will highlight any existing text
-                    NativeMethods.SendMessage(handle, WindowMessages.WM_KEYDOWN, (IntPtr)0x09, IntPtr.Zero); //VK_TAB
+                    for (var i = (launcherType == 2 ? 6 : 1); i > 0; --i)
+                    {
+                        NativeMethods.SendMessage(handle, WindowMessages.WM_KEYDOWN, (IntPtr)0x09, IntPtr.Zero); //VK_TAB
+                    }
 
                     wait();
 

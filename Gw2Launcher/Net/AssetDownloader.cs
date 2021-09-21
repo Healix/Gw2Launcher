@@ -1004,7 +1004,16 @@ namespace Gw2Launcher.Net
                 if (totalBytes != l)
                 {
                     if (BytesDownloaded != null)
-                        BytesDownloaded(this, (uint)(l - totalBytes));
+                    {
+                        try
+                        {
+                            BytesDownloaded(this, (uint)(l - totalBytes));
+                        }
+                        catch (Exception e)
+                        {
+                            Util.Logging.Log(e);
+                        }
+                    }
                     totalBytes = l;
                 }
 
@@ -1017,7 +1026,16 @@ namespace Gw2Launcher.Net
                     {
                         double rate = (l - lastSample0) / elapsed;
                         if (DownloadRate != null)
-                            DownloadRate(this, (uint)(rate + 0.5));
+                        {
+                            try
+                            {
+                                DownloadRate(this, (uint)(rate + 0.5));
+                            }
+                            catch (Exception e)
+                            {
+                                Util.Logging.Log(e);
+                            }
+                        }
 
                         nextSample1 = nextSample0;
                         lastSample1 = lastSample0;
@@ -1031,7 +1049,16 @@ namespace Gw2Launcher.Net
                             reset = true;
 
                             if (DownloadRate != null)
-                                DownloadRate(this, 0);
+                            {
+                                try
+                                {
+                                    DownloadRate(this, 0);
+                                }
+                                catch (Exception e)
+                                {
+                                    Util.Logging.Log(e);
+                                }
+                            }
                         }
                     }
                     else
@@ -1041,13 +1068,31 @@ namespace Gw2Launcher.Net
                         {
                             double rate = (l - lastSample1) / elapsed;
                             if (DownloadRate != null)
-                                DownloadRate(this, (uint)(rate + 0.5));
+                            {
+                                try
+                                {
+                                    DownloadRate(this, (uint)(rate + 0.5));
+                                }
+                                catch (Exception e)
+                                {
+                                    Util.Logging.Log(e);
+                                }
+                            }
                         }
                     }
                 }
 
                 if (Tick != null)
-                    Tick(this, EventArgs.Empty);
+                {
+                    try
+                    {
+                        Tick(this, EventArgs.Empty);
+                    }
+                    catch(Exception e)
+                    {
+                        Util.Logging.Log(e);
+                    }
+                }
             }
             while (work.threads > 0 || work.keepalive && !work.abort);
 

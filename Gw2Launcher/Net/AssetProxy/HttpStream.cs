@@ -779,6 +779,8 @@ namespace Gw2Launcher.Net.AssetProxy
 
             if (Int32.TryParse(s.ToString(), System.Globalization.NumberStyles.HexNumber, System.Globalization.CultureInfo.InvariantCulture, out chunkLength))
             {
+                chunkBytesRemaining = chunkLength;
+
                 if (chunkLength == 0)
                 {
                     //continue reading \r\n end of file

@@ -94,6 +94,8 @@ namespace Gw2Launcher.Windows
                     OBJECT_BASIC_INFORMATION basicInfo;
                     nameLength = 0;
 
+                    //warning: not fully implemented in Wine and will always return a 0 length
+
                     if (NativeMethods.NtQueryObject(_handle, ObjectInformationClass.ObjectBasicInformation, out basicInfo, Marshal.SizeOf(typeof(OBJECT_BASIC_INFORMATION)), ref nameLength) != NtStatus.Success)
                         return null;
 
@@ -310,6 +312,8 @@ namespace Gw2Launcher.Windows
                     buffers[j] = new Buffer(256);
                 }
 
+                var canQuery = infoClass == SYSTEM_INFORMATION_CLASS.SystemExtendedHandleInformation && !Settings.IsRunningWine;
+
                 //warning: NtQueryObject can cause a deadlock when querying an item that is waiting
 
                 var loop = Util.Loop.For(0, handleCount, THREADS, 1000,
@@ -341,7 +345,7 @@ namespace Gw2Launcher.Windows
                         if (processId > 0 && pid != _processId)
                             return;
 
-                        var name = GetObjectName(buffers[thread], pid, h, infoClass == SYSTEM_INFORMATION_CLASS.SystemExtendedHandleInformation);
+                        var name = GetObjectName(buffers[thread], pid, h, canQuery);
 
                         if (name != null && objectNameCallback(name))
                         {

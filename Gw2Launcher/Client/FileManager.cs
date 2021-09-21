@@ -1212,14 +1212,23 @@ namespace Gw2Launcher.Client
                         if (DeleteLocalizedRoot(false))
                             v.Commit();
                     }
-                    else if (((v.Value ^ v.ValueCommit) & Settings.LocalizeAccountExecutionOptions.OnlyIncludeBinFolders) != Settings.LocalizeAccountExecutionOptions.None)
+                    else
                     {
-                        if (DeleteLocalizedRoot(true))
+                        var changed = v.Value ^ v.ValueCommit;
+
+                        if ((changed & Settings.LocalizeAccountExecutionOptions.OnlyIncludeBinFolders) != Settings.LocalizeAccountExecutionOptions.None)
+                        {
+                            if (DeleteLocalizedRoot(true))
+                                v.Commit();
+                        }
+                        else if ((changed & (Settings.LocalizeAccountExecutionOptions.Enabled | Settings.LocalizeAccountExecutionOptions.OnlyIncludeBinFolders)) == Settings.LocalizeAccountExecutionOptions.None)
+                        {
                             v.Commit();
-                    }
-                    else if (((v.Value ^ v.ValueCommit) & (Settings.LocalizeAccountExecutionOptions.Enabled | Settings.LocalizeAccountExecutionOptions.OnlyIncludeBinFolders)) == Settings.LocalizeAccountExecutionOptions.None)
-                    {
-                        v.Commit();
+                        }
+                        else if ((changed & Settings.LocalizeAccountExecutionOptions.Enabled) == Settings.LocalizeAccountExecutionOptions.Enabled)
+                        {
+                            v.Commit();
+                        }
                     }
                 }
             }
@@ -1880,6 +1889,11 @@ namespace Gw2Launcher.Client
             }
 
             return null;
+        }
+
+        public static bool IsDefaultPath(FileType type, string path)
+        {
+            return IsDefaultPath(type, path, new PathData());
         }
 
         public static string GetDefaultPath(FileType type)
@@ -3020,18 +3034,22 @@ namespace Gw2Launcher.Client
                 }
                 else if (!File.Exists(account.DatFile.Path))
                 {
-                    var n = account.DatFile.Path;
+                    var path = Path.GetDirectoryName(account.DatFile.Path);
                     var l = GW2_BASIC_FOLDER_NAME.Length;
+                    string n;
 
-                    if (n.Substring(n.Length - l - 1, l).Equals(GW2_BASIC_FOLDER_NAME, StringComparison.OrdinalIgnoreCase))
-                        n = GW2_BASIC_FOLDER_NAME;
-                    else
+                    if (path.Substring(path.Length - l, l).Equals(GW2_BASIC_FOLDER_NAME, StringComparison.OrdinalIgnoreCase))
                         n = GW2_FOLDER_NAME;
+                    else
+                        n = GW2_BASIC_FOLDER_NAME;
 
                     var gw2altappdata = Path.Combine(pd.GetUserPath(PathData.SpecialPath.AppData), n);
                     if (File.Exists(Path.Combine(gw2altappdata, pd.GetRelativeProfilePath(PathData.SpecialPath.LocalDatFile))))
                     {
-                        OnPathChanged(gw2altappdata, Path.GetDirectoryName(account.DatFile.Path));// Path.Combine(pd.GetUserPath(PathData.SpecialPath.AppData), GW2_FOLDER_NAME));
+                        if ((File.GetAttributes(gw2altappdata) & FileAttributes.ReparsePoint) == 0)
+                        {
+                            OnPathChanged(gw2altappdata, path);// Path.Combine(pd.GetUserPath(PathData.SpecialPath.AppData), GW2_FOLDER_NAME));
+                        }
                     }
                 }
 
@@ -3082,18 +3100,22 @@ namespace Gw2Launcher.Client
                 }
                 else if (!File.Exists(account.GfxFile.Path))
                 {
-                    var n = account.GfxFile.Path;
+                    var path = Path.GetDirectoryName(account.GfxFile.Path);
                     var l = GW2_BASIC_FOLDER_NAME.Length;
+                    string n;
 
-                    if (n.Substring(n.Length - l - 1, l).Equals(GW2_BASIC_FOLDER_NAME, StringComparison.OrdinalIgnoreCase))
-                        n = GW2_BASIC_FOLDER_NAME;
-                    else
+                    if (path.Substring(path.Length - l, l).Equals(GW2_BASIC_FOLDER_NAME, StringComparison.OrdinalIgnoreCase))
                         n = GW2_FOLDER_NAME;
+                    else
+                        n = GW2_BASIC_FOLDER_NAME;
 
                     var gw2altappdata = Path.Combine(pd.GetUserPath(PathData.SpecialPath.AppData), n);
                     if (File.Exists(Path.Combine(gw2altappdata, pd.GetRelativeProfilePath(PathData.SpecialPath.GfxSettingsFile))))
                     {
-                        OnPathChanged(gw2altappdata, Path.GetDirectoryName(account.GfxFile.Path));
+                        if ((File.GetAttributes(gw2altappdata) & FileAttributes.ReparsePoint) == 0)
+                        {
+                            OnPathChanged(gw2altappdata, path);
+                        }
                     }
                 }
 
@@ -3615,13 +3637,20 @@ namespace Gw2Launcher.Client
                 {
                     if (!v.IsPending && File.GetLastWriteTimeUtc(exe) == fi.LastWriteTimeUtc)
                     {
-                        if (resync == 0)
-                            return exe;
-                        ++resync;
+                        if (File.GetLastWriteTimeUtc(Path.Combine(root, "Gw2.dat")) == File.GetLastWriteTimeUtc(Path.Combine(gw2root, "Gw2.dat")))
+                        {
+                            if (resync == 0)
+                                return exe;
+                            ++resync;
+                        }
                     }
                     else
                     {
-                        File.Delete(exe);
+                        try
+                        {
+                            File.Delete(exe);
+                        }
+                        catch { }
                     }
                 }
             }
@@ -3667,6 +3696,7 @@ namespace Gw2Launcher.Client
             var excludeUnknown = v.Value.HasFlag(Settings.LocalizeAccountExecutionOptions.ExcludeUnknownFiles);
             var fullsync = resync != RESYNC_STATE_REFRESH_ONLY;
             var deleteUnknowns = resync != 0 && v.Value.HasFlag(Settings.LocalizeAccountExecutionOptions.AutoSyncDeleteUnknowns);
+            var temp = Path.Combine(localroot, "temp");
 
             var gw2bin = Path.Combine(gw2root, bin);
             if (Directory.Exists(gw2bin))
@@ -3729,7 +3759,7 @@ namespace Gw2Launcher.Client
 
                                 try
                                 {
-                                    CopyDx912ProxyFolder(d, Path.Combine(root, name));
+                                    CopyDx912ProxyFolder(d, Path.Combine(root, name), temp);
                                 }
                                 catch (Exception ex)
                                 {
@@ -3751,7 +3781,63 @@ namespace Gw2Launcher.Client
 
                                 try
                                 {
-                                    CopyAddonsFolder(d, Path.Combine(root, name));
+                                    CopyAddonsFolder(d, Path.Combine(root, name), temp);
+                                }
+                                catch (Exception ex)
+                                {
+                                    Util.Logging.Log(ex);
+                                }
+
+                                break;
+                            case "Gw2.dat": //Chinese version splits Gw2.dat into multiple files within multiple subfolders under a Gw2.dat folder and uses Lock.dat within that folder as a lock check
+
+                                try
+                                {
+                                    var gw2datroot = Path.Combine(gw2root, name);
+                                    var datroot = Path.Combine(root, name);
+                                    var lw = Directory.GetLastWriteTimeUtc(gw2datroot);
+
+                                    if (exists)
+                                    {
+                                        if (Directory.GetLastWriteTimeUtc(datroot) == lw)
+                                            continue;
+                                        Util.FileUtil.DeleteDirectory(datroot, true);
+                                    }
+
+                                    Directory.CreateDirectory(datroot);
+
+                                    foreach (var d1 in Directory.GetDirectories(gw2datroot))
+                                    {
+                                        MakeJunction(datroot, gw2datroot, Path.GetFileName(d1));
+                                    }
+
+                                    foreach (var f1 in Directory.GetFiles(gw2datroot))
+                                    {
+                                        var n = Path.GetFileName(f1);
+
+                                        switch (n)
+                                        {
+                                            case "Lock.dat":
+
+                                                try
+                                                {
+                                                    File.Copy(f1, Path.Combine(datroot, n), true);
+                                                }
+                                                catch (Exception ex)
+                                                {
+                                                    Util.Logging.Log(ex);
+                                                }
+
+                                                break;
+                                            default:
+
+                                                MakeLink(datroot, gw2datroot, n);
+
+                                                break;
+                                        }
+                                    }
+
+                                    Directory.SetLastWriteTimeUtc(datroot, lw);
                                 }
                                 catch (Exception ex)
                                 {
@@ -3763,11 +3849,13 @@ namespace Gw2Launcher.Client
 
                                 try
                                 {
+                                    var d2 = Path.Combine(root, name);
+
                                     if (exists)
                                     {
-                                        if (Directory.GetLastWriteTimeUtc(d) == Directory.GetLastWriteTimeUtc(Path.Combine(gw2root, name)))
+                                        if (Directory.GetLastWriteTimeUtc(d) == Directory.GetLastWriteTimeUtc(d2))
                                             continue;
-                                        Directory.Delete(d);
+                                        Directory.Delete(d2);
                                     }
 
                                     MakeJunction(root, gw2root, name);
@@ -3796,10 +3884,11 @@ namespace Gw2Launcher.Client
 
                 if (fullsync)
                 {
-                    MakeLink(root, gw2root, "Gw2.dat");
-                    MakeLink(root, gw2root, "THIRDPARTYSOFTWAREREADME.txt");
+                    MakeLink(root, gw2root, "Gw2.dat", true, temp);
+                    MakeLink(root, gw2root, "THIRDPARTYSOFTWAREREADME.txt", true, temp);
+                    MakeLink(root, gw2root, fi.Name, true, temp);
 
-                    Windows.Symlink.CreateHardLink(exe, fi.FullName);
+                    //Windows.Symlink.CreateHardLink(exe, fi.FullName);
                 }
 
                 return exe;
@@ -3978,12 +4067,40 @@ namespace Gw2Launcher.Client
         /// <param name="link">The directory where the link will be created</param>
         /// <param name="target">The directory where the target file is located</param>
         /// <param name="name">The name of the target file</param>
-        private static void MakeLink(string link, string target, string name)
+        /// <param name="verifyExisting">If true, compares existing files and skips if already exists</param>
+        /// <param name="temp">Optional temp folder to move files when can't be deleted</param>
+        private static void MakeLink(string link, string target, string name, bool verifyExisting = false, string temp = null)
         {
             link = Path.Combine(link, name);
             target = Path.Combine(target, name);
+
             if (File.Exists(link))
-                File.Delete(link);
+            {
+                if (verifyExisting)
+                {
+                    if (File.GetLastWriteTimeUtc(link) == File.GetLastWriteTimeUtc(target))
+                        return;
+
+                    try
+                    {
+                        File.Delete(link);
+                    }
+                    catch
+                    {
+                        if (temp == null)
+                            throw;
+
+                        Directory.CreateDirectory(temp);
+                        var n = Util.FileUtil.GetTemporaryFileName(temp);
+                        File.Move(link, Path.Combine(temp, n));
+                    }
+                }
+                else
+                {
+                    File.Delete(link);
+                }
+            }
+
             if (File.Exists(target))
                 Windows.Symlink.CreateHardLink(link, target);
         }
@@ -4200,7 +4317,7 @@ namespace Gw2Launcher.Client
             }
         }
 
-        private static void CopyAddonsFolder(string from, string to)
+        private static void CopyAddonsFolder(string from, string to, string temp)
         {
             if (Directory.Exists(to))
             {
@@ -4225,6 +4342,27 @@ namespace Gw2Launcher.Client
 
                 switch (name)
                 {
+                    case "d912pxy":
+
+                        try
+                        {
+                            CopyDx912ProxyFolder(d, Path.Combine(to, name), temp);
+                        }
+                        catch (Exception ex)
+                        {
+                            Util.Logging.Log(ex);
+
+                            try
+                            {
+                                Util.FileUtil.DeleteDirectory(Path.Combine(to, name));
+                            }
+                            catch (Exception ex2)
+                            {
+                                Util.Logging.Log(ex2);
+                            }
+                        }
+
+                        break;
                     case "arcdps":
                     default:
 
@@ -4235,7 +4373,7 @@ namespace Gw2Launcher.Client
             }
         }
 
-        private static void CopyDx912ProxyFolder(string from, string to)
+        private static void CopyDx912ProxyFolder(string from, string to, string temp)
         {
             if (Directory.Exists(to))
             {
@@ -4271,7 +4409,7 @@ namespace Gw2Launcher.Client
                         case "shader_profiles.pck":
                         case "common.hlsli":
 
-                            MakeLink(to, from, Path.Combine(relative, name));
+                            MakeLink(to, from, Path.Combine(relative, name), true, temp);
 
                             break;
                         case "pid.lock":
@@ -4288,7 +4426,7 @@ namespace Gw2Launcher.Client
                                 {
                                     Util.Logging.Log(ex);
 
-                                    MakeLink(to, from, Path.Combine(relative, name));
+                                    MakeLink(to, from, Path.Combine(relative, name), true, temp);
                                 }
                             }
 
@@ -4322,7 +4460,7 @@ namespace Gw2Launcher.Client
             {
                 var name = Path.GetFileName(f);
 
-                MakeLink(to, from, name);
+                MakeLink(to, from, name, true, temp);
             }
 
             foreach (var d in Directory.GetDirectories(from))

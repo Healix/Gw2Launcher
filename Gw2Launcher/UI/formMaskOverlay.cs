@@ -324,6 +324,8 @@ namespace Gw2Launcher.UI
 
                     if (flags != EnableFlags.None)
                     {
+                        var screenRect = Util.ScreenUtil.FromDesktopBounds(b);
+
                         try
                         {
                             var tbi = NativeMethods.GetTitleBarInfoEx(attachedTo);
@@ -331,14 +333,14 @@ namespace Gw2Launcher.UI
                             if ((flags & EnableFlags.EnableClose) != 0)
                             {
                                 var rclose = tbi.rgrect[(int)TitleBarElement.Close];
-                                var rectClose = new Rectangle(rclose.left - rect.left, rclose.top - rect.top + 1, rclose.right - rclose.left - 1, rclose.bottom - rclose.top);
+                                var rectClose = new Rectangle(rclose.left - screenRect.Left, rclose.top - screenRect.Top + 1, rclose.right - rclose.left - 1, rclose.bottom - rclose.top);
 
                                 rg.Exclude(rectClose);
                             }
                             if ((flags & EnableFlags.EnableMinimize) != 0)
                             {
                                 var rmin = tbi.rgrect[(int)TitleBarElement.Minimize];
-                                var rectMinimize = new Rectangle(rmin.left - rect.left, rmin.top - rect.top + 1, rmin.right - rmin.left - 1, rmin.bottom - rmin.top);
+                                var rectMinimize = new Rectangle(rmin.left - screenRect.Left, rmin.top - screenRect.Top + 1, rmin.right - rmin.left - 1, rmin.bottom - rmin.top);
 
                                 rg.Exclude(rectMinimize);
                             }

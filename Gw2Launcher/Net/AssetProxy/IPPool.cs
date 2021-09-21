@@ -22,6 +22,7 @@ namespace Gw2Launcher.Net.AssetProxy
         private Dictionary<IPAddress, Sample> samples;
         private Sample[] sorted;
         private DateTime reset;
+        private byte errors;
 
         public IPPool(IPAddress[] ips)
         {
@@ -40,12 +41,41 @@ namespace Gw2Launcher.Net.AssetProxy
             }
         }
 
+        public bool IsAlive()
+        {
+            lock (sorted)
+            {
+                if (errors >= sorted.Length)
+                    return false;
+
+                return true;
+
+                //for (int i = 0, l = sorted.Length; i < l; i++)
+                //{
+                //    var s = sorted[i];
+                //    if (s.total >= 0 && s.total < double.MaxValue - 1)
+                //        return true;
+                //}
+            }
+
+            //return false;
+        }
+
         public void AddSample(IPAddress ip, double sample)
         {
             lock (sorted)
             {
                 var s = samples[ip];
-                s.total += sample;
+                if (double.MaxValue - s.total <= sample)
+                {
+                    if (s.total != double.MaxValue)
+                    {
+                        s.total = double.MaxValue;
+                        ++errors;
+                    }
+                }
+                else
+                    s.total += sample;
                 s.count++;
                 s.avg = s.total / s.count;
 

@@ -589,6 +589,7 @@ namespace Gw2Launcher.Client
             public event EventHandler<Tools.ArenaAccount> AuthenticationRequired;
 
             private const string DX_WINDOW_CLASSNAME = "ArenaNet_Dx_Window_Class"; //gw2 and gw1 main game window
+            private const string DX_WINDOW_CLASSNAME_DX11BETA = "ArenaNet_Gr_Window_Class"; //gw2 dx11 main game window
             private const int DX_WINDOW_CLASSNAME_LENGTH = 24;
             private const string DIALOG_WINDOW_CLASSNAME = "ArenaNet_Dialog_Class"; //gw1 patcher
             private const int DIALOG_WINDOW_CLASSNAME_LENGTH = 21;
@@ -860,7 +861,8 @@ namespace Gw2Launcher.Client
                                                     break;
                                                 case DX_WINDOW_CLASSNAME_LENGTH:
 
-                                                    if (weventbuffer.ToString().Equals(DX_WINDOW_CLASSNAME))
+                                                    var s = weventbuffer.ToString();
+                                                    if (s.Equals(DX_WINDOW_CLASSNAME_DX11BETA) || s.Equals(DX_WINDOW_CLASSNAME))
                                                     {
                                                         t = WindowChangedEventArgs.EventType.DxWindowHandleCreated;
                                                     }
@@ -1015,8 +1017,9 @@ namespace Gw2Launcher.Client
                             case DX_WINDOW_CLASSNAME_LENGTH:
 
                                 #region DX_WINDOW_CLASSNAME_LENGTH
-
-                                if (buffer.ToString().Equals(DX_WINDOW_CLASSNAME))
+                                
+                                var s = buffer.ToString();
+                                if (s.Equals(DX_WINDOW_CLASSNAME_DX11BETA) || s.Equals(DX_WINDOW_CLASSNAME))
                                 {
                                     timeout = 0;
 
@@ -1099,92 +1102,113 @@ namespace Gw2Launcher.Client
 
                                             limit = DateTime.UtcNow.AddMinutes(3);
 
-                                            do
+                                            if (isGw2)
                                             {
-                                                if ((hasVolume = volumeControl.Query()) || isGw2 && (pidChild = GetChildProcess(process.Id)) > 0)
+
+                                                do
                                                 {
-                                                    break;
+                                                    if (hasVolume = volumeControl.Query() || (pidChild = GetChildProcess(process.Id)) > 0)
+                                                    {
+                                                        break;
+                                                    }
+
+                                                    #region -nopatchui activity check (obsolete)
+
+                                                    //watching for changes in memory usage to check if it's still doing something
+                                                    //bypassing the launcher (-nopatchui) can cause it to get stuck on authentication if either the credentials are wrong or the network isn't authorized
+                                                    //if (!hasVolume && DateTime.UtcNow > nextCheck)
+                                                    //{
+                                                    //    process.Refresh();
+
+                                                    //    var memoryChange = process.PeakWorkingSet64 - memoryUsage;
+                                                    //    memoryUsage += memoryChange;
+
+                                                    //    if (memoryChange < 1000000)
+                                                    //    {
+                                                    //        if (++memoryChecks == 3)
+                                                    //        {
+                                                    //            //this account may be stuck trying to authenticate
+
+                                                    //            var account = this.Account.Settings;
+                                                    //            if (account.HasCredentials && account.NetworkAuthorizationState != Settings.NetworkAuthorizationState.Disabled && Settings.NetworkAuthorization.HasValue)
+                                                    //            {
+                                                    //                if (account.NetworkAuthorizationState == Settings.NetworkAuthorizationState.Unknown)
+                                                    //                {
+                                                    //                    if (AuthenticationRequired != null)
+                                                    //                        AuthenticationRequired(this, null);
+
+                                                    //                    return;
+                                                    //                }
+                                                    //                else
+                                                    //                {
+                                                    //                    Tools.ArenaAccount session;
+                                                    //                    switch (NetworkAuthorization.Verify(account, true, null, out session))
+                                                    //                    {
+                                                    //                        case NetworkAuthorization.VerifyResult.Completed:
+                                                    //                        case NetworkAuthorization.VerifyResult.Required:
+
+                                                    //                            if (AuthenticationRequired != null)
+                                                    //                                AuthenticationRequired(this, session);
+
+                                                    //                            return;
+                                                    //                        case NetworkAuthorization.VerifyResult.OK:
+
+                                                    //                            //authentication was ok - assuming it's a slow load
+                                                    //                            nextCheck_Seconds = 10;
+                                                    //                            //verified = true;
+
+                                                    //                            break;
+                                                    //                        case NetworkAuthorization.VerifyResult.None:
+                                                    //                        default:
+
+                                                    //                            //authentication isn't being tracked - assuming it's stuck
+                                                    //                            nextCheck_Seconds = 10;
+
+                                                    //                            break;
+                                                    //                    }
+                                                    //                }
+                                                    //            }
+                                                    //            else
+                                                    //            {
+                                                    //                //authentication isn't enabled
+                                                    //                nextCheck_Seconds = 10;
+                                                    //            }
+                                                    //        }
+                                                    //        else if (memoryChecks > 6)
+                                                    //        {
+                                                    //            if (AuthenticationRequired != null)
+                                                    //                AuthenticationRequired(this, null);
+
+                                                    //            return;
+                                                    //        }
+                                                    //    }
+                                                    //    else
+                                                    //        memoryChecks = 0;
+
+                                                    //    nextCheck = DateTime.UtcNow.AddSeconds(nextCheck_Seconds);
+                                                    //}
+
+                                                    #endregion
                                                 }
-
-                                                #region -nopatchui activity check (obsolete)
-
-                                                //watching for changes in memory usage to check if it's still doing something
-                                                //bypassing the launcher (-nopatchui) can cause it to get stuck on authentication if either the credentials are wrong or the network isn't authorized
-                                                //if (!hasVolume && DateTime.UtcNow > nextCheck)
-                                                //{
-                                                //    process.Refresh();
-
-                                                //    var memoryChange = process.PeakWorkingSet64 - memoryUsage;
-                                                //    memoryUsage += memoryChange;
-
-                                                //    if (memoryChange < 1000000)
-                                                //    {
-                                                //        if (++memoryChecks == 3)
-                                                //        {
-                                                //            //this account may be stuck trying to authenticate
-
-                                                //            var account = this.Account.Settings;
-                                                //            if (account.HasCredentials && account.NetworkAuthorizationState != Settings.NetworkAuthorizationState.Disabled && Settings.NetworkAuthorization.HasValue)
-                                                //            {
-                                                //                if (account.NetworkAuthorizationState == Settings.NetworkAuthorizationState.Unknown)
-                                                //                {
-                                                //                    if (AuthenticationRequired != null)
-                                                //                        AuthenticationRequired(this, null);
-
-                                                //                    return;
-                                                //                }
-                                                //                else
-                                                //                {
-                                                //                    Tools.ArenaAccount session;
-                                                //                    switch (NetworkAuthorization.Verify(account, true, null, out session))
-                                                //                    {
-                                                //                        case NetworkAuthorization.VerifyResult.Completed:
-                                                //                        case NetworkAuthorization.VerifyResult.Required:
-
-                                                //                            if (AuthenticationRequired != null)
-                                                //                                AuthenticationRequired(this, session);
-
-                                                //                            return;
-                                                //                        case NetworkAuthorization.VerifyResult.OK:
-
-                                                //                            //authentication was ok - assuming it's a slow load
-                                                //                            nextCheck_Seconds = 10;
-                                                //                            //verified = true;
-
-                                                //                            break;
-                                                //                        case NetworkAuthorization.VerifyResult.None:
-                                                //                        default:
-
-                                                //                            //authentication isn't being tracked - assuming it's stuck
-                                                //                            nextCheck_Seconds = 10;
-
-                                                //                            break;
-                                                //                    }
-                                                //                }
-                                                //            }
-                                                //            else
-                                                //            {
-                                                //                //authentication isn't enabled
-                                                //                nextCheck_Seconds = 10;
-                                                //            }
-                                                //        }
-                                                //        else if (memoryChecks > 6)
-                                                //        {
-                                                //            if (AuthenticationRequired != null)
-                                                //                AuthenticationRequired(this, null);
-
-                                                //            return;
-                                                //        }
-                                                //    }
-                                                //    else
-                                                //        memoryChecks = 0;
-
-                                                //    nextCheck = DateTime.UtcNow.AddSeconds(nextCheck_Seconds);
-                                                //}
-
-                                                #endregion
+                                                while (DateTime.UtcNow < limit && !process.WaitForExit(500));
                                             }
-                                            while (DateTime.UtcNow < limit && !process.WaitForExit(500));
+                                            else
+                                            {
+                                                using (var pi = new Windows.ProcessInfo())
+                                                {
+                                                    var modules = new string[] { "GwLoginClient.dll" };
+                                                    var canRead = pi.Open(process.Id);
+
+                                                    do
+                                                    {
+                                                        if (hasVolume = volumeControl.Query() || FindModules(canRead ? pi : null, modules, false))
+                                                        {
+                                                            break;
+                                                        }
+                                                    }
+                                                    while (DateTime.UtcNow < limit && !process.WaitForExit(500));
+                                                }
+                                            }
                                         }
                                     }
 
@@ -1215,6 +1239,26 @@ namespace Gw2Launcher.Client
 
                                                     return true;
                                                 });
+                                        }
+                                    }
+                                    else
+                                    {
+                                        using (var pi = new Windows.ProcessInfo())
+                                        {
+                                            //note audioses.dll/midimap.dll won't be loaded when -nosound is used, wintypes.dll isn't loaded until the window is focused
+                                            var modules = new string[] { "AUDIOSES.DLL", "midimap.dll", "wintypes.dll" };
+                                            var canRead = pi.Open(process.Id);
+
+                                            limit = DateTime.UtcNow.AddSeconds(10);
+
+                                            do
+                                            {
+                                                if (FindModules(canRead ? pi : null, modules, false))
+                                                {
+                                                    break;
+                                                }
+                                            }
+                                            while (DateTime.UtcNow < limit && !process.WaitForExit(500));
                                         }
                                     }
 
@@ -1908,9 +1952,10 @@ namespace Gw2Launcher.Client
                     {
                         //ensure it's the main game window
                         var sb = new StringBuilder(DX_WINDOW_CLASSNAME_LENGTH + 1);
-                        if (NativeMethods.GetClassName(handle, sb, sb.Capacity + 1) != DX_WINDOW_CLASSNAME_LENGTH || !sb.ToString().Equals(DX_WINDOW_CLASSNAME))
+                        string s;
+                        if (NativeMethods.GetClassName(handle, sb, sb.Capacity + 1) != DX_WINDOW_CLASSNAME_LENGTH || !((s = sb.ToString()).Equals(DX_WINDOW_CLASSNAME_DX11BETA) || s.Equals(DX_WINDOW_CLASSNAME)))
                         {
-                            handle = Windows.FindWindow.Find(process.Id, DX_WINDOW_CLASSNAME, sb);
+                            handle = Windows.FindWindow.Find(process.Id, new string[] { DX_WINDOW_CLASSNAME_DX11BETA, DX_WINDOW_CLASSNAME }, sb);
                             if (handle == IntPtr.Zero)
                                 return false;
                         }

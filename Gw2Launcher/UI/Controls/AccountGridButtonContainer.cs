@@ -1420,8 +1420,11 @@ namespace Gw2Launcher.UI.Controls
         {
             get
             {
-                if (panelContents.Buttons.Length > 0)
-                    return panelContents.Buttons[0].Width;
+                foreach (var b in panelContents.Buttons)
+                {
+                    if (b.GridVisibility && b.Width > 0)
+                        return b.Width;
+                }
                 return panelContents.NewButton.Width;
             }
         }

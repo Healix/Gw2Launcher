@@ -216,6 +216,22 @@ namespace Gw2Launcher.Tools
             }
 
             DeleteFileSystemEntries(DataPath.AppDataAccountDataTemp, days, false, false);
+
+            if ((Settings.GuildWars2.LocalizeAccountExecution.Value & Settings.LocalizeAccountExecutionOptions.Enabled) == Settings.LocalizeAccountExecutionOptions.Enabled)
+            {
+                var gw2 = Settings.GuildWars2.Path.Value;
+                if (!string.IsNullOrEmpty(gw2))
+                {
+                    try
+                    {
+                        Util.FileUtil.DeleteDirectory(Path.Combine(Path.GetDirectoryName(gw2), Client.FileManager.LOCALIZED_EXE_FOLDER_NAME, "temp"), true);
+                    }
+                    catch (Exception e)
+                    {
+                        Util.Logging.Log(e);
+                    }
+                }
+            }
         }
     }
 }

@@ -251,7 +251,7 @@ namespace Gw2Launcher.Net.AssetProxy
 
                 lock (this)
                 {
-                    if ((remoteEP == null || remoteEP is DnsEndPoint) && ipPool == null)
+                    if ((remoteEP == null || remoteEP is DnsEndPoint) && (ipPool == null || !ipPool.IsAlive()))
                     {
                         IPAddress[] ips;
                         try

@@ -54,6 +54,7 @@ namespace Gw2Launcher.UI
             this.toolStripMenuItem27 = new System.Windows.Forms.ToolStripSeparator();
             this.createShortcutSelectedToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.showOnPageToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.pinToTopToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.cloneToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.toolStripMenuItem8 = new System.Windows.Forms.ToolStripSeparator();
             this.clearSelectionToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
@@ -128,7 +129,6 @@ namespace Gw2Launcher.UI
             this.buttonFilterClose = new Gw2Launcher.UI.Controls.FlatShapeButton();
             this.sizeDragButton1 = new Gw2Launcher.UI.Controls.SizeDragButton();
             this.contextSelection = new Gw2Launcher.UI.Controls.ContextMenuStripStayOpenOnClick(this.components);
-            this.pinToTopToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.panelContainer.SuspendLayout();
             this.contextMenu.SuspendLayout();
             this.contextNotify.SuspendLayout();
@@ -194,7 +194,7 @@ namespace Gw2Launcher.UI
             this.newToolStripMenuItem,
             this.settingsToolStripMenuItem,
             this.toolsToolStripMenuItem1});
-            this.contextMenu.Size = new System.Drawing.Size(208, 348);
+            this.contextMenu.Size = new System.Drawing.Size(208, 326);
             // 
             // cancelPendingLaunchesToolStripMenuItem
             // 
@@ -411,6 +411,12 @@ namespace Gw2Launcher.UI
             this.showOnPageToolStripMenuItem.Size = new System.Drawing.Size(206, 22);
             this.showOnPageToolStripMenuItem.Text = "Show on page...";
             this.showOnPageToolStripMenuItem.Click += new System.EventHandler(this.showOnPageToolStripMenuItem_Click);
+            // 
+            // pinToTopToolStripMenuItem
+            // 
+            this.pinToTopToolStripMenuItem.Size = new System.Drawing.Size(206, 22);
+            this.pinToTopToolStripMenuItem.Text = "Pin to top";
+            this.pinToTopToolStripMenuItem.Click += new System.EventHandler(this.pinToTopToolStripMenuItem_Click);
             // 
             // cloneToolStripMenuItem
             // 
@@ -1032,12 +1038,6 @@ namespace Gw2Launcher.UI
             this.contextSelection.Size = new System.Drawing.Size(61, 4);
             this.contextSelection.StayOpenOnClick = true;
             this.contextSelection.Closed += new System.Windows.Forms.ToolStripDropDownClosedEventHandler(this.contextSelection_Closed);
-            // 
-            // pinToTopToolStripMenuItem
-            // 
-            this.pinToTopToolStripMenuItem.Size = new System.Drawing.Size(206, 22);
-            this.pinToTopToolStripMenuItem.Text = "Pin to top";
-            this.pinToTopToolStripMenuItem.Click += new System.EventHandler(this.pinToTopToolStripMenuItem_Click);
             // 
             // formMain
             // 

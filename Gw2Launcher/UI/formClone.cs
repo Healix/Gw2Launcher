@@ -74,12 +74,27 @@ namespace Gw2Launcher.UI
 
         private List<Row> rows;
         private Image[] defaultImage;
+        private IList<Settings.IAccount> accounts;
 
         public formClone(IList<Settings.IAccount> accounts)
         {
+            this.accounts = accounts;
+            this.rows = new List<Row>(accounts.Count);
+
             InitializeComponents();
 
-            rows = new List<Row>(accounts.Count);
+        }
+
+        protected override void OnInitializeComponents()
+        {
+            base.OnInitializeComponents();
+
+            InitializeComponent();
+        }
+
+        protected override void OnHandleCreated(EventArgs e)
+        {
+            base.OnHandleCreated(e);
 
             this.SuspendLayout();
 
@@ -153,7 +168,7 @@ namespace Gw2Launcher.UI
 
                 var h = height + ch;
                 var mh = Screen.FromControl(this).WorkingArea.Height * 3 / 4;
-                
+
                 if (h > mh)
                     h = mh;
 
@@ -163,13 +178,6 @@ namespace Gw2Launcher.UI
             this.Height = height;
 
             this.ResumeLayout();
-        }
-
-        protected override void OnInitializeComponents()
-        {
-            base.OnInitializeComponents();
-
-            InitializeComponent();
         }
 
         private Image GetDefaultImage(Settings.AccountType type, Size sz)
