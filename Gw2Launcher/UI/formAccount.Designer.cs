@@ -363,6 +363,10 @@ namespace Gw2Launcher.UI
             this.applyAllResetToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.toolStripMenuItem6 = new System.Windows.Forms.ToolStripSeparator();
             this.automaticApplyAllToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.label28 = new System.Windows.Forms.Label();
+            this.label73 = new System.Windows.Forms.Label();
+            this.label76 = new System.Windows.Forms.Label();
+            this.checkDX11 = new System.Windows.Forms.CheckBox();
             this.contextIcon.SuspendLayout();
             this.contextImage.SuspendLayout();
             this.contextColor.SuspendLayout();
@@ -642,7 +646,7 @@ namespace Gw2Launcher.UI
             // 
             // sidebarPanel1
             // 
-            this.sidebarPanel1.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom)
+            this.sidebarPanel1.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom) 
             | System.Windows.Forms.AnchorStyles.Left)));
             this.sidebarPanel1.BackColor = System.Drawing.Color.White;
             this.sidebarPanel1.BorderColor = System.Drawing.SystemColors.ControlDark;
@@ -676,7 +680,7 @@ namespace Gw2Launcher.UI
             // 
             // stackPanel1
             // 
-            this.stackPanel1.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left)
+            this.stackPanel1.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left) 
             | System.Windows.Forms.AnchorStyles.Right)));
             this.stackPanel1.AutoSizeFill = Gw2Launcher.UI.Controls.StackPanel.AutoSizeFillMode.Width;
             this.stackPanel1.Location = new System.Drawing.Point(7, 9);
@@ -712,7 +716,7 @@ namespace Gw2Launcher.UI
             // 
             // buttonStatistics
             // 
-            this.buttonStatistics.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left)
+            this.buttonStatistics.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left) 
             | System.Windows.Forms.AnchorStyles.Right)));
             this.buttonStatistics.ArrowColor = System.Drawing.SystemColors.Control;
             this.buttonStatistics.BackColor = System.Drawing.Color.White;
@@ -732,7 +736,7 @@ namespace Gw2Launcher.UI
             // 
             // buttonLaunchOptions
             // 
-            this.buttonLaunchOptions.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left)
+            this.buttonLaunchOptions.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left) 
             | System.Windows.Forms.AnchorStyles.Right)));
             this.buttonLaunchOptions.ArrowColor = System.Drawing.SystemColors.Control;
             this.buttonLaunchOptions.BackColor = System.Drawing.Color.White;
@@ -752,7 +756,7 @@ namespace Gw2Launcher.UI
             // 
             // buttonSecurity
             // 
-            this.buttonSecurity.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left)
+            this.buttonSecurity.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left) 
             | System.Windows.Forms.AnchorStyles.Right)));
             this.buttonSecurity.ArrowColor = System.Drawing.SystemColors.Control;
             this.buttonSecurity.BackColor = System.Drawing.Color.White;
@@ -772,7 +776,7 @@ namespace Gw2Launcher.UI
             // 
             // buttonGeneral
             // 
-            this.buttonGeneral.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left)
+            this.buttonGeneral.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left) 
             | System.Windows.Forms.AnchorStyles.Right)));
             this.buttonGeneral.ArrowColor = System.Drawing.SystemColors.Control;
             this.buttonGeneral.BackColor = System.Drawing.Color.White;
@@ -792,7 +796,7 @@ namespace Gw2Launcher.UI
             // 
             // buttonLocalDat
             // 
-            this.buttonLocalDat.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left)
+            this.buttonLocalDat.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left) 
             | System.Windows.Forms.AnchorStyles.Right)));
             this.buttonLocalDat.ArrowColor = System.Drawing.SystemColors.Control;
             this.buttonLocalDat.BackColor = System.Drawing.Color.White;
@@ -812,8 +816,8 @@ namespace Gw2Launcher.UI
             // 
             // panelLaunchOptions
             // 
-            this.panelLaunchOptions.Anchor = ((System.Windows.Forms.AnchorStyles)((((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom)
-            | System.Windows.Forms.AnchorStyles.Left)
+            this.panelLaunchOptions.Anchor = ((System.Windows.Forms.AnchorStyles)((((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom) 
+            | System.Windows.Forms.AnchorStyles.Left) 
             | System.Windows.Forms.AnchorStyles.Right)));
             this.panelLaunchOptions.Controls.Add(this.stackPanel2);
             this.panelLaunchOptions.Location = new System.Drawing.Point(183, 12);
@@ -822,7 +826,7 @@ namespace Gw2Launcher.UI
             // 
             // stackPanel2
             // 
-            this.stackPanel2.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left)
+            this.stackPanel2.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left) 
             | System.Windows.Forms.AnchorStyles.Right)));
             this.stackPanel2.AutoSize = true;
             this.stackPanel2.AutoSizeFill = Gw2Launcher.UI.Controls.StackPanel.AutoSizeFillMode.Width;
@@ -904,7 +908,7 @@ namespace Gw2Launcher.UI
             // 
             // textArguments
             // 
-            this.textArguments.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left)
+            this.textArguments.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left) 
             | System.Windows.Forms.AnchorStyles.Right)));
             this.textArguments.Font = new System.Drawing.Font("Segoe UI", 8.25F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
             this.textArguments.Location = new System.Drawing.Point(20, 0);
@@ -1665,7 +1669,7 @@ namespace Gw2Launcher.UI
             // 
             // textGw2MumbleName
             // 
-            this.textGw2MumbleName.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left)
+            this.textGw2MumbleName.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left) 
             | System.Windows.Forms.AnchorStyles.Right)));
             this.textGw2MumbleName.Enabled = false;
             this.textGw2MumbleName.Font = new System.Drawing.Font("Segoe UI", 8.25F);
@@ -1912,7 +1916,7 @@ namespace Gw2Launcher.UI
             // 
             // buttonScreenshotsLocation
             // 
-            this.buttonScreenshotsLocation.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom)
+            this.buttonScreenshotsLocation.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom) 
             | System.Windows.Forms.AnchorStyles.Right)));
             this.buttonScreenshotsLocation.AutoSize = true;
             this.buttonScreenshotsLocation.Enabled = false;
@@ -2006,8 +2010,8 @@ namespace Gw2Launcher.UI
             // 
             // panelGraphics
             // 
-            this.panelGraphics.Anchor = ((System.Windows.Forms.AnchorStyles)((((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom)
-            | System.Windows.Forms.AnchorStyles.Left)
+            this.panelGraphics.Anchor = ((System.Windows.Forms.AnchorStyles)((((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom) 
+            | System.Windows.Forms.AnchorStyles.Left) 
             | System.Windows.Forms.AnchorStyles.Right)));
             this.panelGraphics.Controls.Add(this.stackPanel34);
             this.panelGraphics.Location = new System.Drawing.Point(183, 12);
@@ -2016,7 +2020,7 @@ namespace Gw2Launcher.UI
             // 
             // stackPanel34
             // 
-            this.stackPanel34.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left)
+            this.stackPanel34.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left) 
             | System.Windows.Forms.AnchorStyles.Right)));
             this.stackPanel34.AutoSize = true;
             this.stackPanel34.AutoSizeFill = Gw2Launcher.UI.Controls.StackPanel.AutoSizeFillMode.Width;
@@ -2028,10 +2032,14 @@ namespace Gw2Launcher.UI
             this.stackPanel34.Controls.Add(this.labelGfxFileInfo);
             this.stackPanel34.Controls.Add(this.labelGfxSettingsNotAvailable);
             this.stackPanel34.Controls.Add(this.panelGraphicsXml);
+            this.stackPanel34.Controls.Add(this.label28);
+            this.stackPanel34.Controls.Add(this.label73);
+            this.stackPanel34.Controls.Add(this.label76);
+            this.stackPanel34.Controls.Add(this.checkDX11);
             this.stackPanel34.Location = new System.Drawing.Point(0, 0);
             this.stackPanel34.Margin = new System.Windows.Forms.Padding(0, 0, 13, 0);
             this.stackPanel34.Padding = new System.Windows.Forms.Padding(13, 10, 0, 10);
-            this.stackPanel34.Size = new System.Drawing.Size(366, 311);
+            this.stackPanel34.Size = new System.Drawing.Size(366, 401);
             // 
             // label43
             // 
@@ -2054,7 +2062,7 @@ namespace Gw2Launcher.UI
             // 
             // stackPanel35
             // 
-            this.stackPanel35.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left)
+            this.stackPanel35.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left) 
             | System.Windows.Forms.AnchorStyles.Right)));
             this.stackPanel35.AutoSize = true;
             this.stackPanel35.Controls.Add(this.aaGfxSettings);
@@ -2223,8 +2231,8 @@ namespace Gw2Launcher.UI
             // 
             // panelGwDat
             // 
-            this.panelGwDat.Anchor = ((System.Windows.Forms.AnchorStyles)((((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom)
-            | System.Windows.Forms.AnchorStyles.Left)
+            this.panelGwDat.Anchor = ((System.Windows.Forms.AnchorStyles)((((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom) 
+            | System.Windows.Forms.AnchorStyles.Left) 
             | System.Windows.Forms.AnchorStyles.Right)));
             this.panelGwDat.Controls.Add(this.stackPanel36);
             this.panelGwDat.Location = new System.Drawing.Point(183, 12);
@@ -2233,7 +2241,7 @@ namespace Gw2Launcher.UI
             // 
             // stackPanel36
             // 
-            this.stackPanel36.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left)
+            this.stackPanel36.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left) 
             | System.Windows.Forms.AnchorStyles.Right)));
             this.stackPanel36.AutoSize = true;
             this.stackPanel36.AutoSizeFill = Gw2Launcher.UI.Controls.StackPanel.AutoSizeFillMode.Width;
@@ -2268,7 +2276,7 @@ namespace Gw2Launcher.UI
             // 
             // stackPanel37
             // 
-            this.stackPanel37.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left)
+            this.stackPanel37.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left) 
             | System.Windows.Forms.AnchorStyles.Right)));
             this.stackPanel37.AutoSize = true;
             this.stackPanel37.Controls.Add(this.aaGwDat);
@@ -2335,8 +2343,8 @@ namespace Gw2Launcher.UI
             // 
             // panelLocalDat
             // 
-            this.panelLocalDat.Anchor = ((System.Windows.Forms.AnchorStyles)((((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom)
-            | System.Windows.Forms.AnchorStyles.Left)
+            this.panelLocalDat.Anchor = ((System.Windows.Forms.AnchorStyles)((((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom) 
+            | System.Windows.Forms.AnchorStyles.Left) 
             | System.Windows.Forms.AnchorStyles.Right)));
             this.panelLocalDat.Controls.Add(this.stackPanel38);
             this.panelLocalDat.Location = new System.Drawing.Point(183, 12);
@@ -2345,7 +2353,7 @@ namespace Gw2Launcher.UI
             // 
             // stackPanel38
             // 
-            this.stackPanel38.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left)
+            this.stackPanel38.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left) 
             | System.Windows.Forms.AnchorStyles.Right)));
             this.stackPanel38.AutoSize = true;
             this.stackPanel38.AutoSizeFill = Gw2Launcher.UI.Controls.StackPanel.AutoSizeFillMode.Width;
@@ -2380,7 +2388,7 @@ namespace Gw2Launcher.UI
             // 
             // stackPanel39
             // 
-            this.stackPanel39.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left)
+            this.stackPanel39.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left) 
             | System.Windows.Forms.AnchorStyles.Right)));
             this.stackPanel39.AutoSize = true;
             this.stackPanel39.Controls.Add(this.aaLocalDat);
@@ -2447,8 +2455,8 @@ namespace Gw2Launcher.UI
             // 
             // panelLaunchOptionsProcess
             // 
-            this.panelLaunchOptionsProcess.Anchor = ((System.Windows.Forms.AnchorStyles)((((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom)
-            | System.Windows.Forms.AnchorStyles.Left)
+            this.panelLaunchOptionsProcess.Anchor = ((System.Windows.Forms.AnchorStyles)((((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom) 
+            | System.Windows.Forms.AnchorStyles.Left) 
             | System.Windows.Forms.AnchorStyles.Right)));
             this.panelLaunchOptionsProcess.Controls.Add(this.stackPanel12);
             this.panelLaunchOptionsProcess.Location = new System.Drawing.Point(183, 12);
@@ -2457,7 +2465,7 @@ namespace Gw2Launcher.UI
             // 
             // stackPanel12
             // 
-            this.stackPanel12.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left)
+            this.stackPanel12.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left) 
             | System.Windows.Forms.AnchorStyles.Right)));
             this.stackPanel12.AutoSize = true;
             this.stackPanel12.AutoSizeFill = Gw2Launcher.UI.Controls.StackPanel.AutoSizeFillMode.Width;
@@ -2570,7 +2578,7 @@ namespace Gw2Launcher.UI
             // 
             // panelProcessAffinityContainer
             // 
-            this.panelProcessAffinityContainer.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left)
+            this.panelProcessAffinityContainer.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left) 
             | System.Windows.Forms.AnchorStyles.Right)));
             this.panelProcessAffinityContainer.AutoSize = true;
             this.panelProcessAffinityContainer.AutoSizeFill = Gw2Launcher.UI.Controls.StackPanel.AutoSizeFillMode.Width;
@@ -2592,7 +2600,7 @@ namespace Gw2Launcher.UI
             // 
             // panelProcessAffinity
             // 
-            this.panelProcessAffinity.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left)
+            this.panelProcessAffinity.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left) 
             | System.Windows.Forms.AnchorStyles.Right)));
             this.panelProcessAffinity.AutoSizeMode = System.Windows.Forms.AutoSizeMode.GrowAndShrink;
             this.panelProcessAffinity.Location = new System.Drawing.Point(8, 21);
@@ -2601,8 +2609,8 @@ namespace Gw2Launcher.UI
             // 
             // panelStatistics
             // 
-            this.panelStatistics.Anchor = ((System.Windows.Forms.AnchorStyles)((((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom)
-            | System.Windows.Forms.AnchorStyles.Left)
+            this.panelStatistics.Anchor = ((System.Windows.Forms.AnchorStyles)((((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom) 
+            | System.Windows.Forms.AnchorStyles.Left) 
             | System.Windows.Forms.AnchorStyles.Right)));
             this.panelStatistics.Controls.Add(this.stackPanel25);
             this.panelStatistics.Location = new System.Drawing.Point(183, 12);
@@ -2611,7 +2619,7 @@ namespace Gw2Launcher.UI
             // 
             // stackPanel25
             // 
-            this.stackPanel25.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left)
+            this.stackPanel25.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left) 
             | System.Windows.Forms.AnchorStyles.Right)));
             this.stackPanel25.AutoSize = true;
             this.stackPanel25.AutoSizeFill = Gw2Launcher.UI.Controls.StackPanel.AutoSizeFillMode.Width;
@@ -2793,7 +2801,7 @@ namespace Gw2Launcher.UI
             this.stackPanel30.FlowDirection = System.Windows.Forms.FlowDirection.LeftToRight;
             this.stackPanel30.Location = new System.Drawing.Point(21, 154);
             this.stackPanel30.Margin = new System.Windows.Forms.Padding(8, 0, 0, 0);
-            this.stackPanel30.Size = new System.Drawing.Size(231, 17);
+            this.stackPanel30.Size = new System.Drawing.Size(235, 17);
             // 
             // aaRecordLaunch
             // 
@@ -2825,15 +2833,15 @@ namespace Gw2Launcher.UI
             this.labelExportRecordedLaunch.Icon = null;
             this.labelExportRecordedLaunch.Location = new System.Drawing.Point(195, 2);
             this.labelExportRecordedLaunch.Margin = new System.Windows.Forms.Padding(1, 0, 0, 0);
-            this.labelExportRecordedLaunch.Size = new System.Drawing.Size(36, 13);
+            this.labelExportRecordedLaunch.Size = new System.Drawing.Size(40, 13);
             this.labelExportRecordedLaunch.Text = "export";
             this.labelExportRecordedLaunch.Visible = false;
             this.labelExportRecordedLaunch.Click += new System.EventHandler(this.labelExportRecordedLaunch_Click);
             // 
             // panelApi
             // 
-            this.panelApi.Anchor = ((System.Windows.Forms.AnchorStyles)((((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom)
-            | System.Windows.Forms.AnchorStyles.Left)
+            this.panelApi.Anchor = ((System.Windows.Forms.AnchorStyles)((((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom) 
+            | System.Windows.Forms.AnchorStyles.Left) 
             | System.Windows.Forms.AnchorStyles.Right)));
             this.panelApi.Controls.Add(this.stackPanel15);
             this.panelApi.Location = new System.Drawing.Point(183, 12);
@@ -2842,7 +2850,7 @@ namespace Gw2Launcher.UI
             // 
             // stackPanel15
             // 
-            this.stackPanel15.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left)
+            this.stackPanel15.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left) 
             | System.Windows.Forms.AnchorStyles.Right)));
             this.stackPanel15.AutoSize = true;
             this.stackPanel15.AutoSizeFill = Gw2Launcher.UI.Controls.StackPanel.AutoSizeFillMode.Width;
@@ -2885,7 +2893,7 @@ namespace Gw2Launcher.UI
             // 
             // stackPanel46
             // 
-            this.stackPanel46.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left)
+            this.stackPanel46.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left) 
             | System.Windows.Forms.AnchorStyles.Right)));
             this.stackPanel46.AutoSize = true;
             this.stackPanel46.AutoSizeFill = Gw2Launcher.UI.Controls.StackPanel.AutoSizeFillMode.Width;
@@ -2910,7 +2918,7 @@ namespace Gw2Launcher.UI
             // 
             // textApiKey
             // 
-            this.textApiKey.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left)
+            this.textApiKey.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left) 
             | System.Windows.Forms.AnchorStyles.Right)));
             this.textApiKey.Font = new System.Drawing.Font("Segoe UI", 8.25F);
             this.textApiKey.Location = new System.Drawing.Point(20, 0);
@@ -3100,8 +3108,8 @@ namespace Gw2Launcher.UI
             // 
             // panelLaunchOptionsAdvanced
             // 
-            this.panelLaunchOptionsAdvanced.Anchor = ((System.Windows.Forms.AnchorStyles)((((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom)
-            | System.Windows.Forms.AnchorStyles.Left)
+            this.panelLaunchOptionsAdvanced.Anchor = ((System.Windows.Forms.AnchorStyles)((((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom) 
+            | System.Windows.Forms.AnchorStyles.Left) 
             | System.Windows.Forms.AnchorStyles.Right)));
             this.panelLaunchOptionsAdvanced.Controls.Add(this.stackPanel31);
             this.panelLaunchOptionsAdvanced.Location = new System.Drawing.Point(183, 12);
@@ -3110,7 +3118,7 @@ namespace Gw2Launcher.UI
             // 
             // stackPanel31
             // 
-            this.stackPanel31.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left)
+            this.stackPanel31.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left) 
             | System.Windows.Forms.AnchorStyles.Right)));
             this.stackPanel31.AutoSize = true;
             this.stackPanel31.AutoSizeFill = Gw2Launcher.UI.Controls.StackPanel.AutoSizeFillMode.Width;
@@ -3221,8 +3229,8 @@ namespace Gw2Launcher.UI
             // 
             // panelGeneral
             // 
-            this.panelGeneral.Anchor = ((System.Windows.Forms.AnchorStyles)((((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom)
-            | System.Windows.Forms.AnchorStyles.Left)
+            this.panelGeneral.Anchor = ((System.Windows.Forms.AnchorStyles)((((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom) 
+            | System.Windows.Forms.AnchorStyles.Left) 
             | System.Windows.Forms.AnchorStyles.Right)));
             this.panelGeneral.Controls.Add(this.stackPanel18);
             this.panelGeneral.Location = new System.Drawing.Point(183, 12);
@@ -3231,7 +3239,7 @@ namespace Gw2Launcher.UI
             // 
             // stackPanel18
             // 
-            this.stackPanel18.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left)
+            this.stackPanel18.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left) 
             | System.Windows.Forms.AnchorStyles.Right)));
             this.stackPanel18.AutoSize = true;
             this.stackPanel18.AutoSizeFill = Gw2Launcher.UI.Controls.StackPanel.AutoSizeFillMode.Width;
@@ -3502,6 +3510,7 @@ namespace Gw2Launcher.UI
             this.buttonSample.Margin = new System.Windows.Forms.Padding(0);
             this.buttonSample.MinimumSize = new System.Drawing.Size(0, 66);
             this.buttonSample.Paging = null;
+            this.buttonSample.Pinned = false;
             this.buttonSample.Selected = false;
             this.buttonSample.ShowAccount = true;
             this.buttonSample.ShowColorKey = false;
@@ -3764,8 +3773,8 @@ namespace Gw2Launcher.UI
             // 
             // panelSecurity
             // 
-            this.panelSecurity.Anchor = ((System.Windows.Forms.AnchorStyles)((((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom)
-            | System.Windows.Forms.AnchorStyles.Left)
+            this.panelSecurity.Anchor = ((System.Windows.Forms.AnchorStyles)((((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom) 
+            | System.Windows.Forms.AnchorStyles.Left) 
             | System.Windows.Forms.AnchorStyles.Right)));
             this.panelSecurity.Controls.Add(this.stackPanel32);
             this.panelSecurity.Location = new System.Drawing.Point(183, 12);
@@ -3774,7 +3783,7 @@ namespace Gw2Launcher.UI
             // 
             // stackPanel32
             // 
-            this.stackPanel32.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left)
+            this.stackPanel32.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left) 
             | System.Windows.Forms.AnchorStyles.Right)));
             this.stackPanel32.AutoSize = true;
             this.stackPanel32.AutoSizeFill = Gw2Launcher.UI.Controls.StackPanel.AutoSizeFillMode.Width;
@@ -3966,7 +3975,7 @@ namespace Gw2Launcher.UI
             this.stackPanel43.FlowDirection = System.Windows.Forms.FlowDirection.LeftToRight;
             this.stackPanel43.Location = new System.Drawing.Point(21, 162);
             this.stackPanel43.Margin = new System.Windows.Forms.Padding(8, 0, 0, 0);
-            this.stackPanel43.Size = new System.Drawing.Size(218, 17);
+            this.stackPanel43.Size = new System.Drawing.Size(238, 17);
             // 
             // aaEnableNetworkAuthorization
             // 
@@ -3985,7 +3994,7 @@ namespace Gw2Launcher.UI
             this.checkEnableNetworkAuthorization.AutoSize = true;
             this.checkEnableNetworkAuthorization.Location = new System.Drawing.Point(20, 0);
             this.checkEnableNetworkAuthorization.Margin = new System.Windows.Forms.Padding(0);
-            this.checkEnableNetworkAuthorization.Size = new System.Drawing.Size(198, 17);
+            this.checkEnableNetworkAuthorization.Size = new System.Drawing.Size(218, 17);
             this.checkEnableNetworkAuthorization.Text = "Enable authorization for this account";
             this.checkEnableNetworkAuthorization.UseVisualStyleBackColor = true;
             // 
@@ -4234,16 +4243,54 @@ namespace Gw2Launcher.UI
             this.automaticApplyAllToolStripMenuItem.Text = "Automatic";
             this.automaticApplyAllToolStripMenuItem.Click += new System.EventHandler(this.automaticApplyAllToolStripMenuItem_Click);
             // 
+            // label28
+            // 
+            this.label28.AutoSize = true;
+            this.label28.Font = new System.Drawing.Font("Segoe UI Semibold", 9F, System.Drawing.FontStyle.Bold);
+            this.label28.Location = new System.Drawing.Point(13, 309);
+            this.label28.Margin = new System.Windows.Forms.Padding(0, 8, 0, 0);
+            this.label28.Size = new System.Drawing.Size(33, 15);
+            this.label28.Text = "DX11";
+            // 
+            // label73
+            // 
+            this.label73.AutoSize = true;
+            this.label73.Font = new System.Drawing.Font("Segoe UI Semilight", 8.25F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+            this.label73.Location = new System.Drawing.Point(14, 325);
+            this.label73.Margin = new System.Windows.Forms.Padding(1, 1, 0, 1);
+            this.label73.Size = new System.Drawing.Size(320, 26);
+            this.label73.Text = "Forces the use of DX11 regardless of whether the option is checked in-game";
+            // 
+            // label76
+            // 
+            this.label76.AutoSize = true;
+            this.label76.Font = new System.Drawing.Font("Segoe UI Semilight", 8.25F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+            this.label76.ForeColor = System.Drawing.SystemColors.GrayText;
+            this.label76.Location = new System.Drawing.Point(14, 353);
+            this.label76.Margin = new System.Windows.Forms.Padding(1, 1, 0, 8);
+            this.label76.Size = new System.Drawing.Size(102, 13);
+            this.label76.Text = "Sets the -dx11 option";
+            // 
+            // checkDX11
+            // 
+            this.checkDX11.AutoSize = true;
+            this.checkDX11.Location = new System.Drawing.Point(21, 374);
+            this.checkDX11.Margin = new System.Windows.Forms.Padding(8, 0, 0, 0);
+            this.checkDX11.Size = new System.Drawing.Size(90, 17);
+            this.checkDX11.Text = "Enable DX11";
+            this.checkDX11.UseVisualStyleBackColor = true;
+            this.checkDX11.CheckedChanged += new System.EventHandler(this.checkDX11_CheckedChanged);
+            // 
             // formAccount
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(96F, 96F);
             this.ClientSize = new System.Drawing.Size(574, 507);
+            this.Controls.Add(this.panelGraphics);
             this.Controls.Add(this.panelIdentifierIconLarge);
             this.Controls.Add(this.buttonCancel);
             this.Controls.Add(this.buttonOK);
             this.Controls.Add(this.sidebarPanel1);
             this.Controls.Add(this.panelLaunchOptions);
-            this.Controls.Add(this.panelGraphics);
             this.Controls.Add(this.panelGwDat);
             this.Controls.Add(this.panelLocalDat);
             this.Controls.Add(this.panelLaunchOptionsProcess);
@@ -4782,5 +4829,9 @@ namespace Gw2Launcher.UI
         private System.Windows.Forms.ToolStripMenuItem editRunAfterToolStripMenuItem;
         private System.Windows.Forms.ToolStripMenuItem deleteRunAfterToolStripMenuItem;
         private System.Windows.Forms.Label label21;
+        private System.Windows.Forms.Label label28;
+        private System.Windows.Forms.Label label73;
+        private System.Windows.Forms.Label label76;
+        private System.Windows.Forms.CheckBox checkDX11;
     }
 }

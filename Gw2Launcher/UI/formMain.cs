@@ -2731,12 +2731,15 @@ namespace Gw2Launcher.UI
                 return;
             }
 
-            DisposeBpProgress();
-
-            if (Settings.BackgroundPatchingNotifications.HasValue)
+            if (bpProgress != null)
             {
-                var v = Settings.BackgroundPatchingNotifications.Value;
-                formNotify.Show(formNotify.NotifyType.Error, v.Screen, v.Anchor, new Tools.BackgroundPatcher.PatchEventArgs());
+                DisposeBpProgress();
+
+                if (Settings.BackgroundPatchingNotifications.HasValue)
+                {
+                    var v = Settings.BackgroundPatchingNotifications.Value;
+                    formNotify.Show(formNotify.NotifyType.Error, v.Screen, v.Anchor, new Tools.BackgroundPatcher.PatchEventArgs());
+                }
             }
         }
 
@@ -6279,6 +6282,70 @@ namespace Gw2Launcher.UI
 
                 if (jumplist != null)
                     jumplist.RefreshAsync();
+            }
+        }
+
+        private void verifyUsageOfDX11ToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            var sb = new StringBuilder();
+            var sbuffer = new StringBuilder(50);
+            var accounts = Client.Launcher.GetActiveProcesses();
+
+            foreach (var a in accounts)
+            {
+                var p = Client.Launcher.GetProcess(a);
+                sbyte state = 0;
+
+                if (p != null)
+                {
+                    try
+                    {
+                        if (Windows.FindWindow.Find(p.Id, "ArenaNet_Gr_Window_Class", sbuffer) == IntPtr.Zero)
+                        {
+                            state = -1;
+
+                            foreach (ProcessModule m in p.Modules)
+                            {
+                                if (m.ModuleName.Equals("d3d11.dll", StringComparison.OrdinalIgnoreCase))
+                                {
+                                    state = 1;
+                                    break;
+                                }
+                            }
+                        }
+                        else
+                        {
+                            state = 1;
+                        }
+                    }
+                    catch { }
+                }
+
+                if (state == 1)
+                    sb.AppendLine(a.Name);
+            }
+
+            using (BeforeShowDialog())
+            {
+                using (var parent = AddMessageBox(this))
+                {
+                    string message;
+
+                    if (accounts.Count == 0)
+                    {
+                        message = "No accounts are currently active";
+                    }
+                    else if (sb.Length > 0)
+                    {
+                        message = "Accounts with an active DX11 window:\n\n" + sb.ToString();
+                    }
+                    else
+                    {
+                        message = "No accounts currently have an active DX11 window";
+                    }
+
+                    MessageBox.Show(parent, message, "DX11?", MessageBoxButtons.OK, MessageBoxIcon.Information);
+                }
             }
         }
     }

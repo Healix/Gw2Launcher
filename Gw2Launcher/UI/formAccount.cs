@@ -1119,6 +1119,8 @@ namespace Gw2Launcher.UI
                     LoadGraphics(path);
                 }
             }
+
+            checkDX11.Checked = Util.Args.Contains(textArguments.Text, "dx11");
         }
 
         void textArguments_TextChanged(object sender, EventArgs e)
@@ -4347,6 +4349,12 @@ namespace Gw2Launcher.UI
                     panelLaunchOptions.ScrollControlIntoView(labelRunAfterProgramsAdd);
                 }
             }
+        }
+
+        private void checkDX11_CheckedChanged(object sender, EventArgs e)
+        {
+            if (checkDX11.Focused)
+                textArguments.Text = Util.Args.AddOrReplace(textArguments.Text, "dx11", checkDX11.Checked ? "-dx11" : "");
         }
     }
 }

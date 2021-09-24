@@ -942,7 +942,9 @@ namespace Gw2Launcher.UI
                 {
                     new string[][] //graphics
                     {
-                        new string[] { "-dx9single", "Limits renderer to a single thread", "" },
+                        new string[] { "-dx9", "Forces DX9 renderer", "" },
+                        new string[] { "-dx11", "Forces DX11 renderer", "" },
+                        new string[] { "-dx9single", "Limits DX9 renderer to a single thread", "" },
                         new string[] { "-forwardrenderer", "Enables forward rendering", "" }, //"Primarily affects how lighting is applied and limits the maximum number of light sources" },
                         new string[] { "-useoldfov", "Reverts to the original field-of-view", ""},
                         new string[] { "-umbra gpu", "Enables Umbra's GPU accelerated culling", "" },
@@ -966,7 +968,23 @@ namespace Gw2Launcher.UI
                 };
             }
 
-            return InitializeArguments(categories, args, container, templateHeader, templateCheck, templateSwitch, templateDescription, onCheckChanged);
+            var c = InitializeArguments(categories, args, container, templateHeader, templateCheck, templateSwitch, templateDescription, onCheckChanged);
+
+            EventHandler onDxCheckChanged = delegate(object o, EventArgs e)
+            {
+                var cb = (CheckBox)o;
+                if (cb.Focused && cb.Checked)
+                {
+                    if (cb == c[0])
+                        c[1].Checked = false;
+                    else
+                        c[0].Checked = false;
+                }
+            };
+            c[0].CheckedChanged += onDxCheckChanged;
+            c[1].CheckedChanged += onDxCheckChanged;
+
+            return c;
         }
 
         public static CheckBox[] InitializeArguments(string[] categories, string[][][] args, Panel container, Label templateHeader, CheckBox templateCheck, Label templateSwitch, Label templateDescription, EventHandler onCheckChanged)

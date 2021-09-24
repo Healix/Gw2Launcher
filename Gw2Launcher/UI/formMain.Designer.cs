@@ -129,6 +129,8 @@ namespace Gw2Launcher.UI
             this.buttonFilterClose = new Gw2Launcher.UI.Controls.FlatShapeButton();
             this.sizeDragButton1 = new Gw2Launcher.UI.Controls.SizeDragButton();
             this.contextSelection = new Gw2Launcher.UI.Controls.ContextMenuStripStayOpenOnClick(this.components);
+            this.verifyUsageOfDX11ToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.toolStripMenuItem13 = new System.Windows.Forms.ToolStripSeparator();
             this.panelContainer.SuspendLayout();
             this.contextMenu.SuspendLayout();
             this.contextNotify.SuspendLayout();
@@ -194,7 +196,7 @@ namespace Gw2Launcher.UI
             this.newToolStripMenuItem,
             this.settingsToolStripMenuItem,
             this.toolsToolStripMenuItem1});
-            this.contextMenu.Size = new System.Drawing.Size(208, 326);
+            this.contextMenu.Size = new System.Drawing.Size(208, 348);
             // 
             // cancelPendingLaunchesToolStripMenuItem
             // 
@@ -619,7 +621,9 @@ namespace Gw2Launcher.UI
             // 
             this.guildWars2ToolStripMenuItem.DropDownItems.AddRange(new System.Windows.Forms.ToolStripItem[] {
             this.killAllActiveProcessesGw2ToolStripMenuItem1,
-            this.killMutexGw2ToolStripMenuItem});
+            this.killMutexGw2ToolStripMenuItem,
+            this.toolStripMenuItem13,
+            this.verifyUsageOfDX11ToolStripMenuItem});
             this.guildWars2ToolStripMenuItem.Size = new System.Drawing.Size(240, 22);
             this.guildWars2ToolStripMenuItem.Text = "Guild Wars 2";
             // 
@@ -1039,6 +1043,16 @@ namespace Gw2Launcher.UI
             this.contextSelection.StayOpenOnClick = true;
             this.contextSelection.Closed += new System.Windows.Forms.ToolStripDropDownClosedEventHandler(this.contextSelection_Closed);
             // 
+            // verifyUsageOfDX11ToolStripMenuItem
+            // 
+            this.verifyUsageOfDX11ToolStripMenuItem.Size = new System.Drawing.Size(193, 22);
+            this.verifyUsageOfDX11ToolStripMenuItem.Text = "Verify usage of DX11";
+            this.verifyUsageOfDX11ToolStripMenuItem.Click += new System.EventHandler(this.verifyUsageOfDX11ToolStripMenuItem_Click);
+            // 
+            // toolStripMenuItem13
+            // 
+            this.toolStripMenuItem13.Size = new System.Drawing.Size(190, 6);
+            // 
             // formMain
             // 
             this.AllowDrop = true;
@@ -1181,5 +1195,7 @@ namespace Gw2Launcher.UI
         private System.Windows.Forms.ToolStripMenuItem showOnPageToolStripMenuItem;
         private Controls.FlatShapeButton buttonLaunchAll;
         private System.Windows.Forms.ToolStripMenuItem pinToTopToolStripMenuItem;
+        private System.Windows.Forms.ToolStripSeparator toolStripMenuItem13;
+        private System.Windows.Forms.ToolStripMenuItem verifyUsageOfDX11ToolStripMenuItem;
     }
 }
