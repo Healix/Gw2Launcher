@@ -815,6 +815,49 @@ namespace Gw2Launcher
 
             #endregion
 
+            #region -exportAccounts [path]
+
+            if (args.Length > 0 && args[0] == "-exportcsv")
+            {
+                Settings.Load(); // Maybe I shouldn't do this here?!
+                var gw1Accounts = new List<Settings.IGw1Account>();
+                var gw2Accounts = new List<Settings.IGw2Account>();
+                foreach(var uid in Settings.Accounts.GetKeys())
+                {
+                    switch (Settings.Accounts[uid].Value.Type)
+                    {
+                        case Settings.AccountType.GuildWars1:
+                            gw1Accounts.Add((Settings.IGw1Account)Settings.Accounts[uid].Value);
+                            break;
+                        case Settings.AccountType.GuildWars2:
+                            gw2Accounts.Add((Settings.IGw2Account)Settings.Accounts[uid].Value);
+                            break;
+                    }
+                }
+
+                // Create Gw1Accounts.csv
+                var sb = new System.Text.StringBuilder();
+                sb.AppendLine("sep=,");
+                sb.AppendLine("UID,Name,Email");
+                foreach (var account in gw1Accounts) 
+                {
+                    sb.AppendFormat("{0},{1},{2}", account.UID, account.Name, account.Email).AppendLine();
+                }
+                System.IO.File.WriteAllText(Path.Combine(Gw2Launcher.DataPath.AppData, "Gw1Accounts.csv"), sb.ToString());
+
+                // Create Gw2Accounts.csv
+                sb = new System.Text.StringBuilder();
+                sb.AppendLine("sep=,");
+                sb.AppendLine("UID,Name,Email,API Key");
+                foreach (var account in gw2Accounts)
+                {
+                    sb.AppendFormat("{0},{1},{2},{3}", account.UID, account.Name, account.Email, account.ApiKey).AppendLine();
+                }
+                System.IO.File.WriteAllText(Path.Combine(Gw2Launcher.DataPath.AppData, "Gw2Accounts.csv"), sb.ToString());
+            }
+
+            #endregion
+
             #region QuickLaunch
 
             if (args.Length > 0 && args[0] == "-quicklaunch")
