@@ -815,7 +815,7 @@ namespace Gw2Launcher
 
             #endregion
 
-            #region -exportAccounts [path]
+            #region -exportcsv
 
             if (args.Length > 0 && args[0] == "-exportcsv")
             {
