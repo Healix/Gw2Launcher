@@ -34,6 +34,7 @@ namespace Gw2Launcher.UI.Controls
         }
 
         [System.ComponentModel.Browsable(false)]
+        [System.ComponentModel.DesignerSerializationVisibility(System.ComponentModel.DesignerSerializationVisibility.Hidden)]
         public override string Text
         {
             get

@@ -148,6 +148,53 @@ namespace Gw2Launcher.Windows.Native
         public int SecurityDescriptorLength;
         public System.Runtime.InteropServices.ComTypes.FILETIME CreateTime;
     }
+    [StructLayout(LayoutKind.Sequential)]
+    public struct OBJECT_TYPES_INFORMATION
+    {
+        public int NumberOfTypes;
+    }
+
+    [StructLayout(LayoutKind.Sequential)]
+    public struct OBJECT_TYPE_INFORMATION
+    {
+        public UNICODE_STRING TypeName;
+        public int TotalNumberOfObjects;
+        public int TotalNumberOfHandles;
+        public int TotalPagedPoolUsage;
+        public int TotalNonPagedPoolUsage;
+        public int TotalNamePoolUsage;
+        public int TotalHandleTableUsage;
+        public int HighWaterNumberOfObjects;
+        public int HighWaterNumberOfHandles;
+        public int HighWaterPagedPoolUsage;
+        public int HighWaterNonPagedPoolUsage;
+        public int HighWaterNamePoolUsage;
+        public int HighWaterHandleTableUsage;
+        public int InvalidAttributes;
+        public GENERIC_MAPPING GenericMapping;
+        public int ValidAccessMask;
+        [MarshalAs(UnmanagedType.U1)]
+        public bool SecurityRequired;
+        [MarshalAs(UnmanagedType.U1)]
+        public bool MaintainHandleCount;
+        /// <summary>
+        /// Implementation varies by OS (not available on 7)
+        /// </summary>
+        public byte TypeIndex;
+        public byte ReservedByte;
+        public int PoolType;
+        public int DefaultPagedPoolCharge;
+        public int DefaultNonPagedPoolCharge;
+    }
+
+    [StructLayout(LayoutKind.Sequential)]
+    public struct GENERIC_MAPPING
+    {
+        public int GenericRead;
+        public int GenericWrite;
+        public int GenericExecute;
+        public int GenericAll;
+    }
 
     [StructLayout(LayoutKind.Sequential)]
     public struct OBJECT_NAME_INFORMATION
@@ -335,6 +382,10 @@ namespace Gw2Launcher.Windows.Native
         WM_CHAR = 0x0102,
         WM_GETICON = 0x007F,
         WM_SETICON = 0x0080,
+        WM_HOTKEY = 0x0312,
+        WM_NCACTIVATE = 0x86,
+        WM_ACTIVATEAPP = 0x001C,
+        WM_ACTIVATE = 0x6,
     }
 
     public enum Sizing
@@ -1483,4 +1534,93 @@ namespace Gw2Launcher.Windows.Native
         [PreserveSig]
         int GetOverlayImage(int iOverlay, ref int piIndex);
     };
+
+    public enum MonitorDpiType
+    {
+        Effective = 0,
+        Angular = 1,
+        Raw = 2,
+    }
+
+    [Flags]
+    public enum FileMapAccess : uint
+    {
+        FileMapCopy = 0x0001,
+        FileMapWrite = 0x0002,
+        FileMapRead = 0x0004,
+        FileMapAllAccess = 0x001f,
+        fileMapExecute = 0x0020,
+    }
+
+    [Flags]
+    public enum FileMapProtection : uint
+    {
+        PageReadonly = 0x02,
+        PageReadWrite = 0x04,
+        PageWriteCopy = 0x08,
+        PageExecuteRead = 0x20,
+        PageExecuteReadWrite = 0x40,
+        SectionCommit = 0x8000000,
+        SectionImage = 0x1000000,
+        SectionNoCache = 0x10000000,
+        SectionReserve = 0x4000000,
+    }
+
+    [Flags]
+    public enum LayeredWindowFlags
+    {
+        LWA_ALPHA = 0x00000002,
+        LWA_COLORKEY = 0x00000001,
+    }
+
+    [StructLayout(LayoutKind.Sequential)]
+    public struct DEBUG_EVENT
+    {
+        public DebugEventType dwDebugEventCode;
+        public int dwProcessId;
+        public int dwThreadId;
+
+        [MarshalAs(UnmanagedType.ByValArray, SizeConst = 86, ArraySubType = UnmanagedType.U1)]
+        byte[] debugInfo;
+    }
+
+    public enum DebugEventType : uint
+    {
+        RIP_EVENT = 9,
+        OUTPUT_DEBUG_STRING_EVENT = 8,
+        UNLOAD_DLL_DEBUG_EVENT = 7,
+        LOAD_DLL_DEBUG_EVENT = 6,
+        EXIT_PROCESS_DEBUG_EVENT = 5,
+        EXIT_THREAD_DEBUG_EVENT = 4,
+        CREATE_PROCESS_DEBUG_EVENT = 3,
+        CREATE_THREAD_DEBUG_EVENT = 2,
+        EXCEPTION_DEBUG_EVENT = 1,
+    }
+
+    public enum ContinueStatus : uint
+    {
+        DBG_CONTINUE = 0x00010002,
+        DBG_EXCEPTION_NOT_HANDLED = 0x80010001,
+        DBG_REPLY_LATER = 0x40010001
+    }
+
+    [Flags]
+    public enum KeyModifiers
+    {
+        None = 0,
+        Alt = 1,
+        Control = 2,
+        Shift = 4,
+        Windows = 8,
+        NoRepeat = 0x4000
+    }
+
+    public enum VkMapType : uint
+    {
+        MAPVK_VK_TO_VSC = 0,
+        MAPVK_VSC_TO_VK = 1,
+        MAPVK_VK_TO_CHAR = 2,
+        MAPVK_VSC_TO_VK_EX = 3,
+        MAPVK_VK_TO_VSC_EX = 4,
+    }
 }

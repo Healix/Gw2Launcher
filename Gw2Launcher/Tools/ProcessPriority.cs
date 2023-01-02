@@ -23,11 +23,38 @@ namespace Gw2Launcher.Tools
             processes = new Dictionary<int, ProcessInfo>();
         }
 
+        public ProcessPriorityClass GetPriority(Process p)
+        {
+            try
+            {
+                lock (this)
+                {
+                    ProcessInfo pi;
+                    if (processes.TryGetValue(p.Id, out pi))
+                    {
+                        return pi.priority;
+                    }
+                }
+
+                return p.PriorityClass;
+            }
+            catch
+            {
+                return ProcessPriorityClass.Normal;
+            }
+        }
+
         public void SetPriority(Process p, ProcessPriorityClass priority)
         {
             lock (this)
             {
                 var pid = p.Id;
+
+                try
+                {
+                    p.PriorityClass = priority;
+                }
+                catch { }
 
                 ProcessInfo pi;
                 if (processes.TryGetValue(pid, out pi))

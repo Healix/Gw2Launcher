@@ -41,7 +41,7 @@ namespace Gw2Launcher.UI.Controls
             {
                 redraw = false;
 
-                TextRenderer.DrawText(buffer.Graphics, TEXT_ADD_ACCOUNT, FONT_REGULAR, rectName, Color.FromArgb(49, 121, 242), Color.Transparent, TextFormatFlags.NoPadding | TextFormatFlags.SingleLine);
+                TextRenderer.DrawText(buffer.Graphics, TEXT_ADD_ACCOUNT, FONT_REGULAR, rectName, UiColors.GetColor(UiColors.Colors.Link), Color.Transparent, TextFormatFlags.NoPadding | TextFormatFlags.SingleLine);
             }
         }
     }

@@ -12,32 +12,42 @@ namespace Gw2Launcher.Api
         private const char ARRAY_END = ']';
         private const char OBJECT_START = '{';
         private const char OBJECT_END = '}';
-        private const char ITEM_SEPERATOR = ',';
-        private const char KEY_VALUE_SEPERATOR = ':';
+        private const char ITEM_SEPARATOR = ',';
+        private const char KEY_VALUE_SEPARATOR = ':';
         private const char SPECIAL_CHAR = '\\';
         private const char STRING = '"';
         private const char BOOL_NOT = '!';
 
         public static T GetValue<T>(Dictionary<string, object> json, string key)
         {
+            T value;
+            GetValue<T>(json, key, out value);
+            return value;
+        }
+
+        public static bool GetValue<T>(Dictionary<string, object> json, string key, out T value)
+        {
             object o;
             if (json.TryGetValue(key, out o))
             {
                 if (o is T)
                 {
-                    return (T)o;
+                    value = (T)o;
+                    return true;
                 }
                 else
                 {
                     try
                     {
-                        return (T)Convert.ChangeType(o, typeof(T));
+                        value = (T)Convert.ChangeType(o, typeof(T));
+                        return true;
                     }
                     catch { }
                 }
             }
 
-            return default(T);
+            value = default(T);
+            return false;
         }
 
         public static object Decode(string json)
@@ -64,7 +74,7 @@ namespace Gw2Launcher.Api
             {
                 char c = json[index];
 
-                if (c == ITEM_SEPERATOR)
+                if (c == ITEM_SEPARATOR)
                 {
                     index++;
                 }
@@ -99,7 +109,7 @@ namespace Gw2Launcher.Api
         private static KeyValuePair<string, object> ParseItem(ref string json, ref int index)
         {
             object key = ParseValue(ref json, ref index);
-            if (json[index] == KEY_VALUE_SEPERATOR)
+            if (json[index] == KEY_VALUE_SEPARATOR)
             {
                 index++;
 
@@ -329,7 +339,7 @@ namespace Gw2Launcher.Api
                     index++;
                     return objects;
                 }
-                else if (c == ITEM_SEPERATOR)
+                else if (c == ITEM_SEPARATOR)
                 {
                     index++;
                 }

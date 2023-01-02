@@ -22,6 +22,8 @@ namespace Gw2Launcher.UI
 
             checkRemoveCurrent.Enabled = page > 0;
             textPage.Value = page;
+
+            textPage.TextBox.KeyDown += textPage_KeyDown;
         }
 
         protected override void OnInitializeComponents()

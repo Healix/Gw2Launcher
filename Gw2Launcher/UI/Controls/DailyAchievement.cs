@@ -7,7 +7,7 @@ using Gw2Launcher.Api;
 
 namespace Gw2Launcher.UI.Controls
 {
-    class DailyAchievement : System.Windows.Forms.Control
+    class DailyAchievement : Base.BaseControl
     {
         private BufferedGraphics buffer;
         private bool redraw, resize;
@@ -77,6 +77,7 @@ namespace Gw2Launcher.UI.Controls
         }
 
         [System.ComponentModel.Browsable(false)]
+        [System.ComponentModel.DesignerSerializationVisibility(System.ComponentModel.DesignerSerializationVisibility.Hidden)]
         public override string Text
         {
             get
@@ -490,10 +491,6 @@ namespace Gw2Launcher.UI.Controls
 
                             break;
                         case DailyAchievements.Daily.AccessCondition.EndOfDragons:
-
-                            icon = Properties.Resources.eod32;
-
-                            break;
                         default:
                         case DailyAchievements.Daily.AccessCondition.Unknown:
 
@@ -523,6 +520,15 @@ namespace Gw2Launcher.UI.Controls
                     buffer = null;
                 }
             }
+        }
+
+        public override void RefreshColors()
+        {
+            labelLevel.foreColor = UiColors.GetColor(UiColors.Colors.DailiesTextLight);
+            redraw = true;
+            this.Invalidate();
+
+            base.RefreshColors();
         }
     }
 }

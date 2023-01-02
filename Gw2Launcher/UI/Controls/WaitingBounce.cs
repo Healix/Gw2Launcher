@@ -6,7 +6,7 @@ using System.Drawing;
 
 namespace Gw2Launcher.UI.Controls
 {
-    class WaitingBounce : Control
+    class WaitingBounce : Base.BaseControl
     {
         private bool enabled;
         private int startTime;
@@ -14,6 +14,7 @@ namespace Gw2Launcher.UI.Controls
         private Rectangle ball;
         private Timer timer;
         private BufferedGraphics buffer;
+        private bool clear;
 
         public WaitingBounce()
         {
@@ -33,10 +34,18 @@ namespace Gw2Launcher.UI.Controls
 
         void timer_Tick(object sender, EventArgs e)
         {
-            this.Invalidate();
+            var h = this.Height - 3;
+            var ms = Environment.TickCount - startTime;
+            var x = (int)((this.Width - h) * (Math.Sin((ms / 500f) % 360) + 1) / 2);
+
+            if (this.ball.X + 2 != x)
+            {
+                this.Invalidate();
+            }
         }
 
         [System.ComponentModel.Browsable(false)]
+        [System.ComponentModel.DesignerSerializationVisibility(System.ComponentModel.DesignerSerializationVisibility.Hidden)]
         public override string Text
         {
             get
@@ -71,6 +80,7 @@ namespace Gw2Launcher.UI.Controls
         {
             base.OnBackColorChanged(e);
             brushB.Color = this.BackColor;
+            clear = true;
         }
 
         protected override void OnSizeChanged(EventArgs e)
@@ -85,9 +95,15 @@ namespace Gw2Launcher.UI.Controls
 
         protected void OnStateChanged()
         {
-            timer.Enabled = enabled = this.Enabled && this.Visible;
+            var e = this.Enabled && this.Visible;
+            if (e == enabled)
+                return;
+
+            timer.Enabled = enabled = e;
             if (enabled)
                 startTime = Environment.TickCount;
+
+            this.Invalidate();
         }
 
         protected override void Dispose(bool disposing)
@@ -112,31 +128,42 @@ namespace Gw2Launcher.UI.Controls
         {
             base.OnPaint(e);
 
-            if (enabled)
+            Graphics g;
+
+            if (buffer == null)
             {
-                if (buffer == null)
-                {
-                    buffer = BufferedGraphicsManager.Current.Allocate(e.Graphics, this.DisplayRectangle);
-                    buffer.Graphics.Clear(this.BackColor);
-                }
-
-                var g = buffer.Graphics;
-
+                buffer = BufferedGraphicsManager.Current.Allocate(e.Graphics, this.DisplayRectangle);
+                g = buffer.Graphics;
+                g.Clear(this.BackColor);
+                clear = false;
+            }
+            else if (clear)
+            {
+                g = buffer.Graphics;
+                g.Clear(this.BackColor);
+                clear = false;
+            }
+            else
+            {
+                g = buffer.Graphics;
                 g.SmoothingMode = System.Drawing.Drawing2D.SmoothingMode.HighSpeed;
                 g.FillRectangle(brushB, ball);
+            }
 
-                var px = (int)(g.DpiX / 96f + 0.5f);
-                var h = this.Height - px * 3;
+            if (enabled)
+            {
+                //var px = (int)(g.DpiX / 96f + 0.5f);
+                var h = this.Height - 3;
                 var ms = Environment.TickCount - startTime;
                 var x = (int)((this.Width - h) * (Math.Sin((ms / 500f) % 360) + 1) / 2);
 
-                ball = new Rectangle(x - px * 2, 0, h + px * 4, this.Height);
+                ball = new Rectangle(x - 2, 0, h + 4, this.Height);
 
                 g.SmoothingMode = System.Drawing.Drawing2D.SmoothingMode.AntiAlias;
-                g.FillEllipse(brushF, x, px, h, h);
-
-                buffer.Render(e.Graphics);
+                g.FillEllipse(brushF, x, 1, h, h);
             }
+
+            buffer.Render(e.Graphics);
         }
     }
 }

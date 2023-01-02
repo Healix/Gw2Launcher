@@ -36,14 +36,8 @@ namespace Gw2Launcher.UI
             // 
             // buttonGw1
             // 
-            this.buttonGw1.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(240)))), ((int)(((byte)(240)))), ((int)(((byte)(240)))));
-            this.buttonGw1.BackColorHovered = System.Drawing.Color.FromArgb(((int)(((byte)(230)))), ((int)(((byte)(236)))), ((int)(((byte)(244)))));
-            this.buttonGw1.BorderColor = System.Drawing.Color.FromArgb(((int)(((byte)(200)))), ((int)(((byte)(200)))), ((int)(((byte)(200)))));
-            this.buttonGw1.BorderColorHovered = System.Drawing.Color.FromArgb(((int)(((byte)(190)))), ((int)(((byte)(196)))), ((int)(((byte)(204)))));
             this.buttonGw1.Cursor = System.Windows.Forms.Cursors.Hand;
             this.buttonGw1.Font = new System.Drawing.Font("Segoe UI", 9.75F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            this.buttonGw1.ForeColor = System.Drawing.Color.FromArgb(((int)(((byte)(50)))), ((int)(((byte)(50)))), ((int)(((byte)(50)))));
-            this.buttonGw1.ForeColorHovered = System.Drawing.Color.Black;
             this.buttonGw1.Location = new System.Drawing.Point(0, 0);
             this.buttonGw1.Margin = new System.Windows.Forms.Padding(0);
             this.buttonGw1.Size = new System.Drawing.Size(230, 60);
@@ -52,14 +46,8 @@ namespace Gw2Launcher.UI
             // 
             // buttonGw2
             // 
-            this.buttonGw2.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(240)))), ((int)(((byte)(240)))), ((int)(((byte)(240)))));
-            this.buttonGw2.BackColorHovered = System.Drawing.Color.FromArgb(((int)(((byte)(230)))), ((int)(((byte)(236)))), ((int)(((byte)(244)))));
-            this.buttonGw2.BorderColor = System.Drawing.Color.FromArgb(((int)(((byte)(200)))), ((int)(((byte)(200)))), ((int)(((byte)(200)))));
-            this.buttonGw2.BorderColorHovered = System.Drawing.Color.FromArgb(((int)(((byte)(190)))), ((int)(((byte)(196)))), ((int)(((byte)(204)))));
             this.buttonGw2.Cursor = System.Windows.Forms.Cursors.Hand;
             this.buttonGw2.Font = new System.Drawing.Font("Segoe UI", 9.75F);
-            this.buttonGw2.ForeColor = System.Drawing.Color.FromArgb(((int)(((byte)(50)))), ((int)(((byte)(50)))), ((int)(((byte)(50)))));
-            this.buttonGw2.ForeColorHovered = System.Drawing.Color.Black;
             this.buttonGw2.Location = new System.Drawing.Point(0, 70);
             this.buttonGw2.Margin = new System.Windows.Forms.Padding(0, 10, 0, 0);
             this.buttonGw2.Size = new System.Drawing.Size(230, 60);
@@ -79,10 +67,17 @@ namespace Gw2Launcher.UI
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(96F, 96F);
             this.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(248)))), ((int)(((byte)(248)))), ((int)(((byte)(248)))));
+            this.BackColorName = Gw2Launcher.UI.UiColors.Colors.MainBackColor;
+            this.BorderColorName = Gw2Launcher.UI.UiColors.Colors.MainBorder;
             this.ClientSize = new System.Drawing.Size(280, 225);
             this.Controls.Add(this.stackPanel1);
+            this.ForeColor = System.Drawing.Color.Black;
+            this.ForeColorName = Gw2Launcher.UI.UiColors.Colors.Text;
             this.Icon = global::Gw2Launcher.Properties.Resources.Gw2Launcher;
             this.Text = "Select account type";
+            this.TitleBackColorName = Gw2Launcher.UI.UiColors.Colors.BarBackColor;
+            this.TitleBorderColorName = Gw2Launcher.UI.UiColors.Colors.BarBorder;
+            this.TitleForeColorName = Gw2Launcher.UI.UiColors.Colors.BarTitle;
             this.stackPanel1.ResumeLayout(false);
             this.ResumeLayout(false);
             this.PerformLayout();

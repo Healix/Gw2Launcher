@@ -601,6 +601,15 @@ namespace Gw2Launcher.UI.QuickStart
                 Settings.GuildWars2.UseCustomGw2Cache.Value = true;
             }
 
+            if (!Client.FileManager.IsVirtualModeSupported)
+            {
+                if (Client.FileManager.IsBasicModeSupported)
+                {
+                    Settings.GuildWars2.ProfileMode.Value = Settings.ProfileMode.Basic;
+                    Settings.GuildWars2.ProfileOptions.Value = Settings.ProfileModeOptions.None;
+                }
+            }
+
             this.DialogResult = System.Windows.Forms.DialogResult.OK;
             this.Close();
         }

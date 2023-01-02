@@ -16,9 +16,6 @@ namespace Gw2Launcher.UI
         private void InitializeComponent()
         {
             this.components = new System.ComponentModel.Container();
-            this.panelContainer = new Gw2Launcher.UI.formMain.TransparentPanel();
-            this.gridContainer = new Gw2Launcher.UI.Controls.AccountGridButtonContainer();
-            this.textFilter = new System.Windows.Forms.TextBox();
             this.contextMenu = new System.Windows.Forms.ContextMenuStrip(this.components);
             this.cancelPendingLaunchesToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.toolStripMenuItemCancelSep = new System.Windows.Forms.ToolStripSeparator();
@@ -35,10 +32,14 @@ namespace Gw2Launcher.UI
             this.launchAllToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.updateLocaldatToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.updateAllToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.toolStripMenuItem15 = new System.Windows.Forms.ToolStripSeparator();
+            this.launchIfToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.launchIfDailyLoginToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.toolStripMenuItem21 = new System.Windows.Forms.ToolStripSeparator();
             this.killProcessAllToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.toolStripMenuItem6 = new System.Windows.Forms.ToolStripSeparator();
             this.disableAutomaticLoginsToolStripMenuItem1 = new Gw2Launcher.UI.Controls.ToolStripMenuItemStayOpenOnClick();
+            this.disableRunAfterToolStripMenuItem1 = new Controls.ToolStripMenuItemStayOpenOnClick();
             this.applyWindowedBoundsToolStripMenuItem1 = new System.Windows.Forms.ToolStripMenuItem();
             this.toolStripMenuItem19 = new System.Windows.Forms.ToolStripSeparator();
             this.createShortcutAllToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
@@ -49,7 +50,9 @@ namespace Gw2Launcher.UI
             this.toolStripMenuItem22 = new System.Windows.Forms.ToolStripSeparator();
             this.killProcessSelectedToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.toolStripMenuItem11 = new System.Windows.Forms.ToolStripSeparator();
+            this.runToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.disableAutomaticLoginsToolStripMenuItem = new Gw2Launcher.UI.Controls.ToolStripMenuItemStayOpenOnClick();
+            this.disableRunAfterToolStripMenuItem = new Controls.ToolStripMenuItemStayOpenOnClick();
             this.applyWindowedBoundsToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.toolStripMenuItem27 = new System.Windows.Forms.ToolStripSeparator();
             this.createShortcutSelectedToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
@@ -76,6 +79,8 @@ namespace Gw2Launcher.UI
             this.toolStripMenuItem7 = new System.Windows.Forms.ToolStripSeparator();
             this.ascendingToolStripMenuItem = new Gw2Launcher.UI.Controls.ToolStripMenuItemStayOpenOnClick();
             this.descendingToolStripMenuItem = new Gw2Launcher.UI.Controls.ToolStripMenuItemStayOpenOnClick();
+            this.filterByToolStripMenuItem = new Gw2Launcher.UI.Controls.ToolStripMenuItemStayOpenOnClick();
+            this.dailyLoginToolStripMenuItem = new Gw2Launcher.UI.Controls.ToolStripMenuItemStayOpenOnClick();
             this.toolStripMenuItem16 = new System.Windows.Forms.ToolStripSeparator();
             this.newToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.settingsToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
@@ -85,6 +90,8 @@ namespace Gw2Launcher.UI
             this.guildWars2ToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.killAllActiveProcessesGw2ToolStripMenuItem1 = new System.Windows.Forms.ToolStripMenuItem();
             this.killMutexGw2ToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.toolStripMenuItem13 = new System.Windows.Forms.ToolStripSeparator();
+            this.verifyUsageOfDX11ToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.guildWars1ToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.killAllActiveProcessesGw1ToolStripMenuItem2 = new System.Windows.Forms.ToolStripMenuItem();
             this.killMutexGw1ToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
@@ -95,8 +102,9 @@ namespace Gw2Launcher.UI
             this.patchingToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.assetProxyServerToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.backgroundPatchingToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.windowManagerToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.colorsToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.toolStripMenuItem14 = new System.Windows.Forms.ToolStripSeparator();
-            this.reauthenticateOnNextLaunchToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.supportToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.contextNotify = new System.Windows.Forms.ContextMenuStrip(this.components);
             this.showToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
@@ -115,64 +123,37 @@ namespace Gw2Launcher.UI
             this.createDesktopShortcutToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.toolStripMenuItem20 = new System.Windows.Forms.ToolStripSeparator();
             this.disableAutomaticLoginsToolStripMenuItem2 = new Gw2Launcher.UI.Controls.ToolStripMenuItemStayOpenOnClick();
+            this.disableRunAfterToolStripMenuItem2 = new Controls.ToolStripMenuItemStayOpenOnClick();
             this.applyWindowedBoundsToolStripMenuItem2 = new System.Windows.Forms.ToolStripMenuItem();
             this.toolStripMenuItem1 = new System.Windows.Forms.ToolStripSeparator();
             this.exitToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.panelBottom = new Gw2Launcher.UI.formMain.TransparentStackPanel();
+            this.textFilter = new Gw2Launcher.UI.Controls.FlatTextBox();
+            this.buttonFilterClose = new Gw2Launcher.UI.Controls.FlatShapeButton();
+            this.sizeDragButton1 = new Gw2Launcher.UI.Controls.SizeDragButton();
+            this.panelContainer = new Gw2Launcher.UI.formMain.TransparentPanel();
+            this.gridContainer = new Gw2Launcher.UI.Controls.AccountGridButtonContainer();
             this.panelTop = new Gw2Launcher.UI.formMain.TransparentStackPanel();
             this.buttonMenu = new Gw2Launcher.UI.formMain.MenuButton();
+            this.buttonAccountBar = new Gw2Launcher.UI.Controls.FlatShapeButton();
+            this.buttonTemplates = new Gw2Launcher.UI.Controls.FlatShapeButton();
             this.buttonLaunchAll = new Gw2Launcher.UI.Controls.FlatShapeButton();
             this.buttonKillAll = new Gw2Launcher.UI.Controls.FlatShapeButton();
+            this.buttonMinimizeRestoreAll = new Gw2Launcher.UI.Controls.FlatShapeButton();
             this.labelTitle = new Gw2Launcher.UI.formMain.TitleLabel();
             this.buttonMinimize = new Gw2Launcher.UI.Controls.FlatShapeButton();
             this.buttonClose = new Gw2Launcher.UI.Controls.FlatShapeButton();
-            this.panelBottom = new Gw2Launcher.UI.formMain.TransparentStackPanel();
-            this.buttonFilterClose = new Gw2Launcher.UI.Controls.FlatShapeButton();
-            this.sizeDragButton1 = new Gw2Launcher.UI.Controls.SizeDragButton();
             this.contextSelection = new Gw2Launcher.UI.Controls.ContextMenuStripStayOpenOnClick(this.components);
-            this.verifyUsageOfDX11ToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
-            this.toolStripMenuItem13 = new System.Windows.Forms.ToolStripSeparator();
-            this.panelContainer.SuspendLayout();
+            this.contextMinimizeRestore = new System.Windows.Forms.ContextMenuStrip(this.components);
+            this.minimizeToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.restoreToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.contextMenu.SuspendLayout();
             this.contextNotify.SuspendLayout();
-            this.panelTop.SuspendLayout();
             this.panelBottom.SuspendLayout();
+            this.panelContainer.SuspendLayout();
+            this.panelTop.SuspendLayout();
+            this.contextMinimizeRestore.SuspendLayout();
             this.SuspendLayout();
-            // 
-            // panelContainer
-            // 
-            this.panelContainer.Anchor = ((System.Windows.Forms.AnchorStyles)((((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom) 
-            | System.Windows.Forms.AnchorStyles.Left) 
-            | System.Windows.Forms.AnchorStyles.Right)));
-            this.panelContainer.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(248)))), ((int)(((byte)(248)))), ((int)(((byte)(248)))));
-            this.panelContainer.Controls.Add(this.gridContainer);
-            this.panelContainer.Location = new System.Drawing.Point(1, 42);
-            this.panelContainer.Size = new System.Drawing.Size(477, 193);
-            this.panelContainer.MouseClick += new System.Windows.Forms.MouseEventHandler(this.panelContainer_MouseClick);
-            // 
-            // gridContainer
-            // 
-            this.gridContainer.AllowCustomOrdering = false;
-            this.gridContainer.Anchor = ((System.Windows.Forms.AnchorStyles)((((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom) 
-            | System.Windows.Forms.AnchorStyles.Left) 
-            | System.Windows.Forms.AnchorStyles.Right)));
-            this.gridContainer.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(248)))), ((int)(((byte)(248)))), ((int)(((byte)(248)))));
-            this.gridContainer.Filter = null;
-            this.gridContainer.GridColumnAutoWidth = 0;
-            this.gridContainer.GridColumns = 1;
-            this.gridContainer.GridSpacing = 3;
-            this.gridContainer.Location = new System.Drawing.Point(5, 5);
-            this.gridContainer.Margin = new System.Windows.Forms.Padding(5);
-            this.gridContainer.Page = ((byte)(0));
-            this.gridContainer.Size = new System.Drawing.Size(467, 183);
-            // 
-            // textFilter
-            // 
-            this.textFilter.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Left | System.Windows.Forms.AnchorStyles.Right)));
-            this.textFilter.Location = new System.Drawing.Point(5, -3);
-            this.textFilter.Margin = new System.Windows.Forms.Padding(5, 5, 0, 5);
-            this.textFilter.Size = new System.Drawing.Size(423, 22);
-            this.textFilter.Visible = false;
-            this.textFilter.TextChanged += new System.EventHandler(this.textFilter_TextChanged);
             // 
             // contextMenu
             // 
@@ -192,6 +173,7 @@ namespace Gw2Launcher.UI
             this.selectedToolStripMenuItem,
             this.toolStripMenuItem2,
             this.sortByToolStripMenuItem,
+            this.filterByToolStripMenuItem,
             this.toolStripMenuItem16,
             this.newToolStripMenuItem,
             this.settingsToolStripMenuItem,
@@ -265,10 +247,13 @@ namespace Gw2Launcher.UI
             this.launchAllToolStripMenuItem,
             this.updateLocaldatToolStripMenuItem,
             this.updateAllToolStripMenuItem,
+            this.toolStripMenuItem15,
+            this.launchIfToolStripMenuItem,
             this.toolStripMenuItem21,
             this.killProcessAllToolStripMenuItem,
             this.toolStripMenuItem6,
             this.disableAutomaticLoginsToolStripMenuItem1,
+            this.disableRunAfterToolStripMenuItem1,
             this.applyWindowedBoundsToolStripMenuItem1,
             this.toolStripMenuItem19,
             this.createShortcutAllToolStripMenuItem});
@@ -294,6 +279,23 @@ namespace Gw2Launcher.UI
             this.updateAllToolStripMenuItem.Text = "Update";
             this.updateAllToolStripMenuItem.Click += new System.EventHandler(this.updateAllToolStripMenuItem_Click);
             // 
+            // toolStripMenuItem15
+            // 
+            this.toolStripMenuItem15.Size = new System.Drawing.Size(203, 6);
+            // 
+            // launchIfToolStripMenuItem
+            // 
+            this.launchIfToolStripMenuItem.DropDownItems.AddRange(new System.Windows.Forms.ToolStripItem[] {
+            this.launchIfDailyLoginToolStripMenuItem});
+            this.launchIfToolStripMenuItem.Size = new System.Drawing.Size(206, 22);
+            this.launchIfToolStripMenuItem.Text = "Launch if...";
+            // 
+            // launchIfDailyLoginToolStripMenuItem
+            // 
+            this.launchIfDailyLoginToolStripMenuItem.Size = new System.Drawing.Size(130, 22);
+            this.launchIfDailyLoginToolStripMenuItem.Text = "Daily login";
+            this.launchIfDailyLoginToolStripMenuItem.Click += new System.EventHandler(this.launchIfDailyLoginToolStripMenuItem_Click);
+            // 
             // toolStripMenuItem21
             // 
             this.toolStripMenuItem21.Size = new System.Drawing.Size(203, 6);
@@ -314,6 +316,13 @@ namespace Gw2Launcher.UI
             this.disableAutomaticLoginsToolStripMenuItem1.StayOpenOnClick = true;
             this.disableAutomaticLoginsToolStripMenuItem1.Text = "Disable automatic logins";
             this.disableAutomaticLoginsToolStripMenuItem1.Click += new System.EventHandler(this.disableAutomaticLoginsToolStripMenuItem_Click);
+            // 
+            // disableRunAfterToolStripMenuItem1
+            // 
+            this.disableRunAfterToolStripMenuItem1.Size = new System.Drawing.Size(206, 22);
+            this.disableRunAfterToolStripMenuItem1.Text = "Disable run after";
+            this.disableRunAfterToolStripMenuItem1.StayOpenOnClick = true;
+            this.disableRunAfterToolStripMenuItem1.Click += new System.EventHandler(this.disableRunAfterToolStripMenuItem_Click);
             // 
             // applyWindowedBoundsToolStripMenuItem1
             // 
@@ -340,7 +349,9 @@ namespace Gw2Launcher.UI
             this.toolStripMenuItem22,
             this.killProcessSelectedToolStripMenuItem,
             this.toolStripMenuItem11,
+            this.runToolStripMenuItem,
             this.disableAutomaticLoginsToolStripMenuItem,
+            this.disableRunAfterToolStripMenuItem,
             this.applyWindowedBoundsToolStripMenuItem,
             this.toolStripMenuItem27,
             this.createShortcutSelectedToolStripMenuItem,
@@ -385,12 +396,25 @@ namespace Gw2Launcher.UI
             // 
             this.toolStripMenuItem11.Size = new System.Drawing.Size(203, 6);
             // 
+            // runToolStripMenuItem
+            // 
+            this.runToolStripMenuItem.Size = new System.Drawing.Size(206, 22);
+            this.runToolStripMenuItem.Text = "Run...";
+            this.runToolStripMenuItem.Click += new System.EventHandler(this.runToolStripMenuItem_Click);
+            // 
             // disableAutomaticLoginsToolStripMenuItem
             // 
             this.disableAutomaticLoginsToolStripMenuItem.Size = new System.Drawing.Size(206, 22);
             this.disableAutomaticLoginsToolStripMenuItem.StayOpenOnClick = true;
             this.disableAutomaticLoginsToolStripMenuItem.Text = "Disable automatic logins";
             this.disableAutomaticLoginsToolStripMenuItem.Click += new System.EventHandler(this.disableAutomaticLoginsToolStripMenuItem_Click);
+            // 
+            // disableRunAfterToolStripMenuItem
+            // 
+            this.disableRunAfterToolStripMenuItem.Size = new System.Drawing.Size(206, 22);
+            this.disableRunAfterToolStripMenuItem.Text = "Disable run after";
+            this.disableRunAfterToolStripMenuItem.StayOpenOnClick = true;
+            this.disableRunAfterToolStripMenuItem.Click += new System.EventHandler(this.disableRunAfterToolStripMenuItem_Click);
             // 
             // applyWindowedBoundsToolStripMenuItem
             // 
@@ -575,6 +599,21 @@ namespace Gw2Launcher.UI
             this.descendingToolStripMenuItem.Text = "Descending";
             this.descendingToolStripMenuItem.Click += new System.EventHandler(this.descendingToolStripMenuItem_Click);
             // 
+            // filterByToolStripMenuItem
+            // 
+            this.filterByToolStripMenuItem.DropDownItems.AddRange(new System.Windows.Forms.ToolStripItem[] {
+            this.dailyLoginToolStripMenuItem});
+            this.filterByToolStripMenuItem.Size = new System.Drawing.Size(207, 22);
+            this.filterByToolStripMenuItem.StayOpenOnClick = false;
+            this.filterByToolStripMenuItem.Text = "Filter by";
+            // 
+            // dailyLoginToolStripMenuItem
+            // 
+            this.dailyLoginToolStripMenuItem.Size = new System.Drawing.Size(130, 22);
+            this.dailyLoginToolStripMenuItem.StayOpenOnClick = false;
+            this.dailyLoginToolStripMenuItem.Text = "Daily login";
+            this.dailyLoginToolStripMenuItem.Click += new System.EventHandler(this.dailyLoginToolStripMenuItem_Click);
+            // 
             // toolStripMenuItem16
             // 
             this.toolStripMenuItem16.Size = new System.Drawing.Size(204, 6);
@@ -601,21 +640,22 @@ namespace Gw2Launcher.UI
             this.toolStripMenuItem12,
             this.advancedToolStripMenuItem,
             this.patchingToolStripMenuItem,
+            this.windowManagerToolStripMenuItem,
+            this.colorsToolStripMenuItem,
             this.toolStripMenuItem14,
-            this.reauthenticateOnNextLaunchToolStripMenuItem,
             this.supportToolStripMenuItem});
             this.toolsToolStripMenuItem1.Size = new System.Drawing.Size(207, 22);
             this.toolsToolStripMenuItem1.Text = "Tools";
             // 
             // showAccountBarToolStripMenuItem
             // 
-            this.showAccountBarToolStripMenuItem.Size = new System.Drawing.Size(240, 22);
+            this.showAccountBarToolStripMenuItem.Size = new System.Drawing.Size(169, 22);
             this.showAccountBarToolStripMenuItem.Text = "Show account bar";
             this.showAccountBarToolStripMenuItem.Click += new System.EventHandler(this.showAccountBarToolStripMenuItem_Click);
             // 
             // toolStripMenuItem10
             // 
-            this.toolStripMenuItem10.Size = new System.Drawing.Size(237, 6);
+            this.toolStripMenuItem10.Size = new System.Drawing.Size(166, 6);
             // 
             // guildWars2ToolStripMenuItem
             // 
@@ -624,7 +664,7 @@ namespace Gw2Launcher.UI
             this.killMutexGw2ToolStripMenuItem,
             this.toolStripMenuItem13,
             this.verifyUsageOfDX11ToolStripMenuItem});
-            this.guildWars2ToolStripMenuItem.Size = new System.Drawing.Size(240, 22);
+            this.guildWars2ToolStripMenuItem.Size = new System.Drawing.Size(169, 22);
             this.guildWars2ToolStripMenuItem.Text = "Guild Wars 2";
             // 
             // killAllActiveProcessesGw2ToolStripMenuItem1
@@ -639,12 +679,22 @@ namespace Gw2Launcher.UI
             this.killMutexGw2ToolStripMenuItem.Text = "Kill mutex";
             this.killMutexGw2ToolStripMenuItem.Click += new System.EventHandler(this.killMutexGw2ToolStripMenuItem_Click);
             // 
+            // toolStripMenuItem13
+            // 
+            this.toolStripMenuItem13.Size = new System.Drawing.Size(190, 6);
+            // 
+            // verifyUsageOfDX11ToolStripMenuItem
+            // 
+            this.verifyUsageOfDX11ToolStripMenuItem.Size = new System.Drawing.Size(193, 22);
+            this.verifyUsageOfDX11ToolStripMenuItem.Text = "Verify usage of DX11";
+            this.verifyUsageOfDX11ToolStripMenuItem.Click += new System.EventHandler(this.verifyUsageOfDX11ToolStripMenuItem_Click);
+            // 
             // guildWars1ToolStripMenuItem
             // 
             this.guildWars1ToolStripMenuItem.DropDownItems.AddRange(new System.Windows.Forms.ToolStripItem[] {
             this.killAllActiveProcessesGw1ToolStripMenuItem2,
             this.killMutexGw1ToolStripMenuItem});
-            this.guildWars1ToolStripMenuItem.Size = new System.Drawing.Size(240, 22);
+            this.guildWars1ToolStripMenuItem.Size = new System.Drawing.Size(169, 22);
             this.guildWars1ToolStripMenuItem.Text = "Guild Wars 1";
             // 
             // killAllActiveProcessesGw1ToolStripMenuItem2
@@ -661,14 +711,14 @@ namespace Gw2Launcher.UI
             // 
             // toolStripMenuItem12
             // 
-            this.toolStripMenuItem12.Size = new System.Drawing.Size(237, 6);
+            this.toolStripMenuItem12.Size = new System.Drawing.Size(166, 6);
             // 
             // advancedToolStripMenuItem
             // 
             this.advancedToolStripMenuItem.DropDownItems.AddRange(new System.Windows.Forms.ToolStripItem[] {
             this.deleteCacheFoldersToolStripMenuItem,
             this.hiddenUsersToolStripMenuItem});
-            this.advancedToolStripMenuItem.Size = new System.Drawing.Size(240, 22);
+            this.advancedToolStripMenuItem.Size = new System.Drawing.Size(169, 22);
             this.advancedToolStripMenuItem.Text = "Advanced";
             // 
             // deleteCacheFoldersToolStripMenuItem
@@ -688,7 +738,7 @@ namespace Gw2Launcher.UI
             this.patchingToolStripMenuItem.DropDownItems.AddRange(new System.Windows.Forms.ToolStripItem[] {
             this.assetProxyServerToolStripMenuItem,
             this.backgroundPatchingToolStripMenuItem});
-            this.patchingToolStripMenuItem.Size = new System.Drawing.Size(240, 22);
+            this.patchingToolStripMenuItem.Size = new System.Drawing.Size(169, 22);
             this.patchingToolStripMenuItem.Text = "Patching";
             // 
             // assetProxyServerToolStripMenuItem
@@ -703,19 +753,25 @@ namespace Gw2Launcher.UI
             this.backgroundPatchingToolStripMenuItem.Text = "Background patching";
             this.backgroundPatchingToolStripMenuItem.Click += new System.EventHandler(this.backgroundPatchingToolStripMenuItem_Click);
             // 
+            // windowManagerToolStripMenuItem
+            // 
+            this.windowManagerToolStripMenuItem.Size = new System.Drawing.Size(169, 22);
+            this.windowManagerToolStripMenuItem.Text = "Window manager";
+            this.windowManagerToolStripMenuItem.Click += new System.EventHandler(this.windowManagerToolStripMenuItem_Click);
+            // 
+            // colorsToolStripMenuItem
+            // 
+            this.colorsToolStripMenuItem.Size = new System.Drawing.Size(169, 22);
+            this.colorsToolStripMenuItem.Text = "Colors";
+            this.colorsToolStripMenuItem.Click += new System.EventHandler(this.colorsToolStripMenuItem_Click);
+            // 
             // toolStripMenuItem14
             // 
-            this.toolStripMenuItem14.Size = new System.Drawing.Size(237, 6);
-            // 
-            // reauthenticateOnNextLaunchToolStripMenuItem
-            // 
-            this.reauthenticateOnNextLaunchToolStripMenuItem.Size = new System.Drawing.Size(240, 22);
-            this.reauthenticateOnNextLaunchToolStripMenuItem.Text = "Re-authenticate on next launch";
-            this.reauthenticateOnNextLaunchToolStripMenuItem.Click += new System.EventHandler(this.authenticateOnNextLaunchToolStripMenuItem_Click);
+            this.toolStripMenuItem14.Size = new System.Drawing.Size(166, 6);
             // 
             // supportToolStripMenuItem
             // 
-            this.supportToolStripMenuItem.Size = new System.Drawing.Size(240, 22);
+            this.supportToolStripMenuItem.Size = new System.Drawing.Size(169, 22);
             this.supportToolStripMenuItem.Text = "Support";
             this.supportToolStripMenuItem.Click += new System.EventHandler(this.supportToolStripMenuItem_Click);
             // 
@@ -776,6 +832,7 @@ namespace Gw2Launcher.UI
             this.createDesktopShortcutToolStripMenuItem,
             this.toolStripMenuItem20,
             this.disableAutomaticLoginsToolStripMenuItem2,
+            this.disableRunAfterToolStripMenuItem2,
             this.applyWindowedBoundsToolStripMenuItem2});
             this.allToolStripMenuItem1.Size = new System.Drawing.Size(188, 22);
             this.allToolStripMenuItem1.StayOpenOnClick = false;
@@ -830,6 +887,13 @@ namespace Gw2Launcher.UI
             this.disableAutomaticLoginsToolStripMenuItem2.Text = "Disable automatic logins";
             this.disableAutomaticLoginsToolStripMenuItem2.Click += new System.EventHandler(this.disableAutomaticLoginsToolStripMenuItem_Click);
             // 
+            // disableRunAfterToolStripMenuItem2
+            // 
+            this.disableRunAfterToolStripMenuItem2.Size = new System.Drawing.Size(206, 22);
+            this.disableRunAfterToolStripMenuItem2.Text = "Disable run after";
+            this.disableRunAfterToolStripMenuItem2.StayOpenOnClick = true;
+            this.disableRunAfterToolStripMenuItem2.Click += new System.EventHandler(this.disableRunAfterToolStripMenuItem_Click);
+            // 
             // applyWindowedBoundsToolStripMenuItem2
             // 
             this.applyWindowedBoundsToolStripMenuItem2.Size = new System.Drawing.Size(206, 22);
@@ -846,20 +910,105 @@ namespace Gw2Launcher.UI
             this.exitToolStripMenuItem.Text = "Exit";
             this.exitToolStripMenuItem.Click += new System.EventHandler(this.exitToolStripMenuItem_Click);
             // 
+            // panelBottom
+            // 
+            this.panelBottom.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Left) 
+            | System.Windows.Forms.AnchorStyles.Right)));
+            this.panelBottom.BackColorName = Gw2Launcher.UI.UiColors.Colors.BarBackColor;
+            this.panelBottom.Controls.Add(this.textFilter);
+            this.panelBottom.Controls.Add(this.buttonFilterClose);
+            this.panelBottom.Controls.Add(this.sizeDragButton1);
+            this.panelBottom.FlowDirection = System.Windows.Forms.FlowDirection.LeftToRight;
+            this.panelBottom.Location = new System.Drawing.Point(1, 240);
+            this.panelBottom.Size = new System.Drawing.Size(477, 15);
+            // 
+            // textFilter
+            // 
+            this.textFilter.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Left | System.Windows.Forms.AnchorStyles.Right)));
+            this.textFilter.BackColorName = Gw2Launcher.UI.UiColors.Colors.TextBoxBackColor;
+            this.textFilter.BorderColorFocusedName = Gw2Launcher.UI.UiColors.Colors.TextBoxBorderColorFocused;
+            this.textFilter.BorderColorName = Gw2Launcher.UI.UiColors.Colors.TextBoxBorderColor;
+            this.textFilter.Cursor = System.Windows.Forms.Cursors.IBeam;
+            this.textFilter.Location = new System.Drawing.Point(5, -3);
+            this.textFilter.Margin = new System.Windows.Forms.Padding(5, 5, 0, 5);
+            this.textFilter.Size = new System.Drawing.Size(423, 21);
+            this.textFilter.Visible = false;
+            this.textFilter.TextChanged += new System.EventHandler(this.textFilter_TextChanged);
+            // 
+            // buttonFilterClose
+            // 
+            this.buttonFilterClose.Alignment = System.Windows.Forms.HorizontalAlignment.Center;
+            this.buttonFilterClose.Anchor = System.Windows.Forms.AnchorStyles.None;
+            this.buttonFilterClose.BackColorHoveredName = Gw2Launcher.UI.UiColors.Colors.BarBackColorHovered;
+            this.buttonFilterClose.BackColorName = Gw2Launcher.UI.UiColors.Colors.BarBackColor;
+            this.buttonFilterClose.Font = new System.Drawing.Font("Segoe UI", 7.25F);
+            this.buttonFilterClose.ForeColorHoveredName = Gw2Launcher.UI.UiColors.Colors.BarForeColorHovered;
+            this.buttonFilterClose.ForeColorName = Gw2Launcher.UI.UiColors.Colors.BarForeColor;
+            this.buttonFilterClose.LineSize = 1;
+            this.buttonFilterClose.Location = new System.Drawing.Point(431, -2);
+            this.buttonFilterClose.Margin = new System.Windows.Forms.Padding(3, 0, 5, 0);
+            this.buttonFilterClose.Selected = false;
+            this.buttonFilterClose.Shape = Gw2Launcher.UI.Controls.FlatShapeButton.IconShape.X;
+            this.buttonFilterClose.ShapeSize = new System.Drawing.Size(7, 7);
+            this.buttonFilterClose.Size = new System.Drawing.Size(20, 20);
+            this.buttonFilterClose.Visible = false;
+            this.buttonFilterClose.Click += new System.EventHandler(this.buttonFilterClose_Click);
+            // 
+            // sizeDragButton1
+            // 
+            this.sizeDragButton1.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom) 
+            | System.Windows.Forms.AnchorStyles.Right)));
+            this.sizeDragButton1.Cursor = System.Windows.Forms.Cursors.SizeNWSE;
+            this.sizeDragButton1.ForeColorName = Gw2Launcher.UI.UiColors.Colors.ResizeHandle;
+            this.sizeDragButton1.Location = new System.Drawing.Point(456, 0);
+            this.sizeDragButton1.Margin = new System.Windows.Forms.Padding(0);
+            this.sizeDragButton1.Padding = new System.Windows.Forms.Padding(0, 0, 2, 2);
+            this.sizeDragButton1.Size = new System.Drawing.Size(21, 15);
+            this.sizeDragButton1.Transparent = true;
+            // 
+            // panelContainer
+            // 
+            this.panelContainer.Anchor = ((System.Windows.Forms.AnchorStyles)((((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom) 
+            | System.Windows.Forms.AnchorStyles.Left) 
+            | System.Windows.Forms.AnchorStyles.Right)));
+            this.panelContainer.Controls.Add(this.gridContainer);
+            this.panelContainer.Location = new System.Drawing.Point(1, 42);
+            this.panelContainer.Size = new System.Drawing.Size(477, 193);
+            this.panelContainer.MouseClick += new System.Windows.Forms.MouseEventHandler(this.panelContainer_MouseClick);
+            // 
+            // gridContainer
+            // 
+            this.gridContainer.AllowCustomOrdering = false;
+            this.gridContainer.Anchor = ((System.Windows.Forms.AnchorStyles)((((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom) 
+            | System.Windows.Forms.AnchorStyles.Left) 
+            | System.Windows.Forms.AnchorStyles.Right)));
+            this.gridContainer.Filter = null;
+            this.gridContainer.FilterDailyLogin = false;
+            this.gridContainer.GridColumnAutoWidth = 0;
+            this.gridContainer.GridColumns = 1;
+            this.gridContainer.GridSpacing = 3;
+            this.gridContainer.Location = new System.Drawing.Point(5, 5);
+            this.gridContainer.Margin = new System.Windows.Forms.Padding(5);
+            this.gridContainer.Page = ((byte)(0));
+            this.gridContainer.Size = new System.Drawing.Size(467, 183);
+            // 
             // panelTop
             // 
             this.panelTop.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left) 
             | System.Windows.Forms.AnchorStyles.Right)));
             this.panelTop.BackColor = System.Drawing.Color.Transparent;
             this.panelTop.Controls.Add(this.buttonMenu);
+            this.panelTop.Controls.Add(this.buttonAccountBar);
+            this.panelTop.Controls.Add(this.buttonTemplates);
             this.panelTop.Controls.Add(this.buttonLaunchAll);
             this.panelTop.Controls.Add(this.buttonKillAll);
+            this.panelTop.Controls.Add(this.buttonMinimizeRestoreAll);
             this.panelTop.Controls.Add(this.labelTitle);
             this.panelTop.Controls.Add(this.buttonMinimize);
             this.panelTop.Controls.Add(this.buttonClose);
             this.panelTop.FlowDirection = System.Windows.Forms.FlowDirection.LeftToRight;
             this.panelTop.Font = new System.Drawing.Font("Segoe UI", 8.25F);
-            this.panelTop.ForeColor = System.Drawing.Color.Black;
+            this.panelTop.ForeColorName = Gw2Launcher.UI.UiColors.Colors.BarTitle;
             this.panelTop.Location = new System.Drawing.Point(1, 0);
             this.panelTop.Size = new System.Drawing.Size(477, 37);
             // 
@@ -867,14 +1016,13 @@ namespace Gw2Launcher.UI
             // 
             this.buttonMenu.Alignment = System.Windows.Forms.HorizontalAlignment.Center;
             this.buttonMenu.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom)));
-            this.buttonMenu.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(235)))), ((int)(((byte)(235)))), ((int)(((byte)(235)))));
-            this.buttonMenu.BackColorHovered = System.Drawing.Color.Gainsboro;
-            this.buttonMenu.BackColorSelected = System.Drawing.Color.Gainsboro;
-            this.buttonMenu.BorderColor = System.Drawing.Color.Empty;
+            this.buttonMenu.BackColorHoveredName = Gw2Launcher.UI.UiColors.Colors.BarBackColorHovered;
+            this.buttonMenu.BackColorName = Gw2Launcher.UI.UiColors.Colors.BarBackColor;
+            this.buttonMenu.BackColorSelectedName = Gw2Launcher.UI.UiColors.Colors.BarBackColorHovered;
             this.buttonMenu.Font = new System.Drawing.Font("Calibri", 8.25F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            this.buttonMenu.ForeColor = System.Drawing.Color.FromArgb(((int)(((byte)(100)))), ((int)(((byte)(100)))), ((int)(((byte)(100)))));
-            this.buttonMenu.ForeColorHovered = System.Drawing.Color.Black;
-            this.buttonMenu.ForeColorSelected = System.Drawing.Color.Black;
+            this.buttonMenu.ForeColorHoveredName = Gw2Launcher.UI.UiColors.Colors.BarForeColorHovered;
+            this.buttonMenu.ForeColorName = Gw2Launcher.UI.UiColors.Colors.BarForeColor;
+            this.buttonMenu.ForeColorSelectedName = Gw2Launcher.UI.UiColors.Colors.BarForeColorHovered;
             this.buttonMenu.LineSize = 1;
             this.buttonMenu.Location = new System.Drawing.Point(0, 1);
             this.buttonMenu.Margin = new System.Windows.Forms.Padding(0, 1, 0, 1);
@@ -883,26 +1031,67 @@ namespace Gw2Launcher.UI
             this.buttonMenu.Shape = Gw2Launcher.UI.Controls.FlatShapeButton.IconShape.MenuLines;
             this.buttonMenu.ShapeSize = new System.Drawing.Size(14, 9);
             this.buttonMenu.Size = new System.Drawing.Size(30, 35);
-            this.buttonMenu.Text = "—";
             this.buttonMenu.Click += new System.EventHandler(this.buttonMenu_Click);
             this.buttonMenu.MouseDown += new System.Windows.Forms.MouseEventHandler(this.buttonMenu_MouseDown);
+            // 
+            // buttonAccountBar
+            // 
+            this.buttonAccountBar.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom) 
+            | System.Windows.Forms.AnchorStyles.Left)));
+            this.buttonAccountBar.BackColorHoveredName = Gw2Launcher.UI.UiColors.Colors.BarAccountBarBackColorHovered;
+            this.buttonAccountBar.BackColorName = Gw2Launcher.UI.UiColors.Colors.BarAccountBarBackColor;
+            this.buttonAccountBar.BorderColorName = Gw2Launcher.UI.UiColors.Colors.BarAccountBarBorder;
+            this.buttonAccountBar.BorderStyle = ((System.Windows.Forms.AnchorStyles)((((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom) 
+            | System.Windows.Forms.AnchorStyles.Left) 
+            | System.Windows.Forms.AnchorStyles.Right)));
+            this.buttonAccountBar.Cursor = System.Windows.Forms.Cursors.Hand;
+            this.buttonAccountBar.ForeColorName = Gw2Launcher.UI.UiColors.Colors.BarAccountBarForeColor;
+            this.buttonAccountBar.LineSize = 4;
+            this.buttonAccountBar.Location = new System.Drawing.Point(32, 0);
+            this.buttonAccountBar.Margin = new System.Windows.Forms.Padding(2, 0, 0, 0);
+            this.buttonAccountBar.Selected = false;
+            this.buttonAccountBar.Shape = Gw2Launcher.UI.Controls.FlatShapeButton.IconShape.MenuLines;
+            this.buttonAccountBar.ShapeSize = new System.Drawing.Size(4, 16);
+            this.buttonAccountBar.Size = new System.Drawing.Size(20, 37);
+            this.buttonAccountBar.Visible = false;
+            this.buttonAccountBar.Click += new System.EventHandler(this.buttonAccountBar_Click);
+            // 
+            // buttonTemplates
+            // 
+            this.buttonTemplates.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom) 
+            | System.Windows.Forms.AnchorStyles.Left)));
+            this.buttonTemplates.BackColorHoveredName = Gw2Launcher.UI.UiColors.Colors.BarTemplatesBackColorHovered;
+            this.buttonTemplates.BackColorName = Gw2Launcher.UI.UiColors.Colors.BarTemplatesBackColor;
+            this.buttonTemplates.BorderColorName = Gw2Launcher.UI.UiColors.Colors.BarTemplatesBorder;
+            this.buttonTemplates.BorderStyle = ((System.Windows.Forms.AnchorStyles)((((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom) 
+            | System.Windows.Forms.AnchorStyles.Left) 
+            | System.Windows.Forms.AnchorStyles.Right)));
+            this.buttonTemplates.Cursor = System.Windows.Forms.Cursors.Hand;
+            this.buttonTemplates.ForeColorName = Gw2Launcher.UI.UiColors.Colors.BarTemplatesForeColor;
+            this.buttonTemplates.LineSize = 4;
+            this.buttonTemplates.Location = new System.Drawing.Point(54, 0);
+            this.buttonTemplates.Margin = new System.Windows.Forms.Padding(2, 0, 0, 0);
+            this.buttonTemplates.Selected = false;
+            this.buttonTemplates.Shape = Gw2Launcher.UI.Controls.FlatShapeButton.IconShape.WindowTemplate;
+            this.buttonTemplates.ShapeDirection = System.Windows.Forms.ArrowDirection.Down;
+            this.buttonTemplates.ShapeSize = new System.Drawing.Size(10, 7);
+            this.buttonTemplates.Size = new System.Drawing.Size(20, 37);
+            this.buttonTemplates.Visible = false;
+            this.buttonTemplates.Click += new System.EventHandler(this.buttonTemplates_Click);
             // 
             // buttonLaunchAll
             // 
             this.buttonLaunchAll.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom) 
             | System.Windows.Forms.AnchorStyles.Left)));
-            this.buttonLaunchAll.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(20)))), ((int)(((byte)(140)))), ((int)(((byte)(20)))));
-            this.buttonLaunchAll.BackColorHovered = System.Drawing.Color.FromArgb(((int)(((byte)(22)))), ((int)(((byte)(156)))), ((int)(((byte)(22)))));
-            this.buttonLaunchAll.BackColorSelected = System.Drawing.Color.FromArgb(((int)(((byte)(20)))), ((int)(((byte)(140)))), ((int)(((byte)(20)))));
-            this.buttonLaunchAll.BorderColor = System.Drawing.Color.FromArgb(((int)(((byte)(16)))), ((int)(((byte)(55)))), ((int)(((byte)(11)))));
+            this.buttonLaunchAll.BackColorHoveredName = Gw2Launcher.UI.UiColors.Colors.BarLaunchAllBackColorHovered;
+            this.buttonLaunchAll.BackColorName = Gw2Launcher.UI.UiColors.Colors.BarLaunchAllBackColor;
+            this.buttonLaunchAll.BorderColorName = Gw2Launcher.UI.UiColors.Colors.BarLaunchAllBorder;
             this.buttonLaunchAll.BorderStyle = ((System.Windows.Forms.AnchorStyles)((((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom) 
             | System.Windows.Forms.AnchorStyles.Left) 
             | System.Windows.Forms.AnchorStyles.Right)));
             this.buttonLaunchAll.Cursor = System.Windows.Forms.Cursors.Hand;
-            this.buttonLaunchAll.ForeColor = System.Drawing.Color.White;
-            this.buttonLaunchAll.ForeColorHovered = System.Drawing.Color.White;
-            this.buttonLaunchAll.ForeColorSelected = System.Drawing.Color.White;
-            this.buttonLaunchAll.Location = new System.Drawing.Point(32, 0);
+            this.buttonLaunchAll.ForeColorName = Gw2Launcher.UI.UiColors.Colors.BarLaunchAllForeColor;
+            this.buttonLaunchAll.Location = new System.Drawing.Point(76, 0);
             this.buttonLaunchAll.Margin = new System.Windows.Forms.Padding(2, 0, 0, 0);
             this.buttonLaunchAll.Selected = false;
             this.buttonLaunchAll.ShapeDirection = System.Windows.Forms.ArrowDirection.Right;
@@ -915,18 +1104,15 @@ namespace Gw2Launcher.UI
             // 
             this.buttonKillAll.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom) 
             | System.Windows.Forms.AnchorStyles.Left)));
-            this.buttonKillAll.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(214)))), ((int)(((byte)(31)))), ((int)(((byte)(31)))));
-            this.buttonKillAll.BackColorHovered = System.Drawing.Color.FromArgb(((int)(((byte)(240)))), ((int)(((byte)(34)))), ((int)(((byte)(34)))));
-            this.buttonKillAll.BackColorSelected = System.Drawing.Color.FromArgb(((int)(((byte)(214)))), ((int)(((byte)(31)))), ((int)(((byte)(31)))));
-            this.buttonKillAll.BorderColor = System.Drawing.Color.FromArgb(((int)(((byte)(84)))), ((int)(((byte)(24)))), ((int)(((byte)(17)))));
+            this.buttonKillAll.BackColorHoveredName = Gw2Launcher.UI.UiColors.Colors.BarCloseAllBackColorHovered;
+            this.buttonKillAll.BackColorName = Gw2Launcher.UI.UiColors.Colors.BarCloseAllBackColor;
+            this.buttonKillAll.BorderColorName = Gw2Launcher.UI.UiColors.Colors.BarCloseAllBorder;
             this.buttonKillAll.BorderStyle = ((System.Windows.Forms.AnchorStyles)((((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom) 
             | System.Windows.Forms.AnchorStyles.Left) 
             | System.Windows.Forms.AnchorStyles.Right)));
             this.buttonKillAll.Cursor = System.Windows.Forms.Cursors.Hand;
-            this.buttonKillAll.ForeColor = System.Drawing.Color.White;
-            this.buttonKillAll.ForeColorHovered = System.Drawing.Color.White;
-            this.buttonKillAll.ForeColorSelected = System.Drawing.Color.White;
-            this.buttonKillAll.Location = new System.Drawing.Point(64, 0);
+            this.buttonKillAll.ForeColorName = Gw2Launcher.UI.UiColors.Colors.BarCloseAllForeColor;
+            this.buttonKillAll.Location = new System.Drawing.Point(108, 0);
             this.buttonKillAll.Margin = new System.Windows.Forms.Padding(2, 0, 0, 0);
             this.buttonKillAll.Selected = false;
             this.buttonKillAll.Shape = Gw2Launcher.UI.Controls.FlatShapeButton.IconShape.X;
@@ -935,30 +1121,51 @@ namespace Gw2Launcher.UI
             this.buttonKillAll.Visible = false;
             this.buttonKillAll.Click += new System.EventHandler(this.buttonKillAll_Click);
             // 
+            // buttonMinimizeRestoreAll
+            // 
+            this.buttonMinimizeRestoreAll.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom) 
+            | System.Windows.Forms.AnchorStyles.Left)));
+            this.buttonMinimizeRestoreAll.BackColorHoveredName = Gw2Launcher.UI.UiColors.Colors.BarMinimizeAllBackColorHovered;
+            this.buttonMinimizeRestoreAll.BackColorName = Gw2Launcher.UI.UiColors.Colors.BarMinimizeAllBackColor;
+            this.buttonMinimizeRestoreAll.BorderColorName = Gw2Launcher.UI.UiColors.Colors.BarMinimizeAllBorder;
+            this.buttonMinimizeRestoreAll.BorderStyle = ((System.Windows.Forms.AnchorStyles)((((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom) 
+            | System.Windows.Forms.AnchorStyles.Left) 
+            | System.Windows.Forms.AnchorStyles.Right)));
+            this.buttonMinimizeRestoreAll.Cursor = System.Windows.Forms.Cursors.Hand;
+            this.buttonMinimizeRestoreAll.ForeColorName = Gw2Launcher.UI.UiColors.Colors.BarMinimizeAllForeColor;
+            this.buttonMinimizeRestoreAll.Location = new System.Drawing.Point(140, 0);
+            this.buttonMinimizeRestoreAll.Margin = new System.Windows.Forms.Padding(2, 0, 0, 0);
+            this.buttonMinimizeRestoreAll.Selected = false;
+            this.buttonMinimizeRestoreAll.Shape = Gw2Launcher.UI.Controls.FlatShapeButton.IconShape.SquareAndLine;
+            this.buttonMinimizeRestoreAll.ShapeDirection = System.Windows.Forms.ArrowDirection.Down;
+            this.buttonMinimizeRestoreAll.ShapeSize = new System.Drawing.Size(7, 7);
+            this.buttonMinimizeRestoreAll.Size = new System.Drawing.Size(30, 37);
+            this.buttonMinimizeRestoreAll.Visible = false;
+            this.buttonMinimizeRestoreAll.Click += new System.EventHandler(this.buttonMinimizeRestoreAll_Click);
+            this.buttonMinimizeRestoreAll.MouseDown += new System.Windows.Forms.MouseEventHandler(this.buttonMinimizeRestoreAll_MouseDown);
+            // 
             // labelTitle
             // 
             this.labelTitle.Anchor = ((System.Windows.Forms.AnchorStyles)((((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom) 
             | System.Windows.Forms.AnchorStyles.Left) 
             | System.Windows.Forms.AnchorStyles.Right)));
-            this.labelTitle.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(235)))), ((int)(((byte)(235)))), ((int)(((byte)(235)))));
+            this.labelTitle.BackColorName = Gw2Launcher.UI.UiColors.Colors.BarBackColor;
             this.labelTitle.Font = new System.Drawing.Font("Segoe UI", 8.25F);
-            this.labelTitle.Location = new System.Drawing.Point(94, 1);
+            this.labelTitle.ForeColorName = Gw2Launcher.UI.UiColors.Colors.BarTitle;
+            this.labelTitle.Location = new System.Drawing.Point(170, 1);
             this.labelTitle.Margin = new System.Windows.Forms.Padding(0, 1, 0, 1);
-            this.labelTitle.Size = new System.Drawing.Size(323, 35);
+            this.labelTitle.Size = new System.Drawing.Size(247, 35);
             this.labelTitle.Text = "Launcher";
             // 
             // buttonMinimize
             // 
             this.buttonMinimize.Alignment = System.Windows.Forms.HorizontalAlignment.Center;
             this.buttonMinimize.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom)));
-            this.buttonMinimize.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(235)))), ((int)(((byte)(235)))), ((int)(((byte)(235)))));
-            this.buttonMinimize.BackColorHovered = System.Drawing.Color.Gainsboro;
-            this.buttonMinimize.BackColorSelected = System.Drawing.Color.FromArgb(((int)(((byte)(235)))), ((int)(((byte)(235)))), ((int)(((byte)(235)))));
-            this.buttonMinimize.BorderColor = System.Drawing.Color.Empty;
+            this.buttonMinimize.BackColorHoveredName = Gw2Launcher.UI.UiColors.Colors.BarBackColorHovered;
+            this.buttonMinimize.BackColorName = Gw2Launcher.UI.UiColors.Colors.BarBackColor;
             this.buttonMinimize.Font = new System.Drawing.Font("Segoe UI", 8.25F);
-            this.buttonMinimize.ForeColor = System.Drawing.Color.Gray;
-            this.buttonMinimize.ForeColorHovered = System.Drawing.Color.Black;
-            this.buttonMinimize.ForeColorSelected = System.Drawing.SystemColors.ControlText;
+            this.buttonMinimize.ForeColorHoveredName = Gw2Launcher.UI.UiColors.Colors.BarForeColorHovered;
+            this.buttonMinimize.ForeColorName = Gw2Launcher.UI.UiColors.Colors.BarMinimizeForeColor;
             this.buttonMinimize.LineSize = 1;
             this.buttonMinimize.Location = new System.Drawing.Point(417, 1);
             this.buttonMinimize.Margin = new System.Windows.Forms.Padding(0, 1, 0, 1);
@@ -966,21 +1173,17 @@ namespace Gw2Launcher.UI
             this.buttonMinimize.Shape = Gw2Launcher.UI.Controls.FlatShapeButton.IconShape.Underscore;
             this.buttonMinimize.ShapeSize = new System.Drawing.Size(11, 3);
             this.buttonMinimize.Size = new System.Drawing.Size(30, 35);
-            this.buttonMinimize.Text = "—";
             this.buttonMinimize.Click += new System.EventHandler(this.buttonMinimize_Click);
             // 
             // buttonClose
             // 
             this.buttonClose.Alignment = System.Windows.Forms.HorizontalAlignment.Center;
             this.buttonClose.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom)));
-            this.buttonClose.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(235)))), ((int)(((byte)(235)))), ((int)(((byte)(235)))));
-            this.buttonClose.BackColorHovered = System.Drawing.Color.FromArgb(((int)(((byte)(232)))), ((int)(((byte)(17)))), ((int)(((byte)(35)))));
-            this.buttonClose.BackColorSelected = System.Drawing.Color.FromArgb(((int)(((byte)(235)))), ((int)(((byte)(235)))), ((int)(((byte)(235)))));
-            this.buttonClose.BorderColor = System.Drawing.Color.Empty;
+            this.buttonClose.BackColorHoveredName = Gw2Launcher.UI.UiColors.Colors.BarCloseBackColorHovered;
+            this.buttonClose.BackColorName = Gw2Launcher.UI.UiColors.Colors.BarBackColor;
             this.buttonClose.Font = new System.Drawing.Font("Segoe UI", 9.25F);
-            this.buttonClose.ForeColor = System.Drawing.Color.FromArgb(((int)(((byte)(100)))), ((int)(((byte)(100)))), ((int)(((byte)(100)))));
-            this.buttonClose.ForeColorHovered = System.Drawing.Color.White;
-            this.buttonClose.ForeColorSelected = System.Drawing.Color.FromArgb(((int)(((byte)(100)))), ((int)(((byte)(100)))), ((int)(((byte)(100)))));
+            this.buttonClose.ForeColorHoveredName = Gw2Launcher.UI.UiColors.Colors.BarCloseForeColorHovered;
+            this.buttonClose.ForeColorName = Gw2Launcher.UI.UiColors.Colors.BarCloseForeColor;
             this.buttonClose.LineSize = 1;
             this.buttonClose.Location = new System.Drawing.Point(447, 1);
             this.buttonClose.Margin = new System.Windows.Forms.Padding(0, 1, 0, 1);
@@ -988,54 +1191,7 @@ namespace Gw2Launcher.UI
             this.buttonClose.Shape = Gw2Launcher.UI.Controls.FlatShapeButton.IconShape.X;
             this.buttonClose.ShapeSize = new System.Drawing.Size(9, 9);
             this.buttonClose.Size = new System.Drawing.Size(30, 35);
-            this.buttonClose.Text = "✕";
             this.buttonClose.Click += new System.EventHandler(this.buttonClose_Click);
-            // 
-            // panelBottom
-            // 
-            this.panelBottom.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Left) 
-            | System.Windows.Forms.AnchorStyles.Right)));
-            this.panelBottom.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(235)))), ((int)(((byte)(235)))), ((int)(((byte)(235)))));
-            this.panelBottom.Controls.Add(this.textFilter);
-            this.panelBottom.Controls.Add(this.buttonFilterClose);
-            this.panelBottom.Controls.Add(this.sizeDragButton1);
-            this.panelBottom.FlowDirection = System.Windows.Forms.FlowDirection.LeftToRight;
-            this.panelBottom.Location = new System.Drawing.Point(1, 240);
-            this.panelBottom.Size = new System.Drawing.Size(477, 15);
-            // 
-            // buttonFilterClose
-            // 
-            this.buttonFilterClose.Alignment = System.Windows.Forms.HorizontalAlignment.Center;
-            this.buttonFilterClose.Anchor = System.Windows.Forms.AnchorStyles.None;
-            this.buttonFilterClose.BackColorHovered = System.Drawing.Color.Gainsboro;
-            this.buttonFilterClose.BackColorSelected = System.Drawing.Color.FromArgb(((int)(((byte)(235)))), ((int)(((byte)(235)))), ((int)(((byte)(235)))));
-            this.buttonFilterClose.BorderColor = System.Drawing.Color.Empty;
-            this.buttonFilterClose.Font = new System.Drawing.Font("Segoe UI", 7.25F);
-            this.buttonFilterClose.ForeColor = System.Drawing.Color.FromArgb(((int)(((byte)(100)))), ((int)(((byte)(100)))), ((int)(((byte)(100)))));
-            this.buttonFilterClose.ForeColorHovered = System.Drawing.Color.Black;
-            this.buttonFilterClose.ForeColorSelected = System.Drawing.Color.FromArgb(((int)(((byte)(100)))), ((int)(((byte)(100)))), ((int)(((byte)(100)))));
-            this.buttonFilterClose.LineSize = 1;
-            this.buttonFilterClose.Location = new System.Drawing.Point(431, -2);
-            this.buttonFilterClose.Margin = new System.Windows.Forms.Padding(3, 0, 5, 0);
-            this.buttonFilterClose.Selected = false;
-            this.buttonFilterClose.Shape = Gw2Launcher.UI.Controls.FlatShapeButton.IconShape.X;
-            this.buttonFilterClose.ShapeSize = new System.Drawing.Size(7, 7);
-            this.buttonFilterClose.Size = new System.Drawing.Size(20, 20);
-            this.buttonFilterClose.Text = "✕";
-            this.buttonFilterClose.Visible = false;
-            this.buttonFilterClose.Click += new System.EventHandler(this.buttonFilterClose_Click);
-            // 
-            // sizeDragButton1
-            // 
-            this.sizeDragButton1.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom) 
-            | System.Windows.Forms.AnchorStyles.Right)));
-            this.sizeDragButton1.Cursor = System.Windows.Forms.Cursors.SizeNWSE;
-            this.sizeDragButton1.ForeColor = System.Drawing.Color.DarkGray;
-            this.sizeDragButton1.Location = new System.Drawing.Point(456, 0);
-            this.sizeDragButton1.Margin = new System.Windows.Forms.Padding(0);
-            this.sizeDragButton1.Padding = new System.Windows.Forms.Padding(0, 0, 2, 2);
-            this.sizeDragButton1.Size = new System.Drawing.Size(21, 15);
-            this.sizeDragButton1.Transparent = true;
             // 
             // contextSelection
             // 
@@ -1043,25 +1199,35 @@ namespace Gw2Launcher.UI
             this.contextSelection.StayOpenOnClick = true;
             this.contextSelection.Closed += new System.Windows.Forms.ToolStripDropDownClosedEventHandler(this.contextSelection_Closed);
             // 
-            // verifyUsageOfDX11ToolStripMenuItem
+            // contextMinimizeRestore
             // 
-            this.verifyUsageOfDX11ToolStripMenuItem.Size = new System.Drawing.Size(193, 22);
-            this.verifyUsageOfDX11ToolStripMenuItem.Text = "Verify usage of DX11";
-            this.verifyUsageOfDX11ToolStripMenuItem.Click += new System.EventHandler(this.verifyUsageOfDX11ToolStripMenuItem_Click);
+            this.contextMinimizeRestore.Items.AddRange(new System.Windows.Forms.ToolStripItem[] {
+            this.minimizeToolStripMenuItem,
+            this.restoreToolStripMenuItem});
+            this.contextMinimizeRestore.Size = new System.Drawing.Size(124, 48);
             // 
-            // toolStripMenuItem13
+            // minimizeToolStripMenuItem
             // 
-            this.toolStripMenuItem13.Size = new System.Drawing.Size(190, 6);
+            this.minimizeToolStripMenuItem.Size = new System.Drawing.Size(123, 22);
+            this.minimizeToolStripMenuItem.Text = "Minimize";
+            this.minimizeToolStripMenuItem.Click += new System.EventHandler(this.minimizeRestoreToolStripMenuItem_Click);
+            // 
+            // restoreToolStripMenuItem
+            // 
+            this.restoreToolStripMenuItem.Size = new System.Drawing.Size(123, 22);
+            this.restoreToolStripMenuItem.Text = "Restore";
+            this.restoreToolStripMenuItem.Click += new System.EventHandler(this.minimizeRestoreToolStripMenuItem_Click);
             // 
             // formMain
             // 
             this.AllowDrop = true;
             this.AutoScaleDimensions = new System.Drawing.SizeF(96F, 96F);
-            this.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(248)))), ((int)(((byte)(248)))), ((int)(((byte)(248)))));
+            this.BackColorName = Gw2Launcher.UI.UiColors.Colors.MainBackColor;
             this.ClientSize = new System.Drawing.Size(479, 256);
             this.Controls.Add(this.panelBottom);
             this.Controls.Add(this.panelContainer);
             this.Controls.Add(this.panelTop);
+            this.ForeColorName = Gw2Launcher.UI.UiColors.Colors.Text;
             this.FormBorderStyle = System.Windows.Forms.FormBorderStyle.None;
             this.Icon = global::Gw2Launcher.Properties.Resources.Gw2Launcher;
             this.Margin = new System.Windows.Forms.Padding(4);
@@ -1070,12 +1236,12 @@ namespace Gw2Launcher.UI
             this.StartPosition = System.Windows.Forms.FormStartPosition.Manual;
             this.Text = "Launcher";
             this.Load += new System.EventHandler(this.formMain_Load);
-            this.panelContainer.ResumeLayout(false);
             this.contextMenu.ResumeLayout(false);
             this.contextNotify.ResumeLayout(false);
-            this.panelTop.ResumeLayout(false);
             this.panelBottom.ResumeLayout(false);
-            this.panelBottom.PerformLayout();
+            this.panelContainer.ResumeLayout(false);
+            this.panelTop.ResumeLayout(false);
+            this.contextMinimizeRestore.ResumeLayout(false);
             this.ResumeLayout(false);
 
         }
@@ -1169,7 +1335,6 @@ namespace Gw2Launcher.UI
         private System.Windows.Forms.ToolStripMenuItem patchingToolStripMenuItem;
         private System.Windows.Forms.ToolStripMenuItem assetProxyServerToolStripMenuItem;
         private System.Windows.Forms.ToolStripMenuItem backgroundPatchingToolStripMenuItem;
-        private System.Windows.Forms.ToolStripMenuItem reauthenticateOnNextLaunchToolStripMenuItem;
         private System.Windows.Forms.ToolStripMenuItem advancedToolStripMenuItem;
         private System.Windows.Forms.ToolStripMenuItem deleteCacheFoldersToolStripMenuItem;
         private System.Windows.Forms.ToolStripMenuItem hiddenUsersToolStripMenuItem;
@@ -1182,7 +1347,7 @@ namespace Gw2Launcher.UI
         private System.Windows.Forms.ToolStripSeparator customSepMenuItem;
         private Controls.ToolStripMenuItemStayOpenOnClick listToolStripMenuItem;
         private Controls.ToolStripMenuItemStayOpenOnClick gridToolStripMenuItem;
-        private System.Windows.Forms.TextBox textFilter;
+        private Controls.FlatTextBox textFilter;
         private Controls.FlatShapeButton buttonFilterClose;
         private Controls.ToolStripMenuItemStayOpenOnClick groupByToolStripMenuItem;
         private Controls.ToolStripMenuItemStayOpenOnClick groupByActiveMenuItem;
@@ -1197,5 +1362,22 @@ namespace Gw2Launcher.UI
         private System.Windows.Forms.ToolStripMenuItem pinToTopToolStripMenuItem;
         private System.Windows.Forms.ToolStripSeparator toolStripMenuItem13;
         private System.Windows.Forms.ToolStripMenuItem verifyUsageOfDX11ToolStripMenuItem;
+        private System.Windows.Forms.ToolStripSeparator toolStripMenuItem15;
+        private System.Windows.Forms.ToolStripMenuItem launchIfToolStripMenuItem;
+        private System.Windows.Forms.ToolStripMenuItem launchIfDailyLoginToolStripMenuItem;
+        private Controls.ToolStripMenuItemStayOpenOnClick filterByToolStripMenuItem;
+        private Controls.ToolStripMenuItemStayOpenOnClick dailyLoginToolStripMenuItem;
+        private System.Windows.Forms.ToolStripMenuItem windowManagerToolStripMenuItem;
+        private Controls.FlatShapeButton buttonAccountBar;
+        private Controls.FlatShapeButton buttonMinimizeRestoreAll;
+        private System.Windows.Forms.ToolStripMenuItem runToolStripMenuItem;
+        private Controls.ToolStripMenuItemStayOpenOnClick disableRunAfterToolStripMenuItem;
+        private Controls.ToolStripMenuItemStayOpenOnClick disableRunAfterToolStripMenuItem1;
+        private Controls.ToolStripMenuItemStayOpenOnClick disableRunAfterToolStripMenuItem2;
+        private Controls.FlatShapeButton buttonTemplates;
+        private System.Windows.Forms.ContextMenuStrip contextMinimizeRestore;
+        private System.Windows.Forms.ToolStripMenuItem minimizeToolStripMenuItem;
+        private System.Windows.Forms.ToolStripMenuItem restoreToolStripMenuItem;
+        private System.Windows.Forms.ToolStripMenuItem colorsToolStripMenuItem;
     }
 }

@@ -10,7 +10,7 @@ using System.Windows.Forms;
 
 namespace Gw2Launcher.UI.Controls
 {
-    public partial class NoteMessage : UserControl
+    public partial class NoteMessage : UserControl, UiColors.IColors
     {
         public event EventHandler EditClick;
         public event EventHandler DeleteClick;
@@ -22,6 +22,8 @@ namespace Gw2Launcher.UI.Controls
         public NoteMessage()
         {
             InitializeComponent();
+
+            RefreshColors();
 
             stackPanel1.SizeChanged += stackPanel1_SizeChanged;
 
@@ -60,7 +62,7 @@ namespace Gw2Launcher.UI.Controls
             {
                 if (value == null)
                 {
-                    labelMessage.ForeColor = SystemColors.GrayText;
+                    labelMessage.ForeColor = UiColors.GetColor(UiColors.Colors.TextGray);
                     labelMessage.Text = "(not available)";
                 }
                 else
@@ -185,6 +187,11 @@ namespace Gw2Launcher.UI.Controls
             base.OnSizeChanged(e);
 
             stackPanel1.MinimumSize = new Size(this.Width, 0);
+        }
+
+        public void RefreshColors()
+        {
+            this.BackColor = UiColors.GetColor(UiColors.Colors.DailiesBackColor);
         }
     }
 }

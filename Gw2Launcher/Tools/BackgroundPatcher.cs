@@ -325,20 +325,39 @@ namespace Gw2Launcher.Tools
 
                     downloader.Start();
 
-                    if (await GetManifests(latest.manifestId, latest.manifestSize, baseIds, rescan))
+                    const byte STATUS_OK = 1;
+                    const byte STATUS_MANIFEST_DOWNLOAD_ERROR = 2;
+                    const byte STATUS_MANIFEST_PARSING_ERROR = 3;
+                    byte status = 0;
+
+                    try
+                    {
+                        status = await GetManifests(latest.manifestId, latest.manifestSize, baseIds, rescan) ? STATUS_OK : STATUS_MANIFEST_DOWNLOAD_ERROR;
+                    }
+                    catch (Exception e)
+                    {
+                        status = STATUS_MANIFEST_PARSING_ERROR;
+                        Util.Logging.Log(e);
+                    }
+
+                    if (status == STATUS_OK)
                     {
                         if (progress.manifestsTotal > 0 || latest.buildId != Settings.LastKnownBuild.Value)
                         {
                             if (!progress.rescan)
                             {
                                 if (PatchBeginning != null)
+                                {
                                     PatchBeginning(null, new PatchEventArgs()
                                     {
                                         Build = latest.buildId
                                     });
+                                }
 
                                 lock (baseIds)
+                                {
                                     progress.filesTotal++;
+                                }
 
                                 var asset = new Net.AssetDownloader.Asset(latest.exeId, true, (int)(latest.exeSize * AVG_COMPRESSION + 0.5f));
 
@@ -364,32 +383,37 @@ namespace Gw2Launcher.Tools
                             }
                         }
                     }
-                    else
+                    else if (status == STATUS_MANIFEST_DOWNLOAD_ERROR)
                     {
-                        progress.errored = true;
-                        if (Error != null)
-                            Error(this, "Failed to retieve manifests", null);
+                        OnError(progress, "Failed to retieve manifests");
+                    }
+                    else if (status == STATUS_MANIFEST_PARSING_ERROR)
+                    {
+                        OnError(progress, "Failed to read manifests");
                     }
 
                     downloader.StopWhenComplete();
                 }
                 else
                 {
-                    progress.errored = true;
-                    if (Error != null)
-                        Error(this, "Failed to retieve latest build", null);
+                    OnError(progress, "Failed to retieve latest build");
                 }
             }
             else
             {
-                progress.errored = true;
-                if (Error != null)
-                    Error(this, "Failed to read Gw2.dat", null);
+                OnError(progress, "Failed to read Gw2.dat");
             }
 
             isActive = false;
             if (StateChanged != null)
                 StateChanged(this, EventArgs.Empty);
+        }
+
+        private void OnError(DownloadProgressEventArgs p, string message, Exception e = null)
+        {
+            p.errored = true;
+            if (Error != null)
+                Error(this, message, null);
         }
 
         void asset_Progress(object sender, Net.AssetDownloader.Asset.ProgressEventArgs e)

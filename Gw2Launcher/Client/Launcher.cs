@@ -23,6 +23,44 @@ namespace Gw2Launcher.Client
         public delegate void LaunchExceptionEventHandler(Settings.IAccount account, LaunchExceptionEventArgs e);
         public delegate void BuildUpdatedEventHandler(BuildUpdatedEventArgs e);
 
+        public class AccountTopMostWindowEventEventArgs : AccountWindowEventEventArgs
+        {
+            private Util.SortedQueue<byte, IntPtr> windows;
+
+            public AccountTopMostWindowEventEventArgs(Process process, IntPtr handle)
+                : base(EventType.TopMost, process, handle)
+            {
+
+            }
+
+            /// <summary>
+            /// Adds other windows to show on top of the window
+            /// </summary>
+            /// <param name="priority">Highest is on top</param>
+            public void Add(byte priority, IntPtr window)
+            {
+                if (windows == null)
+                    windows = new Util.SortedQueue<byte, IntPtr>();
+                windows.Add(priority, window);
+            }
+
+            public Util.SortedQueue<byte, IntPtr> Windows
+            {
+                get
+                {
+                    return windows;
+                }
+            }
+
+            public int Count
+            {
+                get
+                {
+                    return windows != null ? windows.Count : 0;
+                }
+            }
+        }
+
         public class AccountWindowEventEventArgs : EventArgs
         {
             public enum EventType
@@ -33,6 +71,8 @@ namespace Gw2Launcher.Client
                 Minimized,
                 TopMost,
                 BoundsChanged,
+                TemplateChanged,
+                WindowOptionsChanged,
             }
 
             public AccountWindowEventEventArgs(EventType type, Process process, IntPtr handle)
@@ -600,13 +640,15 @@ namespace Gw2Launcher.Client
                 {
                     if (Settings.GuildWars2.Path.HasValue && !string.IsNullOrEmpty(Settings.GuildWars2.Path.Value))
                         this.Add(AccountType.GuildWars2, Settings.GuildWars2.Path.Value);
+                    if (Settings.GuildWars2.PathSteam.HasValue && !string.IsNullOrEmpty(Settings.GuildWars2.PathSteam.Value))
+                        this.Add(AccountType.GuildWars2, Settings.GuildWars2.PathSteam.Value);
                 }
 
                 if (type.HasFlag(AccountType.GuildWars1))
                 {
                     if (Settings.GuildWars1.Path.HasValue && !string.IsNullOrEmpty(Settings.GuildWars1.Path.Value))
                     {
-                        this.Add(AccountType.GuildWars2, Settings.GuildWars1.Path.Value);
+                        this.Add(AccountType.GuildWars1, Settings.GuildWars1.Path.Value);
 
                         var exe = Path.GetFileName(Settings.GuildWars1.Path.Value);
                         foreach (var a in Util.Accounts.GetGw1Accounts())
@@ -688,10 +730,11 @@ namespace Gw2Launcher.Client
                 /// <summary>
                 /// Release using the time this session was alive
                 /// </summary>
-                void Release();
+                /// <param name="success">If the login was successful</param>
+                void Release(bool success = false);
 
                 /// <summary>
-                /// Resets the timestamp
+                /// Resets the timestamp and causes the session to release on dispose instead of cancel
                 /// </summary>
                 void SetTime();
 
@@ -705,6 +748,7 @@ namespace Gw2Launcher.Client
             {
                 private Limiter limiter;
                 private int started;
+                private bool confirmed;
 
                 public Session(Limiter limiter)
                 {
@@ -719,6 +763,7 @@ namespace Gw2Launcher.Client
 
                 public void SetTime()
                 {
+                    confirmed = true;
                     started = Environment.TickCount;
                 }
 
@@ -740,9 +785,9 @@ namespace Gw2Launcher.Client
                     OnRelease(duration, true);
                 }
 
-                public void Release()
+                public void Release(bool success = false)
                 {
-                    OnRelease(Environment.TickCount - started, false);
+                    OnRelease(Environment.TickCount - started, success);
                 }
 
                 public void Cancel()
@@ -760,7 +805,14 @@ namespace Gw2Launcher.Client
                 {
                     GC.SuppressFinalize(this);
 
-                    Cancel();
+                    if (confirmed)
+                    {
+                        Release(false);
+                    }
+                    else
+                    {
+                        Cancel();
+                    }
                 }
             }
 
@@ -796,7 +848,7 @@ namespace Gw2Launcher.Client
 
                         if (maximum < MAXIMUM)
                         {
-                            if (t < -60000)
+                            if (current == 0 && t < -60000)
                             {
                                 //has been waiting 60s, reset
                                 maximum = MAXIMUM;
@@ -834,8 +886,8 @@ namespace Gw2Launcher.Client
             {
                 //each login within a certain time frame will increase the time it takes to login
                 //after the 3rd login, the time will roughly double as long as requests keep being made, which drops down after stopping
-                //the launcher will time out if the login takes too long, or may receive an error instead if too many requests have been made
-                //logins through the website are initially faster, but will see the same result and can take up to 60s to complete
+                //the launcher will time out if the login takes too long (60 seconds), or may receive an error instead if too many requests have been made
+                //logins through the website are initially faster, but will see the same result
 
                 if (duration < 5000)
                 {
@@ -1057,21 +1109,82 @@ namespace Gw2Launcher.Client
             }
         }
 
+        /// <summary>
+        /// Occurs when the account's state has changed
+        /// </summary>
         public static event AccountEventHandler<AccountStateEventArgs> AccountStateChanged;
+        /// <summary>
+        /// Occurs when there's an error while launching
+        /// </summary>
         public static event LaunchExceptionEventHandler LaunchException;
+        /// <summary>
+        /// Occurs when the account is launched
+        /// </summary>
         public static event AccountEventHandler AccountLaunched;
+        /// <summary>
+        /// Occurs when the account has fully exited
+        /// </summary>
         public static event AccountEventHandler AccountExited;
+        /// <summary>
+        /// Occurs when the process linked to the account changes
+        /// </summary>
         public static event AccountEventHandler<Process> AccountProcessChanged;
+        /// <summary>
+        /// Occurs when a started process is linked to the account
+        /// </summary>
         public static event AccountEventHandler<Process> AccountProcessActivated;
+        /// <summary>
+        /// Occurs when the account's process is exited
+        /// </summary>
         public static event AccountEventHandler<Process> AccountProcessExited;
+        /// <summary>
+        /// Occurs when the queue is empty
+        /// </summary>
         public static event EventHandler AllQueuedLaunchesComplete;
+        /// <summary>
+        /// Occurs when the number of active processes has changed
+        /// </summary>
         public static event AccountTypeEventHandler<ushort> AnyActiveProcessCountChanged;
+        /// <summary>
+        /// Occurs when the number of active processes for the given type has changed
+        /// </summary>
         public static event AccountTypeEventHandler<ushort> ActiveProcessCountChanged;
+        /// <summary>
+        /// Occurs when an update is requested
+        /// </summary>
         public static event BuildUpdatedEventHandler BuildUpdated;
+        /// <summary>
+        /// Occurs when an account is queued
+        /// </summary>
         public static event AccountEventHandler<LaunchMode> AccountQueued;
+        /// <summary>
+        /// Occurs after adding an account to the queue
+        /// </summary>
         private static event InternalAccountEventHandler<LaunchMode> QueueAdded;
+        /// <summary>
+        /// Occurs when the account's window changes
+        /// </summary>
         public static event AccountEventHandler<AccountWindowEventEventArgs> AccountWindowEvent;
+        /// <summary>
+        /// Occurs when the account's window is going to be set top most
+        /// </summary>
+        public static event AccountEventHandler<AccountTopMostWindowEventEventArgs> AccountTopMostWindowEvent;
+        /// <summary>
+        /// Occurs when the queue is emptied and all accounts are exited
+        /// </summary>
         public static event EventHandler AllQueuedLaunchesCompleteAllAccountsExited;
+        /// <summary>
+        /// Occurs when the account's mumble link changes
+        /// </summary>
+        public static event AccountEventHandler<Tools.Mumble.MumbleMonitor.IMumbleProcess> MumbleLinkChanged;
+        /// <summary>
+        /// Occurs when the account's mumble link is verified (account is in-game on a character)
+        /// </summary>
+        public static event AccountEventHandler<Tools.Mumble.MumbleMonitor.IMumbleProcess> MumbleLinkVerified;
+        /// <summary>
+        /// Occurs when the account's run after is initialized
+        /// </summary>
+        public static event AccountEventHandler RunAfterChanged;
 
         public enum AccountState
         {
@@ -1125,6 +1238,35 @@ namespace Gw2Launcher.Client
             None,
             KillLinked,
             KillAll
+        }
+
+        public class NetworkChangedException : Exception
+        {
+            public NetworkChangedException()
+                : base("Network was not allowed; launching was aborted")
+            { }
+        }
+
+        public class Gw2LockException : Exception
+        {
+            public Gw2LockException()
+                : base("Lock.dat is in use; exclusive access is required")
+            { }
+        }
+        
+        public class InvalidSteamPathException : Exception
+        {
+            public InvalidSteamPathException(AccountType type, string message)
+                : base(message)
+            {
+                this.Type = type;
+            }
+
+            public AccountType Type
+            {
+                get;
+                private set;
+            }
         }
 
         public class InvalidPathException : Exception
@@ -1280,7 +1422,7 @@ namespace Gw2Launcher.Client
             public Account account;
             public LaunchMode mode;
             public string args;
-            public Tools.ArenaAccount session;
+            public bool disableProxy;
 
             public void OnDequeued(DequeuedState state)
             {
@@ -1336,7 +1478,9 @@ namespace Gw2Launcher.Client
         {
             public const string VAR_USERPOFILE = "USERPROFILE",
                                 VAR_APPDATA = "APPDATA",
-                                VAR_TEMP = "TMP";
+                                VAR_TEMP = "TMP",
+                                VAR_STEAM_ID = "SteamAppId",
+                                VAR_STEAM_ID_VALUE_GW2 = "1284210";
 
             public ProcessOptions()
             {
@@ -1456,6 +1600,7 @@ namespace Gw2Launcher.Client
         private static Stream coherentLock;
         private static WindowLock wlocker;
         private static Limiter limiter;
+        private static Tools.Mumble.MumbleMonitor mumble;
 
         static Launcher()
         {
@@ -1474,34 +1619,15 @@ namespace Gw2Launcher.Client
 
             windowEvents = new WindowEvents();
             autologin = new Autologin();
+            mumble = new Tools.Mumble.MumbleMonitor();
 
             autologin.LoginEntered += Autologin_LoginEntered;
             LinkedProcess.ProcessExited += LinkedProcess_ProcessExited;
             LinkedProcess.ProcessActive += LinkedProcess_ProcessActive;
-            NetworkAuthorization.LoginRequest += NetworkAuthorization_LoginRequest;
-            Tools.ArenaAccount.LoginResponseDuration += ArenaAccount_LoginResponseDuration;
 
             Settings.GuildWars2.PreventDefaultCoherentUI.ValueChanged += PreventDefaultCoherentUI_ValueChanged;
             Settings.LaunchLimiter.ValueChanged += LaunchLimiter_ValueChanged;
             Settings.LaunchBehindOtherAccounts.ValueChanged += LaunchBehindOtherAccounts_ValueChanged;
-        }
-
-        static void NetworkAuthorization_LoginRequest(object sender, EventArgs e)
-        {
-            var l = limiter;
-            if (l != null)
-            {
-                l.Reduce();
-            }
-        }
-
-        static void ArenaAccount_LoginResponseDuration(object sender, int duration)
-        {
-            var l = limiter;
-            if (l != null)
-            {
-                l.Sample(duration);
-            }
         }
 
         static void Autologin_LoginEntered(object sender, Launcher.Account e)
@@ -1562,19 +1688,6 @@ namespace Gw2Launcher.Client
                     }
                 }
             }
-        }
-
-        public static Process FindProcess(Settings.IAccount account)
-        {
-            Account _account;
-            lock (accounts)
-            {
-                if (accounts.TryGetValue(account.UID, out _account))
-                {
-                    return _account.Process.Process;
-                }
-            }
-            return null;
         }
 
         public static AccountState GetState(ushort uid)
@@ -1643,10 +1756,18 @@ namespace Gw2Launcher.Client
         {
             try
             {
-                var p = GetAccount(account).Process.Process;
+                var a = GetAccount(account);
+                var p = a.Process.Process;
                 if (p != null && !p.HasExited)
                 {
-                    return WindowWatcher.SetBounds(account, p, bounds);
+                    var h = WindowWatcher.FindDxWindow(p);
+                    if (h != IntPtr.Zero && WindowWatcher.SetBounds(account, p, h, bounds))
+                    {
+                        OnWindowStateChanged(h, a);
+                        if ((a.WindowOptions & Settings.WindowOptions.TopMost) != 0)
+                            DelayedWindowStateChangedTopMost(100, h, a);
+                        return true;
+                    }
                 }
             }
             catch (Exception e)
@@ -1657,16 +1778,196 @@ namespace Gw2Launcher.Client
             return false;
         }
 
-        public static Process GetProcess(Settings.IAccount account)
+        /// <summary>
+        /// Applies window templates to all active accounts
+        /// </summary>
+        /// <param name="refresh">True to include accounts that already have a valid template</param>
+        public static void ApplyWindowedTemplate(bool refresh)
         {
-            Process p;
-            lock (accounts)
+            foreach (var l in LinkedProcess.GetActive())
             {
-                var _account = GetAccount(account);
-                p = _account.Process.Process;
+                if (IsWindowed(l.Account.Settings))
+                {
+                    if (!refresh)
+                    {
+                        var s = l.Account.Session;
+                        if (s != null)
+                        {
+                            var t = s.WindowTemplate;
+                            if (t != null && t.IsValid)
+                                continue;
+                        }
+                    }
+                    ApplyWindowedTemplate(l.Account.Settings);
+                }
+            }
+        }
+
+        public static bool ApplyWindowedTemplate(Settings.IAccount account)
+        {
+            try
+            {
+                var a = GetAccount(account);
+                var p = a.Process.Process;
+
+                if (p != null && !p.HasExited && a.Session != null)
+                {
+                    Tools.WindowManager.IWindowBounds wb;
+                    if (Tools.WindowManager.Instance.TryGetBounds(account, out wb) == Tools.WindowManager.BoundsResult.Success)
+                    {
+                        var s = a.Session;
+                        var wo = a.WindowOptions;
+
+                        if (s != null)
+                        {
+                            lock (s)
+                            {
+                                if (s.IsDisposed)
+                                {
+                                    wb.Dispose();
+                                    wb = null;
+                                }
+                                else
+                                {
+                                    s.WindowTemplate = wb;
+                                }
+                            }
+                        }
+                        else
+                        {
+                            wb.Dispose();
+                            wb = null;
+                        }
+
+                        if (wb != null)
+                        {
+                            var handle = WindowWatcher.FindDxWindow(p);
+
+                            if (handle != IntPtr.Zero)
+                            {
+                                if ((wo & Settings.WindowOptions.TopMost) != 0 && (wb.Options & Settings.WindowOptions.TopMost) == 0)
+                                {
+                                    if (Windows.WindowLong.HasValue(handle, GWL.GWL_EXSTYLE, WindowStyle.WS_EX_TOPMOST))
+                                    {
+                                        NativeMethods.SetWindowPos(handle, (IntPtr)WindowZOrder.HWND_NOTOPMOST, 0, 0, 0, 0, SetWindowPosFlags.SWP_NOMOVE | SetWindowPosFlags.SWP_NOACTIVATE | SetWindowPosFlags.SWP_NOSIZE);
+                                    }
+                                }
+
+                                if ((wo & Settings.WindowOptions.PreventChanges) != 0 && (wb.Options & Settings.WindowOptions.PreventChanges) == 0)
+                                {
+                                    if (Windows.WindowLong.HasValue(handle, GWL.GWL_STYLE, WindowStyle.WS_MINIMIZEBOX))
+                                    {
+                                        Windows.WindowLong.Add(handle, GWL.GWL_STYLE, WindowStyle.WS_MAXIMIZEBOX);
+                                    }
+                                }
+
+                                if (WindowWatcher.SetBounds(account, p, handle, wb.Bounds) || (wb.Options & ~Settings.WindowOptions.Windowed) != 0)
+                                {
+                                    OnWindowStateChanged(handle, a);
+
+                                    if ((wb.Options & Settings.WindowOptions.TopMost) != 0)
+                                        DelayedWindowStateChangedTopMost(100, handle, a);
+                                }
+
+                                if (AccountWindowEvent != null)
+                                {
+                                    if (a.WindowOptions != wo)
+                                        AccountWindowEvent(account, new AccountWindowEventEventArgs(AccountWindowEventEventArgs.EventType.WindowOptionsChanged, p, handle));
+                                    AccountWindowEvent(account, new AccountWindowEventEventArgs(AccountWindowEventEventArgs.EventType.TemplateChanged, p, handle));
+                                }
+
+                                return true;
+                            }
+                        }
+                    }
+                }
+            }
+            catch (Exception e)
+            {
+                Util.Logging.Log(e);
             }
 
-            return p;
+            return false;
+        }
+
+        public static Settings.WindowOptions GetWindowOptions(Settings.IAccount account)
+        {
+            return GetAccount(account).WindowOptions;
+        }
+
+        public static bool SetWindowOptions(Settings.IAccount account, Settings.WindowOptions options)
+        {
+            try
+            {
+                var a = GetAccount(account);
+                var p = a.Process.Process;
+                var s = a.Session;
+
+                if (p != null && !p.HasExited && s != null)
+                {
+                    var wo = a.WindowOptions;
+                    var handle = WindowWatcher.FindDxWindow(p);
+                    s.WindowOptions = options | Settings.WindowOptions.Windowed;
+
+                    if (handle != IntPtr.Zero)
+                    {
+                        if ((wo & Settings.WindowOptions.TopMost) != 0 && (options & Settings.WindowOptions.TopMost) == 0)
+                        {
+                            if (Windows.WindowLong.HasValue(handle, GWL.GWL_EXSTYLE, WindowStyle.WS_EX_TOPMOST))
+                            {
+                                NativeMethods.SetWindowPos(handle, (IntPtr)WindowZOrder.HWND_NOTOPMOST, 0, 0, 0, 0, SetWindowPosFlags.SWP_NOMOVE | SetWindowPosFlags.SWP_NOACTIVATE | SetWindowPosFlags.SWP_NOSIZE);
+                            }
+                        }
+
+                        if ((wo & Settings.WindowOptions.PreventChanges) != 0 && (options & Settings.WindowOptions.PreventChanges) == 0)
+                        {
+                            if (Windows.WindowLong.HasValue(handle, GWL.GWL_STYLE, WindowStyle.WS_MINIMIZEBOX))
+                            {
+                                Windows.WindowLong.Add(handle, GWL.GWL_STYLE, WindowStyle.WS_MAXIMIZEBOX);
+                            }
+                        }
+
+                        if ((options & ~Settings.WindowOptions.Windowed) != 0)
+                        {
+                            OnWindowStateChanged(handle, a);
+                        }
+
+                        if (AccountWindowEvent != null && a.WindowOptions != wo)
+                            AccountWindowEvent(account, new AccountWindowEventEventArgs(AccountWindowEventEventArgs.EventType.WindowOptionsChanged, p, handle));
+
+                        return true;
+                    }
+                }
+            }
+            catch (Exception e)
+            {
+                Util.Logging.Log(e);
+            }
+
+            return false;
+        }
+
+        public static Tools.WindowManager.IWindowBounds GetWindowTemplate(Settings.IAccount account)
+        {
+            return GetAccount(account).WindowTemplate;
+        }
+
+        public static Tools.Mumble.MumbleMonitor.IMumbleProcess GetMumbleLink(Settings.IAccount account)
+        {
+            return GetAccount(account).MumbleLink;
+        }
+
+        public static Process GetProcess(Settings.IAccount account)
+        {
+            lock (accounts)
+            {
+                Account _account;
+                if (accounts.TryGetValue(account.UID, out _account))
+                {
+                    return _account.Process.Process;
+                }
+            }
+            return null;
         }
 
         public static bool Kill(Settings.IAccount account)
@@ -1894,6 +2195,139 @@ namespace Gw2Launcher.Client
             return waiting;
         }
 
+        private static bool WaitOnSteam(AccountType type, CancellationToken cancel, bool interruptOnQueueChange)
+        {
+            Account account;
+            var waiting = IsSteamActive(type, out account);
+
+            if (waiting)
+            {
+                var changed = false;
+
+                using (var waiter = new ManualResetEvent(false))
+                {
+                    using (cancel.Register(
+                        delegate
+                        {
+                            waiter.Set();
+                        }))
+                    {
+                        InternalAccountEventHandler<LaunchMode> onAdded = delegate(Account a, LaunchMode m)
+                        {
+                            if (!type.HasFlag(a.Type) || a.Settings.Proxy != Settings.LaunchProxy.Steam)
+                            {
+                                changed = true;
+                                waiter.Set();
+                            }
+                        };
+
+                        if (interruptOnQueueChange)
+                            QueueAdded += onAdded;
+
+                        try
+                        {
+                            while (waiting)
+                            {
+                                if (account != null)
+                                {
+                                    //the account is known, wait for it to exit
+
+                                    EventHandler<Account> onExit = null;
+                                    var exited = false;
+
+                                    lock (queueExit)
+                                    {
+                                        if (account.IsActive)
+                                        {
+                                            onExit = delegate(object o, Account a)
+                                            {
+                                                exited = true;
+                                                waiter.Set();
+                                            };
+                                            account.Exited += onExit;
+                                        }
+                                    }
+
+                                    if (onExit != null)
+                                    {
+                                        try
+                                        {
+                                            waiter.WaitOne();
+
+                                            if (changed || cancel.IsCancellationRequested)
+                                            {
+                                                return true;
+                                            }
+                                        }
+                                        finally
+                                        {
+                                            account.Exited -= onExit;
+                                        }
+
+                                        waiter.Reset();
+                                    }
+                                    
+                                    waiting = IsSteamActive(type, out account);
+                                }
+                                else
+                                {
+                                    //the account is unknown, waiting for steam to change/exit
+
+                                    using (var steam = Steam.GetSteamProcess())
+                                    {
+                                        if (steam == null)
+                                        {
+                                            waiting = false;
+                                        }
+                                        else
+                                        {
+                                            while (!waiter.WaitOne(1000))
+                                            {
+                                                try
+                                                {
+                                                    if (type == AccountType.GuildWars2)
+                                                    {
+                                                        if (!Steam.IsRunning(Steam.APPID_GW2))
+                                                        {
+                                                            break;
+                                                        }
+                                                    }
+                                                    else
+                                                    {
+                                                        throw new NotSupportedException();
+                                                    }
+
+                                                    if (steam.HasExited)
+                                                    {
+                                                        break;
+                                                    }
+                                                }
+                                                catch { }
+                                            }
+
+                                            if (changed || cancel.IsCancellationRequested)
+                                            {
+                                                return true;
+                                            }
+
+                                            waiting = IsSteamActive(type, out account);
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                        finally
+                        {
+                            if (interruptOnQueueChange)
+                                QueueAdded -= onAdded;
+                        }
+                    }
+                }
+            }
+
+            return waiting;
+        }
+
         /// <summary>
         /// Returns if the queue is having to wait due to a normal mode launch
         /// </summary>
@@ -2011,6 +2445,45 @@ namespace Gw2Launcher.Client
             }
 
             mode = (LaunchMode)(-1);
+            return false;
+        }
+
+        /// <summary>
+        /// Returns if an account is currently using Steam
+        /// </summary>
+        /// <param name="account">The account using Steam or null if Steam is being used, but the account is unknown</param>
+        /// <returns>True if Steam is being used</returns>
+        private static bool IsSteamActive(AccountType type, out Account account)
+        {
+            lock (accounts)
+            {
+                foreach (var a in accounts.Values)
+                {
+                    if (type.HasFlag(a.Type) && a.IsActive)
+                    {
+                        var s = a.Session;
+                        if (s != null)
+                        {
+                            if (s.Proxy == Settings.LaunchProxy.Steam)
+                            {
+                                account = a;
+                                return true;
+                            }
+                        }
+                    }
+                }
+            }
+
+            account = null;
+
+            if (type == AccountType.GuildWars2)
+            {
+                if (Steam.IsRunning(Steam.APPID_GW2))
+                {
+                    return true;
+                }
+            }
+
             return false;
         }
 
@@ -2184,6 +2657,7 @@ namespace Gw2Launcher.Client
 
             int build = 0;
             var lastMode = (LaunchMode)(-1);
+            var lastLaunchTime = 0;
             var _lastLaunch = new QueuedLaunch[2];
             Tools.DatUpdater datUpdater = null;
 
@@ -2408,12 +2882,19 @@ namespace Gw2Launcher.Client
                 }
                 else if (q.mode == LaunchMode.Launch)
                 {
-                    if (q.Type == AccountType.GuildWars2 && Settings.CheckForNewBuilds.Value && GetActiveProcessCount(AccountType.GuildWars2) == 0)
+                    if (q.Type == AccountType.GuildWars2 && GetActiveProcessCount(AccountType.GuildWars2) == 0)
                     {
-                        int b = Tools.Gw2Build.Build;
-                        if (b > 0 && b != build && Settings.LastKnownBuild.Value != b)
+                        if (Settings.CheckForNewBuilds.Value)
                         {
-                            build = b;
+                            int b = Tools.Gw2Build.Build;
+                            if (b > 0 && b != build && Settings.LastKnownBuild.Value != b)
+                            {
+                                build = b;
+                                doUpdate = true;
+                            }
+                        }
+                        else if (!doUpdate && !FileManager.VerifyLocalDatBuild())
+                        {
                             doUpdate = true;
                         }
                     }
@@ -2529,6 +3010,66 @@ namespace Gw2Launcher.Client
 
                 #endregion
 
+                if (!IsUpdate(q.mode))
+                {
+                    #region Steam limiter
+
+                    if (q.account.Settings.Proxy == Settings.LaunchProxy.Steam && !q.disableProxy)
+                    {
+                        if (Settings.Steam.Limitation.Value != Settings.SteamLimitation.BlockAll)
+                        {
+                            Account asteam;
+
+                            if (IsSteamActive(q.Type, out asteam))
+                            {
+                                switch (Settings.Steam.Limitation.Value)
+                                {
+                                    case Settings.SteamLimitation.LaunchWithoutSteam:
+
+                                        q.disableProxy = true;
+                                        continue;
+
+                                    case Settings.SteamLimitation.OnlyBlockSteam:
+                                        
+                                        var reordered = false;
+
+                                        lock (queueLaunch)
+                                        {
+                                            //moving one non-steam launch to the top of the queue
+                                            foreach (var qnext in queueLaunch.Dequeue(new Func<QueuedLaunch, bool>(
+                                                delegate(QueuedLaunch qsearch)
+                                                {
+                                                    if (qsearch.account != null && qsearch.account.Settings.Proxy != Settings.LaunchProxy.Steam)
+                                                    {
+                                                        return true;
+                                                    }
+
+                                                    return false;
+                                                })))
+                                            {
+                                                queueLaunch.Push(qnext);
+                                                reordered = true;
+                                                break;
+                                            }
+                                        }
+
+                                        if (reordered)
+                                            continue;
+
+                                        break;
+                                }
+                            }
+                        }
+
+                        if (WaitOnSteam(q.Type, cancel, Settings.Steam.Limitation.Value == Settings.SteamLimitation.OnlyBlockSteam) || cancel.IsCancellationRequested)
+                        {
+                            continue;
+                        }
+                    }
+
+                    #endregion
+                }
+
                 if (q.mode != LaunchMode.Launch)
                 {
                     //launches running in normal mode can only run one client at a time
@@ -2596,13 +3137,26 @@ namespace Gw2Launcher.Client
                 {
                     //launches running in shared mode
 
+                    #region Settings.DelayLaunchSeconds
+
                     if (Settings.DelayLaunchSeconds.HasValue && GetActiveProcessCount(AccountType.Any) > 0 && lastMode == q.mode)
                     {
-                        if (cancel.WaitHandle.WaitOne(Settings.DelayLaunchSeconds.Value * 1000))
+                        var delay = Settings.DelayLaunchSeconds.Value * 1000;
+
+                        if (lastLaunchTime != 0)
+                        {
+                            delay -= Environment.TickCount - lastLaunchTime;
+                        }
+
+                        if (delay >= 0 && cancel.WaitHandle.WaitOne(delay))
                         {
                             continue;
                         }
                     }
+
+                    #endregion
+
+                    #region Settings.LimitActiveAccounts
 
                     var limit = Settings.LimitActiveAccounts.Value;
                     if (limit > 0)
@@ -2613,12 +3167,18 @@ namespace Gw2Launcher.Client
                         }
                     }
 
+                    #endregion
+
+                    #region Login limiter
+
                     var l = limiter;
                     if (l != null && l.IsBlocked())
                     {
                         l.Wait(cancel);
                         continue;
                     }
+
+                    #endregion
                 }
 
                 try
@@ -2647,11 +3207,15 @@ namespace Gw2Launcher.Client
                         {
                             if (!okay)
                             {
+                                var ra = q.account.RunAfter;
+                                if (ra != null)
+                                    ra.Close();
                                 q.account.Session = null;
                             }
                         }
 
                         lastMode = q.mode;
+                        lastLaunchTime = Environment.TickCount;
                     }
                     catch (TaskCanceledException)
                     {
@@ -2700,6 +3264,13 @@ namespace Gw2Launcher.Client
 
                         continue;
                     }
+                    catch (Steam.AlreadyRunningSteamException)
+                    {
+                        if (q.account.errors++ > 5)
+                            throw;
+
+                        continue;
+                    }
                 }
                 catch (Exception e)
                 {
@@ -2722,7 +3293,7 @@ namespace Gw2Launcher.Client
                         {
                             Util.Logging.Log(exc);
                         }
-
+                        
                         if (ex.Retry)
                         {
                             #region DatFileNotInitialized
@@ -2755,78 +3326,77 @@ namespace Gw2Launcher.Client
                         {
                             #region InvalidPathException
 
-                            //dump the remaining queue
-                            lock (queueLaunch)
-                            {
-                                var handled = new HashSet<Account>();
-                                var i = queueLaunch.Count;
-                                var type = ((InvalidPathException)e).Type;
+                            var type = ((InvalidPathException)e).Type;
 
-                                while (i-- > 0)
+                            DumpQueue(
+                                delegate(QueuedLaunch _q)
                                 {
-                                    var _q = queueLaunch.Dequeue();
-                                    if (_q.account != null && _q.Type == type)
-                                    {
-                                        _q.account.inQueueCount--;
-                                        _q.OnDequeued(QueuedLaunch.DequeuedState.Skipped);
-
-                                        if (handled.Add(_q.account))
-                                        {
-                                            lock (_q.account)
-                                            {
-                                                _q.account.SetState(AccountState.Error, true, e);
-                                                _q.account.SetState(AccountState.None, false);
-                                            }
-                                        }
-                                    }
-                                    else
-                                    {
-                                        queueLaunch.Enqueue(_q);
-                                    }
-                                }
-                            }
-
-                            #endregion
+                                    return _q.account != null && _q.Type == type;
+                                }, e);
 
                             continue;
+
+                            #endregion
+                        }
+                        else if (e is InvalidSteamPathException)
+                        {
+                            #region InvalidSteamPathException
+
+                            var type = ((InvalidSteamPathException)e).Type;
+
+                            DumpQueue(
+                                delegate(QueuedLaunch _q)
+                                {
+                                    return _q.account != null && _q.Type == type && _q.account.Settings.Proxy == Settings.LaunchProxy.Steam;
+                                }, e);
+
+                            continue;
+
+                            #endregion
                         }
                         else if (e is BadUsernameOrPasswordException)
                         {
                             #region BadUsernameOrPasswordException
 
-                            //dump queued items that are using the same account
-                            lock (queueLaunch)
-                            {
-                                string username = Util.Users.GetUserName(q.account.Settings.WindowsAccount);
-                                var handled = new HashSet<Account>();
-                                //bool dumpAll = queueSingle.Count > 0;
-                                var i = queueLaunch.Count;
+                            var username = Util.Users.GetUserName(q.account.Settings.WindowsAccount);
 
-                                while (i-- > 0)
+                            DumpQueue(
+                                delegate(QueuedLaunch _q)
                                 {
-                                    var _q = queueLaunch.Dequeue();
-                                    if (Util.Users.GetUserName(_q.account.Settings.WindowsAccount).Equals(username, StringComparison.OrdinalIgnoreCase))
-                                    {
-                                        _q.account.inQueueCount--;
-                                        _q.OnDequeued(QueuedLaunch.DequeuedState.Skipped);
-
-                                        if (handled.Add(_q.account))
-                                        {
-                                            lock (_q.account)
-                                            {
-                                                _q.account.SetState(AccountState.Error, true, e);
-                                                _q.account.SetState(AccountState.None, false);
-                                            }
-                                        }
-                                    }
-                                    else
-                                        queueLaunch.Enqueue(_q);
-                                }
-                            }
-
-                            #endregion
+                                    return _q.account != null && Util.Users.GetUserName(_q.account.Settings.WindowsAccount).Equals(username, StringComparison.OrdinalIgnoreCase);
+                                }, e);
 
                             continue;
+
+                            #endregion
+                        }
+                        else if (e is NetworkChangedException)
+                        {
+                            #region NetworkChangedException
+
+                            DumpQueue(
+                                delegate(QueuedLaunch _q)
+                                {
+                                    return true;
+                                }, e);
+
+                            continue;
+
+                            #endregion
+                        }
+                        else if (e is Gw2LockException)
+                        {
+                            #region Gw2LockException
+
+                            DumpQueue(
+                                delegate(QueuedLaunch _q)
+                                {
+                                    return _q.account != null && _q.Type == AccountType.GuildWars2;
+                                }, e);
+
+                            continue;
+
+                            #endregion
                         }
                     }
 
@@ -2872,6 +3442,7 @@ namespace Gw2Launcher.Client
                         var dat = gw2.DatFile;
 
                         FileManager.VerifyLinks(FileManager.FileType.Dat, dat);
+                        FileManager.VerifyLocalDatBuild(false);
 
                         if (Settings.GuildWars2.DatUpdaterEnabled.Value || Settings.GuildWars2.UseCustomGw2Cache.Value)
                         {
@@ -2919,6 +3490,49 @@ namespace Gw2Launcher.Client
                 #endregion
             }
             while (true);
+        }
+
+        /// <summary>
+        /// Removes items from the queue, raising an error for the account
+        /// </summary>
+        /// <param name="onItem">Return true to remove the item from the queue</param>
+        private static void DumpQueue(Func<QueuedLaunch, bool> onItem, Exception e)
+        {
+            //dump the remaining queue
+            lock (queueLaunch)
+            {
+                var handled = new HashSet<Account>();
+                var i = queueLaunch.Count;
+
+                while (i-- > 0)
+                {
+                    var _q = queueLaunch.Dequeue();
+
+                    if (onItem(_q))
+                    {
+                        if (_q.account == null)
+                        {
+                            _q.OnDequeued(QueuedLaunch.DequeuedState.Skipped);
+                        }
+                        else
+                        {
+                            _q.account.inQueueCount--;
+                            _q.OnDequeued(QueuedLaunch.DequeuedState.Skipped);
+
+                            if (handled.Add(_q.account))
+                            {
+                                lock (_q.account)
+                                {
+                                    _q.account.SetState(AccountState.Error, true, e);
+                                    _q.account.SetState(AccountState.None, false);
+                                }
+                            }
+                        }
+                    }
+                    else
+                        queueLaunch.Enqueue(_q);
+                }
+            }
         }
 
         private static bool Launch(QueuedLaunch q, CancellationToken cancel)
@@ -3093,6 +3707,21 @@ namespace Gw2Launcher.Client
             return ProcessPriorityClass.Normal;
         }
 
+        private static bool IsLocalized(Settings.IGw2Account a)
+        {
+            if (a.Proxy == Settings.LaunchProxy.Steam)
+                return false;
+
+            switch (Settings.GuildWars2.LocalizeAccountExecutionSelection.Value)
+            {
+                case Settings.LocalizeAccountExecutionSelectionOptions.Include:
+                    return a.LocalizedExecution;
+                case Settings.LocalizeAccountExecutionSelectionOptions.Exclude:
+                    return !a.LocalizedExecution;
+            }
+            return true;
+        }
+
         private static bool Launch(QueuedLaunch q, FileInfo exe, CancellationToken cancel)
         {
             var account = q.account;
@@ -3100,6 +3729,7 @@ namespace Gw2Launcher.Client
             var type = q.Type;
             var isUpdate = IsUpdate(mode);
             var fi = exe;
+            var localized = false;
 
             #region UserAlreadyActiveException (no longer used)
             //var username = Util.Users.GetUserName(account.Settings.WindowsAccount);
@@ -3115,8 +3745,8 @@ namespace Gw2Launcher.Client
 
             FileManager.IProfileInformation customProfile = null;
             Security.Impersonation.IIdentity identity = null;
-            NetworkAuthorization.ISession session = null;
             Account.LaunchSession s = null;
+            Tools.WindowManager.IWindowBounds wtemplate = null;
 
             byte retries = 0;
 
@@ -3202,13 +3832,14 @@ namespace Gw2Launcher.Client
 
                     #region Activate localized path
 
-                    if (!isUpdate && Settings.GuildWars2.LocalizeAccountExecution.Value.HasFlag(Settings.LocalizeAccountExecutionOptions.Enabled))
+                    if (!isUpdate && Settings.GuildWars2.LocalizeAccountExecution.Value.HasFlag(Settings.LocalizeAccountExecutionOptions.Enabled) && IsLocalized(gw2))
                     {
                         try
                         {
                             var path = FileManager.ActivateLocalizedPath(gw2, fi);
                             if (path != null)
                                 fi = new FileInfo(path);
+                            localized = true;
                         }
                         catch (NotSupportedException)
                         {
@@ -3218,6 +3849,26 @@ namespace Gw2Launcher.Client
                         catch (Exception e)
                         {
                             throw new Exception("Failed to create localized path:\n" + e.Message);
+                        }
+                    }
+
+                    if (!localized && mode == LaunchMode.Launch && FileManager.IsGw2China)
+                    {
+                        try
+                        {
+                            using (var f = File.Open(Path.Combine(fi.DirectoryName, "Gw2.dat", "Lock.dat"), FileMode.Open, FileAccess.Read, FileShare.None))
+                            {
+
+                            }
+                        }
+                        catch (IOException e)
+                        {
+                            switch (e.HResult & 0xFFFF)
+                            {
+                                case 32: //ERROR_SHARING_VIOLATION
+
+                                    throw new Gw2LockException();
+                            }
                         }
                     }
 
@@ -3244,7 +3895,10 @@ namespace Gw2Launcher.Client
                     {
                         try
                         {
-                            Tools.Gw2Cache.DeleteLoginCounter(gw2.UID);
+                            if (gw2.Proxy == Settings.LaunchProxy.Steam)
+                                Tools.Gw2Cache.DeleteLoginCounter();
+                            else
+                                Tools.Gw2Cache.DeleteLoginCounter(gw2.UID);
                         }
                         catch { }
                     }
@@ -3264,39 +3918,116 @@ namespace Gw2Launcher.Client
 
                 #region NetworkAuthorization
 
-                if (!isUpdate && Settings.NetworkAuthorization.HasValue)
+                //if (!isUpdate && Settings.NetworkAuthorization.HasValue)
+                //{
+                //    //warning: authorization can take ~7s after 3+ logins, which will increase to 30~60+s if more requests are made too quickly; this will eventually cause the launcher to fail to login
+                //    session = NetworkAuthorization.Verify(account.Settings,
+                //        delegate
+                //        {
+                //            lock (account)
+                //            {
+                //                account.SetState(AccountState.WaitingForAuthentication, true);
+                //            }
+                //        });
+
+                //    if (cancel.IsCancellationRequested)
+                //    {
+                //        throw new TaskCanceledException();
+                //    }
+
+                //    var l = limiter;
+                //    if (l != null)
+                //    {
+                //        if (l.IsBlocked())
+                //        {
+                //            if (account.State == AccountState.WaitingForAuthentication)
+                //            {
+                //                lock (account)
+                //                {
+                //                    account.SetState(AccountState.Waiting, true);
+                //                }
+                //            }
+
+                //            if (!l.Wait(cancel))
+                //            {
+                //                throw new TaskCanceledException();
+                //            }
+                //        }
+                //    }
+                //}
+
+                #endregion
+
+                #region Window Manager
+
+                if (!isUpdate && IsWindowed(account.Settings) && Tools.WindowManager.IsActive)
                 {
-                    //warning: authorization can take ~7s after 3+ logins, which will increase to 30~60+s if more requests are made too quickly; this will eventually cause the launcher to fail to login
-                    session = NetworkAuthorization.Verify(account.Settings,
-                        delegate
-                        {
-                            lock (account)
-                            {
-                                account.SetState(AccountState.WaitingForAuthentication, true);
-                            }
-                        });
+                    Tools.WindowManager.IWindowBounds wb;
+                    var wm = Tools.WindowManager.Instance;
+                    var wbr = wm.TryGetBounds(account.Settings, out wb);
 
-                    if (cancel.IsCancellationRequested)
+                    if (wbr == Tools.WindowManager.BoundsResult.Success)
                     {
-                        throw new TaskCanceledException();
+                        wtemplate = wb;
                     }
-
-                    var l = limiter;
-                    if (l != null)
+                    else if (wbr == Tools.WindowManager.BoundsResult.Busy && wm.DelayLaunchUntilAvailable)
                     {
-                        if (l.IsBlocked())
+                        lock (account)
                         {
-                            if (account.State == AccountState.WaitingForAuthentication)
+                            account.SetState(AccountState.Waiting, true);
+                        }
+
+                        using (var waiter = new ManualResetEvent(false))
+                        {
+                            EventHandler onTemplatesChanged = delegate
                             {
-                                lock (account)
+                                try
                                 {
-                                    account.SetState(AccountState.Waiting, true);
+                                    waiter.Set();
+                                }
+                                catch { }
+                            };
+                            wm.TemplatesChanged += onTemplatesChanged;
+                            Settings.WindowManagerOptions.ValueChanged += onTemplatesChanged;
+                            try
+                            {
+                                using (cancel.Register(delegate
+                                {
+                                    waiter.Set();
+                                }))
+                                {
+                                    while (true)
+                                    {
+                                        var b = waiter.WaitOne();
+
+                                        if (cancel.IsCancellationRequested)
+                                        {
+                                            throw new TaskCanceledException();
+                                        }
+
+                                        if (b)
+                                        {
+                                            waiter.Reset();
+
+                                            wbr = wm.TryGetBounds(account.Settings, out wb);
+
+                                            if (wbr == Tools.WindowManager.BoundsResult.Success)
+                                            {
+                                                wtemplate = wb;
+                                                break;
+                                            }
+                                            else if (wbr == Tools.WindowManager.BoundsResult.None || !wm.DelayLaunchUntilAvailable)
+                                            {
+                                                break;
+                                            }
+                                        }
+                                    }
                                 }
                             }
-
-                            if (!l.Wait(cancel))
+                            finally
                             {
-                                throw new TaskCanceledException();
+                                wm.TemplatesChanged -= onTemplatesChanged;
+                                Settings.WindowManagerOptions.ValueChanged -= onTemplatesChanged;
                             }
                         }
                     }
@@ -3324,7 +4055,7 @@ namespace Gw2Launcher.Client
 
                 if (type == AccountType.GuildWars2)
                 {
-                    if (mode == LaunchMode.Launch && (Settings.GuildWars2.PreventDefaultCoherentUI.Value && !Settings.GuildWars2.LocalizeAccountExecution.Value.HasFlag(Settings.LocalizeAccountExecutionOptions.Enabled) || Settings.GuildWars2.LocalizeAccountExecution.Value.HasFlag(Settings.LocalizeAccountExecutionOptions.OnlyIncludeBinFolders)) || mode == LaunchMode.LaunchSingle && Settings.GuildWars2.LocalizeAccountExecution.Value.HasFlag(Settings.LocalizeAccountExecutionOptions.OnlyIncludeBinFolders))
+                    if (mode == LaunchMode.Launch && (Settings.GuildWars2.PreventDefaultCoherentUI.Value && !localized) || localized && Settings.GuildWars2.LocalizeAccountExecution.Value.HasFlag(Settings.LocalizeAccountExecutionOptions.OnlyIncludeBinFolders))
                     {
                         lock (queueLaunch)
                         {
@@ -3334,8 +4065,11 @@ namespace Gw2Launcher.Client
                                 {
                                     //CoherentUI_Host.exe is the first file loaded
                                     //icudt.dll is the first file that requires write access
+                                    //icudt.dll changed to icudtl.dat
+                                    //icudtl.dat can no longer be write-locked (causes CoherentUI to crash)
+                                    //changed to CoherentUI64.dll
 
-                                    coherentLock = File.Open(Path.Combine(Path.GetDirectoryName(Settings.GuildWars2.Path.Value), FileManager.IsGw264Bit ? "bin64" : "bin", "icudt.dll"), FileMode.Open, FileAccess.Read, FileShare.None);
+                                    coherentLock = File.Open(Path.Combine(Path.GetDirectoryName(Settings.GuildWars2.Path.Value), FileManager.IsGw264Bit ? "bin64" : "bin", FileManager.IsGw264Bit ? "CoherentUI64.dll" : "CoherentUI.dll"), FileMode.Open, FileAccess.Read, FileShare.None);
                                 }
                                 catch (Exception e)
                                 {
@@ -3370,7 +4104,7 @@ namespace Gw2Launcher.Client
 
                 KillMutex(type);
 
-                var processOptions = GetProcessStartInfo(account.Settings, customProfile, mode, fi, q.args);
+                var processOptions = GetProcessStartInfo(q, customProfile, fi);
                 var isWindowed = IsWindowed(account.Settings);
 
                 if (processOptions.UserName != null)
@@ -3378,10 +4112,52 @@ namespace Gw2Launcher.Client
 
                 retries = 0;
 
+                account.Session = s = new Account.LaunchSession(account, mode, q.args);
+
+                if (!isUpdate)
+                {
+                    s.RunAfter = RunAfterManager.Create(account, true);
+
+                    if (RunAfter(Settings.RunAfter.RunAfterWhen.BeforeLaunching, account) > 0)
+                    {
+                        account.RunAfter.Wait(cancel);
+                        if (cancel.IsCancellationRequested)
+                        {
+                            lock (account)
+                            {
+                                account.SetState(AccountState.None, true);
+                            }
+                            return false;
+                        }
+                    }
+                }
+
+                #region Network
+
+                if ((Settings.Network.Value & Settings.NetworkOptions.Enabled) != 0 && mode != LaunchMode.Update)
+                {
+                    var e = Network.Elapsed;
+                    var check = false;
+                    
+                    if (e < 30000)
+                    {
+                        check = GetActiveProcessCount() == 0;
+                    }
+                    else
+                    {
+                        check = GetActiveGameProcessCount(AccountType.Any) == 0;
+                    }
+
+                    if (check && !Network.Verify())
+                    {
+                        throw new NetworkChangedException();
+                    }
+                }
+
+                #endregion
+
                 do
                 {
-                    account.Session = s = new Account.LaunchSession(mode, q.args);
-
                     const byte WINDOW_STATE_INITIALIZED = 1;
                     const byte WINDOW_STATE_LOADED = 2;
                     const byte WINDOW_STATE_DX_CREATED = 3;
@@ -3395,20 +4171,13 @@ namespace Gw2Launcher.Client
 
                     try
                     {
-                        bool useProxy;
-
-                        if (processOptions.UserName != null && (customProfile == null || customProfile != null && customProfile.UserProfile == null))
-                        {
+                        var useProxy = !isUpdate && !q.disableProxy && (account.Settings.Proxy == Settings.LaunchProxy.Steam || account.Type == AccountType.GuildWars2 && ((Settings.IGw2Account)account.Settings).Provider == Settings.AccountProvider.Steam)
                             //note the proxy must be used when launching on another user's account due to changing the environmental variables - alternatively, all variables must be set
-                            useProxy = true;
-                        }
-                        else
-                            useProxy = false;
+                            || processOptions.UserName != null && (customProfile == null || customProfile != null && customProfile.UserProfile == null);
 
                         if (mode == LaunchMode.Launch)
                         {
-                            if (!useProxy)
-                                useProxy = Settings.PreventTaskbarGrouping.Value;
+                            useProxy = useProxy || Settings.PreventTaskbarGrouping.Value || Settings.ForceTaskbarGrouping.Value;
 
                             if (type == AccountType.GuildWars2)
                             {
@@ -3427,12 +4196,64 @@ namespace Gw2Launcher.Client
 
                         if (useProxy)
                         {
-                            p = ProxyLauncher.Launch(account.Settings, processOptions, mode == LaunchMode.Launch && Settings.PreventTaskbarGrouping.Value);
-                            if (p != null)
-                                account.Process.Attach(p);
+                            if (account.Settings.Proxy == Settings.LaunchProxy.Steam && !q.disableProxy)
+                            {
+                                if (type == AccountType.GuildWars2)
+                                {
+                                    string steam;
+                                    if (Settings.Steam.Path.HasValue)
+                                        steam = Settings.Steam.Path.Value;
+                                    else
+                                        steam = Steam.Path;
+                                    if (!File.Exists(steam))
+                                        throw new InvalidSteamPathException(AccountType.GuildWars2, "Path to Steam not found");
+                                    try
+                                    {
+                                        if (Steam.Launch(steam, Steam.APPID_GW2, processOptions.Arguments, cancel))
+                                        {
+                                            string n;
+                                            if (Settings.GuildWars2.PathSteam.HasValue)
+                                                n = Path.GetFileNameWithoutExtension(Settings.GuildWars2.PathSteam.Value);
+                                            else
+                                                n = Path.GetFileNameWithoutExtension(fi.Name);
+                                            p = WaitForProxyLaunch(account.Settings.UID, n, cancel, Settings.Steam.Timeout.HasValue ? Settings.Steam.Timeout.Value * 1000 : 5000);
+                                            if (p != null)
+                                                account.Process.Attach(p);
+                                            s.Proxy = Settings.LaunchProxy.Steam;
+                                        }
+                                        else
+                                        {
+                                            throw new Exception("Failed to launch Steam");
+                                        }
+                                    }
+                                    catch (Steam.AlreadyRunningSteamException)
+                                    {
+                                        switch (Settings.Steam.Limitation.Value)
+                                        {
+                                            case Settings.SteamLimitation.LaunchWithoutSteam:
+
+                                                q.disableProxy = true;
+
+                                                continue;
+                                        }
+
+                                        throw;
+                                    }
+                                }
+                                else
+                                {
+                                    throw new NotSupportedException();
+                                }
+                            }
                             else
                             {
-                                //process was started, but could not found (exited or restarted)
+                                p = ProxyLauncher.Launch(account.Settings, processOptions, mode == LaunchMode.Launch && (Settings.PreventTaskbarGrouping.Value || Settings.ForceTaskbarGrouping.Value), Settings.ForceTaskbarGrouping.Value);
+                                if (p != null)
+                                    account.Process.Attach(p);
+                                else
+                                {
+                                    //process was started, but could not found (exited or restarted)
+                                }
                             }
                         }
                         else
@@ -3457,15 +4278,39 @@ namespace Gw2Launcher.Client
 
                             if (!isUpdate)
                             {
+                                s.WindowOptions = account.Settings.WindowOptions;
+
+                                s.ProcessSettings = new ProcessSettings()
+                                {
+                                    ProcessAffinity = account.Settings.ProcessAffinity,
+                                    ProcessPriority = account.Settings.ProcessPriority != Settings.ProcessPriorityClass.None ? account.Settings.ProcessPriority : Settings.ProcessPriority.Value,
+                                    WindowOptions = account.Settings.WindowOptions,
+                                };
+
+                                if (wtemplate != null)
+                                {
+                                    s.WindowTemplate = wtemplate;
+                                    wtemplate = null;
+                                }
+                                else if (isWindowed)
+                                {
+                                    Tools.WindowManager.IWindowBounds wb;
+                                    if (Tools.WindowManager.Instance.TryGetBounds(account.Settings, out wb) == Tools.WindowManager.BoundsResult.Success)
+                                        s.WindowTemplate = wb;
+                                }
+
+                                if (account.Type == AccountType.GuildWars2)
+                                {
+                                    s.MumbleLink = mumble.Add(Util.Args.GetValue(processOptions.Arguments, "mumble"), p.Id, account.Settings);
+                                    s.MumbleLink.Verified += OnMumbleLinkVerified;
+                                }
+
                                 watcher = s.Watcher = new WindowWatcher(account, p, true, isWindowed, s);
                                 watcher.WindowChanged += OnWatchedWindowChanged;
                                 watcher.WindowCrashed += OnWatchedWindowCrashed;
-                                if (IsAutomaticLogin(account.Settings) && account.Type == AccountType.GuildWars2)
+                                if (account.Type == AccountType.GuildWars2)
                                     watcher.Timeout += OnWatchedWindowTimeout;
-                                watcher.AuthenticationRequired += OnWatchedWindowAuthenticationRequired;
                                 watcher.ProcessOptions = processOptions;
-
-                                s.RunAfter = RunAfterManager.Create(account);
 
                                 var l = limiter;
                                 if (l != null && l.IsAutomatic && account.Type == AccountType.GuildWars2 && IsAutomaticLogin(account.Settings))
@@ -3562,23 +4407,6 @@ namespace Gw2Launcher.Client
                         {
                             if (!isUpdate && !p.HasExited)
                             {
-                                if (session != null)
-                                {
-                                    lock (s)
-                                    {
-                                        if (windowState != WINDOW_STATE_READY)
-                                        {
-                                            s.AuthSession = session;
-                                            session.Register(account);
-                                        }
-                                        else
-                                        {
-                                            session.Release();
-                                        }
-                                        session = null;
-                                    }
-                                }
-
                                 switch (mode)
                                 {
                                     case LaunchMode.Launch:
@@ -3659,7 +4487,8 @@ namespace Gw2Launcher.Client
                                         catch { }
                                     }
 
-                                    RunAfter(Settings.RunAfter.RunAfterOptions.None, s);
+                                    if (RunAfter(Settings.RunAfter.RunAfterWhen.AfterLaunching, account) > 0)
+                                        account.RunAfter.Wait(cancel);
 
                                     if (mode == LaunchMode.Launch)
                                     {
@@ -3803,14 +4632,14 @@ namespace Gw2Launcher.Client
             }
             finally
             {
+                if (wtemplate != null)
+                {
+                    wtemplate.Dispose();
+                }
+
                 if (s != null && account.Session != s)
                 {
                     s.Dispose();
-                }
-
-                if (session != null)
-                {
-                    session.Release();
                 }
 
                 if (customProfile != null)
@@ -3834,17 +4663,22 @@ namespace Gw2Launcher.Client
             return false;
         }
 
-        private static void RunAfter(Settings.RunAfter.RunAfterOptions state, Account.LaunchSession s)
+        private static int RunAfter(Settings.RunAfter.RunAfterWhen state, Account a)
         {
+            if (Settings.DisableRunAfter.Value)
+                return 0;
+
             try
             {
-                var ra = s.RunAfter;
-                if (ra == null)
-                    return;
-
-                ra.Start(state);
+                var ra = a.RunAfter;
+                if (ra != null)
+                {
+                    return ra.Start(state);
+                }
             }
             catch { }
+
+            return 0;
         }
 
         /// <summary>
@@ -3892,6 +4726,10 @@ namespace Gw2Launcher.Client
             return count;
         }
 
+        public static int GetActiveGameProcessCount(AccountType type)
+        {
+            return LinkedProcess.GetActiveCount(type, AccountState.ActiveGame);
+        }
 
         public static int GetPendingLaunchCount()
         {
@@ -4036,6 +4874,14 @@ namespace Gw2Launcher.Client
             return accounts;
         }
 
+        public static Settings.IAccount GetAccountFromProcessId(int pid)
+        {
+            var a = LinkedProcess.GetAccount(pid);
+            if (a != null)
+                return a.Settings;
+            return null;
+        }
+
         /// <summary>
         /// Returns any accounts with an active status (active, updating, launching)
         /// </summary>
@@ -4063,9 +4909,16 @@ namespace Gw2Launcher.Client
             return false;
         }
 
-        private static bool IsWindowLockEnabled(Settings.IAccount account)
+        private static bool IsWindowLockEnabled(Account account)
         {
-            return wlocker != null && IsWindowed(account) && (account.WindowOptions & Settings.WindowOptions.TopMost) == 0;
+            if (wlocker != null)
+            {
+                if (IsWindowed(account.Settings))
+                    return (account.WindowOptions & Settings.WindowOptions.TopMost) == 0;
+                else
+                    return true;
+            }
+            return false;
         }
 
         private static bool IsWindowed(Settings.IAccount account)
@@ -4078,7 +4931,7 @@ namespace Gw2Launcher.Client
         /// </summary>
         private static bool IsAutomaticLogin(Settings.IAccount account)
         {
-            if (!Settings.DisableAutomaticLogins)
+            if (!Settings.DisableAutomaticLogins.Value)
             {
                 switch (account.Type)
                 {
@@ -4211,7 +5064,7 @@ namespace Gw2Launcher.Client
             }
             else
             {
-                var disableAutologin = Settings.DisableAutomaticLogins || account.Type == Settings.AccountType.GuildWars2 && account.AutomaticLogin && account.HasCredentials;
+                var disableAutologin = Settings.DisableAutomaticLogins.Value || account.Type == Settings.AccountType.GuildWars2 && account.AutomaticLogin && account.HasCredentials;
 
                 #region -email -password -nopatchui (obsolete)
 
@@ -4245,12 +5098,26 @@ namespace Gw2Launcher.Client
                     
                     if (!string.IsNullOrEmpty(account.Arguments))
                     {
+                        if (Util.Args.Contains(account.Arguments, "dx11"))
+                        {
+                            arguments = Util.Args.AddOrReplace(arguments, "dx9", "");
+                        }
+                        else if (Util.Args.Contains(account.Arguments, "dx9"))
+                        {
+                            arguments = Util.Args.AddOrReplace(arguments, "dx11", "");
+                        }
+
                         args.Append(' ');
                         if (disableAutologin)
                             args.Append(Util.Args.AddOrReplace(account.Arguments, "autologin", ""));
                         else
                             args.Append(account.Arguments);
                     }
+
+                    if (gw2.Provider == Settings.AccountProvider.Steam)
+                        args.Append(" -provider Steam");
+                    else if (gw2.Proxy == Settings.LaunchProxy.Steam)
+                        args.Append(" -provider Portal");
 
                     if (!disableAutologin && (gw2.AutomaticRememberedLogin || Settings.GuildWars2.AutomaticRememberedLogin.Value))
                         args.Append(" -autologin");
@@ -4392,15 +5259,23 @@ namespace Gw2Launcher.Client
             return a;
         }
 
-        private static ProcessOptions GetProcessStartInfo(Settings.IAccount account, FileManager.IProfileInformation customProfile, LaunchMode mode, FileInfo fi, string args)
+        private static ProcessOptions GetProcessStartInfo(QueuedLaunch q, FileManager.IProfileInformation customProfile, FileInfo fi)
         {
+            var account = q.account.Settings;
             var options = new ProcessOptions();
+            var appId = 0;
 
             options.FileName = fi.FullName;
             if (account.Type == Settings.AccountType.GuildWars2)
-                options.Arguments = GetArguments(account, Settings.GuildWars2.Arguments.Value, args, mode);
+            {
+                options.Arguments = GetArguments(account, Settings.GuildWars2.Arguments.Value, q.args, q.mode);
+                if (((Settings.IGw2Account)account).Provider == Settings.AccountProvider.Steam)
+                    appId = Steam.APPID_GW2;
+            }
             else
-                options.Arguments = GetArguments(account, Settings.GuildWars1.Arguments.Value, args, mode);
+            {
+                options.Arguments = GetArguments(account, Settings.GuildWars1.Arguments.Value, q.args, q.mode);
+            }
             options.WorkingDirectory = fi.DirectoryName;
 
             if (!Util.Users.IsCurrentUser(account.WindowsAccount))
@@ -4412,52 +5287,60 @@ namespace Gw2Launcher.Client
                 options.Password = password;
             }
 
-            var temp = Path.Combine(DataPath.AppDataAccountDataTemp, account.UID.ToString());
-            if (!Directory.Exists(temp))
-                Directory.CreateDirectory(temp);
-
-            options.Variables[ProcessOptions.VAR_TEMP] = temp;
-
-            if (customProfile != null)
+            if (appId != 0)
             {
-                if (customProfile.UserProfile != null)
-                    options.Variables[ProcessOptions.VAR_USERPOFILE] = customProfile.UserProfile;
-                if (customProfile.AppData != null)
-                    options.Variables[ProcessOptions.VAR_APPDATA] = customProfile.AppData;
-
-                //Security.Impersonation.IImpersonationToken impersonation;
-                //string username = Util.Users.GetUserName(account.WindowsAccount);
-
-                //if (Util.Users.IsCurrentUser(username))
-                //    impersonation = null;
-                //else
-                //    impersonation = Security.Impersonation.Impersonate(username, Security.Credentials.GetPassword(username));
-
-                //try
-                //{
-                //    string appdata = Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData);
-                //    string userprofile = Environment.GetFolderPath(Environment.SpecialFolder.UserProfile);
-
-                //    if (appdata.StartsWith(userprofile, StringComparison.OrdinalIgnoreCase))
-                //    {
-                //        string path = Path.Combine(appdata, "Guild Wars 2", account.DatFile.UID.ToString());
-
-                //        //GW2 only uses the userprofile variable
-                //        options.UserProfile = path;
-                //        options.AppData = Path.Combine(path, appdata.Substring(userprofile.Length + 1));
-                //    }
-                //    else
-                //        throw new Exception("Unknown user profile directory structure");
-                //}
-                //finally
-                //{
-                //    if (impersonation != null)
-                //        impersonation.Dispose();
-                //}
+                options.Variables[ProcessOptions.VAR_STEAM_ID] = appId.ToString();
             }
-            else
+
+            if (account.Proxy == Settings.LaunchProxy.None || q.disableProxy)
             {
-                //string appdata = Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData);
+                var temp = Path.Combine(DataPath.AppDataAccountDataTemp, account.UID.ToString());
+                if (!Directory.Exists(temp))
+                    Directory.CreateDirectory(temp);
+
+                options.Variables[ProcessOptions.VAR_TEMP] = temp;
+
+                if (customProfile != null)
+                {
+                    if (customProfile.UserProfile != null)
+                        options.Variables[ProcessOptions.VAR_USERPOFILE] = customProfile.UserProfile;
+                    if (customProfile.AppData != null)
+                        options.Variables[ProcessOptions.VAR_APPDATA] = customProfile.AppData;
+
+                    //Security.Impersonation.IImpersonationToken impersonation;
+                    //string username = Util.Users.GetUserName(account.WindowsAccount);
+
+                    //if (Util.Users.IsCurrentUser(username))
+                    //    impersonation = null;
+                    //else
+                    //    impersonation = Security.Impersonation.Impersonate(username, Security.Credentials.GetPassword(username));
+
+                    //try
+                    //{
+                    //    string appdata = Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData);
+                    //    string userprofile = Environment.GetFolderPath(Environment.SpecialFolder.UserProfile);
+
+                    //    if (appdata.StartsWith(userprofile, StringComparison.OrdinalIgnoreCase))
+                    //    {
+                    //        string path = Path.Combine(appdata, "Guild Wars 2", account.DatFile.UID.ToString());
+
+                    //        //GW2 only uses the userprofile variable
+                    //        options.UserProfile = path;
+                    //        options.AppData = Path.Combine(path, appdata.Substring(userprofile.Length + 1));
+                    //    }
+                    //    else
+                    //        throw new Exception("Unknown user profile directory structure");
+                    //}
+                    //finally
+                    //{
+                    //    if (impersonation != null)
+                    //        impersonation.Dispose();
+                    //}
+                }
+                else
+                {
+                    //string appdata = Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData);
+                }
             }
 
             return options;
@@ -4593,7 +5476,10 @@ namespace Gw2Launcher.Client
                                                 counter++;
                                                 p.Kill();
                                             }
-                                            catch { }
+                                            catch (Exception e)
+                                            {
+                                                Util.Logging.Log(e);
+                                            }
                                         }
 
                                         break;
@@ -4609,8 +5495,10 @@ namespace Gw2Launcher.Client
                             {
                                 path = p.MainModule.FileName;
                             }
-                            catch 
+                            catch (Exception e)
                             {
+                                Util.Logging.Log(e);
+
                                 try
                                 {
                                     if (p.HasExited)
@@ -4619,7 +5507,10 @@ namespace Gw2Launcher.Client
                                         continue;
                                     }
                                 }
-                                catch { }
+                                catch (Exception ex)
+                                {
+                                    Util.Logging.Log(ex);
+                                }
                                 path = null;
                             }
 
@@ -4709,22 +5600,35 @@ namespace Gw2Launcher.Client
                                                 account.Process.Changed += LinkedProcess_Changed;
                                                 accounts.Add(account.Settings.UID, account);
 
+                                                LaunchMode m;
+                                                Account.LaunchSession s;
+
                                                 if (Util.Args.Contains(commandLine, "shareArchive"))
                                                 {
-                                                    account.Session = new Account.LaunchSession(LaunchMode.Launch);
+                                                    m = LaunchMode.Launch;
                                                 }
                                                 else if (Util.Args.Contains(commandLine, "image"))
                                                 {
                                                     if (Util.Args.Contains(commandLine, "nopatchui"))
-                                                        account.Session = new Account.LaunchSession(LaunchMode.Update);
+                                                        m = LaunchMode.Update;
                                                     else
-                                                        account.Session = new Account.LaunchSession(LaunchMode.UpdateVisible);
+                                                        m = LaunchMode.UpdateVisible;
                                                 }
                                                 else
                                                 {
-                                                    account.Session = new Account.LaunchSession(LaunchMode.LaunchSingle);
+                                                    m = LaunchMode.LaunchSingle;
                                                 }
 
+                                                account.Session = s = new Account.LaunchSession(account, m);
+
+                                                s.WindowOptions = account.Settings.WindowOptions;
+                                                if (account.Type == AccountType.GuildWars2)
+                                                {
+                                                    s.MumbleLink = mumble.Add(Util.Args.GetValue(commandLine, "mumble"), p.Id, account.Settings);
+                                                    s.MumbleLink.Verified += OnMumbleLinkVerified;
+                                                }
+                                                s.RunAfter = RunAfterManager.Create(account, false);
+                                                
                                                 //this program was exited before the account was
                                                 //- assuming this process should trigger the exit event
                                                 EventHandler<Account> onExit = null;
@@ -4840,7 +5744,7 @@ namespace Gw2Launcher.Client
                                                         }
                                                         else if (account.Settings.PendingFiles //accounts with pending files should not be relaunched
                                                             || account.Settings.Type == Settings.AccountType.GuildWars2 && Settings.GuildWars2.ProfileMode.Value == Settings.ProfileMode.Basic //basic accounts may use files that no longer exist on exit
-                                                            || account.Settings.NetworkAuthorizationState != Settings.NetworkAuthorizationState.Disabled && Settings.NetworkAuthorization.Value.HasFlag(Settings.NetworkAuthorizationFlags.RemoveAll)
+                                                            //|| account.Settings.NetworkAuthorizationState != Settings.NetworkAuthorizationState.Disabled && Settings.NetworkAuthorization.Value.HasFlag(Settings.NetworkAuthorizationFlags.RemoveAll)
                                                             || Util.Args.Contains(commandLine, "nopatchui")) //(obsolete) logging out with -nopatchui -email -password will cause the client to restart and log back in, except it can't and will sit on a black/white screen
                                                         {
                                                             try
@@ -4873,7 +5777,6 @@ namespace Gw2Launcher.Client
                                                         var watcher = account.Session.Watcher = new WindowWatcher(account, p, false, isWindowed, account.Session);
                                                         watcher.WindowChanged += OnWatchedWindowChanged;
                                                         watcher.WindowCrashed += OnWatchedWindowCrashed;
-                                                        watcher.AuthenticationRequired += OnWatchedWindowAuthenticationRequired;
                                                         watcher.Start();
 
                                                         var events = windowEvents.Add(p.Id, account);
@@ -5339,24 +6242,88 @@ namespace Gw2Launcher.Client
                             l.SetTime();
                         }
 
+                        if (Settings.HideInitialWindow.Value)
+                        {
+                            s.Hidden = watcher.CreateHidden();
+                        }
+
                         if (!e.WasAlreadyStarted)
                         {
                             var gw2 = (Settings.IGw2Account)settings;
-                            if (settings.AutomaticLogin && settings.HasCredentials || !Settings.DisableAutomaticLogins && gw2.AutomaticPlay && watcher.ProcessOptions != null && Util.Args.Contains(watcher.ProcessOptions.Arguments, "autologin"))
+                            var automatic = watcher.ProcessOptions != null && Util.Args.Contains(watcher.ProcessOptions.Arguments, "autologin");
+                            Autologin.EventAction? action = null;
+                            
+                            if (watcher.SupportsLoginEvents)
                             {
-                                autologin.Queue(account, watcher.Process);
+                                if (settings.AutomaticLogin && settings.HasCredentials)
+                                {
+                                    action = Autologin.EventAction.Login;
+                                }
+                                else if (automatic)
+                                {
+                                    action = Autologin.EventAction.Autologin;
+                                }
+                            }
+                            else if (settings.AutomaticLogin && settings.HasCredentials || !Settings.DisableAutomaticLogins.Value && (gw2.AutomaticPlay || automatic))
+                            {
+                                action = Autologin.EventAction.Auto;
+                            }
+
+                            if (action.HasValue)
+                            {
+                                autologin.Queue(account, watcher.Process, action.Value, automatic);
                             }
                         }
                     }
 
-                    RunAfter(Settings.RunAfter.RunAfterOptions.WaitForLauncherLoaded, s);
+                    RunAfter(Settings.RunAfter.RunAfterWhen.LoadedLauncher, account);
+
+                    break;
+                case WindowWatcher.WindowChangedEventArgs.EventType.LauncherLoginCodeRequired:
+
+                    if ((settings.NetworkAuthorization & Settings.NetworkAuthorizationOptions.Enabled) != 0 && settings.TotpKey != null)
+                    {
+                        autologin.Queue(account, watcher.Process, Autologin.EventAction.Totp);
+                    }
+
+                    break;
+                case WindowWatcher.WindowChangedEventArgs.EventType.LauncherLoginComplete:
+
+                    if (settings.Type == Settings.AccountType.GuildWars2)
+                    {
+                        var gw2 = (Settings.IGw2Account)settings;
+                        if (!Settings.DisableAutomaticLogins.Value && gw2.AutomaticPlay)
+                        {
+                            autologin.Queue(account, watcher.Process, Autologin.EventAction.Play);
+                        }
+                    }
+
+                    break;
+                case WindowWatcher.WindowChangedEventArgs.EventType.LauncherLoginError:
+
+                    if (Settings.LaunchTimeout.Value > 0)
+                        OnWatchedWindowTimeout(watcher, null);
 
                     break;
                 case WindowWatcher.WindowChangedEventArgs.EventType.DxWindowHandleCreated:
 
-                    if (!e.WasAlreadyStarted && IsWindowLockEnabled(account.Settings))
+                    if (s.Hidden != null)
                     {
-                        WindowLock.ToBottom(e.Handle, false);
+                        s.Hidden.Hide(e.Handle);
+                    }
+
+                    if (!e.WasAlreadyStarted)
+                    {
+                        if (settings.Type == Settings.AccountType.GuildWars2)
+                        {
+                            if (Settings.GuildWars2.DxLoadingPriority.HasValue)
+                                SetPriority(watcher.Process, Settings.GuildWars2.DxLoadingPriority.Value, false);
+                        }
+
+                        if (IsWindowLockEnabled(account))
+                        {
+                            WindowLock.ToBottom(e.Handle, false);
+                        }
                     }
 
                     break;
@@ -5374,35 +6341,14 @@ namespace Gw2Launcher.Client
                         var l = s.Limiter;
                         if (l != null)
                         {
-                            l.Release();
+                            l.Release(true);
                             s.Limiter = null;
                         }
                     }
 
-                    if (!e.WasAlreadyStarted && IsWindowLockEnabled(account.Settings))
+                    if (!e.WasAlreadyStarted && IsWindowLockEnabled(account))
                     {
                         WindowLock.ToBottom(e.Handle, false);
-                    }
-                    
-                    lock (account)
-                    {
-                        if (account.State == AccountState.Active)
-                            account.SetState(AccountState.ActiveGame, true);
-                    }
-
-                    var affinity = settings.ProcessAffinity;
-                    if (affinity == 0 && Settings.GuildWars2.ProcessAffinity.HasValue)
-                        affinity = Settings.GuildWars2.ProcessAffinity.Value;
-                    if (affinity > 0)
-                    {
-                        try
-                        {
-                            watcher.Process.ProcessorAffinity = (IntPtr)affinity;
-                        }
-                        catch (Exception ex)
-                        {
-                            Util.Logging.Log(ex);
-                        }
                     }
 
                     if (!e.WasAlreadyStarted && Settings.RepaintInitialWindow.Value)
@@ -5415,8 +6361,8 @@ namespace Gw2Launcher.Client
 
                     if (settings.VolumeEnabled)
                         watcher.SetVolume(settings.Volume);
-                    else if (Settings.GuildWars2.Volume.HasValue)
-                        watcher.SetVolume(Settings.GuildWars2.Volume.Value);
+                    else if (Settings.GetSettings(settings.Type).Volume.HasValue)
+                        watcher.SetVolume(Settings.GetSettings(settings.Type).Volume.Value);
 
                     WindowEvents.Events events;
 
@@ -5436,30 +6382,6 @@ namespace Gw2Launcher.Client
                     }
 
                     watcher.Events = events;
-
-                    var priority = settings.ProcessPriority;
-                    if (priority == Settings.ProcessPriorityClass.None && Settings.GuildWars2.ProcessPriority.HasValue)
-                        priority = Settings.GuildWars2.ProcessPriority.Value;
-                    if (priority != Settings.ProcessPriorityClass.None && priority != Settings.ProcessPriorityClass.Normal)
-                    {
-                        if (processPriority == null)
-                        {
-                            lock (queue)
-                            {
-                                if (processPriority == null)
-                                    processPriority = new Tools.ProcessPriority();
-                            }
-                        }
-
-                        try
-                        {
-                            processPriority.SetPriority(watcher.Process, GetPriority(priority));
-                        }
-                        catch (Exception ex)
-                        {
-                            Util.Logging.Log(ex);
-                        }
-                    }
 
                     if (settings.Type == Settings.AccountType.GuildWars2)
                     {
@@ -5484,41 +6406,142 @@ namespace Gw2Launcher.Client
                     break;
                 case WindowWatcher.WindowChangedEventArgs.EventType.DxWindowLoaded:
 
+                    if (settings.ProcessPriority != Settings.ProcessPriorityClass.None || Settings.GetSettings(settings.Type).ProcessPriority.HasValue)
+                        SetPriority(watcher.Process, settings.ProcessPriority == Settings.ProcessPriorityClass.None ? Settings.GetSettings(settings.Type).ProcessPriority.Value : settings.ProcessPriority);
+                    else
+                        SetPriority(watcher.Process, Settings.ProcessPriorityClass.None, false);
+
+                    var affinity = settings.ProcessAffinity;
+                    if (affinity == 0 && Settings.GetSettings(settings.Type).ProcessAffinity.HasValue)
+                        affinity = Settings.GetSettings(settings.Type).ProcessAffinity.Value;
+                    if (affinity > 0)
+                    {
+                        try
+                        {
+                            var processors = Environment.ProcessorCount;
+                            watcher.Process.ProcessorAffinity = (IntPtr)(affinity & (long)(processors >= 64 ? ulong.MaxValue : ((ulong)1 << processors) - 1));
+                        }
+                        catch (Exception ex)
+                        {
+                            Util.Logging.Log(ex);
+                        }
+                    }
+
                     OnWindowStateChanged(e.Handle, account);
+                    
+                    var m = s.MumbleLink;
+                    if (m != null)
+                    {
+                        if (!e.WasAlreadyStarted)
+                        {
+                            m.Verified += OnRunAfterCharacterLoaded;
+                        }
+                        m.Verify();
+                    }
 
                     if (Settings.WindowIcon.Value)
                     {
                         SetIcons(e.Handle, account, s);
                     }
 
-                    if (!e.WasAlreadyStarted && IsWindowed(settings))
-                    {
-                        var r = settings.WindowBounds;
+                    var hw = s.Hidden;
 
-                        if (!r.IsEmpty)
+                    if (!e.WasAlreadyStarted)
+                    {
+                        if (IsWindowed(settings))
                         {
-                            watcher.SetBounds(account.Settings, watcher.Process, e.Handle, r, 1000, watcher.Events,
-                                delegate(IntPtr w)
-                                {
-                                    OnWindowStateChanged(w, account);
-                                });
+                            var wt = account.WindowTemplate;
+                            var r = wt != null ? wt.Bounds : settings.WindowBounds;
+
+                            if (!r.IsEmpty)
+                            {
+                                if (hw != null)
+                                    hw.DisposeAfter(5000); //in case loading stalls
+
+                                watcher.SetBounds(account.Settings, watcher.Process, e.Handle, r, 1000, watcher.Events,
+                                    delegate(IntPtr w)
+                                    {
+                                        OnWindowStateChanged(w, account);
+                                    },
+                                    delegate(IntPtr w)
+                                    {
+                                        s.Hidden = null;
+                                    });
+                            }
                         }
 
-                        if (IsWindowLockEnabled(account.Settings))
+                        if (IsWindowLockEnabled(account))
                         {
-                            WindowLock.ToBackground(e.Handle, true, true);
+                            var b = IsWindowed(settings);
+                            RECT r;
+
+                            //full screen windows will try to focus on load - only moving full screen windows if another window is overlapping it
+                            if (!b && NativeMethods.GetWindowRect(e.Handle, out r))
+                            {
+                                var bounds1 = r.ToRectangle();
+                                var active = LinkedProcess.GetActive();
+                                foreach (var a in active)
+                                {
+                                    if (a.Account.State == AccountState.ActiveGame && a.Account != account)
+                                    {
+                                        try
+                                        {
+                                            var h = Windows.FindWindow.FindMainWindow(a.Account.Process.Process);
+                                            if (h != IntPtr.Zero && NativeMethods.GetWindowRect(h, out r))
+                                            {
+                                                var bounds2 = r.ToRectangle();
+                                                if (bounds1.Contains(bounds2) || bounds1.IntersectsWith(bounds2))
+                                                {
+                                                    b = true;
+
+                                                    break;
+                                                }
+                                            }
+                                        }
+                                        catch { }
+                                    }
+                                }
+
+                                if (!b && e.Handle == NativeMethods.GetForegroundWindow())
+                                {
+                                    //the window is focused, but was in the background and may appear behind the taskbar
+                                    WindowLock.ResetForegroundWindowFocus(e.Handle);
+                                }
+                            }
+
+                            if (b)
+                            {
+                                WindowLock.ToBackground(e.Handle, true, false);
+                            }
                         }
                     }
 
-                    s.GfxLock = null;
+                    lock (account)
+                    {
+                        if (account.State == AccountState.Active)
+                            account.SetState(AccountState.ActiveGame, true);
+                    }
 
-                    RunAfter(Settings.RunAfter.RunAfterOptions.WaitForDxWindowLoaded, s);
+                    s.GfxLock = null;
+                    if (hw != null && !hw.Disposing)
+                        s.Hidden = null;
+
+                    RunAfter(Settings.RunAfter.RunAfterWhen.LoadedCharacterSelect, account);
 
                     if (AccountWindowEvent != null)
                         AccountWindowEvent(settings, new AccountWindowEventEventArgs(AccountWindowEventEventArgs.EventType.WindowLoaded, watcher.Process, e.Handle));
 
                     break;
                 case WindowWatcher.WindowChangedEventArgs.EventType.WatcherExited:
+
+                    {
+                        var l = s.Limiter;
+                        if (l != null)
+                        {
+                            l.Release();
+                            s.Limiter = null;
+                        }
+                    }
 
                     if (settings.Type == Settings.AccountType.GuildWars2)
                     {
@@ -5541,15 +6564,12 @@ namespace Gw2Launcher.Client
 
                     lock (s)
                     {
+                        var h = s.Hidden;
+                        if (h != null && !h.Disposing)
+                            s.Hidden = null;
                         s.Watcher = null;
                         s.GfxLock = null;
                         s.Limiter = null;
-
-                        if (s.AuthSession != null)
-                        {
-                            s.AuthSession.Release();
-                            s.AuthSession = null;
-                        }
 
                         if (account.Session != s)
                         {
@@ -5558,6 +6578,81 @@ namespace Gw2Launcher.Client
                     }
 
                     break;
+            }
+        }
+
+        static void OnRunAfterCharacterLoaded(object sender, EventArgs e)
+        {
+            var l = (Tools.Mumble.MumbleMonitor.IMumbleProcess)sender;
+            l.Verified -= OnRunAfterCharacterLoaded;
+
+            RunAfter(Settings.RunAfter.RunAfterWhen.LoadedCharacter, GetAccount(l.Account));
+        }
+
+        static void OnMumbleLinkVerified(object sender, EventArgs e)
+        {
+            if (MumbleLinkVerified != null)
+            {
+                var l = (Tools.Mumble.MumbleMonitor.IMumbleProcess)sender;
+
+                MumbleLinkVerified(l.Account, l);
+            }
+        }
+
+        /// <summary>
+        /// Sets the priority of the process
+        /// </summary>
+        /// <param name="monitor">True to ensure the priority is kept (GW2 will reset its priority to normal), False to only apply once</param>
+        public static void SetPriority(Process p, Settings.ProcessPriorityClass priority, bool monitor = true)
+        {
+            if (monitor && processPriority == null)
+            {
+                if (priority == Settings.ProcessPriorityClass.None || priority == Settings.ProcessPriorityClass.Normal)
+                    return;
+
+                lock (queue)
+                {
+                    if (processPriority == null)
+                        processPriority = new Tools.ProcessPriority();
+                }
+            }
+
+            try
+            {
+                if (monitor)
+                {
+                    processPriority.SetPriority(p, GetPriority(priority));
+                }
+                else
+                {
+                    p.PriorityClass = GetPriority(priority);
+                }
+            }
+            catch (Exception ex)
+            {
+                Util.Logging.Log(ex);
+            }
+        }
+
+        /// <summary>
+        /// Returns the monitored priority of the process, or the current priority if it's not monitored
+        /// </summary>
+        public static ProcessPriorityClass GetPriority(Process p)
+        {
+            if (processPriority == null)
+            {
+                try
+                {
+                    return p.PriorityClass;
+                }
+                catch
+                {
+                    return ProcessPriorityClass.Normal;
+                }
+            }
+            else
+            {
+                return processPriority.GetPriority(p);
             }
         }
 
@@ -5653,7 +6748,7 @@ namespace Gw2Launcher.Client
 
         static void OnWindowStateChanged(IntPtr handle, Account account)
         {
-            var options = account.Settings.WindowOptions;
+            var options = account.WindowOptions;
 
             if ((options & Settings.WindowOptions.Windowed) == Settings.WindowOptions.Windowed)
             {
@@ -5662,11 +6757,27 @@ namespace Gw2Launcher.Client
                     if ((options & Settings.WindowOptions.PreventChanges) == Settings.WindowOptions.PreventChanges)
                         Windows.WindowLong.Remove(handle, GWL.GWL_STYLE, WindowStyle.WS_MAXIMIZEBOX);
 
-                    if ((options & Settings.WindowOptions.TopMost) == Settings.WindowOptions.TopMost && account.State == AccountState.ActiveGame)
+                    if ((options & Settings.WindowOptions.TopMost) == Settings.WindowOptions.TopMost && account.State == AccountState.ActiveGame && !WindowWatcher.HasTopMost(handle))
                     {
                         bool handled;
 
-                        if (AccountWindowEvent != null)
+                        if (AccountTopMostWindowEvent != null)
+                        {
+                            var we = new AccountTopMostWindowEventEventArgs(account.Process.Process, handle);
+                            AccountTopMostWindowEvent(account.Settings, we);
+
+                            if (handled = we.Count > 0)
+                            {
+                                handled = WindowWatcher.SetTopMost(handle, we.Windows);
+                            }
+
+                            if (AccountWindowEvent != null)
+                            {
+                                AccountWindowEvent(account.Settings, we);
+                                handled = handled || we.Handled;
+                            }
+                        }
+                        else if (AccountWindowEvent != null)
                         {
                             var we = new AccountWindowEventEventArgs(AccountWindowEventEventArgs.EventType.TopMost, account.Process.Process, handle);
                             AccountWindowEvent(account.Settings, we);
@@ -5688,7 +6799,7 @@ namespace Gw2Launcher.Client
 
         static void events_MoveSizeBegin(object sender, WindowEvents.WindowEventsEventArgs e)
         {
-            var options = e.Account.Settings.WindowOptions;
+            var options = e.Account.WindowOptions;
 
             if ((options & Settings.WindowOptions.PreventChanges) == Settings.WindowOptions.PreventChanges)
             {
@@ -5706,10 +6817,11 @@ namespace Gw2Launcher.Client
 
         static void events_MoveSizeEnd(object sender, WindowEvents.WindowEventsEventArgs e)
         {
-            var options = e.Account.Settings.WindowOptions;
+            var options = e.Account.WindowOptions;
 
             if ((options & Settings.WindowOptions.Windowed) == Settings.WindowOptions.Windowed)
             {
+                var t = e.Account.WindowTemplate;
                 var handle = e.Handle;
                 var changes = options & (Settings.WindowOptions.PreventChanges | Settings.WindowOptions.RememberChanges);
 
@@ -5717,21 +6829,24 @@ namespace Gw2Launcher.Client
                 {
                     try
                     {
-                        var bounds = e.Account.Settings.WindowBounds;
+                        var bounds = t != null ? t.Bounds : e.Account.Settings.WindowBounds;
 
                         switch (changes)
                         {
                             case Settings.WindowOptions.RememberChanges:
 
-                                var placement = new WINDOWPLACEMENT();
-
-                                if (NativeMethods.GetWindowPlacement(handle, ref placement))
+                                if (t == null)
                                 {
-                                    var r = placement.rcNormalPosition.ToRectangle();
+                                    var placement = new WINDOWPLACEMENT();
 
-                                    if (bounds != r)
+                                    if (NativeMethods.GetWindowPlacement(handle, ref placement))
                                     {
-                                        e.Account.Settings.WindowBounds = r;
+                                        var r = placement.rcNormalPosition.ToRectangle();
+
+                                        if (bounds != r)
+                                        {
+                                            e.Account.Settings.WindowBounds = r;
+                                        }
                                     }
                                 }
 
@@ -5749,7 +6864,7 @@ namespace Gw2Launcher.Client
                                         {
                                             OnWindowStateChanged(w, e.Account);
                                         },
-                                        true, (options & Settings.WindowOptions.TopMost) == Settings.WindowOptions.TopMost);
+                                        null, true, (options & Settings.WindowOptions.TopMost) == Settings.WindowOptions.TopMost);
                                 }
 
                                 break;
@@ -5761,12 +6876,34 @@ namespace Gw2Launcher.Client
                     }
                 }
 
-                OnWindowStateChanged(handle, e.Account);
+                //needs to be called after MoveSizeEnd due to how GW2 resets its window (notably top most) when it changes (moved, resized, etc)
+                DelayedWindowStateChanged(1, handle, e.Account);
             }
+        }
+
+        private static async void DelayedWindowStateChanged(int delay, IntPtr handle, Account a)
+        {
+            await Task.Delay(delay);
+            OnWindowStateChanged(handle, a);
+        }
+
+        /// <summary>
+        /// Triggers a window state change if the window isn't top most (GW2 will reset top most after the window is moved)
+        /// </summary>
+        private static async void DelayedWindowStateChangedTopMost(int delay, IntPtr handle, Account a)
+        {
+            await Task.Delay(delay);
+            if (!WindowWatcher.HasTopMost(handle))
+                OnWindowStateChanged(handle, a);
         }
 
         static void events_ForegroundChanged(object sender, WindowEvents.WindowEventsEventArgs e)
         {
+            if (IsWindowed(e.Account.Settings))
+            {
+                OnWindowStateChanged(e.Handle, e.Account);
+            }
+
             if (AccountWindowEvent != null)
                 AccountWindowEvent(e.Account.Settings, new AccountWindowEventEventArgs(AccountWindowEventEventArgs.EventType.Focused, e.Account.Process.Process, e.Handle));
         }
@@ -5906,7 +7043,7 @@ namespace Gw2Launcher.Client
             catch { }
         }
 
-        private static void OnWatchedWindowTimeout(object sender, EventArgs e)
+        private static void OnWatchedWindowTimeout(object sender, WindowWatcher.TimeoutEventArgs e)
         {
             try
             {
@@ -5914,157 +7051,92 @@ namespace Gw2Launcher.Client
                 var account = watcher.Account;
                 var p = account.Process.Process;
 
+                if (e != null)
+                {
+                    if (e.Reason == WindowWatcher.TimeoutEventArgs.TimeoutReason.Launcher && !IsAutomaticLogin(account.Settings))
+                        return;
+                    e.Handled = true;
+                }
+
                 if (p != null && !p.HasExited)
                 {
                     p.Kill();
                     p.WaitForExit();
+                }
 
-                    WaitForScanner();
+                WaitForScanner();
 
-                    lock (queueLaunch)
+                lock (queueLaunch)
+                {
+                    if (account.inQueueCount == 0)
                     {
-                        if (account.inQueueCount == 0)
+                        if (Monitor.TryEnter(account, TIMEOUT_TRYENTER))
                         {
-                            if (Monitor.TryEnter(account, TIMEOUT_TRYENTER))
+                            try
                             {
-                                try
-                                {
-                                    account.SetState(AccountState.Waiting, true);
-                                }
-                                finally
-                                {
-                                    Monitor.Exit(account);
-                                }
+                                account.SetState(AccountState.Waiting, true);
                             }
-
-                            account.inQueueCount++;
-                            queueLaunch.Enqueue(new QueuedLaunch(account, watcher.Session.Mode, watcher.Session.Args));
-                            if (AccountQueued != null)
-                                AccountQueued(account.Settings, watcher.Session.Mode);
-
-                            StartQueue();
+                            finally
+                            {
+                                Monitor.Exit(account);
+                            }
                         }
+
+                        account.inQueueCount++;
+                        queueLaunch.Enqueue(new QueuedLaunch(account, watcher.Session.Mode, watcher.Session.Args));
+                        if (AccountQueued != null)
+                            AccountQueued(account.Settings, watcher.Session.Mode);
+
+                        StartQueue();
                     }
                 }
             }
-            catch { }
+            catch (Exception ex)
+            {
+                Util.Logging.Log(ex);
+            }
         }
 
         private static void OnWatchedWindowCrashed(object sender, WindowWatcher.CrashReason e)
         {
-            if (e == WindowWatcher.CrashReason.PatchRequired || e == WindowWatcher.CrashReason.NoPatchUI)
-            {
-                try
-                {
-                    var watcher = (WindowWatcher)sender;
-                    var account = watcher.Account;
-                    var p = account.Process.Process;
-
-                    if (e == WindowWatcher.CrashReason.NoPatchUI)
-                    {
-                        OnUpdateRequired(watcher.Account, watcher.Session.Mode, watcher.Session.Args, true, "An update may be required; client exited unexpectedly");
-                    }
-                    else if (p != null && !p.HasExited)
-                    {
-                        p.Kill();
-                        p.WaitForExit();
-
-                        OnUpdateRequired(watcher.Account, watcher.Session.Mode, watcher.Session.Args, false, "An update is required; client is out of date");
-                    }
-                }
-                catch (Exception ex)
-                {
-                    Util.Logging.Log(ex);
-                }
-            }
-        }
-
-        static void OnWatchedWindowAuthenticationRequired(object sender, Tools.ArenaAccount e)
-        {
             try
             {
                 var watcher = (WindowWatcher)sender;
                 var account = watcher.Account;
                 var p = account.Process.Process;
 
-                bool retry = false;
-
-                if (p != null && !p.HasExited)
+                switch (e)
                 {
-                    p.Kill();
-                    p.WaitForExit();
+                    case WindowWatcher.CrashReason.NoPatchUI:
 
-                    WaitForScanner();
+                        OnUpdateRequired(watcher.Account, watcher.Session.Mode, watcher.Session.Args, true, "An update may be required; client exited unexpectedly");
 
-                    lock (queueLaunch)
-                    {
-                        if (cancelQueue == null || taskQueue == null || !cancelQueue.IsCancellationRequested)
+                        break;
+                    case WindowWatcher.CrashReason.PatchRequired:
+
+                        if (p != null && !p.HasExited)
                         {
-                            if (Monitor.TryEnter(accounts, TIMEOUT_TRYENTER))
-                            {
-                                try
-                                {
-                                    account.errors++;
-                                }
-                                finally
-                                {
-                                    Monitor.Exit(accounts);
-                                }
-                            }
+                            p.Kill();
+                            p.WaitForExit();
 
-                            if (account.Settings.HasCredentials && account.Settings.NetworkAuthorizationState == Settings.NetworkAuthorizationState.Unknown && Settings.NetworkAuthorization.HasValue)
-                            {
-                                if (account.inQueueCount == 0 && account.errors == 1)
-                                {
-                                    if (Monitor.TryEnter(account, TIMEOUT_TRYENTER))
-                                    {
-                                        try
-                                        {
-                                            account.SetState(AccountState.Waiting, true);
-                                        }
-                                        finally
-                                        {
-                                            Monitor.Exit(account);
-                                        }
-                                    }
-
-                                    account.inQueueCount++;
-                                    queueLaunch.Enqueue(new QueuedLaunch(account, watcher.Session.Mode, watcher.Session.Args)
-                                        {
-                                            session = e
-                                        });
-                                    if (AccountQueued != null)
-                                        AccountQueued(account.Settings, watcher.Session.Mode);
-
-                                    retry = true;
-                                }
-                            }
+                            OnUpdateRequired(watcher.Account, watcher.Session.Mode, watcher.Session.Args, false, "An update is required; client is out of date");
                         }
 
-                        if (!retry && account.inQueueCount == 0 && account.State == AccountState.None)
+                        break;
+                    case WindowWatcher.CrashReason.ErrorDialog:
+
+                        //unknown error - GW2 needs to be patched or Local.dat/Gw2.dat can't be accessed
+                        //assuming a patch is required
+
+                        if (p != null && !p.HasExited && account.errors == 0 && watcher.Session.Mode == LaunchMode.Launch)
                         {
-                            if (Monitor.TryEnter(account, TIMEOUT_TRYENTER))
-                            {
-                                try
-                                {
-                                    account.SetState(AccountState.Error, true, new Exception("Timed out while loading; verify the login credentials and network authorization"));
-                                    account.SetState(AccountState.None, false);
-                                }
-                                finally
-                                {
-                                    Monitor.Exit(account);
-                                }
-                            }
+                            p.Kill();
+                            p.WaitForExit();
+
+                            OnUpdateRequired(watcher.Account, watcher.Session.Mode, watcher.Session.Args, false, "An update may be required");
                         }
-                    }
 
-                    if (retry)
-                        StartQueue();
-                }
-
-                if (!retry)
-                {
-                    var t = e.Logout();
+                        break;
                 }
             }
             catch (Exception ex)
@@ -6134,6 +7206,51 @@ namespace Gw2Launcher.Client
                 catch (Exception ex)
                 {
                     Util.Logging.Log(ex);
+                }
+            }
+        }
+
+        private static Process WaitForProxyLaunch(ushort uid, string processName, CancellationToken cancel, int timeout)
+        {
+            var t = Environment.TickCount;
+
+            using (var pi = new Windows.ProcessInfo())
+            {
+                var ids = new HashSet<int>(LinkedProcess.GetActivePIDs());
+
+                while (true)
+                {
+                    foreach (var p in Process.GetProcessesByName(processName))
+                    {
+                        try
+                        {
+                            var pid = p.Id;
+
+                            if (ids.Contains(pid))
+                                continue;
+
+                            if (pi.Open(pid))
+                            {
+                                var commandLine = pi.GetCommandLine();
+
+                                if (GetUIDFromCommandLine(commandLine) == uid)
+                                {
+                                    return p;
+                                }
+
+                                pi.Close();
+                            }
+                        }
+                        catch { }
+
+                        p.Dispose();
+                    }
+
+                    if (timeout >= 0 && Environment.TickCount - t > timeout)
+                        throw new TimeoutException("Timed out while waiting for Steam");
+
+                    if (cancel.IsCancellationRequested || cancel.WaitHandle.WaitOne(500))
+                        throw new TaskCanceledException();
                 }
             }
         }

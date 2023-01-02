@@ -209,7 +209,7 @@ namespace Gw2Launcher.UI.WindowPositioning
                 snapToAccounts = SnapType.EdgeToEdge,
                 snapToScreen = false,
                 activeWindows = new HashSet<formWindowSize>(),
-                enforceLimitations = true,
+                enforceLimitations = false, //DX11 doesn't have the DX9 window limiations
             };
         }
 
@@ -1222,7 +1222,7 @@ namespace Gw2Launcher.UI.WindowPositioning
             {
                 try
                 {
-                    var p = Client.Launcher.FindProcess(account);
+                    var p = Client.Launcher.GetProcess(account);
                     if (p != null && !p.HasExited)
                     {
                         handle = Windows.FindWindow.FindMainWindow(p);
@@ -1863,6 +1863,15 @@ namespace Gw2Launcher.UI.WindowPositioning
         private void useTemplateToolStripMenuItem_Click(object sender, EventArgs e)
         {
             useTemplateToolStripMenuItem.Checked = !useTemplateToolStripMenuItem.Checked;
+        }
+
+        private void makeFullScreenToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            var screen = Screen.FromControl(this).Bounds;
+            var border = (this.Width - this.ClientSize.Width) / 2;
+            var caption = this.Height - this.ClientSize.Height - border;
+
+            this.Bounds = new Rectangle(screen.Left - border, screen.Top - caption, screen.Width + border * 2, screen.Height + caption + border);
         }
     }
 }

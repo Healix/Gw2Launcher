@@ -1,5 +1,8 @@
 using System;
 using System.Collections.Generic;
+using System.ComponentModel;
+using System.Drawing;
+using System.Drawing.Design;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
@@ -7,7 +10,8 @@ using System.Threading.Tasks;
 namespace Gw2Launcher.UI.Base
 {
 
-    public class BaseForm : System.Windows.Forms.Form
+    [TypeDescriptionProvider(typeof(UiTypeDescriptionProvider))]
+    public class BaseForm : System.Windows.Forms.Form, UiColors.IColors
     {
         private const float DPI = 96f;
 
@@ -23,12 +27,41 @@ namespace Gw2Launcher.UI.Base
             Font = new System.Drawing.Font("Segoe UI", 8.25F);
             Icon = Properties.Resources.Gw2Launcher;
 
+            UiColors.ColorsChanged += OnColorsChanged;
+
             _scale = 1f;
             _dpi = DPI;
 
             if (DesignMode)
             {
                 InitializeComponents();
+            }
+        }
+
+        [Browsable(false)]
+        [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
+        public new System.Windows.Forms.AutoScaleMode AutoScaleMode
+        {
+            get
+            {
+                return base.AutoScaleMode;
+            }
+            set
+            {
+                base.AutoScaleMode = value;
+            }
+        }
+
+        [DefaultValue(typeof(Font), "Segoe UI, 8.25pt")]
+        public override Font Font
+        {
+            get
+            {
+                return base.Font;
+            }
+            set
+            {
+                base.Font = value;
             }
         }
 
@@ -56,6 +89,40 @@ namespace Gw2Launcher.UI.Base
             return (int)(_scale * n + 0.5f);
         }
 
+        /// <summary>
+        /// Scales for 96dpi, rounded
+        /// </summary>
+        protected System.Windows.Forms.Padding Scale(int l, int t, int r, int b)
+        {
+            if (_scale != 1f)
+            {
+                l = (int)(_scale * l + 0.5f);
+                t = (int)(_scale * t + 0.5f);
+                r = (int)(_scale * r + 0.5f);
+                b = (int)(_scale * b + 0.5f);
+            }
+            return new System.Windows.Forms.Padding(l, t, r, b);
+        }
+
+        protected Size Scale(int w, int h)
+        {
+            if (_scale != 1f)
+            {
+                w = (int)(_scale * w + 0.5f);
+                h = (int)(_scale * h + 0.5f);
+            }
+            return new Size(w, h);
+        }
+
+        /// <summary>
+        /// Scales the control for 96dpi
+        /// </summary>
+        protected void Scale(System.Windows.Forms.Control c)
+        {
+            if (_dpi != DPI)
+                c.Scale(new System.Drawing.SizeF(_scale, _scale));
+        }
+
         protected override void ScaleControl(System.Drawing.SizeF factor, System.Windows.Forms.BoundsSpecified specified)
         {
             base.ScaleControl(factor, specified);
@@ -76,7 +143,7 @@ namespace Gw2Launcher.UI.Base
             {
                 UpdateScaling();
             }
-            
+
             ResumeLayout();
         }
 
@@ -140,6 +207,71 @@ namespace Gw2Launcher.UI.Base
         protected virtual void OnScale(float scale)
         {
 
+        }
+
+        protected UiColors.Colors _BackColorName = UiColors.Colors.Custom;
+        [DefaultValue(UiColors.Colors.Custom)]
+        [UiPropertyColor()]
+        [TypeConverter(typeof(UiColorTypeConverter))]
+        [Editor(typeof(UiColorTypeEditor), typeof(UITypeEditor))]
+        public UiColors.Colors BackColorName
+        {
+            get
+            {
+                return _BackColorName;
+            }
+            set
+            {
+                if (_BackColorName != value)
+                {
+                    _BackColorName = value;
+                    RefreshColors();
+                }
+            }
+        }
+
+        protected UiColors.Colors _ForeColorName = UiColors.Colors.Custom;
+        [DefaultValue(UiColors.Colors.Custom)]
+        [UiPropertyColor()]
+        [TypeConverter(typeof(UiColorTypeConverter))]
+        [Editor(typeof(UiColorTypeEditor), typeof(UITypeEditor))]
+        public UiColors.Colors ForeColorName
+        {
+            get
+            {
+                return _ForeColorName;
+            }
+            set
+            {
+                if (_ForeColorName != value)
+                {
+                    _ForeColorName = value;
+                    RefreshColors();
+                }
+            }
+        }
+
+        public virtual void RefreshColors()
+        {
+            if (_ForeColorName != UiColors.Colors.Custom)
+                this.ForeColor = UiColors.GetColor(_ForeColorName);
+            if (_BackColorName != UiColors.Colors.Custom)
+                this.BackColor = UiColors.GetColor(_BackColorName);
+        }
+
+        protected virtual void OnColorsChanged(object sender, EventArgs e)
+        {
+            UiColors.Update(this, true, true);
+        }
+
+        protected override void Dispose(bool disposing)
+        {
+            if (disposing)
+            {
+                UiColors.ColorsChanged -= OnColorsChanged;
+            }
+
+            base.Dispose(disposing);
         }
     }
 }

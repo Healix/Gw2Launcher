@@ -103,8 +103,8 @@ namespace Gw2Launcher.UI
             // arrowLeft
             // 
             this.arrowLeft.Anchor = System.Windows.Forms.AnchorStyles.None;
-            this.arrowLeft.ColorArrow = System.Drawing.Color.FromArgb(((int)(((byte)(150)))), ((int)(((byte)(150)))), ((int)(((byte)(150)))));
-            this.arrowLeft.ColorHighlight = System.Drawing.Color.FromArgb(((int)(((byte)(20)))), ((int)(((byte)(20)))), ((int)(((byte)(20)))));
+            this.arrowLeft.ForeColor = System.Drawing.Color.FromArgb(((int)(((byte)(150)))), ((int)(((byte)(150)))), ((int)(((byte)(150)))));
+            this.arrowLeft.ForeColorHighlight = System.Drawing.Color.FromArgb(((int)(((byte)(20)))), ((int)(((byte)(20)))), ((int)(((byte)(20)))));
             this.arrowLeft.Cursor = System.Windows.Forms.Cursors.Hand;
             this.arrowLeft.Direction = Gw2Launcher.UI.Controls.ArrowButton.ArrowDirection.Left;
             this.arrowLeft.Location = new System.Drawing.Point(70, 48);
@@ -115,8 +115,8 @@ namespace Gw2Launcher.UI
             // arrowRight
             // 
             this.arrowRight.Anchor = System.Windows.Forms.AnchorStyles.None;
-            this.arrowRight.ColorArrow = System.Drawing.Color.FromArgb(((int)(((byte)(150)))), ((int)(((byte)(150)))), ((int)(((byte)(150)))));
-            this.arrowRight.ColorHighlight = System.Drawing.Color.FromArgb(((int)(((byte)(20)))), ((int)(((byte)(20)))), ((int)(((byte)(20)))));
+            this.arrowRight.ForeColor = System.Drawing.Color.FromArgb(((int)(((byte)(150)))), ((int)(((byte)(150)))), ((int)(((byte)(150)))));
+            this.arrowRight.ForeColorHighlight = System.Drawing.Color.FromArgb(((int)(((byte)(20)))), ((int)(((byte)(20)))), ((int)(((byte)(20)))));
             this.arrowRight.Cursor = System.Windows.Forms.Cursors.Hand;
             this.arrowRight.Direction = Gw2Launcher.UI.Controls.ArrowButton.ArrowDirection.Right;
             this.arrowRight.Location = new System.Drawing.Point(116, 48);

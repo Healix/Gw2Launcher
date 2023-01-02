@@ -21,15 +21,17 @@ namespace Gw2Launcher.UI.Controls
             DoubleArrow,
             ArrowAndLine,
             Underscore,
+            SquareAndLine,
+            WindowTemplate,
         }
 
         public FlatShapeButton()
             : base()
         {
-            lineSize = 2;
         }
 
         [System.ComponentModel.Browsable(false)]
+        [System.ComponentModel.DesignerSerializationVisibility(System.ComponentModel.DesignerSerializationVisibility.Hidden)]
         public override string Text
         {
             get
@@ -42,7 +44,7 @@ namespace Gw2Launcher.UI.Controls
             }
         }
 
-        protected ContentAlignment shapeAlignment;
+        protected ContentAlignment shapeAlignment = ContentAlignment.MiddleCenter;
         [DefaultValue(ContentAlignment.MiddleCenter)]
         public ContentAlignment ShapeAlignment
         {
@@ -79,7 +81,7 @@ namespace Gw2Launcher.UI.Controls
             }
         }
 
-        protected int lineSize;
+        protected int lineSize = 2;
         [DefaultValue(2)]
         public int LineSize
         {
@@ -97,7 +99,7 @@ namespace Gw2Launcher.UI.Controls
             }
         }
 
-        protected ArrowDirection shapeDirection;
+        protected ArrowDirection shapeDirection = ArrowDirection.Left;
         [DefaultValue(ArrowDirection.Left)]
         public ArrowDirection ShapeDirection
         {
@@ -115,7 +117,7 @@ namespace Gw2Launcher.UI.Controls
             }
         }
 
-        protected IconShape shape;
+        protected IconShape shape = IconShape.Arrow;
         [DefaultValue(IconShape.Arrow)]
         public IconShape Shape
         {
@@ -267,6 +269,137 @@ namespace Gw2Launcher.UI.Controls
 
             switch (shape)
             {
+                case IconShape.WindowTemplate:
+
+                    using (var brush = new SolidBrush(ForeColorCurrent))
+                    {
+                        using (var pen = new Pen(brush))
+                        {
+                            lineSize = (int)(this.lineSize * scale + 0.5f);
+                            var spacing = (int)(scale * 2 + 0.5f);
+
+                            switch (shapeDirection)
+                            {
+                                case ArrowDirection.Up:
+                                case ArrowDirection.Down:
+                                    p = GetPosition(w, h + lineSize + spacing - 1);
+                                    break;
+                                case ArrowDirection.Right:
+                                case ArrowDirection.Left:
+                                default:
+                                    p = GetPosition(w + lineSize + spacing - 1, h);
+                                    break;
+                            }
+
+                            Rectangle r1, r2;
+                            int sz;
+
+                            switch (shapeDirection)
+                            {
+                                case ArrowDirection.Left:
+                                    sz = h / 2 - spacing / 2;
+                                    r1 = new Rectangle(p.X, p.Y, lineSize, sz);
+                                    r2 = new Rectangle(p.X, p.Y + h - sz, lineSize, sz);
+                                    p.X += lineSize + spacing;
+                                    break;
+                                case ArrowDirection.Right:
+                                    sz = h / 2 - spacing / 2;
+                                    r1 = new Rectangle(p.X + w + spacing, p.Y, lineSize, sz);
+                                    r2 = new Rectangle(p.X + w + spacing, p.Y + h - sz, lineSize, sz);
+                                    break;
+                                case ArrowDirection.Up:
+                                    sz = w / 2 - spacing / 2;
+                                    r1 = new Rectangle(p.X, p.Y, sz, lineSize);
+                                    r2 = new Rectangle(p.X + w - sz, p.Y, sz, lineSize);
+                                    p.Y += lineSize + spacing;
+                                    break;
+                                default:
+                                case ArrowDirection.Down:
+                                    sz = w / 2 - spacing / 2;
+                                    r1 = new Rectangle(p.X, p.Y + h + spacing, sz, lineSize);
+                                    r2 = new Rectangle(p.X + w - sz, p.Y + h + spacing, sz, lineSize);
+                                    break;
+                            }
+
+                            if (borderColor.A > 0)
+                            {
+                                pen.Color = borderColor;
+
+                                g.SmoothingMode = System.Drawing.Drawing2D.SmoothingMode.AntiAlias;
+                                g.DrawRectangle(pen, p.X - 0.5f, p.Y - 0.5f, w, h);
+                                g.DrawRectangle(pen, r1.X - 0.5f, r1.Y - 0.5f, r1.Width, r1.Height);
+                                g.DrawRectangle(pen, r2.X - 0.5f, r2.Y - 0.5f, r2.Width, r2.Height);
+                                g.SmoothingMode = System.Drawing.Drawing2D.SmoothingMode.Default;
+                            }
+
+                            g.FillRectangle(brush, p.X, p.Y, w, h);
+                            g.FillRectangle(brush, r1);
+                            g.FillRectangle(brush, r2);
+                        }
+                    }
+
+                    break;
+                case IconShape.SquareAndLine:
+
+                    using (var brush = new SolidBrush(ForeColorCurrent))
+                    {
+                        using (var pen = new Pen(brush))
+                        {
+                            lineSize = (int)(this.lineSize * scale + 0.5f);
+
+                            switch (shapeDirection)
+                            {
+                                case ArrowDirection.Up:
+                                case ArrowDirection.Down:
+                                    p = GetPosition(w, h + lineSize);
+                                    break;
+                                case ArrowDirection.Right:
+                                case ArrowDirection.Left:
+                                default:
+                                    p = GetPosition(w + lineSize, h);
+                                    break;
+                            }
+
+                            var spacing = (int)(scale * 2 + 0.5f);
+                            Rectangle r;
+
+                            switch (shapeDirection)
+                            {
+                                case ArrowDirection.Left:
+                                    r = new Rectangle(p.X - spacing, p.Y, lineSize, h);
+                                    p.X += lineSize + 1;
+                                    break;
+                                case ArrowDirection.Right:
+                                    r = new Rectangle(p.X + w + spacing, p.Y, lineSize, h);
+                                    w -= 1;
+                                    break;
+                                case ArrowDirection.Up:
+                                    r = new Rectangle(p.X, p.Y - spacing, w, lineSize);
+                                    p.Y += lineSize + 1;
+                                    break;
+                                default:
+                                case ArrowDirection.Down:
+                                    r = new Rectangle(p.X, p.Y + h + spacing, w, lineSize);
+                                    h -= 1;
+                                    break;
+                            }
+
+                            if (borderColor.A > 0)
+                            {
+                                pen.Color = borderColor;
+
+                                g.SmoothingMode = System.Drawing.Drawing2D.SmoothingMode.AntiAlias;
+                                g.DrawPolygon(pen, GetShapeSquare(p.X - 0.5f, p.Y - 0.5f, w, h));
+                                g.DrawRectangle(pen, r.X - 0.5f, r.Y - 0.5f, r.Width, r.Height);
+                                g.SmoothingMode = System.Drawing.Drawing2D.SmoothingMode.Default;
+                            }
+
+                            g.FillRectangle(brush, r);
+                            g.FillPolygon(brush, GetShapeSquare(p.X, p.Y, w, h));
+                        }
+                    }
+
+                    break;
                 case IconShape.ArrowAndLine:
 
                     using (var brush = new SolidBrush(ForeColorCurrent))
@@ -459,9 +592,25 @@ namespace Gw2Launcher.UI.Controls
                         h = (h - lineSize * 3) / 2;
                         p = GetPosition(w, h * 2 + lineSize * 3);
 
-                        g.SmoothingMode = System.Drawing.Drawing2D.SmoothingMode.Default;
 
                         var y = p.Y;
+
+                        if (borderColor.A > 0)
+                        {
+                            using (var pen = new Pen(borderColor))
+                            {
+                                g.SmoothingMode = System.Drawing.Drawing2D.SmoothingMode.AntiAlias;
+                                g.DrawRectangle(pen, p.X - 0.5f, y - 0.5f, w, lineSize);
+                                y += lineSize + h;
+                                g.DrawRectangle(pen, p.X - 0.5f, y - 0.5f, w, lineSize);
+                                y += lineSize + h;
+                                g.DrawRectangle(pen, p.X - 0.5f, y - 0.5f, w, lineSize);
+                            }
+                            y = p.Y;
+                        }
+
+                        g.SmoothingMode = System.Drawing.Drawing2D.SmoothingMode.Default;
+
                         g.FillRectangle(brush, p.X, y, w, lineSize);
                         y += lineSize + h;
                         g.FillRectangle(brush, p.X, y, w, lineSize);

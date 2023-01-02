@@ -10,56 +10,23 @@ using System.Threading;
 using System.Windows.Forms;
 using System.Drawing.Drawing2D;
 using System.Drawing.Imaging;
-using ColorNames = Gw2Launcher.Settings.AccountGridButtonColors.Colors;
+using ColorNames = Gw2Launcher.UI.UiColors.Colors;
 
 namespace Gw2Launcher.UI.Controls
 {
-    public class AccountGridButton : Control
+    public class AccountGridButton : Control, UiColors.IColors
     {
         protected const string
             TEXT_ACCOUNT = "Account",
             TEXT_LAST_USED = "Last used",
             TEXT_STATUS_NEVER = "never";
 
-        public static readonly Settings.AccountGridButtonColors DefaultColors;
-
-        static AccountGridButton()
-        {
-            var colors = DefaultColors = new Settings.AccountGridButtonColors();
-
-            colors[ColorNames.Name] = Color.Black;
-            colors[ColorNames.User] = Color.FromArgb(68, 79, 129);
-            colors[ColorNames.StatusDefault] = Color.Gray;
-            colors[ColorNames.StatusError] = Color.DarkRed;
-            colors[ColorNames.StatusWaiting] = Color.DarkBlue;
-            colors[ColorNames.StatusOK] = Color.DarkGreen;
-
-            colors[ColorNames.BackColorDefault] = Color.White;
-            colors[ColorNames.BackColorHovered] = Color.FromArgb(235, 235, 235);
-            colors[ColorNames.BackColorSelected] = Color.FromArgb(230, 236, 244);
-            colors[ColorNames.BorderLightDefault] = Color.FromArgb(240, 240, 240);
-            colors[ColorNames.BorderLightHovered] = Color.FromArgb(225, 225, 225);
-            colors[ColorNames.BorderLightSelected] = Color.FromArgb(220, 226, 234);
-            colors[ColorNames.BorderDarkDefault] = Color.FromArgb(230, 230, 230);
-            colors[ColorNames.BorderDarkHovered] = Color.FromArgb(215, 215, 215);
-            colors[ColorNames.BorderDarkSelected] = Color.FromArgb(210, 216, 224);
-
-            colors[ColorNames.ForeColorHovered] = Color.FromArgb(128, 215, 215, 215);
-            colors[ColorNames.ForeColorSelected] = Color.FromArgb(128, 205, 217, 233);
-
-            colors[ColorNames.FocusedHighlight] = Color.FromArgb(189, 194, 202);
-            colors[ColorNames.FocusedBorder] = Color.FromArgb(63, 72, 204);
-
-            colors[ColorNames.ActionExitFill] = Color.FromArgb(244, 225, 230);
-            colors[ColorNames.ActionExitFlash] = Color.FromArgb(255, 207, 212);
-            colors[ColorNames.ActionFocusFlash] = Color.FromArgb(221, 224, 255);
-        }
-
         protected static Image[] DefaultImage;
 
         public static readonly Font FONT_NAME = new Font("Segoe UI", 10.25F, FontStyle.Regular, GraphicsUnit.Point, 0);
         public static readonly Font FONT_STATUS = new Font("Segoe UI Semilight", 8.25F, FontStyle.Regular, GraphicsUnit.Point, 0);
         public static readonly Font FONT_USER = new Font("Calibri", 7.25F, FontStyle.Regular, GraphicsUnit.Point, 0);
+        public static readonly Font FONT_LOGIN_REWARD_DAY = new Font("Segoe UI", 8.25F, FontStyle.Bold, GraphicsUnit.Point, 0);
 
         protected static readonly Point
             POINT_NAME = new Point(10, 10),
@@ -70,11 +37,6 @@ namespace Gw2Launcher.UI.Controls
 
         protected const byte INDEX_ICON_MAIN = 0;
         protected const byte INDEX_ICON_NOTE = 1;
-
-        protected const byte INDEX_COLOR_STATUS_DEFAULT = 0;
-        protected const byte INDEX_COLOR_STATUS_OK = 1;
-        protected const byte INDEX_COLOR_STATUS_WAIT = 2;
-        protected const byte INDEX_COLOR_STATUS_ERROR = 3;
 
         protected const int BORDER_SIZE = 2;
         protected const int BORDER_HORIZONTAL = BORDER_SIZE * 2;
@@ -106,7 +68,7 @@ namespace Gw2Launcher.UI.Controls
                 None,
                 Login,
                 Daily,
-                Note
+                Note,
             }
 
             [Flags]
@@ -292,7 +254,7 @@ namespace Gw2Launcher.UI.Controls
 
         protected Rectangle rectName, rectUser, rectStatus, rectImage;
 
-        protected bool isHovered, isSelected, isPressed, isFocused;
+        protected bool isHovered, isSelected, isPressed, isFocused, isActive, isActiveHighlight;
         protected float pressedProgress;
         protected PressedState pressedState;
         private Color pressedColor;
@@ -315,6 +277,8 @@ namespace Gw2Launcher.UI.Controls
             SetStyle(ControlStyles.OptimizedDoubleBuffer, true);
             SetStyle(ControlStyles.Selectable, true);
 
+            _Colors = UiColors.GetTheme();
+
             this.Cursor = System.Windows.Forms.Cursors.Hand;
 
             icons = new DisplayedIcon[]
@@ -326,8 +290,6 @@ namespace Gw2Launcher.UI.Controls
             fontName = FONT_NAME;
             fontStatus = FONT_STATUS;
             fontUser = FONT_USER;
-
-            _Colors = DefaultColors;
 
             redraw = true;
 
@@ -380,6 +342,10 @@ namespace Gw2Launcher.UI.Controls
             int w = this.Width;
             if (!_ShowAccount)
                 h += (int)(8 * scale);
+            if (_Offsets != null && _Offsets.Height > 0)
+            {
+                h = _Offsets.Height;
+            }
 
             int x;
 
@@ -394,6 +360,9 @@ namespace Gw2Launcher.UI.Controls
                 if (_Image == null)
                 {
                     var sz = (int)(DEFAULT_ICON_SIZE * scale);
+
+                    if (sz > h)
+                        sz = h;
 
                     rectImage = new Rectangle(BORDER_SIZE + margin * 2, BORDER_SIZE + (h - BORDER_VERTICAL) / 2 - sz / 2, sz, sz);
                     x = rectImage.Right + margin * 2;
@@ -447,13 +416,29 @@ namespace Gw2Launcher.UI.Controls
 
             if (_ShowAccount)
             {
-                pointUser = new Point(x, y);
+                if (_Offsets != null)
+                {
+                    pointUser = new Point(x + _Offsets[Settings.AccountGridButtonOffsets.Offsets.User].X, y + _Offsets[Settings.AccountGridButtonOffsets.Offsets.User].Y);
+                }
+                else
+                {
+                    pointUser = new Point(x, y);
+                }
+
                 rectUser = new Rectangle(pointUser, new Size(rw, fontUserHeight));
                 y += fontUserHeight;
             }
 
-            pointName = new Point(x, y);
-            pointStatus = new Point(x, y + fontNameHeight + paddingStatus);
+            if (_Offsets != null)
+            {
+                pointName = new Point(x + _Offsets[Settings.AccountGridButtonOffsets.Offsets.Name].X, y + _Offsets[Settings.AccountGridButtonOffsets.Offsets.Name].Y);
+                pointStatus = new Point(x + _Offsets[Settings.AccountGridButtonOffsets.Offsets.Status].X, y + fontNameHeight + paddingStatus + _Offsets[Settings.AccountGridButtonOffsets.Offsets.Status].Y);
+            }
+            else
+            {
+                pointName = new Point(x, y);
+                pointStatus = new Point(x, y + fontNameHeight + paddingStatus);
+            }
 
             rectName = new Rectangle(pointName, new Size(rw, fontNameHeight));
             rectStatus = new Rectangle(pointStatus, new Size(rw, fontStatusHeight));
@@ -562,10 +547,10 @@ namespace Gw2Launcher.UI.Controls
             }
         }
 
-        private Settings.AccountGridButtonColors _Colors;
+        private UiColors.ColorValues _Colors;
         [Browsable(false)]
         [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
-        public Settings.AccountGridButtonColors Colors
+        public UiColors.ColorValues Colors
         {
             get
             {
@@ -574,6 +559,23 @@ namespace Gw2Launcher.UI.Controls
             set
             {
                 _Colors = value;
+                OnRedrawRequired();
+            }
+        }
+
+        private Settings.AccountGridButtonOffsets _Offsets;
+        [Browsable(false)]
+        [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
+        public Settings.AccountGridButtonOffsets Offsets
+        {
+            get
+            {
+                return _Offsets;
+            }
+            set
+            {
+                _Offsets = value;
+                resize = true;
                 OnRedrawRequired();
             }
         }
@@ -1000,10 +1002,14 @@ namespace Gw2Launcher.UI.Controls
                     if (iconMain != null && iconMain.type != DisplayedIcon.IconType.None)
                     {
                         var x = iconMain.bounds.X - w / 3;
+                        var y = this.Height - h - (int)(10 * scale + 0.5f);
                         if (x < icon.bounds.X)
                             icon.bounds.X = x;
-                        icon.bounds.Y = this.Height - h - (int)(10 * scale + 0.5f);
+                        if (y > iconMain.bounds.Y)
+                            icon.bounds.Y = y;
                     }
+
+                    icon.bounds = new Rectangle(this.Width - w - (int)(7 * scale + 0.5f), (int)(7 * scale + 0.5f), w, h);
                 }
             }
             else
@@ -1066,6 +1072,145 @@ namespace Gw2Launcher.UI.Controls
             }
         }
 
+        protected Image GetLoginRewardIcon(byte day, Settings.DailyLoginDayIconFlags flags)
+        {
+            switch (day)
+            {
+                case 1:
+                case 8:
+                case 15:
+                case 22:
+                    if ((flags & Settings.DailyLoginDayIconFlags.MysticCoins) != 0)
+                        return Properties.Resources.loginreward0;
+                    break;
+                case 2:
+                case 7:
+                case 9:
+                case 16:
+                case 21:
+                case 23:
+                    if ((flags & Settings.DailyLoginDayIconFlags.Laurels) != 0)
+                        return Properties.Resources.loginreward1;
+                    break;
+                case 3:
+                case 10:
+                case 17:
+                case 24:
+                    if ((flags & Settings.DailyLoginDayIconFlags.Luck) != 0)
+                        return Properties.Resources.loginreward2;
+                    break;
+                case 4:
+                case 11:
+                case 18:
+                case 25:
+                    if ((flags & Settings.DailyLoginDayIconFlags.BlackLionGoods) != 0)
+                        return Properties.Resources.loginreward3;
+                    break;
+                case 5:
+                case 12:
+                    if ((flags & Settings.DailyLoginDayIconFlags.CraftingMaterials) != 0)
+                        return Properties.Resources.loginreward4;
+                    break;
+                case 6:
+                case 13:
+                case 20:
+                case 27:
+                    if ((flags & Settings.DailyLoginDayIconFlags.Experience) != 0)
+                        return Properties.Resources.loginreward5;
+                    break;
+                case 14:
+                    if ((flags & Settings.DailyLoginDayIconFlags.ExoticEquipment) != 0)
+                        return Properties.Resources.loginreward6;
+                    break;
+                case 19:
+                    if ((flags & Settings.DailyLoginDayIconFlags.CelebrationBooster) != 0)
+                        return Properties.Resources.loginreward7;
+                    break;
+                case 26:
+                    if ((flags & Settings.DailyLoginDayIconFlags.TransmutationCharge) != 0)
+                        return Properties.Resources.loginreward8;
+                    break;
+                case 28:
+                    if ((flags & Settings.DailyLoginDayIconFlags.ChestOfLoyalty) != 0)
+                        return Properties.Resources.loginreward9;
+                    break;
+            }
+
+            return null;
+        }
+
+        protected void DrawLoginReward(Graphics g, byte day, Settings.DailyLoginDayIconFlags flags)
+        {
+            var m = icons[INDEX_ICON_MAIN];
+            if (m.type != DisplayedIcon.IconType.Login || day == 0)
+                return;
+            var image = GetLoginRewardIcon(day, flags);
+            if (image == null && (flags & Settings.DailyLoginDayIconFlags.ShowDay) == 0)
+                return;
+
+            var scale = g.DpiX / 96f;
+            int sz = (int)(24 * scale + 0.5f);
+
+            var x = m.bounds.X + (int)(m.bounds.Width * 0.1f) - sz / 2;
+            var y = m.bounds.Y + (int)(m.bounds.Height * 0.77f) - sz / 2;
+            if (y + sz > this.Height)
+                y = this.Height - sz;
+
+            if (image != null)
+            {
+                using (var path = new GraphicsPath())
+                {
+                    path.AddEllipse(x, y, sz, sz);
+                    g.SetClip(path);
+                    g.DrawImage(image, new Rectangle(x, y, sz, sz), 0, 0, image.Width, image.Height, GraphicsUnit.Pixel);
+                    g.ResetClip();
+                }
+            }
+            else
+            {
+                using (var brush = new SolidBrush(Color.FromArgb(196, Color.White)))
+                {
+                    g.FillEllipse(brush, x, y, sz, sz);
+                }
+
+                DrawOutlinedText(g, day.ToString(), FONT_LOGIN_REWARD_DAY, Color.White, Color.Black, 1, StringAlignment.Center, StringAlignment.Center, new Rectangle(x, y, sz, sz));
+            }
+
+            g.SmoothingMode = SmoothingMode.AntiAlias;
+            g.DrawEllipse(Pens.Black, x, y, sz, sz);
+            g.SmoothingMode = SmoothingMode.None;
+        }
+
+        protected void DrawOutlinedText(Graphics g, string text, Font font, Color color, Color outline, int outlineSize, StringAlignment alignmentHorizontal, StringAlignment alignmentVertical, Rectangle bounds)
+        {
+            using (var path = new GraphicsPath())
+            {
+                using (var format = new StringFormat(StringFormatFlags.NoClip | StringFormatFlags.NoWrap))
+                {
+                    g.SmoothingMode = SmoothingMode.AntiAlias;
+                    g.TextRenderingHint = System.Drawing.Text.TextRenderingHint.ClearTypeGridFit;
+                    g.CompositingQuality = CompositingQuality.HighQuality;
+
+                    format.Alignment = alignmentHorizontal;
+                    format.LineAlignment = alignmentVertical;
+
+                    path.AddString(text, font.FontFamily, (int)font.Style, g.DpiX * font.SizeInPoints / 72f, bounds, format);
+
+                    using (var pen = new Pen(outline, outlineSize))
+                    {
+                        g.DrawPath(pen, path);
+                    }
+                    using (var brush = new SolidBrush(color))
+                    {
+                        g.FillPath(brush, path);
+                    }
+
+                    g.SmoothingMode = SmoothingMode.None;
+                    g.CompositingQuality = CompositingQuality.Default;
+                }
+            }
+        }
+
         protected void DrawIcon(Graphics g)
         {
 
@@ -1073,23 +1218,23 @@ namespace Gw2Launcher.UI.Controls
             {
                 var date = DateTime.UtcNow.Date;
 
-                if (this._ShowDailyLogin && this._LastUsed < date)
+                if (this._ShowDailyLogin && this._LastDailyLogin < date)
                 {
                     OnPaintIcon(g, DisplayedIcon.IconType.Login, Properties.Resources.login, -1, 2, false, 255);
 
+                    if (this._AccountType == Settings.AccountType.GuildWars2 && this._ShowDailyLoginDay != Settings.DailyLoginDayIconFlags.None)
+                    {
+                        DrawLoginReward(g, this._DailyLoginDay, this._ShowDailyLoginDay);
+                    }
+
                     return;
                 }
+
                 if (this._ShowDailyCompletion && this._LastDailyCompletion < date)
                 {
                     var hovered = activeIcon != null && activeIcon.type == DisplayedIcon.IconType.Daily && activeIcon.Hovered;
 
                     OnPaintIcon(g, DisplayedIcon.IconType.Daily, Properties.Resources.daily, -2, 0, hovered, 255);
-
-                    return;
-                }
-                if (this._ShowDailyLogin && this._LastDailyLogin < date)
-                {
-                    OnPaintIcon(g, DisplayedIcon.IconType.Login, Properties.Resources.login, -1, 2, true, 127);
 
                     return;
                 }
@@ -1123,23 +1268,30 @@ namespace Gw2Launcher.UI.Controls
 
                 if (isSelected)
                 {
-                    background = _Colors[ColorNames.BackColorSelected];
-                    borderLight = _Colors[ColorNames.BorderLightSelected];
-                    borderDark = _Colors[ColorNames.BorderDarkSelected];
-                    foreground = _Colors[ColorNames.ForeColorSelected];
+                    background = _Colors[ColorNames.AccountBackColorSelected];
+                    borderLight = _Colors[ColorNames.AccountBorderLightSelected];
+                    borderDark = _Colors[ColorNames.AccountBorderDarkSelected];
+                    foreground = _Colors[ColorNames.AccountForeColorSelected];
                 }
                 else if (isHovered)
                 {
-                    background = _Colors[ColorNames.BackColorHovered];
-                    borderLight = _Colors[ColorNames.BorderLightHovered];
-                    borderDark = _Colors[ColorNames.BorderDarkHovered];
-                    foreground = _Colors[ColorNames.ForeColorHovered];
+                    background = _Colors[ColorNames.AccountBackColorHovered];
+                    borderLight = _Colors[ColorNames.AccountBorderLightHovered];
+                    borderDark = _Colors[ColorNames.AccountBorderDarkHovered];
+                    foreground = _Colors[ColorNames.AccountForeColorHovered];
+                }
+                else if (isActive)
+                {
+                    background = _Colors[ColorNames.AccountBackColorActive];
+                    borderLight = _Colors[ColorNames.AccountBorderLightActive];
+                    borderDark = _Colors[ColorNames.AccountBorderDarkActive];
+                    foreground = _Colors[ColorNames.AccountForeColorActive];
                 }
                 else
                 {
-                    background = _Colors[ColorNames.BackColorDefault];
-                    borderLight = _Colors[ColorNames.BorderLightDefault];
-                    borderDark = _Colors[ColorNames.BorderDarkDefault];
+                    background = _Colors[ColorNames.AccountBackColorDefault];
+                    borderLight = _Colors[ColorNames.AccountBorderLightDefault];
+                    borderDark = _Colors[ColorNames.AccountBorderDarkDefault];
                     foreground = Color.Empty;
                 }
 
@@ -1147,7 +1299,7 @@ namespace Gw2Launcher.UI.Controls
                 {
                     if (background.A < 255)
                     {
-                        g.Clear(_Colors[ColorNames.BackColorDefault]);
+                        g.Clear(_Colors[ColorNames.AccountBackColorDefault]);
 
                         if (background.A != 0)
                         {
@@ -1244,15 +1396,15 @@ namespace Gw2Launcher.UI.Controls
                         g.FillRectangle(brush, width - BORDER_SIZE, 0, BORDER_SIZE, height - BORDER_SIZE); //right
                     }
 
-                    if (isFocused)
+                    if (isFocused || isActiveHighlight && isActive)
                     {
-                        var hasBorder = _Colors[ColorNames.FocusedBorder].A != 0;
-                        var hasFill = _Colors[ColorNames.FocusedHighlight].A != 0;
+                        var hasBorder = _Colors[isFocused ? ColorNames.AccountFocusedBorder : ColorNames.AccountActiveBorder].A != 0;
+                        var hasFill = _Colors[isFocused ? ColorNames.AccountFocusedHighlight : ColorNames.AccountActiveHighlight].A != 0;
 
                         if (hasBorder || hasFill)
                         {
                             var x = (width-BORDER_HORIZONTAL) / 5;
-                            using (var gradient = new LinearGradientBrush(new Rectangle(x - BORDER_SIZE, 0, width, height), Color.Transparent, _Colors[ColorNames.FocusedHighlight], LinearGradientMode.Horizontal))
+                            using (var gradient = new LinearGradientBrush(new Rectangle(x - BORDER_SIZE, 0, width, height), Color.Transparent, _Colors[isFocused ? ColorNames.AccountFocusedHighlight : ColorNames.AccountActiveHighlight], LinearGradientMode.Horizontal))
                             {
                                 if (hasFill)
                                 {
@@ -1277,7 +1429,7 @@ namespace Gw2Launcher.UI.Controls
 
                                 if (hasBorder)
                                 {
-                                    gradient.LinearColors = new Color[] { Color.Transparent, _Colors[ColorNames.FocusedBorder] };
+                                    gradient.LinearColors = new Color[] { Color.Transparent, _Colors[isFocused ? ColorNames.AccountFocusedBorder : ColorNames.AccountActiveBorder] };
 
                                     using (var p = new Pen(gradient, BORDER_SIZE))
                                     {
@@ -1310,10 +1462,10 @@ namespace Gw2Launcher.UI.Controls
 
                         g.SmoothingMode = SmoothingMode.AntiAlias;
 
-                        brush.Color = background.A < 255 ? _Colors[ColorNames.BackColorDefault] : background;
+                        brush.Color = _Colors[ColorNames.AccountPinnedBorder];
                         g.FillEllipse(brush, width - BORDER_SIZE - sz - ofs - 1, BORDER_SIZE + ofs - 1, sz + 2, sz + 2);
 
-                        brush.Color = Util.Color.Gradient(brush.Color, _Colors[ColorNames.Name], 0.5f);
+                        brush.Color = _Colors[ColorNames.AccountPinnedColor];
                         g.FillEllipse(brush, width - BORDER_SIZE - sz - ofs, BORDER_SIZE + ofs, sz, sz);
 
                         g.SmoothingMode = SmoothingMode.None;
@@ -1328,20 +1480,20 @@ namespace Gw2Launcher.UI.Controls
             {
                 case StatusColors.Error:
 
-                    return _Colors[ColorNames.StatusError];
+                    return _Colors[ColorNames.AccountStatusError];
 
                 case StatusColors.Ok:
 
-                    return _Colors[ColorNames.StatusOK];
+                    return _Colors[ColorNames.AccountStatusOK];
 
                 case StatusColors.Waiting:
 
-                    return _Colors[ColorNames.StatusWaiting];
+                    return _Colors[ColorNames.AccountStatusWaiting];
 
                 case StatusColors.Default:
                 default:
 
-                    return _Colors[ColorNames.StatusDefault];
+                    return _Colors[ColorNames.AccountStatusDefault];
 
             }
         }
@@ -1356,10 +1508,10 @@ namespace Gw2Launcher.UI.Controls
 
                 if (_ShowAccount)
                 {
-                    TextRenderer.DrawText(g, _AccountName, fontUser, rectUser, _Colors[ColorNames.User], TextFormatFlags.EndEllipsis | TextFormatFlags.NoPadding);
+                    TextRenderer.DrawText(g, _AccountName, fontUser, rectUser, _Colors[ColorNames.AccountUser], TextFormatFlags.EndEllipsis | TextFormatFlags.NoPadding);
                 }
 
-                TextRenderer.DrawText(g, _DisplayName, fontName, rectName, _Colors[ColorNames.Name], TextFormatFlags.EndEllipsis | TextFormatFlags.NoPadding);
+                TextRenderer.DrawText(g, _DisplayName, fontName, rectName, _Colors[ColorNames.AccountName], TextFormatFlags.EndEllipsis | TextFormatFlags.NoPadding);
 
                 if (_Status != null)
                 {
@@ -1367,11 +1519,11 @@ namespace Gw2Launcher.UI.Controls
                 }
                 else if (this._LastUsed == DateTime.MinValue)
                 {
-                    TextRenderer.DrawText(g, TEXT_STATUS_NEVER, fontStatus, rectStatus, _Colors[ColorNames.StatusError], TextFormatFlags.EndEllipsis | TextFormatFlags.NoPadding);
+                    TextRenderer.DrawText(g, TEXT_STATUS_NEVER, fontStatus, rectStatus, _Colors[ColorNames.AccountStatusError], TextFormatFlags.EndEllipsis | TextFormatFlags.NoPadding);
                 }
                 else
                 {
-                    TextRenderer.DrawText(g, FormatLastUsed(), fontStatus, rectStatus, _Colors[ColorNames.StatusDefault], TextFormatFlags.EndEllipsis | TextFormatFlags.NoPadding);
+                    TextRenderer.DrawText(g, FormatLastUsed(), fontStatus, rectStatus, _Colors[ColorNames.AccountStatusDefault], TextFormatFlags.EndEllipsis | TextFormatFlags.NoPadding);
                 }
 
                 if (totp != null)
@@ -1838,10 +1990,9 @@ namespace Gw2Launcher.UI.Controls
                         var gw2 = (Settings.IGw2Account)value;
                         this.ShowDailyCompletion = gw2.ShowDailyCompletion;
                         this.LastDailyCompletionUtc = gw2.LastDailyCompletionUtc;
-                        if (gw2.ApiData != null && gw2.ApiData.Played != null)
-                            this.LastDailyLoginUtc = gw2.ApiData.Played.LastChange;
-                        else
-                            this.LastDailyLoginUtc = value.LastUsedUtc;
+                        this.LastDailyLoginUtc = gw2.LastDailyLoginUtc;
+                        this.ShowDailyLoginDay = Settings.StyleShowDailyLoginDay.Value;
+                        this.DailyLoginDay = gw2.DailyLoginDay;
                     }
                     else if (value.Type == Settings.AccountType.GuildWars1)
                     {
@@ -1849,6 +2000,7 @@ namespace Gw2Launcher.UI.Controls
                         this.ShowDailyCompletion = false;
                         this.LastDailyCompletionUtc = DateTime.MinValue;
                         this.LastDailyLoginUtc = value.LastUsedUtc;
+                        this.ShowDailyLoginDay = Settings.DailyLoginDayIconFlags.None;
                     }
 
                     if (value.Notes != null)
@@ -1923,31 +2075,6 @@ namespace Gw2Launcher.UI.Controls
             {
                 if (_LastUsed != value)
                 {
-                    var b = _AccountData == null;
-
-                    if (!b)
-                    {
-                        switch (_AccountType)
-                        {
-                            case Settings.AccountType.GuildWars2:
-
-                                var gw2 = (Settings.IGw2Account)_AccountData;
-                                b = gw2.ApiData == null || gw2.ApiData.Played == null;
-
-                                break;
-                            case Settings.AccountType.GuildWars1:
-
-                                b = true;
-
-                                break;
-                        }
-                    }
-
-                    if (b)
-                    {
-                        _LastDailyLogin = value;
-                    }
-
                     _LastUsed = value;
                     DelayedRefresh();
                     OnRedrawRequired();
@@ -1968,6 +2095,42 @@ namespace Gw2Launcher.UI.Controls
                 {
                     _ShowDailyLogin = value;
                     OnRedrawRequired();
+                }
+            }
+        }
+
+        private Settings.DailyLoginDayIconFlags _ShowDailyLoginDay;
+        public Settings.DailyLoginDayIconFlags ShowDailyLoginDay
+        {
+            get
+            {
+                return _ShowDailyLoginDay;
+            }
+            set
+            {
+                if (_ShowDailyLoginDay != value)
+                {
+                    _ShowDailyLoginDay = value;
+                    if (_DailyLoginDay != 0)
+                        OnRedrawRequired();
+                }
+            }
+        }
+
+        private byte _DailyLoginDay;
+        public byte DailyLoginDay
+        {
+            get
+            {
+                return _DailyLoginDay;
+            }
+            set
+            {
+                if (_DailyLoginDay != value)
+                {
+                    _DailyLoginDay = value;
+                    if (_ShowDailyLoginDay != Settings.DailyLoginDayIconFlags.None)
+                        OnRedrawRequired();
                 }
             }
         }
@@ -2136,6 +2299,45 @@ namespace Gw2Launcher.UI.Controls
                     OnRedrawRequired();
                 }
             }
+        }
+
+        public bool IsActive
+        {
+            get
+            {
+                return isActive;
+            }
+            set
+            {
+                if (isActive != value)
+                {
+                    isActive = value;
+                    OnRedrawRequired();
+                }
+            }
+        }
+
+        public bool IsActiveHighlight
+        {
+            get
+            {
+                return isActiveHighlight;
+            }
+            set
+            {
+                if (isActiveHighlight != value)
+                {
+                    isActiveHighlight = value;
+                    if (isActive)
+                        OnRedrawRequired();
+                }
+            }
+        }
+
+        public virtual void RefreshColors()
+        {
+            _Colors = UiColors.GetTheme();
+            OnRedrawRequired();
         }
     }
 }

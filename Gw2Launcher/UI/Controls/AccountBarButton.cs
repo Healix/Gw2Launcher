@@ -208,6 +208,7 @@ namespace Gw2Launcher.UI.Controls
                 if (showClose != value)
                 {
                     showClose = value;
+                    hoveredClose = hoveredClose && value;
                     if (entered)
                         OnRedrawRequired();
                 }
@@ -259,18 +260,21 @@ namespace Gw2Launcher.UI.Controls
         {
             base.OnMouseMove(e);
 
-            if (e.X >= boundsClose.Left && e.X <= boundsClose.Right)
+            if (showClose)
             {
-                if (!hoveredClose)
+                if (e.X >= boundsClose.Left && e.X <= boundsClose.Right)
                 {
-                    hoveredClose = true;
+                    if (!hoveredClose)
+                    {
+                        hoveredClose = true;
+                        OnRedrawRequired();
+                    }
+                }
+                else if (hoveredClose)
+                {
+                    hoveredClose = false;
                     OnRedrawRequired();
                 }
-            }
-            else if (hoveredClose)
-            {
-                hoveredClose = false;
-                OnRedrawRequired();
             }
         }
 
@@ -561,6 +565,15 @@ namespace Gw2Launcher.UI.Controls
                 brushKey.Dispose();
                 brush.Dispose();
                 penClose.Dispose();
+            }
+        }
+
+        public override Size GetPreferredSize(Size proposedSize)
+        {
+            using (var g = this.CreateGraphics())
+            {
+                var sz = TextRenderer.MeasureText(g, this.Text, this.Font, new Size(proposedSize.Width, proposedSize.Height));
+                return new Size(sz.Width + this.Padding.Horizontal, sz.Height + this.Padding.Vertical);
             }
         }
     }

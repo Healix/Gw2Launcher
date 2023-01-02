@@ -42,11 +42,23 @@ namespace Gw2Launcher.Tools
             Delete(new DirectoryInfo(Path.Combine(DataPath.AppDataAccountDataTemp, uid.ToString())).GetDirectories(GW2CACHE, SearchOption.TopDirectoryOnly));
         }
 
+        /// <summary>
+        /// Deletes the login counter for the UID
+        /// </summary>
+        /// <param name="uid"></param>
         public static void DeleteLoginCounter(ushort uid)
         {
-            foreach (var root in Directory.GetDirectories(Path.Combine(DataPath.AppDataAccountDataTemp, uid.ToString()), GW2CACHE, SearchOption.TopDirectoryOnly))
+            DeleteLoginCounter(Path.Combine(DataPath.AppDataAccountDataTemp, uid.ToString()));
+        }
+
+        /// <summary>
+        /// Deletes the login counter from all cache folders under the specified path
+        /// </summary>
+        public static void DeleteLoginCounter(string path)
+        {
+            foreach (var root in Directory.GetDirectories(path, GW2CACHE, SearchOption.TopDirectoryOnly))
             {
-                var path = Path.Combine(root, "user", "Local Storage",  "coui_web_0.localstorage");
+                path = Path.Combine(root, "user", "Local Storage", "coui_web_0.localstorage");
 
                 try
                 {
@@ -55,6 +67,17 @@ namespace Gw2Launcher.Tools
                 }
                 catch { }
             }
+        }
+
+        /// <summary>
+        /// Deletes the login counter from the %temp% folder
+        /// </summary>
+        public static void DeleteLoginCounter()
+        {
+            var path = Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData);
+            if (string.IsNullOrWhiteSpace(path))
+                return;
+            DeleteLoginCounter(Path.Combine(path, "temp"));
         }
 
         public static void Delete(string username)

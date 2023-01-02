@@ -30,9 +30,13 @@ namespace Gw2Launcher.UI
             // 
             this.scrollV.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom) 
             | System.Windows.Forms.AnchorStyles.Right)));
+            this.scrollV.ForeColorHoveredName = Gw2Launcher.UI.UiColors.Colors.ScrollBarHovered;
+            this.scrollV.ForeColorName = Gw2Launcher.UI.UiColors.Colors.ScrollBar;
             this.scrollV.Location = new System.Drawing.Point(388, 1);
             this.scrollV.Maximum = 0;
+            this.scrollV.ScrollChange = 0;
             this.scrollV.Size = new System.Drawing.Size(6, 418);
+            this.scrollV.TrackColorName = Gw2Launcher.UI.UiColors.Colors.ScrollTrack;
             this.scrollV.Value = 0;
             this.scrollV.ValueChanged += new System.EventHandler<int>(this.scrollV_ValueChanged);
             // 
@@ -51,7 +55,6 @@ namespace Gw2Launcher.UI
             // 
             this.panelContent.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left) 
             | System.Windows.Forms.AnchorStyles.Right)));
-            this.panelContent.BackColor = System.Drawing.SystemColors.Control;
             this.panelContent.Location = new System.Drawing.Point(0, 0);
             this.panelContent.Size = new System.Drawing.Size(387, 418);
             this.panelContent.Visible = false;
@@ -59,7 +62,7 @@ namespace Gw2Launcher.UI
             // waitingBounce
             // 
             this.waitingBounce.Anchor = System.Windows.Forms.AnchorStyles.None;
-            this.waitingBounce.ForeColor = System.Drawing.SystemColors.ControlDark;
+            this.waitingBounce.ForeColorName = Gw2Launcher.UI.UiColors.Colors.DailiesHeaderHovered;
             this.waitingBounce.Location = new System.Drawing.Point(143, 201);
             this.waitingBounce.Size = new System.Drawing.Size(100, 16);
             this.waitingBounce.Visible = false;
@@ -76,13 +79,9 @@ namespace Gw2Launcher.UI
             // buttonToday
             // 
             this.buttonToday.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
-            this.buttonToday.BackColorHovered = System.Drawing.SystemColors.ControlLight;
-            this.buttonToday.BackColorSelected = System.Drawing.SystemColors.ControlLight;
-            this.buttonToday.BorderColor = System.Drawing.Color.Empty;
-            this.buttonToday.ForeColorHovered = System.Drawing.SystemColors.ControlText;
-            this.buttonToday.ForeColorSelected = System.Drawing.SystemColors.ControlText;
+            this.buttonToday.BackColorHoveredName = Gw2Launcher.UI.UiColors.Colors.DailiesHeader;
+            this.buttonToday.BackColorSelectedName = Gw2Launcher.UI.UiColors.Colors.DailiesHeader;
             this.buttonToday.Location = new System.Drawing.Point(394, 1);
-            this.buttonToday.Selected = false;
             this.buttonToday.Size = new System.Drawing.Size(30, 150);
             this.buttonToday.Text = "Today";
             this.buttonToday.Click += new System.EventHandler(this.buttonToday_Click);
@@ -90,13 +89,9 @@ namespace Gw2Launcher.UI
             // buttonTomorrow
             // 
             this.buttonTomorrow.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
-            this.buttonTomorrow.BackColorHovered = System.Drawing.SystemColors.ControlLight;
-            this.buttonTomorrow.BackColorSelected = System.Drawing.SystemColors.ControlLight;
-            this.buttonTomorrow.BorderColor = System.Drawing.Color.Empty;
-            this.buttonTomorrow.ForeColorHovered = System.Drawing.SystemColors.ControlText;
-            this.buttonTomorrow.ForeColorSelected = System.Drawing.SystemColors.ControlText;
+            this.buttonTomorrow.BackColorHoveredName = Gw2Launcher.UI.UiColors.Colors.DailiesHeader;
+            this.buttonTomorrow.BackColorSelectedName = Gw2Launcher.UI.UiColors.Colors.DailiesHeader;
             this.buttonTomorrow.Location = new System.Drawing.Point(394, 151);
-            this.buttonTomorrow.Selected = false;
             this.buttonTomorrow.Size = new System.Drawing.Size(30, 150);
             this.buttonTomorrow.Text = "Tomorrow";
             this.buttonTomorrow.Click += new System.EventHandler(this.buttonTomorrow_Click);
@@ -104,25 +99,20 @@ namespace Gw2Launcher.UI
             // buttonMinimize
             // 
             this.buttonMinimize.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Right)));
-            this.buttonMinimize.BackColorHovered = System.Drawing.SystemColors.ControlLight;
-            this.buttonMinimize.BackColorSelected = System.Drawing.SystemColors.ControlLight;
-            this.buttonMinimize.BorderColor = System.Drawing.Color.Empty;
-            this.buttonMinimize.ForeColor = System.Drawing.SystemColors.GrayText;
-            this.buttonMinimize.ForeColorHovered = System.Drawing.SystemColors.ControlText;
-            this.buttonMinimize.ForeColorSelected = System.Drawing.SystemColors.ControlText;
+            this.buttonMinimize.BackColorHoveredName = Gw2Launcher.UI.UiColors.Colors.DailiesHeader;
+            this.buttonMinimize.ForeColorHoveredName = Gw2Launcher.UI.UiColors.Colors.DailiesMinimizeArrowHovered;
+            this.buttonMinimize.ForeColorName = Gw2Launcher.UI.UiColors.Colors.DailiesMinimizeArrow;
             this.buttonMinimize.Location = new System.Drawing.Point(394, 399);
             this.buttonMinimize.Padding = new System.Windows.Forms.Padding(5);
-            this.buttonMinimize.Selected = false;
-            this.buttonMinimize.Shape = Gw2Launcher.UI.Controls.FlatShapeButton.IconShape.Arrow;
             this.buttonMinimize.ShapeAlignment = System.Drawing.ContentAlignment.MiddleRight;
-            this.buttonMinimize.ShapeDirection = System.Windows.Forms.ArrowDirection.Left;
             this.buttonMinimize.ShapeSize = new System.Drawing.Size(4, 8);
             this.buttonMinimize.Size = new System.Drawing.Size(30, 20);
             this.buttonMinimize.Click += new System.EventHandler(this.buttonMinimize_Click);
             // 
             // formDailies
             // 
-            this.BackColor = System.Drawing.Color.White;
+            this.AutoScaleDimensions = new System.Drawing.SizeF(96F, 96F);
+            this.BackColorName = Gw2Launcher.UI.UiColors.Colors.DailiesBackColor;
             this.ClientSize = new System.Drawing.Size(425, 420);
             this.Controls.Add(this.buttonMinimize);
             this.Controls.Add(this.buttonTomorrow);
@@ -131,6 +121,7 @@ namespace Gw2Launcher.UI
             this.Controls.Add(this.scrollV);
             this.DoubleBuffered = true;
             this.Font = new System.Drawing.Font("Segoe UI", 9F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+            this.ForeColorName = Gw2Launcher.UI.UiColors.Colors.DailiesText;
             this.FormBorderStyle = System.Windows.Forms.FormBorderStyle.None;
             this.Icon = global::Gw2Launcher.Properties.Resources.Gw2Launcher;
             this.MinimumSize = new System.Drawing.Size(330, 340);

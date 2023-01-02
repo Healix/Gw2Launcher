@@ -55,6 +55,14 @@ namespace Gw2Launcher.Client
             private Account account;
             private ProcessWatcher watcher;
 
+            public static int[] GetActivePIDs()
+            {
+                lock (activeProcesses)
+                {
+                    return activeProcesses.Keys.ToArray();
+                }
+            }
+
             public static LinkedProcess[] GetActive()
             {
                 lock (activeProcesses)
@@ -89,11 +97,12 @@ namespace Gw2Launcher.Client
                 return GetActiveCount(AccountType.Any);
             }
 
-            public static int GetActiveCount(AccountType type)
+            public static int GetActiveCount(AccountType type, AccountState state = AccountState.None)
             {
                 lock (activeProcesses)
                 {
                     Settings.AccountType t;
+                    int count = 0;
 
                     switch (type)
                     {
@@ -109,18 +118,25 @@ namespace Gw2Launcher.Client
                             break;
                         case AccountType.Any:
 
-                            return activeProcesses.Count;
+                            if (state == AccountState.None)
+                                return activeProcesses.Count;
+
+                            foreach (var p in activeProcesses.Values)
+                            {
+                                if (p.account != null && p.account.State == state)
+                                    count++;
+                            }
+
+                            return count;
 
                         default:
 
                             throw new NotSupportedException();
                     }
 
-                    int count = 0;
-
                     foreach (var p in activeProcesses.Values)
                     {
-                        if (p.account != null && p.account.Settings.Type == t)
+                        if (p.account != null && p.account.Settings.Type == t && (state == AccountState.None || p.account.State == state))
                             count++;
                     }
 
@@ -130,10 +146,15 @@ namespace Gw2Launcher.Client
 
             public static Account GetAccount(Process p)
             {
+                return GetAccount(p.Id);
+            }
+
+            public static Account GetAccount(int pid)
+            {
                 lock (activeProcesses)
                 {
                     LinkedProcess l;
-                    if (activeProcesses.TryGetValue(p.Id, out l))
+                    if (activeProcesses.TryGetValue(pid, out l))
                     {
                         return l.account;
                     }
@@ -143,9 +164,14 @@ namespace Gw2Launcher.Client
 
             public static bool Contains(Process p)
             {
+                return Contains(p.Id);
+            }
+
+            public static bool Contains(int pid)
+            {
                 lock (activeProcesses)
                 {
-                    return activeProcesses.ContainsKey(p.Id);
+                    return activeProcesses.ContainsKey(pid);
                 }
             }
 

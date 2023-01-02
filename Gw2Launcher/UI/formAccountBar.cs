@@ -198,28 +198,11 @@ namespace Gw2Launcher.UI
             }
         }
 
-        private class BarButton : FlatButton
+        private class BarButton : TransparentFlatButton
         {
-            private bool transparent;
-
             public BarButton(bool transparent)
             {
-                this.transparent = transparent;
-            }
-
-            protected override void WndProc(ref Message m)
-            {
-                base.WndProc(ref m);
-
-                switch ((Windows.Native.WindowMessages)m.Msg)
-                {
-                    case Windows.Native.WindowMessages.WM_NCHITTEST:
-
-                        if (transparent)
-                            m.Result = (IntPtr)HitTest.Transparent;
-
-                        break;
-                }
+                this.Transparent = transparent;
             }
         }
 
@@ -462,6 +445,7 @@ namespace Gw2Launcher.UI
 
             Client.Launcher.AccountStateChanged += Launcher_AccountStateChanged;
             Client.Launcher.AccountWindowEvent += Launcher_AccountWindowEvent;
+            Client.Launcher.AccountTopMostWindowEvent += Launcher_AccountTopMostWindowEvent;
             Client.Launcher.AccountProcessExited += Launcher_AccountProcessExited;
         }
 
@@ -2029,6 +2013,18 @@ namespace Gw2Launcher.UI
             }
         }
 
+        void Launcher_AccountTopMostWindowEvent(Settings.IAccount account, Client.Launcher.AccountTopMostWindowEventEventArgs e)
+        {
+            if (ShowTopMost)
+            {
+                Util.Invoke.Required(this,
+                    delegate
+                    {
+                        e.Add(0, this.Handle);
+                    });
+            }
+        }
+
         void Launcher_AccountWindowEvent(Settings.IAccount account, Client.Launcher.AccountWindowEventEventArgs e)
         {
             if (Util.Invoke.IfRequired(this,
@@ -2052,15 +2048,6 @@ namespace Gw2Launcher.UI
                             CheckWindowBounds(account, e.Handle);
                         }
 
-                        if (account.Windowed && (account.WindowOptions & Settings.WindowOptions.TopMost) == Settings.WindowOptions.TopMost && ShowTopMost)
-                        {
-                            try
-                            {
-                                NativeMethods.SetWindowPos(this.Handle, (IntPtr)WindowZOrder.HWND_TOPMOST, 0, 0, 0, 0, SetWindowPosFlags.SWP_NOMOVE | SetWindowPosFlags.SWP_NOSIZE | SetWindowPosFlags.SWP_NOACTIVATE);
-                            }
-                            catch { }
-                        }
-
                         break;
                     case Client.Launcher.AccountWindowEventEventArgs.EventType.Minimized:
 
@@ -2077,12 +2064,6 @@ namespace Gw2Launcher.UI
                         {
                             CheckWindowBounds(account, e.Handle);
                         }
-
-                        break;
-                    case Client.Launcher.AccountWindowEventEventArgs.EventType.TopMost:
-
-                        if (ShowTopMost)
-                            e.Handled = SetTopMostClient(e.Handle);
 
                         break;
                 }
@@ -2719,6 +2700,7 @@ namespace Gw2Launcher.UI
 
                 Client.Launcher.AccountStateChanged -= Launcher_AccountStateChanged;
                 Client.Launcher.AccountWindowEvent -= Launcher_AccountWindowEvent;
+                Client.Launcher.AccountTopMostWindowEvent -= Launcher_AccountTopMostWindowEvent;
                 Client.Launcher.AccountProcessExited -= Launcher_AccountProcessExited;
 
                 foreach (var uid in Settings.Accounts.GetKeys())

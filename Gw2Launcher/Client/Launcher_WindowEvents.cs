@@ -126,9 +126,12 @@ namespace Gw2Launcher.Client
 
                 private void Release()
                 {
-                    if (!NativeMethods.UnhookWinEvent(handle))
-                        throw new System.ComponentModel.Win32Exception(System.Runtime.InteropServices.Marshal.GetLastWin32Error());
-                    handle = IntPtr.Zero;
+                    if (handle != IntPtr.Zero)
+                    {
+                        if (!NativeMethods.UnhookWinEvent(handle))
+                            throw new System.ComponentModel.Win32Exception(System.Runtime.InteropServices.Marshal.GetLastWin32Error());
+                        handle = IntPtr.Zero;
+                    }
                 }
             }
 
@@ -410,7 +413,7 @@ namespace Gw2Launcher.Client
             {
                 GC.SuppressFinalize(this);
 
-                if (context != null)
+                if (context != null && events.Count > 0)
                 {
                     SendOrPostCallback callback = delegate
                     {

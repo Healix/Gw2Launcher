@@ -1,8 +1,10 @@
+using Gw2Launcher.UI.Base;
 using System;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Data;
 using System.Drawing;
+using System.Drawing.Design;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
@@ -15,11 +17,135 @@ namespace Gw2Launcher.UI
         const int FADE_DURATION = 100;
         const string PAGE_ALL = "−";
 
-        private class MenuItemPanel : Panel
+        private class PageTextBox : Control
+        {
+            public event EventHandler ValueChanged;
+
+            private Controls.IntegerTextBox textbox;
+
+            public PageTextBox()
+            {
+                textbox = new Controls.IntegerTextBox()
+                {
+                    Visible = false,
+                    Anchor = AnchorStyles.Left | AnchorStyles.Right,
+                    Size = this.Size,
+                    BorderStyle = System.Windows.Forms.BorderStyle.None,
+                    BackColor = this.BackColor,
+                    ForeColor = this.ForeColor,
+                    TextAlign = HorizontalAlignment.Center,
+                    ReverseMouseWheelDirection = true,
+                    Minimum = 0,
+                    Maximum = 99,
+                };
+                textbox.LostFocus += textbox_LostFocus;
+                textbox.SizeChanged += textbox_SizeChanged;
+                textbox.ValueChanged += textbox_ValueChanged;
+                this.Controls.Add(textbox);
+            }
+
+            public Controls.IntegerTextBox TextBox
+            {
+                get
+                {
+                    return textbox;
+                }
+            }
+
+            public int Value
+            {
+                get
+                {
+                    return textbox.Value;
+                }
+                set
+                {
+                    textbox.Value = value;
+                }
+            }
+
+            protected override void OnBackColorChanged(EventArgs e)
+            {
+                base.OnBackColorChanged(e);
+
+                textbox.BackColor = this.BackColor;
+            }
+
+            protected override void OnForeColorChanged(EventArgs e)
+            {
+                base.OnForeColorChanged(e);
+
+                textbox.ForeColor = this.ForeColor;
+            }
+
+            void textbox_ValueChanged(object sender, EventArgs e)
+            {
+                this.Text = textbox.Value == 0 ? PAGE_ALL : textbox.Value.ToString();
+
+                if (ValueChanged != null)
+                    ValueChanged(this, EventArgs.Empty);
+            }
+
+            void textbox_SizeChanged(object sender, EventArgs e)
+            {
+                textbox.Location = new Point(0, this.Height / 2 - textbox.Height / 2);
+            }
+
+            void textbox_LostFocus(object sender, EventArgs e)
+            {
+                ShowTextBox(false);
+            }
+
+            public void ShowTextBox(bool visible)
+            {
+                if (visible)
+                {
+                    textbox.Visible = true;
+                    textbox.Focus();
+                }
+                else
+                {
+                    textbox.Visible = false;
+                }
+                this.Invalidate();
+            }
+
+            public override string Text
+            {
+                get
+                {
+                    return base.Text;
+                }
+                set
+                {
+                    base.Text = value;
+                    if (!textbox.Visible)
+                        this.Invalidate();
+                }
+            }
+
+            protected override void OnClick(EventArgs e)
+            {
+                base.OnClick(e);
+
+                textbox.SelectAll();
+                ShowTextBox(true);
+            }
+
+            protected override void OnPaint(PaintEventArgs e)
+            {
+                if (!textbox.Visible)
+                    TextRenderer.DrawText(e.Graphics, this.Text, this.Font, textbox.Bounds, this.ForeColor, this.BackColor, TextFormatFlags.TextBoxControl | TextFormatFlags.HorizontalCenter | TextFormatFlags.NoPadding);
+
+                base.OnPaint(e);
+            }
+        }
+
+        private class MenuItemPanel : Controls.StackPanel
         {
         }
 
-        private class MenuItemLabel : Label
+        private class MenuItemLabel : Base.BaseLabel
         {
             private bool hovered;
 
@@ -59,7 +185,28 @@ namespace Gw2Launcher.UI
                 }
             }
 
+            protected UiColors.Colors _BackColorHoveredName = UiColors.Colors.Custom;
+            [DefaultValue(UiColors.Colors.Custom)]
+            [TypeConverter(typeof(UiColorTypeConverter))]
+            [Editor(typeof(UiColorTypeEditor), typeof(UITypeEditor))]
+            public UiColors.Colors BackColorHoveredName
+            {
+                get
+                {
+                    return _BackColorHoveredName;
+                }
+                set
+                {
+                    if (_BackColorHoveredName != value)
+                    {
+                        _BackColorHoveredName = value;
+                        RefreshColors();
+                    }
+                }
+            }
+
             private Color _BorderColor;
+            [DefaultValue(typeof(Color), "")]
             public Color BorderColor
             {
                 get
@@ -74,7 +221,28 @@ namespace Gw2Launcher.UI
                 }
             }
 
+            protected UiColors.Colors _BorderColorName = UiColors.Colors.Custom;
+            [DefaultValue(UiColors.Colors.Custom)]
+            [TypeConverter(typeof(UiColorTypeConverter))]
+            [Editor(typeof(UiColorTypeEditor), typeof(UITypeEditor))]
+            public UiColors.Colors BorderColorName
+            {
+                get
+                {
+                    return _BorderColorName;
+                }
+                set
+                {
+                    if (_BorderColorName != value)
+                    {
+                        _BorderColorName = value;
+                        RefreshColors();
+                    }
+                }
+            }
+
             private Color _BorderColorHovered;
+            [DefaultValue(typeof(Color), "")]
             public Color BorderColorHovered
             {
                 get
@@ -86,6 +254,26 @@ namespace Gw2Launcher.UI
                     _BorderColorHovered = value;
                     if (hovered)
                         this.Invalidate();
+                }
+            }
+
+            protected UiColors.Colors _BorderColorHoveredName = UiColors.Colors.Custom;
+            [DefaultValue(UiColors.Colors.Custom)]
+            [TypeConverter(typeof(UiColorTypeConverter))]
+            [Editor(typeof(UiColorTypeEditor), typeof(UITypeEditor))]
+            public UiColors.Colors BorderColorHoveredName
+            {
+                get
+                {
+                    return _BorderColorHoveredName;
+                }
+                set
+                {
+                    if (_BorderColorHoveredName != value)
+                    {
+                        _BorderColorHoveredName = value;
+                        RefreshColors();
+                    }
                 }
             }
 
@@ -126,6 +314,18 @@ namespace Gw2Launcher.UI
                         g.DrawLine(pen, 0, h, w, h);
                     }
                 }
+            }
+
+            public override void RefreshColors()
+            {
+                base.RefreshColors();
+
+                if (_BackColorHoveredName != UiColors.Colors.Custom)
+                    this.BackColorHovered = UiColors.GetColor(_BackColorHoveredName);
+                if (_BorderColorName != UiColors.Colors.Custom)
+                    this.BorderColor = UiColors.GetColor(_BorderColorName);
+                if (_BorderColorHoveredName != UiColors.Colors.Custom)
+                    this.BorderColorHovered = UiColors.GetColor(_BorderColorHoveredName);
             }
         }
 
@@ -175,8 +375,10 @@ namespace Gw2Launcher.UI
         private Shadow shadow;
         private bool created;
         private bool animated;
+        private PopupUtil popup;
+        private int activated;
 
-        public formMenu()
+        public formMenu(Form owner)
         {
             InitializeComponents();
 
@@ -187,14 +389,18 @@ namespace Gw2Launcher.UI
 
             _Page = 0;
             _Pages = 1;
-            labelPage.Text = PAGE_ALL;
+            textPage.Text = PAGE_ALL;
 
             this.TransparencyKey = Color.Magenta;
 
             redraw = true;
 
+            textPage.ValueChanged += textPage_ValueChanged;
             panelPage.MouseWheel += page_MouseWheel;
             this.Disposed += formMenu_Disposed;
+
+            popup = new PopupUtil(owner, this);
+            popup.Deactivating += popup_Deactivating;
         }
 
         protected override void OnInitializeComponents()
@@ -202,6 +408,20 @@ namespace Gw2Launcher.UI
             base.OnInitializeComponents();
 
             InitializeComponent();
+        }
+
+        protected override void OnForeColorChanged(EventArgs e)
+        {
+            base.OnForeColorChanged(e);
+
+            textPage.ForeColor = this.ForeColor;
+        }
+
+        protected override void SetVisibleCore(bool value)
+        {
+            if (value)
+                popup.Enabled = true;
+            base.SetVisibleCore(value);
         }
 
         void formMenu_Disposed(object sender, EventArgs e)
@@ -212,6 +432,11 @@ namespace Gw2Launcher.UI
                 buffer.Dispose();
         }
 
+        private void textPage_ValueChanged(object sender, EventArgs e)
+        {
+            Page = (byte)textPage.Value;
+        }
+
         protected override bool ProcessCmdKey(ref Message msg, Keys keyData)
         {
             if (keyData == Keys.Escape)
@@ -219,6 +444,29 @@ namespace Gw2Launcher.UI
                 OnHide();
             }
             return base.ProcessCmdKey(ref msg, keyData);
+        }
+
+        protected override bool ProcessDialogKey(Keys keyData)
+        {
+            switch (keyData)
+            {
+                case Keys.D0:
+                case Keys.D1:
+                case Keys.D2:
+                case Keys.D3:
+                case Keys.D4:
+                case Keys.D5:
+                case Keys.D6:
+                case Keys.D7:
+                case Keys.D8:
+                case Keys.D9:
+
+                    if (!textPage.ContainsFocus)
+                        ShowPageInput((byte)(keyData - Keys.D0));
+
+                    break;
+            }
+            return base.ProcessDialogKey(keyData);
         }
 
         protected override void OnFormClosing(FormClosingEventArgs e)
@@ -245,12 +493,13 @@ namespace Gw2Launcher.UI
                 if (_Page != value)
                 {
                     _Page = value;
-                    if (value == 0)
-                        labelPage.Text = PAGE_ALL;
-                    else
-                        labelPage.Text = value.ToString();
-                    if (value > _Pages)
-                        Pages = value;
+                    textPage.Value = value;
+                    //if (value == 0)
+                    //    textPage.Text = PAGE_ALL;
+                    //else
+                    //    textPage.Text = value.ToString();
+                    //if (value > _Pages)
+                    //    Pages = value;
 
                     if (PageChanged != null)
                         PageChanged(this, value);
@@ -361,6 +610,8 @@ namespace Gw2Launcher.UI
 
         public void Show(Form owner, Control attachTo)
         {
+            activated = Environment.TickCount;
+
             var l = attachTo.PointToScreen(Point.Empty);
             var arrowSize = panelContainer.Top - 1;
 
@@ -386,7 +637,7 @@ namespace Gw2Launcher.UI
                     TransparencyKey = this.TransparencyKey,
                 };
 
-                if (Windows.WindowShadow.Enable(shadow.Handle))
+                if (!Settings.StyleDisableWindowShadows.Value && Windows.WindowShadow.Enable(shadow.Handle))
                 {
                     this.LocationChanged += formMenu_LocationChanged;
                     this.SizeChanged += formMenu_SizeChanged;
@@ -452,7 +703,7 @@ namespace Gw2Launcher.UI
                     g.FillPolygon(brush, background);
                 }
 
-                using (var pen = new Pen(Color.Gray, pw))
+                using (var pen = new Pen(UiColors.GetColor(UiColors.Colors.MainBorder), pw))
                 {
                     g.DrawPolygon(pen, background);
                 }
@@ -485,7 +736,73 @@ namespace Gw2Launcher.UI
         protected override void OnDeactivate(EventArgs e)
         {
             base.OnDeactivate(e);
+        }
 
+        void popup_Deactivating(object sender, EventArgs e)
+        {
+            //backup for when the menu is deactivated on show (linux)
+            if (Environment.TickCount - activated < 100)
+            {
+                var w = Gw2Launcher.Windows.Native.NativeMethods.GetForegroundWindow();
+                if (w == popup.Owner.Handle || w == this.Handle || w == IntPtr.Zero)
+                {
+                    if (!Gw2Launcher.Windows.Native.NativeMethods.SetForegroundWindow(this.Handle))
+                    {
+                        AutoHide();
+                    }
+                    return;
+                }
+            }
+
+            HidePopup();
+        }
+
+        private async void AutoHide()
+        {
+            var wasActive = false;
+            var boundsChanged = true;
+            var bounds = new Rectangle();
+
+            EventHandler onActivated = delegate
+            {
+                wasActive = true;
+            };
+            EventHandler onBoundsChanged = delegate
+            {
+                boundsChanged = true;
+            };
+
+            this.Activated += onActivated;
+            this.SizeChanged += onBoundsChanged;
+            this.LocationChanged += onBoundsChanged;
+
+            while (true)
+            {
+                await Task.Delay(500);
+
+                if (this.IsDisposed)
+                    return;
+                if (wasActive)
+                    break;
+                if (boundsChanged)
+                {
+                    boundsChanged = false;
+                    bounds = Rectangle.Inflate(this.Bounds, Cursor.Size.Width / 2, Cursor.Size.Height / 2);
+                }
+                if (!bounds.Contains(Cursor.Position))
+                {
+                    HidePopup();
+                    break;
+                }
+            }
+
+            this.Activated -= onActivated;
+            this.SizeChanged -= onBoundsChanged;
+            this.LocationChanged -= onBoundsChanged;
+        }
+
+        public void HidePopup()
+        {
             if (this.Visible)
                 OnHide();
         }
@@ -608,5 +925,33 @@ namespace Gw2Launcher.UI
             OnMenuItemSelected(MenuItem.CloseAllAccounts);
         }
 
+        public void ShowPageInput(byte page)
+        {
+            textPage.Value = page;
+            textPage.TextBox.Select(textPage.Text.Length, 0);
+            textPage.ShowTextBox(true);
+        }
+
+        public void ShowPageInput(string input = null)
+        {
+            byte v;
+            if (input != null && byte.TryParse(input, out v))
+            {
+                ShowPageInput(v);
+            }
+            else
+            {
+                textPage.TextBox.SelectAll();
+                textPage.ShowTextBox(true);
+            }
+        }
+
+        public override void RefreshColors()
+        {
+            base.RefreshColors();
+
+            redraw = true;
+            this.Invalidate();
+        }
     }
 }

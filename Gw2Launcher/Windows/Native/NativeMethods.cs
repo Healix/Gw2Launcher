@@ -19,6 +19,7 @@ namespace Gw2Launcher.Windows.Native
         public const string DWMAPI = "dwmapi.dll";
         public const string UXTHEME = "uxtheme.dll";
         public const string PSAPI = "psapi.dll";
+        public const string SHCORE = "shcore.dll";
 
         [DllImport(USER32, SetLastError = true)]
         [return: MarshalAs(UnmanagedType.Bool)]
@@ -427,9 +428,9 @@ namespace Gw2Launcher.Windows.Native
         internal static extern uint ExtractIconEx(string szFileName, int nIconIndex, IntPtr[] phiconLarge, IntPtr[] phiconSmall, uint nIcons);
 
         [DllImport(SHELL32)]
-        internal static extern IntPtr SHGetFileInfo(string pszPath, uint dwFileAttributes, ref SHFILEINFO psfi, uint cbSizeFileInfo, uint uFlags);
+        internal static extern IImageList SHGetFileInfo(string pszPath, uint dwFileAttributes, ref SHFILEINFO psfi, uint cbSizeFileInfo, uint uFlags);
 
-        [DllImport(SHELL32)]
+        [DllImport(SHELL32, SetLastError = true)]
         internal static extern int SHGetImageList(int iImageList, ref Guid riid, out IImageList ppv);
 
         [DllImport(PSAPI, SetLastError = true)]
@@ -437,5 +438,73 @@ namespace Gw2Launcher.Windows.Native
 
         [DllImport(PSAPI)]
         internal static extern uint GetModuleFileNameEx(IntPtr hProcess, IntPtr hModule, [Out] StringBuilder lpBaseName, [In] [MarshalAs(UnmanagedType.U4)] int nSize);
+
+        [DllImport(SHCORE)]
+        internal static extern int GetDpiForMonitor(IntPtr monitor, MonitorDpiType type, out uint dpiX, out uint dpiY);
+
+        [DllImport(USER32)]
+        internal static extern int GetSystemMetricsForDpi(SystemMetric smIndex, uint dpi);
+
+        [DllImport(GDI32)]
+        internal static extern IntPtr CreateDC(string lpszDriver, string lpszDevice, string lpszOutput, IntPtr lpInitData);
+
+        [DllImport(GDI32)]
+        internal static extern bool DeleteDC([In] IntPtr hdc);
+
+        [DllImport(USER32)]
+        [return: MarshalAs(UnmanagedType.Bool)]
+        internal static extern bool IsIconic(IntPtr hWnd);
+
+        [DllImport(KERNEL32, CharSet = CharSet.Auto, SetLastError = true)]
+        internal static extern IntPtr CreateFileMapping(IntPtr hFile, IntPtr lpAttributes, FileMapProtection flProtect, Int32 dwMaxSizeHi, Int32 dwMaxSizeLow, string lpName);
+
+        [DllImport(KERNEL32, SetLastError = true)]
+        internal static extern IntPtr OpenFileMapping(FileMapAccess DesiredAccess, bool bInheritHandle, string lpName);
+
+        [DllImport(KERNEL32, CharSet = CharSet.Auto, SetLastError = true)]
+        internal static extern IntPtr MapViewOfFile(IntPtr hFileMapping, FileMapAccess dwDesiredAccess, Int32 dwFileOffsetHigh, Int32 dwFileOffsetLow, Int32 dwNumberOfBytesToMap);
+
+        [DllImport(KERNEL32)]
+        internal static extern bool UnmapViewOfFile(IntPtr lpBaseAddress);
+
+        [DllImport(KERNEL32, SetLastError = true, CharSet = CharSet.Auto)]
+        internal static extern int GetFinalPathNameByHandle(IntPtr hFile, IntPtr lpszFilePath, int cchFilePath, int dwFlags);
+
+        [DllImport(KERNEL32, SetLastError = true, CharSet = CharSet.Auto)]
+        internal static extern int GetFinalPathNameByHandle(IntPtr hFile, [MarshalAs(UnmanagedType.LPTStr)] StringBuilder lpszFilePath, uint cchFilePath, uint dwFlags);
+
+        [DllImport(USER32)]
+        internal static extern bool SetLayeredWindowAttributes(IntPtr hwnd, uint crKey, byte bAlpha, LayeredWindowFlags dwFlags);
+
+        [DllImport(KERNEL32, SetLastError = true)]
+        internal static extern bool DebugActiveProcess(int dwProcessId);
+
+        [DllImport(KERNEL32, SetLastError = true)]
+        internal static extern bool DebugActiveProcessStop(int dwProcessId);
+
+        [DllImport(KERNEL32)]
+        internal static extern void DisableProcessWindowsGhosting();
+
+        [DllImport(KERNEL32)]
+        [return: MarshalAs(UnmanagedType.Bool)]
+        internal static extern bool WaitForDebugEvent(ref DEBUG_EVENT lpDebugEvent, uint dwMilliseconds);
+
+        [DllImport(KERNEL32, SetLastError = true)]
+        internal static extern bool ContinueDebugEvent(int dwProcessId, int dwThreadId, ContinueStatus dwContinueStatus);
+
+        [DllImport(USER32)]
+        internal static extern IntPtr GetDesktopWindow();
+
+        [DllImport(USER32)]
+        internal static extern short GetAsyncKeyState(short vKey);
+
+        [DllImport(USER32, CharSet = CharSet.Auto, SetLastError = true)]
+        internal static extern bool RegisterHotKey(IntPtr hWnd, int id, KeyModifiers fsModifiers, System.Windows.Forms.Keys vk);
+
+        [DllImport(USER32, CharSet = CharSet.Auto, SetLastError = true)]
+        internal static extern bool UnregisterHotKey(IntPtr hWnd, int id);
+
+        [DllImport(USER32)]
+        internal static extern uint MapVirtualKeyEx(uint uCode, VkMapType uMapType, IntPtr dwhkl);
     }
 }

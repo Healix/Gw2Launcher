@@ -173,9 +173,14 @@ namespace Gw2Launcher.Client
             }
         }
 
-        private static FileInfo GetLink(Settings.IAccount account, Launcher.ProcessOptions options)
+        private static FileInfo GetLink(Settings.IAccount account, Launcher.ProcessOptions options, bool shared)
         {
-            var path = Path.Combine(DataPath.AppDataAccountData, "pl", account.UID.ToString());
+            string path;
+
+            if (shared)
+                path = Path.Combine(DataPath.AppDataAccountData, "pl");
+            else
+                path = Path.Combine(DataPath.AppDataAccountData, "pl", account.UID.ToString());
 
             string name;
             if ((name = _fileDescription) == null)
@@ -200,13 +205,15 @@ namespace Gw2Launcher.Client
         /// Launches using a proxy
         /// </summary>
         /// <param name="shortcut">True to launch using a shortcut</param>
-        public static Process Launch(Settings.IAccount account, Launcher.ProcessOptions options, bool shortcut)
+        /// <param name="shared">True to share the shortcut with other accounts (forces grouping vs prevents grouping)</param>
+        /// <returns>The resulting process launched via proxy</returns>
+        public static Process Launch(Settings.IAccount account, Launcher.ProcessOptions options, bool shortcut, bool shared = false)
         {
             var po = new ProxyOptions(options);
 
             if (shortcut)
             {
-                var link = GetLink(account, options);
+                var link = GetLink(account, options, shared);
                 try
                 {
                     var di = link.Directory;
@@ -217,11 +224,11 @@ namespace Gw2Launcher.Client
                 {
                     Util.Logging.Log(e);
                 }
-                if (!link.Exists)
+                if (shared || !link.Exists)
                 {
                     new Windows.Shortcut(options.FileName, "")
                     {
-                        AppUserModelID = "Gw2Launcher." + account.UID,
+                        AppUserModelID = shared ? "Gw2Launcher.Gw2" : "Gw2Launcher." + account.UID,
                         PreventPinning = true
                     }.Save(link.FullName);
                 }
@@ -290,11 +297,12 @@ namespace Gw2Launcher.Client
                         else if (result == LaunchResult.Failed)
                         {
                             var msg = reader.ReadString();
-                            throw new Exception(msg);
+                            var fpath = reader.ReadString();
+                            throw new Exception("Proxy launch failed:\n" + msg + "\n" + fpath);
                         }
                         else if (result == LaunchResult.None)
                         {
-                            throw new Exception("No response from launcher");
+                            throw new Exception("Proxy launch failed: no response");
                         }
                         else
                         {
@@ -302,6 +310,37 @@ namespace Gw2Launcher.Client
                         }
                     }
                 }
+            }
+        }
+
+        public static bool LaunchSteam(Settings.IAccount account, Launcher.ProcessOptions options)
+        {
+            var path = Steam.Path;
+            int appId;
+
+            if (account.Type == Settings.AccountType.GuildWars2)
+                appId = Steam.APPID_GW2;
+            else
+                throw new NotSupportedException();
+
+            var startInfo = new ProcessStartInfo(path, "-applaunch " + appId + (string.IsNullOrEmpty(options.Arguments) ? "" : " " + options.Arguments))
+            {
+                UseShellExecute = true,
+                WorkingDirectory = Path.GetDirectoryName(path),
+            };
+
+            if (!string.IsNullOrEmpty(options.UserName))
+            {
+                startInfo.UserName = options.UserName;
+                startInfo.Password = options.Password;
+                startInfo.LoadUserProfile = true;
+            }
+
+            using (var p = Process.Start(startInfo))
+            {
+                p.WaitForExit(500);
+
+                return true;
             }
         }
     }

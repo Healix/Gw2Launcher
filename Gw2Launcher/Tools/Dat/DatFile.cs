@@ -1,3 +1,4 @@
+using Gw2Launcher.Tools.Dat.Compression;
 using System;
 using System.IO;
 
@@ -73,7 +74,10 @@ namespace Gw2Launcher.Tools.Dat
             mft.header = r.ReadBytes(40);
 
             //check version and header size
-            if (BitConverter.ToUInt32(mft.header, 0) != 441336215U || BitConverter.ToInt32(mft.header, 4) != 40)
+            var header = BitConverter.ToUInt32(mft.header, 0);
+            if ((header != 441336215U //US
+                && header != 441336225U) //CN
+                || BitConverter.ToInt32(mft.header, 4) != 40)
                 throw new IOException("Unknown header");
 
             r.BaseStream.Position = mft.MftOffset;
@@ -182,6 +186,64 @@ namespace Gw2Launcher.Tools.Dat
             }
 
             return entries;
+        }
+
+        /// <summary>
+        /// Reads the build from Local.dat
+        /// </summary>
+        public static int ReadBuild(string path)
+        {
+            using (var r = new BinaryReader(new BufferedStream(File.Open(path, FileMode.Open, FileAccess.Read, FileShare.ReadWrite))))
+            {
+                var mft = ReadMft(r);
+
+                foreach (var e in mft.entries)
+                {
+                    if (e.baseId == 16)
+                    {
+                        r.BaseStream.Position = e.offset;
+
+                        var a = new Archive();
+                        var buffer = a.Decompress(r.BaseStream, e.size);
+
+                        using (var r2 = new BinaryReader(new MemoryStream(buffer)))
+                        {
+                            if (r2.ReadUInt16() != 18000) //PF
+                                throw new IOException("Unknown header");
+                            r2.BaseStream.Position += 4;
+                            if (r2.ReadUInt16() != 12)
+                                throw new IOException("Unknown version");
+                            if (r2.ReadUInt32() != 1818455916U) //locl
+                                throw new IOException("Unknown header");
+
+                            while (r2.BaseStream.Position < buffer.Length)
+                            {
+                                var chunkType = r2.ReadUInt32();
+                                var chunkSize = r2.ReadUInt32();
+                                var chunkEnd = r2.BaseStream.Position + chunkSize;
+
+                                if (chunkType == 1701998435U) //core
+                                {
+                                    var chunkVersion = r2.ReadUInt16();
+                                    var chunkHeaderSize = r2.ReadUInt16();
+                                    var chunkTableOffset = r2.ReadUInt32();
+
+                                    if (chunkVersion != 0)
+                                        throw new IOException("Unknown core version");
+
+                                    return r2.ReadInt32();
+                                }
+
+                                r2.BaseStream.Position = chunkEnd;
+                            }
+                        }
+
+                        break;
+                    }
+                }
+            }
+
+            throw new IOException("Build not found");
         }
     }
 }

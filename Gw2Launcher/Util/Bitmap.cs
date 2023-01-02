@@ -153,6 +153,9 @@ namespace Gw2Launcher.Util
             }
         }
 
+        /// <summary>
+        /// Creates a simple white rectangle with a red border and x
+        /// </summary>
         public static Image CreateErrorImage(int width, int height)
         {
             var i = new System.Drawing.Bitmap(width, height);
@@ -164,6 +167,36 @@ namespace Gw2Launcher.Util
                 g.DrawLine(Pens.Red, 0, height - 1, width - 1, 0);
             }
             return i;
+        }
+
+        /// <summary>
+        /// Resizes an convert an icon to an image
+        /// </summary>
+        /// <param name="icon">Icon to resize</param>
+        /// <param name="iconSize">Optional icon size for multi-size icons</param>
+        /// <param name="imageSize">Resulting image size</param>
+        /// <returns>Resized icon as an image</returns>
+        public static Image ResizeIcon(Icon icon, Size iconSize, Size imageSize)
+        {
+            Icon _icon;
+
+            if (!iconSize.IsEmpty && (icon.Width != iconSize.Width || icon.Height != iconSize.Height))
+                _icon = new Icon(icon, iconSize);
+            else
+                _icon = null;
+
+            using (_icon)
+            {
+                var image = new System.Drawing.Bitmap(imageSize.Width, imageSize.Height, System.Drawing.Imaging.PixelFormat.Format32bppArgb);
+
+                using (var g = Graphics.FromImage(image))
+                {
+                    g.InterpolationMode = System.Drawing.Drawing2D.InterpolationMode.HighQualityBicubic;
+                    g.DrawIcon(_icon == null ? icon : _icon, new Rectangle(Point.Empty, imageSize));
+                }
+
+                return image;
+            }
         }
     }
 }

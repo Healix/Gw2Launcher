@@ -28,17 +28,29 @@ namespace Gw2Launcher.UI
         /// </summary>
         private void InitializeComponent()
         {
+            this.components = new System.ComponentModel.Container();
             System.Windows.Forms.DataGridViewCellStyle dataGridViewCellStyle1 = new System.Windows.Forms.DataGridViewCellStyle();
             this.stackPanel1 = new Gw2Launcher.UI.Controls.StackPanel();
             this.labelTitle = new System.Windows.Forms.Label();
-            this.gridAccounts = new Gw2Launcher.UI.Controls.ScaledDataGridView();
-            this.columnCheck = new System.Windows.Forms.DataGridViewCheckBoxColumn();
+            this.gridAccounts = new Gw2Launcher.UI.Controls.SelectionDataGridView();
             this.columnName = new System.Windows.Forms.DataGridViewTextBoxColumn();
+            this.contextMenu = new System.Windows.Forms.ContextMenuStrip(this.components);
+            this.sortByToolStripMenuItem = new Gw2Launcher.UI.Controls.ToolStripMenuItemStayOpenOnClick();
+            this.nameToolStripMenuItem = new Gw2Launcher.UI.Controls.ToolStripMenuItemStayOpenOnClick();
+            this.lastUsedToolStripMenuItem = new Gw2Launcher.UI.Controls.ToolStripMenuItemStayOpenOnClick();
+            this.toolStripMenuItem1 = new System.Windows.Forms.ToolStripSeparator();
+            this.descendingToolStripMenuItem = new Gw2Launcher.UI.Controls.ToolStripMenuItemStayOpenOnClick();
+            this.filterToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.guildWars2ToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.guildWars1ToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.stackPanel2 = new Gw2Launcher.UI.Controls.StackPanel();
             this.buttonCancel = new System.Windows.Forms.Button();
             this.buttonOK = new System.Windows.Forms.Button();
+            this.toolStripMenuItem2 = new System.Windows.Forms.ToolStripSeparator();
+            this.clearSelectionToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.stackPanel1.SuspendLayout();
             ((System.ComponentModel.ISupportInitialize)(this.gridAccounts)).BeginInit();
+            this.contextMenu.SuspendLayout();
             this.stackPanel2.SuspendLayout();
             this.SuspendLayout();
             // 
@@ -77,19 +89,19 @@ namespace Gw2Launcher.UI
             this.gridAccounts.Anchor = ((System.Windows.Forms.AnchorStyles)((((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom) 
             | System.Windows.Forms.AnchorStyles.Left) 
             | System.Windows.Forms.AnchorStyles.Right)));
-            this.gridAccounts.BackgroundColor = System.Drawing.SystemColors.Control;
-            this.gridAccounts.BorderStyle = System.Windows.Forms.BorderStyle.None;
-            this.gridAccounts.ColumnHeadersHeightSizeMode = System.Windows.Forms.DataGridViewColumnHeadersHeightSizeMode.AutoSize;
+            this.gridAccounts.BackgroundColor = System.Drawing.SystemColors.Window;
+            this.gridAccounts.BorderStyle = System.Windows.Forms.BorderStyle.Fixed3D;
+            this.gridAccounts.CellBorderStyle = System.Windows.Forms.DataGridViewCellBorderStyle.None;
             this.gridAccounts.ColumnHeadersVisible = false;
             this.gridAccounts.Columns.AddRange(new System.Windows.Forms.DataGridViewColumn[] {
-            this.columnCheck,
             this.columnName});
+            this.gridAccounts.ContextMenuStrip = this.contextMenu;
             dataGridViewCellStyle1.Alignment = System.Windows.Forms.DataGridViewContentAlignment.MiddleLeft;
-            dataGridViewCellStyle1.BackColor = System.Drawing.SystemColors.Control;
+            dataGridViewCellStyle1.BackColor = System.Drawing.SystemColors.Window;
             dataGridViewCellStyle1.Font = new System.Drawing.Font("Segoe UI", 8.25F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
             dataGridViewCellStyle1.ForeColor = System.Drawing.SystemColors.ControlText;
-            dataGridViewCellStyle1.SelectionBackColor = System.Drawing.SystemColors.Highlight;
-            dataGridViewCellStyle1.SelectionForeColor = System.Drawing.SystemColors.HighlightText;
+            dataGridViewCellStyle1.SelectionBackColor = System.Drawing.SystemColors.ControlLight;
+            dataGridViewCellStyle1.SelectionForeColor = System.Drawing.SystemColors.ControlText;
             dataGridViewCellStyle1.WrapMode = System.Windows.Forms.DataGridViewTriState.False;
             this.gridAccounts.DefaultCellStyle = dataGridViewCellStyle1;
             this.gridAccounts.EditMode = System.Windows.Forms.DataGridViewEditMode.EditProgrammatically;
@@ -99,20 +111,12 @@ namespace Gw2Launcher.UI
             this.gridAccounts.Name = "gridAccounts";
             this.gridAccounts.ReadOnly = true;
             this.gridAccounts.RowHeadersVisible = false;
+            this.gridAccounts.RowHighlightDeselectedColor = System.Drawing.Color.FromArgb(((int)(((byte)(222)))), ((int)(((byte)(176)))), ((int)(((byte)(196)))));
+            this.gridAccounts.RowHighlightSelectedColor = System.Drawing.Color.LightSteelBlue;
             this.gridAccounts.ScrollBars = System.Windows.Forms.ScrollBars.Vertical;
-            this.gridAccounts.SelectionMode = System.Windows.Forms.DataGridViewSelectionMode.CellSelect;
+            this.gridAccounts.SelectionMode = System.Windows.Forms.DataGridViewSelectionMode.FullRowSelect;
             this.gridAccounts.Size = new System.Drawing.Size(259, 193);
             this.gridAccounts.TabIndex = 0;
-            this.gridAccounts.CellContentClick += new System.Windows.Forms.DataGridViewCellEventHandler(this.gridAccounts_CellContentClick);
-            this.gridAccounts.SelectionChanged += new System.EventHandler(this.gridServers_SelectionChanged);
-            // 
-            // columnCheck
-            // 
-            this.columnCheck.AutoSizeMode = System.Windows.Forms.DataGridViewAutoSizeColumnMode.AllCells;
-            this.columnCheck.HeaderText = "Check";
-            this.columnCheck.Name = "columnCheck";
-            this.columnCheck.ReadOnly = true;
-            this.columnCheck.Width = 5;
             // 
             // columnName
             // 
@@ -120,6 +124,80 @@ namespace Gw2Launcher.UI
             this.columnName.HeaderText = "Name";
             this.columnName.Name = "columnName";
             this.columnName.ReadOnly = true;
+            // 
+            // contextMenu
+            // 
+            this.contextMenu.Items.AddRange(new System.Windows.Forms.ToolStripItem[] {
+            this.sortByToolStripMenuItem,
+            this.filterToolStripMenuItem,
+            this.toolStripMenuItem2,
+            this.clearSelectionToolStripMenuItem});
+            this.contextMenu.Name = "contextMenu";
+            this.contextMenu.Size = new System.Drawing.Size(153, 98);
+            // 
+            // sortByToolStripMenuItem
+            // 
+            this.sortByToolStripMenuItem.DropDownItems.AddRange(new System.Windows.Forms.ToolStripItem[] {
+            this.nameToolStripMenuItem,
+            this.lastUsedToolStripMenuItem,
+            this.toolStripMenuItem1,
+            this.descendingToolStripMenuItem});
+            this.sortByToolStripMenuItem.Name = "sortByToolStripMenuItem";
+            this.sortByToolStripMenuItem.Size = new System.Drawing.Size(152, 22);
+            this.sortByToolStripMenuItem.StayOpenOnClick = false;
+            this.sortByToolStripMenuItem.Text = "Sort by";
+            // 
+            // nameToolStripMenuItem
+            // 
+            this.nameToolStripMenuItem.Name = "nameToolStripMenuItem";
+            this.nameToolStripMenuItem.Size = new System.Drawing.Size(136, 22);
+            this.nameToolStripMenuItem.StayOpenOnClick = true;
+            this.nameToolStripMenuItem.Text = "Name";
+            this.nameToolStripMenuItem.Click += new System.EventHandler(this.sortMenuItem_Click);
+            // 
+            // lastUsedToolStripMenuItem
+            // 
+            this.lastUsedToolStripMenuItem.Name = "lastUsedToolStripMenuItem";
+            this.lastUsedToolStripMenuItem.Size = new System.Drawing.Size(136, 22);
+            this.lastUsedToolStripMenuItem.StayOpenOnClick = true;
+            this.lastUsedToolStripMenuItem.Text = "Last used";
+            this.lastUsedToolStripMenuItem.Click += new System.EventHandler(this.sortMenuItem_Click);
+            // 
+            // toolStripMenuItem1
+            // 
+            this.toolStripMenuItem1.Name = "toolStripMenuItem1";
+            this.toolStripMenuItem1.Size = new System.Drawing.Size(133, 6);
+            // 
+            // descendingToolStripMenuItem
+            // 
+            this.descendingToolStripMenuItem.Name = "descendingToolStripMenuItem";
+            this.descendingToolStripMenuItem.Size = new System.Drawing.Size(136, 22);
+            this.descendingToolStripMenuItem.StayOpenOnClick = true;
+            this.descendingToolStripMenuItem.Text = "Descending";
+            this.descendingToolStripMenuItem.Click += new System.EventHandler(this.sortMenuItem_Click);
+            // 
+            // filterToolStripMenuItem
+            // 
+            this.filterToolStripMenuItem.DropDownItems.AddRange(new System.Windows.Forms.ToolStripItem[] {
+            this.guildWars2ToolStripMenuItem,
+            this.guildWars1ToolStripMenuItem});
+            this.filterToolStripMenuItem.Name = "filterToolStripMenuItem";
+            this.filterToolStripMenuItem.Size = new System.Drawing.Size(152, 22);
+            this.filterToolStripMenuItem.Text = "Filter";
+            // 
+            // guildWars2ToolStripMenuItem
+            // 
+            this.guildWars2ToolStripMenuItem.Name = "guildWars2ToolStripMenuItem";
+            this.guildWars2ToolStripMenuItem.Size = new System.Drawing.Size(140, 22);
+            this.guildWars2ToolStripMenuItem.Text = "Guild Wars 2";
+            this.guildWars2ToolStripMenuItem.Click += new System.EventHandler(this.filterMenuItem_Click);
+            // 
+            // guildWars1ToolStripMenuItem
+            // 
+            this.guildWars1ToolStripMenuItem.Name = "guildWars1ToolStripMenuItem";
+            this.guildWars1ToolStripMenuItem.Size = new System.Drawing.Size(140, 22);
+            this.guildWars1ToolStripMenuItem.Text = "Guild Wars 1";
+            this.guildWars1ToolStripMenuItem.Click += new System.EventHandler(this.filterMenuItem_Click);
             // 
             // stackPanel2
             // 
@@ -158,6 +236,18 @@ namespace Gw2Launcher.UI
             this.buttonOK.UseVisualStyleBackColor = true;
             this.buttonOK.Click += new System.EventHandler(this.buttonOK_Click);
             // 
+            // toolStripMenuItem2
+            // 
+            this.toolStripMenuItem2.Name = "toolStripMenuItem2";
+            this.toolStripMenuItem2.Size = new System.Drawing.Size(149, 6);
+            // 
+            // clearSelectionToolStripMenuItem
+            // 
+            this.clearSelectionToolStripMenuItem.Name = "clearSelectionToolStripMenuItem";
+            this.clearSelectionToolStripMenuItem.Size = new System.Drawing.Size(152, 22);
+            this.clearSelectionToolStripMenuItem.Text = "Clear selection";
+            this.clearSelectionToolStripMenuItem.Click += new System.EventHandler(this.clearSelectionToolStripMenuItem_Click);
+            // 
             // formAccountSelect
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(96F, 96F);
@@ -172,10 +262,10 @@ namespace Gw2Launcher.UI
             this.ShowIcon = false;
             this.ShowInTaskbar = false;
             this.StartPosition = System.Windows.Forms.FormStartPosition.CenterParent;
-            this.Load += new System.EventHandler(this.formAccountSelect_Load);
             this.stackPanel1.ResumeLayout(false);
             this.stackPanel1.PerformLayout();
             ((System.ComponentModel.ISupportInitialize)(this.gridAccounts)).EndInit();
+            this.contextMenu.ResumeLayout(false);
             this.stackPanel2.ResumeLayout(false);
             this.ResumeLayout(false);
 
@@ -183,13 +273,23 @@ namespace Gw2Launcher.UI
 
         #endregion
 
-        private Controls.ScaledDataGridView gridAccounts;
+        private Controls.SelectionDataGridView gridAccounts;
         private System.Windows.Forms.Button buttonCancel;
         private System.Windows.Forms.Button buttonOK;
         private System.Windows.Forms.Label labelTitle;
-        private System.Windows.Forms.DataGridViewCheckBoxColumn columnCheck;
-        private System.Windows.Forms.DataGridViewTextBoxColumn columnName;
         private Controls.StackPanel stackPanel1;
         private Controls.StackPanel stackPanel2;
+        private System.Windows.Forms.ContextMenuStrip contextMenu;
+        private UI.Controls.ToolStripMenuItemStayOpenOnClick sortByToolStripMenuItem;
+        private UI.Controls.ToolStripMenuItemStayOpenOnClick nameToolStripMenuItem;
+        private UI.Controls.ToolStripMenuItemStayOpenOnClick lastUsedToolStripMenuItem;
+        private System.Windows.Forms.ToolStripSeparator toolStripMenuItem1;
+        private UI.Controls.ToolStripMenuItemStayOpenOnClick descendingToolStripMenuItem;
+        private System.Windows.Forms.ToolStripMenuItem filterToolStripMenuItem;
+        private System.Windows.Forms.ToolStripMenuItem guildWars2ToolStripMenuItem;
+        private System.Windows.Forms.ToolStripMenuItem guildWars1ToolStripMenuItem;
+        private System.Windows.Forms.DataGridViewTextBoxColumn columnName;
+        private System.Windows.Forms.ToolStripSeparator toolStripMenuItem2;
+        private System.Windows.Forms.ToolStripMenuItem clearSelectionToolStripMenuItem;
     }
 }

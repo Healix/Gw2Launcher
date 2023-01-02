@@ -6,28 +6,30 @@ using System.Threading.Tasks;
 using System.Windows.Forms;
 using System.Drawing;
 using System.Drawing.Drawing2D;
+using System.ComponentModel;
+using System.Drawing.Design;
 
 namespace Gw2Launcher.UI.Controls
 {
-    class FlatVScrollBar : Control
+    class FlatVScrollBar : Base.BaseControl
     {
         public event EventHandler<int> ValueChanged;
+        public event EventHandler<int> ValueDifference;
 
         const byte DEFAULT_SLIDER_H = 80;
 
-        private int value, maximum;
+        private int value, maximum, scrollChange;
 
         private int sliderX, sliderY, sliderW, sliderH;
         private int barX, barY, barW, barH;
         private int originY;
-        private Color colorBar, colorSlider, colorSliderHighlight;
         private SolidBrush brush;
         private bool highlighted, sliding, hovered;
 
         public FlatVScrollBar()
             : base()
         {
-            brush = new SolidBrush(colorBar);
+            brush = new SolidBrush(_TrackColor);
 
             value = 0;
             maximum = 100;
@@ -37,9 +39,9 @@ namespace Gw2Launcher.UI.Controls
             sliderH = DEFAULT_SLIDER_H;
             barW = sliderW;
 
-            colorBar = Color.FromArgb(214, 214, 214);
-            colorSlider = Color.FromArgb(150, 150, 150);
-            colorSliderHighlight = Color.FromArgb(90, 90, 90);
+            _TrackColor = Color.FromArgb(214, 214, 214);
+            ForeColor = Color.FromArgb(150, 150, 150);
+            _ForeColorHovered = Color.FromArgb(90, 90, 90);
 
             this.Size = new Size(barW + 2, barH);
 
@@ -80,7 +82,109 @@ namespace Gw2Launcher.UI.Controls
             }
         }
 
-        [System.ComponentModel.Browsable(false)]
+        private Color _TrackColor;
+        [DefaultValue(typeof(Color), "214, 214, 214")]
+        public Color TrackColor
+        {
+            get
+            {
+                return _TrackColor;
+            }
+            set
+            {
+                if (_TrackColor != value)
+                {
+                    _TrackColor = value;
+                    this.Invalidate();
+                }
+            }
+        }
+
+        protected UiColors.Colors _TrackColorName = UiColors.Colors.Custom;
+        [DefaultValue(UiColors.Colors.Custom)]
+        [UiPropertyColor()]
+        [TypeConverter(typeof(UiColorTypeConverter))]
+        [Editor(typeof(UiColorTypeEditor), typeof(UITypeEditor))]
+        public UiColors.Colors TrackColorName
+        {
+            get
+            {
+                return _TrackColorName;
+            }
+            set
+            {
+                if (_TrackColorName != value)
+                {
+                    _TrackColorName = value;
+                    RefreshColors();
+                }
+            }
+        }
+
+        [DefaultValue(typeof(Color), "150, 150, 150")]
+        public override Color ForeColor
+        {
+            get
+            {
+                return base.ForeColor;
+            }
+            set
+            {
+                base.ForeColor = value;
+            }
+        }
+
+        private Color _ForeColorHovered;
+        [DefaultValue(typeof(Color), "90, 90, 90")]
+        public Color ForeColorHovered
+        {
+            get
+            {
+                return _ForeColorHovered;
+            }
+            set
+            {
+                if (_ForeColorHovered != value)
+                {
+                    _ForeColorHovered = value;
+                    this.Invalidate();
+                }
+            }
+        }
+
+        protected UiColors.Colors _ForeColorHoveredName = UiColors.Colors.Custom;
+        [DefaultValue(UiColors.Colors.Custom)]
+        [UiPropertyColor()]
+        [TypeConverter(typeof(UiColorTypeConverter))]
+        [Editor(typeof(UiColorTypeEditor), typeof(UITypeEditor))]
+        public UiColors.Colors ForeColorHoveredName
+        {
+            get
+            {
+                return _ForeColorHoveredName;
+            }
+            set
+            {
+                if (_ForeColorHoveredName != value)
+                {
+                    _ForeColorHoveredName = value;
+                    RefreshColors();
+                }
+            }
+        }
+
+        public override void RefreshColors()
+        {
+            base.RefreshColors();
+
+            if (_TrackColorName != UiColors.Colors.Custom)
+                TrackColor = UiColors.GetColor(_TrackColorName);
+            if (_ForeColorHoveredName != UiColors.Colors.Custom)
+                ForeColorHovered = UiColors.GetColor(_ForeColorHoveredName);
+        }
+
+        [Browsable(false)]
+        [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
         public override string Text
         {
             get
@@ -108,9 +212,13 @@ namespace Gw2Launcher.UI.Controls
 
                 if (this.value != value)
                 {
+                    var diff = value - this.value;
+
                     this.value = value;
                     OnValueChanged();
 
+                    if (ValueDifference != null)
+                        ValueDifference(this, diff);
                     if (ValueChanged != null)
                         ValueChanged(this, value);
                 }
@@ -136,6 +244,26 @@ namespace Gw2Launcher.UI.Controls
                     else
                         OnValueChanged();
                 }
+            }
+        }
+
+        /// <summary>
+        /// Amount to move the bar when scrolling (wheel or arrow keys), or 0 to use the default (1/3 of bar size)
+        /// </summary>
+        public int ScrollChange
+        {
+            get
+            {
+                if (!DesignMode)
+                {
+                    if (scrollChange == 0)
+                        return barH / 3;
+                }
+                return scrollChange;
+            }
+            set
+            {
+                scrollChange = value;
             }
         }
 
@@ -189,7 +317,12 @@ namespace Gw2Launcher.UI.Controls
                 var value = (int)((float)(sliderY - barY) / (barH - sliderH) * maximum + 0.5f);
                 if (this.value != value)
                 {
+                    var diff = value - this.value;
+
                     this.value = value;
+
+                    if (ValueDifference != null)
+                        ValueDifference(this, diff);
                     if (ValueChanged != null)
                         ValueChanged(this, this.Value);
                 }
@@ -285,11 +418,11 @@ namespace Gw2Launcher.UI.Controls
                 {
                     case Keys.Up:
                     case Keys.Left:
-                        this.Value -= barH / 3;
+                        this.Value -= ScrollChange;
                         break;
                     case Keys.Down:
                     case Keys.Right:
-                        this.Value += barH / 3;
+                        this.Value += ScrollChange;
                         break;
                 }
             }
@@ -312,11 +445,11 @@ namespace Gw2Launcher.UI.Controls
         {
             if (e.Delta > 0)
             {
-                this.Value -= barH / 3;
+                this.Value -= ScrollChange;
             }
             else if (e.Delta < 0)
             {
-                this.Value += barH / 3;
+                this.Value += ScrollChange;
             }
         }
 
@@ -344,16 +477,16 @@ namespace Gw2Launcher.UI.Controls
 
             g.Clear(this.BackColor);
 
-            brush.Color = colorBar;
+            brush.Color = _TrackColor;
 
             g.FillRectangle(brush, barX, barY, barW, barH);
 
             if (maximum > 0)
             {
                 if (highlighted)
-                    brush.Color = colorSliderHighlight;
+                    brush.Color = _ForeColorHovered;
                 else
-                    brush.Color = colorSlider;
+                    brush.Color = ForeColor;
 
                 g.FillRectangle(brush, sliderX, sliderY, sliderW, sliderH);
             }

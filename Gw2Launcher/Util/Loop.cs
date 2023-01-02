@@ -325,7 +325,7 @@ namespace Gw2Launcher.Util
         /// <param name="from">Start index, inclusive</param>
         /// <param name="to">End index, exclusive</param>
         /// <param name="threads">Number of threads to use</param>
-        /// <param name="timeout">The duration a task can run for before being aborted, if > 0</param>
+        /// <param name="timeout">The duration (ms) a task can run for before being aborted, if > 0</param>
         /// <param name="work">Work to run</param>
         public static ILoop For(long from, long to, byte threads, int timeout, WorkAction work)
         {

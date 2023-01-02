@@ -36,7 +36,7 @@ namespace Gw2Launcher.UI
             this.label1 = new System.Windows.Forms.Label();
             this.labelDownloaded = new System.Windows.Forms.Label();
             this.checkRecord = new System.Windows.Forms.CheckBox();
-            this.gridRecord = new Controls.ScaledDataGridView();
+            this.gridRecord = new Gw2Launcher.UI.Controls.ScaledDataGridView();
             this.columnIndex = new System.Windows.Forms.DataGridViewTextBoxColumn();
             this.columnUrl = new System.Windows.Forms.DataGridViewTextBoxColumn();
             this.columnResponseCode = new System.Windows.Forms.DataGridViewTextBoxColumn();
@@ -45,8 +45,8 @@ namespace Gw2Launcher.UI
             this.checkRecordData = new System.Windows.Forms.CheckBox();
             this.labelStatus = new System.Windows.Forms.Label();
             this.label4 = new System.Windows.Forms.Label();
-            this.labelClear = new Controls.LinkLabel();
-            this.labelCached = new Controls.LinkLabel();
+            this.labelClear = new Gw2Launcher.UI.Controls.LinkLabel();
+            this.labelCached = new Gw2Launcher.UI.Controls.LinkLabel();
             this.label5 = new System.Windows.Forms.Label();
             this.label2 = new System.Windows.Forms.Label();
             this.checkUseHttps = new System.Windows.Forms.CheckBox();
@@ -82,7 +82,9 @@ namespace Gw2Launcher.UI
             this.labelLastRequest.AutoSize = true;
             this.labelLastRequest.Font = new System.Drawing.Font("Segoe UI Semilight", 8.25F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
             this.labelLastRequest.Location = new System.Drawing.Point(89, 71);
+            this.labelLastRequest.Name = "labelLastRequest";
             this.labelLastRequest.Size = new System.Drawing.Size(19, 13);
+            this.labelLastRequest.TabIndex = 10;
             this.labelLastRequest.Text = "---";
             // 
             // label3
@@ -90,7 +92,9 @@ namespace Gw2Launcher.UI
             this.label3.AutoSize = true;
             this.label3.Font = new System.Drawing.Font("Segoe UI Semilight", 8.25F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
             this.label3.Location = new System.Drawing.Point(10, 71);
+            this.label3.Name = "label3";
             this.label3.Size = new System.Drawing.Size(63, 13);
+            this.label3.TabIndex = 11;
             this.label3.Text = "Last request";
             // 
             // label1
@@ -98,7 +102,9 @@ namespace Gw2Launcher.UI
             this.label1.AutoSize = true;
             this.label1.Font = new System.Drawing.Font("Segoe UI Semilight", 8.25F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
             this.label1.Location = new System.Drawing.Point(10, 89);
+            this.label1.Name = "label1";
             this.label1.Size = new System.Drawing.Size(42, 13);
+            this.label1.TabIndex = 9;
             this.label1.Text = "UL / DL";
             // 
             // labelDownloaded
@@ -106,14 +112,18 @@ namespace Gw2Launcher.UI
             this.labelDownloaded.AutoSize = true;
             this.labelDownloaded.Font = new System.Drawing.Font("Segoe UI Semilight", 8.25F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
             this.labelDownloaded.Location = new System.Drawing.Point(89, 89);
+            this.labelDownloaded.Name = "labelDownloaded";
             this.labelDownloaded.Size = new System.Drawing.Size(19, 13);
+            this.labelDownloaded.TabIndex = 8;
             this.labelDownloaded.Text = "---";
             // 
             // checkRecord
             // 
             this.checkRecord.AutoSize = true;
             this.checkRecord.Location = new System.Drawing.Point(13, 115);
+            this.checkRecord.Name = "checkRecord";
             this.checkRecord.Size = new System.Drawing.Size(109, 17);
+            this.checkRecord.TabIndex = 7;
             this.checkRecord.Text = "Record requests";
             this.checkRecord.UseVisualStyleBackColor = true;
             this.checkRecord.CheckedChanged += new System.EventHandler(this.checkRecord_CheckedChanged);
@@ -148,17 +158,20 @@ namespace Gw2Launcher.UI
             this.gridRecord.EditMode = System.Windows.Forms.DataGridViewEditMode.EditProgrammatically;
             this.gridRecord.Location = new System.Drawing.Point(12, 138);
             this.gridRecord.MultiSelect = false;
+            this.gridRecord.Name = "gridRecord";
             this.gridRecord.ReadOnly = true;
             this.gridRecord.RowHeadersVisible = false;
             this.gridRecord.ScrollBars = System.Windows.Forms.ScrollBars.Vertical;
             this.gridRecord.SelectionMode = System.Windows.Forms.DataGridViewSelectionMode.FullRowSelect;
             this.gridRecord.Size = new System.Drawing.Size(481, 169);
+            this.gridRecord.TabIndex = 6;
             this.gridRecord.CellContentClick += new System.Windows.Forms.DataGridViewCellEventHandler(this.gridRecord_CellContentClick);
             this.gridRecord.SelectionChanged += new System.EventHandler(this.gridRecord_SelectionChanged);
             // 
             // columnIndex
             // 
             this.columnIndex.HeaderText = "";
+            this.columnIndex.Name = "columnIndex";
             this.columnIndex.ReadOnly = true;
             this.columnIndex.Resizable = System.Windows.Forms.DataGridViewTriState.True;
             this.columnIndex.SortMode = System.Windows.Forms.DataGridViewColumnSortMode.NotSortable;
@@ -168,6 +181,7 @@ namespace Gw2Launcher.UI
             // 
             this.columnUrl.AutoSizeMode = System.Windows.Forms.DataGridViewAutoSizeColumnMode.Fill;
             this.columnUrl.HeaderText = "URL";
+            this.columnUrl.Name = "columnUrl";
             this.columnUrl.ReadOnly = true;
             this.columnUrl.SortMode = System.Windows.Forms.DataGridViewColumnSortMode.NotSortable;
             // 
@@ -176,6 +190,7 @@ namespace Gw2Launcher.UI
             dataGridViewCellStyle1.Alignment = System.Windows.Forms.DataGridViewContentAlignment.MiddleCenter;
             this.columnResponseCode.DefaultCellStyle = dataGridViewCellStyle1;
             this.columnResponseCode.HeaderText = "Code";
+            this.columnResponseCode.Name = "columnResponseCode";
             this.columnResponseCode.ReadOnly = true;
             this.columnResponseCode.SortMode = System.Windows.Forms.DataGridViewColumnSortMode.NotSortable;
             this.columnResponseCode.ToolTipText = "Response code";
@@ -189,6 +204,7 @@ namespace Gw2Launcher.UI
             this.columnResponse.HeaderText = "Content";
             this.columnResponse.LinkBehavior = System.Windows.Forms.LinkBehavior.HoverUnderline;
             this.columnResponse.LinkColor = System.Drawing.Color.FromArgb(((int)(((byte)(49)))), ((int)(((byte)(121)))), ((int)(((byte)(242)))));
+            this.columnResponse.Name = "columnResponse";
             this.columnResponse.ReadOnly = true;
             this.columnResponse.Resizable = System.Windows.Forms.DataGridViewTriState.True;
             this.columnResponse.TrackVisitedState = false;
@@ -197,7 +213,9 @@ namespace Gw2Launcher.UI
             // 
             this.checkEnabled.AutoSize = true;
             this.checkEnabled.Location = new System.Drawing.Point(10, 10);
+            this.checkEnabled.Name = "checkEnabled";
             this.checkEnabled.Size = new System.Drawing.Size(181, 17);
+            this.checkEnabled.TabIndex = 5;
             this.checkEnabled.Text = "Enable local asset server proxy";
             this.checkEnabled.UseVisualStyleBackColor = true;
             // 
@@ -206,7 +224,9 @@ namespace Gw2Launcher.UI
             this.checkRecordData.AutoSize = true;
             this.checkRecordData.Enabled = false;
             this.checkRecordData.Location = new System.Drawing.Point(133, 115);
+            this.checkRecordData.Name = "checkRecordData";
             this.checkRecordData.Size = new System.Drawing.Size(105, 17);
+            this.checkRecordData.TabIndex = 4;
             this.checkRecordData.Text = "Record content";
             this.checkRecordData.UseVisualStyleBackColor = true;
             // 
@@ -216,7 +236,9 @@ namespace Gw2Launcher.UI
             this.labelStatus.Font = new System.Drawing.Font("Segoe UI Semilight", 8.25F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
             this.labelStatus.Location = new System.Drawing.Point(0, 0);
             this.labelStatus.Margin = new System.Windows.Forms.Padding(0);
+            this.labelStatus.Name = "labelStatus";
             this.labelStatus.Size = new System.Drawing.Size(19, 13);
+            this.labelStatus.TabIndex = 0;
             this.labelStatus.Text = "---";
             this.labelStatus.Click += new System.EventHandler(this.labelStatus_Click);
             // 
@@ -225,15 +247,20 @@ namespace Gw2Launcher.UI
             this.label4.AutoSize = true;
             this.label4.Font = new System.Drawing.Font("Segoe UI Semilight", 8.25F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
             this.label4.Location = new System.Drawing.Point(10, 35);
+            this.label4.Name = "label4";
             this.label4.Size = new System.Drawing.Size(35, 13);
+            this.label4.TabIndex = 3;
             this.label4.Text = "Status";
             // 
             // labelClear
             // 
             this.labelClear.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
             this.labelClear.AutoSize = true;
+            this.labelClear.Icon = null;
             this.labelClear.Location = new System.Drawing.Point(462, 116);
+            this.labelClear.Name = "labelClear";
             this.labelClear.Size = new System.Drawing.Size(31, 13);
+            this.labelClear.TabIndex = 2;
             this.labelClear.Text = "clear";
             this.labelClear.Visible = false;
             this.labelClear.Click += new System.EventHandler(this.labelClear_Click);
@@ -242,8 +269,11 @@ namespace Gw2Launcher.UI
             // 
             this.labelCached.AutoSize = true;
             this.labelCached.Font = new System.Drawing.Font("Segoe UI Semilight", 8.25F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+            this.labelCached.Icon = null;
             this.labelCached.Location = new System.Drawing.Point(89, 53);
+            this.labelCached.Name = "labelCached";
             this.labelCached.Size = new System.Drawing.Size(19, 13);
+            this.labelCached.TabIndex = 12;
             this.labelCached.Text = "---";
             this.labelCached.Click += new System.EventHandler(this.labelCached_Click);
             // 
@@ -252,7 +282,9 @@ namespace Gw2Launcher.UI
             this.label5.AutoSize = true;
             this.label5.Font = new System.Drawing.Font("Segoe UI Semilight", 8.25F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
             this.label5.Location = new System.Drawing.Point(10, 53);
+            this.label5.Name = "label5";
             this.label5.Size = new System.Drawing.Size(37, 13);
+            this.label5.TabIndex = 13;
             this.label5.Text = "Cache";
             // 
             // label2
@@ -261,7 +293,9 @@ namespace Gw2Launcher.UI
             this.label2.Font = new System.Drawing.Font("Segoe UI Semilight", 8.25F);
             this.label2.Location = new System.Drawing.Point(10, 59);
             this.label2.Margin = new System.Windows.Forms.Padding(0, 10, 0, 6);
+            this.label2.Name = "label2";
             this.label2.Size = new System.Drawing.Size(56, 13);
+            this.label2.TabIndex = 2;
             this.label2.Text = "Encryption";
             // 
             // checkUseHttps
@@ -270,7 +304,9 @@ namespace Gw2Launcher.UI
             this.checkUseHttps.Font = new System.Drawing.Font("Segoe UI Semilight", 8.25F);
             this.checkUseHttps.Location = new System.Drawing.Point(18, 78);
             this.checkUseHttps.Margin = new System.Windows.Forms.Padding(8, 0, 0, 0);
+            this.checkUseHttps.Name = "checkUseHttps";
             this.checkUseHttps.Size = new System.Drawing.Size(78, 17);
+            this.checkUseHttps.TabIndex = 3;
             this.checkUseHttps.Text = "Use HTTPS";
             this.checkUseHttps.UseVisualStyleBackColor = true;
             this.checkUseHttps.Click += new System.EventHandler(this.checkUseHttps_Click);
@@ -281,7 +317,9 @@ namespace Gw2Launcher.UI
             this.label7.Font = new System.Drawing.Font("Segoe UI Semilight", 8.25F);
             this.label7.Location = new System.Drawing.Point(10, 10);
             this.label7.Margin = new System.Windows.Forms.Padding(0, 0, 0, 6);
+            this.label7.Name = "label7";
             this.label7.Size = new System.Drawing.Size(107, 13);
+            this.label7.TabIndex = 0;
             this.label7.Text = "Download speed limit";
             // 
             // labelSpeedLimit
@@ -289,9 +327,11 @@ namespace Gw2Launcher.UI
             this.labelSpeedLimit.Anchor = System.Windows.Forms.AnchorStyles.None;
             this.labelSpeedLimit.AutoSize = true;
             this.labelSpeedLimit.Font = new System.Drawing.Font("Segoe UI Semilight", 8.25F);
-            this.labelSpeedLimit.Location = new System.Drawing.Point(181, 4);
+            this.labelSpeedLimit.Location = new System.Drawing.Point(181, 3);
             this.labelSpeedLimit.Margin = new System.Windows.Forms.Padding(6, 0, 0, 0);
+            this.labelSpeedLimit.Name = "labelSpeedLimit";
             this.labelSpeedLimit.Size = new System.Drawing.Size(44, 13);
+            this.labelSpeedLimit.TabIndex = 2;
             this.labelSpeedLimit.Text = "10 MB/s";
             // 
             // sliderSpeedLimit
@@ -300,7 +340,9 @@ namespace Gw2Launcher.UI
             this.sliderSpeedLimit.Enabled = false;
             this.sliderSpeedLimit.Location = new System.Drawing.Point(30, 0);
             this.sliderSpeedLimit.Margin = new System.Windows.Forms.Padding(7, 0, 0, 0);
+            this.sliderSpeedLimit.Name = "sliderSpeedLimit";
             this.sliderSpeedLimit.Size = new System.Drawing.Size(145, 20);
+            this.sliderSpeedLimit.TabIndex = 1;
             this.sliderSpeedLimit.TabStop = false;
             this.sliderSpeedLimit.Value = 1F;
             this.sliderSpeedLimit.ValueChanged += new System.EventHandler(this.sliderSpeedLimit_ValueChanged);
@@ -312,7 +354,9 @@ namespace Gw2Launcher.UI
             this.checkSpeedLimit.Font = new System.Drawing.Font("Segoe UI", 8.25F);
             this.checkSpeedLimit.Location = new System.Drawing.Point(8, 3);
             this.checkSpeedLimit.Margin = new System.Windows.Forms.Padding(8, 0, 0, 0);
+            this.checkSpeedLimit.Name = "checkSpeedLimit";
             this.checkSpeedLimit.Size = new System.Drawing.Size(15, 14);
+            this.checkSpeedLimit.TabIndex = 0;
             this.checkSpeedLimit.UseVisualStyleBackColor = true;
             this.checkSpeedLimit.CheckedChanged += new System.EventHandler(this.checkSpeedLimit_CheckedChanged);
             // 
@@ -323,8 +367,10 @@ namespace Gw2Launcher.UI
             this.labelAdvanced.Font = new System.Drawing.Font("Segoe UI Semilight", 8.25F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
             this.labelAdvanced.ForeColor = System.Drawing.Color.FromArgb(((int)(((byte)(49)))), ((int)(((byte)(121)))), ((int)(((byte)(242)))));
             this.labelAdvanced.Location = new System.Drawing.Point(197, 12);
+            this.labelAdvanced.Name = "labelAdvanced";
             this.labelAdvanced.Padding = new System.Windows.Forms.Padding(6, 0, 6, 0);
             this.labelAdvanced.Size = new System.Drawing.Size(65, 13);
+            this.labelAdvanced.TabIndex = 1;
             this.labelAdvanced.Text = "advanced";
             this.labelAdvanced.Click += new System.EventHandler(this.labelAdvanced_Click);
             // 
@@ -337,7 +383,9 @@ namespace Gw2Launcher.UI
             this.panelAdvanced.Controls.Add(this.stackPanel1);
             this.panelAdvanced.Location = new System.Drawing.Point(197, 8);
             this.panelAdvanced.MinimumSize = new System.Drawing.Size(261, 2);
+            this.panelAdvanced.Name = "panelAdvanced";
             this.panelAdvanced.Size = new System.Drawing.Size(263, 181);
+            this.panelAdvanced.TabIndex = 0;
             this.panelAdvanced.Visible = false;
             // 
             // stackPanel1
@@ -355,8 +403,10 @@ namespace Gw2Launcher.UI
             this.stackPanel1.Controls.Add(this.stackPanel4);
             this.stackPanel1.Location = new System.Drawing.Point(0, 0);
             this.stackPanel1.Margin = new System.Windows.Forms.Padding(0);
+            this.stackPanel1.Name = "stackPanel1";
             this.stackPanel1.Padding = new System.Windows.Forms.Padding(10);
             this.stackPanel1.Size = new System.Drawing.Size(261, 179);
+            this.stackPanel1.TabIndex = 0;
             // 
             // stackPanel2
             // 
@@ -368,7 +418,9 @@ namespace Gw2Launcher.UI
             this.stackPanel2.FlowDirection = System.Windows.Forms.FlowDirection.LeftToRight;
             this.stackPanel2.Location = new System.Drawing.Point(10, 29);
             this.stackPanel2.Margin = new System.Windows.Forms.Padding(0);
+            this.stackPanel2.Name = "stackPanel2";
             this.stackPanel2.Size = new System.Drawing.Size(225, 20);
+            this.stackPanel2.TabIndex = 1;
             // 
             // label6
             // 
@@ -376,7 +428,9 @@ namespace Gw2Launcher.UI
             this.label6.Font = new System.Drawing.Font("Segoe UI Semilight", 8.25F);
             this.label6.Location = new System.Drawing.Point(10, 105);
             this.label6.Margin = new System.Windows.Forms.Padding(0, 10, 0, 6);
+            this.label6.Name = "label6";
             this.label6.Size = new System.Drawing.Size(26, 13);
+            this.label6.TabIndex = 4;
             this.label6.Text = "Port";
             // 
             // stackPanel3
@@ -388,7 +442,9 @@ namespace Gw2Launcher.UI
             this.stackPanel3.FlowDirection = System.Windows.Forms.FlowDirection.LeftToRight;
             this.stackPanel3.Location = new System.Drawing.Point(10, 124);
             this.stackPanel3.Margin = new System.Windows.Forms.Padding(0, 0, 0, 3);
+            this.stackPanel3.Name = "stackPanel3";
             this.stackPanel3.Size = new System.Drawing.Size(81, 22);
+            this.stackPanel3.TabIndex = 5;
             // 
             // checkPort
             // 
@@ -397,7 +453,9 @@ namespace Gw2Launcher.UI
             this.checkPort.Font = new System.Drawing.Font("Segoe UI", 8.25F);
             this.checkPort.Location = new System.Drawing.Point(8, 4);
             this.checkPort.Margin = new System.Windows.Forms.Padding(8, 0, 0, 0);
+            this.checkPort.Name = "checkPort";
             this.checkPort.Size = new System.Drawing.Size(15, 14);
+            this.checkPort.TabIndex = 0;
             this.checkPort.UseVisualStyleBackColor = true;
             this.checkPort.CheckedChanged += new System.EventHandler(this.checkPort_CheckedChanged);
             // 
@@ -416,7 +474,9 @@ namespace Gw2Launcher.UI
             0,
             0,
             0});
+            this.numericPort.Name = "numericPort";
             this.numericPort.Size = new System.Drawing.Size(51, 22);
+            this.numericPort.TabIndex = 1;
             this.numericPort.Value = new decimal(new int[] {
             80,
             0,
@@ -432,7 +492,9 @@ namespace Gw2Launcher.UI
             this.stackPanel4.FlowDirection = System.Windows.Forms.FlowDirection.LeftToRight;
             this.stackPanel4.Location = new System.Drawing.Point(10, 149);
             this.stackPanel4.Margin = new System.Windows.Forms.Padding(0, 0, 0, 3);
+            this.stackPanel4.Name = "stackPanel4";
             this.stackPanel4.Size = new System.Drawing.Size(188, 17);
+            this.stackPanel4.TabIndex = 6;
             // 
             // checkOverrideHosts
             // 
@@ -440,7 +502,9 @@ namespace Gw2Launcher.UI
             this.checkOverrideHosts.Font = new System.Drawing.Font("Segoe UI Semilight", 8.25F);
             this.checkOverrideHosts.Location = new System.Drawing.Point(8, 0);
             this.checkOverrideHosts.Margin = new System.Windows.Forms.Padding(8, 0, 0, 0);
+            this.checkOverrideHosts.Name = "checkOverrideHosts";
             this.checkOverrideHosts.Size = new System.Drawing.Size(92, 17);
+            this.checkOverrideHosts.TabIndex = 0;
             this.checkOverrideHosts.Text = "Override DNS";
             this.checkOverrideHosts.UseVisualStyleBackColor = true;
             this.checkOverrideHosts.CheckedChanged += new System.EventHandler(this.checkOverrideHosts_CheckedChanged);
@@ -454,7 +518,9 @@ namespace Gw2Launcher.UI
             this.label8.ForeColor = System.Drawing.SystemColors.GrayText;
             this.label8.Location = new System.Drawing.Point(106, 1);
             this.label8.Margin = new System.Windows.Forms.Padding(6, 0, 0, 1);
+            this.label8.Name = "label8";
             this.label8.Size = new System.Drawing.Size(82, 13);
+            this.label8.TabIndex = 1;
             this.label8.Text = "requires port 80";
             // 
             // stackPanel5
@@ -466,7 +532,9 @@ namespace Gw2Launcher.UI
             this.stackPanel5.Controls.Add(this.labelError);
             this.stackPanel5.FlowDirection = System.Windows.Forms.FlowDirection.LeftToRight;
             this.stackPanel5.Location = new System.Drawing.Point(89, 35);
+            this.stackPanel5.Name = "stackPanel5";
             this.stackPanel5.Size = new System.Drawing.Size(92, 13);
+            this.stackPanel5.TabIndex = 14;
             // 
             // labelError
             // 
@@ -475,12 +543,15 @@ namespace Gw2Launcher.UI
             this.labelError.ForeColor = System.Drawing.SystemColors.GrayText;
             this.labelError.Location = new System.Drawing.Point(25, 0);
             this.labelError.Margin = new System.Windows.Forms.Padding(6, 0, 0, 0);
+            this.labelError.Name = "labelError";
             this.labelError.Size = new System.Drawing.Size(67, 13);
+            this.labelError.TabIndex = 1;
             this.labelError.Text = "failed to start";
             this.labelError.Visible = false;
             // 
             // formAssetProxy
             // 
+            this.AutoScaleDimensions = new System.Drawing.SizeF(96F, 96F);
             this.ClientSize = new System.Drawing.Size(505, 319);
             this.Controls.Add(this.panelAdvanced);
             this.Controls.Add(this.labelAdvanced);
@@ -499,6 +570,7 @@ namespace Gw2Launcher.UI
             this.Controls.Add(this.stackPanel5);
             this.Icon = global::Gw2Launcher.Properties.Resources.Gw2Launcher;
             this.MinimumSize = new System.Drawing.Size(429, 296);
+            this.Name = "formAssetProxy";
             this.StartPosition = System.Windows.Forms.FormStartPosition.CenterParent;
             this.Text = "Asset Proxy";
             this.FormClosing += new System.Windows.Forms.FormClosingEventHandler(this.formAssetProxy_FormClosing);

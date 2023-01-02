@@ -48,6 +48,7 @@ namespace Gw2Launcher.UI
             this.label7 = new System.Windows.Forms.Label();
             this.comboRunAfter = new System.Windows.Forms.ComboBox();
             this.checkUseCurrentUser = new System.Windows.Forms.CheckBox();
+            this.checkWaitUntilComplete = new System.Windows.Forms.CheckBox();
             this.panelOnExit = new Gw2Launcher.UI.Controls.StackPanel();
             this.label8 = new System.Windows.Forms.Label();
             this.comboOnExit = new System.Windows.Forms.ComboBox();
@@ -65,8 +66,8 @@ namespace Gw2Launcher.UI
             // 
             // panelContainer
             // 
-            this.panelContainer.Anchor = ((System.Windows.Forms.AnchorStyles)((((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom)
-            | System.Windows.Forms.AnchorStyles.Left)
+            this.panelContainer.Anchor = ((System.Windows.Forms.AnchorStyles)((((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom) 
+            | System.Windows.Forms.AnchorStyles.Left) 
             | System.Windows.Forms.AnchorStyles.Right)));
             this.panelContainer.Controls.Add(this.stackPanel5);
             this.panelContainer.Controls.Add(this.label9);
@@ -77,11 +78,12 @@ namespace Gw2Launcher.UI
             this.panelContainer.Controls.Add(this.label7);
             this.panelContainer.Controls.Add(this.comboRunAfter);
             this.panelContainer.Controls.Add(this.checkUseCurrentUser);
+            this.panelContainer.Controls.Add(this.checkWaitUntilComplete);
             this.panelContainer.Controls.Add(this.panelOnExit);
             this.panelContainer.Controls.Add(this.stackPanel2);
             this.panelContainer.Location = new System.Drawing.Point(15, 15);
             this.panelContainer.Margin = new System.Windows.Forms.Padding(15);
-            this.panelContainer.Size = new System.Drawing.Size(299, 373);
+            this.panelContainer.Size = new System.Drawing.Size(299, 395);
             // 
             // stackPanel5
             // 
@@ -133,7 +135,7 @@ namespace Gw2Launcher.UI
             // 
             // panelProgram
             // 
-            this.panelProgram.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left)
+            this.panelProgram.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left) 
             | System.Windows.Forms.AnchorStyles.Right)));
             this.panelProgram.AutoSize = true;
             this.panelProgram.Controls.Add(this.label5);
@@ -155,7 +157,7 @@ namespace Gw2Launcher.UI
             // 
             // stackPanel3
             // 
-            this.stackPanel3.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left)
+            this.stackPanel3.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left) 
             | System.Windows.Forms.AnchorStyles.Right)));
             this.stackPanel3.AutoSize = true;
             this.stackPanel3.AutoSizeFill = Gw2Launcher.UI.Controls.StackPanel.AutoSizeFillMode.NoWrap;
@@ -168,7 +170,7 @@ namespace Gw2Launcher.UI
             // 
             // textPath
             // 
-            this.textPath.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left)
+            this.textPath.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left) 
             | System.Windows.Forms.AnchorStyles.Right)));
             this.textPath.Font = new System.Drawing.Font("Segoe UI", 8.25F);
             this.textPath.Location = new System.Drawing.Point(8, 1);
@@ -197,7 +199,7 @@ namespace Gw2Launcher.UI
             // 
             // textArguments
             // 
-            this.textArguments.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left)
+            this.textArguments.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left) 
             | System.Windows.Forms.AnchorStyles.Right)));
             this.textArguments.Font = new System.Drawing.Font("Segoe UI", 8.25F);
             this.textArguments.Location = new System.Drawing.Point(8, 83);
@@ -206,8 +208,8 @@ namespace Gw2Launcher.UI
             // 
             // panelCommands
             // 
-            this.panelCommands.Anchor = ((System.Windows.Forms.AnchorStyles)((((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom)
-            | System.Windows.Forms.AnchorStyles.Left)
+            this.panelCommands.Anchor = ((System.Windows.Forms.AnchorStyles)((((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom) 
+            | System.Windows.Forms.AnchorStyles.Left) 
             | System.Windows.Forms.AnchorStyles.Right)));
             this.panelCommands.Controls.Add(this.label11);
             this.panelCommands.Controls.Add(this.textCommands);
@@ -227,8 +229,8 @@ namespace Gw2Launcher.UI
             // 
             // textCommands
             // 
-            this.textCommands.Anchor = ((System.Windows.Forms.AnchorStyles)((((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom)
-            | System.Windows.Forms.AnchorStyles.Left)
+            this.textCommands.Anchor = ((System.Windows.Forms.AnchorStyles)((((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom) 
+            | System.Windows.Forms.AnchorStyles.Left) 
             | System.Windows.Forms.AnchorStyles.Right)));
             this.textCommands.Font = new System.Drawing.Font("Segoe UI", 8.25F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
             this.textCommands.Location = new System.Drawing.Point(8, 29);
@@ -257,8 +259,8 @@ namespace Gw2Launcher.UI
             this.label7.Font = new System.Drawing.Font("Segoe UI Semilight", 8.25F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
             this.label7.Location = new System.Drawing.Point(1, 208);
             this.label7.Margin = new System.Windows.Forms.Padding(1, 10, 0, 6);
-            this.label7.Size = new System.Drawing.Size(55, 13);
-            this.label7.Text = "Run after...";
+            this.label7.Size = new System.Drawing.Size(64, 13);
+            this.label7.Text = "Start when...";
             // 
             // comboRunAfter
             // 
@@ -267,22 +269,32 @@ namespace Gw2Launcher.UI
             this.comboRunAfter.Location = new System.Drawing.Point(8, 227);
             this.comboRunAfter.Margin = new System.Windows.Forms.Padding(8, 0, 0, 0);
             this.comboRunAfter.Size = new System.Drawing.Size(183, 21);
+            this.comboRunAfter.SelectedIndexChanged += new System.EventHandler(this.comboRunAfter_SelectedIndexChanged);
             // 
             // checkUseCurrentUser
             // 
             this.checkUseCurrentUser.AutoSize = true;
-            this.checkUseCurrentUser.Location = new System.Drawing.Point(8, 254);
-            this.checkUseCurrentUser.Margin = new System.Windows.Forms.Padding(8, 6, 0, 0);
+            this.checkUseCurrentUser.Location = new System.Drawing.Point(8, 256);
+            this.checkUseCurrentUser.Margin = new System.Windows.Forms.Padding(8, 8, 0, 0);
             this.checkUseCurrentUser.Size = new System.Drawing.Size(201, 17);
             this.checkUseCurrentUser.Text = "Run on the current Windows user";
             this.checkUseCurrentUser.UseVisualStyleBackColor = true;
+            // 
+            // checkWaitUntilComplete
+            // 
+            this.checkWaitUntilComplete.AutoSize = true;
+            this.checkWaitUntilComplete.Location = new System.Drawing.Point(8, 276);
+            this.checkWaitUntilComplete.Margin = new System.Windows.Forms.Padding(8, 3, 0, 0);
+            this.checkWaitUntilComplete.Size = new System.Drawing.Size(275, 17);
+            this.checkWaitUntilComplete.Text = "Wait for the program to close before continuing";
+            this.checkWaitUntilComplete.UseVisualStyleBackColor = true;
             // 
             // panelOnExit
             // 
             this.panelOnExit.AutoSize = true;
             this.panelOnExit.Controls.Add(this.label8);
             this.panelOnExit.Controls.Add(this.comboOnExit);
-            this.panelOnExit.Location = new System.Drawing.Point(0, 271);
+            this.panelOnExit.Location = new System.Drawing.Point(0, 293);
             this.panelOnExit.Margin = new System.Windows.Forms.Padding(0);
             this.panelOnExit.Size = new System.Drawing.Size(191, 48);
             // 
@@ -310,7 +322,7 @@ namespace Gw2Launcher.UI
             this.stackPanel2.Controls.Add(this.buttonCancel);
             this.stackPanel2.Controls.Add(this.buttonOk);
             this.stackPanel2.FlowDirection = System.Windows.Forms.FlowDirection.LeftToRight;
-            this.stackPanel2.Location = new System.Drawing.Point(58, 338);
+            this.stackPanel2.Location = new System.Drawing.Point(58, 360);
             this.stackPanel2.Margin = new System.Windows.Forms.Padding(0, 20, 0, 0);
             this.stackPanel2.Size = new System.Drawing.Size(182, 35);
             // 
@@ -338,11 +350,11 @@ namespace Gw2Launcher.UI
             // formRunAfter
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(96F, 96F);
-            this.ClientSize = new System.Drawing.Size(329, 403);
+            this.ClientSize = new System.Drawing.Size(329, 425);
             this.Controls.Add(this.panelContainer);
             this.MaximizeBox = false;
             this.MinimizeBox = false;
-            this.MinimumSize = new System.Drawing.Size(345, 442);
+            this.MinimumSize = new System.Drawing.Size(345, 464);
             this.ShowIcon = false;
             this.ShowInTaskbar = false;
             this.StartPosition = System.Windows.Forms.FormStartPosition.CenterParent;
@@ -391,5 +403,6 @@ namespace Gw2Launcher.UI
         private System.Windows.Forms.Label label11;
         private System.Windows.Forms.Label label9;
         private System.Windows.Forms.TextBox textName;
+        private System.Windows.Forms.CheckBox checkWaitUntilComplete;
     }
 }

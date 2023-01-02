@@ -82,7 +82,7 @@ namespace Gw2Launcher.Windows
         public static void CreateHardLink(string link, string target)
         {
             if (!NativeMethods.CreateHardLink(link, target, IntPtr.Zero))
-                throw new IOException("Failed to create link");
+                throw new IOException("Failed to create link", Marshal.GetExceptionForHR(Marshal.GetHRForLastWin32Error()));
         }
 
         public static void CreateJunction(string link, string target)

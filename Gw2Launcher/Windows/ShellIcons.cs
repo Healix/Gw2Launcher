@@ -5,97 +5,128 @@ using System.Text;
 using System.Threading.Tasks;
 using System.Drawing;
 using Gw2Launcher.Windows.Native;
+using System.Runtime.InteropServices;
 
 namespace Gw2Launcher.Windows
 {
-    class ShellIcons
+    static class ShellIcons
     {
+        const uint SHGFI_SYSICONINDEX = 0x000004000;
+        const uint SHGFI_USEFILEATTRIBUTES = 0x000000010;
+        const int ILD_TRANSPARENT = 0x00000001;
+        const int ILD_IMAGE = 0x00000020;
+
         public enum IconSize
         {
+            /// <summary>
+            /// 32x32
+            /// </summary>
             Large = 0,
+            /// <summary>
+            /// 16x16
+            /// </summary>
             Small = 1,
+            /// <summary>
+            /// 48x48
+            /// </summary>
+            ExtraLarge = 2,
+            /// <summary>
+            /// Caption icon
+            /// </summary>
+            SystemSmall = 3,
+            /// <summary>
+            /// 256x256
+            /// </summary>
+            Jumbo = 4,
         }
 
-        private IImageList[] iil;
-        private Size[] sizes;
+        private static short[] sizes;
 
-        public ShellIcons()
+        //getting icons is limited to 1 thread at a time
+
+        static ShellIcons()
         {
-            iil = new IImageList[2];
-            sizes = new Size[2];
+            sizes = new short[5];
         }
 
-        public Size GetSize(IconSize size)
+        public static Size GetSize(IconSize size)
         {
-            var i = (int)size;
-
-            if (!sizes[i].IsEmpty)
-                return sizes[i];
-
-            lock (iil)
+            lock (sizes)
             {
-                if (!sizes[i].IsEmpty)
-                    return sizes[i];
+                var i = (int)size;
 
-                switch (size)
+                if (sizes[i] > 0)
                 {
-                    case IconSize.Small:
-
-                        return sizes[i] = new Size(NativeMethods.GetSystemMetrics(SystemMetric.SM_CXSMICON), NativeMethods.GetSystemMetrics(SystemMetric.SM_CYSMICON));
-
-                    case IconSize.Large:
-
-                        return sizes[i] = new Size(NativeMethods.GetSystemMetrics(SystemMetric.SM_CXICON), NativeMethods.GetSystemMetrics(SystemMetric.SM_CYICON));
-
-                    default:
-
-                        return Size.Empty;
+                    return new Size(sizes[i], sizes[i]);
                 }
-            }
-        }
-
-        public Icon GetIcon(string path, IconSize size)
-        {
-            var i = (int)size;
-            var guid = new Guid("46EB5926-582E-4017-9FDF-E8998DAA0950");
-            var iml = iil[i];
-
-            if (iml == null)
-            {
-                lock (iil)
+                else if (sizes[i] == 0)
                 {
-                    iml = iil[i];
-
-                    if (iml == null)
+                    try
                     {
-                        if (NativeMethods.SHGetImageList(i, ref guid, out iml) != 0)
-                            return null;
-                        iil[i] = iml;
+                        var guid = new Guid("46EB5926-582E-4017-9FDF-E8998DAA0950");
+                        IImageList iml;
+
+                        if (NativeMethods.SHGetImageList(i, ref guid, out iml) == 0)
+                        {
+                            try
+                            {
+                                int x = 0,
+                                    y = 0;
+
+                                iml.GetIconSize(ref x, ref y);
+                                sizes[i] = (short)x;
+
+                                return new Size(x, x);
+                            }
+                            finally
+                            {
+                                Marshal.FinalReleaseComObject(iml);
+                            }
+                        }
+                    }
+                    catch (Exception e)
+                    {
+                        Util.Logging.Log(e);
                     }
                 }
+
+                return Size.Empty;
             }
+        }
 
-            var h = IntPtr.Zero;
-            var shfi = new SHFILEINFO();
-
-            const uint SHGFI_SYSICONINDEX = 0x000004000;
-            const uint SHGFI_USEFILEATTRIBUTES = 0x000000010;
-            const int ILD_TRANSPARENT = 0x00000001;
-            const int ILD_IMAGE = 0x00000020;
-
-            NativeMethods.SHGetFileInfo(path, 0, ref shfi, (uint)System.Runtime.InteropServices.Marshal.SizeOf(shfi), SHGFI_SYSICONINDEX | SHGFI_USEFILEATTRIBUTES);
-
-            iml.GetIcon(shfi.iIcon, ILD_TRANSPARENT | ILD_IMAGE, ref h);
-
-            if (h != IntPtr.Zero)
+        public static Icon GetIcon(string path, IconSize size)
+        {
+            lock (sizes)
             {
                 try
                 {
-                    return (Icon)Icon.FromHandle(h).Clone();
+                    var shfi = new SHFILEINFO();
+                    var iml = NativeMethods.SHGetFileInfo(path, 0, ref shfi, (uint)Marshal.SizeOf(shfi), SHGFI_SYSICONINDEX | SHGFI_USEFILEATTRIBUTES | (uint)size);
+
+                    if (iml != null)
+                    {
+                        var h = IntPtr.Zero;
+
+                        try
+                        {
+                            iml.GetIcon(shfi.iIcon, ILD_TRANSPARENT | ILD_IMAGE, ref h);
+
+                            if (h != IntPtr.Zero)
+                            {
+                                return (Icon)Icon.FromHandle(h).Clone();
+                            }
+                        }
+                        finally
+                        {
+                            if (h != IntPtr.Zero)
+                                NativeMethods.DestroyIcon(h);
+                            Marshal.FinalReleaseComObject(iml);
+                        }
+                    }
                 }
-                finally
+                catch (Exception e)
                 {
-                    NativeMethods.DestroyIcon(h);
+                    Util.Logging.Log(e);
                 }
             }
 

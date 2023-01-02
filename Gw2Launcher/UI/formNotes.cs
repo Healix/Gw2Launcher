@@ -30,6 +30,8 @@ namespace Gw2Launcher.UI
 
             SetStyle(ControlStyles.ResizeRedraw, true);
 
+            panelContent.BackColor = UiColors.GetColor(UiColors.Colors.DailiesSeparator);
+
             _ExpiredCount = _MessageCount = -1;
 
             this.Opacity = 0;
@@ -586,7 +588,10 @@ namespace Gw2Launcher.UI
         {
             base.OnPaintBackground(e);
 
-            e.Graphics.DrawRectangle(SystemPens.WindowFrame, 0, 0, this.Width - 1, this.Height - 1);
+            using (var p = new Pen(UiColors.GetColor(UiColors.Colors.MainBorder)))
+            {
+                e.Graphics.DrawRectangle(p, 0, 0, this.Width - 1, this.Height - 1);
+            }
         }
 
         private void scrollV_ValueChanged(object sender, int e)
@@ -648,6 +653,13 @@ namespace Gw2Launcher.UI
             {
                 return modified;
             }
+        }
+
+        public override void RefreshColors()
+        {
+            panelContent.BackColor = UiColors.GetColor(UiColors.Colors.DailiesSeparator);
+
+            base.RefreshColors();
         }
     }
 }

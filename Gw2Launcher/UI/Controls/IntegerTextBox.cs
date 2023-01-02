@@ -5,6 +5,7 @@ using System.Text;
 using System.Threading.Tasks;
 using System.Windows.Forms;
 using Gw2Launcher.Windows.Native;
+using System.ComponentModel;
 
 namespace Gw2Launcher.UI.Controls
 {
@@ -23,6 +24,7 @@ namespace Gw2Launcher.UI.Controls
             _Increment = 1;
         }
 
+        [DefaultValue(0)]
         public int Value
         {
             get
@@ -56,6 +58,7 @@ namespace Gw2Launcher.UI.Controls
         }
 
         private int _Minimum;
+        [DefaultValue(0)]
         public int Minimum
         {
             get
@@ -74,6 +77,7 @@ namespace Gw2Launcher.UI.Controls
         }
 
         private int _Maximum;
+        [DefaultValue(100)]
         public int Maximum
         {
             get
@@ -92,6 +96,7 @@ namespace Gw2Launcher.UI.Controls
         }
 
         private int _Increment;
+        [DefaultValue(1)]
         public int Increment
         {
             get
@@ -105,6 +110,7 @@ namespace Gw2Launcher.UI.Controls
         }
 
         private bool _ReverseMouseWheelDirection;
+        [DefaultValue(false)]
         public bool ReverseMouseWheelDirection
         {
             get
@@ -181,8 +187,13 @@ namespace Gw2Launcher.UI.Controls
 
             if (!char.IsControl(c) && !char.IsHighSurrogate(c) && !char.IsLowSurrogate(c))
             {
-                if (!char.IsDigit(e.KeyChar))
-                    e.Handled = true;
+                if (!char.IsDigit(c))
+                {
+                    if (_Minimum >= 0 || SelectionStart != 0 || c != '-')
+                    {
+                        e.Handled = true;
+                    }
+                }
             }
 
             base.OnKeyPress(e);

@@ -108,6 +108,9 @@ namespace Gw2Launcher.Util
         /// </summary>
         public static string AddOrReplace(string args, string key, string keyAndValue)
         {
+            if (string.IsNullOrEmpty(args))
+                return keyAndValue;
+
             int from, to;
             GetValue(args, key, out from, out to);
 

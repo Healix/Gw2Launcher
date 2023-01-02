@@ -2,11 +2,15 @@ using System;
 using System.Text;
 using System.Windows.Forms;
 using System.Drawing;
+using System.ComponentModel;
+using System.Drawing.Design;
 
 namespace Gw2Launcher.UI.Controls
 {
-    class FlatButton : Control
+    class FlatButton : Base.BaseControl
     {
+        public event EventHandler SelectedChanged;
+
         protected bool 
             redraw, 
             isHovered, 
@@ -18,8 +22,6 @@ namespace Gw2Launcher.UI.Controls
         {
             SetStyle(ControlStyles.UserPaint, true);
             SetStyle(ControlStyles.AllPaintingInWmPaint, true);
-
-            alignment = HorizontalAlignment.Left;
         }
 
         protected void OnRedrawRequired()
@@ -70,6 +72,7 @@ namespace Gw2Launcher.UI.Controls
             OnRedrawRequired();
         }
 
+        [DefaultValue(false)]
         public bool Selected
         {
             get
@@ -78,10 +81,16 @@ namespace Gw2Launcher.UI.Controls
             }
             set
             {
-                isSelected = value;
-                //if (value)
-                //    isHovered = false;
-                OnRedrawRequired();
+                if (isSelected != value)
+                {
+                    isSelected = value;
+                    //if (value)
+                    //    isHovered = false;
+                    OnRedrawRequired();
+
+                    if (SelectedChanged != null)
+                        SelectedChanged(this, EventArgs.Empty);
+                }
             }
         }
 
@@ -94,6 +103,7 @@ namespace Gw2Launcher.UI.Controls
         }
 
         protected Color borderColor;
+        [DefaultValue(typeof(Color), "")]
         public Color BorderColor
         {
             get
@@ -110,63 +120,276 @@ namespace Gw2Launcher.UI.Controls
             }
         }
 
+        protected UiColors.Colors _BorderColorName = UiColors.Colors.Custom;
+        [DefaultValue(UiColors.Colors.Custom)]
+        [UiPropertyColor()]
+        [TypeConverter(typeof(UiColorTypeConverter))]
+        [Editor(typeof(UiColorTypeEditor), typeof(UITypeEditor))]
+        public UiColors.Colors BorderColorName
+        {
+            get
+            {
+                return _BorderColorName;
+            }
+            set
+            {
+                if (_BorderColorName != value)
+                {
+                    _BorderColorName = value;
+                    RefreshColors();
+                }
+            }
+        }
+
+        protected Color borderColorHovered;
+        [DefaultValue(typeof(Color), "")]
+        public Color BorderColorHovered
+        {
+            get
+            {
+                if (borderColorHovered.IsEmpty && !DesignMode)
+                    return borderColor;
+                return borderColorHovered;
+            }
+            set
+            {
+                if (borderColorHovered != value)
+                {
+                    borderColorHovered = value;
+                    if (isHovered)
+                        OnRedrawRequired();
+                }
+            }
+        }
+
+        protected UiColors.Colors _BorderColorHoveredName = UiColors.Colors.Custom;
+        [DefaultValue(UiColors.Colors.Custom)]
+        [UiPropertyColor()]
+        [TypeConverter(typeof(UiColorTypeConverter))]
+        [Editor(typeof(UiColorTypeEditor), typeof(UITypeEditor))]
+        public UiColors.Colors BorderColorHoveredName
+        {
+            get
+            {
+                return _BorderColorHoveredName;
+            }
+            set
+            {
+                if (_BorderColorHoveredName != value)
+                {
+                    _BorderColorHoveredName = value;
+                    RefreshColors();
+                }
+            }
+        }
+
+        protected Color borderColorSelected;
+        [DefaultValue(typeof(Color), "")]
+        public Color BorderColorSelected
+        {
+            get
+            {
+                if (borderColorSelected.IsEmpty && !DesignMode)
+                    return borderColor;
+                return borderColorSelected;
+            }
+            set
+            {
+                if (borderColorSelected != value)
+                {
+                    borderColorSelected = value;
+                    if (isSelected)
+                        OnRedrawRequired();
+                }
+            }
+        }
+
+        protected UiColors.Colors _BorderColorSelectedName = UiColors.Colors.Custom;
+        [DefaultValue(UiColors.Colors.Custom)]
+        [UiPropertyColor()]
+        [TypeConverter(typeof(UiColorTypeConverter))]
+        [Editor(typeof(UiColorTypeEditor), typeof(UITypeEditor))]
+        public UiColors.Colors BorderColorSelectedName
+        {
+            get
+            {
+                return _BorderColorSelectedName;
+            }
+            set
+            {
+                if (_BorderColorSelectedName != value)
+                {
+                    _BorderColorSelectedName = value;
+                    RefreshColors();
+                }
+            }
+        }
+
         protected Color backColorHovered;
+        [DefaultValue(typeof(Color), "")]
         public Color BackColorHovered
         {
             get
             {
-                if (backColorHovered.IsEmpty)
+                if (backColorHovered.IsEmpty && !DesignMode)
                     return this.BackColor;
                 return backColorHovered;
             }
             set
             {
-                backColorHovered = value;
+                if (backColorHovered != value)
+                {
+                    backColorHovered = value;
+                    if (isHovered)
+                        OnRedrawRequired();
+                }
+            }
+        }
+
+        protected UiColors.Colors _BackColorHoveredName = UiColors.Colors.Custom;
+        [DefaultValue(UiColors.Colors.Custom)]
+        [UiPropertyColor()]
+        [TypeConverter(typeof(UiColorTypeConverter))]
+        [Editor(typeof(UiColorTypeEditor), typeof(UITypeEditor))]
+        public UiColors.Colors BackColorHoveredName
+        {
+            get
+            {
+                return _BackColorHoveredName;
+            }
+            set
+            {
+                if (_BackColorHoveredName != value)
+                {
+                    _BackColorHoveredName = value;
+                    RefreshColors();
+                }
             }
         }
 
         protected Color foreColorHovered;
+        [DefaultValue(typeof(Color), "")]
         public Color ForeColorHovered
         {
             get
             {
-                if (foreColorHovered.IsEmpty)
+                if (foreColorHovered.IsEmpty && !DesignMode)
                     return this.ForeColor;
                 return foreColorHovered;
             }
             set
             {
-                foreColorHovered = value;
+                if (foreColorHovered != value)
+                {
+                    foreColorHovered = value;
+                    if (isHovered)
+                        OnRedrawRequired();
+                }
+            }
+        }
+
+        protected UiColors.Colors _ForeColorHoveredName = UiColors.Colors.Custom;
+        [DefaultValue(UiColors.Colors.Custom)]
+        [UiPropertyColor()]
+        [TypeConverter(typeof(UiColorTypeConverter))]
+        [Editor(typeof(UiColorTypeEditor), typeof(UITypeEditor))]
+        public UiColors.Colors ForeColorHoveredName
+        {
+            get
+            {
+                return _ForeColorHoveredName;
+            }
+            set
+            {
+                if (_ForeColorHoveredName != value)
+                {
+                    _ForeColorHoveredName = value;
+                    RefreshColors();
+                }
             }
         }
 
         protected Color backColorSelected;
+        [DefaultValue(typeof(Color), "")]
         public Color BackColorSelected
         {
             get
             {
-                if (backColorSelected.IsEmpty)
+                if (backColorSelected.IsEmpty && !DesignMode)
                     return this.BackColor;
                 return backColorSelected;
             }
             set
             {
-                backColorSelected = value;
+                if (backColorSelected != value)
+                {
+                    backColorSelected = value;
+                    if (isSelected)
+                        OnRedrawRequired();
+                }
+            }
+        }
+
+        protected UiColors.Colors _BackColorSelectedName = UiColors.Colors.Custom;
+        [DefaultValue(UiColors.Colors.Custom)]
+        [UiPropertyColor()]
+        [TypeConverter(typeof(UiColorTypeConverter))]
+        [Editor(typeof(UiColorTypeEditor), typeof(UITypeEditor))]
+        public UiColors.Colors BackColorSelectedName
+        {
+            get
+            {
+                return _BackColorSelectedName;
+            }
+            set
+            {
+                if (_BackColorSelectedName != value)
+                {
+                    _BackColorSelectedName = value;
+                    RefreshColors();
+                }
             }
         }
 
         protected Color foreColorSelected;
+        [DefaultValue(typeof(Color), "")]
         public Color ForeColorSelected
         {
             get
             {
-                if (foreColorSelected.IsEmpty)
+                if (foreColorSelected.IsEmpty && !DesignMode)
                     return this.ForeColor;
                 return foreColorSelected;
             }
             set
             {
-                foreColorSelected = value;
+                if (foreColorSelected != value)
+                {
+                    foreColorSelected = value;
+                    if (isSelected)
+                        OnRedrawRequired();
+                }
+            }
+        }
+
+        protected UiColors.Colors _ForeColorSelectedName = UiColors.Colors.Custom;
+        [DefaultValue(UiColors.Colors.Custom)]
+        [UiPropertyColor()]
+        [TypeConverter(typeof(UiColorTypeConverter))]
+        [Editor(typeof(UiColorTypeEditor), typeof(UITypeEditor))]
+        public UiColors.Colors ForeColorSelectedName
+        {
+            get
+            {
+                return _ForeColorSelectedName;
+            }
+            set
+            {
+                if (_ForeColorSelectedName != value)
+                {
+                    _ForeColorSelectedName = value;
+                    RefreshColors();
+                }
             }
         }
 
@@ -175,7 +398,11 @@ namespace Gw2Launcher.UI.Controls
             get
             {
                 if (isHovered)
+                {
+                    if (isSelected && PrioritizeSelectedColoring)
+                        return this.BackColorSelected;
                     return this.BackColorHovered;
+                }
                 else if (isSelected)
                     return this.BackColorSelected;
                 else
@@ -188,7 +415,11 @@ namespace Gw2Launcher.UI.Controls
             get
             {
                 if (isHovered)
+                {
+                    if (isSelected && PrioritizeSelectedColoring)
+                        return this.ForeColorSelected;
                     return this.ForeColorHovered;
+                }
                 else if (isSelected)
                     return this.ForeColorSelected;
                 else
@@ -196,8 +427,35 @@ namespace Gw2Launcher.UI.Controls
             }
         }
 
+        public Color BorderColorCurrent
+        {
+            get
+            {
+                if (isHovered)
+                {
+                    if (isSelected && PrioritizeSelectedColoring)
+                        return this.BorderColorSelected;
+                    return this.BorderColorHovered;
+                }
+                else if (isSelected)
+                    return this.BorderColorSelected;
+                else
+                    return this.BorderColor;
+            }
+        }
+
+        /// <summary>
+        /// By default, hovering will take priority over being selected. If true, selected will take priority.
+        /// </summary>
+        [DefaultValue(false)]
+        public bool PrioritizeSelectedColoring
+        {
+            get;
+            set;
+        }
+
         protected AnchorStyles borderStyle;
-        [System.ComponentModel.DefaultValue(AnchorStyles.None)]
+        [DefaultValue(AnchorStyles.None)]
         public AnchorStyles BorderStyle
         {
             get
@@ -214,8 +472,8 @@ namespace Gw2Launcher.UI.Controls
             }
         }
 
-        protected HorizontalAlignment alignment;
-        [System.ComponentModel.DefaultValue(HorizontalAlignment.Left)]
+        protected HorizontalAlignment alignment = HorizontalAlignment.Left;
+        [DefaultValue(HorizontalAlignment.Left)]
         public HorizontalAlignment Alignment
         {
             get
@@ -227,6 +485,24 @@ namespace Gw2Launcher.UI.Controls
                 if (alignment != value)
                 {
                     alignment = value;
+                    OnRedrawRequired();
+                }
+            }
+        }
+
+        private bool _NoWrap;
+        [DefaultValue(false)]
+        public bool NoWrap
+        {
+            get
+            {
+                return _NoWrap;
+            }
+            set
+            {
+                if (_NoWrap != value)
+                {
+                    _NoWrap = value;
                     OnRedrawRequired();
                 }
             }
@@ -256,6 +532,9 @@ namespace Gw2Launcher.UI.Controls
                     f |= TextFormatFlags.Right;
                     break;
             }
+
+            if (_NoWrap)
+                f |= TextFormatFlags.SingleLine;
 
             TextRenderer.DrawText(g, text, this.Font, new Rectangle(x, y, w, h), ForeColorCurrent, BackColorCurrent, f);
         }
@@ -294,7 +573,7 @@ namespace Gw2Launcher.UI.Controls
                 if (r < 1)
                 {
                     w = (int)(w * r + 0.5f);
-                    h = (int)(w * r + 0.5f);
+                    h = (int)(h * r + 0.5f);
                 }
 
                 g.DrawImage(image, x, y, w, h);
@@ -347,48 +626,52 @@ namespace Gw2Launcher.UI.Controls
         {
             g.Clear(BackColorCurrent);
 
-            if (borderStyle != AnchorStyles.None && borderColor.A > 0)
+            if (borderStyle != AnchorStyles.None)
             {
-                var pw = (int)(g.DpiX / 96f + 0.5f);
-
-                using (var p = new Pen(borderColor, pw))
+                var borderColor = this.BorderColorCurrent;
+                if (borderColor.A > 0)
                 {
-                    int x = 0,
-                        y = 0,
-                        w = this.Width - 1,
-                        h = this.Height - 1;
+                    var pw = (int)(g.DpiX / 96f + 0.5f);
 
-                    switch (borderStyle & (AnchorStyles.Left | AnchorStyles.Right))
+                    using (var p = new Pen(borderColor, pw))
                     {
-                        case AnchorStyles.Left: //only left
-                            w += pw;
-                            break;
-                        case AnchorStyles.Right: //only right
-                            x -= pw;
-                            w += pw;
-                            break;
-                        case AnchorStyles.None:
-                            x -= pw;
-                            w += pw * 2;
-                            break;
-                    }
+                        int x = pw / 2,
+                            y = pw / 2,
+                            w = this.Width - pw,
+                            h = this.Height - pw;
 
-                    switch (borderStyle & (AnchorStyles.Top | AnchorStyles.Bottom))
-                    {
-                        case AnchorStyles.Top: //only top
-                            h += pw;
-                            break;
-                        case AnchorStyles.Bottom: //only bottom
-                            y -= pw;
-                            h += pw;
-                            break;
-                        case AnchorStyles.None:
-                            y -= pw;
-                            h += pw * 2;
-                            break;
-                    }
+                        switch (borderStyle & (AnchorStyles.Left | AnchorStyles.Right))
+                        {
+                            case AnchorStyles.Left: //only left
+                                w += pw;
+                                break;
+                            case AnchorStyles.Right: //only right
+                                x -= pw;
+                                w += pw;
+                                break;
+                            case AnchorStyles.None:
+                                x -= pw;
+                                w += pw * 2;
+                                break;
+                        }
 
-                    g.DrawRectangle(p, x, y, w, h);
+                        switch (borderStyle & (AnchorStyles.Top | AnchorStyles.Bottom))
+                        {
+                            case AnchorStyles.Top: //only top
+                                h += pw;
+                                break;
+                            case AnchorStyles.Bottom: //only bottom
+                                y -= pw;
+                                h += pw;
+                                break;
+                            case AnchorStyles.None:
+                                y -= pw;
+                                h += pw * 2;
+                                break;
+                        }
+
+                        g.DrawRectangle(p, x, y, w, h);
+                    }
                 }
             }
         }
@@ -443,6 +726,26 @@ namespace Gw2Launcher.UI.Controls
                     buffer = null;
                 }
             }
+        }
+
+        public override void RefreshColors()
+        {
+            base.RefreshColors();
+
+            if (_ForeColorSelectedName != UiColors.Colors.Custom)
+                this.ForeColorSelected = UiColors.GetColor(_ForeColorSelectedName);
+            if (_BackColorSelectedName != UiColors.Colors.Custom)
+                this.BackColorSelected = UiColors.GetColor(_BackColorSelectedName);
+            if (_ForeColorHoveredName != UiColors.Colors.Custom)
+                this.ForeColorHovered = UiColors.GetColor(_ForeColorHoveredName);
+            if (_BackColorHoveredName != UiColors.Colors.Custom)
+                this.BackColorHovered = UiColors.GetColor(_BackColorHoveredName);
+            if (_BorderColorSelectedName != UiColors.Colors.Custom)
+                this.BorderColorSelected = UiColors.GetColor(_BorderColorSelectedName);
+            if (_BorderColorHoveredName != UiColors.Colors.Custom)
+                this.BorderColorHovered = UiColors.GetColor(_BorderColorHoveredName);
+            if (_BorderColorName != UiColors.Colors.Custom)
+                this.BorderColor = UiColors.GetColor(_BorderColorName);
         }
     }
 }

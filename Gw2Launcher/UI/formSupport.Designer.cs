@@ -383,8 +383,8 @@ namespace Gw2Launcher.UI
             // 
             // arrowLoginExpand
             // 
-            this.arrowLoginExpand.ColorArrow = System.Drawing.Color.FromArgb(((int)(((byte)(150)))), ((int)(((byte)(150)))), ((int)(((byte)(150)))));
-            this.arrowLoginExpand.ColorHighlight = System.Drawing.Color.FromArgb(((int)(((byte)(20)))), ((int)(((byte)(20)))), ((int)(((byte)(20)))));
+            this.arrowLoginExpand.ForeColor = System.Drawing.Color.FromArgb(((int)(((byte)(150)))), ((int)(((byte)(150)))), ((int)(((byte)(150)))));
+            this.arrowLoginExpand.ForeColorHighlight = System.Drawing.Color.FromArgb(((int)(((byte)(20)))), ((int)(((byte)(20)))), ((int)(((byte)(20)))));
             this.arrowLoginExpand.Cursor = System.Windows.Forms.Cursors.Hand;
             this.arrowLoginExpand.Direction = Gw2Launcher.UI.Controls.ArrowButton.ArrowDirection.Right;
             this.arrowLoginExpand.Location = new System.Drawing.Point(353, 102);
@@ -548,8 +548,8 @@ namespace Gw2Launcher.UI
             // 
             // arrowAssetExpand
             // 
-            this.arrowAssetExpand.ColorArrow = System.Drawing.Color.FromArgb(((int)(((byte)(150)))), ((int)(((byte)(150)))), ((int)(((byte)(150)))));
-            this.arrowAssetExpand.ColorHighlight = System.Drawing.Color.FromArgb(((int)(((byte)(20)))), ((int)(((byte)(20)))), ((int)(((byte)(20)))));
+            this.arrowAssetExpand.ForeColor = System.Drawing.Color.FromArgb(((int)(((byte)(150)))), ((int)(((byte)(150)))), ((int)(((byte)(150)))));
+            this.arrowAssetExpand.ForeColorHighlight = System.Drawing.Color.FromArgb(((int)(((byte)(20)))), ((int)(((byte)(20)))), ((int)(((byte)(20)))));
             this.arrowAssetExpand.Cursor = System.Windows.Forms.Cursors.Hand;
             this.arrowAssetExpand.Direction = Gw2Launcher.UI.Controls.ArrowButton.ArrowDirection.Right;
             this.arrowAssetExpand.Location = new System.Drawing.Point(353, 102);

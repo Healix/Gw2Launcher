@@ -12,6 +12,9 @@ namespace Gw2Launcher.UI.ColorPicker
 {
     public partial class formColorDialog : Base.BaseForm
     {
+        /// <summary>
+        /// Creates a color picker (alpha transparency allowed by default)
+        /// </summary>
         public formColorDialog()
         {
             InitializeComponents();
@@ -236,6 +239,9 @@ namespace Gw2Launcher.UI.ColorPicker
         }
 
         private Color _Color;
+        /// <summary>
+        /// Currently selected color (automatically sets the original color if it wasn't already set)
+        /// </summary>
         public Color Color
         {
             get
@@ -251,6 +257,9 @@ namespace Gw2Launcher.UI.ColorPicker
             }
         }
 
+        /// <summary>
+        /// Displayed as the original (previously set) color
+        /// </summary>
         public Color OriginalColor
         {
             get
@@ -263,6 +272,9 @@ namespace Gw2Launcher.UI.ColorPicker
             }
         }
 
+        /// <summary>
+        /// Displayed as the default color
+        /// </summary>
         public Color DefaultColor
         {
             get

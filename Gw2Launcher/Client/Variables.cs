@@ -23,22 +23,27 @@ namespace Gw2Launcher.Client
 
         public class DataSource
         {
-            public DataSource(Settings.IAccount account, Process process)
+            public DataSource(Settings.IAccount account)
             {
                 this.Account = account;
+            }
+
+            public DataSource(Settings.IAccount account, Process process)
+                : this(account)
+            {
                 this.Process = process;
             }
 
             public Settings.IAccount Account
             {
                 get;
-                private set;
+                set;
             }
 
             public Process Process
             {
                 get;
-                private set;
+                set;
             }
         }
 

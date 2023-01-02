@@ -132,7 +132,8 @@ namespace Gw2Launcher.Net.AssetProxy
                             //latest files contain build info and shouldn't be cached. However, if another client
                             //is already running, the game can't update anyways, so using a cached build will allow
                             //it to login without patching
-                            if (DateTime.UtcNow.Subtract(fi.LastWriteTimeUtc).TotalSeconds < 60 || Gw2Launcher.Client.Launcher.GetActiveStates().Count > 1)
+
+                            if (DateTime.UtcNow.Subtract(fi.LastWriteTimeUtc).TotalSeconds < 60 || Gw2Launcher.Client.Launcher.GetActiveGameProcessCount(Gw2Launcher.Client.Launcher.AccountType.GuildWars2) > 0)
                             {
                                 useExisting = true;
                             }

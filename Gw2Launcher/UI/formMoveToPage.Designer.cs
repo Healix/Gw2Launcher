@@ -28,10 +28,10 @@ namespace Gw2Launcher.UI
         /// </summary>
         private void InitializeComponent()
         {
-            this.textPage = new Gw2Launcher.UI.Controls.IntegerTextBox();
+            this.textPage = new Gw2Launcher.UI.Controls.FlatIntegerTextBox();
             this.stackPanel2 = new Gw2Launcher.UI.Controls.StackPanel();
-            this.buttonCancel = new System.Windows.Forms.Button();
-            this.buttonOk = new System.Windows.Forms.Button();
+            this.buttonCancel = new Gw2Launcher.UI.Controls.FlatButton();
+            this.buttonOk = new Gw2Launcher.UI.Controls.FlatButton();
             this.stackPanel1 = new Gw2Launcher.UI.Controls.StackPanel();
             this.stackPanel3 = new Gw2Launcher.UI.Controls.StackPanel();
             this.arrowFirst = new Gw2Launcher.UI.Controls.FlatShapeButton();
@@ -47,17 +47,16 @@ namespace Gw2Launcher.UI
             // textPage
             // 
             this.textPage.Anchor = System.Windows.Forms.AnchorStyles.None;
-            this.textPage.Increment = 1;
+            this.textPage.BackColorName = Gw2Launcher.UI.UiColors.Colors.TextBoxBackColor;
+            this.textPage.BorderColorFocusedName = Gw2Launcher.UI.UiColors.Colors.TextBoxBorderColorFocused;
+            this.textPage.BorderColorName = Gw2Launcher.UI.UiColors.Colors.TextBoxBorderColor;
             this.textPage.Location = new System.Drawing.Point(46, 0);
             this.textPage.Margin = new System.Windows.Forms.Padding(10, 0, 10, 0);
             this.textPage.Maximum = 99;
-            this.textPage.Minimum = 0;
             this.textPage.ReverseMouseWheelDirection = true;
-            this.textPage.Size = new System.Drawing.Size(62, 22);
+            this.textPage.Size = new System.Drawing.Size(62, 21);
             this.textPage.Text = "0";
             this.textPage.TextAlign = System.Windows.Forms.HorizontalAlignment.Center;
-            this.textPage.Value = 0;
-            this.textPage.KeyDown += new System.Windows.Forms.KeyEventHandler(this.textPage_KeyDown);
             // 
             // stackPanel2
             // 
@@ -66,27 +65,45 @@ namespace Gw2Launcher.UI
             this.stackPanel2.Controls.Add(this.buttonCancel);
             this.stackPanel2.Controls.Add(this.buttonOk);
             this.stackPanel2.FlowDirection = System.Windows.Forms.FlowDirection.LeftToRight;
-            this.stackPanel2.Location = new System.Drawing.Point(0, 60);
+            this.stackPanel2.Location = new System.Drawing.Point(0, 59);
             this.stackPanel2.Margin = new System.Windows.Forms.Padding(0, 5, 0, 0);
             this.stackPanel2.Size = new System.Drawing.Size(184, 41);
             // 
             // buttonCancel
             // 
+            this.buttonCancel.Alignment = System.Windows.Forms.HorizontalAlignment.Center;
             this.buttonCancel.Anchor = System.Windows.Forms.AnchorStyles.None;
+            this.buttonCancel.BackColorHoveredName = Gw2Launcher.UI.UiColors.Colors.SelectButtonBackColorHovered;
+            this.buttonCancel.BackColorName = Gw2Launcher.UI.UiColors.Colors.SelectButtonBackColor;
+            this.buttonCancel.BorderColorHoveredName = Gw2Launcher.UI.UiColors.Colors.SelectButtonBorderColorHovered;
+            this.buttonCancel.BorderColorName = Gw2Launcher.UI.UiColors.Colors.SelectButtonBorderColor;
+            this.buttonCancel.BorderStyle = ((System.Windows.Forms.AnchorStyles)((((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom) 
+            | System.Windows.Forms.AnchorStyles.Left) 
+            | System.Windows.Forms.AnchorStyles.Right)));
             this.buttonCancel.Font = new System.Drawing.Font("Segoe UI", 8.25F);
+            this.buttonCancel.ForeColorHoveredName = Gw2Launcher.UI.UiColors.Colors.SelectButtonForeColorHovered;
+            this.buttonCancel.ForeColorName = Gw2Launcher.UI.UiColors.Colors.SelectButtonForeColor;
             this.buttonCancel.Location = new System.Drawing.Point(3, 3);
             this.buttonCancel.Size = new System.Drawing.Size(86, 35);
             this.buttonCancel.Text = "Cancel";
-            this.buttonCancel.UseVisualStyleBackColor = true;
             this.buttonCancel.Click += new System.EventHandler(this.buttonCancel_Click);
             // 
             // buttonOk
             // 
+            this.buttonOk.Alignment = System.Windows.Forms.HorizontalAlignment.Center;
+            this.buttonOk.BackColorHoveredName = Gw2Launcher.UI.UiColors.Colors.SelectButtonBackColorHovered;
+            this.buttonOk.BackColorName = Gw2Launcher.UI.UiColors.Colors.SelectButtonBackColor;
+            this.buttonOk.BorderColorHoveredName = Gw2Launcher.UI.UiColors.Colors.SelectButtonBorderColorHovered;
+            this.buttonOk.BorderColorName = Gw2Launcher.UI.UiColors.Colors.SelectButtonBorderColor;
+            this.buttonOk.BorderStyle = ((System.Windows.Forms.AnchorStyles)((((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom) 
+            | System.Windows.Forms.AnchorStyles.Left) 
+            | System.Windows.Forms.AnchorStyles.Right)));
             this.buttonOk.Font = new System.Drawing.Font("Segoe UI", 8.25F);
+            this.buttonOk.ForeColorHoveredName = Gw2Launcher.UI.UiColors.Colors.SelectButtonForeColorHovered;
+            this.buttonOk.ForeColorName = Gw2Launcher.UI.UiColors.Colors.SelectButtonForeColor;
             this.buttonOk.Location = new System.Drawing.Point(95, 3);
             this.buttonOk.Size = new System.Drawing.Size(86, 35);
             this.buttonOk.Text = "OK";
-            this.buttonOk.UseVisualStyleBackColor = true;
             this.buttonOk.Click += new System.EventHandler(this.buttonOk_Click);
             // 
             // stackPanel1
@@ -97,7 +114,7 @@ namespace Gw2Launcher.UI
             this.stackPanel1.Controls.Add(this.stackPanel2);
             this.stackPanel1.Location = new System.Drawing.Point(15, 60);
             this.stackPanel1.Margin = new System.Windows.Forms.Padding(15, 60, 15, 15);
-            this.stackPanel1.Size = new System.Drawing.Size(184, 101);
+            this.stackPanel1.Size = new System.Drawing.Size(184, 100);
             // 
             // stackPanel3
             // 
@@ -111,25 +128,20 @@ namespace Gw2Launcher.UI
             this.stackPanel3.Controls.Add(this.arrowLast);
             this.stackPanel3.FlowDirection = System.Windows.Forms.FlowDirection.LeftToRight;
             this.stackPanel3.Location = new System.Drawing.Point(15, 3);
-            this.stackPanel3.Size = new System.Drawing.Size(154, 22);
+            this.stackPanel3.Size = new System.Drawing.Size(154, 21);
             // 
             // arrowFirst
             // 
             this.arrowFirst.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom) 
             | System.Windows.Forms.AnchorStyles.Left)));
-            this.arrowFirst.BackColorHovered = System.Drawing.Color.FromArgb(((int)(((byte)(248)))), ((int)(((byte)(248)))), ((int)(((byte)(248)))));
-            this.arrowFirst.BackColorSelected = System.Drawing.Color.FromArgb(((int)(((byte)(248)))), ((int)(((byte)(248)))), ((int)(((byte)(248)))));
-            this.arrowFirst.BorderColor = System.Drawing.Color.Empty;
             this.arrowFirst.Cursor = System.Windows.Forms.Cursors.Hand;
-            this.arrowFirst.ForeColor = System.Drawing.Color.FromArgb(((int)(((byte)(150)))), ((int)(((byte)(150)))), ((int)(((byte)(150)))));
-            this.arrowFirst.ForeColorHovered = System.Drawing.Color.FromArgb(((int)(((byte)(20)))), ((int)(((byte)(20)))), ((int)(((byte)(20)))));
-            this.arrowFirst.ForeColorSelected = System.Drawing.Color.FromArgb(((int)(((byte)(150)))), ((int)(((byte)(150)))), ((int)(((byte)(150)))));
+            this.arrowFirst.ForeColorHoveredName = Gw2Launcher.UI.UiColors.Colors.ArrowForeColorHovered;
+            this.arrowFirst.ForeColorName = Gw2Launcher.UI.UiColors.Colors.ArrowForeColor;
             this.arrowFirst.Location = new System.Drawing.Point(0, 0);
             this.arrowFirst.Margin = new System.Windows.Forms.Padding(0);
-            this.arrowFirst.Selected = false;
             this.arrowFirst.Shape = Gw2Launcher.UI.Controls.FlatShapeButton.IconShape.ArrowAndLine;
             this.arrowFirst.ShapeSize = new System.Drawing.Size(5, 11);
-            this.arrowFirst.Size = new System.Drawing.Size(24, 22);
+            this.arrowFirst.Size = new System.Drawing.Size(24, 21);
             this.arrowFirst.TabStop = false;
             this.arrowFirst.Click += new System.EventHandler(this.arrowFirst_Click);
             // 
@@ -137,18 +149,13 @@ namespace Gw2Launcher.UI
             // 
             this.arrowPrevious.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom) 
             | System.Windows.Forms.AnchorStyles.Left)));
-            this.arrowPrevious.BackColorHovered = System.Drawing.Color.FromArgb(((int)(((byte)(248)))), ((int)(((byte)(248)))), ((int)(((byte)(248)))));
-            this.arrowPrevious.BackColorSelected = System.Drawing.Color.FromArgb(((int)(((byte)(248)))), ((int)(((byte)(248)))), ((int)(((byte)(248)))));
-            this.arrowPrevious.BorderColor = System.Drawing.Color.Empty;
             this.arrowPrevious.Cursor = System.Windows.Forms.Cursors.Hand;
-            this.arrowPrevious.ForeColor = System.Drawing.Color.FromArgb(((int)(((byte)(150)))), ((int)(((byte)(150)))), ((int)(((byte)(150)))));
-            this.arrowPrevious.ForeColorHovered = System.Drawing.Color.FromArgb(((int)(((byte)(20)))), ((int)(((byte)(20)))), ((int)(((byte)(20)))));
-            this.arrowPrevious.ForeColorSelected = System.Drawing.Color.FromArgb(((int)(((byte)(150)))), ((int)(((byte)(150)))), ((int)(((byte)(150)))));
+            this.arrowPrevious.ForeColorHoveredName = Gw2Launcher.UI.UiColors.Colors.ArrowForeColorHovered;
+            this.arrowPrevious.ForeColorName = Gw2Launcher.UI.UiColors.Colors.ArrowForeColor;
             this.arrowPrevious.Location = new System.Drawing.Point(24, 0);
             this.arrowPrevious.Margin = new System.Windows.Forms.Padding(0);
-            this.arrowPrevious.Selected = false;
             this.arrowPrevious.ShapeSize = new System.Drawing.Size(5, 11);
-            this.arrowPrevious.Size = new System.Drawing.Size(12, 22);
+            this.arrowPrevious.Size = new System.Drawing.Size(12, 21);
             this.arrowPrevious.TabStop = false;
             this.arrowPrevious.Click += new System.EventHandler(this.arrowPrevious_Click);
             // 
@@ -156,19 +163,14 @@ namespace Gw2Launcher.UI
             // 
             this.arrowNext.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom) 
             | System.Windows.Forms.AnchorStyles.Left)));
-            this.arrowNext.BackColorHovered = System.Drawing.Color.FromArgb(((int)(((byte)(248)))), ((int)(((byte)(248)))), ((int)(((byte)(248)))));
-            this.arrowNext.BackColorSelected = System.Drawing.Color.FromArgb(((int)(((byte)(248)))), ((int)(((byte)(248)))), ((int)(((byte)(248)))));
-            this.arrowNext.BorderColor = System.Drawing.Color.Empty;
             this.arrowNext.Cursor = System.Windows.Forms.Cursors.Hand;
-            this.arrowNext.ForeColor = System.Drawing.Color.FromArgb(((int)(((byte)(150)))), ((int)(((byte)(150)))), ((int)(((byte)(150)))));
-            this.arrowNext.ForeColorHovered = System.Drawing.Color.FromArgb(((int)(((byte)(20)))), ((int)(((byte)(20)))), ((int)(((byte)(20)))));
-            this.arrowNext.ForeColorSelected = System.Drawing.Color.FromArgb(((int)(((byte)(150)))), ((int)(((byte)(150)))), ((int)(((byte)(150)))));
+            this.arrowNext.ForeColorHoveredName = Gw2Launcher.UI.UiColors.Colors.ArrowForeColorHovered;
+            this.arrowNext.ForeColorName = Gw2Launcher.UI.UiColors.Colors.ArrowForeColor;
             this.arrowNext.Location = new System.Drawing.Point(118, 0);
             this.arrowNext.Margin = new System.Windows.Forms.Padding(0);
-            this.arrowNext.Selected = false;
             this.arrowNext.ShapeDirection = System.Windows.Forms.ArrowDirection.Right;
             this.arrowNext.ShapeSize = new System.Drawing.Size(5, 11);
-            this.arrowNext.Size = new System.Drawing.Size(12, 22);
+            this.arrowNext.Size = new System.Drawing.Size(12, 21);
             this.arrowNext.TabStop = false;
             this.arrowNext.Click += new System.EventHandler(this.arrowNext_Click);
             // 
@@ -176,27 +178,22 @@ namespace Gw2Launcher.UI
             // 
             this.arrowLast.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom) 
             | System.Windows.Forms.AnchorStyles.Left)));
-            this.arrowLast.BackColorHovered = System.Drawing.Color.FromArgb(((int)(((byte)(248)))), ((int)(((byte)(248)))), ((int)(((byte)(248)))));
-            this.arrowLast.BackColorSelected = System.Drawing.Color.FromArgb(((int)(((byte)(248)))), ((int)(((byte)(248)))), ((int)(((byte)(248)))));
-            this.arrowLast.BorderColor = System.Drawing.Color.Empty;
             this.arrowLast.Cursor = System.Windows.Forms.Cursors.Hand;
-            this.arrowLast.ForeColor = System.Drawing.Color.FromArgb(((int)(((byte)(150)))), ((int)(((byte)(150)))), ((int)(((byte)(150)))));
-            this.arrowLast.ForeColorHovered = System.Drawing.Color.FromArgb(((int)(((byte)(20)))), ((int)(((byte)(20)))), ((int)(((byte)(20)))));
-            this.arrowLast.ForeColorSelected = System.Drawing.Color.FromArgb(((int)(((byte)(150)))), ((int)(((byte)(150)))), ((int)(((byte)(150)))));
+            this.arrowLast.ForeColorHoveredName = Gw2Launcher.UI.UiColors.Colors.ArrowForeColorHovered;
+            this.arrowLast.ForeColorName = Gw2Launcher.UI.UiColors.Colors.ArrowForeColor;
             this.arrowLast.Location = new System.Drawing.Point(130, 0);
             this.arrowLast.Margin = new System.Windows.Forms.Padding(0);
-            this.arrowLast.Selected = false;
             this.arrowLast.Shape = Gw2Launcher.UI.Controls.FlatShapeButton.IconShape.ArrowAndLine;
             this.arrowLast.ShapeDirection = System.Windows.Forms.ArrowDirection.Right;
             this.arrowLast.ShapeSize = new System.Drawing.Size(5, 11);
-            this.arrowLast.Size = new System.Drawing.Size(24, 22);
+            this.arrowLast.Size = new System.Drawing.Size(24, 21);
             this.arrowLast.TabStop = false;
             this.arrowLast.Click += new System.EventHandler(this.arrowLast_Click);
             // 
             // checkRemoveCurrent
             // 
             this.checkRemoveCurrent.AutoSize = true;
-            this.checkRemoveCurrent.Location = new System.Drawing.Point(5, 38);
+            this.checkRemoveCurrent.Location = new System.Drawing.Point(5, 37);
             this.checkRemoveCurrent.Margin = new System.Windows.Forms.Padding(5, 10, 0, 0);
             this.checkRemoveCurrent.Size = new System.Drawing.Size(162, 17);
             this.checkRemoveCurrent.Text = "Remove from current page";
@@ -207,14 +204,20 @@ namespace Gw2Launcher.UI
             this.AutoScaleDimensions = new System.Drawing.SizeF(96F, 96F);
             this.AutoSize = true;
             this.AutoSizeMode = System.Windows.Forms.AutoSizeMode.GrowAndShrink;
+            this.BackColorName = Gw2Launcher.UI.UiColors.Colors.MainBackColor;
+            this.BorderColorName = Gw2Launcher.UI.UiColors.Colors.MainBorder;
             this.ClientSize = new System.Drawing.Size(214, 176);
             this.Controls.Add(this.stackPanel1);
+            this.ForeColorName = Gw2Launcher.UI.UiColors.Colors.Text;
             this.Text = "Page selection";
+            this.TitleBackColorName = Gw2Launcher.UI.UiColors.Colors.BarBackColor;
+            this.TitleBorderColorName = Gw2Launcher.UI.UiColors.Colors.BarBorder;
+            this.TitleForeColor = System.Drawing.Color.FromArgb(((int)(((byte)(0)))), ((int)(((byte)(0)))), ((int)(((byte)(0)))));
+            this.TitleForeColorName = Gw2Launcher.UI.UiColors.Colors.BarTitle;
             this.stackPanel2.ResumeLayout(false);
             this.stackPanel1.ResumeLayout(false);
             this.stackPanel1.PerformLayout();
             this.stackPanel3.ResumeLayout(false);
-            this.stackPanel3.PerformLayout();
             this.ResumeLayout(false);
             this.PerformLayout();
 
@@ -222,10 +225,10 @@ namespace Gw2Launcher.UI
 
         #endregion
 
-        private Controls.IntegerTextBox textPage;
+        private Controls.FlatIntegerTextBox textPage;
         private Controls.StackPanel stackPanel2;
-        private System.Windows.Forms.Button buttonCancel;
-        private System.Windows.Forms.Button buttonOk;
+        private Controls.FlatButton buttonCancel;
+        private Controls.FlatButton buttonOk;
         private Controls.StackPanel stackPanel1;
         private Controls.StackPanel stackPanel3;
         private Controls.FlatShapeButton arrowFirst;

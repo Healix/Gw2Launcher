@@ -34,7 +34,10 @@ namespace Gw2Launcher.Tools.Dat
                 re.fileId = r.ReadInt32();
                 re.size = r.ReadInt32();
 
-                r.BaseStream.Position += 8;
+                if (re.baseId <= 0 || re.fileId <= 0 || re.size < 0)
+                    throw new InvalidDataException();
+
+                r.BaseStream.Position += 12;
             }
 
             return m;
@@ -61,6 +64,9 @@ namespace Gw2Launcher.Tools.Dat
                 re.baseId = r.ReadInt32();
                 re.fileId = r.ReadInt32();
                 re.size = r.ReadInt32();
+
+                if (re.baseId <= 0 || re.fileId <= 0 || re.size < 0)
+                    throw new InvalidDataException();
 
                 r.BaseStream.Position += 4;
             }

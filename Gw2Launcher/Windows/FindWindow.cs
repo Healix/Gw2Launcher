@@ -5,6 +5,7 @@ using System.Text;
 using System.Threading.Tasks;
 using System.Runtime.InteropServices;
 using Gw2Launcher.Windows.Native;
+using System.Diagnostics;
 
 namespace Gw2Launcher.Windows
 {
@@ -464,6 +465,36 @@ namespace Gw2Launcher.Windows
                 return true;
             }
 
+            return false;
+        }
+
+        public static bool IsMinimized(IntPtr handle)
+        {
+            return NativeMethods.IsIconic(handle);
+        }
+
+        /// <summary>
+        /// Returns if the window handle has higher privileges than the current process
+        /// </summary>
+        public static bool IsPrivilegedWindow(IntPtr handle)
+        {
+            uint pid;
+            NativeMethods.GetWindowThreadProcessId(handle, out pid);
+            if (pid > 0)
+            {
+                try
+                {
+                    using (var p = Process.GetProcessById((int)pid))
+                    {
+                        handle = p.Handle;
+                        return false;
+                    }
+                }
+                catch
+                {
+                    return true;
+                }
+            }
             return false;
         }
     }

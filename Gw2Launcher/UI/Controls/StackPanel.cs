@@ -7,6 +7,8 @@ using System.Windows.Forms;
 using System.Drawing;
 using System.Windows.Forms.Layout;
 using System.ComponentModel;
+using System.Drawing.Design;
+using System.Windows.Forms.Design;
 
 namespace Gw2Launcher.UI.Controls
 {
@@ -21,8 +23,250 @@ namespace Gw2Launcher.UI.Controls
     /// Fill - fills the remaining horizontal space, but only up to the width of the control (horizontal only)
     /// Left/Right - floats (vertical only)
     /// </summary>
-    class StackPanel : FlowLayoutPanel
+    [TypeDescriptionProvider(typeof(UiTypeDescriptionProvider))]
+    class StackPanel : FlowLayoutPanel, UiColors.IColors
     {
+        class AutoSizeStretchTypeEditor : UITypeEditor
+        {
+            private class ListValue
+            {
+                private string s;
+
+                public ListValue(AutoSizeStretchMode v, string s = null)
+                {
+                    this.Value = v;
+                    this.s = s;
+                }
+
+                public AutoSizeStretchMode Value
+                {
+                    get;
+                    set;
+                }
+
+                public override string ToString()
+                {
+                    if (s != null)
+                        return s;
+                    return Value.ToString();
+                }
+            }
+
+            public override UITypeEditorEditStyle GetEditStyle(ITypeDescriptorContext context)
+            {
+                return UITypeEditorEditStyle.DropDown;
+            }
+
+            public override bool IsDropDownResizable
+            {
+                get
+                {
+                    return true;
+                }
+            }
+
+            public override object EditValue(ITypeDescriptorContext context, IServiceProvider provider, object value)
+            {
+                var s = (IWindowsFormsEditorService)provider.GetService(typeof(IWindowsFormsEditorService));
+
+                AutoSizeStretchMode mode;
+                if (value is AutoSizeStretchMode)
+                    mode = (AutoSizeStretchMode)value;
+                else
+                    mode = (AutoSizeStretchMode)0;
+
+                if (s != null)
+                {
+                    var list = new CheckedListBox()
+                    {
+                        Width = 200,
+                        Height = 150,
+                        CheckOnClick = true,
+                    };
+
+                    Func<AutoSizeStretchMode, AutoSizeStretchMode, CheckState> getState = delegate(AutoSizeStretchMode v, AutoSizeStretchMode flag)
+                    {
+                        switch (flag)
+                        {
+                            case AutoSizeStretchMode.NoPreferredSize:
+
+                                if (v == flag)
+                                    return CheckState.Checked;
+                                else
+                                    return CheckState.Indeterminate;
+
+                            case AutoSizeStretchMode.MinimumPreferredWidth:
+                            case AutoSizeStretchMode.MinimumPreferredHeight:
+
+                                if ((v & AutoSizeStretchMode.MinimumPreferredSize) == AutoSizeStretchMode.MinimumPreferredSize)
+                                    return CheckState.Indeterminate;
+
+                                break;
+                            case AutoSizeStretchMode.MaximumPreferredWidth:
+                            case AutoSizeStretchMode.MaximumPreferredHeight:
+
+                                if ((v & AutoSizeStretchMode.MaximumPreferredSize) == AutoSizeStretchMode.MaximumPreferredSize)
+                                    return CheckState.Indeterminate;
+
+                                break;
+                            case AutoSizeStretchMode.MinimumPreferredSize:
+                            case AutoSizeStretchMode.MaximumPreferredSize:
+
+                                var vf = v & flag;
+                                if (vf == flag)
+                                    return CheckState.Checked;
+                                else if (vf != 0)
+                                    return CheckState.Indeterminate;
+
+                                break;
+                        }
+
+                        return (v & flag) == flag ? CheckState.Checked : CheckState.Unchecked;
+                    };
+
+                    foreach (var i in new ListValue[] 
+                        {
+                            new ListValue(AutoSizeStretchMode.NoPreferredSize),
+                        
+                            new ListValue(AutoSizeStretchMode.MinimumPreferredSize),
+                            new ListValue(AutoSizeStretchMode.MinimumPreferredWidth, "   Width"),
+                            new ListValue(AutoSizeStretchMode.MinimumPreferredHeight, "   Height"),
+                        
+                            new ListValue(AutoSizeStretchMode.MaximumPreferredSize),
+                            new ListValue(AutoSizeStretchMode.MaximumPreferredWidth, "   Width"),
+                            new ListValue(AutoSizeStretchMode.MaximumPreferredHeight, "   Height"),
+                        })
+                    {
+                        list.Items.Add(i, getState(mode, i.Value));
+                    }
+
+                    var blocked = false;
+
+                    list.ItemCheck += delegate(object o, ItemCheckEventArgs e)
+                    {
+                        if (blocked)
+                            return;
+                        blocked = true;
+
+                        if (e.Index == 0)
+                        {
+                            if (e.NewValue == CheckState.Checked || e.CurrentValue == CheckState.Indeterminate)
+                            {
+                                e.NewValue = CheckState.Checked;
+
+                                for (var i = 1; i < list.Items.Count; i++)
+                                {
+                                    list.SetItemChecked(i, false);
+                                }
+                            }
+                        }
+                        else
+                        {
+                            mode = (AutoSizeStretchMode)0;
+
+                            for (var i = 1; i < list.Items.Count; i++)
+                            {
+                                if (i != e.Index && list.GetItemCheckState(i) == CheckState.Checked || i == e.Index && e.NewValue == CheckState.Checked)
+                                    mode |= ((ListValue)list.Items[i]).Value;
+                            }
+
+                            if (e.CurrentValue == CheckState.Indeterminate)
+                            {
+                                mode &= ~((ListValue)list.Items[e.Index]).Value;
+                            }
+
+                            for (var i = 0; i < list.Items.Count; i++)
+                            {
+                                var state = getState(mode, ((ListValue)list.Items[i]).Value);
+
+                                if (i == e.Index)
+                                    e.NewValue = state;
+                                else
+                                    list.SetItemCheckState(i, state);
+                            }
+                        }
+
+                        blocked = false;
+                    };
+
+                    list.Leave += delegate
+                    {
+                        mode = (AutoSizeStretchMode)0;
+
+                        for (var i = 1; i < list.Items.Count; i++)
+                        {
+                            if (list.GetItemCheckState(i) == CheckState.Checked)
+                                mode |= ((ListValue)list.Items[i]).Value;
+                        }
+
+                        value = mode;
+                    };
+
+                    s.DropDownControl(list);
+                }
+
+                return value;
+            }
+        }
+
+        class AutoSizeStretchTypeConverter : TypeConverter
+        {
+            public override bool CanConvertTo(ITypeDescriptorContext context, Type destinationType)
+            {
+                return destinationType == typeof(string) || base.CanConvertTo(context, destinationType);
+            }
+            public override object ConvertTo(ITypeDescriptorContext context, System.Globalization.CultureInfo culture, object value, Type destinationType)
+            {
+                if (destinationType == typeof(string))
+                {
+                    StackPanel.AutoSizeStretchMode mode;
+                    if (value is StackPanel.AutoSizeStretchMode)
+                        mode = (StackPanel.AutoSizeStretchMode)value;
+                    else
+                        return value.ToString();
+
+                    if (mode == 0)
+                    {
+                        return value.ToString();
+                    }
+
+                    StringBuilder sb = null;
+
+                    foreach (var v in new StackPanel.AutoSizeStretchMode[]
+                    {
+                        StackPanel.AutoSizeStretchMode.MinimumPreferredSize,
+                        StackPanel.AutoSizeStretchMode.MaximumPreferredSize,
+                    })
+                    {
+                        if ((mode & v) == v)
+                        {
+                            if (sb == null)
+                                sb = new StringBuilder(50);
+                            sb.Append(v.ToString());
+                            sb.Append(", ");
+                            mode &= ~v;
+                        }
+                    }
+
+                    if (sb == null)
+                    {
+                        return mode.ToString();
+                    }
+                    else
+                    {
+                        if (mode != 0)
+                            sb.Append(mode.ToString());
+                        else if (sb.Length > 0)
+                            sb.Length -= 2;
+
+                        return sb.ToString();
+                    }
+                }
+
+                return base.ConvertTo(context, culture, value, destinationType);
+            }
+        }
+
         private class StackPanelLayout : LayoutEngine
         {
             public class Cache
@@ -30,6 +274,7 @@ namespace Gw2Launcher.UI.Controls
                 public Rectangle[] bounds;
                 public Size size;
                 public Size proposed;
+                public Size minimum;
 
                 public void Invalidate()
                 {
@@ -38,23 +283,25 @@ namespace Gw2Launcher.UI.Controls
                 }
             }
 
-            public override bool Layout(object container, LayoutEventArgs args)
+            public bool Layout(StackPanel panel, LayoutEventArgs args, bool force)
             {
-                var panel = (StackPanel)container;
                 var size = panel.ClientSize;
 
-                if (args == null || args.AffectedControl != container)
+                if (args == null || args.AffectedControl != panel)
                 {
                     panel.cache.Invalidate();
 
-                    if (panel.AutoSize && panel.AutoSizeFill == AutoSizeFillMode.Width)
+                    if (panel.AutoSize)
                     {
-                        var parent = panel.Parent;
-                        if (parent != null)
+                        if (panel.AutoSizeFill == AutoSizeFillMode.Width)
                         {
-                            var w = parent.ClientSize.Width - parent.Padding.Horizontal;
-                            if (w < size.Width)
-                                size = new Size(w, size.Height);
+                            var parent = panel.Parent;
+                            if (parent != null)
+                            {
+                                var w = parent.ClientSize.Width - parent.Padding.Horizontal;
+                                if (w < size.Width)
+                                    size = new Size(w, size.Height);
+                            }
                         }
                     }
                 }
@@ -99,19 +346,34 @@ namespace Gw2Launcher.UI.Controls
                     }
                 }
 
-                var s = DoLayout(panel, size, true, panel.cache.proposed.IsEmpty, panel.AutoSize, false);
+                var m = panel.cache.minimum;
+                var s = DoLayout(panel, size, true, panel.cache.proposed.IsEmpty, panel.AutoSize, force);
 
                 if (panel.AutoSize)
                 {
-                    if (panel.ClientSize != s)
+                    if (panel.ClientSize != s || m != panel.cache.minimum)
                     {
-                        //panel.ClientSize = s;
+                        if (force)
+                            panel.ClientSize = s;
 
                         return true;
                     }
                 }
 
                 return false;
+            }
+
+            public override bool Layout(object container, LayoutEventArgs args)
+            {
+                return Layout((StackPanel)container, args, false);
+            }
+
+            private Size GetPreferredSize(Control c, Size proposed, bool force)
+            {
+                if (force && c is StackPanel)
+                    return ((StackPanel)c).GetPreferredSize(proposed, true);
+                else
+                    return c.GetPreferredSize(proposed);
             }
 
             private bool IsAutoSized(Control c)
@@ -141,7 +403,7 @@ namespace Gw2Launcher.UI.Controls
                     if (!panel.Visible || parent == null)
                         return panel.Size;
 
-                    if (panel.cache.proposed == proposed)
+                    if (panel.cache.proposed == proposed && !proposed.IsEmpty)
                     {
                         if (panel.cache.size == proposed)
                         {
@@ -192,18 +454,20 @@ namespace Gw2Launcher.UI.Controls
                     y;
                 int w = proposed.Width,
                     h = proposed.Height;
-                int minimumWidth = panel.MinimumSize.Width,
+                int minimumWidth = panel.MinimumSize.Width, //calculated minimum size when auto sizing
                     minimumHeight = panel.MinimumSize.Height;
                 int maximumWidth = panel.MaximumSize.Width,
                     maximumHeight = panel.MaximumSize.Height;
                 var direction = panel.FlowDirection;
+                var vertical = direction == FlowDirection.TopDown || direction == FlowDirection.BottomUp;
+                var stretch = panel.AutoSizeStretch;
 
                 if (maximumWidth == 0)
                     maximumWidth = int.MaxValue;
                 if (maximumHeight == 0)
                     maximumHeight = int.MaxValue;
 
-                if (w == 0)
+                if (w <= 0)
                 {
                     w = maximumWidth;
                 }
@@ -217,7 +481,7 @@ namespace Gw2Launcher.UI.Controls
                     w = maximumWidth;
                 }
 
-                if (h == 0)
+                if (h <= 0)
                 {
                     h = maximumHeight;
                 }
@@ -231,20 +495,20 @@ namespace Gw2Launcher.UI.Controls
                     h = maximumHeight;
                 }
 
-                if (panel.AutoSizeFill == AutoSizeFillMode.NoWrap)
-                {
-                    if (panel.MaximumSize.Width > 0)
-                        w = panel.MaximumSize.Width - panel.Padding.Right;
-                    else
-                        w = int.MaxValue;
-                }
-
                 if (autosize)
                 {
-                    if (panel.AutoSizeFill != AutoSizeFillMode.Width && !panel.Anchor.HasFlag(AnchorStyles.Left | AnchorStyles.Right))
+                    if (panel.AutoSizeFill != AutoSizeFillMode.Width && (panel.Anchor & (AnchorStyles.Left | AnchorStyles.Right)) != (AnchorStyles.Left | AnchorStyles.Right))
                         minimumWidth = panel.MinimumSize.Width;
-                    if (!panel.Anchor.HasFlag(AnchorStyles.Top | AnchorStyles.Bottom))
+                    if ((panel.Anchor & (AnchorStyles.Top | AnchorStyles.Bottom)) != (AnchorStyles.Top | AnchorStyles.Bottom))
                         minimumHeight = panel.MinimumSize.Height;
+
+                    if (panel.AutoSizeFill == AutoSizeFillMode.NoWrap)
+                    {
+                        if (panel.MaximumSize.Width > 0)
+                            w = panel.MaximumSize.Width - panel.Padding.Right;
+                        else
+                            w = int.MaxValue;
+                    }
 
                     if (panel.AutoSizeMode != AutoSizeMode.GrowAndShrink)
                     {
@@ -275,6 +539,13 @@ namespace Gw2Launcher.UI.Controls
                     minimumHeight = h;
                 }
 
+                int firstW, firstH;
+                int minimumY, minimumX;
+                int visible;
+
+                firstW = count;
+                firstH = count;
+
                 do
                 {
                     x = panel.Padding.Left;
@@ -282,13 +553,38 @@ namespace Gw2Launcher.UI.Controls
 
                     int i;
 
+                    minimumY = 0;
+                    minimumX = 0;
+                    visible = 0;
+
                     for (i = 0; i < count; ++i)
                     {
                         var c = panel.Controls[i];
+
                         if (!force && !c.Visible)
                         {
                             bounds[i] = Rectangle.Empty;
                             continue;
+                        }
+
+                        ++visible;
+
+                        var cStretchW = (c.Anchor & (AnchorStyles.Left | AnchorStyles.Right)) == (AnchorStyles.Left | AnchorStyles.Right);
+                        var cStretchH = (c.Anchor & (AnchorStyles.Top | AnchorStyles.Bottom)) == (AnchorStyles.Top | AnchorStyles.Bottom);
+
+                        if (c.Anchor == AnchorStyles.None)
+                        {
+                            if (i < firstW)
+                                firstW = i;
+                            if (i < firstH)
+                                firstH = i;
+                        }
+                        else
+                        {
+                            if (i < firstW && ((c.Anchor & AnchorStyles.Right) != 0 || (c.Anchor & AnchorStyles.Left) == 0))
+                                firstW = i;
+                            if (i < firstH && ((c.Anchor & AnchorStyles.Bottom) != 0 || (c.Anchor & AnchorStyles.Top) == 0))
+                                firstH = i;
                         }
 
                         Point l;
@@ -303,54 +599,67 @@ namespace Gw2Launcher.UI.Controls
                         {
                             l = new Point(x + c.Margin.Left, y + c.Margin.Top);
 
-                            if (c.Anchor.HasFlag(AnchorStyles.Left | AnchorStyles.Right) || c.Dock == DockStyle.Fill)
+                            if (IsAutoSized(c))
                             {
-                                s = c.MinimumSize;
+                                //horizontal layouts must always calculate stretched widths last
 
-                                if (!IsAutoSized(c))
+                                if (cStretchW && (!vertical || cStretchH && stretch == AutoSizeStretchMode.NoPreferredSize) || c.Dock == DockStyle.Fill)
                                 {
-                                    if (!c.Anchor.HasFlag(AnchorStyles.Left | AnchorStyles.Right) && c.Dock != DockStyle.Fill)
+                                    s = c.MinimumSize;
+                                }
+                                else
+                                {
+                                    var remainingWidth = w - l.X - c.Margin.Right;
+
+                                    //factor fixed sizes of other controls for horizontal layout
+                                    if (!vertical && w < ushort.MaxValue)
                                     {
-                                        s.Width = c.Width;
+                                        for (var j = i + 1; j < count; j++)
+                                        {
+                                            var _c = panel.Controls[j];
+
+                                            if (!force && !_c.Visible)
+                                                continue;
+
+                                            var _cStretchW = (_c.Anchor & (AnchorStyles.Left | AnchorStyles.Right)) == (AnchorStyles.Left | AnchorStyles.Right);
+
+                                            if (_cStretchW || IsAutoSized(_c))
+                                            {
+                                                remainingWidth -= _c.MinimumSize.Width + _c.Margin.Horizontal;
+                                            }
+                                            else
+                                            {
+                                                remainingWidth -= _c.Width + _c.Margin.Horizontal;
+                                            }
+                                        }
+
+                                        if (remainingWidth < 0)
+                                            remainingWidth = 0;
                                     }
-                                    if (!c.Anchor.HasFlag(AnchorStyles.Top | AnchorStyles.Bottom))
+
+                                    s = GetPreferredSize(c, new Size(remainingWidth, int.MaxValue), force);
+
+                                    if (cStretchW && (stretch & AutoSizeStretchMode.PreferredWidth) == AutoSizeStretchMode.NoPreferredSize)
                                     {
-                                        s.Height = c.Height;
+                                        s.Width = c.MinimumSize.Width;
+                                    }
+
+                                    if (cStretchH && (stretch & AutoSizeStretchMode.PreferredHeight) == AutoSizeStretchMode.NoPreferredSize)
+                                    {
+                                        s.Height = c.MinimumSize.Height;
                                     }
                                 }
                             }
-                            else if (IsAutoSized(c))
+                            else if (cStretchW)
                             {
-                                var _w = w - l.X - c.Margin.Right;
-
-                                if (direction == FlowDirection.LeftToRight && maximumWidth < ushort.MaxValue)
-                                {
-                                    for (var j = i + 1; j < count; j++)
-                                    {
-                                        var _c = panel.Controls[j];
-
-                                        if (!force && !_c.Visible)
-                                            continue;
-
-                                        if (IsAutoSized(_c))
-                                        {
-                                            _w -= _c.MinimumSize.Width + _c.Margin.Horizontal;
-                                        }
-                                        else
-                                        {
-                                            _w -= _c.Width + _c.Margin.Horizontal;
-                                        }
-                                    }
-
-                                    if (_w < 0)
-                                        _w = 0;
-                                }
-
-                                s = new Size(_w, int.MaxValue);
-                                if (force && c is StackPanel)
-                                    s = ((StackPanel)c).GetPreferredSize(s, true);
+                                if (cStretchH)
+                                    s = c.MinimumSize;
                                 else
-                                    s = c.GetPreferredSize(s);
+                                    s = new Size(c.MinimumSize.Width, c.Height);
+                            }
+                            else if (cStretchH)
+                            {
+                                s = new Size(c.Width, c.MinimumSize.Height);
                             }
                             else
                             {
@@ -360,22 +669,23 @@ namespace Gw2Launcher.UI.Controls
                             bounds[i] = new Rectangle(l, s);
                         }
 
-                        if (direction == FlowDirection.TopDown)
+                        if (vertical)
                         {
                             if (autosize)
                             {
                                 var r = l.X + s.Width + c.Margin.Right;
 
-                                if (r > maximumWidth)
-                                    r = maximumWidth;
+                                if (r > minimumX)
+                                    minimumX = r;
 
                                 if (r > minimumWidth)
                                 {
                                     minimumWidth = r;
-                                    if (minimumWidth > w)
+                                    if (r > w)
                                     {
-                                        w = minimumWidth;
-                                        break;
+                                        w = r;
+                                        if (visible > 1)
+                                            break;
                                     }
                                 }
                             }
@@ -387,14 +697,12 @@ namespace Gw2Launcher.UI.Controls
                         }
                         else
                         {
-                            if (c.Anchor.HasFlag(AnchorStyles.Top | AnchorStyles.Bottom))
-                            {
-                                s.Height = c.MinimumSize.Height;
-                            }
-
                             if (autosize)
                             {
                                 var b = l.Y + s.Height + c.Margin.Bottom;
+
+                                if (b > minimumY)
+                                    minimumY = b;
 
                                 if (b > maximumHeight)
                                     b = maximumHeight;
@@ -402,11 +710,8 @@ namespace Gw2Launcher.UI.Controls
                                 if (b > minimumHeight)
                                 {
                                     minimumHeight = b;
-                                    if (minimumHeight > h)
-                                    {
-                                        h = minimumHeight;
-                                        //break;
-                                    }
+                                    if (b > h)
+                                        h = b;
                                 }
                             }
 
@@ -420,136 +725,188 @@ namespace Gw2Launcher.UI.Controls
                     if (i < count)
                         continue;
 
+                    if (vertical)
+                        minimumY = y;
+                    else
+                        minimumX = x;
+
                     if (autosize)
                     {
-                        switch (direction)
+                        if (vertical)
                         {
-                            case FlowDirection.BottomUp:
-                            case FlowDirection.TopDown:
-
-                                if (y > minimumHeight)
-                                {
-                                    if (y > maximumHeight)
-                                        minimumHeight = maximumHeight;
-                                    else
-                                        minimumHeight = y;
-                                }
-
-                                break;
-                            case FlowDirection.LeftToRight:
-                            case FlowDirection.RightToLeft:
-
-                                if (x > minimumWidth)
-                                {
-                                    if (x > maximumWidth)
-                                        minimumWidth = maximumWidth;
-                                    else
-                                        minimumWidth = x;
-                                }
-
-                                break;
-                        }
-                    }
-
-                    if (minimumWidth == 0 && autosize)
-                    {
-                        for (i = 0; i < count; ++i)
-                        {
-                            var c = panel.Controls[i];
-                            if (!force && !c.Visible)
-                                continue;
-
-                            int r;
-
-                            if (bounds[i].Width == 0)
+                            if (y > minimumHeight)
                             {
-                                if (IsAutoSized(c))
+                                if (y > maximumHeight)
+                                    minimumHeight = maximumHeight;
+                                else
+                                    minimumHeight = y;
+                            }
+                        }
+                        else
+                        {
+                            if (x > minimumWidth)
+                            {
+                                if (x > maximumWidth)
+                                    minimumWidth = maximumWidth;
+                                else
+                                    minimumWidth = x;
+                            }
+                        }
+
+                        if (minimumWidth == 0) //even possible? (no controls / only stretch?) -- happens when no controls / only invisible
+                        {
+                            for (i = 0; i < count; ++i)
+                            {
+                                var c = panel.Controls[i];
+
+                                if (!force && !c.Visible)
+                                    continue;
+
+                                int r;
+
+                                if (bounds[i].Width == 0)
                                 {
-                                    var s = new Size(w - bounds[i].X - c.Margin.Right, int.MaxValue);
-                                    if (force && c is StackPanel)
-                                        s = ((StackPanel)c).GetPreferredSize(s, true);
+                                    if (IsAutoSized(c))
+                                    {
+                                        var s = GetPreferredSize(c, new Size(w - bounds[i].X - c.Margin.Right, int.MaxValue), force);
+                                        r = bounds[i].X + s.Width + c.Margin.Right;
+                                    }
                                     else
-                                        s = c.GetPreferredSize(s);
-                                    r = bounds[i].X + s.Width + c.Margin.Right;
+                                    {
+                                        r = c.Right + c.Margin.Right;
+                                    }
                                 }
                                 else
                                 {
-                                    r = c.Right + c.Margin.Right;
+                                    r = bounds[i].Right + c.Margin.Right;
                                 }
-                            }
-                            else
-                            {
-                                r = bounds[i].Right + c.Margin.Right;
-                            }
 
-                            if (r > maximumWidth)
-                            {
-                                minimumWidth = maximumWidth;
-                                break;
-                            }
+                                if (r > maximumWidth)
+                                {
+                                    minimumWidth = maximumWidth;
+                                    break;
+                                }
 
-                            if (r > minimumWidth)
-                                minimumWidth = r;
+                                if (r > minimumWidth)
+                                    minimumWidth = r;
+                            }
                         }
                     }
+
+                    if (visible == 0)
+                        break;
 
                     for (i = 0; i < count; ++i)
                     {
                         var c = panel.Controls[i];
+
                         if (!force && !c.Visible)
                             continue;
 
+                        var cStretchW = (c.Anchor & (AnchorStyles.Left | AnchorStyles.Right)) == (AnchorStyles.Left | AnchorStyles.Right);
+                        var cStretchH = (c.Anchor & (AnchorStyles.Top | AnchorStyles.Bottom)) == (AnchorStyles.Top | AnchorStyles.Bottom);
+
                         if (c.Dock == DockStyle.None)
                         {
-                            if (direction == FlowDirection.TopDown)
+                            if (cStretchW || cStretchH)
                             {
-                                switch (c.Anchor & (AnchorStyles.Left | AnchorStyles.Right))
+                                var cAutosized = IsAutoSized(c);
+                                var ri = i;
+                                var s = bounds[i].Size;
+
+                                if (cStretchW)
                                 {
-                                    //right aligned
-                                    case AnchorStyles.Right:
+                                    int remainingWidth;
 
-                                        bounds[i].X = minimumWidth - bounds[i].Width - c.Margin.Right;
+                                    if (vertical)
+                                    {
+                                        remainingWidth = minimumWidth - bounds[i].X - c.Margin.Right;
+                                    }
+                                    else
+                                    {
+                                        remainingWidth = bounds[i].Width + minimumWidth - x;
+                                    }
 
-                                        break;
-                                    //stretch horizontally
-                                    case AnchorStyles.Left | AnchorStyles.Right:
-
-                                        if (IsAutoSized(c))
+                                    if (cAutosized)
+                                    {
+                                        if (vertical)
                                         {
-                                            var r = bounds[i].X + c.Margin.Right;
-                                            var _w = minimumWidth - r;
-                                            var s = new Size(_w, int.MaxValue);
-
-                                            if (force && c is StackPanel)
-                                                s = ((StackPanel)c).GetPreferredSize(s, true);
-                                            else
-                                                s = c.GetPreferredSize(s);
-
-                                            if (s.Width < _w)
-                                                s.Width = _w;
-
-                                            r += s.Width;
-
-                                            var _hdiff = s.Height - bounds[i].Height;
-
-                                            for (var j = i + 1; j < count; ++j)
+                                            //vertical was already handled
+                                        }
+                                        else
+                                        {
+                                            if (stretch != AutoSizeStretchMode.NoPreferredSize || !cStretchH)
                                             {
-                                                bounds[j].Y += _hdiff;
-                                            }
+                                                s = c.GetPreferredSize(new Size(remainingWidth, int.MaxValue));
 
-                                            y += _hdiff;
-                                            if (autosize)
-                                            {
-                                                if (y > maximumHeight)
-                                                    minimumHeight = maximumHeight;
+                                                if (cStretchW & (stretch & AutoSizeStretchMode.PreferredWidth) == AutoSizeStretchMode.NoPreferredSize)
+                                                {
+                                                    s.Width = c.MinimumSize.Width;
+                                                }
                                                 else
-                                                    minimumHeight = y;
-                                            }
+                                                {
+                                                    minimumX += s.Width - bounds[i].Width;
+                                                }
 
-                                            bounds[i].Size = s;
+                                                if (cStretchH && (stretch & AutoSizeStretchMode.PreferredHeight) == AutoSizeStretchMode.NoPreferredSize)
+                                                {
+                                                    s.Height = c.MinimumSize.Height;
+                                                }
+                                                else if (autosize)
+                                                {
+                                                    //horizontal layout - bottom is absolute
+                                                    var b = bounds[i].Y + c.Margin.Bottom + s.Height;
+
+                                                    if (b > maximumHeight)
+                                                        b = maximumHeight;
+
+                                                    if (b > minimumY)
+                                                        minimumY = b;
+
+                                                    if (b > minimumHeight)
+                                                    {
+                                                        minimumHeight = b;
+                                                        if (b > h)
+                                                            h = b;
+                                                        if (ri > firstH)
+                                                        {
+                                                            //recalculate anchors
+                                                            ri = firstH;
+                                                        }
+                                                    }
+                                                }
+                                            }
+                                        }
+
+                                        if (remainingWidth >= s.Width)
+                                        {
+                                            if ((stretch & AutoSizeStretchMode.MaximumPreferredWidth) == 0)
+                                            {
+                                                s.Width = remainingWidth;
+                                            }
+                                        }
+                                        else if ((stretch & AutoSizeStretchMode.PreferredWidth) == AutoSizeStretchMode.NoPreferredSize)
+                                        {
+                                            s.Width = remainingWidth;
+                                        }
+                                        else
+                                        {
+                                            //keeping larger autosized width; will need recalculate total width
 
                                             if (autosize)
                                             {
+                                                var r = s.Width + minimumWidth - remainingWidth;
+
+                                                ////alternative if using remainingWidth isn't viable
+                                                //if (vertical)
+                                                //{
+                                                //    r = bounds[i].X + c.Margin.Right + s.Width;
+                                                //}
+                                                //else
+                                                //{
+                                                //    r = x + s.Width - bounds[i].Width;
+                                                //}
+
                                                 if (r > maximumWidth)
                                                     r = maximumWidth;
 
@@ -557,155 +914,175 @@ namespace Gw2Launcher.UI.Controls
                                                 {
                                                     minimumWidth = r;
 
-                                                    if (minimumWidth > w)
+                                                    if (r > w)
                                                     {
-                                                        w = minimumWidth;
-                                                        i = int.MaxValue - 1;
+                                                        //width changed, everything needs to be recalculated (vertical layout)
+                                                        w = r;
+                                                        if (vertical && visible != 1)
+                                                            break;
                                                     }
-                                                    else if (i > 0)
+                                                    else if (vertical && ri > firstW)
                                                     {
-                                                        i = -1;
+                                                        //recalculate anchors (vertical layout)
+                                                        ri = firstW;
                                                     }
-
-                                                    continue;
                                                 }
                                             }
                                         }
-                                        else
-                                        {
-                                            bounds[i].Size = new Size(minimumWidth - bounds[i].X - c.Margin.Right, bounds[i].Height);
-                                        }
-
-                                        break;
-                                    //centered horizontally
-                                    case AnchorStyles.None:
-
-                                        bounds[i].X = panel.Padding.Left + ((minimumWidth - panel.Padding.Left) - bounds[i].Width) / 2 + c.Margin.Left - c.Margin.Right;
-
-                                        break;
+                                    }
+                                    else
+                                        s.Width = remainingWidth;
                                 }
 
-                                switch (c.Anchor & (AnchorStyles.Top | AnchorStyles.Bottom))
+                                if (cStretchH)
                                 {
-                                    case AnchorStyles.Top | AnchorStyles.Bottom:
-                                        
-                                        var _h = minimumHeight - bounds[i].Y - c.Margin.Bottom;
+                                    int remainingHeight;
 
+                                    if (vertical)
+                                    {
+                                        remainingHeight = bounds[i].Height + minimumHeight - y;
+                                    }
+                                    else
+                                    {
+                                        remainingHeight = minimumHeight - bounds[i].Y - c.Margin.Bottom;
+                                    }
+
+                                    if (cAutosized)
+                                    {
+                                        if (remainingHeight >= s.Height || (stretch & AutoSizeStretchMode.PreferredHeight) == AutoSizeStretchMode.NoPreferredSize)
+                                        {
+                                            if ((stretch & AutoSizeStretchMode.MaximumPreferredHeight) == 0)
+                                                s.Height = remainingHeight;
+                                        }
+                                        else
+                                        {
+                                            //keeping larger autosized height (already handled - only possible when stretching width in horizontal, as vertical was already calculated)
+                                        }
+                                    }
+                                    else
+                                        s.Height = remainingHeight;
+                                }
+
+                                //shift remaining controls
+                                if (vertical)
+                                {
+                                    var yDiff = s.Height - bounds[i].Height;
+
+                                    if (yDiff != 0)
+                                    {
                                         for (var j = i + 1; j < count; ++j)
                                         {
-                                            var _c = panel.Controls[j];
-                                            if (!force && !_c.Visible)
-                                                continue;
-                                            _h -= _c.Margin.Vertical + bounds[j].Height;
+                                            bounds[j].Y += yDiff;
                                         }
 
-                                        var _hdiff = _h - bounds[i].Height;
-                                        if (_hdiff > 0)
+                                        y += yDiff;
+                                    }
+                                }
+                                else
+                                {
+                                    var xDiff = s.Width - bounds[i].Width;
+
+                                    if (xDiff != 0)
+                                    {
+                                        for (var j = i + 1; j < count; ++j)
                                         {
-                                            for (var j = i + 1; j < count; ++j)
-                                            {
-                                                bounds[j].Y += _hdiff;
-                                            }
+                                            bounds[j].X += xDiff;
                                         }
 
-                                        bounds[i].Height = _h;
+                                        x += xDiff;
+                                    }
+                                }
 
-                                        break;
-                                    case AnchorStyles.Bottom:
+                                bounds[i].Size = s;
 
-                                        bounds[i].Y = minimumHeight - bounds[i].Height - c.Margin.Bottom;
+                                if (ri != i)
+                                {
+                                    i = ri - 1;
+                                    continue;
+                                }
+                            }
 
-                                        break;
+                            if (vertical)
+                            {
+                                //vertical layout
+
+                                if (!cStretchW)
+                                {
+                                    switch (c.Anchor & (AnchorStyles.Left | AnchorStyles.Right))
+                                    {
+                                        //right aligned
+                                        case AnchorStyles.Right:
+
+                                            bounds[i].X = minimumWidth - bounds[i].Width - c.Margin.Right;
+
+                                            break;
+                                        //stretch horizontally
+                                        //case AnchorStyles.Left | AnchorStyles.Right:
+
+                                        //centered horizontally
+                                        case AnchorStyles.None:
+
+                                            bounds[i].X = panel.Padding.Left + ((minimumWidth - panel.Padding.Left) - bounds[i].Width) / 2 + c.Margin.Left - c.Margin.Right;
+
+                                            break;
+                                    }
+                                }
+
+                                if (!cStretchH)
+                                {
+                                    switch (c.Anchor & (AnchorStyles.Top | AnchorStyles.Bottom))
+                                    {
+                                        //stretched vertically
+                                        //case AnchorStyles.Top | AnchorStyles.Bottom:
+
+                                        //bottom aligned
+                                        case AnchorStyles.Bottom:
+
+                                            bounds[i].Y = minimumHeight - bounds[i].Height - c.Margin.Bottom;
+
+                                            break;
+                                    }
                                 }
                             }
                             else
                             {
-                                switch (c.Anchor & (AnchorStyles.Left | AnchorStyles.Right))
+                                //horizontal layout
+
+                                if (!cStretchW)
                                 {
-                                    //right aligned
-                                    case AnchorStyles.Right:
+                                    switch (c.Anchor & (AnchorStyles.Left | AnchorStyles.Right))
+                                    {
+                                        //right aligned
+                                        case AnchorStyles.Right:
 
-                                        bounds[i].X = minimumWidth - bounds[i].Width - c.Margin.Right;
+                                            bounds[i].X = minimumWidth - bounds[i].Width - c.Margin.Right;
 
-                                        break;
-                                    //stretch to fill horizontal space
-                                    case AnchorStyles.Left | AnchorStyles.Right:
-
-                                        var _wdiff = minimumWidth - x;
-
-                                        if (_wdiff > 0)
-                                        {
-                                            bounds[i].Width += _wdiff;
-                                            x = minimumWidth;
-
-                                            for (var j = i + 1; j < count; ++j)
-                                            {
-                                                bounds[j].X += _wdiff;
-                                            }
-                                        }
-
-                                        if (IsAutoSized(c))
-                                        {
-                                            var s = new Size(bounds[i].Width, int.MaxValue);
-                                            if (force && c is StackPanel)
-                                                s = ((StackPanel)c).GetPreferredSize(s, true);
-                                            else
-                                                s = c.GetPreferredSize(s);
-
-                                            if (s.Height > bounds[i].Height)
-                                            {
-                                                bounds[i].Height = s.Height;
-
-                                                if (autosize)
-                                                {
-                                                    var b = bounds[i].Y + s.Height + c.Margin.Bottom;
-
-                                                    if (b > maximumHeight)
-                                                        b = maximumHeight;
-
-                                                    if (b > minimumHeight)
-                                                    {
-                                                        minimumHeight = b;
-
-                                                        if (minimumHeight > h)
-                                                        {
-                                                            h = minimumHeight;
-                                                            i = int.MaxValue - 1;
-                                                        }
-                                                        else if (i > 0)
-                                                        {
-                                                            i = -1;
-                                                        }
-
-                                                        continue;
-                                                    }
-                                                }
-                                            }
-                                        }
-
-                                        break;
+                                            break;
+                                        //stretch to fill horizontal space
+                                        //case AnchorStyles.Left | AnchorStyles.Right:
+                                    }
                                 }
 
-                                switch (c.Anchor & (AnchorStyles.Top | AnchorStyles.Bottom))
+                                if (!cStretchH)
                                 {
-                                    //bottom aligned
-                                    case AnchorStyles.Bottom:
+                                    switch (c.Anchor & (AnchorStyles.Top | AnchorStyles.Bottom))
+                                    {
+                                        //bottom aligned
+                                        case AnchorStyles.Bottom:
 
-                                        bounds[i].Y = minimumHeight - bounds[i].Height - c.Margin.Bottom;
+                                            bounds[i].Y = minimumHeight - bounds[i].Height - c.Margin.Bottom;
 
-                                        break;
-                                    //stretch vertically
-                                    case AnchorStyles.Top | AnchorStyles.Bottom:
+                                            break;
+                                        //stretch vertically
+                                        //case AnchorStyles.Top | AnchorStyles.Bottom:
 
-                                        bounds[i].Height = minimumHeight - bounds[i].Y - c.Margin.Bottom;
+                                        //centered vertically
+                                        case AnchorStyles.None:
 
-                                        break;
-                                    //centered vertically
-                                    case AnchorStyles.None:
+                                            bounds[i].Y = panel.Padding.Top + ((minimumHeight - panel.Padding.Top) - bounds[i].Height) / 2 + c.Margin.Top - c.Margin.Bottom;
 
-                                        bounds[i].Y = panel.Padding.Top + ((minimumHeight - panel.Padding.Top) - bounds[i].Height) / 2 + c.Margin.Top - c.Margin.Bottom;
-
-                                        break;
+                                            break;
+                                    }
                                 }
                             }
                         }
@@ -713,25 +1090,23 @@ namespace Gw2Launcher.UI.Controls
                         {
                             switch (c.Dock)
                             {
+                                //control is right-aligned floated (does not affect other controls)
                                 case DockStyle.Right:
 
                                     bounds[i].X = minimumWidth - bounds[i].Width - c.Margin.Right;
 
                                     break;
+                                //horizontal layout: control will fill remaining space up to its maximum preferred size
                                 case DockStyle.Fill:
 
-                                    if (direction == FlowDirection.LeftToRight) //similar to left-right anchoring, except the control is only stretched if needed
+                                    if (!vertical)
                                     {
                                         var _wdiff = minimumWidth - x;
                                         int _w;
 
                                         if (IsAutoSized(c))
                                         {
-                                            var s = new Size(int.MaxValue, int.MaxValue);
-                                            if (force && c is StackPanel)
-                                                s = ((StackPanel)c).GetPreferredSize(s, true);
-                                            else
-                                                s = c.GetPreferredSize(s);
+                                            var s = GetPreferredSize(c, new Size(int.MaxValue, int.MaxValue), force);
 
                                             if (s.Height > bounds[i].Height)
                                             {
@@ -748,17 +1123,15 @@ namespace Gw2Launcher.UI.Controls
                                                     {
                                                         minimumHeight = b;
 
-                                                        if (minimumHeight > h)
+                                                        minimumHeight = b;
+                                                        if (b > h)
+                                                            h = b;
+                                                        if (i > firstH)
                                                         {
-                                                            h = minimumHeight;
-                                                            i = int.MaxValue - 1;
+                                                            //recalculate anchors
+                                                            i = firstH - 1;
+                                                            continue;
                                                         }
-                                                        else if (i > 0)
-                                                        {
-                                                            i = -1;
-                                                        }
-
-                                                        continue;
                                                     }
                                                 }
                                             }
@@ -810,6 +1183,14 @@ namespace Gw2Launcher.UI.Controls
                     }
                 }
 
+                minimumX += panel.Padding.Right;
+                minimumY += panel.Padding.Bottom;
+                if (minimumX < panel.MinimumSize.Width)
+                    minimumX = panel.MinimumSize.Width;
+                if (minimumY < panel.MinimumSize.Height)
+                    minimumY = panel.MinimumSize.Height;
+
+                panel.cache.minimum = new Size(minimumX, minimumY);
                 panel.cache.proposed = new Size(minimumWidth + panel.Padding.Right, minimumHeight + panel.Padding.Bottom);
                 if (apply)
                     panel.cache.size = panel.cache.proposed;
@@ -817,7 +1198,7 @@ namespace Gw2Launcher.UI.Controls
             }
         }
 
-        public enum AutoSizeFillMode
+        public enum AutoSizeFillMode : byte
         {
             None,
             /// <summary>
@@ -825,14 +1206,63 @@ namespace Gw2Launcher.UI.Controls
             /// </summary>
             Width,
             /// <summary>
-            /// Expands to the widest control
+            /// Expands to the largest control
             /// </summary>
-            NoWrap
+            NoWrap,
+        }
+
+        [Flags]
+        public enum AutoSizeStretchMode : byte
+        {
+            /// <summary>
+            /// Preferred sizes will be ignored
+            /// </summary>
+            NoPreferredSize = 0,
+
+            /// <summary>
+            /// Width will not be stretched below the preferred size
+            /// </summary>
+            MinimumPreferredWidth = 1,
+            /// <summary>
+            /// Width/height will not be stretched below the preferred size
+            /// </summary>
+            MinimumPreferredHeight = 2,
+            /// <summary>
+            /// Width/height will not be stretched below the preferred size
+            /// </summary>
+            MinimumPreferredSize = 3,
+
+            /// <summary>
+            /// Width will not be stretched beyond the preferred size
+            /// </summary>
+            MaximumPreferredWidth = 4,
+            /// <summary>
+            /// Height will not be stretched beyond the preferred size
+            /// </summary>
+            MaximumPreferredHeight = 8,
+            /// <summary>
+            /// Width/height will not be stretched beyond the preferred size
+            /// </summary>
+            MaximumPreferredSize = 12,
+
+            /// <summary>
+            /// MinimumPreferredWidth and MaximumPreferredWidth
+            /// </summary>
+            PreferredWidth = 5,
+            /// <summary>
+            /// MinimumPreferredHeight and MaximumPreferredHeight
+            /// </summary>
+            PreferredHeight = 10,
+            /// <summary>
+            /// MinimumPreferredSize and MaximumPreferredSize
+            /// </summary>
+            PreferredSize = 15,
         }
 
         private static readonly StackPanelLayout layout = new StackPanelLayout();
 
         private AutoSizeFillMode fillMode;
+        private AutoSizeStretchMode stretchMode;
         private StackPanelLayout.Cache cache;
 
         public StackPanel()
@@ -931,6 +1361,25 @@ namespace Gw2Launcher.UI.Controls
             }
         }
 
+        [DefaultValue(AutoSizeStretchMode.NoPreferredSize)]
+        [Editor(typeof(AutoSizeStretchTypeEditor), typeof(UITypeEditor))]
+        [TypeConverter(typeof(AutoSizeStretchTypeConverter))]
+        public AutoSizeStretchMode AutoSizeStretch
+        {
+            get
+            {
+                return stretchMode;
+            }
+            set
+            {
+                if (stretchMode != value)
+                {
+                    stretchMode = value;
+                    PerformLayout();
+                }
+            }
+        }
+
         public override LayoutEngine LayoutEngine
         {
             get
@@ -941,14 +1390,25 @@ namespace Gw2Launcher.UI.Controls
 
         private class ControlCollection : Control.ControlCollection
         {
+            private bool canSetIndex;
+
             public ControlCollection(Control owner)
                 : base(owner)
             {
             }
 
+            public override void AddRange(Control[] controls)
+            {
+                canSetIndex = true;
+                base.AddRange(controls);
+                canSetIndex = false;
+            }
+
             public override void SetChildIndex(Control child, int newIndex)
             {
-
+                //prevent invisible controls from changing order when the control is created
+                if (canSetIndex)
+                    base.SetChildIndex(child, newIndex);
             }
 
             public void SetBaseChildIndex(Control child, int newIndex)
@@ -969,6 +1429,14 @@ namespace Gw2Launcher.UI.Controls
             }
         }
 
+        /// <summary>
+        /// Sets the index of the control; note Controls.SetChildIndex is ignored
+        /// </summary>
+        public void SetChildIndex(Control child, int newIndex)
+        {
+            ((ControlCollection)this.Controls).SetBaseChildIndex(child, newIndex);
+        }
+
         public Size GetPreferredSize(Size proposedSize, bool force)
         {
             return layout.DoLayout(this, proposedSize, false, true, true, force);
@@ -985,10 +1453,110 @@ namespace Gw2Launcher.UI.Controls
             }
             else if (proposedSize.Width == cache.proposed.Width)
             {
-                return cache.proposed;
+                if (proposedSize.Height == int.MaxValue)
+                {
+                    if (cache.minimum.Height == cache.proposed.Height)
+                    {
+                        return cache.proposed;
+                    }
+                    else
+                    {
+                        var min = new Size(cache.proposed.Width, cache.minimum.Height);
+
+                        return min;
+                    }
+                }
+                else if (proposedSize.Height == cache.proposed.Height)
+                {
+                    return cache.proposed;
+                }
             }
 
             return layout.DoLayout(this, proposedSize, false, true, true, false);
+        }
+
+        /// <summary>
+        /// Performs the layout of child controls; invisible controls will be ignored
+        /// </summary>
+        /// <param name="force">Optionally forces the layout of invisible controls</param>
+        public void PerformLayout(bool force)
+        {
+            layout.Layout(this, null, force);
+        }
+
+        /// <summary>
+        /// Computes the location of where the control is located within the panel
+        /// </summary>
+        public Point PointFromChild(Control child)
+        {
+            var p = child.Parent;
+            var x = child.Left;
+            var y = child.Top;
+
+            while (p != null && p != this)
+            {
+                x += p.Left;
+                y += p.Top;
+
+                p = p.Parent;
+            }
+
+            if (p == null)
+            {
+                return Point.Empty;
+            }
+
+            return new Point(x, y);
+        }
+
+        protected UiColors.Colors _BackColorName = UiColors.Colors.Custom;
+        [DefaultValue(UiColors.Colors.Custom)]
+        [UiPropertyColor()]
+        [TypeConverter(typeof(UiColorTypeConverter))]
+        [Editor(typeof(UiColorTypeEditor), typeof(UITypeEditor))]
+        public UiColors.Colors BackColorName
+        {
+            get
+            {
+                return _BackColorName;
+            }
+            set
+            {
+                if (_BackColorName != value)
+                {
+                    _BackColorName = value;
+                    RefreshColors();
+                }
+            }
+        }
+
+        protected UiColors.Colors _ForeColorName = UiColors.Colors.Custom;
+        [DefaultValue(UiColors.Colors.Custom)]
+        [UiPropertyColor()]
+        [TypeConverter(typeof(UiColorTypeConverter))]
+        [Editor(typeof(UiColorTypeEditor), typeof(UITypeEditor))]
+        public UiColors.Colors ForeColorName
+        {
+            get
+            {
+                return _ForeColorName;
+            }
+            set
+            {
+                if (_ForeColorName != value)
+                {
+                    _ForeColorName = value;
+                    RefreshColors();
+                }
+            }
+        }
+
+        public void RefreshColors()
+        {
+            if (_ForeColorName != UiColors.Colors.Custom)
+                base.ForeColor = UiColors.GetColor(_ForeColorName);
+            if (_BackColorName != UiColors.Colors.Custom)
+                base.BackColor = UiColors.GetColor(_BackColorName);
         }
     }
 }

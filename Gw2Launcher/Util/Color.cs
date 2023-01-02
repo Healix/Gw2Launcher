@@ -8,6 +8,11 @@ namespace Gw2Launcher.Util
 {
     static class Color
     {
+        public static System.Drawing.Color Invert(System.Drawing.Color c)
+        {
+            return System.Drawing.Color.FromArgb(c.A, 255 - c.R, 255 - c.G, 255 - c.B);
+        }
+
         public static System.Drawing.Color Darken(System.Drawing.Color c, float percent)
         {
             percent = 1 - percent;

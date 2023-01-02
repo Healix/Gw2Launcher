@@ -12,8 +12,9 @@ namespace Gw2Launcher.Client
         {
             public class LaunchSession : IDisposable
             {
-                public LaunchSession(LaunchMode mode, string args = null)
+                public LaunchSession(Account a, LaunchMode mode, string args = null)
                 {
+                    this.Account = a;
                     this.Mode = mode;
                     this.Args = args;
                 }
@@ -21,6 +22,12 @@ namespace Gw2Launcher.Client
                 ~LaunchSession()
                 {
                     Dispose();
+                }
+
+                public Account Account
+                {
+                    get;
+                    private set;
                 }
 
                 public LaunchMode Mode
@@ -33,12 +40,6 @@ namespace Gw2Launcher.Client
                 {
                     get;
                     private set;
-                }
-
-                public NetworkAuthorization.ISession AuthSession
-                {
-                    get;
-                    set;
                 }
 
                 private Tools.Icons _Icons;
@@ -125,8 +126,8 @@ namespace Gw2Launcher.Client
                     }
                 }
 
-                private RunAfterManager _RunAfter;
-                public RunAfterManager RunAfter
+                private IRunAfterManager _RunAfter;
+                public IRunAfterManager RunAfter
                 {
                     get
                     {
@@ -138,18 +139,137 @@ namespace Gw2Launcher.Client
                         {
                             if (_RunAfter != value)
                             {
-                                if (_RunAfter != null)
-                                    _RunAfter.Dispose();
-                                _RunAfter = value;
+                                using (_RunAfter)
+                                {
+                                    _RunAfter = value;
+                                }
                             }
                         }
                     }
                 }
-                
-                public bool IsDisposed
+
+                private ProcessSettings _ProcessSettings;
+                public ProcessSettings ProcessSettings
+                {
+                    get
+                    {
+                        return _ProcessSettings;
+                    }
+                    set
+                    {
+                        lock (this)
+                        {
+                            if (_ProcessSettings != value)
+                            {
+                                if (isDisposed && value != null)
+                                {
+                                    value.Dispose();
+                                }
+                                else
+                                {
+                                    if (_ProcessSettings != null)
+                                        _ProcessSettings.Dispose();
+                                    _ProcessSettings = value;
+                                }
+                            }
+                        }
+                    }
+                }
+
+                private Tools.WindowManager.IWindowBounds _WindowTemplate;
+                public Tools.WindowManager.IWindowBounds WindowTemplate
+                {
+                    get
+                    {
+                        return _WindowTemplate;
+                    }
+                    set
+                    {
+                        lock (this)
+                        {
+                            if (_WindowTemplate != value)
+                            {
+                                if (isDisposed && value != null)
+                                {
+                                    value.Dispose();
+                                }
+                                else
+                                {
+                                    if (_WindowTemplate != null)
+                                        _WindowTemplate.Dispose();
+                                    _WindowTemplate = value;
+                                    if (value != null)
+                                        WindowOptions = value.Options | Gw2Launcher.Settings.WindowOptions.Windowed;
+                                }
+                            }
+                        }
+                    }
+                }
+
+                public Settings.WindowOptions WindowOptions
                 {
                     get;
-                    private set;
+                    set;
+                }
+
+                private Tools.Mumble.MumbleMonitor.IMumbleProcess _MumbleLink;
+                public Tools.Mumble.MumbleMonitor.IMumbleProcess MumbleLink
+                {
+                    get
+                    {
+                        return _MumbleLink;
+                    }
+                    set
+                    {
+                        lock (this)
+                        {
+                            if (_MumbleLink != value)
+                            {
+                                if (_MumbleLink != null)
+                                    _MumbleLink.Dispose();
+                                _MumbleLink = value;
+
+                                if (MumbleLinkChanged != null)
+                                    MumbleLinkChanged(this.Account.Settings, value);
+                            }
+                        }
+                    }
+                }
+
+                private WindowWatcher.HiddenWindow _Hidden;
+                public WindowWatcher.HiddenWindow Hidden
+                {
+                    get
+                    {
+                        return _Hidden;
+                    }
+                    set
+                    {
+                        lock (this)
+                        {
+                            if (_Hidden != value)
+                            {
+                                if (_Hidden != null)
+                                    _Hidden.Dispose();
+                                _Hidden = value;
+                            }
+                        }
+                    }
+                }
+
+                public Settings.LaunchProxy Proxy
+                {
+                    get;
+                    set;
+                }
+
+                private bool isDisposed;
+                public bool IsDisposed
+                {
+                    get
+                    {
+                        return isDisposed;
+                    }
                 }
 
                 public void Dispose()
@@ -162,15 +282,11 @@ namespace Gw2Launcher.Client
                         Icons = null;
                         Watcher = null;
                         Limiter = null;
+                        WindowTemplate = null;
+                        MumbleLink = null;
                         RunAfter = null;
 
-                        if (AuthSession != null)
-                        {
-                            AuthSession.Release();
-                            AuthSession = null;
-                        }
-
-                        IsDisposed = true;
+                        isDisposed = true;
                     }
                 }
             }
@@ -236,6 +352,80 @@ namespace Gw2Launcher.Client
             {
                 get;
                 private set;
+            }
+
+            public ProcessSettings ProcessSettings
+            {
+                get
+                {
+                    var s = session;
+                    if (s != null)
+                    {
+                        return s.ProcessSettings;
+                    }
+                    return null;
+                }
+            }
+
+            public Settings.WindowOptions WindowOptions
+            {
+                get
+                {
+                    var s = session;
+                    if (s != null)
+                    {
+                        return s.WindowOptions;
+                    }
+                    return this.Settings.WindowOptions;
+                }
+            }
+
+            public Tools.WindowManager.IWindowBounds WindowTemplate
+            {
+                get
+                {
+                    var s = session;
+                    if (s != null)
+                    {
+                        return s.WindowTemplate;
+                    }
+                    return null;
+                }
+            }
+
+            public Tools.Mumble.MumbleMonitor.IMumbleProcess MumbleLink
+            {
+                get
+                {
+                    var s = session;
+                    if (s != null)
+                    {
+                        return s.MumbleLink;
+                    }
+                    return null;
+                }
+            }
+
+            private RunAfterManager _RunAfter;
+            public RunAfterManager RunAfter
+            {
+                get
+                {
+                    return _RunAfter;
+                }
+                set
+                {
+                    lock (this)
+                    {
+                        if (_RunAfter != value)
+                        {
+                            using (_RunAfter)
+                            {
+                                _RunAfter = value;
+                            }
+                        }
+                    }
+                }
             }
 
             public LinkedProcess Process

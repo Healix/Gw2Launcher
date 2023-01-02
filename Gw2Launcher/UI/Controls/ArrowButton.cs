@@ -6,10 +6,12 @@ using System.Threading.Tasks;
 using System.Windows.Forms;
 using System.Drawing;
 using System.Drawing.Drawing2D;
+using System.ComponentModel;
+using System.Drawing.Design;
 
 namespace Gw2Launcher.UI.Controls
 {
-    class ArrowButton : Control
+    class ArrowButton : Base.BaseControl
     {
         public enum ArrowDirection
         {
@@ -17,7 +19,7 @@ namespace Gw2Launcher.UI.Controls
             Left
         }
 
-        protected Color colorArrow, colorHighlight;
+        protected Color colorHighlight;
         protected PointF[] points;
         protected SolidBrush brush;
         protected Pen pen;
@@ -29,10 +31,11 @@ namespace Gw2Launcher.UI.Controls
         {
             points = new PointF[6];
 
-            colorArrow = Color.FromArgb(150, 150, 150);
-            colorHighlight = Color.FromArgb(20, 20, 20);
-            brush = new SolidBrush(colorArrow);
+            brush = new SolidBrush(this.ForeColor);
             pen = new Pen(brush);
+
+            this.ForeColor = Color.FromArgb(150, 150, 150);
+            colorHighlight = Color.FromArgb(20, 20, 20);
 
             this.Cursor = Cursors.Hand;
 
@@ -41,20 +44,14 @@ namespace Gw2Launcher.UI.Controls
             SetStyle(ControlStyles.OptimizedDoubleBuffer, true);
         }
 
-        public Color ColorArrow
+        protected override void OnForeColorChanged(EventArgs e)
         {
-            get
-            {
-                return colorArrow;
-            }
-            set
-            {
-                colorArrow = value;
-                OnColorChanged();
-            }
+            base.OnForeColorChanged(e);
+            OnColorChanged();
         }
 
-        public Color ColorHighlight
+        [DefaultValue(typeof(Color),"20,20,20")]
+        public Color ForeColorHighlight
         {
             get
             {
@@ -67,16 +64,38 @@ namespace Gw2Launcher.UI.Controls
             }
         }
 
+        protected UiColors.Colors _ForeColorHighlightName = UiColors.Colors.Custom;
+        [DefaultValue(UiColors.Colors.Custom)]
+        [UiPropertyColor()]
+        [TypeConverter(typeof(UiColorTypeConverter))]
+        [Editor(typeof(UiColorTypeEditor), typeof(UITypeEditor))]
+        public UiColors.Colors ForeColorHighlightName
+        {
+            get
+            {
+                return _ForeColorHighlightName;
+            }
+            set
+            {
+                if (_ForeColorHighlightName != value)
+                {
+                    _ForeColorHighlightName = value;
+                    RefreshColors();
+                }
+            }
+        }
+
         protected void OnColorChanged()
         {
             if (highlighted)
                 pen.Color = brush.Color = colorHighlight;
             else
-                pen.Color = brush.Color = colorArrow;
+                pen.Color = brush.Color = this.ForeColor;
             this.Invalidate();
         }
 
         [System.ComponentModel.Browsable(false)]
+        [System.ComponentModel.DesignerSerializationVisibility(System.ComponentModel.DesignerSerializationVisibility.Hidden)]
         public override string Text
         {
             get
@@ -137,7 +156,7 @@ namespace Gw2Launcher.UI.Controls
             if (highlighted)
             {
                 highlighted = false;
-                pen.Color = brush.Color = colorArrow;
+                pen.Color = brush.Color = this.ForeColor;
                 this.Invalidate();
             }
         }
@@ -174,7 +193,7 @@ namespace Gw2Launcher.UI.Controls
             }
             else
             {
-                using (var brush = new SolidBrush(Util.Color.Lighten(colorArrow, 0.5f)))
+                using (var brush = new SolidBrush(Util.Color.Lighten(this.ForeColor, 0.5f)))
                 {
                     g.FillClosedCurve(brush, points);
                     using (var pen = new Pen(brush))
@@ -183,6 +202,14 @@ namespace Gw2Launcher.UI.Controls
                     }
                 }
             }
+        }
+
+        public override void RefreshColors()
+        {
+            base.RefreshColors();
+
+            if (_ForeColorHighlightName != UiColors.Colors.Custom)
+                this.ForeColorHighlight = UiColors.GetColor(_ForeColorHighlightName);
         }
     }
 }

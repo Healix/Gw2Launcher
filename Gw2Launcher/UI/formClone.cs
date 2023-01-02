@@ -188,20 +188,7 @@ namespace Gw2Launcher.UI
                 defaultImage = new Image[2];
 
             if (defaultImage[i] == null)
-            {
-                using (var icon = new Icon(type == Settings.AccountType.GuildWars1 ? Properties.Resources.Gw1 : Properties.Resources.Gw2, 48, 48))
-                {
-                    var image = defaultImage[i] = new Bitmap(sz.Width, sz.Height, System.Drawing.Imaging.PixelFormat.Format32bppArgb);
-
-                    using (var g = Graphics.FromImage(image))
-                    {
-                        g.InterpolationMode = System.Drawing.Drawing2D.InterpolationMode.HighQualityBicubic;
-                        g.DrawIcon(icon, new Rectangle(0, 0, image.Width, image.Height));
-                    }
-
-                    return image;
-                }
-            }
+                defaultImage[i] = Util.Bitmap.ResizeIcon(type == Settings.AccountType.GuildWars1 ? Properties.Resources.Gw1 : Properties.Resources.Gw2, new Size(48, 48), sz);
 
             return defaultImage[i];
         }
@@ -414,8 +401,7 @@ namespace Gw2Launcher.UI
         {
             this.Enabled = false;
 
-            Controls.FlatProgressBar p = null;
-            Base.FlatBase f = null;
+            formProgressBar f = null;
 
             if (radioDatCopy.Visible && radioDatCopy.Checked)
             {
@@ -431,29 +417,12 @@ namespace Gw2Launcher.UI
 
                 if (max > 0)
                 {
-                    f = new Base.FlatBase()
+                    f = new formProgressBar()
                     {
-                        Text = "",
-                        StartPosition = FormStartPosition.Manual,
-                    };
-
-                    p = new Controls.FlatProgressBar()
-                    {
-                        Anchor = AnchorStyles.Left | AnchorStyles.Top | AnchorStyles.Right | AnchorStyles.Bottom,
-                        Animated = false,
-                        BackColor = Color.FromArgb(240, 240, 240),
-                        ForeColor = Color.LightSteelBlue,
                         Maximum = max,
-                        Margin = new Padding(5, 5, 5, 5),
                     };
 
-                    f.Controls.Add(p);
-
-                    f.Size = new System.Drawing.Size(300, 50);
-                    f.InitializeComponents(); //note scaling occurs here
-
-                    f.Location = new Point(this.Left + this.Width / 2 - f.Width / 2, this.Top + this.Height / 2 - f.Height / 2);
-
+                    f.CenterAt(this);
                     f.Show(this);
                 }
             }
@@ -470,10 +439,10 @@ namespace Gw2Launcher.UI
                         var b = Settings.Clone(a);
 
                         b.Name = row.text.Text;
+                        b.CreatedUtc = DateTime.UtcNow; //created should not be cloned to prevent creating a new "first" account
 
                         if (!checkStatistics.Checked)
                         {
-                            b.CreatedUtc = DateTime.UtcNow;
                             b.LastUsedUtc = DateTime.MinValue;
                             b.TotalUses = 0;
                         }
@@ -514,12 +483,12 @@ namespace Gw2Launcher.UI
                                 }
                             }
 
-                            if (p != null)
-                                p.Value++;
+                            if (f != null && !f.IsDisposed)
+                                f.Value++;
                         }
                         else if (b.Type == Settings.AccountType.GuildWars1)
                         {
-
+                            //no files to clone
                         }
 
                         accounts.Add(b);

@@ -13,8 +13,12 @@ namespace Gw2Launcher.UI
 {
     public partial class formRunAfter : Base.BaseForm
     {
-        public formRunAfter(Settings.RunAfter ra)
+        private Settings.AccountType type;
+
+        public formRunAfter(Settings.RunAfter ra, Settings.AccountType type)
         {
+            this.type = type;
+
             InitializeComponents();
 
             if (ra != null)
@@ -24,8 +28,9 @@ namespace Gw2Launcher.UI
 
                 textPath.Text = ra.Path;
                 textPath.Select(textPath.TextLength, 0);
-                
+
                 checkUseCurrentUser.Checked = (ra.Options & Settings.RunAfter.RunAfterOptions.UseCurrentUser) != 0;
+                checkWaitUntilComplete.Checked = (ra.Options & Settings.RunAfter.RunAfterOptions.WaitUntilComplete) != 0;
 
                 if (ra.Type == Settings.RunAfter.RunAfterType.ShellCommands)
                 {
@@ -38,10 +43,8 @@ namespace Gw2Launcher.UI
                 }
             }
 
-            if (ra != null && (ra.Options & Settings.RunAfter.RunAfterOptions.Enabled) == 0)
+            if (ra != null && (!ra.Enabled || Util.ComboItem<Settings.RunAfter.RunAfterWhen>.Select(comboRunAfter, ra.When) == -1) || ra == null && Util.ComboItem<Settings.RunAfter.RunAfterWhen>.Select(comboRunAfter, Settings.RunAfter.RunAfterWhen.AfterLaunching) == -1)
                 comboRunAfter.SelectedIndex = 0;
-            else if (ra == null || Util.ComboItem<Settings.RunAfter.RunAfterOptions>.Select(comboRunAfter, ra.Options & (Settings.RunAfter.RunAfterOptions.WaitForDxWindowLoaded | Settings.RunAfter.RunAfterOptions.WaitForLauncherLoaded)) == -1)
-                comboRunAfter.SelectedIndex = 1;
 
             if (ra == null || Util.ComboItem<Settings.RunAfter.RunAfterOptions>.Select(comboOnExit, ra.Options & (Settings.RunAfter.RunAfterOptions.CloseOnExit | Settings.RunAfter.RunAfterOptions.KillOnExit)) == -1)
                 comboOnExit.SelectedIndex = 0;
@@ -49,8 +52,8 @@ namespace Gw2Launcher.UI
             ActiveControl = textName;
         }
 
-        public formRunAfter()
-            : this(null)
+        public formRunAfter(Settings.AccountType type)
+            : this(null, type)
         {
 
         }
@@ -63,11 +66,28 @@ namespace Gw2Launcher.UI
 
             comboRunAfter.Items.AddRange(new object[]
                 {
-                    new Util.ComboItem<Settings.RunAfter.RunAfterOptions>(Settings.RunAfter.RunAfterOptions.Enabled, "Disabled"),
-                    new Util.ComboItem<Settings.RunAfter.RunAfterOptions>(Settings.RunAfter.RunAfterOptions.None, "Launching"),
-                    new Util.ComboItem<Settings.RunAfter.RunAfterOptions>(Settings.RunAfter.RunAfterOptions.WaitForLauncherLoaded, "Loading the launcher"),
-                    new Util.ComboItem<Settings.RunAfter.RunAfterOptions>(Settings.RunAfter.RunAfterOptions.WaitForDxWindowLoaded, "Loading the game"),
+                    new Util.ComboItem<Settings.RunAfter.RunAfterWhen>(Settings.RunAfter.RunAfterWhen.None, "Disabled"),
+                    new Util.ComboItem<Settings.RunAfter.RunAfterWhen>(Settings.RunAfter.RunAfterWhen.Manual, "Manual"),
+                    new Util.ComboItem<Settings.RunAfter.RunAfterWhen>(Settings.RunAfter.RunAfterWhen.BeforeLaunching, "Before launching"),
+                    new Util.ComboItem<Settings.RunAfter.RunAfterWhen>(Settings.RunAfter.RunAfterWhen.AfterLaunching, "After launching")
                 });
+
+            if (this.type == Settings.AccountType.GuildWars1)
+            {
+                comboRunAfter.Items.AddRange(new object[]
+                    {
+                        new Util.ComboItem<Settings.RunAfter.RunAfterWhen>(Settings.RunAfter.RunAfterWhen.LoadedCharacterSelect, "Loaded the game"),
+                    });
+            }
+            else
+            {
+                comboRunAfter.Items.AddRange(new object[]
+                    {
+                        new Util.ComboItem<Settings.RunAfter.RunAfterWhen>(Settings.RunAfter.RunAfterWhen.LoadedLauncher, "Loaded the launcher"),
+                        new Util.ComboItem<Settings.RunAfter.RunAfterWhen>(Settings.RunAfter.RunAfterWhen.LoadedCharacterSelect, "Loaded character select"),
+                        new Util.ComboItem<Settings.RunAfter.RunAfterWhen>(Settings.RunAfter.RunAfterWhen.LoadedCharacter, "Loaded a character"),
+                    });
+            }
 
             comboOnExit.Items.AddRange(new object[]
                 {
@@ -142,10 +162,16 @@ namespace Gw2Launcher.UI
             }
 
             var flags = Settings.RunAfter.RunAfterOptions.None;
+            var when = Util.ComboItem<Settings.RunAfter.RunAfterWhen>.SelectedValue(comboRunAfter, Settings.RunAfter.RunAfterWhen.Manual);
 
-            if (comboRunAfter.SelectedIndex != 0)
+            if (when != Settings.RunAfter.RunAfterWhen.None)
             {
-                flags |= Util.ComboItem<Settings.RunAfter.RunAfterOptions>.SelectedValue(comboRunAfter, Settings.RunAfter.RunAfterOptions.None) | Settings.RunAfter.RunAfterOptions.Enabled;
+                flags |= Settings.RunAfter.RunAfterOptions.Enabled;
+            }
+
+            if (checkWaitUntilComplete.Enabled && checkWaitUntilComplete.Checked)
+            {
+                flags |= Settings.RunAfter.RunAfterOptions.WaitUntilComplete;
             }
 
             if (checkUseCurrentUser.Checked)
@@ -155,13 +181,13 @@ namespace Gw2Launcher.UI
 
             if (radioCommands.Checked)
             {
-                this.Result = new Settings.RunAfter(textName.Text, null, textCommands.Text, flags);
+                this.Result = new Settings.RunAfter(textName.Text, null, textCommands.Text, flags, when);
             }
             else
             {
                 flags |= Util.ComboItem<Settings.RunAfter.RunAfterOptions>.SelectedValue(comboOnExit, Settings.RunAfter.RunAfterOptions.None);
 
-                this.Result = new Settings.RunAfter(textName.Text, textPath.Text, textArguments.Text, flags);
+                this.Result = new Settings.RunAfter(textName.Text, textPath.Text, textArguments.Text, flags, when);
             }
 
             this.DialogResult = System.Windows.Forms.DialogResult.OK;
@@ -177,6 +203,23 @@ namespace Gw2Launcher.UI
             panelCommands.Visible = radioCommands.Checked;
             panelOnExit.Visible = radioProgram.Checked;
             panelContainer.ResumeLayout();
+        }
+
+        private void comboRunAfter_SelectedIndexChanged(object sender, EventArgs e)
+        {
+            var b = false;
+
+            switch (Util.ComboItem<Settings.RunAfter.RunAfterWhen>.SelectedValue(comboRunAfter, Settings.RunAfter.RunAfterWhen.None))
+            {
+                case Settings.RunAfter.RunAfterWhen.BeforeLaunching:
+                case Settings.RunAfter.RunAfterWhen.AfterLaunching:
+
+                    b = true;
+
+                    break;
+            }
+
+            checkWaitUntilComplete.Enabled = b;
         }
     }
 }

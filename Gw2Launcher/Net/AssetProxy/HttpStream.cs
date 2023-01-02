@@ -33,6 +33,14 @@ namespace Gw2Launcher.Net.AssetProxy
 
         public abstract class HttpHeader
         {
+            public enum ConnectionType
+            {
+                None,
+                KeepAlive,
+                Closed,
+                Unknown,
+            }
+
             protected HttpHeader(string command, WebHeaderCollection headers)
             {
                 this.Headers = headers;
@@ -70,7 +78,7 @@ namespace Gw2Launcher.Net.AssetProxy
                         }
                     }
 
-                    if (command.ToLower().StartsWith("http/"))
+                    if (command.StartsWith("http/", StringComparison.OrdinalIgnoreCase))
                         return HttpResponseHeader.Create(command, headers);
                     else
                         return HttpRequestHeader.Create(command, headers);
@@ -126,7 +134,31 @@ namespace Gw2Launcher.Net.AssetProxy
                         transfer = this.Headers[System.Net.HttpResponseHeader.TransferEncoding];
                     else
                         transfer = this.Headers[System.Net.HttpRequestHeader.TransferEncoding];
-                    return (transfer != null && transfer.ToLower() == "chunked");
+                    return (transfer != null && transfer.Equals("chunked", StringComparison.OrdinalIgnoreCase));
+                }
+            }
+
+            public ConnectionType Connection
+            {
+                get
+                {
+                    if (this.Headers == null)
+                        return ConnectionType.None;
+
+                    string connection;
+                    if (this is HttpResponseHeader)
+                        connection = this.Headers[System.Net.HttpResponseHeader.Connection];
+                    else
+                        connection = this.Headers[System.Net.HttpRequestHeader.Connection];
+
+                    if (connection == null)
+                        return ConnectionType.None;
+                    else if (connection.Equals("keep-alive", StringComparison.OrdinalIgnoreCase))
+                        return ConnectionType.KeepAlive;
+                    else if (connection.Equals("close", StringComparison.OrdinalIgnoreCase))
+                        return ConnectionType.KeepAlive;
+                    else
+                        return ConnectionType.Unknown;
                 }
             }
         }
@@ -185,14 +217,16 @@ namespace Gw2Launcher.Net.AssetProxy
 
             protected override void ProcessHeaders(WebHeaderCollection headers)
             {
-                string value;
-                value = headers["connection"];
-                if (value != null && value.Equals("keep-alive", StringComparison.OrdinalIgnoreCase))
-                {
-                    value = headers["keep-alive"];
+                var value = headers["connection"];
 
-                    KeepAliveOptions keepAlive = new KeepAliveOptions();
-                    keepAlive.keepAlive = true;
+                if (value == null || value.Equals("keep-alive", StringComparison.OrdinalIgnoreCase))
+                {
+                    var keepAlive = new KeepAliveOptions()
+                    {
+                        keepAlive = true,
+                    };
+
+                    value = headers["keep-alive"];
 
                     if (value != null)
                     {
@@ -223,7 +257,6 @@ namespace Gw2Launcher.Net.AssetProxy
 
                     this.KeepAlive = keepAlive;
                 }
-
             }
 
             public Version ProtocolVersion

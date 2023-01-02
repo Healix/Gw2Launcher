@@ -171,5 +171,50 @@ namespace Gw2Launcher.Tools
                 }
             }
         }
+
+        public static Icons FromExecutable(string path, bool small = true, bool big = true, int index = 0)
+        {
+            var _small = small ? new IntPtr[1] : null;
+            var _big = big ? new IntPtr[1] : null;
+
+            try
+            {
+                if (NativeMethods.ExtractIconEx(path, index, _big, _small, 1) > 0)
+                {
+                    Icon ismall, ibig;
+
+                    ismall = small && _small[0] != IntPtr.Zero ? (Icon)Icon.FromHandle(_small[0]).Clone() : null;
+                    ibig = big && _big[0] != IntPtr.Zero ? (Icon)Icon.FromHandle(_big[0]).Clone() : null;
+
+                    return new Icons(ismall, ibig);
+                }
+            }
+            catch (Exception e)
+            {
+                Util.Logging.Log(e);
+            }
+            finally
+            {
+                if (small)
+                {
+                    for (var i = _small.Length - 1; i >= 0; --i)
+                    {
+                        if (_small[i] != IntPtr.Zero)
+                            NativeMethods.DestroyIcon(_small[i]);
+                    }
+                }
+
+                if (big)
+                {
+                    for (var i = _big.Length - 1; i >= 0; --i)
+                    {
+                        if (_big[i] != IntPtr.Zero)
+                            NativeMethods.DestroyIcon(_big[i]);
+                    }
+                }
+            }
+
+            return null;
+        }
     }
 }

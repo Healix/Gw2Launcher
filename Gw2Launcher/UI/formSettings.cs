@@ -11,15 +11,16 @@ using System.IO;
 using Gw2Launcher.UI.Controls;
 using Gw2Launcher.Windows.Native;
 using System.Threading;
-using ColorNames = Gw2Launcher.Settings.AccountGridButtonColors.Colors;
+using Gw2Launcher.UI.Controls.ListPanel;
+using ColorNames = Gw2Launcher.UI.UiColors.Colors;
 
 namespace Gw2Launcher.UI
 {
     public partial class formSettings : Base.BaseForm
     {
-        private class AccountGridButtonColorPreviewPanel : ColorPicker.Controls.ColorPreviewPanel
+        private class UiColorsPreviewPanel : ColorPicker.Controls.ColorPreviewPanel
         {
-            public Settings.AccountGridButtonColors.Colors ColorName
+            public UiColors.Colors ColorName
             {
                 get;
                 set;
@@ -30,8 +31,182 @@ namespace Gw2Launcher.UI
                 get;
                 set;
             }
+        }
 
-            public bool SupportsAlpha
+        private class ColorInfo
+        {
+            private UiColors.Colors[][] shared;
+            private UiColors.ColorValues values;
+            private UiColors.ColorValues defaults;
+            private bool previewed;
+
+            public UiColors.ColorValues Values
+            {
+                get
+                {
+                    if (values == null)
+                    {
+                        var cv = UiColors.GetTheme();
+                        values = new UiColors.ColorValues(cv.BaseTheme, cv.Decompress());
+                    }
+                    return values;
+                }
+                set
+                {
+                    values = value;
+                }
+            }
+
+            public Dictionary<UiColors.Colors, UiColorsPreviewPanel> Panels
+            {
+                get;
+                set;
+            }
+
+            public DataGridViewRow[] Rows
+            {
+                get;
+                set;
+            }
+
+            public UiColors.ColorValues Original
+            {
+                get;
+                set;
+            }
+
+            public UiColors.ColorValues Defaults
+            {
+                get
+                {
+                    if (defaults == null)
+                        defaults = UiColors.GetTheme(UiColors.Theme.Settings);
+                    return defaults;
+                }
+                set
+                {
+                    defaults = value;
+                }
+            }
+
+            public void SetColor(ColorNames c, Color v, bool applyToPanel = true, bool applyToRows = true)
+            {
+                Values[c] = v;
+
+                if (applyToPanel)
+                {
+                    UiColorsPreviewPanel p;
+                    if (Panels.TryGetValue(c, out p))
+                    {
+                        p.Color1 = v;
+                    }
+                }
+
+                if (applyToRows && Rows != null)
+                {
+                    Rows[(int)c].Cells[0].Value = v;
+                }
+
+                Modified = true;
+            }
+
+            public ColorNames[] GetShared(ColorNames c)
+            {
+                var i = (int)c;
+
+                if (shared == null)
+                    shared = UiColors.GetTheme(UiColors.Theme.Light).GetShared();
+
+                if (i < 0 || i > shared.Length || shared[i] == null)
+                    return new ColorNames[0];
+
+                return shared[i];
+            }
+
+            public void FromPanels()
+            {
+                if (values == null)
+                    return;
+                foreach (var p in this.Panels.Values)
+                {
+                    Values[p.ColorName] = p.Color1;
+                }
+            }
+
+            /// <summary>
+            /// Copies the current values to any attached controls
+            /// </summary>
+            public void ToControls()
+            {
+                if (values == null)
+                    return;
+                
+                foreach (var p in this.Panels.Values)
+                {
+                    p.Color1 = Values[p.ColorName];
+                }
+
+                if (Rows != null)
+                {
+                    for (var i = 0; i < Rows.Length; i++)
+                    {
+                        Rows[i].Cells[0].Value = Values[(ColorNames)i];
+                    }
+                }
+            }
+
+            /// <summary>
+            /// Applies the current colors to the current theme
+            /// </summary>
+            public void Preview()
+            {
+                if (values == null)
+                    return;
+                if (Original == null)
+                    Original = UiColors.GetTheme().Clone();
+                previewed = true;
+                UiColors.SetColors(Values);
+            }
+
+            /// <summary>
+            /// Resets the current theme to its original values
+            /// </summary>
+            public void Reset()
+            {
+                if (previewed && Original != null)
+                {
+                    UiColors.SetColors(Original);
+                }
+            }
+
+            public void Save()
+            {
+                if (values == null)
+                    return;
+                Original = null;
+
+                if (values.Equals(UiColors.GetTheme(UiColors.Theme.Light)))
+                {
+                    Settings.StyleColors.Clear();
+                }
+                else if (values.Equals(UiColors.GetTheme(UiColors.Theme.Dark)))
+                {
+                    Settings.StyleColors.Value = new Settings.UiColors()
+                    {
+                        Theme = UiColors.Theme.Dark,
+                    };
+                }
+                else
+                {
+                    Settings.StyleColors.Value = new Settings.UiColors()
+                    {
+                        Colors = UiColors.Compress(values),
+                        Theme = UiColors.Theme.Settings,
+                    };
+                }
+            }
+
+            public bool Modified
             {
                 get;
                 set;
@@ -47,6 +222,7 @@ namespace Gw2Launcher.UI
             Style,
             Tools,
             Updates,
+            Backup,
         }
 
         private enum ArgsState : byte
@@ -60,17 +236,20 @@ namespace Gw2Launcher.UI
         private Form activeWindow;
         private CheckBox[] checkArgsGw2, checkArgsGw1;
         private ArgsState argsStateGw2, argsStateGw1, encryptionState;
-        private CheckBox[] checkProcessorAffinityGw2, checkProcessorAffinityGw1;
         private ToolTip tooltipColors;
         private CancellationTokenSource cancelPressed;
         private Point locationColorDialog;
         private Dictionary<string, object> iconsRunAfter;
-        private Windows.ShellIcons shellIcons;
+        private formMain owner;
+        private Tools.Markers.MarkerIcons markerIcons;
+        private UI.Tooltip.FloatingTooltip ftooltip;
+        private ColorInfo colorInfo;
 
-        public formSettings()
+        public formSettings(formMain owner)
         {
             InitializeComponents();
 
+            this.owner = owner;
             locationColorDialog = new Point(int.MinValue, int.MinValue);
             iconsRunAfter = new Dictionary<string, object>();
 
@@ -81,6 +260,7 @@ namespace Gw2Launcher.UI
             Util.CheckedButton.Group(radioLocalizedExecutionAutoSyncBasic, radioLocalizedExecutionAutoSyncAll);
             Util.CheckedButton.Group(checkJumpListOnlyShowDaily, checkJumpListHideActive);
             Util.CheckedButton.Group(checkPreventRelaunchingExit, checkPreventRelaunchingRelaunch);
+            Util.CheckedButton.Group(radioLocalizedExecutionAccountsExclude, radioLocalizedExecutionAccountsInclude);
 
             labelVersionBuild.Text = Program.BUILD + (Environment.Is64BitProcess ? " (64-bit)" : " (32-bit)");
             labelVersionRelease.Text = Program.RELEASE_VERSION.ToString();
@@ -100,12 +280,12 @@ namespace Gw2Launcher.UI
             checkArgsGw2 = InitializeArguments(Settings.AccountType.GuildWars2, panelArgsGw2, labelArgsTemplateHeader, checkArgsTemplate, null, labelArgsTemplateDesc, checkArgsGw2_CheckedChanged);
             checkArgsGw1 = InitializeArguments(Settings.AccountType.GuildWars1, panelArgsGw1, labelArgsTemplateHeader, checkArgsTemplate, null, labelArgsTemplateDesc, checkArgsGw1_CheckedChanged);
 
-            buttonGeneral.Panels = new Panel[] { panelGeneral, panelLaunchConfiguration, panelWindows };
-            buttonGeneral.SubItems = new string[] { "Launching", "Windows" };
+            buttonGeneral.Panels = new Panel[] { panelGeneral, panelLaunchConfiguration, panelWindows, panelHotkeys };
+            buttonGeneral.SubItems = new string[] { "Launching", "Windows", "Hotkeys" };
 
-            buttonGuildWars2.Panels = new Panel[] { panelGw2, panelLaunchOptionsGw2, panelLaunchConfigurationGw2,
+            buttonGuildWars2.Panels = new Panel[] { panelGw2, panelLaunchOptionsGw2, panelLaunchConfigurationGw2, panelSteamGw2, panelTweaksGw2,
                                                     panelLaunchOptionsAdvancedGw2 };
-            buttonGuildWars2.SubItems = new string[] { "Launch options", "Management" };
+            buttonGuildWars2.SubItems = new string[] { "Launch options", "Management", "Steam", "Tweaks" };
 
             buttonGuildWars1.Panels = new Panel[] { panelGw1, panelLaunchOptionsGw1,
                                                     panelLaunchOptionsAdvancedGw1 };
@@ -114,13 +294,15 @@ namespace Gw2Launcher.UI
             buttonSecurity.Panels = new Panel[] { panelSecurity, panelPasswords };
             buttonSecurity.SubItems = new string[] { "Windows" };
 
-            buttonStyle.Panels = new Panel[] { panelStyle, panelActions };
-            buttonStyle.SubItems = new string[] { "Actions" };
+            buttonStyle.Panels = new Panel[] { panelStyle, panelActions, panelColors };
+            buttonStyle.SubItems = new string[] { "Actions", "Colors" };
 
             buttonTools.Panels = new Panel[] { panelTools, panelAccountBar, panelLocalDat, panelScreenshots };
             buttonTools.SubItems = new string[] { "Account bar", "Local.dat", "Screenshots" };
 
             buttonUpdates.Panels = new Panel[] { panelUpdates };
+
+            buttonBackup.Panels = new Panel[] { panelBackup };
 
             sidebarPanel1.Initialize(new SidebarButton[]
                 {
@@ -130,7 +312,8 @@ namespace Gw2Launcher.UI
                     buttonSecurity,
                     buttonStyle,
                     buttonTools,
-                    buttonUpdates
+                    buttonUpdates,
+                    buttonBackup,
                 });
 
             buttonGeneral.Selected = true;
@@ -141,6 +324,13 @@ namespace Gw2Launcher.UI
             {
                 textGw2Path.Text = Settings.GuildWars2.Path.Value;
                 textGw2Path.Select(textGw2Path.TextLength, 0);
+            }
+
+            if (Settings.GuildWars2.PathSteam.HasValue)
+            {
+                textGw2PathSteam.Text = Settings.GuildWars2.PathSteam.Value;
+                textGw2PathSteam.Select(textGw2PathSteam.TextLength, 0);
+                checkGw2PathSteam.Checked = true;
             }
 
             if (Settings.GuildWars1.Path.HasValue)
@@ -253,6 +443,7 @@ namespace Gw2Launcher.UI
             checkWindowIcon.Checked = Settings.WindowIcon.Value;
 
             checkPreventTaskbarGrouping.Checked = Settings.PreventTaskbarGrouping.Value;
+            checkForceTaskbarGrouping.Checked = Settings.ForceTaskbarGrouping.Value;
             checkTopMost.Checked = Settings.TopMost.Value;
 
             if (Client.FileManager.IsFolderLinkingSupported)
@@ -359,25 +550,25 @@ namespace Gw2Launcher.UI
                 checkAutoUpdateDownloadProgress.Tag = new Rectangle(screen.Right - 210, 10, 200, 9);
             }
 
-            if (Settings.NetworkAuthorization.HasValue)
-            {
-                checkEnableNetworkAuthorization.Checked = true;
-                var v = Settings.NetworkAuthorization.Value;
-                switch (v & Settings.NetworkAuthorizationFlags.VerificationModes)
-                {
-                    case Settings.NetworkAuthorizationFlags.Manual:
-                        radioNetworkVerifyManual.Checked = true;
-                        break;
-                    case Settings.NetworkAuthorizationFlags.Automatic:
-                    default:
-                        radioNetworkVerifyAutomatic.Checked = true;
-                        break;
-                }
-                checkRemovePreviousNetworks.Checked = v.HasFlag(Settings.NetworkAuthorizationFlags.RemovePreviouslyAuthorized);
-                checkRemoveAllNetworks.Checked = v.HasFlag(Settings.NetworkAuthorizationFlags.RemoveAll);
-                checkNetworkAbortOnCancel.Checked = v.HasFlag(Settings.NetworkAuthorizationFlags.AbortLaunchingOnFail);
-                checkNetworkVerifyAutomaticIP.Checked = v.HasFlag(Settings.NetworkAuthorizationFlags.VerifyIP);
-            }
+            //if (Settings.NetworkAuthorization.HasValue)
+            //{
+            //    checkEnableNetworkAuthorization.Checked = true;
+            //    var v = Settings.NetworkAuthorization.Value;
+            //    switch (v & Settings.NetworkAuthorizationFlags.VerificationModes)
+            //    {
+            //        case Settings.NetworkAuthorizationFlags.Manual:
+            //            radioNetworkVerifyManual.Checked = true;
+            //            break;
+            //        case Settings.NetworkAuthorizationFlags.Automatic:
+            //        default:
+            //            radioNetworkVerifyAutomatic.Checked = true;
+            //            break;
+            //    }
+            //    checkRemovePreviousNetworks.Checked = v.HasFlag(Settings.NetworkAuthorizationFlags.RemovePreviouslyAuthorized);
+            //    checkRemoveAllNetworks.Checked = v.HasFlag(Settings.NetworkAuthorizationFlags.RemoveAll);
+            //    checkNetworkAbortOnCancel.Checked = v.HasFlag(Settings.NetworkAuthorizationFlags.AbortLaunchingOnFail);
+            //    checkNetworkVerifyAutomaticIP.Checked = v.HasFlag(Settings.NetworkAuthorizationFlags.VerifyIP);
+            //}
 
             if (Settings.ScreenshotNaming.HasValue)
             {
@@ -431,6 +622,7 @@ namespace Gw2Launcher.UI
                     new Util.ComboItem<Settings.ProcessPriorityClass>(Settings.ProcessPriorityClass.Low, "Low"),
                 };
             comboGw2ProcessPriority.Items.AddRange(priorityValues);
+            comboGw2ProcessPriorityDx.Items.AddRange(priorityValues);
             comboGw1ProcessPriority.Items.AddRange(priorityValues);
             comboProcessPriority.Items.AddRange(priorityValues);
 
@@ -441,6 +633,14 @@ namespace Gw2Launcher.UI
             }
             else
                 Util.ComboItem<Settings.ProcessPriorityClass>.Select(comboGw2ProcessPriority, Settings.ProcessPriorityClass.Normal);
+
+            if (Settings.GuildWars2.DxLoadingPriority.HasValue && Settings.GuildWars2.DxLoadingPriority.Value != Settings.ProcessPriorityClass.None)
+            {
+                Util.ComboItem<Settings.ProcessPriorityClass>.Select(comboGw2ProcessPriorityDx, Settings.GuildWars2.DxLoadingPriority.Value);
+                checkGw2ProcessPriorityDx.Checked = true;
+            }
+            else
+                Util.ComboItem<Settings.ProcessPriorityClass>.Select(comboGw2ProcessPriorityDx, Settings.ProcessPriorityClass.Normal);
 
             if (Settings.GuildWars1.ProcessPriority.HasValue && Settings.GuildWars1.ProcessPriority.Value != Settings.ProcessPriorityClass.None)
             {
@@ -457,19 +657,18 @@ namespace Gw2Launcher.UI
             }
             else
                 Util.ComboItem<Settings.ProcessPriorityClass>.Select(comboProcessPriority, Settings.ProcessPriorityClass.Normal);
-
-            panelGw2ProcessAffinity.SuspendLayout();
-            panelGw1ProcessAffinity.SuspendLayout();
-            checkProcessorAffinityGw2 = InitializeProcessorAffinity(panelGw2ProcessAffinity, checkGw2ProcessAffinityAll, label29);
-            checkProcessorAffinityGw1 = InitializeProcessorAffinity(panelGw1ProcessAffinity, checkGw1ProcessAffinityAll, label29);
-            panelGw2ProcessAffinity.AutoSize = true;
-            panelGw1ProcessAffinity.AutoSize = true;
-            panelGw2ProcessAffinity.ResumeLayout();
-            panelGw1ProcessAffinity.ResumeLayout();
-
-            SetProcessorAffinity(Settings.GuildWars2.ProcessAffinity, checkGw2ProcessAffinityAll, checkProcessorAffinityGw2);
-            SetProcessorAffinity(Settings.GuildWars1.ProcessAffinity, checkGw1ProcessAffinityAll, checkProcessorAffinityGw1);
             
+            if (Settings.GuildWars2.ProcessAffinity.HasValue)
+            {
+                adGw2ProcessAffinity.Affinity = Settings.GuildWars2.ProcessAffinity.Value;
+                checkGw2ProcessAffinityAll.Checked = false;
+            }
+            if (Settings.GuildWars1.ProcessAffinity.HasValue)
+            {
+                adGw1ProcessAffinity.Affinity = Settings.GuildWars1.ProcessAffinity.Value;
+                checkGw1ProcessAffinityAll.Checked = false;
+            }
+
             checkGw2ProcessBoostBrowser.Checked = Settings.GuildWars2.PrioritizeCoherentUI.Value;
 
             if (Settings.NotesNotifications.HasValue)
@@ -530,6 +729,7 @@ namespace Gw2Launcher.UI
             checkStyleShowCloseAll.Checked = Settings.ShowKillAllAccounts.Value;
 
             checkRepaintInitialWindow.Checked = Settings.RepaintInitialWindow.Value;
+            checkHideInitialWindow.Checked = Settings.HideInitialWindow.Value;
 
             if (Settings.GuildWars2.MumbleLinkName.HasValue)
             {
@@ -537,35 +737,43 @@ namespace Gw2Launcher.UI
                 textGw2MumbleName.Text = Settings.GuildWars2.MumbleLinkName.Value;
             }
 
-            if (Client.FileManager.IsFolderLinkingSupported)
+            if (Settings.GuildWars2.ProfileMode.HasValue)
             {
-                if (Settings.GuildWars2.ProfileMode.HasValue)
+                switch (Settings.GuildWars2.ProfileMode.Value)
                 {
-                    switch (Settings.GuildWars2.ProfileMode.Value)
-                    {
-                        case Settings.ProfileMode.Advanced:
+                    case Settings.ProfileMode.Advanced:
 
-                            radioGw2ModeAdvanced.Checked = true;
+                        radioGw2ModeAdvanced.Checked = true;
 
-                            break;
-                        case Settings.ProfileMode.Basic:
+                        break;
+                    case Settings.ProfileMode.Basic:
 
-                            radioGw2ModeBasic.Checked = true;
+                        radioGw2ModeBasic.Checked = true;
 
-                            if (Settings.GuildWars2.ProfileOptions.HasValue)
-                            {
-                                var o = Settings.GuildWars2.ProfileOptions.Value;
-                                checkGw2ModeBasicRestorePath.Checked = o.HasFlag(Settings.ProfileModeOptions.RestoreOriginalPath);
-                                checkGw2ModeBasicClearTemporary.Checked = o.HasFlag(Settings.ProfileModeOptions.ClearTemporaryFiles);
-                            }
+                        if (Settings.GuildWars2.ProfileOptions.HasValue)
+                        {
+                            var o = Settings.GuildWars2.ProfileOptions.Value;
+                            checkGw2ModeBasicRestorePath.Checked = o.HasFlag(Settings.ProfileModeOptions.RestoreOriginalPath);
+                            checkGw2ModeBasicClearTemporary.Checked = o.HasFlag(Settings.ProfileModeOptions.ClearTemporaryFiles);
+                        }
 
-                            break;
-                    }
+                        break;
                 }
             }
-            else
+
+            if (!Client.FileManager.IsVirtualModeSupported)
             {
-                radioGw2ModeBasic.Enabled = false;
+                labelGw2ModeAdvancedWarning1.Visible = true;
+                labelGw2ModeAdvancedWarning2.Visible = true;
+
+                if (!Settings.GuildWars2.ProfileMode.HasValue && Client.FileManager.IsBasicModeSupported)
+                    radioGw2ModeBasic.Checked = true;
+            }
+
+            if (!Client.FileManager.IsBasicModeSupported)
+            {
+                labelGw2ModeBasicWarning1.Visible = true;
+                labelGw2ModeBasicWarning2.Visible = false;
             }
 
             if (Settings.ScreenshotNotifications.HasValue)
@@ -584,33 +792,6 @@ namespace Gw2Launcher.UI
                 Util.NumericUpDown.SetValue(numericStyleColumns, Settings.StyleColumns.Value);
             }
 
-            Settings.AccountGridButtonColors colors;
-
-            if (Settings.StyleColors.HasValue)
-            {
-                colors = Settings.StyleColors.Value;
-                labelColorsReset.Visible = true;
-            }
-            else
-            {
-                colors = AccountGridButton.DefaultColors;
-            }
-
-            tooltipColors = new ToolTip();
-            tooltipColors.InitialDelay = 100;
-
-            var colors2 = new Settings.AccountGridButtonColors();
-
-            foreach (var panel in GetColorPanels())
-            {
-                panel.Color1 = colors[panel.ColorName];
-                if (panel.Tooltip != null)
-                    tooltipColors.SetToolTip(panel, panel.Tooltip);
-                panel.Click += panelColor_Click;
-                colors2[panel.ColorName] = colors[panel.ColorName];
-            }
-
-            buttonSample.Colors = colors2;
             buttonSample.SetStatus("sample", AccountGridButton.StatusColors.Default);
 
             comboEncryptionScope.Items.AddRange(new object[]
@@ -704,10 +885,314 @@ namespace Gw2Launcher.UI
                 panelGw1RunAfterPrograms.ResumeLayout();
             }
 
+            panelHotkeysHotkeys.HotkeyClick += panelHotkeysHotkeys_HotkeyClick;
+            panelHotkeysHotkeys.TemplateHeader = label28;
+            panelHotkeysHotkeys.TemplateText = labelHotkeysAdd;
+            panelHotkeysHotkeys.TemplateKey = label214;
+            panelHotkeysHotkeys.EnableGrouping = true;
+
+            checkHotkeysEnable.Checked = Settings.HotkeysEnabled.Value;
+
+            if (Settings.StyleOffsets.HasValue)
+            {
+                var offsets = Settings.StyleOffsets.Value.Clone();
+
+                Util.NumericUpDown.SetValue(numericStyleOffsetNameX, offsets[Settings.AccountGridButtonOffsets.Offsets.Name].X);
+                Util.NumericUpDown.SetValue(numericStyleOffsetNameY, offsets[Settings.AccountGridButtonOffsets.Offsets.Name].Y);
+                Util.NumericUpDown.SetValue(numericStyleOffsetStatusX, offsets[Settings.AccountGridButtonOffsets.Offsets.Status].X);
+                Util.NumericUpDown.SetValue(numericStyleOffsetStatusY, offsets[Settings.AccountGridButtonOffsets.Offsets.Status].Y);
+                Util.NumericUpDown.SetValue(numericStyleOffsetUserX, offsets[Settings.AccountGridButtonOffsets.Offsets.User].X);
+                Util.NumericUpDown.SetValue(numericStyleOffsetUserY, offsets[Settings.AccountGridButtonOffsets.Offsets.User].Y);
+
+                if (offsets.Height > 0)
+                {
+                    checkStyleHeight.Checked = true;
+                    Util.NumericUpDown.SetValue(numericStyleHeight, offsets.Height);
+                }
+
+                if (Settings.StyleGridSpacing.HasValue)
+                {
+                    checkStyleSpacing.Checked = true;
+                    Util.NumericUpDown.SetValue(numericStyleSpacing, Settings.StyleGridSpacing.Value);
+                }
+
+                buttonSample.Offsets = offsets;
+                checkStyleCustomizeOffsets.Checked = true;
+            }
+
+            checkStyleDisableShadows.Checked = Settings.StyleDisableWindowShadows.Value;
+            checkStyleDisableSearchOnKeyPress.Checked = Settings.StyleDisableSearchOnKeyPress.Value;
+            checkStyleDisablePageOnKeyPress.Checked = Settings.StyleDisablePageOnKeyPress.Value;
+            checkStyleShowTemplatesToggle.Checked = Settings.ShowWindowTemplatesToggle.Value;
+            checkStyleShowMinimizeRestoreAll.Checked = Settings.ShowMinimizeRestoreAll.Value;
+            checkStyleShowAccountBarToggle.Checked = Settings.ShowAccountBarToggle.Value;
+
+            checkStyleShowLoginRewardIcon.Checked = Settings.StyleShowDailyLoginDay.Value != Settings.DailyLoginDayIconFlags.None;
+            checkStyleMarkActive.Checked = Settings.StyleHighlightActive.Value;
+
+            if (Settings.DxTimeout.HasValue)
+            {
+                checkDxTimeoutRelaunch.Checked = true;
+                Util.NumericUpDown.SetValue(numericDxTimeoutRelaunch, Settings.DxTimeout.Value);
+            }
+
+            comboShowDailiesLang.Items.AddRange(new object[]
+                {
+                    new Util.ComboItem<Settings.Language>(Settings.Language.EN, "EN"),
+                    new Util.ComboItem<Settings.Language>(Settings.Language.DE, "DE"),
+                    new Util.ComboItem<Settings.Language>(Settings.Language.ES, "ES"),
+                    new Util.ComboItem<Settings.Language>(Settings.Language.FR, "FR"),
+                    new Util.ComboItem<Settings.Language>(Settings.Language.ZH, "ZH"),
+                });
+
+            Util.ComboItem<Settings.Language>.Select(comboShowDailiesLang, Settings.ShowDailiesLanguage.Value);
+
+            comboTweakEmailMethod.Items.AddRange(new object[]
+                {
+                    new Util.ComboItem<Settings.LoginInputType>(Settings.LoginInputType.Clipboard, "Pasted via clipboard"),
+                    new Util.ComboItem<Settings.LoginInputType>(Settings.LoginInputType.Post, "Characters via post"),
+                    new Util.ComboItem<Settings.LoginInputType>(Settings.LoginInputType.Send, "Characters via send"),
+                });
+            
+            comboTweakPasswordMethod.Items.AddRange(new object[]
+                {
+                    new Util.ComboItem<Settings.LoginInputType>(Settings.LoginInputType.Clipboard, "Pasted via clipboard"),
+                    new Util.ComboItem<Settings.LoginInputType>(Settings.LoginInputType.Post, "Characters via post"),
+                    new Util.ComboItem<Settings.LoginInputType>(Settings.LoginInputType.Send, "Characters via send"),
+                });
+
+            if (Settings.Tweaks.Login.HasValue)
+            {
+                checkTweakLogin.Checked = true;
+
+                var v = Settings.Tweaks.Login.Value;
+
+                Util.ComboItem<Settings.LoginInputType>.Select(comboTweakEmailMethod, v.Email);
+                Util.ComboItem<Settings.LoginInputType>.Select(comboTweakPasswordMethod, v.Password);
+
+                checkTweakLoginVerify.Checked = v.Verify;
+                Util.NumericUpDown.SetValue(numericTweakLoginDelay, v.Delay);
+            }
+            else
+            {
+                Util.ComboItem<Settings.LoginInputType>.Select(comboTweakEmailMethod, Settings.LoginInputType.Post);
+                Util.ComboItem<Settings.LoginInputType>.Select(comboTweakPasswordMethod, Settings.LoginInputType.Clipboard);
+            }
+
+            if (Settings.Tweaks.Launcher.HasValue)
+            {
+                checkTweakLauncher.Checked = true;
+
+                var v = Settings.Tweaks.Launcher.Value;
+
+                checkTweakLauncherCoherentLoad.Checked = v.WaitForCoherentLoaded;
+                checkTweakLauncherCoherentMemory.Checked = v.WaitForCoherentMemory;
+                Util.NumericUpDown.SetValue(numericTweakLauncherDelay, v.Delay);
+            }
+
+            if (Settings.Network.HasValue)
+            {
+                var v = Settings.Network.Value;
+
+                checkNetworkEnable.Checked = (v & Settings.NetworkOptions.Enabled) != 0;
+                checkNetworkExact.Checked = (v & Settings.NetworkOptions.Exact) != 0;
+                checkNetworkWarnOnChange.Checked = (v & Settings.NetworkOptions.WarnOnChange) != 0;
+            }
+
+            if (Settings.Steam.Path.HasValue)
+            {
+                checkSteamPath.Checked = true;
+                textSteamPath.Text = Settings.Steam.Path.Value;
+            }
+
+            if (Settings.Steam.Timeout.HasValue)
+            {
+                Util.NumericUpDown.SetValue(numericSteamTimeout, Settings.Steam.Timeout.Value);
+            }
+
+            if (Settings.Steam.Limitation.HasValue)
+            {
+                switch (Settings.Steam.Limitation.Value)
+                {
+                    case Settings.SteamLimitation.OnlyBlockSteam:
+
+                        radioSteamLimitSteam.Checked = true;
+
+                        break;
+                    case Settings.SteamLimitation.BlockAll:
+
+                        radioSteamLimitAll.Checked = true;
+
+                        break;
+                    case Settings.SteamLimitation.LaunchWithoutSteam:
+
+                        radioSteamLimitLaunchWithout.Checked = true;
+
+                        break;
+                }
+            }
+
+            if (Settings.Tweaks.DisableMumbleLinkDailyLogin.Value)
+            {
+                checkTweakDailyLogin.Checked = false;
+            }
+
+
+
+
             argsStateGw2 = ArgsState.Changed;
             argsStateGw1 = ArgsState.Changed;
             panelLaunchOptionsAdvancedGw2.PreVisiblePropertyChanged += panelLaunchOptionsAdvancedGw2_PreVisiblePropertyChanged;
             panelLaunchOptionsAdvancedGw1.PreVisiblePropertyChanged += panelLaunchOptionsAdvancedGw1_PreVisiblePropertyChanged;
+            panelHotkeys.PreVisiblePropertyChanged += panelHotkeys_PreVisiblePropertyChanged;
+            panelStyle.PreVisiblePropertyChanged += panelStyle_PreVisiblePropertyChanged;
+            panelSecurity.PreVisiblePropertyChanged += panelSecurity_PreVisiblePropertyChanged;
+            panelStyle.PreVisiblePropertyChanged += OnSamplePreVisiblePropertyChanged;
+            panelColors.PreVisiblePropertyChanged += OnSamplePreVisiblePropertyChanged;
+            buttonSample.SizeChanged += buttonSample_SizeChanged;
+        }
+
+        void panelSecurity_PreVisiblePropertyChanged(object sender, bool e)
+        {
+            panelSecurity.PreVisiblePropertyChanged -= panelSecurity_PreVisiblePropertyChanged;
+
+            if (Settings.IPAddresses.HasValue)
+            {
+                var addresses = Settings.IPAddresses.Value;
+                var sb = new StringBuilder(addresses.Length * 20);
+
+                foreach (var a in addresses)
+                {
+                    a.ToString(sb);
+                    sb.AppendLine();
+                }
+
+                textNetworkAddresses.Text = sb.ToString();
+            }
+
+            textNetworkAddresses.TextChanged += textNetworkAddresses_TextChanged;
+        }
+
+        void panelStyle_PreVisiblePropertyChanged(object sender, bool e)
+        {
+            panelStyle.PreVisiblePropertyChanged -= panelStyle_PreVisiblePropertyChanged;
+
+            panelStyleLoginRewardIcons.SuspendLayout();
+
+            var flags = new Settings.DailyLoginDayIconFlags[]
+            {
+                Settings.DailyLoginDayIconFlags.MysticCoins,
+                Settings.DailyLoginDayIconFlags.Laurels,
+                Settings.DailyLoginDayIconFlags.Luck,
+                Settings.DailyLoginDayIconFlags.BlackLionGoods,
+                Settings.DailyLoginDayIconFlags.CraftingMaterials,
+                Settings.DailyLoginDayIconFlags.Experience,
+                Settings.DailyLoginDayIconFlags.ExoticEquipment,
+                Settings.DailyLoginDayIconFlags.CelebrationBooster,
+                Settings.DailyLoginDayIconFlags.TransmutationCharge,
+                Settings.DailyLoginDayIconFlags.ChestOfLoyalty,
+            };
+
+            var icons = new Image[]
+            {
+                Properties.Resources.loginreward0,
+                Properties.Resources.loginreward1,
+                Properties.Resources.loginreward2,
+                Properties.Resources.loginreward3,
+                Properties.Resources.loginreward4,
+                Properties.Resources.loginreward5,
+                Properties.Resources.loginreward6,
+                Properties.Resources.loginreward7,
+                Properties.Resources.loginreward8,
+                Properties.Resources.loginreward9,
+            };
+
+            var v = Settings.StyleShowDailyLoginDay.Value;
+            if (v == Settings.DailyLoginDayIconFlags.None)
+                v = ~Settings.DailyLoginDayIconFlags.None;
+
+            checkStyleLoginRewardIconsNumber.Checked = (v & Settings.DailyLoginDayIconFlags.ShowDay) != 0;
+
+            var sz = Scale(icons[0].Width);
+
+            for (var i = 0; i < flags.Length; i++)
+            {
+                var check = new CheckBox()
+                {
+                    Checked = (v & flags[i]) != 0,
+                    AutoSize = true,
+                    Margin = Padding.Empty,
+                    Tag = flags[i],
+                    Anchor = AnchorStyles.Left,
+                };
+
+                var icon = new PictureBox()
+                {
+                    Image = icons[i],
+                    SizeMode = PictureBoxSizeMode.StretchImage,
+                    Size = new Size(sz, sz),
+                    Anchor = AnchorStyles.Left,
+                };
+
+                var panel = new StackPanel()
+                {
+                    Margin = checkStyleLoginRewardIconsNumber.Margin,
+                    AutoSize = true,
+                    AutoSizeFill = StackPanel.AutoSizeFillMode.NoWrap,
+                    FlowDirection = FlowDirection.LeftToRight,
+                    Tag = check
+                };
+
+                var onClick = new EventHandler(
+                    delegate
+                    {
+                        check.Checked = !check.Checked;
+                    });
+
+                icon.Click += onClick;
+                panel.Click += onClick;
+
+                panel.Controls.AddRange(new Control[] { check, icon });
+                panelStyleLoginRewardIcons.Controls.Add(panel);
+            }
+
+            panelStyleLoginRewardIcons.ResumeLayout();
+        }
+
+        void buttonSample_SizeChanged(object sender, EventArgs e)
+        {
+            if (!checkStyleHeight.Checked)
+                Util.NumericUpDown.SetValue(numericStyleHeight, buttonSample.Height);
+
+            panelColorsAccountSample.Size = buttonSample.Size;
+            panelStyleSample.Size = buttonSample.Size;
+        }
+
+        void panelHotkeys_PreVisiblePropertyChanged(object sender, bool e)
+        {
+            panelHotkeys.PreVisiblePropertyChanged -= panelHotkeys_PreVisiblePropertyChanged;
+
+            panelHotkeysHotkeys.SuspendLayout();
+            if (Settings.Hotkeys.HasValue)
+            {
+                var hotkeys = Settings.Hotkeys.Value;
+                foreach (var h in hotkeys)
+                {
+                    CreateHotkeyButton(h);
+                }
+            }
+            foreach (var a in Util.Accounts.GetAccounts())
+            {
+                if (a.Hotkeys != null)
+                {
+                    foreach (var h in a.Hotkeys)
+                    {
+                        CreateHotkeyButton(h, a);
+                    }
+                }
+            }
+            panelHotkeysHotkeys.ResumeLayout();
+            panelHotkeysHotkeys.ResetModified();
         }
 
         protected override void OnInitializeComponents()
@@ -723,74 +1208,6 @@ namespace Gw2Launcher.UI
 
             p = panelScreenshotImageFormatJpg.Parent;
             p.Margin = new System.Windows.Forms.Padding(comboScreenshotImageFormat.Left - 2, p.Margin.Top, p.Margin.Right, p.Margin.Bottom);
-        }
-
-        private AccountGridButtonColorPreviewPanel[] GetColorPanels()
-        {
-            return new AccountGridButtonColorPreviewPanel[]
-            {
-                panelColorName,
-                panelColorUser,
-                panelColorStatusError,
-                panelColorStatusNone,
-                panelColorStatusOk,
-                panelColorStatusWaiting,
-                panelColorBackgroundDefault,
-                panelColorBackgroundHovered,
-                panelColorBackgroundSelected,
-                panelColorForegroundHovered,
-                panelColorForegroundSelected,
-                panelColorBorderDarkDefault,
-                panelColorBorderDarkHovered,
-                panelColorBorderDarkSelected,
-                panelColorBorderLightDefault,
-                panelColorBorderLightHovered,
-                panelColorBorderLightSelected,
-                panelColorExitFill,
-                panelColorExitFlash,
-                panelColorFocus,
-                panelColorHighlight,
-                panelColorHighlightBorder,
-            };
-        }
-
-        private void SetProcessorAffinity(Settings.ISettingValue<long> s, CheckBox checkAll, CheckBox[] checks)
-        {
-            if (s.HasValue)
-            {
-                var bits = s.Value;
-                var isSet = false;
-                var count = checks.Length;
-                if (count > 64)
-                    count = 64;
-
-                for (var i = 0; i < count; i++)
-                {
-                    if (checks[i].Checked = (bits & 1) == 1)
-                        isSet = true;
-                    bits >>= 1;
-                }
-                checkAll.Checked = !isSet;
-            }
-            else
-            {
-                checkGw2ProcessAffinityAll.Checked = true;
-
-            }
-        }
-
-        private long GetProcessorAffinity(CheckBox[] checks)
-        {
-            long bits = 0;
-            var count = checks.Length;
-            if (count > 64)
-                count = 64;
-            for (int i = 0; i < count; i++)
-            {
-                if (checks[i].Checked)
-                    bits |= ((long)1 << i);
-            }
-            return bits;
         }
 
         private int GetScopeWeigth(Settings.EncryptionScope scope)
@@ -861,30 +1278,6 @@ namespace Gw2Launcher.UI
                     copyAuth,
                     showAuth,
                 });
-        }
-
-        public static CheckBox[] InitializeProcessorAffinity(Panel container, CheckBox templateCheck, Label templateLabel)
-        {
-            var count = Environment.ProcessorCount;
-            var controls = new CheckBox[count];
-            var format = new string('0', (count - 1).ToString().Length);
-
-            for (var i = 0; i < count; i++)
-            {
-                CheckBox check;
-                controls[i] = check = new CheckBox()
-                {
-                    Text = i.ToString(format),
-                    Font = templateCheck.Font,
-                    AutoSize = true,
-                    Enabled = i < 64,
-                    Margin = new Padding(0, 0, 5, 5),
-                };
-            }
-
-            container.Controls.AddRange(controls);
-
-            return controls;
         }
 
         public static CheckBox[] InitializeArguments(Settings.AccountType type, Panel container, Label templateHeader, CheckBox templateCheck, Label templateSwitch, Label templateDescription, EventHandler onCheckChanged)
@@ -1264,6 +1657,11 @@ namespace Gw2Launcher.UI
             else
                 Settings.GuildWars2.Path.Clear();
 
+            if (checkGw2PathSteam.Checked && !string.IsNullOrEmpty(textGw2PathSteam.Text))
+                Settings.GuildWars2.PathSteam.Value = textGw2PathSteam.Text;
+            else
+                Settings.GuildWars2.PathSteam.Clear();
+
             if (!string.IsNullOrEmpty(textGw1Path.Text))
                 Settings.GuildWars1.Path.Value = textGw1Path.Text;
             else
@@ -1326,6 +1724,7 @@ namespace Gw2Launcher.UI
                 Settings.LastProgramVersion.Clear();
 
             Settings.PreventTaskbarGrouping.Value = checkPreventTaskbarGrouping.Checked;
+            Settings.ForceTaskbarGrouping.Value = checkForceTaskbarGrouping.Checked;
 
             if (checkWindowCaption.Checked)
                 Settings.WindowCaption.Value = textWindowCaption.Text;
@@ -1444,40 +1843,6 @@ namespace Gw2Launcher.UI
             else
                 Settings.BackgroundPatchingProgress.Clear();
 
-            if (checkEnableNetworkAuthorization.Checked)
-            {
-                Settings.NetworkAuthorizationFlags v;
-
-                if (radioNetworkVerifyManual.Checked)
-                {
-                    v = Settings.NetworkAuthorizationFlags.Manual;
-                }
-                else
-                {
-                    v = Settings.NetworkAuthorizationFlags.Automatic;
-                    if (checkNetworkVerifyAutomaticIP.Checked)
-                        v |= Settings.NetworkAuthorizationFlags.VerifyIP;
-                }
-
-                if (checkRemoveAllNetworks.Checked)
-                    v |= Settings.NetworkAuthorizationFlags.RemoveAll;
-                else if (checkRemovePreviousNetworks.Checked)
-                    v |= Settings.NetworkAuthorizationFlags.RemovePreviouslyAuthorized;
-
-                if (checkNetworkAbortOnCancel.Checked)
-                    v |= Settings.NetworkAuthorizationFlags.AbortLaunchingOnFail;
-
-                if (!v.HasFlag(Settings.NetworkAuthorizationFlags.VerifyIP) || (v & (Settings.NetworkAuthorizationFlags.Always | Settings.NetworkAuthorizationFlags.RemoveAll)) != 0)
-                    Settings.PublicIPAddress.Clear();
-
-                Settings.NetworkAuthorization.Value = v;
-            }
-            else
-            {
-                Settings.NetworkAuthorization.Clear();
-                Settings.PublicIPAddress.Clear();
-            }
-
             if (checkScreenshotNameFormat.Checked && !string.IsNullOrEmpty(comboScreenshotNameFormat.Text))
             {
                 Tools.Screenshots.Formatter formatter = null;
@@ -1534,6 +1899,11 @@ namespace Gw2Launcher.UI
             else
                 Settings.GuildWars2.ProcessPriority.Clear();
 
+            if (checkGw2ProcessPriorityDx.Checked && comboGw2ProcessPriorityDx.SelectedIndex >= 0)
+                Settings.GuildWars2.DxLoadingPriority.Value = Util.ComboItem<Settings.ProcessPriorityClass>.SelectedValue(comboGw2ProcessPriorityDx);
+            else
+                Settings.GuildWars2.DxLoadingPriority.Clear();
+
             if (checkGw1ProcessPriority.Checked && comboGw1ProcessPriority.SelectedIndex >= 0)
                 Settings.GuildWars1.ProcessPriority.Value = Util.ComboItem<Settings.ProcessPriorityClass>.SelectedValue(comboGw1ProcessPriority);
             else
@@ -1546,7 +1916,7 @@ namespace Gw2Launcher.UI
 
             if (!checkGw2ProcessAffinityAll.Checked)
             {
-                var bits = GetProcessorAffinity(checkProcessorAffinityGw2);
+                var bits = adGw2ProcessAffinity.Affinity;
                 if (bits == 0)
                     Settings.GuildWars2.ProcessAffinity.Clear();
                 else
@@ -1557,7 +1927,7 @@ namespace Gw2Launcher.UI
 
             if (!checkGw1ProcessAffinityAll.Checked)
             {
-                var bits = GetProcessorAffinity(checkProcessorAffinityGw1);
+                var bits = adGw1ProcessAffinity.Affinity;
                 if (bits == 0)
                     Settings.GuildWars1.ProcessAffinity.Clear();
                 else
@@ -1628,6 +1998,7 @@ namespace Gw2Launcher.UI
             Settings.ShowKillAllAccounts.Value = checkStyleShowCloseAll.Checked;
 
             Settings.RepaintInitialWindow.Value = checkRepaintInitialWindow.Checked;
+            Settings.HideInitialWindow.Value = checkHideInitialWindow.Checked;
 
             if (checkGw2MumbleName.Checked)
                 Settings.GuildWars2.MumbleLinkName.Value = textGw2MumbleName.Text;
@@ -1692,21 +2063,7 @@ namespace Gw2Launcher.UI
                 Settings.StyleBackgroundImage.Value = (string)checkStyleBackgroundImage.Tag;
             else
                 Settings.StyleBackgroundImage.Clear();
-
-            if (!AccountGridButton.DefaultColors.Equals(buttonSample.Colors))
-            {
-                var colors = new Settings.AccountGridButtonColors();
-                foreach (var panel in GetColorPanels())
-                {
-                    colors[panel.ColorName] = panel.Color1;
-                }
-                Settings.StyleColors.Value = colors;
-            }
-            else
-            {
-                Settings.StyleColors.Clear();
-            }
-
+            
             Settings.LaunchBehindOtherAccounts.Value = checkLaunchBehindWindows.Checked;
 
             if (checkLaunchLimiter.Checked)
@@ -1793,6 +2150,205 @@ namespace Gw2Launcher.UI
             }
             else
                 Settings.GuildWars1.RunAfter.Clear();
+
+            if (panelHotkeysHotkeys.Modified)
+            {
+                foreach (var m in panelHotkeysHotkeys.GetModified())
+                {
+                    if (m.Account == null)
+                    {
+                        if (m.Hotkeys != null)
+                            Settings.Hotkeys.Value = m.Hotkeys;
+                        else
+                            Settings.Hotkeys.Clear();
+                    }
+                    else
+                    {
+                        m.Account.Hotkeys = m.Hotkeys;
+                    }
+                }
+            }
+
+            Settings.HotkeysEnabled.Value = checkHotkeysEnable.Checked;
+
+            if (checkStyleCustomizeOffsets.Checked)
+            {
+                Settings.StyleOffsets.Value = buttonSample.Offsets;
+                if (checkStyleSpacing.Checked)
+                    Settings.StyleGridSpacing.Value = (byte)numericStyleSpacing.Value;
+                else
+                    Settings.StyleGridSpacing.Clear();
+            }
+            else
+            {
+                Settings.StyleOffsets.Clear();
+                Settings.StyleGridSpacing.Clear();
+            }
+
+            Settings.StyleDisableWindowShadows.Value = checkStyleDisableShadows.Checked;
+            Settings.StyleDisableSearchOnKeyPress.Value = checkStyleDisableSearchOnKeyPress.Checked;
+            Settings.StyleDisablePageOnKeyPress.Value = checkStyleDisablePageOnKeyPress.Checked;
+            Settings.ShowWindowTemplatesToggle.Value = checkStyleShowTemplatesToggle.Checked;
+            Settings.ShowMinimizeRestoreAll.Value = checkStyleShowMinimizeRestoreAll.Checked;
+            Settings.ShowAccountBarToggle.Value = checkStyleShowAccountBarToggle.Checked;
+
+            if (panelStyleLoginRewardIcons.Controls.Count > 0)
+            {
+                var v = Settings.DailyLoginDayIconFlags.None;
+
+                if (checkStyleShowLoginRewardIcon.Checked)
+                {
+                    if (checkStyleLoginRewardIconsNumber.Checked)
+                        v |= Settings.DailyLoginDayIconFlags.ShowDay;
+                    foreach (Control c in panelStyleLoginRewardIcons.Controls)
+                    {
+                        var check = (CheckBox)c.Tag;
+                        if (check.Checked)
+                            v |= (Settings.DailyLoginDayIconFlags)check.Tag;
+                    }
+                }
+
+                Settings.StyleShowDailyLoginDay.Value = v;
+            }
+
+            if (panelGw2ProcessAffinityAccounts.Tag != null)
+            {
+                ((AffinityAccountsPanel)panelGw2ProcessAffinityAccounts.Tag).Save();
+            }
+
+            if (panelGw1ProcessAffinityAccounts.Tag != null)
+            {
+                ((AffinityAccountsPanel)panelGw1ProcessAffinityAccounts.Tag).Save();
+            }
+
+            Settings.StyleHighlightActive.Value = checkStyleMarkActive.Checked;
+
+            if (checkDxTimeoutRelaunch.Checked)
+                Settings.DxTimeout.Value = (byte)numericDxTimeoutRelaunch.Value;
+            else
+                Settings.DxTimeout.Clear();
+
+            Settings.ShowDailiesLanguage.Value = Util.ComboItem<Settings.Language>.SelectedValue(comboShowDailiesLang, Settings.Language.EN);
+
+            if (labelLocalizedExecutionAccountsSelected.Tag != null)
+            {
+                foreach (var a in GetLocalizedExecutionAccountsSelected())
+                {
+                    ((Settings.IGw2Account)a.Key).LocalizedExecution = a.Value;
+                }
+            }
+
+            if (radioLocalizedExecutionAccountsInclude.Checked)
+                Settings.GuildWars2.LocalizeAccountExecutionSelection.Value = Settings.LocalizeAccountExecutionSelectionOptions.Include;
+            else if (radioLocalizedExecutionAccountsExclude.Checked)
+                Settings.GuildWars2.LocalizeAccountExecutionSelection.Value = Settings.LocalizeAccountExecutionSelectionOptions.Exclude;
+            else
+                Settings.GuildWars2.LocalizeAccountExecutionSelection.Clear();
+
+            if (checkTweakLogin.Checked)
+            {
+                Settings.Tweaks.Login.Value = new Settings.LoginTweaks(
+                    Util.ComboItem<Settings.LoginInputType>.SelectedValue(comboTweakEmailMethod, Settings.LoginInputType.Clipboard),
+                    Util.ComboItem<Settings.LoginInputType>.SelectedValue(comboTweakPasswordMethod, Settings.LoginInputType.Post),
+                    checkTweakLoginVerify.Checked,
+                    (byte)numericTweakLoginDelay.Value);
+            }
+            else
+                Settings.Tweaks.Login.Clear();
+
+            if (checkTweakLauncher.Checked)
+            {
+                Settings.Tweaks.Launcher.Value = new Settings.LauncherTweaks(
+                    (byte)numericTweakLauncherDelay.Value,
+                    checkTweakLauncherCoherentLoad.Checked,
+                    checkTweakLauncherCoherentMemory.Checked);
+            }
+            else
+                Settings.Tweaks.Launcher.Clear();
+
+            if (labelTweakLauncherCoords.Tag != null)
+            {
+                var v = (Settings.LauncherPoints)labelTweakLauncherCoords.Tag;
+
+                if (v.EmptyArea.IsEmpty && v.PlayButton.IsEmpty)
+                    Settings.GuildWars2.LauncherAutologinPoints.Clear();
+                else
+                    Settings.GuildWars2.LauncherAutologinPoints.Value = v;
+            }
+
+            if (checkNetworkEnable.Checked)
+            {
+                var v = Settings.NetworkOptions.Enabled;
+                if (checkNetworkExact.Checked)
+                    v |= Settings.NetworkOptions.Exact;
+                if (checkNetworkWarnOnChange.Checked)
+                    v |= Settings.NetworkOptions.WarnOnChange;
+                Settings.Network.Value = v;
+            }
+            else
+                Settings.Network.Clear();
+
+            if (textNetworkAddresses.Tag != null)
+            {
+                var lines = textNetworkAddresses.Lines;
+                var addresses = new Net.IP.WildcardAddress[lines.Length];
+                var count = 0;
+
+                foreach (var l in textNetworkAddresses.Lines)
+                {
+                    if (string.IsNullOrWhiteSpace(l))
+                        continue;
+
+                    try
+                    {
+                        var ip = Net.IP.WildcardAddress.Parse(l.Trim());
+                        addresses[count++] = ip;
+                    }
+                    catch { }
+                }
+
+                if (count > 0)
+                {
+                    if (count != addresses.Length)
+                        Array.Resize(ref addresses, count);
+
+                    Settings.IPAddresses.Value = addresses;
+                }
+                else
+                    Settings.IPAddresses.Clear();
+            }
+
+            if (checkSteamPath.Checked && !string.IsNullOrEmpty(textSteamPath.Text))
+            {
+                Settings.Steam.Path.Value = textSteamPath.Text;
+            }
+
+            if (numericSteamTimeout.Value != 5)
+                Settings.Steam.Timeout.Value = (byte)numericSteamTimeout.Value;
+            else
+                Settings.Steam.Timeout.Clear();
+
+            if (radioSteamLimitAll.Checked)
+                Settings.Steam.Limitation.Value = Settings.SteamLimitation.BlockAll;
+            else if (radioSteamLimitSteam.Checked)
+                Settings.Steam.Limitation.Value = Settings.SteamLimitation.OnlyBlockSteam;
+            else if (radioSteamLimitLaunchWithout.Checked)
+                Settings.Steam.Limitation.Value = Settings.SteamLimitation.LaunchWithoutSteam;
+
+            if (colorInfo != null && colorInfo.Modified) //only loaded if the color settings were viewed
+            {
+                colorInfo.Save();
+            }
+
+            if (checkTweakDailyLogin.Checked)
+                Settings.Tweaks.DisableMumbleLinkDailyLogin.Clear();
+            else
+                Settings.Tweaks.DisableMumbleLinkDailyLogin.Value = true;
+
+
+
+
+
 
             this.DialogResult = System.Windows.Forms.DialogResult.OK;
         }
@@ -2134,10 +2690,19 @@ namespace Gw2Launcher.UI
         {
             if (disposing)
             {
+                if (colorInfo != null)
+                {
+                    colorInfo.Reset();
+                    colorInfo = null;
+                }
+
                 Util.ScheduledEvents.Unregister(OnScreenshotNameFormatChangedCallback);
 
                 using (buttonSample.BackgroundImage) { }
                 using (buttonSample.Image) { }
+                using (ftooltip) { }
+                using (tooltipColors) { }
+                using (cancelPressed) { }
 
                 if (components != null)
                     components.Dispose();
@@ -2147,6 +2712,8 @@ namespace Gw2Launcher.UI
 
             if (disposing)
             {
+                using (markerIcons) { }
+
                 foreach (object o in iconsRunAfter.Values)
                 {
                     if (o is Icon)
@@ -2288,7 +2855,7 @@ namespace Gw2Launcher.UI
 
         private void checkGw2ProcessAffinityAll_CheckedChanged(object sender, EventArgs e)
         {
-            tableGw2ProcessAffinity.Visible = !checkGw2ProcessAffinityAll.Checked;
+            panelGw2ProcessAffinity.Visible = !checkGw2ProcessAffinityAll.Checked;
         }
 
         private void checkNoteNotifications_CheckedChanged(object sender, EventArgs e)
@@ -2370,6 +2937,8 @@ namespace Gw2Launcher.UI
         private void checkStyleMarkFocused_CheckedChanged(object sender, EventArgs e)
         {
             buttonSample.IsFocused = checkStyleMarkFocused.Checked;
+            buttonSample.IsActiveHighlight = checkStyleMarkActive.Checked && !buttonSample.IsFocused;
+            buttonSample.IsActive = checkStyleMarkActive.Checked;
         }
 
         private void buttonAccountBarShow_Click(object sender, EventArgs e)
@@ -2579,7 +3148,7 @@ namespace Gw2Launcher.UI
 
         private void checkGw1ProcessAffinityAll_CheckedChanged(object sender, EventArgs e)
         {
-            tableGw1ProcessAffinity.Visible = !checkGw1ProcessAffinityAll.Checked;
+            panelGw1ProcessAffinity.Visible = !checkGw1ProcessAffinityAll.Checked;
         }
 
         private void OnGw2ProcessPriorityChanged()
@@ -2845,6 +3414,8 @@ namespace Gw2Launcher.UI
                     return buttonTools;
                 case Panels.Updates:
                     return buttonUpdates;
+                case Panels.Backup:
+                    return buttonBackup;
                 case Panels.General:
                 default:
                     return buttonGeneral;
@@ -2998,7 +3569,8 @@ namespace Gw2Launcher.UI
 
         private void buttonSample_Click(object sender, EventArgs e)
         {
-            contextImage.Show(Cursor.Position);
+            if (panelStyle.Visible)
+                contextImage.Show(Cursor.Position);
         }
 
         private void menuImageBackgroundToolStripMenuItem_Click(object sender, EventArgs e)
@@ -3014,60 +3586,83 @@ namespace Gw2Launcher.UI
             }
         }
 
-        private void panelColor_Click(object sender, EventArgs e)
+        private void ShowColorDialog(ColorNames c, Color color, UiColorsPreviewPanel panel)
         {
-            var panel = (AccountGridButtonColorPreviewPanel)sender;
-
             using (var f = new ColorPicker.formColorDialog())
             {
-                var c = panel.Color1;
-
                 if (locationColorDialog.X != int.MinValue)
                 {
                     f.StartPosition = FormStartPosition.Manual;
                     f.Location = locationColorDialog;
                 }
 
-                f.AllowAlphaTransparency = panel.SupportsAlpha;
-                f.Color = c;
-                f.DefaultColor = AccountGridButton.DefaultColors[panel.ColorName];
+                f.DefaultColor = colorInfo.Defaults[c];
+                f.AllowAlphaTransparency = UiColors.SupportsAlpha(c);
+                f.Color = color;
 
                 if (f.ShowDialog(this) == System.Windows.Forms.DialogResult.OK)
                 {
-                    panel.Color1 = buttonSample.Colors[panel.ColorName] = f.Color;
-
-                    if (f.DefaultColor.ToArgb() != f.Color.ToArgb())
+                    if (panel != null)
                     {
-                        labelColorsReset.Visible = true;
+                        panel.Color1 = f.Color;
                     }
 
-                    buttonSample.Redraw();
+                    if (checkColorsShared.Checked)
+                    {
+                        foreach (var cn in colorInfo.GetShared(c))
+                        {
+                            if (cn != c)
+                            {
+                                colorInfo.SetColor(cn, f.Color, true, true);
+                            }
+                        }
+                    }
+
+                    colorInfo.SetColor(c, f.Color, panel == null, true);
+
+                    if (checkColorsPreview.Checked)
+                    {
+                        colorInfo.Preview();
+                    }
+                    else if (buttonSample.Visible)
+                    {
+                        buttonSample.Colors = colorInfo.Values;
+                    }
                 }
 
                 locationColorDialog = f.Location;
             }
         }
 
-        private void ShowStatusColorSample(Settings.AccountGridButtonColors.Colors c)
+        private void panelColor_Click(object sender, EventArgs e)
+        {
+            var panel = (UiColorsPreviewPanel)sender;
+
+            panel.Focus();
+
+            ShowColorDialog(panel.ColorName, panel.Color1, panel);
+        }
+
+        private void ShowStatusColorSample(UiColors.Colors c)
         {
             switch (c)
             {
-                case Settings.AccountGridButtonColors.Colors.StatusDefault:
+                case UiColors.Colors.AccountStatusDefault:
 
                     buttonSample.SetStatus("a minute ago (sample)", AccountGridButton.StatusColors.Default);
 
                     break;
-                case Settings.AccountGridButtonColors.Colors.StatusError:
+                case UiColors.Colors.AccountStatusError:
 
                     buttonSample.SetStatus("failed (sample)", AccountGridButton.StatusColors.Error);
 
                     break;
-                case Settings.AccountGridButtonColors.Colors.StatusOK:
+                case UiColors.Colors.AccountStatusOK:
 
                     buttonSample.SetStatus("active (sample)", AccountGridButton.StatusColors.Ok);
 
                     break;
-                case Settings.AccountGridButtonColors.Colors.StatusWaiting:
+                case UiColors.Colors.AccountStatusWaiting:
 
                     buttonSample.SetStatus("waiting (sample)", AccountGridButton.StatusColors.Waiting);
 
@@ -3082,12 +3677,12 @@ namespace Gw2Launcher.UI
 
         private void panelColor_MouseEnter(object sender, EventArgs e)
         {
-            ShowStatusColorSample(((AccountGridButtonColorPreviewPanel)sender).ColorName);
+            ShowStatusColorSample(((UiColorsPreviewPanel)sender).ColorName);
         }
 
         private void panelColor_MouseLeave(object sender, EventArgs e)
         {
-            ShowStatusColorSample(Settings.AccountGridButtonColors.Colors.Name);
+            //ShowStatusColorSample(UiColors.Colors.AccountName);
         }
 
         private void sliderGw1Volume_ValueChanged(object sender, EventArgs e)
@@ -3098,12 +3693,30 @@ namespace Gw2Launcher.UI
 
         private void panelColorHighlight_MouseEnter(object sender, EventArgs e)
         {
-            buttonSample.IsFocused = true;
+            bool focused = false, active = false;
+
+            switch (((UiColorsPreviewPanel)sender).ColorName)
+            {
+                case ColorNames.AccountFocusedBorder:
+                case ColorNames.AccountFocusedHighlight:
+                    focused = true;
+                    break;
+                case ColorNames.AccountActiveBorder:
+                case ColorNames.AccountActiveHighlight:
+                    active = true;
+                    break;
+            }
+
+            buttonSample.IsFocused = focused;
+            buttonSample.IsActive = active;
+            buttonSample.IsActiveHighlight = active;
         }
 
         private void panelColorHighlight_MouseLeave(object sender, EventArgs e)
         {
-            buttonSample.IsFocused = checkStyleMarkFocused.Checked;
+            //buttonSample.IsFocused = false;
+            //buttonSample.IsActiveHighlight = false;
+            //buttonSample.IsActive = false;
         }
 
         private void ShowPressedSample(AccountGridButton.PressedState state, Color flash, Color fill)
@@ -3128,62 +3741,59 @@ namespace Gw2Launcher.UI
 
         private void panelColorFocus_MouseEnter(object sender, EventArgs e)
         {
-            ShowPressedSample(AccountGridButton.PressedState.Pressed, panelColorFocus.Color1, Color.Empty);
+            ShowPressedSample(AccountGridButton.PressedState.Pressed, colorInfo.Values[ColorNames.AccountActionFocusFlash], Color.Empty);
         }
 
         private void panelColorExitFill_MouseEnter(object sender, EventArgs e)
         {
-            ShowPressedSample(AccountGridButton.PressedState.Pressing, panelColorExitFlash.Color1, panelColorExitFill.Color1);
+            ShowPressedSample(AccountGridButton.PressedState.Pressing, colorInfo.Values[ColorNames.AccountActionExitFlash], colorInfo.Values[ColorNames.AccountActionExitFill]);
         }
 
         private void panelColorExitFlash_MouseEnter(object sender, EventArgs e)
         {
-            ShowPressedSample(AccountGridButton.PressedState.Pressed, panelColorExitFlash.Color1, Color.Empty);
+            ShowPressedSample(AccountGridButton.PressedState.Pressed, colorInfo.Values[ColorNames.AccountActionExitFlash], Color.Empty);
         }
 
         private void panelColorBackground_MouseEnter(object sender, EventArgs e)
         {
-            bool hovered = false, selected = false;
+            bool hovered = false, selected = false, active = false;
 
-            switch (((AccountGridButtonColorPreviewPanel)sender).ColorName)
+            switch (((UiColorsPreviewPanel)sender).ColorName)
             {
-                case ColorNames.BackColorHovered:
-                case ColorNames.BorderDarkHovered:
-                case ColorNames.BorderLightHovered:
-                case ColorNames.ForeColorHovered:
+                case ColorNames.AccountBackColorHovered:
+                case ColorNames.AccountBorderDarkHovered:
+                case ColorNames.AccountBorderLightHovered:
+                case ColorNames.AccountForeColorHovered:
                     hovered = true;
                     break;
-                case ColorNames.BackColorSelected:
-                case ColorNames.BorderDarkSelected:
-                case ColorNames.BorderLightSelected:
-                case ColorNames.ForeColorSelected:
+                case ColorNames.AccountBackColorSelected:
+                case ColorNames.AccountBorderDarkSelected:
+                case ColorNames.AccountBorderLightSelected:
+                case ColorNames.AccountForeColorSelected:
                     selected = true;
+                    break;
+                case ColorNames.AccountBackColorActive:
+                case ColorNames.AccountBorderDarkActive:
+                case ColorNames.AccountBorderLightActive:
+                case ColorNames.AccountForeColorActive:
+                    active = true;
                     break;
             }
 
             buttonSample.IsHovered = hovered;
             buttonSample.Selected = selected;
             buttonSample.IsFocused = false;
+            buttonSample.IsActiveHighlight = false;
+            buttonSample.IsActive = active;
         }
         
         private void panelColorBackground_MouseLeave(object sender, EventArgs e)
         {
-            buttonSample.IsHovered = false;
-            buttonSample.Selected = false;
-            buttonSample.IsFocused = checkStyleMarkFocused.Checked;
-        }
-
-        private void labelColorsReset_Click(object sender, EventArgs e)
-        {
-            var colors = buttonSample.Colors;
-
-            foreach (var p in GetColorPanels())
-            {
-                p.Color1 = colors[p.ColorName] = AccountGridButton.DefaultColors[p.ColorName];
-            }
-
-            buttonSample.Redraw();
-            labelColorsReset.Visible = false;
+            //buttonSample.IsHovered = false;
+            //buttonSample.Selected = false;
+            //buttonSample.IsFocused = false;
+            //buttonSample.IsActiveHighlight = false;
+            //buttonSample.IsActive = false;
         }
 
         private void numericLaunchLimiterRechargeTime_ValueChanged(object sender, EventArgs e)
@@ -3273,9 +3883,7 @@ namespace Gw2Launcher.UI
             {
                 object o;
 
-                if (shellIcons == null)
-                    shellIcons = new Windows.ShellIcons();
-                sz = shellIcons.GetSize(Windows.ShellIcons.IconSize.Small);
+                sz = Windows.ShellIcons.GetSize(Windows.ShellIcons.IconSize.Small);
 
                 l.Padding = new Padding(sz.Width + Scale(3), 0, 0, 0);
                 l.MinimumSize = new Size(0, sz.Height + 2);
@@ -3287,7 +3895,7 @@ namespace Gw2Launcher.UI
                         {
                             try
                             {
-                                return shellIcons.GetIcon(path, Windows.ShellIcons.IconSize.Small);
+                                return Windows.ShellIcons.GetIcon(path, Windows.ShellIcons.IconSize.Small);
                             }
                             catch
                             {
@@ -3363,9 +3971,9 @@ namespace Gw2Launcher.UI
             if (container.Controls.Count == 1)
             {
                 if (container == panelGw2RunAfterPrograms)
-                    panelGw2RunAfterProgramsAddSeperator.Visible = true;
+                    panelGw2RunAfterProgramsAddSeparator.Visible = true;
                 else if (container == panelGw1RunAfterPrograms)
-                    panelGw1RunAfterProgramsAddSeperator.Visible = true;
+                    panelGw1RunAfterProgramsAddSeparator.Visible = true;
                 container.Visible = true;
             }
 
@@ -3379,7 +3987,7 @@ namespace Gw2Launcher.UI
             l.Text = r.GetName();
             l.Tag = r;
 
-            if ((r.Options & Settings.RunAfter.RunAfterOptions.Enabled) == 0)
+            if (!r.Enabled)
                 l.ForeColor = SystemColors.GrayText;
             else
                 l.ResetForeColor();
@@ -3389,7 +3997,7 @@ namespace Gw2Launcher.UI
 
         private void labelGw2RunAfterProgramsAdd_Click(object sender, EventArgs e)
         {
-            using (var f = new formRunAfter())
+            using (var f = new formRunAfter(Settings.AccountType.GuildWars2))
             {
                 if (f.ShowDialog(this) == System.Windows.Forms.DialogResult.OK)
                 {
@@ -3401,7 +4009,7 @@ namespace Gw2Launcher.UI
 
         private void labelGw1RunAfterProgramsAdd_Click(object sender, EventArgs e)
         {
-            using (var f = new formRunAfter())
+            using (var f = new formRunAfter(Settings.AccountType.GuildWars1))
             {
                 if (f.ShowDialog(this) == System.Windows.Forms.DialogResult.OK)
                 {
@@ -3421,8 +4029,12 @@ namespace Gw2Launcher.UI
         {
             var l = (UI.Controls.LinkLabel)contextRunAfterProgram.Tag;
             var r = (Settings.RunAfter)l.Tag;
+            var type = Settings.AccountType.GuildWars2;
 
-            using (var f = new formRunAfter(r))
+            if (l.Parent == panelGw1RunAfterPrograms)
+                type = Settings.AccountType.GuildWars1;
+
+            using (var f = new formRunAfter(r, type))
             {
                 if (f.ShowDialog(this) == System.Windows.Forms.DialogResult.OK)
                 {
@@ -3442,13 +4054,1190 @@ namespace Gw2Launcher.UI
             {
                 panel.Parent.SuspendLayout();
                 if (panel == panelGw2RunAfterPrograms)
-                    panelGw2RunAfterProgramsAddSeperator.Visible = false;
+                    panelGw2RunAfterProgramsAddSeparator.Visible = false;
                 else if (panel == panelGw1RunAfterPrograms)
-                    panelGw1RunAfterProgramsAddSeperator.Visible = false;
+                    panelGw1RunAfterProgramsAddSeparator.Visible = false;
                 panel.Visible = false;
                 panel.Parent.ResumeLayout();
             }
             label.Dispose();
+        }
+
+        private void CreateHotkeyButton(Settings.Hotkey h, Settings.IAccount account = null)
+        {
+            panelHotkeysHotkeys.Add(h, panelHotkeysHotkeys.GetText(h), account);
+
+            if (panelHotkeysHotkeys.Count == 1)
+            {
+                panelHotkeysAddSeparator.Visible = true;
+                panelHotkeysHotkeys.Visible = true;
+            }
+        }
+
+        private void labelHotkeysAdd_Click(object sender, EventArgs e)
+        {
+            using (var f = new formHotkey())
+            {
+                if (f.ShowDialog(this) == System.Windows.Forms.DialogResult.OK)
+                {
+                    CreateHotkeyButton(f.Result, f.SelectedAccount);
+                    panelHotkeys.ScrollControlIntoView((Control)sender);
+                }
+            }
+        }
+
+        void panelHotkeysHotkeys_HotkeyClick(object sender, EventArgs e)
+        {
+            contextHotkey.Tag = sender;
+            contextHotkey.Show(Cursor.Position);
+        }
+
+        private void editHotkeyToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            var h = (HotkeyContainerPanel.HotkeyValue)contextHotkey.Tag;
+
+            using (var f = new formHotkey(h.Hotkey, h.Account, false))
+            {
+                if (f.ShowDialog(this) == System.Windows.Forms.DialogResult.OK)
+                {
+                    panelHotkeysHotkeys.Update(f.Result, h.Hotkey, panelHotkeysHotkeys.GetText(f.Result), f.SelectedAccount);
+                }
+            }
+        }
+
+        private void deleteHotkeyToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            var h = (HotkeyContainerPanel.HotkeyValue)contextHotkey.Tag;
+
+            panelHotkeysHotkeys.Remove(h.Hotkey);
+
+            if (panelHotkeysHotkeys.Count == 0)
+            {
+                panelHotkeysAddSeparator.Visible = false;
+                panelHotkeysHotkeys.Visible = false;
+            }
+        }
+
+        private void checkStyleHeight_CheckedChanged(object sender, EventArgs e)
+        {
+            labelStyleHeight.Parent.SuspendLayout();
+            numericStyleHeight.Enabled = checkStyleHeight.Checked;
+            labelStyleHeight.Visible = !checkStyleHeight.Checked;
+            labelStyleHeight.Parent.ResumeLayout();
+            OnStyleCustomizeOffsetsChanged();
+        }
+
+        private void checkStyleSpacing_CheckedChanged(object sender, EventArgs e)
+        {
+            numericStyleSpacing.Enabled = checkStyleSpacing.Checked;
+        }
+
+        private void checkStyleCustomizeOffsets_CheckedChanged(object sender, EventArgs e)
+        {
+            panelStyleCustomizeOffsets.Visible = checkStyleCustomizeOffsets.Checked;
+            OnStyleCustomizeOffsetsChanged();
+        }
+
+        private void OnStyleCustomizeOffsetsChanged()
+        {
+            if (!checkStyleCustomizeOffsets.Checked)
+            {
+                buttonSample.Offsets = null;
+                return;
+            }
+
+            var offsets = buttonSample.Offsets;
+            if (offsets == null)
+                offsets = new Settings.AccountGridButtonOffsets();
+
+            offsets[Settings.AccountGridButtonOffsets.Offsets.Name] = new Settings.Point<sbyte>((sbyte)numericStyleOffsetNameX.Value, (sbyte)numericStyleOffsetNameY.Value);
+            offsets[Settings.AccountGridButtonOffsets.Offsets.Status] = new Settings.Point<sbyte>((sbyte)numericStyleOffsetStatusX.Value, (sbyte)numericStyleOffsetStatusY.Value);
+            offsets[Settings.AccountGridButtonOffsets.Offsets.User] = new Settings.Point<sbyte>((sbyte)numericStyleOffsetUserX.Value, (sbyte)numericStyleOffsetUserY.Value);
+            offsets.Height = checkStyleHeight.Checked ? (ushort)numericStyleHeight.Value : (ushort)0;
+
+            buttonSample.Offsets = offsets;
+        }
+
+        private void numericStyleOffset_ValueChanged(object sender, EventArgs e)
+        {
+            OnStyleCustomizeOffsetsChanged();
+        }
+
+        private void numericStyleHeight_ValueChanged(object sender, EventArgs e)
+        {
+            OnStyleCustomizeOffsetsChanged();
+        }
+
+        private void labelExportAccounts_Click(object sender, EventArgs e)
+        {
+            using (var f = new Backup.formAccountExport())
+            {
+                f.ShowDialog(this);
+            }
+        }
+
+        private void labelImportAccounts_Click(object sender, EventArgs e)
+        {
+            using (var f = new Backup.formAccountImport())
+            {
+                f.ShowDialog(this);
+
+                if (f.Accounts != null && f.Accounts.Count > 0)
+                {
+                    owner.AddAccounts(f.Accounts, true);
+                    MessageBox.Show(this, f.Accounts.Count + (f.Accounts.Count == 1 ? " account has" : " accounts have") + " been imported", "Complete", MessageBoxButtons.OK, MessageBoxIcon.Information);
+                }
+            }
+        }
+
+        private void checkStyleShowLoginRewardIcon_CheckedChanged(object sender, EventArgs e)
+        {
+            panelStyleLoginRewardIconsContainer.Visible = checkStyleShowLoginRewardIcon.Checked;
+        }
+
+        private void labelGw1ProcessAffinityShowAccounts_Click(object sender, EventArgs e)
+        {
+            using (var f = new formAccountAffinity())
+            {
+                f.ShowDialog(this);
+            }
+        }
+
+        private void InitializeAffinityAccountsPanel(StackPanel panel, IEnumerable<Settings.IAccount> accounts)
+        {
+            var p = new AffinityAccountsPanel(accounts)
+            {
+                AutoSizeFill = StackPanel.AutoSizeFillMode.Width,
+                AutoSize = true,
+                Margin = Padding.Empty,
+            };
+            Scale(p);
+            panel.Controls.Add(p);
+            panel.Tag = p;
+        }
+
+        private void checkGw2ProcessAffinityAccounts_CheckedChanged(object sender, EventArgs e)
+        {
+            if (checkGw2ProcessAffinityAccounts.Checked && panelGw2ProcessAffinityAccounts.Tag == null)
+            {
+                InitializeAffinityAccountsPanel(panelGw2ProcessAffinityAccounts, Util.Accounts.GetGw2Accounts());
+            }
+            panelGw2ProcessAffinityAccounts.Visible = checkGw2ProcessAffinityAccounts.Checked;
+        }
+
+        private void checkGw1ProcessAffinityAccounts_CheckedChanged(object sender, EventArgs e)
+        {
+            if (checkGw1ProcessAffinityAccounts.Checked && panelGw1ProcessAffinityAccounts.Tag == null)
+            {
+                InitializeAffinityAccountsPanel(panelGw1ProcessAffinityAccounts, Util.Accounts.GetGw1Accounts());
+            }
+            panelGw1ProcessAffinityAccounts.Visible = checkGw1ProcessAffinityAccounts.Checked;
+        }
+
+        private void panelBackup_PreVisiblePropertyChanged(object sender, bool e)
+        {
+            if (e)
+            {
+                var hasPasswords = false;
+
+                if (labelBackupPasswordChange.Tag == null)
+                {
+                    foreach (var a in Util.Accounts.GetAccounts())
+                    {
+                        if (a.Password != null)
+                        {
+                            hasPasswords = true;
+                            break;
+                        }
+                    }
+
+                    labelBackupPasswordChange.Tag = hasPasswords;
+                }
+                else
+                {
+                    hasPasswords = (bool)labelBackupPasswordChange.Tag;
+                }
+
+                var scope = Util.ComboItem<Settings.EncryptionScope>.SelectedValue(comboEncryptionScope, Settings.EncryptionScope.CurrentUser);
+                var b = hasPasswords && (scope == Settings.EncryptionScope.CurrentUser || scope == Settings.EncryptionScope.LocalMachine);
+
+                panelBackup.SuspendLayout();
+                labelBackupPasswordUser.Visible = b && scope == Settings.EncryptionScope.CurrentUser;
+                labelBackupPasswordMachine.Visible = b && scope == Settings.EncryptionScope.LocalMachine;
+                labelBackupPasswordChange.Visible = b;
+                labelBackupPasswords.Visible = b;
+                panelBackup.ResumeLayout();
+            }
+        }
+
+        private void labelBackupPasswordChange_Click(object sender, EventArgs e)
+        {
+            buttonSecurity.SelectPanel(panelSecurity);
+        }
+
+        private async void buttonBackupBackup_Click(object sender, EventArgs e)
+        {
+            string path;
+
+            using (var f = new SaveFileDialog())
+            {
+                f.Filter = "Backup|*.bkp";
+                f.FileName = "Gw2Launcher-" + DateTime.Now.ToString("yyyy-MM-dd_HH-mm-ss");
+
+                if (f.ShowDialog(this) != System.Windows.Forms.DialogResult.OK)
+                    return;
+
+                path = f.FileName;
+            }
+
+            this.Enabled = false;
+
+            using (var f = new formProgressBar()
+            {
+                Maximum = 1000,
+            })
+            {
+                using (var cancel = new CancellationTokenSource())
+                {
+                    f.FormClosing += delegate
+                    {
+                        cancel.Cancel();
+                    };
+
+                    var o = new Tools.Backup.Backup.BackupOptions()
+                    {
+                        Format = checkBackupSingleFile.Checked ? Tools.Backup.Backup.BackupFormat.File : Tools.Backup.Backup.BackupFormat.Directory,
+                        IncludeLocalDat = checkBackupIncludeLocalDat.Checked,
+                        IncludeGfxSettings = checkBackupIncludeGfxSettings.Checked,
+                    };
+
+                    var backup = new Tools.Backup.Backup.Exporter(path, o);
+
+                    backup.ProgressChanged += delegate
+                    {
+                        f.Value = (int)(backup.Progress * f.Maximum);
+                    };
+
+                    var t = new Task(new Action(
+                        delegate
+                        {
+                            backup.Export(cancel.Token);
+                        }), TaskCreationOptions.LongRunning);
+                    t.Start();
+
+                    f.CenterAt(this);
+                    f.Show(this);
+
+                    try
+                    {
+                        await t;
+                        f.Hide();
+                    }
+                    catch (Exception ex)
+                    {
+                        f.Hide();
+                        if (!cancel.IsCancellationRequested)
+                            MessageBox.Show(this, ex.Message, "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                    }
+                }
+            }
+
+            this.Enabled = true;
+        }
+
+        private void labelBackupRestore_Click(object sender, EventArgs e)
+        {
+            string path;
+
+            using (var f = new OpenFileDialog())
+            {
+                f.Filter = "Backup|*.bkp";
+
+                if (f.ShowDialog(this) != System.Windows.Forms.DialogResult.OK)
+                    return;
+
+                path = f.FileName;
+            }
+
+            var backup = new Tools.Backup.Backup.Importer(path);
+            Tools.Backup.Backup.RestoreInformation ri;
+
+            try
+            {
+                ri = backup.ReadInformation();
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show(this, ex.Message, "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                return;
+            }
+
+            var hasFiles = false;
+
+            foreach (var f in ri.Files)
+            {
+                if (f.Input.Exists)
+                {
+                    hasFiles = true;
+                    break;
+                }
+            }
+
+            if (!hasFiles)
+            {
+                MessageBox.Show(this, "Backup contains no recoverable data", "No files found", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                return;
+            }
+
+            using (var f = new UI.Backup.formBackupRestore(ri))
+            {
+                f.ShowDialog(this);
+            }
+        }
+
+        private Tools.Markers.MarkerIcons GetMarkerIcons()
+        {
+            if (markerIcons != null)
+                return markerIcons;
+
+            var icons = markerIcons = new Tools.Markers.MarkerIcons(false);
+
+            for (int i = 0, count = Settings.Markers.Count; i < count; i++)
+            {
+                var m = Settings.Markers[i];
+                if (m.IconType == Settings.MarkerIconType.Icon)
+                {
+                    icons.Add(m.IconPath);
+                }
+            }
+
+            return icons;
+        }
+
+        private void labelMarkersAdd_Click(object sender, EventArgs e)
+        {
+            using (var f = new Markers.formMarker(GetMarkerIcons()))
+            {
+                if (f.ShowDialog(this) == System.Windows.Forms.DialogResult.OK)
+                {
+                    panelMarkersContainer.Add(f.Result, markerIcons, true);
+                }
+            }
+        }
+
+        private void editMarkerToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            var l = (MarkerListPanel.MarkerListItem)contextMarker.Tag;
+            var m = (Settings.IMarker)l.Value;
+
+            using (var f = new Markers.formMarker(GetMarkerIcons(), m))
+            {
+                if (f.ShowDialog(this) == System.Windows.Forms.DialogResult.OK && !f.Result.Equals(m))
+                {
+                    l.Update(f.Result, markerIcons);
+                }
+            }
+        }
+
+        private void deleteMarkerToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+        }
+
+        private void panelMarkersContainer_MarkerMouseClick(object sender, ControlListPanel.ListItemMouseEventArgs e)
+        {
+            contextMarker.Tag = e.Item;
+            contextMarker.Show(Cursor.Position);
+        }
+
+        private void panelMarkersContainer_LabelMouseClick(object sender, ControlListPanel.ListItemMouseEventArgs e)
+        {
+            contextMarker.Tag = e.Item;
+            contextMarker.Show(Cursor.Position);
+        }
+
+        private void checkStyleMarkActive_CheckedChanged(object sender, EventArgs e)
+        {
+            buttonSample.IsActiveHighlight = checkStyleMarkActive.Checked;
+            buttonSample.IsActive = checkStyleMarkActive.Checked;
+            buttonSample.IsFocused = checkStyleMarkFocused.Checked && !buttonSample.IsActiveHighlight;
+        }
+
+        private void checkDxTimeoutRelaunch_CheckedChanged(object sender, EventArgs e)
+        {
+            numericDxTimeoutRelaunch.Enabled = label221.Enabled = checkDxTimeoutRelaunch.Checked;
+        }
+
+        private void checkGw2ProcessPriorityDx_CheckedChanged(object sender, EventArgs e)
+        {
+            comboGw2ProcessPriorityDx.Enabled = checkGw2ProcessPriorityDx.Checked;
+        }
+
+        private void checkPreventTaskbarGrouping_CheckedChanged(object sender, EventArgs e)
+        {
+            if (checkPreventTaskbarGrouping.Checked)
+                checkForceTaskbarGrouping.Checked = false;
+        }
+
+        private void checkForceTaskbarGrouping_CheckedChanged(object sender, EventArgs e)
+        {
+            if (checkForceTaskbarGrouping.Checked)
+                checkPreventTaskbarGrouping.Checked = false;
+        }
+
+        private async void labelVersionChangelog_Click(object sender, EventArgs e)
+        {
+            labelVersionChangelog.Enabled = false;
+
+            Util.Explorer.OpenUrl("https://github.com/Healix/Gw2Launcher/wiki/Changes");
+
+            await Task.Delay(500);
+
+            labelVersionChangelog.Enabled = true;
+        }
+
+        private void ShowTooltip(Control c, string tooltip)
+        {
+            if (ftooltip == null)
+                ftooltip = new Tooltip.FloatingTooltip();
+            ftooltip.ShowTooltip(c, tooltip);
+        }
+
+        private void labelVersionChangelog_MouseEnter(object sender, EventArgs e)
+        {
+            ShowTooltip(labelVersionChangelog, "Open changelog on GitHub");
+        }
+
+        private Dictionary<Settings.IAccount, bool> GetLocalizedExecutionAccountsSelected()
+        {
+            var accounts = (Dictionary<Settings.IAccount, bool>)labelLocalizedExecutionAccountsSelected.Tag;
+
+            if (accounts == null)
+            {
+                var selected = 0;
+
+                accounts = new Dictionary<Settings.IAccount, bool>();
+
+                foreach (var a in Util.Accounts.GetGw2Accounts())
+                {
+                    accounts[a] = a.LocalizedExecution;
+
+                    if (a.LocalizedExecution)
+                        selected++;
+                }
+
+                labelLocalizedExecutionAccountsSelected.Tag = accounts;
+
+                labelLocalizedExecutionAccountsSelectedCount.Text = selected + " selected";
+                labelLocalizedExecutionAccountsSelectedCount.Visible = selected > 0;
+            }
+
+            return accounts;
+        }
+
+        private void labelLocalizedExecutionAccountsSelected_Click(object sender, EventArgs e)
+        {
+            var accounts = GetLocalizedExecutionAccountsSelected();
+
+            using (var f = new formAccountSelect("Select accounts", accounts, true))
+            {
+                if (f.ShowDialog(this) != System.Windows.Forms.DialogResult.OK)
+                    return;
+
+                foreach (var a in accounts.Keys.ToArray())
+                {
+                    accounts[a] = false;
+                }
+
+                foreach (var a in f.Selected)
+                {
+                    accounts[a] = true;
+                }
+
+                labelLocalizedExecutionAccountsSelectedCount.Text = f.Selected.Count + " selected";
+                labelLocalizedExecutionAccountsSelectedCount.Visible = f.Selected.Count > 0;
+            }
+        }
+
+        private void panelLocalizedExecution_VisibleChanged(object sender, EventArgs e)
+        {
+            if (panelLocalizedExecution.Visible)
+                GetLocalizedExecutionAccountsSelected();
+        }
+
+        private void numericTweakLoginDelay_ValueChanged(object sender, EventArgs e)
+        {
+            labelTweakLoginDelay.Text = numericTweakLoginDelay.Value == 1 ? "second" : "seconds";
+        }
+
+        private void numericTweakLauncherDelay_ValueChanged(object sender, EventArgs e)
+        {
+            labelTweakLauncherDelay.Text = numericTweakLauncherDelay.Value == 1 ? "second" : "seconds";
+        }
+
+        private void checkTweakLogin_CheckedChanged(object sender, EventArgs e)
+        {
+            panelTweakLogin.Visible = checkTweakLogin.Checked;
+        }
+
+        private void checkTweakLauncher_CheckedChanged(object sender, EventArgs e)
+        {
+            panelTweakLauncher.Visible = checkTweakLauncher.Checked;
+        }
+
+        private void labelTweakLauncherCoords_Click(object sender, EventArgs e)
+        {
+            Settings.Point<ushort> empty, play;
+
+            if (labelTweakLauncherCoords.Tag != null)
+            {
+                var v = (Settings.LauncherPoints)labelTweakLauncherCoords.Tag;
+                empty = v.EmptyArea;
+                play = v.PlayButton;
+            }
+            else if (Settings.GuildWars2.LauncherAutologinPoints.HasValue)
+            {
+                var v = Settings.GuildWars2.LauncherAutologinPoints.Value;
+                empty = v.EmptyArea;
+                play = v.PlayButton;
+            }
+            else
+            {
+                empty = play = new Settings.Point<ushort>();
+            }
+
+            var f = new formAutologinConfig(empty, play)
+            {
+                StartPosition = FormStartPosition.Manual,
+                TopMost = true,
+            };
+
+            f.Location = new Point(this.Location.X + (this.Width - f.Width) / 2, this.Location.Y);
+
+            this.Visible = false;
+            this.Owner.Visible = false;
+
+            if (f.ShowDialog(this) == System.Windows.Forms.DialogResult.OK)
+            {
+                labelTweakLauncherCoords.Tag = new Settings.LauncherPoints()
+                {
+                    EmptyArea = f.EmptyLocation,
+                    PlayButton = f.PlayLocation,
+                };
+            }
+
+            this.Owner.Visible = true;
+            this.Visible = true;
+
+            this.Select();
+
+            f.Dispose();
+        }
+
+        void textNetworkAddresses_TextChanged(object sender, EventArgs e)
+        {
+            textNetworkAddresses.TextChanged -= textNetworkAddresses_TextChanged;
+            textNetworkAddresses.Tag = true;
+        }
+
+        private void checkNetworkEnable_CheckedChanged(object sender, EventArgs e)
+        {
+            checkNetworkExact.Parent.Enabled = checkNetworkEnable.Checked;
+            checkNetworkWarnOnChange.Enabled = checkNetworkEnable.Checked;
+        }
+
+        private void checkGw2PathSteam_CheckedChanged(object sender, EventArgs e)
+        {
+            var b = checkGw2PathSteam.Checked;
+
+            checkGw2PathSteam.Parent.SuspendLayout();
+
+            if (b)
+            {
+                checkGw2PathSteam.Tag = checkGw2PathSteam.Text;
+                checkGw2PathSteam.Text = "";
+            }
+            else
+            {
+                checkGw2PathSteam.Text = checkGw2PathSteam.Tag as string;
+            }
+
+            textGw2PathSteam.Visible = b;
+            buttonGw2PathSteam.Visible = b;
+
+            checkGw2PathSteam.Parent.ResumeLayout();
+        }
+
+        private void buttonGw2PathSteam_Click(object sender, EventArgs e)
+        {
+            using (var f = new OpenFileDialog())
+            {
+                f.ValidateNames = false;
+                f.Filter = "Guild Wars 2|Gw2*.exe|All executables|*.exe";
+                f.Title = "Open Gw2-64.exe";
+
+                if (textGw2PathSteam.TextLength != 0)
+                {
+                    try
+                    {
+                        f.InitialDirectory = System.IO.Path.GetDirectoryName(textGw2PathSteam.Text);
+                    }
+                    catch { }
+                }
+
+                if (f.ShowDialog(this) == System.Windows.Forms.DialogResult.OK)
+                {
+                    textGw2PathSteam.Text = f.FileName;
+                    textGw2PathSteam.Select(textGw2PathSteam.TextLength, 0);
+                }
+            }
+        }
+
+        private void checkSteamPath_CheckedChanged(object sender, EventArgs e)
+        {
+            var b = checkSteamPath.Checked;
+            textSteamPath.Enabled = b;
+            buttonSteamPath.Enabled = b;
+        }
+
+        private void panelSteamGw2_PreVisiblePropertyChanged(object sender, bool e)
+        {
+            panelSteamGw2.PreVisiblePropertyChanged -= panelSteamGw2_PreVisiblePropertyChanged;
+
+            if (!checkSteamPath.Checked)
+            {
+                try
+                {
+                    textSteamPath.Text = Path.GetFullPath(Client.Steam.Path);
+                }
+                catch { }
+            }
+        }
+
+        private void InitColors()
+        {
+            tooltipColors = new ToolTip();
+            tooltipColors.InitialDelay = 100;
+
+            colorInfo = new ColorInfo()
+            {
+                Panels = new Dictionary<ColorNames, UiColorsPreviewPanel>(),
+            };
+
+            panelColorsContent.SuspendLayout();
+            
+            panelColorsAccount.Controls.AddRange(new Control[]
+                {
+                    CreateColorsContainer(new Control[]
+                    {
+                        CreateColorLabel("Name"),
+                        CreateColor(ColorNames.AccountName, ""),
+                    }),
+                    CreateColorsContainer(new Control[]
+                    {
+                        CreateColorLabel("Status"),
+                        CreateColor(ColorNames.AccountStatusDefault, "Default status color", panelColor_MouseEnter, panelColor_MouseLeave),
+                        CreateColor(ColorNames.AccountStatusOK, "OK status color", panelColor_MouseEnter, panelColor_MouseLeave),
+                        CreateColor(ColorNames.AccountStatusWaiting, "Pending status color", panelColor_MouseEnter, panelColor_MouseLeave),
+                        CreateColor(ColorNames.AccountStatusError, "Error status color", panelColor_MouseEnter, panelColor_MouseLeave),
+                    }),
+                    CreateColorsContainer(new Control[]
+                    {
+                        CreateColorLabel("User"),
+                        CreateColor(ColorNames.AccountUser, ""),
+                    }),
+
+                    CreateColorsSeparator(),
+
+                    CreateColorsContainer(new Control[]
+                    {
+                        CreateColorLabel("Default"),
+                        CreateColor(ColorNames.AccountBackColorDefault, "Background color", panelColorBackground_MouseEnter, panelColorBackground_MouseLeave),
+                        CreateColor(ColorNames.AccountBorderLightDefault, "Border color (top/left)", panelColorBackground_MouseEnter, panelColorBackground_MouseLeave),
+                        CreateColor(ColorNames.AccountBorderDarkDefault, "Border color (bottom/right)", panelColorBackground_MouseEnter, panelColorBackground_MouseLeave),
+                    }),
+                    CreateColorsContainer(new Control[]
+                    {
+                        CreateColorLabel("Hovered"),
+                        CreateColor(ColorNames.AccountBackColorHovered, "Background color", panelColorBackground_MouseEnter, panelColorBackground_MouseLeave),
+                        CreateColor(ColorNames.AccountBorderLightHovered, "Border color (top/left)", panelColorBackground_MouseEnter, panelColorBackground_MouseLeave),
+                        CreateColor(ColorNames.AccountBorderDarkHovered, "Border color (bottom/right)", panelColorBackground_MouseEnter, panelColorBackground_MouseLeave),
+                        CreateColor(ColorNames.AccountForeColorHovered, "Overlay color (when using a background image)", panelColorBackground_MouseEnter, panelColorBackground_MouseLeave),
+                    }),
+                    CreateColorsContainer(new Control[]
+                    {
+                        CreateColorLabel("Selected"),
+                        CreateColor(ColorNames.AccountBackColorSelected, "Background color", panelColorBackground_MouseEnter, panelColorBackground_MouseLeave),
+                        CreateColor(ColorNames.AccountBorderLightSelected, "Border color (top/left)", panelColorBackground_MouseEnter, panelColorBackground_MouseLeave),
+                        CreateColor(ColorNames.AccountBorderDarkSelected, "Border color (bottom/right)", panelColorBackground_MouseEnter, panelColorBackground_MouseLeave),
+                        CreateColor(ColorNames.AccountForeColorSelected, "Overlay color (when using a background image)", panelColorBackground_MouseEnter, panelColorBackground_MouseLeave),
+                    }),
+                    CreateColorsContainer(new Control[]
+                    {
+                        CreateColorLabel("Active"),
+                        CreateColor(ColorNames.AccountBackColorActive, "Background color", panelColorBackground_MouseEnter, panelColorBackground_MouseLeave),
+                        CreateColor(ColorNames.AccountBorderLightActive, "Border color (top/left)", panelColorBackground_MouseEnter, panelColorBackground_MouseLeave),
+                        CreateColor(ColorNames.AccountBorderDarkActive, "Border color (bottom/right)", panelColorBackground_MouseEnter, panelColorBackground_MouseLeave),
+                        CreateColor(ColorNames.AccountForeColorActive, "Overlay color (when using a background image)", panelColorBackground_MouseEnter, panelColorBackground_MouseLeave),
+                    }),
+
+                    CreateColorsSeparator(),
+
+                    CreateColorsContainer(new Control[]
+                    {
+                        CreateColorLabel("Highlight"),
+                        CreateColor(ColorNames.AccountFocusedHighlight, "Focused background color", panelColorHighlight_MouseEnter, panelColorHighlight_MouseLeave),
+                        CreateColor(ColorNames.AccountFocusedBorder, "Focused border color", panelColorHighlight_MouseEnter, panelColorHighlight_MouseLeave),
+                        CreateColor(ColorNames.AccountActiveHighlight, "Active background color", panelColorHighlight_MouseEnter, panelColorHighlight_MouseLeave),
+                        CreateColor(ColorNames.AccountActiveBorder, "Active border color", panelColorHighlight_MouseEnter, panelColorHighlight_MouseLeave),
+                    }),
+                    CreateColorsContainer(new Control[]
+                    {
+                        CreateColorLabel("Actions"),
+                        CreateColor(ColorNames.AccountActionFocusFlash, "Focus flash color", panelColorFocus_MouseEnter),
+                        CreateColor(ColorNames.AccountActionExitFill, "Exit fill color", panelColorExitFill_MouseEnter),
+                        CreateColor(ColorNames.AccountActionExitFlash, "Exit flash color", panelColorExitFlash_MouseEnter),
+                    }),
+                });
+
+            panelColorsUi.Controls.AddRange(new Control[]
+                {
+                    CreateColorsContainer(new Control[]
+                    {
+                        CreateColorLabel("Background"),
+                        CreateColor(ColorNames.MainBackColor, "Main background color"),
+                        CreateColor(ColorNames.MainBorder, "Main border color"),
+                        CreateColor(ColorNames.BackColor100, "100% background color"),
+                        CreateColor(ColorNames.BackColor95, "95% background color"),
+                        CreateColor(ColorNames.BackColor90, "90% background color"),
+                        CreateColor(ColorNames.BackColor80, "80% background color"),
+                    }),
+                    CreateColorsContainer(new Control[]
+                    {
+                        CreateColorLabel("Text"),
+                        CreateColor(ColorNames.Text, "Text color"),
+                        CreateColor(ColorNames.TextGray, "Gray text"),
+                    }),
+                    CreateColorsContainer(new Control[]
+                    {
+                        CreateColorLabel("Title bar"),
+                        CreateColor(ColorNames.BarTitle, "Title color"),
+                        CreateColor(ColorNames.BarTitleInactive, "Title color (inactive)"),
+                        CreateColor(ColorNames.BarBorder, "Border color"),
+                        CreateColor(ColorNames.BarBackColor, "Background color"),
+                        CreateColor(ColorNames.BarBackColorHovered, "Background color (hovered)"),
+                        CreateColor(ColorNames.BarForeColor, "Foreground color"),
+                        CreateColor(ColorNames.BarForeColorHovered, "Foreground color (hovered)"),
+                        CreateColor(ColorNames.BarForeColorInactive, "Foreground color (inactive)"),
+                    }),
+                    CreateColorsContainer(new Control[]
+                    {
+                        CreateColorLabel(""),
+                        CreateColor(ColorNames.BarMinimizeForeColor, "Minimize button foreground color"),
+                        CreateColor(ColorNames.BarMinimizeForeColorInactive, "Minimize button foreground color (inactive)"),
+                        CreateColor(ColorNames.BarCloseForeColor, "Close button foreground color"),
+                        CreateColor(ColorNames.BarCloseForeColorInactive, "Close button foreground color (inactive)"),
+                    }),
+                    CreateColorsContainer(new Control[]
+                    {
+                        CreateColorLabel("Menu"),
+                        CreateColor(ColorNames.MenuText, "Text color"),
+                        CreateColor(ColorNames.MenuBackColor, "Background color"),
+                        CreateColor(ColorNames.MenuBackColorHovered, "Background color (hovered)"),
+                        CreateColor(ColorNames.MenuSeparator, "Separator color"),
+                    }),
+                });
+
+            panelColorsContent.ResumeLayout();
+        }
+
+        private Control CreateColorsSeparator()
+        {
+            var panel = new Control()
+            {
+                Size = Scale(160, 1),
+                BackColor = Color.FromArgb(224, 224, 224),
+                Margin = Scale(10, 8, 10, 5),
+            };
+
+            return panel;
+        }
+
+        private StackPanel CreateColorsContainer(Control[] controls)
+        {
+            var panel = new StackPanel()
+            {
+                FlowDirection = FlowDirection.LeftToRight,
+                Margin = Scale(0, 3, 0, 0),
+                AutoSize = true,
+                AutoSizeFill = StackPanel.AutoSizeFillMode.NoWrap,
+            };
+
+            if (controls != null)
+            {
+                panel.Controls.AddRange(controls);
+            }
+
+            return panel;
+        }
+
+        private Label CreateColorLabel(string text, int indent = 0)
+        {
+            return new Label()
+                {
+                    Text = text,
+                    Font = labelColorTemplate.Font,
+                    MinimumSize = labelColorTemplate.MinimumSize,
+                    Anchor = AnchorStyles.Left,
+                    Margin = indent == 0 ? Padding.Empty : new Padding(Scale(indent), 0, 0, 0),
+                    AutoSize = true,
+                };
+        }
+
+        private UiColorsPreviewPanel CreateColor(UiColors.Colors color, string tooltip = null, EventHandler onMouseEnter = null, EventHandler onMouseLeave = null)
+        {
+            var panel = new UiColorsPreviewPanel()
+            {
+                Margin = panelColorTemplate.Margin,
+                Anchor = AnchorStyles.Left,
+                BorderStyle = BorderStyle.FixedSingle,
+                Cursor = Cursors.Hand,
+                ColorName = color,
+                Tooltip = tooltip,
+                Size = panelColorTemplate.Size,
+                Color1 = colorInfo.Values[color],
+            };
+
+            if (onMouseEnter != null)
+                panel.MouseEnter += onMouseEnter;
+            if (onMouseLeave != null)
+                panel.MouseLeave += onMouseLeave;
+
+            if (!string.IsNullOrEmpty(tooltip))
+                tooltipColors.SetToolTip(panel, panel.Tooltip);
+            panel.Click += panelColor_Click;
+
+            colorInfo.Panels[color] = panel;
+
+            return panel;
+        }
+
+        private void panelColors_PreVisiblePropertyChanged(object sender, bool e)
+        {
+            panelColors.PreVisiblePropertyChanged -= panelColors_PreVisiblePropertyChanged;
+
+            InitColors();
+
+            comboColors.SelectedIndex = 0;
+        }
+
+        private void OnSamplePreVisiblePropertyChanged(object sender, bool e)
+        {
+            if (!e)
+                return;
+
+            StackPanel parent;
+
+            if (sender == panelStyle)
+            {
+                parent = panelStyleSample;
+
+                buttonSample.IsFocused = checkStyleMarkFocused.Checked;
+                buttonSample.IsActiveHighlight = checkStyleMarkActive.Checked && !buttonSample.IsFocused;
+                buttonSample.IsActive = checkStyleMarkActive.Checked;
+            }
+            else if (sender == panelColors)
+            {
+                parent = panelColorsAccountSample;
+
+                buttonSample.IsHovered = false;
+                buttonSample.Selected = false;
+                buttonSample.IsFocused = false;
+                buttonSample.IsActive = false;
+                buttonSample.IsActiveHighlight = false;
+            }
+            else
+            {
+                return;
+            }
+
+            if (buttonSample.Parent != parent)
+            {
+                parent.Controls.Add(buttonSample);
+            }
+        }
+
+        private IEnumerable<UiColorsPreviewPanel> EnumerateColorPanels(Control parent)
+        {
+            foreach (Control c in parent.Controls)
+            {
+                if (c is UiColorsPreviewPanel)
+                {
+                    yield return (UiColorsPreviewPanel)c;
+                }
+                else
+                {
+                    foreach (var p in EnumerateColorPanels(c))
+                    {
+                        yield return p;
+                    }
+                }
+            }
+        }
+
+        private void presetExportToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            using (var f = new SaveFileDialog())
+            {
+                f.Filter = "Colors in #RRGGBB|*.txt|Colors in R,G,B|*.txt";
+
+                if (f.ShowDialog() == System.Windows.Forms.DialogResult.OK)
+                {
+                    try
+                    {
+                        var format = UiColors.ColorFormat.Hex;
+
+                        if (f.FilterIndex == 2)
+                            format = UiColors.ColorFormat.RGB;
+
+                        UiColors.Export(f.FileName, colorInfo.Values, format);
+                    }
+                    catch (Exception ex)
+                    {
+                        MessageBox.Show(this, ex.ToString(), "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                    }
+                }
+            }
+        }
+
+        private void presetImportToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            using (var f = new OpenFileDialog())
+            {
+                f.Filter = "Colors|*.txt";
+
+                if (f.ShowDialog() == System.Windows.Forms.DialogResult.OK)
+                {
+                    try
+                    {
+                        var count = 0;
+
+                        foreach (var v in UiColors.Import(f.FileName))
+                        {
+                            colorInfo.SetColor(v.Key, v.Value, true);
+                            ++count;
+                        }
+
+                        if (count > 0)
+                        {
+                            if (checkColorsPreview.Checked)
+                            {
+                                colorInfo.Preview();
+                            }
+                            else
+                            {
+                                buttonSample.Colors = colorInfo.Values;
+                            }
+                        }
+                    }
+                    catch (Exception ex)
+                    {
+                        MessageBox.Show(this, ex.ToString(), "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                    }
+                }
+            }
+        }
+
+        private void LoadTheme(UiColors.Theme theme)
+        {
+            var colors = UiColors.GetTheme(theme);
+            var count = colors.Count;
+
+            for (var i = 0; i < count; i++)
+            {
+                colorInfo.SetColor((ColorNames)i, colors[(ColorNames)i], false);
+            }
+
+            colorInfo.Values.BaseTheme = colors.BaseTheme;
+            colorInfo.ToControls();
+
+            if (checkColorsPreview.Checked)
+            {
+                colorInfo.Preview();
+            }
+            else
+            {
+                buttonSample.Colors = colorInfo.Values;
+            }
+        }
+
+        private void presetLightToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            LoadTheme(UiColors.Theme.Light);
+        }
+
+        private void presetDarkToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            LoadTheme(UiColors.Theme.Dark);
+        }
+
+        private void labelColorsPreset_Click(object sender, EventArgs e)
+        {
+            contextColorsPreset.Show(Cursor.Position);
+        }
+
+        private void checkColorsPreview_CheckedChanged(object sender, EventArgs e)
+        {
+            if (checkColorsPreview.Checked)
+            {
+                colorInfo.Preview();
+            }
+            else
+            {
+                colorInfo.Reset();
+            }
+        }
+
+        private void currentToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            LoadTheme(UiColors.Theme.Settings);
+        }
+
+        private void InitColorsRows()
+        {
+            var rows = colorInfo.Rows = new DataGridViewRow[colorInfo.Values.Count];
+
+            for (var i = 0; i < rows.Length; i++)
+            {
+                var c = (ColorNames)i;
+                var r = rows[i] = (DataGridViewRow)gridColors.RowTemplate.Clone();
+
+                r.CreateCells(gridColors);
+
+                r.Cells[0].Value = colorInfo.Values[c];
+                r.Cells[1].Value = c.ToString();
+                r.Tag = c;
+            }
+
+            gridColors.SuspendLayout();
+
+            gridColors.Rows.AddRange(rows);
+            gridColors.Sort(columnName, ListSortDirection.Ascending);
+
+            gridColors.ResumeLayout();
+        }
+
+        private void comboColors_SelectedIndexChanged(object sender, EventArgs e)
+        {
+            var i = comboColors.SelectedIndex;
+
+            panelColorsContent.SuspendLayout();
+
+            if (i == 0)
+            {
+                buttonSample.Colors = colorInfo.Values;
+            }
+
+            if (i == 2 && colorInfo.Rows == null)
+            {
+                InitColorsRows();
+            }
+
+            panelColorsAccount.Visible = i == 0;
+            panelColorsUi.Visible = i == 1;
+            gridColors.Visible = i == 2;
+            textColorsFilter.Visible = i == 2;
+
+            panelColorsContent.ResumeLayout();
+        }
+
+        private void gridColors_CellClick(object sender, DataGridViewCellEventArgs e)
+        {
+            if (e.ColumnIndex >= 0)
+            {
+                var r = gridColors.Rows[e.RowIndex];
+                var c = (ColorNames)r.Tag;
+
+                UiColorsPreviewPanel p;
+                colorInfo.Panels.TryGetValue(c, out p);
+
+                ShowColorDialog(c, (Color)r.Cells[0].Value, p);
+            }
+        }
+
+        private void gridColors_CellPainting(object sender, DataGridViewCellPaintingEventArgs e)
+        {
+            if (e.ColumnIndex == 0)
+            {
+                e.Handled = true;
+                e.PaintBackground(e.ClipBounds, true);
+                var g = e.Graphics;
+
+                var r = Rectangle.Inflate(e.CellBounds, -e.CellStyle.Padding.Left, -e.CellStyle.Padding.Top);
+
+                using (var brush = new SolidBrush((Color)e.Value))
+                {
+                    g.FillRectangle(brush, r);
+                    g.DrawRectangle(Pens.Black, r);
+                }
+            }
+        }
+
+        private async void DoColorsFilter()
+        {
+            if (textColorsFilter.Tag != null)
+                return;
+            textColorsFilter.Tag = true;
+
+            await Task.Delay(500);
+
+            textColorsFilter.Tag = null;
+            var t = textColorsFilter.Text;
+
+            gridColors.SuspendLayout();
+
+            foreach (DataGridViewRow row in gridColors.Rows)
+            {
+                row.Visible = ((string)row.Cells[1].Value).IndexOf(t, StringComparison.OrdinalIgnoreCase) != -1;
+            }
+
+            gridColors.ResumeLayout();
+        }
+
+        private void textColorsFilter_TextChanged(object sender, EventArgs e)
+        {
+            DoColorsFilter();
+        }
+
+        private void adProcessAffinity_MouseDown(object sender, MouseEventArgs e)
+        {
+            if (e.Button == System.Windows.Forms.MouseButtons.Right)
+            {
+                contextAffinity.Tag = sender;
+                contextAffinity.Show(Cursor.Position);
+            }
+        }
+
+        private void saveToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            var ad = (AffinityDisplay)contextAffinity.Tag;
+
+            using (var f = new UI.Affinity.formAffinitySelectDialog(ad.Affinity))
+            {
+                f.ShowDialog(this);
+            }
+        }
+
+        private void loadToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            var ad = (AffinityDisplay)contextAffinity.Tag;
+
+            using (var f = new UI.Affinity.formAffinitySelectDialog(Affinity.formAffinitySelectDialog.DialogMode.Select))
+            {
+                if (f.ShowDialog(this) == System.Windows.Forms.DialogResult.OK)
+                {
+                    ad.Affinity = f.SelectedAffinity.Affinity;
+                }
+            }
         }
     }
 }

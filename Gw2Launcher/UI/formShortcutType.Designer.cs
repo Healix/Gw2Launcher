@@ -33,10 +33,10 @@ namespace Gw2Launcher.UI
             this.radioMultiple = new System.Windows.Forms.RadioButton();
             this.stackPanel4 = new Gw2Launcher.UI.Controls.StackPanel();
             this.radioSingle = new System.Windows.Forms.RadioButton();
-            this.label2 = new System.Windows.Forms.Label();
+            this.label2 = new Gw2Launcher.UI.Base.BaseLabel();
             this.stackPanel2 = new Gw2Launcher.UI.Controls.StackPanel();
-            this.buttonCancel = new System.Windows.Forms.Button();
-            this.buttonOK = new System.Windows.Forms.Button();
+            this.buttonCancel = new Gw2Launcher.UI.Controls.FlatButton();
+            this.buttonOK = new Gw2Launcher.UI.Controls.FlatButton();
             this.stackPanel1.SuspendLayout();
             this.stackPanel4.SuspendLayout();
             this.stackPanel2.SuspendLayout();
@@ -96,7 +96,7 @@ namespace Gw2Launcher.UI
             this.label2.Anchor = System.Windows.Forms.AnchorStyles.Left;
             this.label2.AutoSize = true;
             this.label2.Font = new System.Drawing.Font("Segoe UI Semilight", 9F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            this.label2.ForeColor = System.Drawing.SystemColors.GrayText;
+            this.label2.ForeColorName = Gw2Launcher.UI.UiColors.Colors.TextGray;
             this.label2.Location = new System.Drawing.Point(109, 4);
             this.label2.Margin = new System.Windows.Forms.Padding(0);
             this.label2.Size = new System.Drawing.Size(74, 15);
@@ -115,30 +115,55 @@ namespace Gw2Launcher.UI
             // 
             // buttonCancel
             // 
+            this.buttonCancel.Alignment = System.Windows.Forms.HorizontalAlignment.Center;
             this.buttonCancel.Anchor = System.Windows.Forms.AnchorStyles.None;
+            this.buttonCancel.BackColorHoveredName = Gw2Launcher.UI.UiColors.Colors.SelectButtonBackColorHovered;
+            this.buttonCancel.BackColorName = Gw2Launcher.UI.UiColors.Colors.SelectButtonBackColor;
+            this.buttonCancel.BorderColorHoveredName = Gw2Launcher.UI.UiColors.Colors.SelectButtonBorderColorHovered;
+            this.buttonCancel.BorderColorName = Gw2Launcher.UI.UiColors.Colors.SelectButtonBorderColor;
+            this.buttonCancel.BorderStyle = ((System.Windows.Forms.AnchorStyles)((((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom) 
+            | System.Windows.Forms.AnchorStyles.Left) 
+            | System.Windows.Forms.AnchorStyles.Right)));
             this.buttonCancel.Font = new System.Drawing.Font("Segoe UI", 8.25F);
+            this.buttonCancel.ForeColorHoveredName = Gw2Launcher.UI.UiColors.Colors.SelectButtonForeColorHovered;
+            this.buttonCancel.ForeColorName = Gw2Launcher.UI.UiColors.Colors.SelectButtonForeColor;
             this.buttonCancel.Location = new System.Drawing.Point(3, 3);
             this.buttonCancel.Size = new System.Drawing.Size(86, 35);
             this.buttonCancel.Text = "Cancel";
-            this.buttonCancel.UseVisualStyleBackColor = true;
             this.buttonCancel.Click += new System.EventHandler(this.buttonCancel_Click);
             // 
             // buttonOK
             // 
+            this.buttonOK.Alignment = System.Windows.Forms.HorizontalAlignment.Center;
+            this.buttonOK.BackColorHoveredName = Gw2Launcher.UI.UiColors.Colors.SelectButtonBackColorHovered;
+            this.buttonOK.BackColorName = Gw2Launcher.UI.UiColors.Colors.SelectButtonBackColor;
+            this.buttonOK.BorderColorHoveredName = Gw2Launcher.UI.UiColors.Colors.SelectButtonBorderColorHovered;
+            this.buttonOK.BorderColorName = Gw2Launcher.UI.UiColors.Colors.SelectButtonBorderColor;
+            this.buttonOK.BorderStyle = ((System.Windows.Forms.AnchorStyles)((((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom) 
+            | System.Windows.Forms.AnchorStyles.Left) 
+            | System.Windows.Forms.AnchorStyles.Right)));
             this.buttonOK.Font = new System.Drawing.Font("Segoe UI", 8.25F);
+            this.buttonOK.ForeColorHoveredName = Gw2Launcher.UI.UiColors.Colors.SelectButtonForeColorHovered;
+            this.buttonOK.ForeColorName = Gw2Launcher.UI.UiColors.Colors.SelectButtonForeColor;
             this.buttonOK.Location = new System.Drawing.Point(95, 3);
             this.buttonOK.Size = new System.Drawing.Size(86, 35);
             this.buttonOK.Text = "OK";
-            this.buttonOK.UseVisualStyleBackColor = true;
             this.buttonOK.Click += new System.EventHandler(this.buttonOK_Click);
             // 
             // formShortcutType
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(96F, 96F);
             this.AutoSize = true;
+            this.BackColorName = Gw2Launcher.UI.UiColors.Colors.MainBackColor;
+            this.BorderColorName = Gw2Launcher.UI.UiColors.Colors.MainBorder;
             this.ClientSize = new System.Drawing.Size(247, 177);
             this.Controls.Add(this.stackPanel1);
+            this.ForeColorName = Gw2Launcher.UI.UiColors.Colors.Text;
             this.Text = "Create shortcut...";
+            this.TitleBackColorName = Gw2Launcher.UI.UiColors.Colors.BarBackColor;
+            this.TitleBorderColorName = Gw2Launcher.UI.UiColors.Colors.BarBorder;
+            this.TitleForeColor = System.Drawing.Color.FromArgb(((int)(((byte)(0)))), ((int)(((byte)(0)))), ((int)(((byte)(0)))));
+            this.TitleForeColorName = Gw2Launcher.UI.UiColors.Colors.BarTitle;
             this.stackPanel1.ResumeLayout(false);
             this.stackPanel1.PerformLayout();
             this.stackPanel4.ResumeLayout(false);
@@ -154,12 +179,12 @@ namespace Gw2Launcher.UI
         private System.Windows.Forms.Label labelTitle;
         private Controls.StackPanel stackPanel1;
         private Controls.StackPanel stackPanel2;
-        private System.Windows.Forms.Button buttonCancel;
+        private Controls.FlatButton buttonCancel;
         private System.Windows.Forms.RadioButton radioMultiple;
-        private System.Windows.Forms.Button buttonOK;
+        private Controls.FlatButton buttonOK;
         private Controls.StackPanel stackPanel4;
         private System.Windows.Forms.RadioButton radioSingle;
-        private System.Windows.Forms.Label label2;
+        private Base.BaseLabel label2;
 
     }
 }

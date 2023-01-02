@@ -42,7 +42,7 @@
     <PlatformTarget>x86</PlatformTarget>
     <DebugType>none</DebugType>
     <Optimize>true</Optimize>
-    <OutputPath>bin\Release\32\</OutputPath>
+    <OutputPath>bin\Release\</OutputPath>
     <DefineConstants>TRACE</DefineConstants>
     <ErrorReport>prompt</ErrorReport>
     <WarningLevel>4</WarningLevel>
@@ -62,6 +62,9 @@
   <PropertyGroup />
   <PropertyGroup>
     <ApplicationManifest>app.manifest</ApplicationManifest>
+  </PropertyGroup>
+  <PropertyGroup>
+    <SignAssembly>false</SignAssembly>
   </PropertyGroup>
   <ItemGroup>
     <Reference Include="System" />
@@ -91,13 +94,17 @@
     <Compile Include="Client\Launcher_Account.cs" />
     <Compile Include="Client\Launcher_Autologin.cs" />
     <Compile Include="Client\FileManager_FileLocker.cs" />
+    <Compile Include="Client\Launcher_CoherentWatcher.cs" />
     <Compile Include="Client\Launcher_LinkedProcess.cs" />
     <Compile Include="Client\Launcher_RunAfter.cs" />
+    <Compile Include="Client\Steam.cs" />
     <Compile Include="Client\Launcher_WindowEvents.cs" />
     <Compile Include="Client\Launcher_WindowLock.cs" />
     <Compile Include="Client\Launcher_WindowWatcher.cs" />
     <Compile Include="Client\Launcher_NetworkAuthorization.cs" />
+    <Compile Include="Client\ProcessSettings.cs" />
     <Compile Include="Client\ProxyLauncher.cs" />
+    <Compile Include="Client\SteamProxy.cs" />
     <Compile Include="Client\Variables.cs" />
     <Compile Include="DataPath.cs" />
     <Compile Include="IO\CrcStream.cs" />
@@ -114,11 +121,16 @@
     <Compile Include="Net\BpsLimiter.cs" />
     <Compile Include="Net\Dns.cs" />
     <Compile Include="Net\DnsServers.cs" />
+    <Compile Include="Properties\Resources.Designer.cs">
+      <AutoGen>True</AutoGen>
+      <DesignTime>True</DesignTime>
+      <DependentUpon>Resources.resx</DependentUpon>
+    </Compile>
     <Compile Include="Security\Cryptography\Crypto.cs" />
     <Compile Include="Security\Cryptography\ProtectedString.cs" />
     <Compile Include="Security\Impersonation.cs" />
-    <Compile Include="Tools\ArenaAccount.cs" />
     <Compile Include="Tools\AutoUpdate.cs" />
+    <Compile Include="Tools\Backup\Backup.cs" />
     <Compile Include="Tools\CoherentMonitor.cs" />
     <Compile Include="Tools\DataStore.cs" />
     <Compile Include="Tools\DatUpdater.cs" />
@@ -128,7 +140,178 @@
     <Compile Include="Tools\Dat\Compression\IO\FileStream.cs" />
     <Compile Include="Tools\Dat\Compression\Tree\BinaryTree.cs" />
     <Compile Include="Tools\Dat\Compression\Tree\TreeBuilder.cs" />
+    <Compile Include="Tools\Backup\AccountExporter.cs" />
     <Compile Include="Tools\Gw2Logs.cs" />
+    <Compile Include="Tools\Hotkeys\HotkeyManager.cs" />
+    <Compile Include="Tools\Hotkeys\Hotkeys.cs" />
+    <Compile Include="Tools\Hotkeys\HotkeyInfo.cs" />
+    <Compile Include="Tools\Images.cs" />
+    <Compile Include="Tools\Markers\Marker.cs" />
+    <Compile Include="Tools\Markers\MarkerMonitor.cs" />
+    <Compile Include="Tools\Markers\MarkerIcons.cs" />
+    <Compile Include="Tools\Mumble\MumbleData.cs" />
+    <Compile Include="Tools\Mumble\MumbleMonitor.cs" />
+    <Compile Include="Tools\Shared\Values.cs" />
+    <Compile Include="Tools\Shared\Icons.cs" />
+    <Compile Include="Tools\Shared\Images.cs" />
+    <Compile Include="Tools\WindowManager.cs" />
+    <Compile Include="UI\Affinity\formAffinitySelectDialog.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="UI\Affinity\formAffinitySelectDialog.Designer.cs">
+      <DependentUpon>formAffinitySelectDialog.cs</DependentUpon>
+    </Compile>
+    <Compile Include="UI\Base\BaseControl.cs">
+      <SubType>Component</SubType>
+    </Compile>
+    <Compile Include="UI\Base\BaseLabel.cs">
+      <SubType>Component</SubType>
+    </Compile>
+    <Compile Include="UI\Base\PopupUtil.cs" />
+    <Compile Include="UI\Base\PopupFlatBase.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="UI\Controls\FlatIntegerTextBox.cs">
+      <SubType>Component</SubType>
+    </Compile>
+    <Compile Include="UI\Controls\FlatTextBox.cs">
+      <SubType>Component</SubType>
+    </Compile>
+    <Compile Include="UI\formColors.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="UI\formColors.Designer.cs">
+      <DependentUpon>formColors.cs</DependentUpon>
+    </Compile>
+    <Compile Include="UI\UiProperty.cs" />
+    <Compile Include="UI\UiColors.cs" />
+    <Compile Include="UI\Controls\AffinityAccountsPanel.cs">
+      <SubType>Component</SubType>
+    </Compile>
+    <Compile Include="UI\Controls\AffinityDisplay.cs">
+      <SubType>Component</SubType>
+    </Compile>
+    <Compile Include="UI\Controls\ListPanel\LabelListPanel.cs">
+      <SubType>Component</SubType>
+    </Compile>
+    <Compile Include="UI\Controls\ListPanel\ControlListPanel.cs">
+      <SubType>Component</SubType>
+    </Compile>
+    <Compile Include="UI\Controls\FlatMarkerIconButton.cs">
+      <SubType>Component</SubType>
+    </Compile>
+    <Compile Include="UI\Controls\GradientLabel.cs">
+      <SubType>Component</SubType>
+    </Compile>
+    <Compile Include="UI\Controls\GradientLine.cs">
+      <SubType>Component</SubType>
+    </Compile>
+    <Compile Include="UI\Controls\HotkeyContainerPanel.cs">
+      <SubType>Component</SubType>
+    </Compile>
+    <Compile Include="UI\Controls\HotkeyGroupsPanel.cs">
+      <SubType>Component</SubType>
+    </Compile>
+    <Compile Include="UI\Controls\HotkeyInput.cs">
+      <SubType>Component</SubType>
+    </Compile>
+    <Compile Include="UI\Controls\ListPanel\MarkerListPanel.cs">
+      <SubType>Component</SubType>
+    </Compile>
+    <Compile Include="UI\Controls\SelectionDataGridView.cs">
+      <SubType>Component</SubType>
+    </Compile>
+    <Compile Include="UI\Backup\formAccountImport.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="UI\Backup\formAccountImport.Designer.cs">
+      <DependentUpon>formAccountImport.cs</DependentUpon>
+    </Compile>
+    <Compile Include="UI\Backup\formAccountExport.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="UI\Backup\formAccountExport.Designer.cs">
+      <DependentUpon>formAccountExport.cs</DependentUpon>
+    </Compile>
+    <Compile Include="UI\Backup\formBackupRestore.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="UI\Backup\formBackupRestore.Designer.cs">
+      <DependentUpon>formBackupRestore.cs</DependentUpon>
+    </Compile>
+    <Compile Include="UI\Backup\formBackupRestoreImport.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="UI\Backup\formBackupRestoreImport.Designer.cs">
+      <DependentUpon>formBackupRestoreImport.cs</DependentUpon>
+    </Compile>
+    <Compile Include="UI\Controls\TimeTextBox.cs">
+      <SubType>Component</SubType>
+    </Compile>
+    <Compile Include="UI\Controls\TransparentFlatButton.cs">
+      <SubType>Component</SubType>
+    </Compile>
+    <Compile Include="UI\formHotkey.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="UI\formHotkey.Designer.cs">
+      <DependentUpon>formHotkey.cs</DependentUpon>
+    </Compile>
+    <Compile Include="UI\formNetworkChanged.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="UI\formNetworkChanged.Designer.cs">
+      <DependentUpon>formNetworkChanged.cs</DependentUpon>
+    </Compile>
+    <Compile Include="UI\Markers\formMarker.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="UI\Markers\formMarker.Designer.cs">
+      <DependentUpon>formMarker.cs</DependentUpon>
+    </Compile>
+    <Compile Include="UI\formProcessSettingsPopup.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="UI\formProcessSettingsPopup.Designer.cs">
+      <DependentUpon>formProcessSettingsPopup.cs</DependentUpon>
+    </Compile>
+    <Compile Include="UI\formProgressBar.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="UI\formRunAfterPopup.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="UI\formRunAfterPopup.Designer.cs">
+      <DependentUpon>formRunAfterPopup.cs</DependentUpon>
+    </Compile>
+    <Compile Include="UI\Markers\formMarkerTrigger.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="UI\Markers\formMarkerTrigger.Designer.cs">
+      <DependentUpon>formMarkerTrigger.cs</DependentUpon>
+    </Compile>
+    <Compile Include="UI\Markers\formMarkerReset.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="UI\Markers\formMarkerReset.Designer.cs">
+      <DependentUpon>formMarkerReset.cs</DependentUpon>
+    </Compile>
+    <Compile Include="UI\Tooltip\FloatingTooltip.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="UI\WindowPositioning\formTemplatesCompact.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="UI\WindowPositioning\formTemplatesCompact.Designer.cs">
+      <DependentUpon>formTemplatesCompact.cs</DependentUpon>
+    </Compile>
+    <Compile Include="UI\WindowPositioning\TemplateDisplay.cs">
+      <SubType>Component</SubType>
+    </Compile>
+    <Compile Include="Util\Array.cs" />
+    <Compile Include="Util\Dpi.cs" />
+    <Compile Include="Windows\DebugEvents.cs" />
+    <Compile Include="Windows\Hotkeys.cs" />
     <Compile Include="Tools\Icons.cs" />
     <Compile Include="Tools\JumpList.cs" />
     <Compile Include="Tools\Notes.cs" />
@@ -466,12 +649,6 @@
     <Compile Include="UI\formManagedInactiveUsers.Designer.cs">
       <DependentUpon>formManagedInactiveUsers.cs</DependentUpon>
     </Compile>
-    <Compile Include="UI\formNetworkAuthorizationRequired.cs">
-      <SubType>Form</SubType>
-    </Compile>
-    <Compile Include="UI\formNetworkAuthorizationRequired.Designer.cs">
-      <DependentUpon>formNetworkAuthorizationRequired.cs</DependentUpon>
-    </Compile>
     <Compile Include="UI\formNote.cs">
       <SubType>Form</SubType>
     </Compile>
@@ -637,6 +814,7 @@
     <Compile Include="Util\ScreenUtil.cs" />
     <Compile Include="Windows\Hosts.cs" />
     <Compile Include="Windows\JumpList.cs" />
+    <Compile Include="Windows\Keyboard.cs" />
     <Compile Include="Windows\LastInput.cs" />
     <Compile Include="Windows\Native\Native.cs" />
     <Compile Include="Windows\Native\NativeMethods.cs" />
@@ -651,6 +829,9 @@
     <Compile Include="Windows\WindowShadow.cs" />
     <Compile Include="Windows\WindowSize.cs" />
     <Compile Include="Windows\WindowLong.cs" />
+    <EmbeddedResource Include="UI\Affinity\formAffinitySelectDialog.resx">
+      <DependentUpon>formAffinitySelectDialog.cs</DependentUpon>
+    </EmbeddedResource>
     <EmbeddedResource Include="UI\ColorPicker\formColorDialog.resx">
       <DependentUpon>formColorDialog.cs</DependentUpon>
     </EmbeddedResource>
@@ -659,14 +840,9 @@
     </EmbeddedResource>
     <EmbeddedResource Include="Properties\Resources.resx">
       <Generator>ResXFileCodeGenerator</Generator>
-      <LastGenOutput>Resources.Designer.cs</LastGenOutput>
       <SubType>Designer</SubType>
+      <LastGenOutput>Resources.Designer.cs</LastGenOutput>
     </EmbeddedResource>
-    <Compile Include="Properties\Resources.Designer.cs">
-      <AutoGen>True</AutoGen>
-      <DependentUpon>Resources.resx</DependentUpon>
-      <DesignTime>True</DesignTime>
-    </Compile>
     <EmbeddedResource Include="UI\Controls\NoteMessage.resx">
       <DependentUpon>NoteMessage.cs</DependentUpon>
     </EmbeddedResource>
@@ -678,6 +854,18 @@
     </EmbeddedResource>
     <EmbeddedResource Include="UI\Controls\SidebarButton.resx">
       <DependentUpon>SidebarButton.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="UI\Backup\formAccountImport.resx">
+      <DependentUpon>formAccountImport.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="UI\Backup\formAccountExport.resx">
+      <DependentUpon>formAccountExport.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="UI\Backup\formBackupRestore.resx">
+      <DependentUpon>formBackupRestore.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="UI\Backup\formBackupRestoreImport.resx">
+      <DependentUpon>formBackupRestoreImport.cs</DependentUpon>
     </EmbeddedResource>
     <EmbeddedResource Include="UI\formAccount.resx">
       <DependentUpon>formAccount.cs</DependentUpon>
@@ -709,8 +897,32 @@
     <EmbeddedResource Include="UI\formBrowseLocalDatQuick.resx">
       <DependentUpon>formBrowseLocalDatQuick.cs</DependentUpon>
     </EmbeddedResource>
+    <EmbeddedResource Include="UI\formColors.resx">
+      <DependentUpon>formColors.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="UI\formHotkey.resx">
+      <DependentUpon>formHotkey.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="UI\formNetworkChanged.resx">
+      <DependentUpon>formNetworkChanged.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="UI\Markers\formMarker.resx">
+      <DependentUpon>formMarker.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="UI\formProcessSettingsPopup.resx">
+      <DependentUpon>formProcessSettingsPopup.cs</DependentUpon>
+    </EmbeddedResource>
     <EmbeddedResource Include="UI\formRunAfter.resx">
       <DependentUpon>formRunAfter.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="UI\formRunAfterPopup.resx">
+      <DependentUpon>formRunAfterPopup.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="UI\Markers\formMarkerTrigger.resx">
+      <DependentUpon>formMarkerTrigger.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="UI\Markers\formMarkerReset.resx">
+      <DependentUpon>formMarkerReset.cs</DependentUpon>
     </EmbeddedResource>
     <EmbeddedResource Include="UI\QuickStart\formAccount.resx">
       <DependentUpon>formAccount.cs</DependentUpon>
@@ -760,9 +972,6 @@
     <EmbeddedResource Include="UI\formManagedInactiveUsers.resx">
       <DependentUpon>formManagedInactiveUsers.cs</DependentUpon>
     </EmbeddedResource>
-    <EmbeddedResource Include="UI\formNetworkAuthorizationRequired.resx">
-      <DependentUpon>formNetworkAuthorizationRequired.cs</DependentUpon>
-    </EmbeddedResource>
     <EmbeddedResource Include="UI\formNote.resx">
       <DependentUpon>formNote.cs</DependentUpon>
     </EmbeddedResource>
@@ -801,6 +1010,9 @@
     </EmbeddedResource>
     <EmbeddedResource Include="UI\formWindowsAccount.resx">
       <DependentUpon>formWindowsAccount.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="UI\WindowPositioning\formTemplatesCompact.resx">
+      <DependentUpon>formTemplatesCompact.cs</DependentUpon>
     </EmbeddedResource>
     <EmbeddedResource Include="UI\WindowPositioning\formWindowSize.resx">
       <DependentUpon>formWindowSize.cs</DependentUpon>
@@ -869,18 +1081,27 @@
     <None Include="Resources\Gw2Launcher.ico" />
   </ItemGroup>
   <ItemGroup>
-    <None Include="Resources\hot32.jpg" />
+    <None Include="Resources\hot32.png" />
   </ItemGroup>
   <ItemGroup>
-    <None Include="Resources\pof32.jpg" />
+    <None Include="Resources\pof32.png" />
   </ItemGroup>
   <ItemGroup>
     <None Include="Resources\Gw1.ico" />
   </ItemGroup>
-  <ItemGroup />
   <ItemGroup>
-    <None Include="Resources\eod32.jpg" />
+    <None Include="Resources\loginreward0.jpg" />
+    <None Include="Resources\loginreward1.jpg" />
+    <None Include="Resources\loginreward2.jpg" />
+    <None Include="Resources\loginreward3.jpg" />
+    <None Include="Resources\loginreward4.jpg" />
+    <None Include="Resources\loginreward5.jpg" />
+    <None Include="Resources\loginreward6.jpg" />
+    <None Include="Resources\loginreward7.jpg" />
+    <None Include="Resources\loginreward8.jpg" />
+    <None Include="Resources\loginreward9.jpg" />
   </ItemGroup>
+  <ItemGroup />
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <PropertyGroup>
     <PostBuildEvent>

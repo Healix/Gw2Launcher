@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Collections;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
@@ -9,7 +10,7 @@ namespace Gw2Launcher.Util
     /// <summary>
     /// A queue where each TValue is unique and sorted by TKey
     /// </summary>
-    class SortedQueue<TKey, TValue>
+    class SortedQueue<TKey, TValue> : IEnumerable<TValue>, ICollection<TValue>
         where TKey : IComparable<TKey>
     {
         private class Node
@@ -152,14 +153,16 @@ namespace Gw2Launcher.Util
             count++;
         }
 
-        public void Remove(TValue item)
+        public bool Remove(TValue item)
         {
             Node n;
             if (nodes.TryGetValue(item, out n))
             {
                 nodes.Remove(item);
                 Remove(n);
+                return true;
             }
+            return false;
         }
 
         private void Remove(Node n)
@@ -251,6 +254,69 @@ namespace Gw2Launcher.Util
             get
             {
                 return count;
+            }
+        }
+
+        public IEnumerator<TValue> GetEnumerator()
+        {
+            var n = first;
+
+            while (n != null)
+            {
+                yield return n.value;
+                n = n.next;
+            }
+        }
+
+        System.Collections.IEnumerator System.Collections.IEnumerable.GetEnumerator()
+        {
+            return GetEnumerator();
+        }
+
+        public bool IsSynchronized
+        {
+            get 
+            {
+                return false;
+            }
+        }
+
+        public object SyncRoot
+        {
+            get 
+            {
+                return this;
+            }
+        }
+
+        public void Add(TValue item)
+        {
+            Add(default(TKey), item);
+        }
+
+        public void Clear()
+        {
+            count = 0;
+            first = last = null;
+            nodes.Clear();
+        }
+
+        public void CopyTo(TValue[] array, int arrayIndex)
+        {
+            var n = first;
+
+            while (n != null)
+            {
+                array[arrayIndex++] = n.value;
+                n = n.next;
+            }
+        }
+
+        public bool IsReadOnly
+        {
+            get
+            {
+                return false;
             }
         }
     }

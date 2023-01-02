@@ -76,7 +76,14 @@ namespace Gw2Launcher.Windows
         /// <returns></returns>
         public uint GetParent()
         {
-            return GetParent(_process);
+            if (hasPBI)
+            {
+                return (uint)pbi.InheritedFromUniqueProcessId;
+            }
+            else
+            {
+                return GetParent(_process);
+            }
         }
 
         private uint GetParent(IntPtr handle)

@@ -68,7 +68,12 @@ namespace Gw2Launcher.Security.Cryptography
             return value;
         }
 
-        public byte[] ToArray(Crypto crypto)
+        /// <summary>
+        /// Turns the protected string into a compressed encrpyted array
+        /// </summary>
+        /// <param name="crypto">Crypto source</param>
+        /// <param name="apply">True to retain the crypto source and compressed array</param>
+        public byte[] ToArray(Crypto crypto, bool apply = false)
         {
             byte[] buffer;
 
@@ -94,8 +99,11 @@ namespace Gw2Launcher.Security.Cryptography
             {
                 var b = crypto.Compress(crypto.Encrypt(buffer));
 
-                this.data = b;
-                this.crypto = crypto;
+                if (apply)
+                {
+                    this.data = b;
+                    this.crypto = crypto;
+                }
 
                 return b;
             }

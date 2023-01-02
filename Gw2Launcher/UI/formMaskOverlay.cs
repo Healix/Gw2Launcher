@@ -15,11 +15,39 @@ namespace Gw2Launcher.UI
     {
         public class Manager : IDisposable
         {
-            private Dictionary<Settings.IAccount, Process> accounts;
+            private class MaskProcess
+            {
+                public MaskProcess(Process p, IntPtr h, EnableFlags flags)
+                {
+                    this.Process = p;
+                    this.Handle = h;
+                    this.Flags = flags;
+                }
 
+                public Process Process
+                {
+                    get;
+                    private set;
+                }
+
+                public IntPtr Handle
+                {
+                    get;
+                    private set;
+                }
+
+                public EnableFlags Flags
+                {
+                    get;
+                    private set;
+                }
+            }
+
+            private Dictionary<Settings.IAccount, MaskProcess> accounts;
+            
             public Manager()
             {
-                accounts = new Dictionary<Settings.IAccount, Process>();
+                accounts = new Dictionary<Settings.IAccount, MaskProcess>();
             }
 
             void Launcher_AccountProcessExited(Settings.IAccount account, Process e)
@@ -33,10 +61,10 @@ namespace Gw2Launcher.UI
                 {
                     lock (accounts)
                     {
-                        Process p;
+                        MaskProcess p;
                         if (accounts.TryGetValue(account, out p))
                         {
-                            var h = Windows.FindWindow.Find(p);
+                            var h = Windows.FindWindow.Find(p.Process);
                             if (h != IntPtr.Zero)
                             {
                                 NativeMethods.SetWindowPos(h, IntPtr.Zero, 0, 0, 0, 0, SetWindowPosFlags.SWP_NOMOVE | SetWindowPosFlags.SWP_NOSIZE | SetWindowPosFlags.SWP_NOACTIVATE | SetWindowPosFlags.SWP_ASYNCWINDOWPOS | SetWindowPosFlags.SWP_NOZORDER);
@@ -46,9 +74,10 @@ namespace Gw2Launcher.UI
                 }
             }
 
-            public void Add(Settings.IAccount account, Process p, IntPtr window)
+            public void Add(Settings.IAccount account, Process p, IntPtr window, Settings.WindowOptions options)
             {
-                Process existing, current;
+                MaskProcess existing;
+                Process current;
 
                 lock (accounts)
                 {
@@ -66,7 +95,7 @@ namespace Gw2Launcher.UI
 
                     EnableFlags flags;
 
-                    if (!account.WindowOptions.HasFlag(Settings.WindowOptions.DisableTitleBarButtons))
+                    if ((options & Settings.WindowOptions.DisableTitleBarButtons) == 0)
                     {
                         flags = EnableFlags.EnableClose | EnableFlags.EnableMinimize;
                     }
@@ -75,9 +104,14 @@ namespace Gw2Launcher.UI
                         flags = EnableFlags.None;
                     }
 
+                    if (existing != null && existing.Flags == flags && existing.Handle == window)
+                    {
+                        return;
+                    }
+
                     try
                     {
-                        accounts[account] = current = Util.ProcessUtil.ShowWindowMask(p, window, flags);
+                        accounts[account] = new MaskProcess(current = Util.ProcessUtil.ShowWindowMask(p, window, flags), window, flags);
                     }
                     catch
                     {
@@ -102,8 +136,8 @@ namespace Gw2Launcher.UI
                 {
                     try
                     {
-                        existing.EnableRaisingEvents = false;
-                        existing.Kill();
+                        existing.Process.EnableRaisingEvents = false;
+                        existing.Process.Kill();
                     }
                     catch { }
                 }
@@ -117,7 +151,7 @@ namespace Gw2Launcher.UI
 
                     foreach (var account in accounts.Keys)
                     {
-                        if (accounts[account] == p)
+                        if (accounts[account].Process == p)
                         {
                             Remove(account, p);
 
@@ -131,13 +165,13 @@ namespace Gw2Launcher.UI
             {
                 lock (accounts)
                 {
-                    Process existing;
+                    MaskProcess existing;
 
                     if (accounts.TryGetValue(account, out existing))
                     {
-                        if (p == null || existing == p)
+                        if (p == null || existing.Process == p)
                         {
-                            p = existing;
+                            p = existing.Process;
 
                             if (accounts.Remove(account) && accounts.Count == 0)
                             {
@@ -173,10 +207,11 @@ namespace Gw2Launcher.UI
                         Client.Launcher.AccountWindowEvent -= Launcher_AccountWindowEvent;
                         Client.Launcher.AccountProcessExited -= Launcher_AccountProcessExited;
 
-                        foreach (var p in accounts.Values)
+                        foreach (var m in accounts.Values)
                         {
                             try
                             {
+                                var p = m.Process;
                                 p.EnableRaisingEvents = false;
                                 p.Kill();
                             }
@@ -438,8 +473,8 @@ namespace Gw2Launcher.UI
             get
             {
                 var cp = base.CreateParams;
-                var ex = WindowStyle.WS_EX_TOOLWINDOW | WindowStyle.WS_EX_NOACTIVATE;
-
+                var ex = WindowStyle.WS_EX_TRANSPARENT | WindowStyle.WS_EX_NOACTIVATE;
+                
 
                 cp.ExStyle |= (int)(ex);
 
@@ -463,7 +498,7 @@ namespace Gw2Launcher.UI
             {
                 case WindowMessages.WM_MOUSEACTIVATE:
                     
-                    m.Result = (IntPtr)0x0003; //MA_NOACTIVATE
+                    m.Result = (IntPtr)3; //MA_NOACTIVATE
 
                     return;
                 case WindowMessages.WM_WINDOWPOSCHANGING:

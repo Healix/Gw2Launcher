@@ -34,16 +34,23 @@ namespace Gw2Launcher.UI.Controls
             // 
             // panelContents
             // 
+            this.panelContents.GridLayout = Gw2Launcher.UI.Controls.AccountGridButtonPanel.GridLayoutMode.Auto;
+            this.panelContents.GridRowHeight = 60;
             this.panelContents.Location = new System.Drawing.Point(0, 0);
+            this.panelContents.NewButton = null;
             this.panelContents.Size = new System.Drawing.Size(200, 0);
             // 
             // scrollV
             // 
             this.scrollV.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom) 
             | System.Windows.Forms.AnchorStyles.Right)));
+            this.scrollV.ForeColorHoveredName = Gw2Launcher.UI.UiColors.Colors.ScrollBarHovered;
+            this.scrollV.ForeColorName = Gw2Launcher.UI.UiColors.Colors.ScrollBar;
             this.scrollV.Location = new System.Drawing.Point(277, 0);
             this.scrollV.Maximum = 100;
+            this.scrollV.ScrollChange = 0;
             this.scrollV.Size = new System.Drawing.Size(6, 245);
+            this.scrollV.TrackColorName = Gw2Launcher.UI.UiColors.Colors.ScrollTrack;
             this.scrollV.Value = 0;
             this.scrollV.Visible = false;
             this.scrollV.ValueChanged += new System.EventHandler<int>(this.scrollV_ValueChanged);
@@ -51,7 +58,6 @@ namespace Gw2Launcher.UI.Controls
             // AccountGridButtonContainer
             // 
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Inherit;
-            this.BackColor = System.Drawing.Color.White;
             this.Controls.Add(this.scrollV);
             this.Controls.Add(this.panelContents);
             this.Size = new System.Drawing.Size(283, 245);

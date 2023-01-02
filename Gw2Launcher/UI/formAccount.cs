@@ -255,12 +255,11 @@ namespace Gw2Launcher.UI
         private Dictionary<string, ApiKeyData> apikeys;
         private Task taskTotp;
         private bool totpChanged;
-        private CheckBox[] checkProcessorAffinity;
         private ApiRequirements[] apiRequirements;
         private ApiKeyData kdCurrent;
         private TextBox[] textAccountNames;
         private Dictionary<string, object> iconsRunAfter;
-        private Windows.ShellIcons shellIcons;
+        private Tools.Shared.Images imagesLoginRewards;
 
         public formAccount(Settings.AccountType type)
             : this(type, false)
@@ -311,12 +310,15 @@ namespace Gw2Launcher.UI
                 label59.Visible = false;
                 checkShowDailyCompletion.Parent.Visible = false;
                 panelAutoLoginGw2.Visible = false;
+                panelAccountTypeGw2.Visible = false;
                 checkMuteMusic.Visible = false;
                 checkMuteVoices.Visible = false;
                 panelClientPortGw2.Visible = false;
                 panelMumbleNameGw2.Visible = false;
                 panelAutomaticLauncherLoginGw2.Visible = false;
                 labelAutologinConfigure.Visible = false;
+                panelTrackLoginRewardsDay.Visible = false;
+                panelLaunchSteamGw2.Visible = false;
 
                 panelAutoLoginGw1.Visible = true;
                 labelAutoLoginCharacter.Visible = true;
@@ -341,7 +343,7 @@ namespace Gw2Launcher.UI
                                 if (gw2.ApiData != null && gw2.ApiData.DailyPoints != null)
                                     totalAp = gw2.ApiData.DailyPoints.Value;
                             }
-                            else
+                            else if (kd.account != null)
                                 totalAp = kd.account.DailyAP + kd.account.MonthlyAP;
                             if (totalAp >= Api.Account.MAX_AP)
                                 return ApiRequirements.ApiState.NotEligible;
@@ -364,7 +366,6 @@ namespace Gw2Launcher.UI
             panelSecurity.PreVisiblePropertyChanged += panelSecurity_PreVisiblePropertyChanged;
             panelLaunchOptionsAdvanced.PreVisiblePropertyChanged += panelLaunchOptionsAdvanced_PreVisiblePropertyChanged;
 
-            buttonGeneral.Panels = new Panel[] { panelGeneral, panelApi };
             buttonLaunchOptions.Panels = new Panel[] { panelLaunchOptions, panelLaunchOptionsProcess, panelLaunchOptionsAdvanced };
             buttonSecurity.Panels = new Panel[] { panelSecurity };
             buttonStatistics.Panels = new Panel[] { panelStatistics };
@@ -373,14 +374,18 @@ namespace Gw2Launcher.UI
 
             if (type == Settings.AccountType.GuildWars1)
             {
-                buttonLocalDat.Text = "Gw.dat";
+                buttonGeneral.Panels = new Panel[] { panelGeneral, panelHotkeys };
                 buttonLocalDat.Panels = new Panel[] { panelGwDat };
+
+                buttonGeneral.SubItems = new string[] { "Hotkeys" };
+                buttonLocalDat.Text = "Gw.dat";
             }
             else
             {
+                buttonGeneral.Panels = new Panel[] { panelGeneral, panelApi, panelHotkeys };
                 buttonLocalDat.Panels = new Panel[] { panelLocalDat, panelGraphics };
 
-                buttonGeneral.SubItems = new string[] { "API usage" };
+                buttonGeneral.SubItems = new string[] { "API usage", "Hotkeys" };
                 buttonLocalDat.SubItems = new string[] { "Graphics" };
             }
 
@@ -407,13 +412,7 @@ namespace Gw2Launcher.UI
                 });
 
             Util.ComboItem<Settings.ProcessPriorityClass>.Select(comboProcessPriority, Settings.ProcessPriorityClass.Normal);
-
-            panelProcessAffinity.SuspendLayout();
-            checkProcessorAffinity = formSettings.InitializeProcessorAffinity(panelProcessAffinity, checkProcessAffinityAll, label36);
-            checkProcessAffinityAll.Checked = true;
-            panelProcessAffinity.AutoSize = true;
-            panelProcessAffinity.ResumeLayout();
-
+            
             if (!hasData)
             {
                 panelIdentifierColor.BackColor = Util.Color.FromUID(Settings.GetNextUID());
@@ -454,11 +453,6 @@ namespace Gw2Launcher.UI
             buttonSample.ShowAccount = !Settings.StyleShowAccount.HasValue || Settings.StyleShowAccount.Value;
             buttonSample.ShowColorKey = Settings.StyleShowColor.Value;
             buttonSample.AccountType = type;
-
-            if (Settings.StyleColors.HasValue)
-            {
-                buttonSample.Colors = Settings.StyleColors.Value;
-            }
         }
 
         public formAccount(Settings.IAccount account)
@@ -609,6 +603,18 @@ namespace Gw2Launcher.UI
                     checkGw2MumbleName.Checked = true;
                     textGw2MumbleName.Text = gw2.MumbleLinkName;
                 }
+
+                if (gw2.DailyLoginDay > 0)
+                {
+                    checkTrackLoginRewardsDay.Checked = true;
+                    textTrackLoginRewardsDay.Value = gw2.DailyLoginDay;
+                }
+
+                if (gw2.Provider == Settings.AccountProvider.Steam)
+                    radioAccountTypeSteam.Checked = true;
+
+                if (gw2.Proxy == Settings.LaunchProxy.Steam)
+                    checkLaunchSteam.Checked = true;
             }
             else
             {
@@ -638,7 +644,8 @@ namespace Gw2Launcher.UI
                 }
             }
 
-            checkEnableNetworkAuthorization.Checked = account.NetworkAuthorizationState != Settings.NetworkAuthorizationState.Disabled;
+            checkEnableNetworkAuthorization.Checked = (account.NetworkAuthorization & Settings.NetworkAuthorizationOptions.Enabled) != 0;
+            checkEnableNetworkAuthorizationRemember.Checked = (account.NetworkAuthorization & Settings.NetworkAuthorizationOptions.Remember) != 0;
 
             if (account.TotpKey != null)
                 textAuthenticatorKey.Tag = account.TotpKey;
@@ -653,24 +660,13 @@ namespace Gw2Launcher.UI
 
             if (account.ProcessAffinity != 0)
             {
-                var bits = account.ProcessAffinity;
-                var isSet = false;
-                var count = checkProcessorAffinity.Length;
-                if (count > 64)
-                    count = 64;
-
-                for (var i = 0; i < count; i++)
-                {
-                    if (checkProcessorAffinity[i].Checked = (bits & 1) == 1)
-                        isSet = true;
-                    bits >>= 1;
-                }
-                checkProcessAffinityAll.Checked = !isSet;
+                adProcessAffinity.Affinity = account.ProcessAffinity;
+                checkProcessAffinityAll.Checked = false;
             }
 
             if (account.ColorKey != Color.Empty)
             {
-                panelIdentifierColor.BackColor = account.ColorKey;
+                SetColor(account.ColorKey);
                 menuColorUseDefaultToolStripMenuItem.Checked = false;
             }
             else
@@ -757,6 +753,31 @@ namespace Gw2Launcher.UI
                 }
                 panelRunAfterPrograms.ResumeLayout();
             }
+
+            panelHotkeysHotkeys.HotkeyClick += panelHotkeysHotkeys_HotkeyClick;
+            panelHotkeysHotkeys.TemplateHeader = label77;
+            panelHotkeysHotkeys.TemplateText = labelHotkeysAdd;
+            panelHotkeysHotkeys.TemplateKey = label214;
+            panelHotkeysHotkeys.EnableGrouping = false;
+            labelHotkeysDisabled.Visible = !Settings.HotkeysEnabled.Value;
+            
+            if (account.Hotkeys != null)
+            {
+                panelHotkeysHotkeys.SuspendLayout();
+                foreach (var h in account.Hotkeys)
+                {
+                    CreateHotkeyButton(h);
+                }
+                panelHotkeysHotkeys.ResumeLayout();
+                panelHotkeysHotkeys.ResetModified();
+            }
+
+            checkLaunchSteam.Checked = account.Proxy == Settings.LaunchProxy.Steam;
+
+
+
+
+
 
 
 
@@ -1150,7 +1171,15 @@ namespace Gw2Launcher.UI
 
         private void checkAutomaticLogin_CheckedChanged(object sender, EventArgs e)
         {
-            textAutoLoginEmail.Enabled = textAutoLoginPassword.Enabled = checkAutomaticLogin.Checked;
+            tableLogin.Parent.SuspendLayout();
+
+            var b = checkAutomaticLogin.Checked;
+
+            textAutoLoginEmail.Enabled = textAutoLoginPassword.Enabled = b;
+            panelAutomaticLauncherLoginGw2.Visible = panelAutomaticLauncherLoginGw2.Enabled = !b && radioAccountTypeGw2.Checked;
+            tableLogin.Visible = tableLogin.Enabled = b && radioAccountTypeGw2.Checked;
+
+            tableLogin.Parent.ResumeLayout();
         }
 
         protected override void OnFormClosing(FormClosingEventArgs e)
@@ -2432,10 +2461,7 @@ namespace Gw2Launcher.UI
                 }
                 else if (aaWindowedOptions.Checked)
                 {
-                    if (master.WindowOptions == Settings.WindowOptions.None || !a.WindowBounds.IsEmpty || aaWindowed.Checked)
-                    {
-                        a.WindowOptions = master.WindowOptions;
-                    }
+                    a.WindowOptions = master.WindowOptions;
                 }
 
                 if (textAccountNames != null)
@@ -2461,7 +2487,7 @@ namespace Gw2Launcher.UI
                 {
                     if (isMaster)
                     {
-                        a.WindowBounds = textWindowed.TextLength > 0 ? FixSize(ParseWindowSize(textWindowed.Text)) : Rectangle.Empty;
+                        a.WindowBounds = !string.IsNullOrWhiteSpace(textWindowed.Text) ? FixSize(ParseWindowSize(textWindowed.Text)) : Rectangle.Empty;
                     }
                     else if (aaWindowed.Checked)
                     {
@@ -2581,7 +2607,8 @@ namespace Gw2Launcher.UI
 
                             if (isMaster || aaAutomaticLauncherLogin.Checked)
                             {
-                                gw2.AutomaticRememberedLogin = checkAutomaticLauncherLogin.Checked;
+                                if (panelAutomaticLauncherLoginGw2.Enabled)
+                                    gw2.AutomaticRememberedLogin = checkAutomaticLauncherLogin.Checked;
                             }
 
                             if (isMaster || aaPort.Checked)
@@ -2717,6 +2744,21 @@ namespace Gw2Launcher.UI
                                 gw2.MumbleLinkName = ((Settings.IGw2Account)master).MumbleLinkName;
                             }
 
+                            if (isMaster || aaTrackLoginRewardsDay.Checked)
+                            {
+                                gw2.DailyLoginDay = checkTrackLoginRewardsDay.Checked ? (byte)textTrackLoginRewardsDay.Value : (byte)0;
+                            }
+
+                            if (isMaster || aaAccountTypeGw2.Checked)
+                            {
+                                gw2.Provider = radioAccountTypeSteam.Checked ? Settings.AccountProvider.Steam : Settings.AccountProvider.ArenaNet;
+                            }
+
+                            if (isMaster || aaLaunchSteam.Checked)
+                            {
+                                gw2.Proxy = checkLaunchSteam.Checked ? Settings.LaunchProxy.Steam : Settings.LaunchProxy.None;
+                            }
+
                             break;
                         case Settings.AccountType.GuildWars1:
 
@@ -2745,11 +2787,13 @@ namespace Gw2Launcher.UI
                 {
                     if (checkEnableNetworkAuthorization.Checked)
                     {
-                        if (a.NetworkAuthorizationState == Settings.NetworkAuthorizationState.Disabled)
-                            a.NetworkAuthorizationState = Settings.NetworkAuthorizationState.Unknown;
+                        var na = Settings.NetworkAuthorizationOptions.Enabled;
+                        if (checkEnableNetworkAuthorizationRemember.Checked)
+                            na |= Settings.NetworkAuthorizationOptions.Remember;
+                        a.NetworkAuthorization = na;
                     }
-                    else if (a.NetworkAuthorizationState != Settings.NetworkAuthorizationState.Disabled)
-                        a.NetworkAuthorizationState = Settings.NetworkAuthorizationState.Disabled;
+                    else
+                        a.NetworkAuthorization = Settings.NetworkAuthorizationOptions.None;
                 }
 
                 if (isMaster)
@@ -2779,21 +2823,7 @@ namespace Gw2Launcher.UI
 
                 if (isMaster)
                 {
-                    long bits = 0;
-
-                    if (!checkProcessAffinityAll.Checked)
-                    {
-                        var processors = checkProcessorAffinity.Length;
-                        if (processors > 64)
-                            processors = 64;
-                        for (int j = 0; j < processors; j++)
-                        {
-                            if (checkProcessorAffinity[j].Checked)
-                                bits |= ((long)1 << j);
-                        }
-                    }
-
-                    a.ProcessAffinity = bits;
+                    a.ProcessAffinity = checkProcessAffinityAll.Checked ? 0 : adProcessAffinity.Affinity;
                 }
                 else if (aaProcessAffinity.Checked)
                 {
@@ -2873,6 +2903,24 @@ namespace Gw2Launcher.UI
                 {
                     a.RunAfter = master.RunAfter;
                 }
+
+                if (isMaster && panelHotkeysHotkeys.Modified)
+                {
+                    foreach (var m in panelHotkeysHotkeys.GetModified())
+                    {
+                        var hotkeys = m.Hotkeys;
+
+                        a.Hotkeys = hotkeys;
+
+                        break;
+                    }
+                }
+
+
+
+
+
+
             }
 
             this.DialogResult = System.Windows.Forms.DialogResult.OK;
@@ -3403,6 +3451,7 @@ namespace Gw2Launcher.UI
                 using (panelIdentifierIcon.BackgroundImage) { }
                 using (buttonSample.Image) { }
                 using (buttonSample.BackgroundImage) { }
+                using (imagesLoginRewards) { }
 
                 if (components != null)
                     components.Dispose();
@@ -3795,6 +3844,7 @@ namespace Gw2Launcher.UI
         private void checkAutomaticLoginGw1_CheckedChanged(object sender, EventArgs e)
         {
             textAutoLoginCharacter.Enabled = textAutoLoginEmail.Enabled = textAutoLoginPassword.Enabled = checkAutomaticLoginGw1.Checked;
+            tableLogin.Visible = checkAutomaticLoginGw1.Checked;
         }
 
         private void checkGw2MumbleName_CheckedChanged(object sender, EventArgs e)
@@ -4186,9 +4236,7 @@ namespace Gw2Launcher.UI
             {
                 object o;
 
-                if (shellIcons == null)
-                    shellIcons = new Windows.ShellIcons();
-                sz = shellIcons.GetSize(Windows.ShellIcons.IconSize.Small);
+                sz = Windows.ShellIcons.GetSize(Windows.ShellIcons.IconSize.Small);
 
                 l.Padding = new Padding(sz.Width + Scale(3), 0, 0, 0);
                 l.MinimumSize = new Size(0, sz.Height + 2);
@@ -4200,7 +4248,7 @@ namespace Gw2Launcher.UI
                         {
                             try
                             {
-                                return shellIcons.GetIcon(path, Windows.ShellIcons.IconSize.Small);
+                                return Windows.ShellIcons.GetIcon(path, Windows.ShellIcons.IconSize.Small);
                             }
                             catch
                             {
@@ -4275,7 +4323,7 @@ namespace Gw2Launcher.UI
 
             if (container.Controls.Count == 1)
             {
-                panelRunAfterProgramsAddSeperator.Visible = true;
+                panelRunAfterProgramsAddSeparator.Visible = true;
                 container.Visible = true;
             }
 
@@ -4289,7 +4337,7 @@ namespace Gw2Launcher.UI
             l.Text = r.GetName();
             l.Tag = r;
 
-            if ((r.Options & Settings.RunAfter.RunAfterOptions.Enabled) == 0)
+            if (!r.Enabled)
                 l.ForeColor = SystemColors.GrayText;
             else
                 l.ResetForeColor();
@@ -4308,7 +4356,7 @@ namespace Gw2Launcher.UI
             var l = (UI.Controls.LinkLabel)contextRunAfterProgram.Tag;
             var r = (Settings.RunAfter)l.Tag;
 
-            using (var f = new formRunAfter(r))
+            using (var f = new formRunAfter(r, accountType))
             {
                 if (f.ShowDialog(this) == System.Windows.Forms.DialogResult.OK)
                 {
@@ -4328,7 +4376,7 @@ namespace Gw2Launcher.UI
             if (panel.Controls.Count == 0)
             {
                 panel.Parent.SuspendLayout();
-                panelRunAfterProgramsAddSeperator.Visible = false;
+                panelRunAfterProgramsAddSeparator.Visible = false;
                 panel.Visible = false;
                 panel.Parent.ResumeLayout();
             }
@@ -4339,7 +4387,7 @@ namespace Gw2Launcher.UI
 
         private void labelRunAfterProgramsAdd_Click(object sender, EventArgs e)
         {
-            using (var f = new formRunAfter())
+            using (var f = new formRunAfter(accountType))
             {
                 if (f.ShowDialog(this) == System.Windows.Forms.DialogResult.OK)
                 {
@@ -4355,6 +4403,378 @@ namespace Gw2Launcher.UI
         {
             if (checkDX11.Focused)
                 textArguments.Text = Util.Args.AddOrReplace(textArguments.Text, "dx11", checkDX11.Checked ? "-dx11" : "");
+        }
+
+        private void CreateHotkeyButton(Settings.Hotkey h)
+        {
+            panelHotkeysHotkeys.Add(h, panelHotkeysHotkeys.GetText(h), account);
+
+            if (panelHotkeysHotkeys.Count == 1)
+            {
+                panelHotkeysAddSeparator.Visible = true;
+                panelHotkeysHotkeys.Visible = true;
+            }
+        }
+
+        private void labelHotkeysAdd_Click(object sender, EventArgs e)
+        {
+            using (var f = new formHotkey(true))
+            {
+                if (f.ShowDialog(this) == System.Windows.Forms.DialogResult.OK)
+                {
+                    CreateHotkeyButton(f.Result);
+                    panelHotkeys.ScrollControlIntoView((Control)sender);
+                }
+            }
+        }
+
+        void panelHotkeysHotkeys_HotkeyClick(object sender, EventArgs e)
+        {
+            contextHotkey.Tag = sender;
+            contextHotkey.Show(Cursor.Position);
+        }
+
+        private void editHotkeyToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            var h = (HotkeyContainerPanel.HotkeyValue)contextHotkey.Tag;
+
+            using (var f = new formHotkey(h.Hotkey, account, true))
+            {
+                if (f.ShowDialog(this) == System.Windows.Forms.DialogResult.OK)
+                {
+                    panelHotkeysHotkeys.Update(f.Result, h.Hotkey, panelHotkeysHotkeys.GetText(f.Result), account);
+                }
+            }
+        }
+
+        private void deleteHotkeyToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            var h = (HotkeyContainerPanel.HotkeyValue)contextHotkey.Tag;
+
+            panelHotkeysHotkeys.Remove(h.Hotkey);
+
+            if (panelHotkeysHotkeys.Count == 0)
+            {
+                panelHotkeysAddSeparator.Visible = false;
+                panelHotkeysHotkeys.Visible = false;
+            }
+        }
+
+        private void checkTrackLoginRewardsDay_CheckedChanged(object sender, EventArgs e)
+        {
+            if (checkTrackLoginRewardsDay.Checked)
+            {
+                var sz = textTrackLoginRewardsDay.Height;
+                imageTrackLoginRewardsDay.Size = new Size(sz, sz);
+            }
+            imageTrackLoginRewardsDay.Visible = checkTrackLoginRewardsDay.Checked;
+        }
+
+        private Image GetLoginRewardIcon(int day)
+        {
+            switch (day)
+            {
+                case 1:
+                case 8:
+                case 15:
+                case 22:
+                    return Properties.Resources.loginreward0;
+                case 2:
+                case 7:
+                case 9:
+                case 16:
+                case 21:
+                case 23:
+                    return Properties.Resources.loginreward1;
+                case 3:
+                case 10:
+                case 17:
+                case 24:
+                    return Properties.Resources.loginreward2;
+                case 4:
+                case 11:
+                case 18:
+                case 25:
+                    return Properties.Resources.loginreward3;
+                case 5:
+                case 12:
+                    return Properties.Resources.loginreward4;
+                case 6:
+                case 13:
+                case 20:
+                case 27:
+                    return Properties.Resources.loginreward5;
+                case 14:
+                    return Properties.Resources.loginreward6;
+                case 19:
+                    return Properties.Resources.loginreward7;
+                case 26:
+                    return Properties.Resources.loginreward8;
+                case 28:
+                    return Properties.Resources.loginreward9;
+            }
+
+            return null;
+        }
+
+        private void SetLoginRewardIcon()
+        {
+            var i = GetLoginRewardIcon(textTrackLoginRewardsDay.Value);
+            if (i != null)
+                imageTrackLoginRewardsDay.Image = i;
+        }
+
+        private void textTrackLoginRewardsDay_ValueChanged(object sender, EventArgs e)
+        {
+            if (imageTrackLoginRewardsDay.Visible)
+                SetLoginRewardIcon();
+
+            if (panelLoginRewards.Visible)
+            {
+                SelectLoginRewardButton(GetLoginRewardButton(textTrackLoginRewardsDay.Value));
+            }
+        }
+
+        private FlatMarkerIconButton GetLoginRewardButton(int day)
+        {
+            if (panelLoginRewardsContainer.Tag != null && object.Equals(((Control)panelLoginRewardsContainer.Tag).Tag, day))
+            {
+                return (FlatMarkerIconButton)panelLoginRewardsContainer.Tag;
+            }
+
+            foreach (Control p in panelLoginRewardsContainer.Controls)
+            {
+                foreach (Control c in p.Controls)
+                {
+                    if (object.Equals(c.Tag, day))
+                    {
+                        return (FlatMarkerIconButton)c;
+                    }
+                }
+            }
+            return null;
+        }
+
+        private void imageTrackLoginRewardsDay_VisibleChanged(object sender, EventArgs e)
+        {
+            if (imageTrackLoginRewardsDay.Visible)
+                SetLoginRewardIcon();
+        }
+
+        private void CreateLoginRewardsButtons()
+        {
+            const int DAYS = 28;
+            const int COLUMNS = 7;
+            const int ROWS = (DAYS - 1) / COLUMNS + 1;
+
+            panelLoginRewardsContainer.Controls.Clear();
+
+            var day = 0;
+            var selected = textTrackLoginRewardsDay.Value;
+
+            panelLoginRewards.Size = Size.Empty;
+            panelLoginRewardsContainer.Size = Size.Empty;
+
+            for (var row = 0; row < ROWS; row++)
+            {
+                StackPanel panel = null;
+
+                for (var col = 0; col < COLUMNS; col++)
+                {
+                    if (++day > DAYS)
+                        break;
+
+                    if (panel == null)
+                    {
+                        panel = new StackPanel()
+                        {
+                            FlowDirection = FlowDirection.LeftToRight,
+                            Margin = Padding.Empty,
+                            AutoSizeMode = System.Windows.Forms.AutoSizeMode.GrowAndShrink,
+                            AutoSize = true,
+                        };
+                        panelLoginRewardsContainer.Controls.Add(panel);
+                    }
+
+                    var img = GetLoginRewardIcon(day);
+                    var source = imagesLoginRewards.GetValue(img);
+
+                    source.BeginLoad(delegate
+                    {
+                        return img;
+                    });
+
+                    var b = new FlatMarkerIconButton()
+                    {
+                        Size = buttonLoginRewardsDayTemplate.Size,
+                        Margin = buttonLoginRewardsDayTemplate.Margin,
+                        Padding = buttonLoginRewardsDayTemplate.Padding,
+                        ImageSource = new Tools.Shared.Images.SourceValue(source),
+                        Marker = Settings.MarkerIconType.Icon,
+                        BackColorSelected = Color.LightSteelBlue,
+                        BorderColorSelected = Color.SteelBlue,
+                        BorderStyle = AnchorStyles.Bottom | AnchorStyles.Left | AnchorStyles.Right | AnchorStyles.Top,
+                        Cursor = Cursors.Hand,
+                        Tag = day,
+                        PrioritizeSelectedColoring = true,
+                        ImageOpacity = 0.5f,
+                        ImageGrayscale = true,
+                    };
+
+                    b.Click += buttonLoginRewardsDay_Click;
+
+                    panel.Controls.Add(b);
+                }
+            }
+
+            panelLoginRewardsContainer.PerformLayout(true);
+        }
+
+        void buttonLoginRewardsDay_Click(object sender, EventArgs e)
+        {
+            SelectLoginRewardButton((FlatMarkerIconButton)sender);
+        }
+
+        private void SelectLoginRewardButton(FlatMarkerIconButton b)
+        {
+            if (b != null && b.Selected)
+                return;
+
+            if (panelLoginRewardsContainer.Tag != null)
+            {
+                var bp = ((FlatMarkerIconButton)panelLoginRewardsContainer.Tag);
+                bp.Selected = false;
+                bp.ImageOpacity = 0.5f;
+                bp.ImageGrayscale = true;
+            }
+
+            panelLoginRewardsContainer.Tag = b;
+
+            if (b != null)
+            {
+                b.ImageOpacity = 1;
+                b.Selected = true;
+                b.ImageGrayscale = false;
+
+                textTrackLoginRewardsDay.Value = (int)b.Tag;
+            }
+        }
+
+        private void textTrackLoginRewardsDay_Enter(object sender, EventArgs e)
+        {
+            if (imagesLoginRewards == null)
+            {
+                imagesLoginRewards = new Tools.Shared.Images(false);
+                CreateLoginRewardsButtons();
+                panelLoginRewards.SizeChanged += panelLoginRewards_SizeChanged;
+            }
+
+            if (!panelLoginRewards.Visible)
+            {
+                panelLoginRewards.SendToBack();
+                panelTrackLoginRewardsDay.LocationChanged += panelTrackLoginRewardsDay_LocationChanged;
+                stackPanel18.LocationChanged += panelTrackLoginRewardsDay_LocationChanged;
+                SelectLoginRewardButton(GetLoginRewardButton(textTrackLoginRewardsDay.Value));
+            }
+
+            MoveLoginRewardsPanel();
+            panelLoginRewards.BringToFront();
+            panelLoginRewards.Visible = true;
+        }
+
+        void panelTrackLoginRewardsDay_LocationChanged(object sender, EventArgs e)
+        {
+            MoveLoginRewardsPanel();
+        }
+
+        void panelLoginRewards_SizeChanged(object sender, EventArgs e)
+        {
+            if (panelLoginRewards.Visible)
+                MoveLoginRewardsPanel();
+        }
+
+        private void MoveLoginRewardsPanel()
+        {
+            var p = stackPanel18.PointFromChild(textTrackLoginRewardsDay);
+            var y = p.Y - (panelLoginRewards.Height - textTrackLoginRewardsDay.Height) / 2;
+            var top = -panelGeneral.AutoScrollPosition.Y;
+            var bottom = top + panelGeneral.Height;
+
+            if (y < top)
+            {
+                if (top > p.Y)
+                    y = p.Y;
+                else
+                    y = top;
+            }
+            else if (y + panelLoginRewards.Height > bottom)
+            {
+                y = p.Y + textTrackLoginRewardsDay.Height;
+                if (bottom > y)
+                    y = bottom - panelLoginRewards.Height;
+                else
+                    y -= panelLoginRewards.Height;
+            }
+
+            panelLoginRewards.Location = new Point(p.X + textTrackLoginRewardsDay.Width + imageTrackLoginRewardsDay.Margin.Left / 2, y + panelGeneral.AutoScrollPosition.Y);
+        }
+
+        private void textTrackLoginRewardsDay_Leave(object sender, EventArgs e)
+        {
+            panelLoginRewards.Visible = false;
+            panelTrackLoginRewardsDay.LocationChanged -= panelTrackLoginRewardsDay_LocationChanged;
+            stackPanel18.LocationChanged -= panelTrackLoginRewardsDay_LocationChanged;
+        }
+
+        private void checkEnableNetworkAuthorization_CheckedChanged(object sender, EventArgs e)
+        {
+            checkEnableNetworkAuthorizationRemember.Enabled = checkEnableNetworkAuthorization.Checked;
+        }
+
+        private void checkAccountTypeSteam_CheckedChanged(object sender, EventArgs e)
+        {
+            var b = radioAccountTypeSteam.Checked;
+
+            checkAutomaticLogin.Enabled = !b;
+            panelAutomaticLauncherLoginGw2.Visible = panelAutomaticLauncherLoginGw2.Enabled = !b && !checkAutomaticLogin.Checked;
+            tableLogin.Visible = tableLogin.Enabled = !b && checkAutomaticLogin.Checked;
+        }
+
+        private void checkLaunchSteam_CheckedChanged(object sender, EventArgs e)
+        {
+            panelLaunchSteamGw2.SuspendLayout();
+
+            labelLaunchSteamBasicWarning.Visible = checkLaunchSteam.Checked;
+            labelLaunchSteamFeatureWarning.Visible = checkLaunchSteam.Checked;
+
+            panelLaunchSteamGw2.ResumeLayout();
+        }
+
+        private void saveToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            using (var f = new UI.Affinity.formAffinitySelectDialog(adProcessAffinity.Affinity))
+            {
+                f.ShowDialog(this);
+            }
+        }
+
+        private void loadToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            using (var f = new UI.Affinity.formAffinitySelectDialog(Affinity.formAffinitySelectDialog.DialogMode.Select))
+            {
+                if (f.ShowDialog(this) == System.Windows.Forms.DialogResult.OK)
+                {
+                    adProcessAffinity.Affinity = f.SelectedAffinity.Affinity;
+                }
+            }
+        }
+
+        private void adProcessAffinity_MouseDown(object sender, MouseEventArgs e)
+        {
+            if (e.Button == System.Windows.Forms.MouseButtons.Right)
+            {
+                contextAffinity.Show(Cursor.Position);
+            }
         }
     }
 }

@@ -360,6 +360,14 @@ namespace Gw2Launcher.Api
             cache = new DataCache<ItemID>(HEADER, VERSION, Path.Combine(DataPath.AppData, FILE_NAME), new FormatCacheID());
         }
 
+        public Settings.Language Language
+        {
+            get
+            {
+                return Settings.ShowDailiesLanguage.Value;
+            }
+        }
+
         public async Task<Dailies> GetToday(Action onDownloadBegin)
         {
             var now = DateTime.UtcNow;
@@ -460,13 +468,15 @@ namespace Gw2Launcher.Api
             return d;
         }
 
-        public void Reset(bool clearCache)
+        public async Task Reset(bool clearCache)
         {
             nextUpdate = DateTime.MinValue;
             if (today != null)
                 today.Date = DateTime.MinValue;
             if (tomorrow != null)
                 tomorrow.Date = DateTime.MinValue;
+            if (clearCache)
+                await cache.ClearAsync();
         }
 
         private bool Equals(Dailies a, Dailies b)
@@ -578,7 +588,7 @@ namespace Gw2Launcher.Api
                 await cache.ClearAsync();
             }
 
-            await PopulateAchievements(ids, achievements, icons);
+            await PopulateAchievements(ids, achievements, icons, this.Language);
 
             var images = new System.Drawing.Image[icons.Count];
             int i = 0;
@@ -748,14 +758,25 @@ namespace Gw2Launcher.Api
                         object o;
                         if (ddata.TryGetValue("required_access", out o))
                         {
-                            var rdata = (Dictionary<string, object>)o;
-                            var product = (string)rdata["product"];
-
-                            d.Access = ParseAccessCondition(product, (string)rdata["condition"]);
-
-                            if ((d.Access & Daily.AccessCondition.Unknown) != 0)
+                            if (o is Dictionary<string, object>)
                             {
-                                d.UnknownName = CreateUnknownName(product);
+                                var rdata = (Dictionary<string, object>)o;
+                                var product = (string)rdata["product"];
+
+                                d.Access = ParseAccessCondition(product, (string)rdata["condition"]);
+
+                                if ((d.Access & Daily.AccessCondition.Unknown) != 0)
+                                {
+                                    d.UnknownName = CreateUnknownName(product);
+                                }
+                            }
+                            else if (o is List<object>)
+                            {
+                                throw new Exception("Unknown required_access (array) format");
+                            }
+                            else
+                            {
+                                throw new Exception("Unknown required_access format");
                             }
                         }
                     }
@@ -793,7 +814,7 @@ namespace Gw2Launcher.Api
             return new string(chars, 0, count < 6 ? count : 6);
         }
 
-        private async Task PopulateAchievements(HashSet<ItemID> achievementIds, Dictionary<ItemID, Achievement> achievements, Dictionary<ItemID, Icon> icons)
+        private async Task PopulateAchievements(HashSet<ItemID> achievementIds, Dictionary<ItemID, Achievement> achievements, Dictionary<ItemID, Icon> icons, Settings.Language l)
         {
             try
             {
@@ -824,7 +845,7 @@ namespace Gw2Launcher.Api
                 return;
             }
 
-            var sb = new StringBuilder(achievementIds.Count * 5 + 20);
+            var sb = new StringBuilder(achievementIds.Count * 5 + 30);
             sb.Append("v2/achievements?ids=");
 
             foreach (var id in achievementIds)
@@ -834,6 +855,13 @@ namespace Gw2Launcher.Api
             }
 
             sb.Length--;
+
+            if (l != Settings.Language.EN)
+            {
+                sb.Append("&lang=");
+                sb.Append(Settings.GetLanguageCode(l));
+            }
+
             Achievement[] achievs;
 
             try
@@ -1041,7 +1069,10 @@ namespace Gw2Launcher.Api
                     return "PvP";
             }
 
-            return char.ToUpper(key[0]) + key.Substring(1);
+            if (key.Length > 1)
+                return char.ToUpper(key[0]) + key.Substring(1);
+
+            return key;
         }
     }
 }

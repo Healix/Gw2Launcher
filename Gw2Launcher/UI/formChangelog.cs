@@ -38,7 +38,7 @@ namespace Gw2Launcher.UI
             }
         }
 
-        private class LineSeperator : Control
+        private class LineSeparator : Control
         {
             protected override void OnPaintBackground(PaintEventArgs pevent)
             {
@@ -229,7 +229,7 @@ namespace Gw2Launcher.UI
                             {
                                 y += 10;
 
-                                var ls = new LineSeperator()
+                                var ls = new LineSeparator()
                                 {
                                     Location = new Point(panelContent.Width / 8, y),
                                     Size = new Size(panelContent.Width * 3  / 4, 1),

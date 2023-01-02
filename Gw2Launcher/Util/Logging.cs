@@ -97,5 +97,10 @@ namespace Gw2Launcher.Util
                 return false;
             }
         }
+
+        public static void LogEvent(Settings.IAccount account, string message)
+        {
+
+        }
     }
 }

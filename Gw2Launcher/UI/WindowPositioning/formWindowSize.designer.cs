@@ -59,6 +59,8 @@ namespace Gw2Launcher.UI.WindowPositioning
             this.applyBoundsToProcessToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.toolStripMenuItem3 = new System.Windows.Forms.ToolStripSeparator();
             this.cancelToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.toolStripMenuItem7 = new System.Windows.Forms.ToolStripSeparator();
+            this.makeFullScreenToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.contextMenu.SuspendLayout();
             this.SuspendLayout();
             // 
@@ -81,7 +83,7 @@ namespace Gw2Launcher.UI.WindowPositioning
             this.toolStripMenuItem3,
             this.cancelToolStripMenuItem});
             this.contextMenu.Name = "contextMenuStrip1";
-            this.contextMenu.Size = new System.Drawing.Size(295, 270);
+            this.contextMenu.Size = new System.Drawing.Size(295, 292);
             // 
             // saveToolStripMenuItem
             // 
@@ -210,7 +212,9 @@ namespace Gw2Launcher.UI.WindowPositioning
             // 
             this.onThisScreenToolStripMenuItem.DropDownItems.AddRange(new System.Windows.Forms.ToolStripItem[] {
             this.onlyOnThisScreenToolStripMenuItem,
-            this.allToThisScreenToolStripMenuItem});
+            this.allToThisScreenToolStripMenuItem,
+            this.toolStripMenuItem7,
+            this.makeFullScreenToolStripMenuItem});
             this.onThisScreenToolStripMenuItem.Name = "onThisScreenToolStripMenuItem";
             this.onThisScreenToolStripMenuItem.Size = new System.Drawing.Size(188, 22);
             this.onThisScreenToolStripMenuItem.Text = "On this screen";
@@ -302,8 +306,21 @@ namespace Gw2Launcher.UI.WindowPositioning
             this.cancelToolStripMenuItem.Text = "Cancel";
             this.cancelToolStripMenuItem.Click += new System.EventHandler(this.cancelToolStripMenuItem_Click);
             // 
+            // toolStripMenuItem7
+            // 
+            this.toolStripMenuItem7.Name = "toolStripMenuItem7";
+            this.toolStripMenuItem7.Size = new System.Drawing.Size(196, 6);
+            // 
+            // makeFullScreenToolStripMenuItem
+            // 
+            this.makeFullScreenToolStripMenuItem.Name = "makeFullScreenToolStripMenuItem";
+            this.makeFullScreenToolStripMenuItem.Size = new System.Drawing.Size(199, 22);
+            this.makeFullScreenToolStripMenuItem.Text = "Make full screen";
+            this.makeFullScreenToolStripMenuItem.Click += new System.EventHandler(this.makeFullScreenToolStripMenuItem_Click);
+            // 
             // formWindowSize
             // 
+            this.AutoScaleDimensions = new System.Drawing.SizeF(96F, 96F);
             this.BackColor = System.Drawing.Color.White;
             this.ClientSize = new System.Drawing.Size(276, 225);
             this.Cursor = System.Windows.Forms.Cursors.SizeAll;
@@ -357,5 +374,7 @@ namespace Gw2Launcher.UI.WindowPositioning
         private System.Windows.Forms.ToolStripMenuItem templatesToolStripMenuItem;
         private System.Windows.Forms.ToolStripSeparator toolStripMenuItem6;
         private Controls.ToolStripMenuItemStayOpenOnClick useTemplateToolStripMenuItem;
+        private System.Windows.Forms.ToolStripSeparator toolStripMenuItem7;
+        private System.Windows.Forms.ToolStripMenuItem makeFullScreenToolStripMenuItem;
     }
 }

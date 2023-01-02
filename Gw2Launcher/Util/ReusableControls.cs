@@ -35,6 +35,7 @@ namespace Gw2Launcher.Util
             where T : Control
         {
             T GetNext();
+            void HideRemaining();
         }
 
         private class Result<T> : IResult<T>
@@ -61,6 +62,14 @@ namespace Gw2Launcher.Util
                     return controls[offset + index++];
                 else
                     throw new IndexOutOfRangeException();
+            }
+
+            public void HideRemaining()
+            {
+                while (index < count)
+                {
+                    GetNext().Visible = false;
+                }
             }
 
             public bool HasNext
@@ -173,7 +182,7 @@ namespace Gw2Launcher.Util
                     {
                         this.capacity = _count + 10;
                         this.controls = new T[this.capacity];
-                        Array.Copy(_controls, controls, this.count);
+                        System.Array.Copy(_controls, controls, this.count);
                     }
 
                     for (var i = this.count; i < _count; i++)
@@ -183,7 +192,7 @@ namespace Gw2Launcher.Util
 
                     _new = new T[add];
 
-                    Array.Copy(this.controls, this.count, _new, 0, add);
+                    System.Array.Copy(this.controls, this.count, _new, 0, add);
 
                     this.count = _count;
 

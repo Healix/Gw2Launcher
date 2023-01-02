@@ -86,6 +86,10 @@ namespace Gw2Launcher.Tools
 
             do
             {
+                //WMI could alternatively be used to poll processes, but it may not be available and has a higher impact
+                //ManagementEventWatcher("SELECT * FROM __InstanceCreationEvent WITHIN 1 WHERE TargetInstance ISA 'Win32_Process' AND TargetInstance.Name = 'CoherentUI_Host.exe'")
+                //Win32_ProcessStartTrace could be used, but requires admin privileges
+
                 await Task.Delay(5000);
 
                 if (await Task.Run(scan) == 0)

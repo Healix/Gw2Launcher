@@ -79,32 +79,43 @@ namespace Gw2Launcher.Api
                 throw;
             }
 
-            object o;
+            string name;
             int dap, map;
+            int age, world;
 
-            if (data.TryGetValue("daily_ap", out o))
+            if (!Json.GetValue<int>(data, "daily_ap", out dap))
+                dap = -1;
+            if (!Json.GetValue<int>(data, "monthly_ap", out map))
+                map = -1;
+            if (!Json.GetValue<int>(data, "age", out age))
+                age = 0;
+            if (!Json.GetValue<int>(data, "world", out world))
+                world = 0;
+
+            var _access = Json.GetValue<List<object>>(data, "access");
+            string[] access;
+
+            if (_access == null)
             {
-                dap = (int)o;
-                map = (int)data["monthly_ap"];
+                access = new string[0];
             }
             else
             {
-                dap = map = -1;
+                access = new string[_access.Count];
+                for (var i = _access.Count - 1; i >= 0; i--)
+                {
+                    access[i] = (string)_access[i];
+                }
             }
 
-            var _access = (List<object>)data["access"];
-            var access = new string[_access.Count];
-
-            for (var i = _access.Count - 1; i >= 0; i--)
-            {
-                access[i] = (string)_access[i];
-            }
+            if (!Json.GetValue<string>(data, "name", out name))
+                name = "";
 
             var a = new Account()
             {
-                Name = (string)data["name"],
-                Age = (int)data["age"],
-                World = (int)data["world"],
+                Name = name,
+                Age = age,
+                World = world,
                 Created = DateTime.Parse((string)data["created"], null, System.Globalization.DateTimeStyles.AdjustToUniversal),
                 DailyAP = dap,
                 MonthlyAP = map,

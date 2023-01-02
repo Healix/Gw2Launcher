@@ -11,7 +11,7 @@ using Gw2Launcher.Windows.Native;
 
 namespace Gw2Launcher.UI.Controls
 {
-    public class SizeDragButton : Control
+    class SizeDragButton : Base.BaseControl
     {
         public event EventHandler<Point> DragOffsetChanged;
         public event EventHandler BeginDrag;
@@ -38,6 +38,7 @@ namespace Gw2Launcher.UI.Controls
         }
 
         [System.ComponentModel.Browsable(false)]
+        [System.ComponentModel.DesignerSerializationVisibility(System.ComponentModel.DesignerSerializationVisibility.Hidden)]
         public override string Text
         {
             get

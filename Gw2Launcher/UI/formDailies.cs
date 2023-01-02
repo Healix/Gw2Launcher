@@ -15,7 +15,7 @@ namespace Gw2Launcher.UI
 {
     public partial class formDailies : Base.BaseForm
     {
-        private class Popup : Form
+        private class Popup : Base.BaseForm
         {
             private DailyAchievement control;
             private Image defaultImage;
@@ -24,11 +24,17 @@ namespace Gw2Launcher.UI
             {
                 this.defaultImage = defaultImage;
 
+                InitializeComponents();
+            }
+
+            protected override void OnInitializeComponents()
+            {
                 this.Opacity = 0;
                 this.FormBorderStyle = System.Windows.Forms.FormBorderStyle.None;
                 this.ShowInTaskbar = false;
                 this.StartPosition = FormStartPosition.Manual;
-                this.BackColor = Color.White;
+                this.BackColorName = UiColors.Colors.DailiesBackColor;
+                this.ForeColorName = UiColors.Colors.DailiesText;
 
                 control = new DailyAchievement()
                 {
@@ -42,7 +48,7 @@ namespace Gw2Launcher.UI
                     LevelFont = new System.Drawing.Font("Segoe UI Semilight", 8.5f, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0))),
                     Location = new Point(5, 5),
                     Anchor = AnchorStyles.Top | AnchorStyles.Left,
-                    BackColor = Color.White,
+                    BackColorName = UiColors.Colors.DailiesBackColor,
                 };
 
                 this.Controls.Add(control);
@@ -152,11 +158,14 @@ namespace Gw2Launcher.UI
             {
                 base.OnPaintBackground(e);
 
-                e.Graphics.DrawRectangle(SystemPens.ControlLight, 0, 0, this.Width - 1, this.Height - 1);
+                using (var p = new Pen(UiColors.GetColor(UiColors.Colors.DailiesSeparator)))
+                {
+                    e.Graphics.DrawRectangle(p, 0, 0, this.Width - 1, this.Height - 1);
+                }
             }
         }
 
-        private class MinimizedWindow : Form
+        private class MinimizedWindow : Base.BaseForm
         {
             private Form parent;
             private formDailies owner;
@@ -170,13 +179,20 @@ namespace Gw2Launcher.UI
                 this.parent = parent;
                 this.Owner = parent;
 
+                InitializeComponents();
+
+                PositionToParent();
+            }
+
+            protected override void OnInitializeComponents()
+            {
                 this.FormBorderStyle = FormBorderStyle.None;
-                this.BackColor = Color.White;
                 this.ShowInTaskbar = false;
+                this.BackColorName = UiColors.Colors.DailiesMinimizeBackColor;
 
                 var h = this.Handle; //force
 
-                this.Size = new System.Drawing.Size(owner.Scale(18), owner.Scale(66));
+                this.Size = new Size(18, 66);
 
                 this.alignment = owner.alignment;
 
@@ -188,9 +204,9 @@ namespace Gw2Launcher.UI
                     Location = new Point(1, 1),
                     Size = new Size(this.Width - 2, this.Height - 2),
                     ShapeSize = new Size(4, 8),
-                    BackColorHovered = SystemColors.ControlLight,
-                    ForeColor = SystemColors.GrayText,
-                    ForeColorHovered = Util.Color.Darken(SystemColors.GrayText, 0.5f),
+                    BackColorHoveredName = UiColors.Colors.DailiesMinimizeBackColorHovered,
+                    ForeColorName = UiColors.Colors.DailiesMinimizeArrow,
+                    ForeColorHoveredName = UiColors.Colors.DailiesMinimizeArrowHovered,
                 };
 
                 this.Controls.Add(buttonMinimize);
@@ -203,8 +219,6 @@ namespace Gw2Launcher.UI
                 parent.VisibleChanged += parent_VisibleChanged;
 
                 owner.VisibleChanged += owner_VisibleChanged;
-
-                PositionToParent();
             }
 
             void buttonMinimize_MouseHover(object sender, EventArgs e)
@@ -225,7 +239,10 @@ namespace Gw2Launcher.UI
             {
                 base.OnPaintBackground(e);
 
-                e.Graphics.DrawRectangle(SystemPens.WindowFrame, 0, 0, this.Width - 1, this.Height - 1);
+                using (var p = new Pen(UiColors.GetColor(UiColors.Colors.MainBorder)))
+                {
+                    e.Graphics.DrawRectangle(p, 0, 0, this.Width - 1, this.Height - 1);
+                }
             }
 
             protected override void OnFormClosing(FormClosingEventArgs e)
@@ -355,6 +372,8 @@ namespace Gw2Launcher.UI
                 if (owner.Visible)
                 {
                     wasVisible = false;
+                    if (this.ContainsFocus)
+                        owner.Focus();
                     this.Hide();
                 }
             }
@@ -383,6 +402,16 @@ namespace Gw2Launcher.UI
                 if (this.Visible != visible)
                 {
                     SetVisibleCore(visible);
+
+                    if (visible)
+                    {
+                        this.Opacity = 0;
+                    }
+                    else
+                    {
+                        this.Refresh();
+                        this.Opacity = 1;
+                    }
                 }
                 else
                     base.OnVisibleChanged(e);
@@ -422,6 +451,7 @@ namespace Gw2Launcher.UI
             {
                 if (disposing)
                 {
+                    UiColors.ColorsChanged -= OnColorsChanged;
                     parent.LocationChanged -= parent_LocationChanged;
                     parent.SizeChanged -= parent_SizeChanged;
                     parent.VisibleChanged -= parent_VisibleChanged;
@@ -479,12 +509,15 @@ namespace Gw2Launcher.UI
 
         public formDailies(Form parent)
         {
-            InitializeComponents();
-
             SetStyle(ControlStyles.ResizeRedraw, true);
 
+            InitializeComponents();
+
             this.parent = parent;
+            this.Opacity = 0;
             this.KeyPreview = true;
+
+            panelContent.BackColor = UiColors.GetColor(UiColors.Colors.DailiesSeparator);
 
             alignment = HorizontalAlignment.Right;
 
@@ -509,27 +542,23 @@ namespace Gw2Launcher.UI
             popup = new Popup(imageDefault);
             popup.Owner = this;
 
-            buttonMinimize.ForeColorHovered = Util.Color.Darken(SystemColors.GrayText, 0.5f);
-
             panelContainer.MouseWheel += panelContainer_MouseWheel;
             panelContainer.MouseHover += panelContainer_MouseHover;
             this.MouseWheel += panelContainer_MouseWheel;
-
             Settings.ShowDailies.ValueChanged += Settings_ValueChanged;
+            Settings.ShowDailiesLanguage.ValueChanged += Language_ValueChanged;
+            parent.VisibleChanged += parent_VisibleChanged;
+
             Settings_ValueChanged(Settings.ShowDailies, EventArgs.Empty);
 
             if (Settings.ShowDailies.Value.HasFlag(Settings.DailiesMode.AutoLoad))
                 SelectTab(DailyType.Today);
             else
                 loadOnShow = true;
-
-            parent.VisibleChanged += parent_VisibleChanged;
         }
         
         protected override void OnInitializeComponents()
         {
-            base.OnInitializeComponents();
-
             InitializeComponent();
         }
 
@@ -553,8 +582,11 @@ namespace Gw2Launcher.UI
 
             if (!setting.HasValue || !setting.Value.HasFlag(Settings.DailiesMode.Show))
             {
-                this.Dispose();
-                return;
+                if (this.IsHandleCreated)
+                {
+                    this.Dispose();
+                    return;
+                }
             }
 
             var bounds = Settings.WindowBounds[typeof(formDailies)];
@@ -581,6 +613,11 @@ namespace Gw2Launcher.UI
                 if (bounds.HasValue && bounds.Value.X == int.MinValue)
                     this.Size = bounds.Value.Size;
             }
+        }
+
+        void Language_ValueChanged(object sender, EventArgs e)
+        {
+            RefreshDailies(true);
         }
 
         protected override bool ShowWithoutActivation
@@ -714,18 +751,27 @@ namespace Gw2Launcher.UI
 
             if (e.KeyCode == Keys.F5)
             {
-                switch (currentTab)
-                {
-                    case DailyType.Today:
-                    case DailyType.Tomorrow:
-
-                        da.Reset(e.Control);
-                        GetDailies(currentTab);
-
-                        break;
-                }
+                RefreshDailies(e.Control);
 
                 e.Handled = true;
+            }
+        }
+
+        private async void RefreshDailies(bool clearCache)
+        {
+            switch (currentTab)
+            {
+                case DailyType.Today:
+                case DailyType.Tomorrow:
+
+                    await da.Reset(clearCache);
+
+                    if (!this.Visible)
+                        loadOnShow = true;
+                    else
+                        GetDailies(currentTab);
+
+                    break;
             }
         }
 
@@ -733,17 +779,10 @@ namespace Gw2Launcher.UI
         {
             base.OnPaintBackground(e);
 
-            e.Graphics.DrawRectangle(SystemPens.WindowFrame, 0, 0, this.Width - 1, this.Height - 1);
-
-            //using (var pen = new Pen(SystemBrushes.ControlDark))
-            //{
-            //    pen.DashStyle = System.Drawing.Drawing2D.DashStyle.Dot;
-
-            //    var r = Rectangle.FromLTRB(buttonTomorrow.Right - 5, buttonTomorrow.Bottom + 5, buttonTomorrow.Right - 2, buttonMinimize.Top - 5);
-
-            //    e.Graphics.DrawLine(pen, r.Right, r.Top, r.Right, r.Bottom);
-            //    e.Graphics.DrawLine(pen, r.Right - 2, r.Top + 1, r.Right - 2, r.Bottom - 2);
-            //}
+            using (var p = new Pen(UiColors.GetColor(UiColors.Colors.MainBorder)))
+            {
+                e.Graphics.DrawRectangle(p, 0, 0, this.Width - 1, this.Height - 1);
+            }
         }
 
         protected override void OnSizeChanged(EventArgs e)
@@ -819,10 +858,10 @@ namespace Gw2Launcher.UI
                 {
                     var control = new DailyAchievement()
                     {
-                        BackColor = Color.White,
+                        BackColorName = UiColors.Colors.DailiesBackColor,
                         NameVisible = true,
                         NameFont = fontName,
-                        IconSize = new Size(Scale(32),Scale(32)),
+                        IconSize = Scale(32,32),
                         IconVisible = true,
                         Size = new Size(panelContent.Width, Scale(50)),
                         Anchor = AnchorStyles.Left | AnchorStyles.Right | AnchorStyles.Top,
@@ -840,7 +879,9 @@ namespace Gw2Launcher.UI
                     var bar = new DailyCategoryBar()
                     {
                         Font = fontBar,
-                        BackColor = SystemColors.ControlLight,
+                        Padding = new Padding(Scale(10), 0, 0, 0),
+                        ArrowBarWidth = Scale(50),
+                        BackColorName = UiColors.Colors.DailiesHeader,
                         Size = new Size(panelContent.Width, Scale(35)),
                         Anchor = AnchorStyles.Left | AnchorStyles.Right | AnchorStyles.Top,
                     };
@@ -1070,7 +1111,7 @@ namespace Gw2Launcher.UI
         private async void GetDailies(DailyType type)
         {
             currentTab = type;
-            if ((isLoading & type) == type)
+            if ((isLoading & type) == type || IsDisposed)
                 return;
             isLoading |= type;
 
@@ -1194,6 +1235,9 @@ namespace Gw2Launcher.UI
             {
                 Util.ScheduledEvents.Unregister(OnScheduledRetry);
 
+                Settings.ShowDailies.ValueChanged -= Settings_ValueChanged;
+                Settings.ShowDailiesLanguage.ValueChanged -= Language_ValueChanged;
+
                 parent.VisibleChanged -= parent_VisibleChanged;
 
                 if (components != null)
@@ -1293,7 +1337,15 @@ namespace Gw2Launcher.UI
         protected override void OnVisibleChanged(EventArgs e)
         {
             if (this.Visible)
+            {
+                this.Refresh();
+                this.Opacity = 1;
                 NativeMethods.ShowWindow(this.Handle, ShowWindowCommands.ShowNoActivate);
+            }
+            else
+            {
+                this.Opacity = 0;
+            }
 
             base.OnVisibleChanged(e);
         }
@@ -1428,6 +1480,8 @@ namespace Gw2Launcher.UI
             if (minimized.Visible && this.Visible)
             {
                 NativeMethods.ShowWindow(minimized.Handle, ShowWindowCommands.ShowNoActivate);
+                if (this.ContainsFocus)
+                    minimized.Focus();
                 this.Hide();
             }
         }
@@ -1683,6 +1737,13 @@ namespace Gw2Launcher.UI
 
                     break;
             }
+        }
+
+        public override void RefreshColors()
+        {
+            base.RefreshColors();
+
+            panelContent.BackColor = UiColors.GetColor(UiColors.Colors.DailiesSeparator);
         }
     }
 }

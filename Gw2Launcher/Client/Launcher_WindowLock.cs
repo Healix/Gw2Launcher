@@ -218,12 +218,20 @@ namespace Gw2Launcher.Client
             }
 
             /// <summary>
-            /// Forces the window above other windows
+            /// Places the window above other windows
             /// </summary>
-            public static void ToTop(IntPtr handle, bool async = true)
+            /// <param name="forced">True to force a top most window</param>
+            public static void ToTop(IntPtr handle, bool async = true, bool forced = false)
             {
-                SetZOrder(handle, (IntPtr)WindowZOrder.HWND_TOPMOST, async);
-                SetZOrder(handle, (IntPtr)WindowZOrder.HWND_NOTOPMOST, async);
+                if (forced)
+                {
+                    SetZOrder(handle, (IntPtr)WindowZOrder.HWND_TOPMOST, async);
+                    SetZOrder(handle, (IntPtr)WindowZOrder.HWND_NOTOPMOST, async);
+                }
+                else
+                {
+                    SetZOrder(handle, (IntPtr)WindowZOrder.HWND_TOP, async);
+                }
             }
             
             /// <summary>
@@ -270,6 +278,14 @@ namespace Gw2Launcher.Client
                 {
                     SetZOrder(handle, w, async);
                 }
+            }
+
+            /// <summary>
+            /// Re-focuses the foreground window
+            /// </summary>
+            public static bool ResetForegroundWindowFocus(IntPtr handle)
+            {
+                return NativeMethods.SetForegroundWindow(NativeMethods.GetDesktopWindow()) && NativeMethods.SetForegroundWindow(handle);
             }
         }
     }

@@ -5,6 +5,8 @@ using System.Text;
 using System.Threading.Tasks;
 using System.Windows.Forms;
 using System.Drawing;
+using System.ComponentModel;
+using System.Drawing.Design;
 
 namespace Gw2Launcher.UI.Base
 {
@@ -104,30 +106,30 @@ namespace Gw2Launcher.UI.Base
             var psize = (int)(scale + 0.5f);
             var phalf = psize / 2;
 
-            if (visible)
+            using (var p = new Pen(visible ? this.TitleBorderColor : this.BorderColor, psize))
             {
-                using (var p = new Pen(Color.FromArgb(200, 200, 200), psize))
+                if (visible)
                 {
                     var bounds = new Rectangle(psize, psize + (int)(10 * scale + 0.5f), this.ClientSize.Width - psize * 2, (int)(35 * scale + 0.5f));
                     int y;
 
-                    using (var b = new SolidBrush(Color.FromArgb(235, 235, 235)))
+                    using (var b = new SolidBrush(this.TitleBackColor))
                     {
                         g.FillRectangle(b, bounds);
                     }
 
-                    TextRenderer.DrawText(g, this.Text, fontTitle, bounds, this.ForeColor, Color.Transparent, TextFormatFlags.HorizontalCenter | TextFormatFlags.VerticalCenter | TextFormatFlags.NoPadding);
+                    TextRenderer.DrawText(g, this.Text, fontTitle, bounds, this.TitleForeColor, Color.Transparent, TextFormatFlags.HorizontalCenter | TextFormatFlags.VerticalCenter | TextFormatFlags.NoPadding);
 
                     y = bounds.Top + phalf - psize;
                     g.DrawLine(p, bounds.Left, y, bounds.Right, y);
 
                     y = bounds.Bottom + phalf;
                     g.DrawLine(p, bounds.Left, y, bounds.Right, y);
-                }
-            }
 
-            using (var p = new Pen(Color.FromArgb(120, 120, 120), psize))
-            {
+                    //border last
+                    p.Color = this.BorderColor;
+                }
+
                 g.DrawRectangle(p, phalf, phalf, this.ClientSize.Width - psize, this.ClientSize.Height - psize);
             }
         }
@@ -156,6 +158,176 @@ namespace Gw2Launcher.UI.Base
                 if (buffer != null)
                     buffer.Dispose();
             }
+        }
+
+        protected Color _TitleForeColor = Color.Black;
+        [DefaultValue(typeof(Color), "Black")]
+        public virtual Color TitleForeColor
+        {
+            get
+            {
+                return _TitleForeColor;
+            }
+            set
+            {
+                if (_TitleForeColor != value)
+                {
+                    _TitleForeColor = value;
+                    this.Invalidate();
+                }
+            }
+        }
+
+        protected UiColors.Colors _TitleForeColorName = UiColors.Colors.Custom;
+        [DefaultValue(UiColors.Colors.Custom)]
+        [UiPropertyColor()]
+        [TypeConverter(typeof(UiColorTypeConverter))]
+        [Editor(typeof(UiColorTypeEditor), typeof(UITypeEditor))]
+        public UiColors.Colors TitleForeColorName
+        {
+            get
+            {
+                return _TitleForeColorName;
+            }
+            set
+            {
+                if (_TitleForeColorName != value)
+                {
+                    _TitleForeColorName = value;
+                    RefreshColors();
+                }
+            }
+        }
+
+        protected Color _TitleBackColor = Color.FromArgb(235, 235, 235);
+        [DefaultValue(typeof(Color), "235,235,235")]
+        public virtual Color TitleBackColor
+        {
+            get
+            {
+                return _TitleBackColor;
+            }
+            set
+            {
+                if (_TitleBackColor != value)
+                {
+                    _TitleBackColor = value;
+                    this.Invalidate();
+                }
+            }
+        }
+
+        protected UiColors.Colors _TitleBackColorName = UiColors.Colors.Custom;
+        [DefaultValue(UiColors.Colors.Custom)]
+        [UiPropertyColor()]
+        [TypeConverter(typeof(UiColorTypeConverter))]
+        [Editor(typeof(UiColorTypeEditor), typeof(UITypeEditor))]
+        public UiColors.Colors TitleBackColorName
+        {
+            get
+            {
+                return _TitleBackColorName;
+            }
+            set
+            {
+                if (_TitleBackColorName != value)
+                {
+                    _TitleBackColorName = value;
+                    RefreshColors();
+                }
+            }
+        }
+
+        protected Color _TitleBorderColor = Color.FromArgb(200, 200, 200);
+        [DefaultValue(typeof(Color), "200,200,200")]
+        public virtual Color TitleBorderColor
+        {
+            get
+            {
+                return _TitleBorderColor;
+            }
+            set
+            {
+                if (_TitleBorderColor != value)
+                {
+                    _TitleBorderColor = value;
+                    this.Invalidate();
+                }
+            }
+        }
+
+        protected UiColors.Colors _TitleBorderColorName = UiColors.Colors.Custom;
+        [DefaultValue(UiColors.Colors.Custom)]
+        [UiPropertyColor()]
+        [TypeConverter(typeof(UiColorTypeConverter))]
+        [Editor(typeof(UiColorTypeEditor), typeof(UITypeEditor))]
+        public UiColors.Colors TitleBorderColorName
+        {
+            get
+            {
+                return _TitleBorderColorName;
+            }
+            set
+            {
+                if (_TitleBorderColorName != value)
+                {
+                    _TitleBorderColorName = value;
+                    RefreshColors();
+                }
+            }
+        }
+
+        protected Color _BorderColor = Color.FromArgb(120, 120, 120);
+        [DefaultValue(typeof(Color), "120,120,120")]
+        public virtual Color BorderColor
+        {
+            get
+            {
+                return _BorderColor;
+            }
+            set
+            {
+                if (_BorderColor != value)
+                {
+                    _BorderColor = value;
+                    this.Invalidate();
+                }
+            }
+        }
+
+        protected UiColors.Colors _BorderColorName = UiColors.Colors.Custom;
+        [DefaultValue(UiColors.Colors.Custom)]
+        [UiPropertyColor()]
+        [TypeConverter(typeof(UiColorTypeConverter))]
+        [Editor(typeof(UiColorTypeEditor), typeof(UITypeEditor))]
+        public UiColors.Colors BorderColorName
+        {
+            get
+            {
+                return _BorderColorName;
+            }
+            set
+            {
+                if (_BorderColorName != value)
+                {
+                    _BorderColorName = value;
+                    RefreshColors();
+                }
+            }
+        }
+
+        public override void RefreshColors()
+        {
+            if (_BorderColorName != UiColors.Colors.Custom)
+                this.BorderColor = UiColors.GetColor(_BorderColorName);
+            if (_TitleBackColorName != UiColors.Colors.Custom)
+                this.TitleBackColor = UiColors.GetColor(_TitleBackColorName);
+            if (_TitleBorderColorName != UiColors.Colors.Custom)
+                this.TitleBorderColor = UiColors.GetColor(_TitleBorderColorName);
+            if (_TitleForeColorName != UiColors.Colors.Custom)
+                this.TitleForeColor = UiColors.GetColor(_TitleForeColorName);
+
+            base.RefreshColors();
         }
     }
 }

@@ -65,6 +65,9 @@ namespace Gw2Launcher.Util
             return new Rectangle(bounds.X + w.X - l.X, bounds.Y + w.Y - l.Y, bounds.Width, bounds.Height);
         }
 
+        /// <summary>
+        /// Converts bounds to use desktop coordinates, which are based on the working area of the screen
+        /// </summary>
         public static Rectangle ToDesktopBounds(Rectangle bounds)
         {
             var screen = Screen.FromRectangle(bounds);

@@ -23,7 +23,7 @@ namespace Gw2Launcher.Util
         /// <summary>
         /// Launches with the specified args
         /// </summary>
-        public static bool Execute(string args, bool admin)
+        public static bool Execute(string args, bool admin, bool waitExit = true)
         {
             var p = new ProcessStartInfo(GetPath(), args);
             p.UseShellExecute = true;
@@ -32,6 +32,9 @@ namespace Gw2Launcher.Util
 
             using (var proc = Process.Start(p))
             {
+                if (!waitExit)
+                    return true;
+
                 proc.WaitForExit();
                 return proc.ExitCode == 0;
             }
@@ -145,6 +148,11 @@ namespace Gw2Launcher.Util
         public static bool KillMutexWindow(Settings.AccountType type, bool runAsAdmin)
         {
             return Execute("-pu -handle -pid 0 \"" + GetMutexName(type) + "\" " + (byte)Windows.Win32Handles.MatchMode.EndsWith, runAsAdmin);
+        }
+
+        public static bool KillMutex(string mutex, Windows.Win32Handles.MatchMode matchMode, bool runAsAdmin)
+        {
+            return Execute("-pu -handle -pid 0 \"" + mutex + "\" " + (byte)matchMode, runAsAdmin);
         }
 
         /// <summary>
@@ -412,6 +420,42 @@ namespace Gw2Launcher.Util
 
                 return p;
             }
+        }
+
+        /// <summary>
+        /// Restores Gw2Launcher using the specified backup file
+        /// </summary>
+        /// <param name="path">Backup file</param>
+        public static void Restore(string path)
+        {
+            using (var self = Process.GetCurrentProcess())
+            {
+                Execute("-restore \"" + path + "\" " + self.Id, false, false);
+            }
+        }
+
+        /// <summary>
+        /// Returns the first running process found that matches the path
+        /// </summary>
+        public static Process FindProcess(string path)
+        {
+            path = Path.GetFullPath(path);
+
+            foreach (var p in Process.GetProcessesByName(Path.GetFileNameWithoutExtension(path)))
+            {
+                try
+                {
+                    if (p.MainModule.FileName.Equals(path, StringComparison.OrdinalIgnoreCase))
+                    {
+                        return p;
+                    }
+                }
+                catch { }
+
+                p.Dispose();
+            }
+
+            return null;
         }
     }
 }

@@ -6,7 +6,7 @@ using System.Drawing;
 
 namespace Gw2Launcher.UI.Controls
 {
-    class DailyCategoryBar : Control
+    class DailyCategoryBar : Base.BaseControl
     {
         public event EventHandler Collapsed;
         public event EventHandler Expanded;
@@ -32,6 +32,12 @@ namespace Gw2Launcher.UI.Controls
             }
         }
 
+        public int ArrowBarWidth
+        {
+            get;
+            set;
+        }
+
         protected override void OnSizeChanged(EventArgs e)
         {
             base.OnSizeChanged(e);
@@ -42,7 +48,7 @@ namespace Gw2Launcher.UI.Controls
                 buffer = null;
             }
 
-            rectCollapse = new Rectangle(this.Width - 50, 0, 50, this.Height);
+            rectCollapse = new Rectangle(this.Width - ArrowBarWidth, 0, ArrowBarWidth, this.Height);
 
             redraw = true;
             this.Invalidate();
@@ -133,19 +139,18 @@ namespace Gw2Launcher.UI.Controls
 
                 var g = buffer.Graphics;
 
-                TextRenderer.DrawText(g, this.Text, this.Font, new Rectangle(10, 0, rectCollapse.Left - 10, this.Height), this.ForeColor, TextFormatFlags.WordBreak | TextFormatFlags.WordEllipsis | TextFormatFlags.VerticalCenter);
+                TextRenderer.DrawText(g, this.Text, this.Font, new Rectangle(this.Padding.Left, 0, rectCollapse.Left - this.Padding.Left, this.Height), this.ForeColor, TextFormatFlags.WordBreak | TextFormatFlags.WordEllipsis | TextFormatFlags.VerticalCenter);
 
-                var c = Util.Color.Darken(this.BackColor, 0.5f);
-                using (var brush = new SolidBrush(c))
+                using (var brush = new SolidBrush(UiColors.GetColor(hovered ? UiColors.Colors.DailiesHeaderHovered : UiColors.Colors.DailiesHeaderArrow)))
                 {
                     using (var pen = new Pen(brush))
                     {
                         if (hovered)
                         {
-                            brush.Color = Util.Color.Darken(this.BackColor, 0.1f);
                             g.FillRectangle(brush, rectCollapse);
 
-                            brush.Color = c;
+                            brush.Color = UiColors.GetColor(UiColors.Colors.DailiesHeaderArrow);
+                            pen.Color = brush.Color;
                         }
 
                         PointF[] points;
@@ -211,6 +216,14 @@ namespace Gw2Launcher.UI.Controls
                     buffer = null;
                 }
             }
+        }
+
+        public override void RefreshColors()
+        {
+            redraw = true;
+            this.Invalidate();
+
+            base.RefreshColors();
         }
     }
 }

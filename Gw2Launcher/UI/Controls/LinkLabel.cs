@@ -6,10 +6,11 @@ using System.Threading.Tasks;
 using System.Windows.Forms;
 using System.Drawing;
 using System.ComponentModel;
+using System.Drawing.Design;
 
 namespace Gw2Launcher.UI.Controls
 {
-    class LinkLabel : Label
+    class LinkLabel : Base.BaseLabel
     {
         public const int DEFAULT_FORECOLOR = -13534734;
 
@@ -21,7 +22,7 @@ namespace Gw2Launcher.UI.Controls
         {
             Cursor = Cursors.Hand;
             base.ForeColor = foreColor = Color.FromArgb(DEFAULT_FORECOLOR);
-            foreColorHighlight = Util.Color.Darken(foreColor, 0.3f);
+            foreColorHighlight = Color.FromArgb(34, 85, 169);
         }
 
         [DefaultValue(typeof(Color), "49, 121, 242")]
@@ -34,7 +35,40 @@ namespace Gw2Launcher.UI.Controls
             set
             {
                 base.ForeColor = foreColor = value;
-                foreColorHighlight = Util.Color.Darken(foreColor, 0.3f);
+            }
+        }
+
+        [DefaultValue(typeof(Color), "34, 85, 169")]
+        public Color ForeColorHovered
+        {
+            get
+            {
+                return foreColorHighlight;
+            }
+            set
+            {
+                foreColorHighlight = value;
+            }
+        }
+
+        protected UiColors.Colors _ForeColorHoveredName = UiColors.Colors.Custom;
+        [UiPropertyColor()]
+        [DefaultValue(UiColors.Colors.Custom)]
+        [TypeConverter(typeof(UiColorTypeConverter))]
+        [Editor(typeof(UiColorTypeEditor), typeof(UITypeEditor))]
+        public UiColors.Colors ForeColorHoveredName
+        {
+            get
+            {
+                return _ForeColorHoveredName;
+            }
+            set
+            {
+                if (_ForeColorHoveredName != value)
+                {
+                    _ForeColorHoveredName = value;
+                    RefreshColors();
+                }
             }
         }
 
@@ -98,6 +132,14 @@ namespace Gw2Launcher.UI.Controls
             {
                 e.Graphics.DrawIcon(icon, 0, (this.Height - icon.Height) / 2);
             }
+        }
+
+        public override void RefreshColors()
+        {
+            if (_ForeColorHoveredName != UiColors.Colors.Custom)
+                ForeColorHovered = UiColors.GetColor(_ForeColorHoveredName);
+
+            base.RefreshColors();
         }
     }
 }

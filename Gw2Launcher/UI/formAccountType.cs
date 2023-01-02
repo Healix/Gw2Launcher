@@ -15,41 +15,65 @@ namespace Gw2Launcher.UI
 {
     public partial class formAccountType : Base.FlatBase
     {
-        private class SelectButton : Control
+        private class SelectButton : Control, UiColors.IColors
         {
             private bool hovered;
 
             public SelectButton()
             {
-                this.ForeColor = Color.FromArgb(50, 50, 50);
-                this.ForeColorHovered = Color.Black;
-                this.BackColor = Color.FromArgb(240, 240, 240);
-                this.BorderColor = Color.FromArgb(200, 200, 200);
-                this.BackColorHovered = Color.FromArgb(230, 236, 244);
-                this.BorderColorHovered = Color.FromArgb(190, 196, 204);
                 this.Cursor = Cursors.Hand;
                 this.DoubleBuffered = true;
+
+                RefreshColors();
             }
 
-            public Color ForeColorHovered
+            [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
+            [Browsable(false)]
+            public override Color BackColor
+            {
+                get
+                {
+                    return base.BackColor;
+                }
+                set
+                {
+                    base.BackColor = value;
+                }
+            }
+
+            [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
+            [Browsable(false)]
+            public override Color ForeColor
+            {
+                get
+                {
+                    return base.ForeColor;
+                }
+                set
+                {
+                    base.ForeColor = value;
+                }
+            }
+
+            private Color ForeColorHovered
             {
                 get;
                 set;
             }
 
-            public Color BackColorHovered
+            private Color BackColorHovered
             {
                 get;
                 set;
             }
 
-            public Color BorderColor
+            private Color BorderColor
             {
                 get;
                 set;
             }
 
-            public Color BorderColorHovered
+            private Color BorderColorHovered
             {
                 get;
                 set;
@@ -127,6 +151,18 @@ namespace Gw2Launcher.UI
                 //x += 5;
                 x = 0;
                 TextRenderer.DrawText(g, this.Text, this.Font, Rectangle.FromLTRB(x, 0, this.Width, this.Height), fc, bc, TextFormatFlags.VerticalCenter |  TextFormatFlags.HorizontalCenter);
+            }
+
+            public void RefreshColors()
+            {
+                this.ForeColor = UiColors.GetColor(UiColors.Colors.SelectButtonForeColor);
+                this.ForeColorHovered = UiColors.GetColor(UiColors.Colors.SelectButtonForeColorHovered);
+                this.BackColor = UiColors.GetColor(UiColors.Colors.SelectButtonBackColor);
+                this.BorderColor = UiColors.GetColor(UiColors.Colors.SelectButtonBorderColor);
+                this.BackColorHovered = UiColors.GetColor(UiColors.Colors.SelectButtonBackColorHovered);
+                this.BorderColorHovered = UiColors.GetColor(UiColors.Colors.SelectButtonBorderColorHovered);
+
+                this.Invalidate();
             }
         }
 

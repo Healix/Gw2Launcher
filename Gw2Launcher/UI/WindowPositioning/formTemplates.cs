@@ -756,269 +756,6 @@ namespace Gw2Launcher.UI.WindowPositioning
             }
         }
         
-        private class ScreenTemplate : Settings.WindowTemplate
-        {
-            private Rectangle bounds;
-            private int windows;
-
-            public ScreenTemplate(params Screen[] screens) : base(screens)
-            {
-                Initialize();
-            }
-
-            public Rectangle Bounds
-            {
-                get
-                {
-                    return bounds;
-                }
-            }
-
-            public int WindowCount
-            {
-                get
-                {
-                    return windows;
-                }
-            }
-
-            private void Initialize()
-            {
-                if (base.Screens.Length == 1)
-                {
-                    bounds = base.Screens[0].Bounds;
-                    windows = base.Screens[0].Windows.Length;
-                }
-                else
-                {
-                    int l = int.MaxValue,
-                        t = int.MaxValue,
-                        r = int.MinValue,
-                        b = int.MinValue;
-                    windows = 0;
-
-                    foreach (var s in base.Screens)
-                    {
-                        if (s.Bounds.X < l)
-                            l = s.Bounds.X;
-                        if (s.Bounds.Y < t)
-                            t = s.Bounds.Y;
-                        if (s.Bounds.Right > r)
-                            r = s.Bounds.Right;
-                        if (s.Bounds.Bottom > b)
-                            b = s.Bounds.Bottom;
-
-                        windows += s.Windows.Length;
-                    }
-
-                    bounds = new Rectangle(l, t, r - l, b - t);
-                }
-            }
-
-            public Rectangle[] GetWindows(bool useWorkingArea, bool flipX, bool flipY)
-            {
-                var b = new Rectangle[base.Screens.Length];
-
-                for (var i = base.Screens.Length - 1; i >= 0; --i)
-                {
-                    if (useWorkingArea)
-                        b[i] = System.Windows.Forms.Screen.FromRectangle(base.Screens[i].Bounds).WorkingArea;
-                    else
-                        b[i] = System.Windows.Forms.Screen.FromRectangle(base.Screens[i].Bounds).Bounds;
-                }
-
-                return GetWindows(b, flipX, flipY);
-            }
-
-            public Rectangle[] GetWindows(Rectangle bounds, bool flipX, bool flipY)
-            {
-                var scaleX = (double)bounds.Width / this.bounds.Width;
-                var scaleY = (double)bounds.Height / this.bounds.Height;
-                var b = new Rectangle[base.Screens.Length];
-
-                for (var i = base.Screens.Length - 1; i >= 0; --i)
-                {
-                    var s = base.Screens[i].Bounds;
-
-                    var x1 = (int)((s.X - this.bounds.X) * scaleX + 0.5) + bounds.X;
-                    var y1 = (int)((s.Y - this.bounds.Y) * scaleY + 0.5) + bounds.Y;
-                    var x2 = (int)((s.Right - this.bounds.X) * scaleX + 0.5) + bounds.X;
-                    var y2 = (int)((s.Bottom - this.bounds.Y) * scaleY + 0.5) + bounds.Y;
-
-                    b[i] = new Rectangle(x1, y1, x2 - x1, y2 - y1);
-                }
-
-                return GetWindows(b, flipX, flipY);
-            }
-
-            private int GetWindows(Rectangle[] windows, int offset, int screen, Rectangle bounds, bool flipX, bool flipY)
-            {
-                var wi = offset;
-                var screens = base.Screens;
-
-                if (screens[screen].Bounds.Size == bounds.Size)
-                {
-                    if (flipX || flipY || !bounds.Location.IsEmpty)
-                    {
-                        foreach (var w in screens[screen].Windows)
-                        {
-                            int x = w.X,
-                                y = w.Y;
-
-                            if (flipX)
-                            {
-                                x = bounds.Width - w.Right;
-                            }
-
-                            if (flipY)
-                            {
-                                y = bounds.Height - w.Bottom;
-                            }
-
-                            windows[wi++] = new Rectangle(x + bounds.X, y + bounds.Y, w.Width, w.Height);
-                        }
-                    }
-                    else
-                    {
-                        Array.Copy(screens[screen].Windows, 0, windows, wi, screens[screen].Windows.Length);
-                        wi += screens[screen].Windows.Length;
-                    }
-                }
-                else
-                {
-                    var scaleX = (double)bounds.Width / screens[screen].Bounds.Width;
-                    var scaleY = (double)bounds.Height / screens[screen].Bounds.Height;
-
-                    foreach (var w in screens[screen].Windows)
-                    {
-                        int x, y, r, b;
-
-                        if (flipX)
-                        {
-                            x = screens[screen].Bounds.Width - w.Right;
-                            r = screens[screen].Bounds.Width - w.X;
-                        }
-                        else
-                        {
-                            x = w.X;
-                            r = w.Right;
-                        }
-
-                        if (flipY)
-                        {
-                            y = screens[screen].Bounds.Height - w.Bottom;
-                            b = screens[screen].Bounds.Height - w.Y;
-                        }
-                        else
-                        {
-                            y = w.Y;
-                            b = w.Bottom;
-                        }
-
-                        x = (int)(x * scaleX + 0.5);
-                        r = (int)(r * scaleX + 0.5);
-                        y = (int)(y * scaleY + 0.5);
-                        b = (int)(b * scaleY + 0.5);
-
-                        windows[wi++] = new Rectangle(x + bounds.X, y + bounds.Y, r - x, b - y);
-                    }
-                }
-
-                return wi - offset;
-            }
-
-            public Rectangle[] GetWindows(int screen, Rectangle bounds, bool flipX, bool flipY)
-            {
-                var windows = new Rectangle[base.Screens[screen].Windows.Length];
-
-                GetWindows(windows, 0, screen, bounds, flipX, flipY);
-
-                return windows;
-            }
-
-            public Rectangle[] GetWindows(Rectangle[] bounds, bool flipX, bool flipY)
-            {
-                var windows = new Rectangle[this.windows];
-                var wi = 0;
-
-                for (var i = base.Screens.Length - 1; i >= 0; --i)
-                {
-                    wi += GetWindows(windows, wi, i, bounds[i], flipX, flipY);
-
-
-                    //if (screens[i].ScreenBounds.Size == bounds[i].Size)
-                    //{
-                    //    if (flipX || flipY || !bounds[i].Location.IsEmpty)
-                    //    {
-                    //        foreach (var w in screens[i].Windows)
-                    //        {
-                    //            int x = w.X,
-                    //                y = w.Y;
-
-                    //            if (flipX)
-                    //            {
-                    //                x = bounds[i].Width - w.Right;
-                    //            }
-
-                    //            if (flipY)
-                    //            {
-                    //                y = bounds[i].Height - w.Bottom;
-                    //            }
-
-                    //            windows[wi++] = new Rectangle(x + bounds[i].X, y + bounds[i].Y, w.Width, w.Height);
-                    //        }
-                    //    }
-                    //    else
-                    //    {
-                    //        Array.Copy(screens[i].Windows, 0, windows, wi, screens[i].Windows.Length);
-                    //        wi += screens[i].Windows.Length;
-                    //    }
-                    //}
-                    //else
-                    //{
-                    //    var scaleX = (double)bounds[i].Width / screens[i].ScreenBounds.Width;
-                    //    var scaleY = (double)bounds[i].Height / screens[i].ScreenBounds.Height;
-
-                    //    foreach (var w in screens[i].Windows)
-                    //    {
-                    //        int x, y, r, b;
-
-                    //        if (flipX)
-                    //        {
-                    //            x = screens[i].ScreenBounds.Width - w.Right;
-                    //            r = screens[i].ScreenBounds.Width - w.X;
-                    //        }
-                    //        else
-                    //        {
-                    //            x = w.X;
-                    //            r = w.Right;
-                    //        }
-
-                    //        if (flipY)
-                    //        {
-                    //            y = screens[i].ScreenBounds.Height - w.Bottom;
-                    //            b = screens[i].ScreenBounds.Height - w.Y;
-                    //        }
-                    //        else
-                    //        {
-                    //            y = w.Y;
-                    //            b = w.Bottom;
-                    //        }
-
-                    //        x = (int)(x * scaleX + 0.5);
-                    //        r = (int)(r * scaleX + 0.5);
-                    //        y = (int)(y * scaleY + 0.5);
-                    //        b = (int)(b * scaleY + 0.5);
-
-                    //        windows[wi++] = new Rectangle(x + bounds[i].X, y + bounds[i].Y, r - x, b - y);
-                    //    }
-                    //}
-                }
-
-                return windows;
-            }
-        }
-
         private class TemplateDisplay : Control
         {
             private BufferedGraphics buffer;
@@ -1031,7 +768,7 @@ namespace Gw2Launcher.UI.WindowPositioning
                 redraw = true;
                 SetColor();
                 Cursor = Cursors.Hand;
-                Padding = new Padding(3, 3, 3, 3);
+                //Padding = new Padding(3, 3, 3, 3);
             }
 
             private void OnRedrawRequired()
@@ -1068,10 +805,64 @@ namespace Gw2Launcher.UI.WindowPositioning
                 }
             }
 
+            protected override void OnTextChanged(EventArgs e)
+            {
+                base.OnTextChanged(e);
+
+                if (_TextHeight > 0)
+                    OnRedrawRequired();
+            }
+
+            private int _TextHeight;
+            public int TextHeight
+            {
+                get
+                {
+                    return _TextHeight;
+                }
+                set
+                {
+                    if (_TextHeight != value)
+                    {
+                        _TextHeight = value;
+                        OnRedrawRequired();
+                    }
+                }
+            }
+
             public Settings.WindowTemplate Source
             {
                 get;
                 set;
+            }
+
+            public List<TemplateDisplay> Shared
+            {
+                get;
+                set;
+            }
+
+            public Settings.WindowTemplate.Assignment AssignedTo
+            {
+                get;
+                set;
+            }
+
+            private bool _Activated;
+            public bool Activated
+            {
+                get
+                {
+                    return _Activated;
+                }
+                set
+                {
+                    if (_Activated != value)
+                    {
+                        _Activated = value;
+                        OnRedrawRequired();
+                    }
+                }
             }
 
             private void SetColor()
@@ -1218,8 +1009,8 @@ namespace Gw2Launcher.UI.WindowPositioning
 
                     if (_Selected)
                     {
-                        g.Clear(Color.FromArgb(201, 217, 235));
-                        using (var pen = new Pen(Color.FromArgb(153, 170, 189)))
+                        g.Clear(Color.FromArgb(248, 248, 248));
+                        using (var pen = new Pen(Color.FromArgb(220, 220, 220)))
                         {
                             g.DrawRectangle(pen, 0, 0, this.Width - 1, this.Height - 1);
                         }
@@ -1227,12 +1018,14 @@ namespace Gw2Launcher.UI.WindowPositioning
                     else
                     {
                         g.Clear(this.BackColor);
+
+                        g.DrawRectangle(Pens.DarkGray, this.Padding.Left, this.Padding.Top, this.Width - this.Padding.Horizontal - 1, this.Height - this.Padding.Vertical - _TextHeight - 1);
                     }
 
                     if (template != null)
                     {
                         if (display == null)
-                            display = template.GetWindows(new Rectangle(this.Padding.Left, this.Padding.Top, this.Width - this.Padding.Horizontal, this.Height - this.Padding.Vertical), _FlipHorizontal, _FlipVertical);
+                            display = template.GetWindows(new Rectangle(this.Padding.Left, this.Padding.Top, this.Width - this.Padding.Horizontal, this.Height - this.Padding.Vertical - _TextHeight), _FlipHorizontal, _FlipVertical);
 
                         using (var brush = new SolidBrush(this.ForeColor))
                         {
@@ -1244,6 +1037,46 @@ namespace Gw2Launcher.UI.WindowPositioning
                                     g.DrawRectangle(pen, r.X, r.Y, r.Width - 1, r.Height - 1);
                                 }
                             }
+                        }
+                    }
+
+                    if (_Activated)
+                    {
+                        using (var brush = new SolidBrush(Color.FromArgb(180, 0, 90, 0)))
+                        {
+                            var w = this.Width-2;
+                            var h = (int)(this.Font.GetHeight(g) * 1.1f);
+                            var y = this.Padding.Top + (this.Height - this.Padding.Vertical - _TextHeight - h) / 2;
+                            var r = new Rectangle((this.Width - w) / 2, y, w, h);
+
+                            g.FillRectangle(brush, r);
+                            TextRenderer.DrawText(g, "active", this.Font, r, Color.White, Color.Transparent, TextFormatFlags.SingleLine | TextFormatFlags.HorizontalCenter | TextFormatFlags.VerticalCenter);
+                        }
+                    }
+
+                    if (_TextHeight > 0)
+                    {
+                        Color c;
+                        var text = this.Text;
+                        if (string.IsNullOrEmpty(text))
+                        {
+                            text = "(no name)";
+                            c = SystemColors.GrayText;
+                        }
+                        else
+                        {
+                            c = SystemColors.ControlText;
+                        }
+
+                        var sz = TextRenderer.MeasureText(g, text, Font, new Size(this.Width - this.Padding.Horizontal, 0), TextFormatFlags.WordBreak | TextFormatFlags.NoPadding | TextFormatFlags.TextBoxControl);
+
+                        if (sz.Height > _TextHeight - this.Padding.Vertical)
+                        {
+                            TextRenderer.DrawText(g, text, Font, new Rectangle(this.Padding.Left, this.Height - _TextHeight, this.Width - this.Padding.Horizontal, _TextHeight), c, Color.Transparent, TextFormatFlags.HorizontalCenter | TextFormatFlags.Top | TextFormatFlags.WordBreak | TextFormatFlags.EndEllipsis | TextFormatFlags.TextBoxControl);
+                        }
+                        else
+                        {
+                            TextRenderer.DrawText(g, text, Font, new Rectangle(this.Padding.Left, this.Height - _TextHeight + (_TextHeight - sz.Height) / 2 - this.Padding.Bottom, this.Width - this.Padding.Horizontal, _TextHeight), c, Color.Transparent, TextFormatFlags.HorizontalCenter | TextFormatFlags.Top | TextFormatFlags.WordBreak | TextFormatFlags.EndEllipsis | TextFormatFlags.TextBoxControl);
                         }
                     }
                 }
@@ -1261,295 +1094,60 @@ namespace Gw2Launcher.UI.WindowPositioning
                         buffer.Dispose();
                 }
             }
-        }
 
-        private enum VariableType
-        {
-            CountAsByte,
-            PercentAsFloat,
-        }
-
-        private enum TemplateLayout
-        {
-            Columns,
-            Rows
-        }
-
-        private class TemplateVariables
-        {
-            public TemplateVariables(params ITemplateVariable[] variables)
+            protected override void OnDoubleClick(EventArgs e)
             {
-                this.Variables = variables;
-            }
-
-            public ITemplateVariable[] Variables
-            {
-                get;
-                private set;
-            }
-
-            public void SetVariable<T>(int index, T value)
-            {
-                ((TemplateVariable<T>)Variables[index]).Value = value;
-            }
-
-            public TemplateVariable<T> GetVariable<T>(int index)
-            {
-                return (TemplateVariable<T>)Variables[index];
-            }
-
-            public T GetValue<T>(int index)
-            {
-                return GetVariable<T>(index).Value;
-            }
-
-            public T GetMinimum<T>(int index)
-            {
-                return GetVariable<T>(index).Minimum;
-            }
-
-            public object[] GetValues()
-            {
-                var values = new object[this.Variables.Length];
-
-                for (var i = this.Variables.Length - 1; i >= 0; --i)
+                if (AssignedTo != null)
                 {
-                    values[i] = this.Variables[i].GetValue();
+                    Activated = !_Activated;
                 }
 
-                return values;
+                base.OnDoubleClick(e);
             }
-
-            public void SetValues(object[] values)
-            {
-                for (var i = values.Length - 1; i >= 0; --i)
-                {
-                    this.Variables[i].SetValue(values[i]);
-                }
-            }
-        }
-
-        private interface ITemplateVariable
-        {
-            VariableType Type
-            {
-                get;
-            }
-
-            string Name
-            {
-                get;
-            }
-
-            Type ValueType
-            {
-                get;
-            }
-
-            object GetValue();
-
-            void SetValue(object o);
-        }
-
-        private class TemplateVariable<T> : ITemplateVariable
-        {
-            private Action<TemplateVariable<T>> onChanged;
-            private T value;
-
-            public TemplateVariable(VariableType type, string name, T value, T minimum, Action<TemplateVariable<T>> onChanged = null)
-            {
-                this.Type = type;
-                this.Name = name;
-                this.Value = value;
-                this.Minimum = minimum;
-                this.onChanged = onChanged;
-            }
-
-            public VariableType Type
-            {
-                get;
-                private set;
-            }
-
-            public string Name
-            {
-                get;
-                private set;
-            }
-
-            public T Value
-            {
-                get
-                {
-                    return value;
-                }
-                set
-                {
-                    if (!object.Equals(this.value, value))
-                    {
-                        this.value = value;
-                        if (onChanged != null)
-                            onChanged(this);
-                    }
-                }
-            }
-
-            public object GetValue()
-            {
-                return value;
-            }
-
-            public void SetValue(object o)
-            {
-                this.Value = (T)o;
-            }
-
-            public T Minimum
-            {
-                get;
-                private set;
-            }
-
-            public Type ValueType
-            {
-                get
-                {
-                    return typeof(T);
-                }
-            }
-        }
-
-        private class Template
-        {
-            private Func<Template, Size, Rectangle[]> generator;
-            private TemplateVariables variables;
-
-            public Template(TemplateVariables variables, Func<Template, Size, Rectangle[]> generator)
-            {
-                this.generator = generator;
-                this.variables = variables;
-            }
-
-            public TemplateVariables Variables
-            {
-                get
-                {
-                    return variables;
-                }
-            }
-
-            public Rectangle[] Create(Size size)
-            {
-                return generator(this, size);
-            }
-        }
-
-        private interface ITemplateSize
-        {
-            float Size
-            {
-                get;
-            }
-        }
-
-        private class TemplateSection : ITemplateSize
-        {
-            public class TemplateArea : ITemplateSize
-            {
-                public TemplateArea(float size, TemplateLayout layout, byte count)
-                {
-                    this.Size = size;
-                    this.AreaLayout = layout;
-                    this.Count = count;
-                }
-
-                public float Size
-                {
-                    get;
-                    private set;
-                }
-
-                public TemplateLayout AreaLayout
-                {
-                    get;
-                    private set;
-                }
-
-                public byte Count
-                {
-                    get;
-                    private set;
-                }
-            }
-
-            public TemplateSection(float size, params TemplateArea[] areas)
-            {
-                this.Size = size;
-                this.Areas = areas;
-            }
-
-            public float Size
-            {
-                get;
-                private set;
-            }
-
-            public TemplateArea[] Areas
-            {
-                get;
-                private set;
-            }
-
-            public int Count
-            {
-                get
-                {
-                    var count = 0;
-
-                    foreach (var a in Areas)
-                    {
-                        count += a.Count;
-                    }
-
-                    return count;
-                }
-            }
-        }
-
-        private class Column
-        {
-            public Column(TemplateLayout layout, float width, float[] heights, byte[] counts)
-            {
-                this.layout = layout;
-                this.width = width;
-                this.heights = heights;
-                this.counts = counts;
-            }
-
-            public Column(TemplateLayout layout, float width, byte count)
-                : this(layout, width, new float[] { width }, new byte[] { count })
-            {
-            }
-
-            public TemplateLayout layout;
-            public float width;
-            public float[] heights;
-            public byte[] counts;
         }
 
         public event EventHandler<TemplateDisplayManager> TemplateDisplayManagerChanged;
 
+        public enum TemplateMode
+        {
+            WindowTemplates,
+            Manager
+        }
+
+        public event EventHandler ShowCompact;
+        private event EventHandler<TemplateDisplay> TemplateDisplayAdded;
+
         private Dictionary<Template, object[]> defaultValues;
         private CheckBox[] checkScreen;
-        private TemplateDisplay[] displayed;
+        private TemplateDisplay[] basicTemplates;
         private Dictionary<Rectangle, int> screens;
         private TemplateDisplayManager displayManager;
         private formWindowSize master;
         private int delayedChange;
+        private TemplateMode mode;
+        private Size defaultDisplaySize, defaultAssignedSize;
+        private int assignedTextHeight;
+        private Dictionary<Settings.WindowTemplate, TemplateDisplay> customTemplates;
+        private Dictionary<Settings.WindowTemplate.Assignment, TemplateDisplay> assignedTemplates;
+        private TextBox textName;
 
+        /// <summary>
+        /// Initializes the templates form to work with the window positioning tool
+        /// </summary>
         public formTemplates(formWindowSize master)
         {
+            mode = TemplateMode.WindowTemplates;
+
             InitializeComponents();
+
+            contextCustom.Items.Remove(toolStripMenuItem1);
+            contextCustom.Items.Remove(snapToToolStripMenuItem);
+            contextCustom.Items.Remove(accountTypeToolStripMenuItem);
+            contextCustom.Items.Remove(toolStripMenuItem2);
+            contextCustom.Items.Remove(enabledToolStripMenuItem);
+
+            panelSidebar.Visible = false;
+            panelSidebarLine.Visible = false;
 
             this.screens = new Dictionary<Rectangle, int>();
             this.master = master;
@@ -1558,7 +1156,7 @@ namespace Gw2Launcher.UI.WindowPositioning
             checkScreen = new CheckBox[screens.Length];
             checkScreen[0] = checkScreen1;
             checkScreen1.Tag = 0;
-            displayed = new TemplateDisplay[screens.Length];
+            basicTemplates = new TemplateDisplay[screens.Length];
 
             panelScreen.SuspendLayout();
             for (var i = 0; i < screens.Length; i++)
@@ -1582,8 +1180,43 @@ namespace Gw2Launcher.UI.WindowPositioning
                 }
             }
             panelScreen.ResumeLayout();
+        }
 
-            this.Disposed += formTemplates_Disposed;
+        /// <summary>
+        /// Initializes the templates form to work with the window manager
+        /// </summary>
+        public formTemplates()
+        {
+            mode = TemplateMode.Manager;
+
+            InitializeComponents();
+
+            this.ShowInTaskbar = true;
+            this.ShowIcon = true;
+            this.Text = "Templates";
+            this.MinimizeBox = true;
+
+            panelTemplateWindowOptions.Visible = false;
+            toolStripMenuItem1.Visible = true;
+            contextCustom.Closed += contextCustom_Closed;
+
+            SelectTab(buttonManager);
+        }
+
+        void WindowManagerOptions_ValueChanged(object sender, EventArgs e)
+        {
+            if (Util.Invoke.IfRequired(this,
+                delegate
+                {
+                    WindowManagerOptions_ValueChanged(sender, e);
+                }))
+                return;
+
+            var v = ((Settings.ISettingValue<Settings.WindowManagerFlags>)sender).Value;
+
+            checkDelayLaunching.Checked = (v & Settings.WindowManagerFlags.DelayLaunchUntilAvailable) != 0;
+            checkReorderOnRelease.Checked = (v & Settings.WindowManagerFlags.ReorderOnRelease) != 0;
+            checkAllowActiveChanges.Checked = (v & Settings.WindowManagerFlags.AllowActiveChanges) != 0;
         }
 
         protected override void OnInitializeComponents()
@@ -1598,17 +1231,28 @@ namespace Gw2Launcher.UI.WindowPositioning
             panelTemplates.SuspendLayout();
 
             var screen = Screen.PrimaryScreen.Bounds;
-            var size = Util.RectangleConstraint.Scale(screen.Size, new Size(Scale(80), Scale(80)));
+
+            defaultDisplaySize = Util.RectangleConstraint.Scale(screen.Size, new Size(Scale(80), Scale(80)));
+            defaultAssignedSize = Util.RectangleConstraint.Scale(screen.Size, new Size(Scale(120), Scale(120)));
+            assignedTextHeight = this.FontHeight * 2;
+
+            labelNoTemplates.MinimumSize = new System.Drawing.Size(0, defaultAssignedSize.Height + assignedTextHeight);
 
             defaultValues = new Dictionary<Template, object[]>();
+            customTemplates = new Dictionary<Settings.WindowTemplate, TemplateDisplay>();
+            assignedTemplates = new Dictionary<Settings.WindowTemplate.Assignment, TemplateDisplay>();
 
             foreach (var t in CreateTemplates())
             {
                 var td = CreateDisplay();
 
-                td.Size = size;
                 td.TemplateData = t;
                 td.Template = new ScreenTemplate(new Settings.WindowTemplate.Screen(screen, t.Create(screen.Size)));
+
+                if (mode == TemplateMode.Manager)
+                {
+                    td.Visible = false;
+                }
 
                 defaultValues[t] = t.Variables.GetValues();
 
@@ -1621,44 +1265,315 @@ namespace Gw2Launcher.UI.WindowPositioning
             {
                 for (var i = 0; i < custom; i++)
                 {
-                    var t = Settings.WindowTemplates[i];
-                    var td = CreateDisplay();
-
-                    var stt = new Settings.WindowTemplate.Screen[t.Screens.Length];
-                    for (var j = t.Screens.Length - 1; j >= 0; --j)
-                    {
-                        stt[j] = new Settings.WindowTemplate.Screen(t.Screens[j].Bounds, t.Screens[j].Windows);
-                    }
-
-                    var st = new ScreenTemplate(stt);
-
-                    td.Size = size;
-                    td.Template = st;
-                    td.Source = t;
-
-                    panelTemplates.Controls.Add(td);
+                    OnTemplateAdded(Settings.WindowTemplates[i]);
                 }
             }
 
             panelTemplates.ResumeLayout();
 
+            Settings.WindowTemplates.ValueAdded += WindowTemplates_ValueAdded;
+            Settings.WindowTemplates.ValueRemoved += WindowTemplates_ValueRemoved;
+
+            if (mode == TemplateMode.Manager)
+            {
+                Settings.WindowManagerOptions.ValueChanged += WindowManagerOptions_ValueChanged;
+                WindowManagerOptions_ValueChanged(Settings.WindowManagerOptions, null);
+            }
+
             base.OnShown(e);
         }
 
-        protected override void OnFormClosed(FormClosedEventArgs e)
+        void WindowTemplates_ValueRemoved(object sender, Settings.WindowTemplate e)
         {
-            base.OnFormClosed(e);
+            Util.Invoke.Required(this,
+                delegate
+                {
+                    OnTemplateRemoved(e);
+                });
         }
 
-        void formTemplates_Disposed(object sender, EventArgs e)
+        void WindowTemplates_ValueAdded(object sender, Settings.WindowTemplate e)
         {
-            if (displayManager != null)
+            Util.Invoke.Required(this,
+                delegate
+                {
+                    OnTemplateAdded(e);
+                });
+        }
+
+        void Assigned_ValueRemoved(object sender, Settings.WindowTemplate.Assignment e)
+        {
+            Util.Invoke.Required(this,
+                delegate
+                {
+                    OnAssignedRemoved(e);
+                });
+        }
+
+        void Assigned_ValueAdded(object sender, Settings.WindowTemplate.Assignment e)
+        {
+            Util.Invoke.Required(this,
+                delegate
+                {
+                    var parent = FindAssigned(sender);
+                    if (parent != null)
+                        OnAssignedAdded(parent, e);
+                });
+        }
+
+        private void OnTemplateRemoved(Settings.WindowTemplate t)
+        {
+            if (mode == TemplateMode.Manager)
             {
-                displayManager.Dispose();
-                displayManager = null;
-                if (TemplateDisplayManagerChanged != null)
-                    TemplateDisplayManagerChanged(this, displayManager);
+                t.Assignments.ValueAdded -= Assigned_ValueAdded;
+                t.Assignments.ValueRemoved -= Assigned_ValueRemoved;
             }
+
+            TemplateDisplay td;
+
+            if (customTemplates.TryGetValue(t, out td))
+            {
+                customTemplates.Remove(t);
+
+                t.ScreensChanged -= template_ScreensChanged;
+
+                for (var i = t.Assignments.Count - 1; i >= 0; --i)
+                {
+                    t.Assignments[i].EnabledChanged -= assigned_EnabledChanged;
+                }
+
+                panelTemplates.SuspendLayout();
+
+                if (td.Shared != null)
+                {
+                    foreach (var c in td.Shared)
+                    {
+                        if (c.Selected)
+                        {
+                            Selected = null;
+                            LoadOptions(null);
+                        }
+                        panelTemplates.Controls.Remove(c);
+                        c.Dispose();
+                    }
+                }
+                else
+                {
+                    if (td.Selected)
+                    {
+                        Selected = null;
+                        LoadOptions(null);
+                    }
+                    panelTemplates.Controls.Remove(td);
+                    td.Dispose();
+                }
+
+                panelTemplates.ResumeLayout();
+            }
+        }
+
+        private void OnTemplateAdded(Settings.WindowTemplate t)
+        {
+            panelTemplates.SuspendLayout();
+
+            var td = CreateDisplay();
+
+            customTemplates[t] = td;
+
+            t.ScreensChanged += template_ScreensChanged;
+
+            td.Source = t;
+            td.Template = new ScreenTemplate(t);
+
+            panelTemplates.Controls.Add(td);
+
+            if (mode == TemplateMode.Manager)
+            {
+                td.Shared = new List<TemplateDisplay>();
+                td.Shared.Add(td);
+
+                td.Visible = IsFilterVisible(td);
+
+                t.Assignments.ValueAdded += Assigned_ValueAdded;
+                t.Assignments.ValueRemoved += Assigned_ValueRemoved;
+
+                var assigned = t.Assignments;
+                var count = assigned.Count;
+
+                for (var j = 0; j < count; j++)
+                {
+                    OnAssignedAdded(td, assigned[j]);
+                }
+            }
+
+            if (TemplateDisplayAdded != null)
+                TemplateDisplayAdded(this, td);
+
+            panelTemplates.ResumeLayout();
+        }
+
+        void template_ScreensChanged(object sender, EventArgs e)
+        {
+            var t = (Settings.WindowTemplate)sender;
+            TemplateDisplay parent;
+
+            if (customTemplates.TryGetValue(t, out parent))
+            {
+                var st = new ScreenTemplate(t);
+
+                if (parent.Shared != null)
+                {
+                    foreach (var td in parent.Shared)
+                    {
+                        td.Template = st;
+                    }
+                }
+                else
+                {
+                    parent.Template = st;
+                }
+            }
+        }
+
+        private void OnAssignedAdded(TemplateDisplay parent, Settings.WindowTemplate.Assignment a)
+        {
+            var previous = parent.Shared[parent.Shared.Count - 1];
+            var td = CreateDisplay();
+            bool v;
+
+            assignedTemplates[a] = td;
+
+            a.EnabledChanged += assigned_EnabledChanged;
+
+            td.Source = parent.Source;
+            td.Template = parent.Template;
+            td.AssignedTo = a;
+            td.Shared = parent.Shared;
+            td.Shared.Add(td);
+            td.Visible = v = IsFilterVisible(td);
+            td.Activated = a.Enabled;
+            td.TextHeight = assignedTextHeight;
+            td.Size = new System.Drawing.Size(defaultAssignedSize.Width, defaultAssignedSize.Height + assignedTextHeight);
+            td.Text = a.Name;
+
+            td.MouseUp += assigned_MouseUp;
+
+            ShowNoTemplates = _ShowNoTemplates && !v;
+
+            panelTemplates.SuspendLayout();
+
+            panelTemplates.Controls.Add(td);
+            panelTemplates.Controls.SetChildIndex(td, panelTemplates.Controls.GetChildIndex(previous) + 1);
+
+            panelTemplates.ResumeLayout();
+
+            if (TemplateDisplayAdded != null)
+                TemplateDisplayAdded(this, td);
+        }
+
+        private void OnAssignedRemoved(Settings.WindowTemplate.Assignment a)
+        {
+            TemplateDisplay td;
+            if (assignedTemplates.TryGetValue(a, out td))
+            {
+                assignedTemplates.Remove(a);
+
+                a.EnabledChanged -= assigned_EnabledChanged;
+
+                if (td.Selected)
+                {
+                    Selected = null;
+                    LoadOptions(null);
+                }
+
+                td.Shared.Remove(td);
+                panelTemplates.Controls.Remove(td);
+                td.Dispose();
+
+                if (buttonManager.Selected)
+                {
+                    var b = true;
+
+                    foreach (var t in assignedTemplates.Values)
+                    {
+                        if (t.Visible)
+                        {
+                            b = false;
+                            break;
+                        }
+                    }
+
+                    ShowNoTemplates = b;
+                }
+            }
+        }
+
+        void contextCustom_Closed(object sender, ToolStripDropDownClosedEventArgs e)
+        {
+            var c = _Selected;
+            if (c != null && c.AssignedTo != null)
+            {
+                Selected = null;
+            }
+        }
+
+        private TemplateDisplay FindAssigned(object l)
+        {
+            foreach (var td in customTemplates.Values)
+            {
+                if (object.ReferenceEquals(td.Source.Assignments, l))
+                {
+                    return td;
+                }
+            }
+
+            return null;
+        }
+
+        protected override void Dispose(bool disposing)
+        {
+            if (disposing)
+            {
+                Settings.WindowTemplates.ValueAdded -= WindowTemplates_ValueAdded;
+                Settings.WindowTemplates.ValueRemoved -= WindowTemplates_ValueRemoved;
+
+                if (mode == TemplateMode.Manager)
+                    Settings.WindowManagerOptions.ValueChanged -= WindowManagerOptions_ValueChanged;
+
+                if (customTemplates != null)
+                {
+                    foreach (var t in customTemplates.Keys)
+                    {
+                        if (mode == TemplateMode.Manager)
+                        {
+                            t.Assignments.ValueAdded -= Assigned_ValueAdded;
+                            t.Assignments.ValueRemoved -= Assigned_ValueRemoved;
+                            for (var i = t.Assignments.Count - 1; i >= 0; --i)
+                            {
+                                t.Assignments[i].EnabledChanged -= assigned_EnabledChanged;
+                            }
+                        }
+                        t.ScreensChanged -= template_ScreensChanged;
+                    }
+                }
+
+                if (displayManager != null)
+                {
+                    displayManager.Dispose();
+                    displayManager = null;
+                    if (TemplateDisplayManagerChanged != null)
+                        TemplateDisplayManagerChanged(this, displayManager);
+                }
+
+                using ((Form)labelOptions.Tag) { }
+
+                if (components != null)
+                {
+                    components.Dispose();
+                }
+            }
+
+            base.Dispose(disposing);
         }
 
         private TemplateDisplay CreateDisplay()
@@ -1666,6 +1581,8 @@ namespace Gw2Launcher.UI.WindowPositioning
             var td = new TemplateDisplay()
             {
                 Margin = Padding.Empty,
+                Size = defaultDisplaySize,
+                Padding = new Padding(Scale(3)),
             };
 
             td.MouseDown += td_MouseDown;
@@ -1711,7 +1628,7 @@ namespace Gw2Launcher.UI.WindowPositioning
 
             td.Focus();
 
-            if (_Selected != td)
+            if (td.AssignedTo == null && _Selected != td)
             {
                 Selected = td;
                 LoadOptions(td);
@@ -1720,7 +1637,39 @@ namespace Gw2Launcher.UI.WindowPositioning
             if (e.Button == System.Windows.Forms.MouseButtons.Right)
             {
                 if (td.TemplateData == null)
+                {
+                    var hasSource = td.Source != null;
+                    var isAssigned = td.AssignedTo != null;
+
+                    toolStripMenuItem1.Visible = hasSource || isAssigned;
+                    snapToToolStripMenuItem.Visible = hasSource;
+
+                    if (hasSource)
+                    {
+                        windowEdgesToolStripMenuItem.Checked = td.Source.SnapToEdges == Settings.WindowTemplate.SnapType.WindowEdgeInner;
+                        windowEdgesOuterToolStripMenuItem.Checked = td.Source.SnapToEdges == Settings.WindowTemplate.SnapType.WindowEdgeOuter;
+                        clientEdgesToolStripMenuItem.Checked = td.Source.SnapToEdges == Settings.WindowTemplate.SnapType.ClientEdge;
+                        snapToToolStripMenuItem.Checked = td.Source.SnapToEdges != Settings.WindowTemplate.SnapType.None;
+                    }
+
+                    toolStripMenuItem2.Visible = isAssigned;
+                    enabledToolStripMenuItem.Visible = isAssigned;
+                    renameToolStripMenuItem.Visible = isAssigned;
+                    accountTypeToolStripMenuItem.Visible = isAssigned;
+
+                    if (isAssigned)
+                    {
+                        Selected = td;
+
+                        enabledToolStripMenuItem.Checked = td.AssignedTo.Enabled;
+                        guildWars1ToolStripMenuItem.Checked = td.AssignedTo.Type == Settings.WindowTemplate.Assignment.AccountType.GuildWars1;
+                        guildWars2ToolStripMenuItem.Checked = td.AssignedTo.Type == Settings.WindowTemplate.Assignment.AccountType.GuildWars2;
+                        accountTypeToolStripMenuItem.Checked = td.AssignedTo.Type != Settings.WindowTemplate.Assignment.AccountType.Any;
+                    }
+
+                    contextCustom.Tag = td;
                     contextCustom.Show(Cursor.Position);
+                }
             }
         }
 
@@ -1735,16 +1684,19 @@ namespace Gw2Launcher.UI.WindowPositioning
             checkFlipX.Checked = !isEmpty && td.FlipHorizontal;
             checkFlipY.Checked = !isEmpty && td.FlipVertical;
 
-            for (var i = checkScreen.Length - 1; i >= 0; --i)
+            if (checkScreen != null)
             {
-                var c = checkScreen[i];
-                c.Enabled = !isCustom || td.Template.Screens.Length == 1 || GetTemplateScreenIndex(td.Template, i) != -1;
-                if (c.Enabled && !isEmpty && displayed[i] == td)
-                    c.CheckState = CheckState.Checked;
-                else if (displayed[i] != null)
-                    c.CheckState = CheckState.Indeterminate;
-                else
-                    c.CheckState = CheckState.Unchecked;
+                for (var i = checkScreen.Length - 1; i >= 0; --i)
+                {
+                    var c = checkScreen[i];
+                    c.Enabled = !isCustom || td.Template.Screens.Length == 1 || GetTemplateScreenIndex(td.Template, i) != -1;
+                    if (c.Enabled && !isEmpty && basicTemplates[i] == td)
+                        c.CheckState = CheckState.Checked;
+                    else if (basicTemplates[i] != null)
+                        c.CheckState = CheckState.Indeterminate;
+                    else
+                        c.CheckState = CheckState.Unchecked;
+                }
             }
 
             panelOptions.Visible = false;
@@ -1853,58 +1805,32 @@ namespace Gw2Launcher.UI.WindowPositioning
                 panelOptions.Controls.Add(c);
             }
 
+            panelOptions.ResumeLayout();
+
             if (panelOptions.Controls.Count > 0)
                 panelOptions.Visible = true;
 
-            panelOptions.ResumeLayout();
             panelOptionsContainer.ResumeLayout();
         }
-
-        byte tmode = 0;
 
         private async void DelayedTemplateChanged()
         {
             do
             {
-                if (tmode==0)
+                var t = delayedChange;
+
+                OnDisplayedTemplateUpdate();
+
+                await Task.Delay(100);
+
+                if (delayedChange == t)
                 {
-                    var t = delayedChange;
-
-                    OnDisplayedTemplateUpdate();
-
-                    await Task.Delay(100);
-
-                    if (delayedChange == t)
-                    {
-                        delayedChange = 0;
-                        break;
-                    }
-                    else
-                    {
-                        t = delayedChange;
-                    }
-                }
-                else if (tmode == 1)
-                {
-                    var t = delayedChange;
-
-                    while (true)
-                    {
-                        await Task.Delay(500);
-                        if (delayedChange == t)
-                        {
-                            delayedChange = 0;
-                            break;
-                        }
-                        else
-                        {
-                            t = delayedChange;
-                        }
-                    }
-
-                    OnDisplayedTemplateUpdate();
-
+                    delayedChange = 0;
                     break;
+                }
+                else
+                {
+                    t = delayedChange;
                 }
             }
             while (true);
@@ -1914,16 +1840,21 @@ namespace Gw2Launcher.UI.WindowPositioning
         {
             var useWorking = checkOverlapTaskbar.Enabled && !checkOverlapTaskbar.Checked;
 
-            for (var i = 0; i < displayed.Length; i++)
+            for (var i = 0; i < basicTemplates.Length; i++)
             {
-                if (displayed[i] == null)
+                if (basicTemplates[i] == null)
                     continue;
 
-                var t = displayed[i].Template;
+                var t = basicTemplates[i].Template;
 
                 if (t.Screens.Length == 1)
                 {
-                    var screen = Screen.AllScreens[i];
+                    var screens = Screen.AllScreens;
+                    Screen screen;
+                    if (i < screens.Length)
+                        screen = screens[i];
+                    else
+                        screen = screens[0];
                     displayManager.Set(i, t.GetWindows(useWorking ? screen.WorkingArea : screen.Bounds, checkFlipX.Checked, checkFlipY.Checked));
                     displayManager.Show();
                 }
@@ -2298,7 +2229,7 @@ namespace Gw2Launcher.UI.WindowPositioning
 
         private void labelCustomize_Click(object sender, EventArgs e)
         {
-            ShowCustom(_Selected, false);
+            ShowCustom(_Selected, _Selected != null && _Selected.Source != null);
         }
 
         private void labelReset_Click(object sender, EventArgs e)
@@ -2337,97 +2268,261 @@ namespace Gw2Launcher.UI.WindowPositioning
 
         private void labelCustomNew_Click(object sender, EventArgs e)
         {
-            ShowCustom(null, null, false);
+            ShowCustom(null, formCustomTemplate.BoundsType.Unknown, null, null, null, false, mode == TemplateMode.Manager, false, null);
         }
 
         private void labelCustomNewFromLayout_Click(object sender, EventArgs e)
         {
-            var w = master.GetWindows();
-            var rects = new Rectangle[w.Count];
-            var i = 0;
+            Rectangle[] rects;
+            Settings.WindowTemplate.Assignment assigned = null;
+            var type = formCustomTemplate.BoundsType.Unknown;
 
-            foreach (var r in w)
+            if (master == null)
             {
-                if (checkSnapEdge.Checked)
+                var active = Client.Launcher.GetActiveProcesses();
+                rects = new Rectangle[active.Count];
+                var uids = new ushort[rects.Length];
+                var border = (this.Width - this.ClientSize.Width) / 2 - 1;
+                var i = 0;
+
+                foreach (var a in active)
                 {
-                    var border = (r.Width - r.ClientSize.Width) / 2 - 1;
-                    rects[i++] = new Rectangle(r.Left + border, r.Top, r.Width - border * 2, r.Height - border);
+                    if (Client.Launcher.GetState(a) == Client.Launcher.AccountState.ActiveGame)
+                    {
+                        var p = Client.Launcher.GetProcess(a);
+                        if (p != null)
+                        {
+                            try
+                            {
+                                var h = Windows.FindWindow.FindMainWindow(p);
+                                if (Windows.WindowLong.HasValue(h, GWL.GWL_STYLE, WindowStyle.WS_MINIMIZEBOX))
+                                {
+                                    var placement = Windows.WindowSize.GetWindowPlacement(h);
+                                    var r = Util.ScreenUtil.FromDesktopBounds(placement.rcNormalPosition.ToRectangle());
+
+                                    rects[i] = r;
+                                    uids[i] = a.UID;
+
+                                    ++i;
+                                }
+                            }
+                            catch { }
+                        }
+                    }
+                }
+
+                if (i > 0)
+                {
+                    type = formCustomTemplate.BoundsType.WindowBounds;
+
+                    if (i != rects.Length)
+                    {
+                        Array.Resize(ref rects, i);
+                    }
+
+                    var accounts = new KeyValuePair<byte, Settings.WindowTemplate.Assigned>[i];
+
+                    for (var j = 0; j < i; j++)
+                    {
+                        accounts[j] = new KeyValuePair<byte, Settings.WindowTemplate.Assigned>((byte)j, new Settings.WindowTemplate.Assigned(Settings.WindowTemplate.Assigned.AssignedType.Account, new ushort[] { uids[j] }));
+                    }
+
+                    assigned = new Settings.WindowTemplate.Assignment()
+                    {
+                        Assigned = accounts,
+                    };
                 }
                 else
                 {
-                    rects[i++] = r.Bounds;
+                    MessageBox.Show(this, "No windowed accounts are currently active", "No windows found", MessageBoxButtons.OK, MessageBoxIcon.Exclamation);
+                    return;
+                    //rects = null;
+                }
+            }
+            else
+            {
+                var w = master.GetWindows();
+                rects = new Rectangle[w.Count];
+                var i = 0;
+
+                if (w.Count > 0)
+                {
+                    if (checkSnapEdge.Checked)
+                        type = formCustomTemplate.BoundsType.ClientBounds;
+                    else
+                        type = formCustomTemplate.BoundsType.WindowBounds;
+                }
+
+                foreach (var r in w)
+                {
+                    if (checkSnapEdge.Checked)
+                    {
+                        var border = (r.Width - r.ClientSize.Width) / 2 - 1;
+                        rects[i++] = new Rectangle(r.Left + border, r.Top, r.Width - border * 2, r.Height - border);
+                    }
+                    else
+                    {
+                        rects[i++] = r.Bounds;
+                    }
                 }
             }
 
-            ShowCustom(null, rects, false);
+            ShowCustom(null, type, rects, null, null, false, mode == TemplateMode.Manager, false, assigned);
         }
-        
+
         private void ShowCustom(TemplateDisplay td, bool overwrite)
         {
-            Rectangle[] rects;
+            Rectangle[] windows = null;
+            Settings.WindowTemplate.Assignment assigned = null;
+            byte[] keys = null;
+            byte[] order = null;
+
             if (td != null)
             {
                 if (td.TemplateData != null)
-                    rects = td.Template.GetWindows(new Rectangle[] { checkOverlapTaskbar.Checked ? Screen.FromControl(this).Bounds : Screen.FromControl(this).WorkingArea }, checkFlipX.Checked, checkFlipY.Checked);
+                    windows = td.Template.GetWindows(new Rectangle[] { checkOverlapTaskbar.Checked ? Screen.FromControl(this).Bounds : Screen.FromControl(this).WorkingArea }, checkFlipX.Checked, checkFlipY.Checked);
                 else
-                    rects = td.Template.GetWindows(false, checkFlipX.Checked, checkFlipY.Checked);
-            }
-            else
-                rects = null;
+                    windows = td.Template.GetWindows(false, checkFlipX.Checked, checkFlipY.Checked);
 
-            ShowCustom(td, rects, overwrite);
+                if (td.Source != null)
+                {
+                    assigned = td.AssignedTo;
+                    order = td.Source.Order;
+                    keys = td.Source.Keys;
+                }
+            }
+
+            ShowCustom(td, formCustomTemplate.BoundsType.Unknown, windows, keys, order, overwrite, mode == TemplateMode.Manager, checkFlipX.Checked || checkFlipY.Checked, assigned);
         }
 
-        private void ShowCustom(TemplateDisplay td, Rectangle[] rects, bool overwrite)
+        private void ShowCustom(TemplateDisplay td, formCustomTemplate.BoundsType type, Rectangle[] rects, byte[] keys, byte[] order, bool canOverwrite, bool canAssign, bool isModified, Settings.WindowTemplate.Assignment assigned)
         {
             if (displayManager != null)
                 displayManager.Hide();
 
-            using (var f = new formCustomTemplate(master.MinimumSize, rects))
+            var isCustomSource = td != null && td.TemplateData == null;
+            var referenceCount = isCustomSource ? td.Source.Assignments.Count : 0;
+            var canOverwriteAssign = isCustomSource && assigned != null && td.AssignedTo == assigned;
+
+            using (var f = new formCustomTemplate(master != null ? master.MinimumSize : Size.Empty, type, rects, keys, order, isModified, referenceCount, canAssign, assigned != null ? assigned.Assigned : null, assigned != null ? assigned.Type : Settings.WindowTemplate.Assignment.AccountType.Any))
             {
-                f.Overwrite = overwrite;
+                f.Overwrite = canOverwrite ? formCustomTemplate.SaveMode.Overwrite : formCustomTemplate.SaveMode.New;
+                f.CanOverwriteAssign = canOverwriteAssign;
+                f.ShowModificationWarning = referenceCount > (canOverwriteAssign ? 1 : 0);
 
                 if (f.ShowDialog(this) == System.Windows.Forms.DialogResult.OK)
                 {
-                    if (f.Result == null || f.Result.Length == 0)
+                    if (f.Result == null || f.Result.Screens.Length == 0)
                         return;
 
-                    var stt = new Settings.WindowTemplate.Screen[f.Result.Length];
+                    var stt = new Settings.WindowTemplate.Screen[f.Result.Screens.Length];
+                    var addedReference = false;
 
-                    for (var i = f.Result.Length - 1; i >= 0;--i )
+                    for (var i = f.Result.Screens.Length - 1; i >= 0; --i )
                     {
-                        stt[i] = new Settings.WindowTemplate.Screen(f.Result[i].Screen, f.Result[i].Windows);
+                        stt[i] = new Settings.WindowTemplate.Screen(f.Result.Screens[i].Screen, f.Result.Screens[i].Windows);
                     }
 
-                    var st = new ScreenTemplate(stt);
+                    Settings.WindowTemplate source = null;
 
-                    if (f.Overwrite && td != null && td.TemplateData == null)
+                    EventHandler<TemplateDisplay> onAdded = delegate(object o, TemplateDisplay t)
                     {
-                        Settings.WindowTemplates.ReplaceOrAdd(td.Source, st);
+                        if (t.Visible)
+                        {
+                            Selected = t.AssignedTo == null ? t : null;
+                        }
+                    };
+                    TemplateDisplayAdded += onAdded;
 
-                        td.Template = st;
-                        td.Source = st;
-
-                        LoadOptions(td);
-                        OnTemplateChanged();
+                    if (isCustomSource && td.Source != null && f.Overwrite != formCustomTemplate.SaveMode.New)
+                    {
+                        source = td.Source;
+                        source.Screens = stt;
                     }
                     else
                     {
-                        td = CreateDisplay();
-                        td.Template = st;
-                        td.Source = st;
-
-                        Settings.WindowTemplates.Add(st);
-
-                        td.Size = Util.RectangleConstraint.Scale(f.Size, new Size(Scale(80),Scale(80)));
-
-                        Selected = td;
-                        LoadOptions(td);
-
-                        panelTemplates.Controls.Add(td);
-                        OnTemplateChanged();
-                        //panelCustom.Visible = true;
+                        source = new Settings.WindowTemplate(stt)
+                        {
+                            SnapToEdges = td != null && td.Source != null ? td.Source.SnapToEdges : Settings.WindowTemplate.SnapType.WindowEdgeOuter,
+                        };
                     }
+
+                    if (f.Result.BoundsType != formCustomTemplate.BoundsType.Unknown)
+                    {
+                        source.SnapToEdges = f.Result.BoundsType == formCustomTemplate.BoundsType.ClientBounds ? Settings.WindowTemplate.SnapType.WindowEdgeOuter : Settings.WindowTemplate.SnapType.None;
+                    }
+
+                    source.Order = f.Result.Order;
+                    source.Keys = f.Result.Keys;
+
+                    panelTemplates.SuspendLayout();
+
+                    if (canAssign)
+                    {
+                        if (f.Overwrite == formCustomTemplate.SaveMode.New || f.Overwrite == formCustomTemplate.SaveMode.Overwrite && f.Result.Assigned == null && !canOverwriteAssign)
+                        {
+                            canAssign = false;
+                        }
+                    }
+
+                    if (canAssign)
+                    {
+                        if (!canOverwriteAssign || f.Overwrite != formCustomTemplate.SaveMode.Overwrite)
+                        {
+                            assigned = null;
+                        }
+
+                        if (assigned == null)
+                        {
+                            if (f.Overwrite == formCustomTemplate.SaveMode.Overwrite && f.Result.Assigned == null)
+                            {
+                                //template is already not assigned
+                            }
+                            else if (f.Overwrite == formCustomTemplate.SaveMode.Reference || f.Result.Assigned != null)
+                            {
+                                addedReference = true;
+                                
+                                if (mode == TemplateMode.Manager)
+                                {
+                                    SelectTab(buttonManager);
+                                }
+
+                                assigned = new Settings.WindowTemplate.Assignment()
+                                {
+                                    Assigned = f.Result.Assigned,
+                                };
+
+                                source.Assignments.Add(assigned);
+                            }
+                        }
+                        else
+                        {
+                            assigned.Assigned = f.Result.Assigned;
+                        }
+                    }
+
+                    if (!isCustomSource || f.Overwrite == formCustomTemplate.SaveMode.New)
+                    {
+                        if (mode == TemplateMode.Manager && !addedReference)
+                        {
+                            SelectTab(buttonTemplates);
+                        }
+
+                        Settings.WindowTemplates.Add(source);
+                    }
+                    else if (td != null && td.Shared != null)
+                    {
+                        foreach (var c in td.Shared)
+                        {
+                            c.Visible = IsFilterVisible(c);
+                        }
+                    }
+
+                    TemplateDisplayAdded -= onAdded;
+
+                    LoadOptions(Selected);
+                    panelTemplates.ResumeLayout();
+                    OnTemplateChanged();
                 }
             }
 
@@ -2469,25 +2564,60 @@ namespace Gw2Launcher.UI.WindowPositioning
 
         private void editToolStripMenuItem_Click(object sender, EventArgs e)
         {
-            ShowCustom(_Selected, true);
+            ShowCustom((TemplateDisplay)contextCustom.Tag, true);
         }
 
         private void deleteToolStripMenuItem_Click(object sender, EventArgs e)
         {
-            var c = _Selected;
+            var c = (TemplateDisplay)contextCustom.Tag;
             if (c != null)
             {
+                panelTemplates.SuspendLayout();
+
                 if (c.Source != null)
-                    Settings.WindowTemplates.Remove(c.Source);
-                panelTemplates.Controls.Remove(c);
-                c.Dispose();
-                Selected = null;
-                LoadOptions(null);
+                {
+                    if (c.AssignedTo == null)
+                    {
+                        var count = c.Source.Assignments.Count;
+                        if (count > 0)
+                        {
+                            if (MessageBox.Show(this, count + " linked " + (count == 1 ? "template" : "templates") + " will be deleted. Are you sure?", "Warning", MessageBoxButtons.YesNo, MessageBoxIcon.Exclamation) != System.Windows.Forms.DialogResult.Yes)
+                            {
+                                panelTemplates.ResumeLayout();
+                                return;
+                            }
+                        }
+                        Settings.WindowTemplates.Remove(c.Source);
+                    }
+                    else
+                    {
+                        if (c.Shared != null)
+                        {
+                            c.Shared.Remove(c);
+                        }
+
+                        if (c.AssignedTo.Enabled)
+                        {
+                            Tools.WindowManager.Instance.Deactivate(c.Source, c.AssignedTo);
+                        }
+
+                        c.Source.Assignments.Remove(c.AssignedTo);
+                    }
+                }
+
+                panelTemplates.ResumeLayout();
+
+                if (_Selected != null)
+                {
+                    Selected = null;
+                    LoadOptions(null);
+                }
             }
         }
 
         private void labelDelete_Click(object sender, EventArgs e)
         {
+            contextCustom.Tag = _Selected;
             deleteToolStripMenuItem_Click(sender, e);
         }
 
@@ -2526,9 +2656,9 @@ namespace Gw2Launcher.UI.WindowPositioning
                         TemplateDisplayManagerChanged(this, displayManager);
                 }
 
-                if (displayed[i] != _Selected)
+                if (basicTemplates[i] != _Selected)
                 {
-                    displayed[i] = _Selected;
+                    basicTemplates[i] = _Selected;
 
                     var useWorking = checkOverlapTaskbar.Enabled && !checkOverlapTaskbar.Checked;
 
@@ -2555,9 +2685,9 @@ namespace Gw2Launcher.UI.WindowPositioning
                     }
                 }
             }
-            else if (displayed[i] != null)
+            else if (basicTemplates[i] != null)
             {
-                displayed[i] = null;
+                basicTemplates[i] = null;
                 displayManager.Remove(i);
             }
         }
@@ -2583,6 +2713,353 @@ namespace Gw2Launcher.UI.WindowPositioning
         {
             if (displayManager != null)
                 displayManager.SnapToEdge = checkSnapEdge.Checked;
+        }
+
+        private void buttonSidebar_Click(object sender, EventArgs e)
+        {
+            SelectTab((Controls.FlatVerticalButton)sender);
+        }
+
+        /// <summary>
+        /// Changes the displayed tab based on the sidebar buttons (buttonManager, buttonTemplates)
+        /// </summary>
+        private void SelectTab(Controls.FlatVerticalButton button)
+        {
+            if (button.Selected)
+                return;
+
+            var isManager = button == buttonManager;
+
+            labelOptions.Parent.SuspendLayout();
+            labelOptions.Visible = isManager;
+            label3.Visible = isManager;
+            label6.Visible = isManager;
+            labelCompact.Visible = isManager;
+            labelOptions.Parent.ResumeLayout();
+
+            buttonManager.Selected = isManager;
+            buttonTemplates.Selected = !isManager;
+
+            panelContainer.SuspendLayout();
+            panelTemplatesContainer.SuspendLayout();
+
+            panelTemplateOptionsScroll.Visible = !isManager;
+
+            OnFilterChanged();
+
+            panelTemplatesContainer.ResumeLayout();
+            panelContainer.ResumeLayout();
+        }
+
+        private bool _ShowNoTemplates;
+        private bool ShowNoTemplates
+        {
+            get
+            {
+                return _ShowNoTemplates;
+            }
+            set
+            {
+                if (_ShowNoTemplates != value)
+                {
+                    _ShowNoTemplates = value;
+
+                    panelTemplatesContainer.SuspendLayout();
+
+                    labelNoTemplates.Visible = value;
+                    panelTemplates.Visible = !value;
+
+                    panelTemplatesContainer.ResumeLayout();
+                }
+            }
+        }
+
+        private bool IsFilterVisible(TemplateDisplay td)
+        {
+            if (buttonManager.Selected)
+                return td.AssignedTo != null;
+            return td.AssignedTo == null;
+        }
+
+        private void OnFilterChanged()
+        {
+            panelTemplates.SuspendLayout();
+
+            var count = 0;
+
+            foreach (Control c in panelTemplates.Controls)
+            {
+                var td = (TemplateDisplay)c;
+                var v = IsFilterVisible(td);
+
+                td.Visible = v;
+
+                if (v)
+                {
+                    ++count;
+                }
+                else if (_Selected == td)
+                {
+                    Selected = null;
+                    LoadOptions(null);
+                }
+
+            }
+
+            ShowNoTemplates = count == 0;
+
+            panelTemplates.ResumeLayout();
+        }
+
+        private void ToggleActive(TemplateDisplay td)
+        {
+            var a = td.AssignedTo;
+            if (a != null)
+                SetActive(td, !a.Enabled);
+        }
+
+        void assigned_MouseUp(object sender, MouseEventArgs e)
+        {
+            if (e.Button == System.Windows.Forms.MouseButtons.Left)
+            {
+                ToggleActive((TemplateDisplay)sender);
+            }
+        }
+
+        private void SetActive(TemplateDisplay td, bool enabled)
+        {
+            var a = td.AssignedTo;
+            if (a != null)
+            {
+                if (a.Enabled == enabled)
+                    return;
+                if (enabled)
+                    Tools.WindowManager.Instance.Activate(td.Source, td.AssignedTo);
+                else
+                    Tools.WindowManager.Instance.Deactivate(td.Source, td.AssignedTo);
+            }
+        }
+
+        void assigned_EnabledChanged(object sender, EventArgs e)
+        {
+            var a = (Settings.WindowTemplate.Assignment)sender;
+            TemplateDisplay td;
+
+            if (assignedTemplates.TryGetValue(a, out td))
+            {
+                td.Activated = a.Enabled;
+            }
+        }
+
+        private void enabledToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            enabledToolStripMenuItem.Checked = !enabledToolStripMenuItem.Checked;
+
+            var c = (TemplateDisplay)contextCustom.Tag;
+            if (c != null && c.Source != null)
+            {
+                SetActive(c, enabledToolStripMenuItem.Checked);
+            }
+        }
+
+        private void ShowRename(TemplateDisplay td)
+        {
+            if (td.TextHeight == 0)
+                return;
+
+            if (textName == null)
+            {
+                textName = new TextBox()
+                {
+                    Visible = false,
+                };
+                textName.LostFocus += textName_LostFocus;
+                textName.KeyDown += textName_KeyDown;
+            }
+
+            td.Controls.Add(textName);
+
+            textName.Bounds = new Rectangle(td.Padding.Left, td.Height - td.Padding.Bottom - td.TextHeight + (td.TextHeight - textName.Height) / 2, td.Width - td.Padding.Horizontal, td.TextHeight);
+            textName.Text = td.Text;
+            textName.Tag = td;
+            td.Text = string.Empty;
+            textName.SelectAll();
+            textName.Visible = true;
+            textName.Focus();
+        }
+
+        void textName_KeyDown(object sender, KeyEventArgs e)
+        {
+            if (e.KeyCode == Keys.Enter)
+            {
+                e.Handled = true;
+                e.SuppressKeyPress = true;
+                textName.Visible = false;
+            }
+        }
+
+        void textName_LostFocus(object sender, EventArgs e)
+        {
+            var td = (TemplateDisplay)textName.Tag;
+            if (td == null)
+                return;
+            var a = td.AssignedTo;
+            if (a != null && !td.IsDisposed)
+            {
+                td.Text = a.Name = textName.Text;
+            }
+            textName.Tag = null;
+            textName.Visible = false;
+            this.Controls.Add(textName);
+        }
+
+        private void renameToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            ShowRename((TemplateDisplay)contextCustom.Tag);
+        }
+
+        private void labelOptions_Click(object sender, EventArgs e)
+        {
+            var f = (Form)labelOptions.Tag;
+
+            if (f == null || f.IsDisposed)
+            {
+                labelOptions.Tag = f = new UI.Base.PopupFlatBase(this, false)
+                {
+                    StartPosition = FormStartPosition.Manual,
+                };
+
+                f.Controls.Add(panelSettings);
+
+                var h = f.Handle;
+
+                panelSettings.Size = panelSettingsContent.Size;
+                f.Size = new Size(panelSettingsContent.Width + panelSettings.Margin.Horizontal, panelSettingsContent.Height + panelSettings.Margin.Vertical - 1);
+
+                f.FormClosing += delegate
+                {
+                    panelSettings.Visible = false;
+                    this.Controls.Add(panelSettings);
+                    f.Dispose();
+                };
+
+                panelSettings.Visible = true;
+            }
+
+            var l = labelOptions.PointToScreen(Point.Empty);
+            var screen = Screen.FromPoint(l).WorkingArea;
+            var x = l.X - 10;
+            var y = l.Y - 10;
+
+            if (x + f.Width > screen.Right)
+                x = screen.Right - f.Width;
+            if (y + f.Height > screen.Bottom)
+                y = screen.Bottom - f.Height;
+
+            f.Location = new Point(x, y);
+            if (!f.Visible)
+                f.Show(this);
+        }
+
+        private void checkDelayLaunching_CheckedChanged(object sender, EventArgs e)
+        {
+            Tools.WindowManager.Instance.DelayLaunchUntilAvailable = ((CheckBox)sender).Checked;
+        }
+
+        private void checkReorderOnRelease_CheckedChanged(object sender, EventArgs e)
+        {
+            Tools.WindowManager.Instance.ReorderOnRelease = ((CheckBox)sender).Checked;
+        }
+
+        private void checkAllowActiveChanges_CheckedChanged(object sender, EventArgs e)
+        {
+            Tools.WindowManager.Instance.AllowActiveChanges = ((CheckBox)sender).Checked;
+        }
+
+        protected override void WndProc(ref Message m)
+        {
+            base.WndProc(ref m);
+
+            switch ((WindowMessages)m.Msg)
+            {
+                case WindowMessages.WM_EXITSIZEMOVE:
+
+                    if (mode == TemplateMode.Manager)
+                        Settings.WindowBounds[this.GetType()].Value = this.Bounds;
+
+                    break;
+            }
+        }
+
+        private void snapToToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            var t = (ToolStripMenuItem)sender;
+            var c = (TemplateDisplay)contextCustom.Tag;
+            var b = !t.Checked;
+
+            if (t == snapToToolStripMenuItem)
+            {
+                return;
+            }
+
+            if (c != null && c.Source != null)
+            {
+                Settings.WindowTemplate.SnapType v;
+                if (t == windowEdgesToolStripMenuItem)
+                    v = Settings.WindowTemplate.SnapType.WindowEdgeInner;
+                else if (t == clientEdgesToolStripMenuItem)
+                    v = Settings.WindowTemplate.SnapType.ClientEdge;
+                else if (t == windowEdgesOuterToolStripMenuItem)
+                    v = Settings.WindowTemplate.SnapType.WindowEdgeOuter;
+                else
+                    v = Settings.WindowTemplate.SnapType.None;
+                c.Source.SnapToEdges = b ? v : Settings.WindowTemplate.SnapType.None;
+            }
+        }
+
+        private void accountTypeToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            var t = (ToolStripMenuItem)sender;
+            var c = (TemplateDisplay)contextCustom.Tag;
+            var b = !t.Checked;
+
+            if (t == accountTypeToolStripMenuItem)
+            {
+                return;
+            }
+
+            if (c != null && c.AssignedTo != null)
+            {
+                Settings.WindowTemplate.Assignment.AccountType v;
+                if (t == guildWars2ToolStripMenuItem)
+                    v = Settings.WindowTemplate.Assignment.AccountType.GuildWars2;
+                else if (t == guildWars1ToolStripMenuItem)
+                    v = Settings.WindowTemplate.Assignment.AccountType.GuildWars1;
+                else
+                    v = Settings.WindowTemplate.Assignment.AccountType.Any;
+                c.AssignedTo.Type = b ? v : Settings.WindowTemplate.Assignment.AccountType.Any;
+            }
+        }
+
+        private void labelCompact_Click(object sender, EventArgs e)
+        {
+            if (ShowCompact != null)
+            {
+                ShowCompact(this, EventArgs.Empty);
+            }
+            else
+            {
+                var f = (formTemplatesCompact)labelCompact.Tag;
+                if (f == null || f.IsDisposed)
+                {
+                    labelCompact.Tag = f = new formTemplatesCompact();
+                    f.Show();
+                }
+                else if (!f.Visible)
+                {
+                    f.Show();
+                }
+            }
         }
     }
 }

@@ -33,6 +33,7 @@ namespace Gw2Launcher.Util
 
             return false;
         }
+
         public static bool OpenFolder(string path)
         {
             try
@@ -41,7 +42,7 @@ namespace Gw2Launcher.Util
                 {
                     p.StartInfo.UseShellExecute = true;
                     p.StartInfo.FileName = "explorer.exe";
-                    p.StartInfo.Arguments = "\"" + path + '"';
+                    p.StartInfo.Arguments = '"' + path + '"';
 
                     if (p.Start())
                         return true;
@@ -99,6 +100,11 @@ namespace Gw2Launcher.Util
                 if (pidlFolder != IntPtr.Zero)
                     Marshal.FreeCoTaskMem(pidlFolder);
             }
+        }
+
+        public static bool OpenUrl(string url)
+        {
+            return OpenFolder(url);
         }
     }
 }

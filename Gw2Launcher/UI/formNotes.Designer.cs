@@ -30,11 +30,10 @@ namespace Gw2Launcher.UI
         {
             this.panelContainer = new System.Windows.Forms.Panel();
             this.panelContent = new System.Windows.Forms.Panel();
-            this.waitingBounce = new Gw2Launcher.UI.Controls.WaitingBounce();
             this.labelMessage = new System.Windows.Forms.Label();
             this.panelAdd = new System.Windows.Forms.Panel();
-            this.labelAccountName = new System.Windows.Forms.Label();
-            this.labelAdd = new Controls.LinkLabel();
+            this.labelAccountName = new Gw2Launcher.UI.Base.BaseLabel();
+            this.labelAdd = new Gw2Launcher.UI.Controls.LinkLabel();
             this.scrollV = new Gw2Launcher.UI.Controls.FlatVScrollBar();
             this.buttonMinimize = new Gw2Launcher.UI.Controls.FlatShapeButton();
             this.buttonExpired = new Gw2Launcher.UI.Controls.FlatVerticalButton();
@@ -49,7 +48,6 @@ namespace Gw2Launcher.UI
             | System.Windows.Forms.AnchorStyles.Left) 
             | System.Windows.Forms.AnchorStyles.Right)));
             this.panelContainer.Controls.Add(this.panelContent);
-            this.panelContainer.Controls.Add(this.waitingBounce);
             this.panelContainer.Controls.Add(this.labelMessage);
             this.panelContainer.Location = new System.Drawing.Point(1, 1);
             this.panelContainer.Size = new System.Drawing.Size(387, 303);
@@ -58,18 +56,9 @@ namespace Gw2Launcher.UI
             // 
             this.panelContent.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left) 
             | System.Windows.Forms.AnchorStyles.Right)));
-            this.panelContent.BackColor = System.Drawing.SystemColors.Control;
             this.panelContent.Location = new System.Drawing.Point(0, 0);
             this.panelContent.Size = new System.Drawing.Size(387, 303);
             this.panelContent.Visible = false;
-            // 
-            // waitingBounce
-            // 
-            this.waitingBounce.Anchor = System.Windows.Forms.AnchorStyles.None;
-            this.waitingBounce.ForeColor = System.Drawing.SystemColors.ControlDark;
-            this.waitingBounce.Location = new System.Drawing.Point(143, 165);
-            this.waitingBounce.Size = new System.Drawing.Size(100, 16);
-            this.waitingBounce.Visible = false;
             // 
             // labelMessage
             // 
@@ -94,7 +83,7 @@ namespace Gw2Launcher.UI
             this.labelAccountName.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left) 
             | System.Windows.Forms.AnchorStyles.Right)));
             this.labelAccountName.AutoEllipsis = true;
-            this.labelAccountName.ForeColor = System.Drawing.SystemColors.GrayText;
+            this.labelAccountName.ForeColorName = Gw2Launcher.UI.UiColors.Colors.TextGray;
             this.labelAccountName.Location = new System.Drawing.Point(45, 8);
             this.labelAccountName.Size = new System.Drawing.Size(336, 15);
             this.labelAccountName.Text = "-";
@@ -103,6 +92,9 @@ namespace Gw2Launcher.UI
             // labelAdd
             // 
             this.labelAdd.AutoSize = true;
+            this.labelAdd.ForeColorHoveredName = Gw2Launcher.UI.UiColors.Colors.LinkHovered;
+            this.labelAdd.ForeColorName = Gw2Launcher.UI.UiColors.Colors.Link;
+            this.labelAdd.Icon = null;
             this.labelAdd.Location = new System.Drawing.Point(10, 8);
             this.labelAdd.Size = new System.Drawing.Size(29, 15);
             this.labelAdd.Text = "new";
@@ -112,27 +104,26 @@ namespace Gw2Launcher.UI
             // 
             this.scrollV.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom) 
             | System.Windows.Forms.AnchorStyles.Right)));
+            this.scrollV.ForeColorHoveredName = Gw2Launcher.UI.UiColors.Colors.ScrollBarHovered;
+            this.scrollV.ForeColorName = Gw2Launcher.UI.UiColors.Colors.ScrollBar;
             this.scrollV.Location = new System.Drawing.Point(388, 1);
             this.scrollV.Maximum = 0;
+            this.scrollV.ScrollChange = 0;
             this.scrollV.Size = new System.Drawing.Size(6, 334);
+            this.scrollV.TrackColorName = Gw2Launcher.UI.UiColors.Colors.ScrollTrack;
             this.scrollV.Value = 0;
             this.scrollV.ValueChanged += new System.EventHandler<int>(this.scrollV_ValueChanged);
             // 
             // buttonMinimize
             // 
             this.buttonMinimize.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Right)));
-            this.buttonMinimize.BackColorHovered = System.Drawing.SystemColors.ControlLight;
-            this.buttonMinimize.BackColorSelected = System.Drawing.SystemColors.ControlLight;
-            this.buttonMinimize.BorderColor = System.Drawing.Color.Empty;
-            this.buttonMinimize.ForeColor = System.Drawing.SystemColors.GrayText;
-            this.buttonMinimize.ForeColorHovered = System.Drawing.SystemColors.ControlText;
-            this.buttonMinimize.ForeColorSelected = System.Drawing.SystemColors.ControlText;
+            this.buttonMinimize.BackColorHoveredName = Gw2Launcher.UI.UiColors.Colors.DailiesHeader;
+            this.buttonMinimize.ForeColorHoveredName = Gw2Launcher.UI.UiColors.Colors.DailiesMinimizeArrowHovered;
+            this.buttonMinimize.ForeColorName = Gw2Launcher.UI.UiColors.Colors.DailiesMinimizeArrow;
             this.buttonMinimize.Location = new System.Drawing.Point(394, 315);
             this.buttonMinimize.Padding = new System.Windows.Forms.Padding(5);
-            this.buttonMinimize.Selected = false;
             this.buttonMinimize.Shape = Gw2Launcher.UI.Controls.FlatShapeButton.IconShape.X;
             this.buttonMinimize.ShapeAlignment = System.Drawing.ContentAlignment.MiddleRight;
-            this.buttonMinimize.ShapeDirection = System.Windows.Forms.ArrowDirection.Left;
             this.buttonMinimize.ShapeSize = new System.Drawing.Size(7, 7);
             this.buttonMinimize.Size = new System.Drawing.Size(30, 20);
             this.buttonMinimize.Click += new System.EventHandler(this.buttonMinimize_Click);
@@ -140,13 +131,9 @@ namespace Gw2Launcher.UI
             // buttonExpired
             // 
             this.buttonExpired.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
-            this.buttonExpired.BackColorHovered = System.Drawing.SystemColors.ControlLight;
-            this.buttonExpired.BackColorSelected = System.Drawing.SystemColors.ControlLight;
-            this.buttonExpired.BorderColor = System.Drawing.Color.Empty;
-            this.buttonExpired.ForeColorHovered = System.Drawing.SystemColors.ControlText;
-            this.buttonExpired.ForeColorSelected = System.Drawing.SystemColors.ControlText;
+            this.buttonExpired.BackColorHoveredName = Gw2Launcher.UI.UiColors.Colors.DailiesHeader;
+            this.buttonExpired.BackColorSelectedName = Gw2Launcher.UI.UiColors.Colors.DailiesHeader;
             this.buttonExpired.Location = new System.Drawing.Point(394, 121);
-            this.buttonExpired.Selected = false;
             this.buttonExpired.Size = new System.Drawing.Size(30, 120);
             this.buttonExpired.Text = "Recent";
             this.buttonExpired.Click += new System.EventHandler(this.buttonExpired_Click);
@@ -154,20 +141,18 @@ namespace Gw2Launcher.UI
             // buttonMessages
             // 
             this.buttonMessages.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
-            this.buttonMessages.BackColorHovered = System.Drawing.SystemColors.ControlLight;
-            this.buttonMessages.BackColorSelected = System.Drawing.SystemColors.ControlLight;
-            this.buttonMessages.BorderColor = System.Drawing.Color.Empty;
-            this.buttonMessages.ForeColorHovered = System.Drawing.SystemColors.ControlText;
-            this.buttonMessages.ForeColorSelected = System.Drawing.SystemColors.ControlText;
+            this.buttonMessages.BackColorHoveredName = Gw2Launcher.UI.UiColors.Colors.DailiesHeader;
+            this.buttonMessages.BackColorSelectedName = Gw2Launcher.UI.UiColors.Colors.DailiesHeader;
             this.buttonMessages.Location = new System.Drawing.Point(394, 1);
-            this.buttonMessages.Selected = false;
             this.buttonMessages.Size = new System.Drawing.Size(30, 120);
             this.buttonMessages.Text = "Notes";
             this.buttonMessages.Click += new System.EventHandler(this.buttonMessages_Click);
             // 
             // formNotes
             // 
-            this.BackColor = System.Drawing.Color.White;
+            this.AutoScaleDimensions = new System.Drawing.SizeF(96F, 96F);
+            this.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(255)))), ((int)(((byte)(255)))), ((int)(((byte)(255)))));
+            this.BackColorName = Gw2Launcher.UI.UiColors.Colors.DailiesBackColor;
             this.ClientSize = new System.Drawing.Size(425, 336);
             this.Controls.Add(this.panelContainer);
             this.Controls.Add(this.panelAdd);
@@ -176,6 +161,7 @@ namespace Gw2Launcher.UI
             this.Controls.Add(this.buttonExpired);
             this.Controls.Add(this.buttonMessages);
             this.Font = new System.Drawing.Font("Segoe UI", 9F);
+            this.ForeColorName = Gw2Launcher.UI.UiColors.Colors.DailiesText;
             this.FormBorderStyle = System.Windows.Forms.FormBorderStyle.None;
             this.Icon = global::Gw2Launcher.Properties.Resources.Gw2Launcher;
             this.MaximizeBox = false;
@@ -196,7 +182,6 @@ namespace Gw2Launcher.UI
 
         private System.Windows.Forms.Panel panelContainer;
         private System.Windows.Forms.Panel panelContent;
-        private Controls.WaitingBounce waitingBounce;
         private System.Windows.Forms.Label labelMessage;
         private Controls.FlatVScrollBar scrollV;
         private Controls.FlatShapeButton buttonMinimize;
@@ -204,7 +189,7 @@ namespace Gw2Launcher.UI
         private Controls.FlatVerticalButton buttonMessages;
         private Controls.LinkLabel labelAdd;
         private System.Windows.Forms.Panel panelAdd;
-        private System.Windows.Forms.Label labelAccountName;
+        private Base.BaseLabel labelAccountName;
 
     }
 }

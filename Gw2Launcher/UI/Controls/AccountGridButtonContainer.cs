@@ -236,9 +236,9 @@ namespace Gw2Launcher.UI.Controls
 
             private SelectionBox(Control container, Size size, Point offset, Control source, Point location)
             {
-                this.pen = new Pen(new SolidBrush(Color.FromArgb((int)(255 * 0.75f), SystemColors.Highlight)));
+                this.pen = new Pen(new SolidBrush(Color.FromArgb((int)(255 * 0.75f), UiColors.GetColor(UiColors.Colors.AccountSelectionHighlight))));
                 this.pen.Alignment = System.Drawing.Drawing2D.PenAlignment.Inset;
-                this.brush = new SolidBrush(Color.FromArgb((int)(255 * 0.25f), SystemColors.Highlight));
+                this.brush = new SolidBrush(Color.FromArgb((int)(255 * 0.25f), UiColors.GetColor(UiColors.Colors.AccountSelectionHighlight)));
 
                 using (var g = container.CreateGraphics())
                 {
@@ -779,6 +779,11 @@ namespace Gw2Launcher.UI.Controls
             private bool[] types;
             private string[] items;
 
+            public SearchFilter()
+                : this(0, null)
+            {
+            }
+
             public SearchFilter(byte page, string filter)
             {
                 Page = page;
@@ -798,6 +803,7 @@ namespace Gw2Launcher.UI.Controls
                         return;
 
                     _Filter = value;
+                    _DailyLogin = false;
 
                     if (value == null)
                     {
@@ -874,6 +880,12 @@ namespace Gw2Launcher.UI.Controls
                                     types[(byte)Settings.AccountType.GuildWars2] = true;
 
                                     break;
+                                case "daily":
+                                case "login":
+
+                                    _DailyLogin = true;
+
+                                    break;
                                 default:
 
                                     items.Add(f);
@@ -906,6 +918,29 @@ namespace Gw2Launcher.UI.Controls
                 }
             }
 
+            private bool _DailyLogin;
+            public bool DailyLogin
+            {
+                get
+                {
+                    return _DailyLogin;
+                }
+                set
+                {
+                    _DailyLogin = value;
+                }
+            }
+
+            public bool MatchDailyLogin(AccountGridButton button)
+            {
+                if (_DailyLogin)
+                {
+                    return button.LastUsedUtc.Date != DateTime.UtcNow.Date;
+                }
+
+                return true;
+            }
+
             public bool MatchPage(AccountGridButton button)
             {
                 if (_Page > 0)
@@ -927,11 +962,16 @@ namespace Gw2Launcher.UI.Controls
                 return true;
             }
 
-            public bool MatchText(AccountGridButton button)
+            public bool MatchFilters(AccountGridButton button)
             {
                 if (types != null && !types[(byte)button.AccountType])
                     return false;
 
+                return MatchText(button) && MatchDailyLogin(button);
+            }
+
+            public bool MatchText(AccountGridButton button)
+            {
                 if (items == null)
                     return true;
 
@@ -956,7 +996,61 @@ namespace Gw2Launcher.UI.Controls
 
             public bool MatchAll(AccountGridButton button)
             {
-                return MatchPage(button) && MatchText(button);
+                return MatchPage(button) && MatchFilters(button);
+            }
+
+            public bool IsActive
+            {
+                get
+                {
+                    return _Page != 0 || HasFilters;
+                }
+            }
+
+            public bool HasFilters
+            {
+                get
+                {
+                    return _Filter != null || _DailyLogin;
+                }
+            }
+        }
+
+        public struct Style : IEquatable<Style>
+        {
+            public Font FontName, FontStatus, FontUser;
+            public bool ShowAccount, ShowColor, ShowIcon, ShowActiveHighlight;
+            public UiColors.ColorValues Colors;
+            public Settings.AccountGridButtonOffsets Offsets;
+            public Settings.DailyLoginDayIconFlags ShowDailyLoginDay;
+
+            public void Apply(AccountGridButton b)
+            {
+                b.FontName = FontName;
+                b.FontStatus = FontStatus;
+                b.ShowAccount = ShowAccount;
+                b.ShowColorKey = ShowColor;
+                b.ShowImage = ShowIcon || b.Image != null;
+                b.Colors = Colors;
+                b.Offsets = Offsets;
+                b.IsActiveHighlight = ShowActiveHighlight;
+                b.ShowDailyLoginDay = b.AccountType == Settings.AccountType.GuildWars2 ? ShowDailyLoginDay : Settings.DailyLoginDayIconFlags.None;
+            }
+
+            public bool Equals(Style s)
+            {
+                return s.FontName == FontName
+                    && s.FontStatus == FontStatus
+                    && s.FontUser == FontUser
+
+                    && s.ShowAccount == ShowAccount 
+                    && s.ShowColor == ShowColor
+                    && s.ShowIcon == ShowIcon
+                    && s.ShowActiveHighlight == ShowActiveHighlight 
+
+                    && s.Colors == Colors
+                    && s.Offsets == Offsets 
+                    && s.ShowDailyLoginDay == ShowDailyLoginDay;
             }
         }
 
@@ -1005,9 +1099,7 @@ namespace Gw2Launcher.UI.Controls
         private int buttonsOnPage;
         private bool hideNewAccount;
 
-        private Font fontName, fontStatus, fontUser;
-        private bool showAccount, showColor, showIcon;
-        private Settings.AccountGridButtonColors colors;
+        private Style style;
 
         private SelectionBox selection;
         private Rectangle dragBounds;
@@ -1031,10 +1123,14 @@ namespace Gw2Launcher.UI.Controls
             gridColumnsAuto = true;
             buttonState = System.Windows.Forms.MouseButtons.None;
             returnToScroll = -1;
-            fontName = AccountGridButton.FONT_NAME;
-            fontStatus = AccountGridButton.FONT_STATUS;
-            fontUser = AccountGridButton.FONT_USER;
-            showAccount = true;
+
+            style = new Style()
+            {
+                FontName = AccountGridButton.FONT_NAME,
+                FontStatus = AccountGridButton.FONT_STATUS,
+                FontUser = AccountGridButton.FONT_USER,
+                ShowAccount = true,
+            };
 
             var buttonNewAccount = new NewAccountGridButton();
             buttonNewAccount.Visible = false;
@@ -1518,7 +1614,7 @@ namespace Gw2Launcher.UI.Controls
                 buttons[i].Index = i;
             }
 
-            var filtered = _Filter != null && _Filter.Filter != null;
+            var filtered = _Filter != null && _Filter.HasFilters;
             if (filtered || comparer.Options.Sorting.Mode != Settings.SortMode.CustomGrid)
             {
                 panelContents.GridLayout = AccountGridButtonPanel.GridLayoutMode.Auto;
@@ -1566,12 +1662,7 @@ namespace Gw2Launcher.UI.Controls
 
         public void Add(AccountGridButton button)
         {
-            button.FontName = fontName;
-            button.FontStatus = fontStatus;
-            button.FontUser = fontUser;
-            button.ShowAccount = showAccount;
-            button.ShowColorKey = showColor;
-            button.ShowImage = showIcon || button.Image != null;
+            this.style.Apply(button);
 
             button.MouseClick += button_MouseClick;
             button.MouseDown += button_MouseDown;
@@ -2029,7 +2120,7 @@ namespace Gw2Launcher.UI.Controls
 
             dragspots.highlight = new Panel()
             {
-                BackColor = Color.Gray,
+                BackColor = Util.Color.Lighten(Util.Color.Invert(this.BackColor), 0.5f),
                 Visible = false,
             };
 
@@ -2186,7 +2277,7 @@ namespace Gw2Launcher.UI.Controls
 
             dragspots.target = new Panel()
             {
-                BackColor = Color.Black,
+                BackColor = Util.Color.Invert(this.BackColor),
                 Visible = false,
             };
 
@@ -2558,44 +2649,35 @@ namespace Gw2Launcher.UI.Controls
             }
         }
 
-        public void SetStyle(Font fontName, Font fontStatus, Font fontUser, bool showAccount, bool showColor, bool showIcon, Settings.AccountGridButtonColors colors)
+        public void SetStyle(Style s)
         {
-            if (colors == null)
-                colors = AccountGridButton.DefaultColors;
+            var buttonNewAccount = panelContents.NewButton;
 
-            if (this.fontName == fontName && this.fontStatus == fontStatus && this.showAccount == showAccount && this.showColor == showColor && this.showIcon == showIcon && this.colors == colors && this.IsHandleCreated)
+            if (s.Colors == null)
+                s.Colors = UiColors.GetTheme();
+
+            if (this.style.Equals(s) && this.IsHandleCreated)
                 return;
 
-            this.fontName = fontName;
-            this.fontStatus = fontStatus;
-            this.fontUser = fontUser;
-            this.showAccount = showAccount;
-            this.showColor = showColor;
-            this.showIcon = showIcon;
-            this.colors = colors;
+            this.style = s;
 
             foreach (var b in panelContents.Buttons)
             {
-                b.FontName = fontName;
-                b.FontStatus = fontStatus;
-                b.ShowAccount = showAccount;
-                b.ShowColorKey = showColor;
-                b.ShowImage = showIcon || b.Image != null;
-                b.Colors = colors;
+                s.Apply(b);
             }
 
-            var buttonNewAccount = panelContents.NewButton;
-            buttonNewAccount.FontName = fontName;
-            buttonNewAccount.FontStatus = fontStatus;
-            buttonNewAccount.ShowAccount = showAccount;
+            s.Apply(buttonNewAccount);
+
             buttonNewAccount.ShowColorKey = false;
             buttonNewAccount.ShowImage = false;
+            buttonNewAccount.ShowDailyLoginDay = Settings.DailyLoginDayIconFlags.None;
+
             buttonNewAccount.ResizeLabels();
 
             panelContents.GridRowHeight = buttonNewAccount.MinimumSize.Height;
             using (var g = this.CreateGraphics())
             {
-                GridColumnAutoWidth = TextRenderer.MeasureText(g, "www", this.fontName).Width * 5;
+                GridColumnAutoWidth = TextRenderer.MeasureText(g, "www", s.FontName).Width * 5;
             }
         }
 
@@ -2646,7 +2728,7 @@ namespace Gw2Launcher.UI.Controls
         {
             var buttons = panelContents.Buttons;
             var enabled = _Filter != null;
-            var filtered = enabled && _Filter.Filter != null;
+            var filtered = enabled && _Filter.HasFilters;
             var count = enabled ? 0 : buttons.Length;
 
             this.SuspendLayout();
@@ -2661,7 +2743,7 @@ namespace Gw2Launcher.UI.Controls
                     {
                         ++count;
 
-                        v = _Filter.MatchText(b);
+                        v = _Filter.MatchFilters(b);
                     }
                     else
                         v = false;
@@ -2723,34 +2805,6 @@ namespace Gw2Launcher.UI.Controls
             this.ResumeLayout();
         }
 
-        public void SetFilter(byte page, string filter)
-        {
-            if (string.IsNullOrEmpty(filter))
-                filter = null;
-
-            if (_Filter != null)
-            {
-                var pageChanged = _Filter.Page != page;
-
-                if (page == 0 && filter == null)
-                {
-                    _Filter = null;
-                    OnFilterChanged(pageChanged);
-                }
-                else if (pageChanged || _Filter.Filter != filter)
-                {
-                    _Filter.Page = page;
-                    _Filter.Filter = filter;
-                    OnFilterChanged(pageChanged);
-                }
-            }
-            else if (page != 0 || filter != null)
-            {
-                _Filter = new SearchFilter(page, filter);
-                OnFilterChanged(page != 0);
-            }
-        }
-
         public byte Page
         {
             get
@@ -2773,10 +2827,9 @@ namespace Gw2Launcher.UI.Controls
                 {
                     if (_Filter.Page != value)
                     {
-                        if (value == 0 && _Filter.Filter == null)
+                        _Filter.Page = value;
+                        if (!_Filter.IsActive)
                             _Filter = null;
-                        else
-                            _Filter.Page = value;
                         OnFilterChanged(true);
                     }
                 }
@@ -2799,17 +2852,53 @@ namespace Gw2Launcher.UI.Controls
 
                 if (_Filter == null)
                 {
-                    _Filter = new SearchFilter(0, value);
-                    OnFilterChanged(false);
+                    if (!string.IsNullOrEmpty(value))
+                    {
+                        _Filter = new SearchFilter(0, value);
+                        OnFilterChanged(false);
+                    }
                 }
                 else
                 {
                     if (_Filter.Filter != value)
                     {
-                        if (value == null && _Filter.Page == 0)
+                        _Filter.Filter = value;
+                        if (!_Filter.IsActive)
                             _Filter = null;
-                        else
-                            _Filter.Filter = value;
+                        OnFilterChanged(false);
+                    }
+                }
+            }
+        }
+
+        public bool FilterDailyLogin
+        {
+            get
+            {
+                if (_Filter == null)
+                    return false;
+                return _Filter.DailyLogin;
+            }
+            set
+            {
+                if (_Filter == null)
+                {
+                    if (value)
+                    {
+                        _Filter = new SearchFilter()
+                        {
+                            DailyLogin = value,
+                        };
+                        OnFilterChanged(false);
+                    }
+                }
+                else
+                {
+                    if (_Filter.DailyLogin != value)
+                    {
+                        _Filter.DailyLogin = value;
+                        if (!_Filter.IsActive)
+                            _Filter = null;
                         OnFilterChanged(false);
                     }
                 }

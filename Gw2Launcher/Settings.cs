@@ -11,7 +11,7 @@ namespace Gw2Launcher
 {
     public static class Settings
     {
-        private const ushort VERSION = 11;
+        private const ushort VERSION = 14;
 
         public const string ASSET_HOST = "assetcdn.101.arenanetworks.com";
         public const string ASSET_COOKIE = "authCookie=access=/latest/*!/manifest/program/*!/program/*~md5=4e51ad868f87201ad93e428ff30c6691";
@@ -22,6 +22,115 @@ namespace Gw2Launcher
         private static readonly Type[] FORMS;
 
         #region Enums
+
+        public enum SteamLimitation : byte
+        {
+            OnlyBlockSteam = 0,
+            BlockAll = 1,
+            LaunchWithoutSteam = 2,
+        }
+
+        public enum AccountProvider : byte
+        {
+            ArenaNet = 0,
+            Steam = 1,
+        }
+
+        public enum LaunchProxy : byte
+        {
+            None = 0,
+            Steam = 1,
+            Other = 2,
+        }
+
+        public enum LoginInputType : byte
+        {
+            Clipboard = 0,
+            Post = 1,
+            Send = 2,
+        }
+
+        public enum Language : byte
+        {
+            EN = 0,
+            DE = 1,
+            FR = 2,
+            ES = 3,
+            ZH = 4,
+        }
+
+        [Flags]
+        public enum RunAfterPopupSorting : byte
+        {
+            None = 0,
+            Descending = 1,
+            Active = 2,
+            Name = 4,
+            Type = 8,
+        }
+
+        [Flags]
+        public enum RunAfterPopupFilter : byte
+        {
+            None = 0,
+            ProcessActive = 1,
+            ProcessInactive = 2,
+            ManualStartup = 4,
+            ActiveAccount = 8,
+            ProcessHasNotStarted = 16,
+        }
+
+        [Flags]
+        public enum RunAfterPopupOptions : byte
+        {
+            None = 0,
+            ShowIcon = 1,
+            ShowClose = 2,
+            KeepOpen = 4,
+        }
+
+        [Flags]
+        public enum DailyLoginDayIconFlags : ushort
+        {
+            None = 0,
+            ShowDay = 1,
+            MysticCoins = 2,
+            Laurels = 4,
+            Luck = 8,
+            BlackLionGoods = 16,
+            CraftingMaterials = 32,
+            Experience = 64,
+            ExoticEquipment = 128,
+            CelebrationBooster = 256,
+            TransmutationCharge = 512,
+            ChestOfLoyalty = 1024,
+        }
+
+        [Flags]
+        public enum WindowManagerFlags : byte
+        {
+            None = 0,
+            DelayLaunchUntilAvailable = 1,
+            ReorderOnRelease = 2,
+            AllowActiveChanges = 4,
+        }
+
+        public enum MarkerIconType : byte
+        {
+            None = 0,
+            Icon = 1,
+            Circle = 2,
+            Square = 3,
+        }
+
+        public enum MarkerResetType : byte
+        {
+            None = 0,
+            Daily = 1,
+            Weekly = 2,
+            Date = 3,
+            Duration = 4,
+        }
 
         public enum ImagePlacement : byte
         {
@@ -134,27 +243,21 @@ namespace Gw2Launcher
             Voices = 4,
         }
 
-        public enum NetworkAuthorizationState : byte
+        [Flags]
+        public enum NetworkAuthorizationOptions : byte
         {
-            Disabled = 0,
-            Unknown = 1,
-            OK = 2,
+            None = 0,
+            Enabled = 1,
+            Remember = 2,
         }
 
         [Flags]
-        public enum NetworkAuthorizationFlags : byte
+        public enum NetworkOptions : byte
         {
             None = 0,
-            Manual = 1,
-            Automatic = 2,
-            Always = 4,
-
-            VerificationModes = 7,
-
-            VerifyIP = 16,
-            RemoveAll = 32,
-            AbortLaunchingOnFail = 64,
-            RemovePreviouslyAuthorized = 128,
+            Enabled = 1,
+            Exact = 2,
+            WarnOnChange = 4,
         }
 
         public enum ApiCacheState : byte
@@ -188,6 +291,22 @@ namespace Gw2Launcher
                     return System.Diagnostics.ProcessPriorityClass.Idle;
             }
             return System.Diagnostics.ProcessPriorityClass.Normal;
+        }
+
+        public static ProcessPriorityClass ToProcessPriorityClass(this System.Diagnostics.ProcessPriorityClass priority)
+        {
+            switch (priority)
+            {
+                case System.Diagnostics.ProcessPriorityClass.High:
+                    return Settings.ProcessPriorityClass.High;
+                case System.Diagnostics.ProcessPriorityClass.AboveNormal:
+                    return Settings.ProcessPriorityClass.AboveNormal;
+                case System.Diagnostics.ProcessPriorityClass.BelowNormal:
+                    return Settings.ProcessPriorityClass.BelowNormal;
+                case System.Diagnostics.ProcessPriorityClass.Idle:
+                    return Settings.ProcessPriorityClass.Low;
+            }
+            return ProcessPriorityClass.Normal;
         }
 
         [Flags]
@@ -249,6 +368,15 @@ namespace Gw2Launcher
         }
 
         [Flags]
+        public enum TemplateBarOptions : byte
+        {
+            None = 0,
+            TopMost = 1,
+            HideNames = 2,
+            DisplayAsList = 4,
+        }
+
+        [Flags]
         public enum LocalizeAccountExecutionOptions : byte
         {
             None = 0,
@@ -257,6 +385,13 @@ namespace Gw2Launcher
             OnlyIncludeBinFolders = 4,
             AutoSync = 8,
             AutoSyncDeleteUnknowns = 16,
+        }
+
+        public enum LocalizeAccountExecutionSelectionOptions : byte
+        {
+            None = 0,
+            Include = 1,
+            Exclude = 2,
         }
 
         public enum EncryptionScope : byte
@@ -292,6 +427,157 @@ namespace Gw2Launcher
         #endregion
 
         #region Classes/Interfaces
+
+        public struct LauncherTweaks
+        {
+            [Flags]
+            public enum CoherentFlags
+            {
+                None = 0,
+                WaitForLoaded = 1,
+                WaitForMemory = 2,
+            }
+
+            public LauncherTweaks(byte delay, bool waitForCoherentLoaded, bool waitForCoherentMemory)
+                : this()
+            {
+                this.Delay = delay;
+
+                var flags = CoherentFlags.None;
+                if (waitForCoherentLoaded)
+                    flags |= CoherentFlags.WaitForLoaded;
+                if (waitForCoherentMemory)
+                    flags |= CoherentFlags.WaitForMemory;
+
+                this.CoherentOptions = flags;
+            }
+
+            public LauncherTweaks(byte delay, CoherentFlags coherent)
+                : this()
+            {
+                this.Delay = delay;
+                this.CoherentOptions = coherent;
+            }
+
+            public byte Delay
+            {
+                get;
+                set;
+            }
+
+            public CoherentFlags CoherentOptions
+            {
+                get;
+                set;
+            }
+
+            public bool WaitForCoherentLoaded
+            {
+                get
+                {
+                    return (CoherentOptions & CoherentFlags.WaitForLoaded) != 0;
+                }
+            }
+
+            public bool WaitForCoherentMemory
+            {
+                get
+                {
+                    return (CoherentOptions & CoherentFlags.WaitForMemory) != 0;
+                }
+            }
+
+            public override bool Equals(object obj)
+            {
+                if (obj is LauncherTweaks)
+                {
+                    var o = (LauncherTweaks)obj;
+
+                    return Delay == o.Delay && CoherentOptions == o.CoherentOptions;
+                }
+
+                return base.Equals(obj);
+            }
+
+            public override int GetHashCode()
+            {
+                return base.GetHashCode();
+            }
+        }
+
+        public struct LoginTweaks
+        {
+            public LoginTweaks(LoginInputType email, LoginInputType password, bool verify, byte delay)
+                : this()
+            {
+                this.Email = email;
+                this.Password = password;
+                this.Verify = verify;
+                this.Delay = delay;
+            }
+
+            public LoginInputType Email
+            {
+                get;
+                set;
+            }
+
+            public LoginInputType Password
+            {
+                get;
+                set;
+            }
+
+            public bool Verify
+            {
+                get;
+                set;
+            }
+
+            public byte Delay
+            {
+                get;
+                set;
+            }
+
+            public override bool Equals(object obj)
+            {
+                if (obj is LoginTweaks)
+                {
+                    var o = (LoginTweaks)obj;
+
+                    return Email == o.Email && Password == o.Password && Verify == o.Verify && Delay == o.Delay;
+                }
+
+                return base.Equals(obj);
+            }
+
+            public override int GetHashCode()
+            {
+                return base.GetHashCode();
+            }
+        }
+
+        public class AffinityValue
+        {
+            public AffinityValue(string name, long affinity)
+            {
+                this.Name = name;
+                this.Affinity = affinity;
+            }
+
+            public string Name
+            {
+                get;
+                private set;
+            }
+
+            public long Affinity
+            {
+                get;
+                private set;
+            }
+        }
 
         public class ImageOptions
         {
@@ -384,7 +670,248 @@ namespace Gw2Launcher
 
         public class WindowTemplate
         {
-            public class Screen
+            public event EventHandler ScreensChanged;
+            public event EventHandler SnapToEdgesChanged;
+
+            public enum SnapType : byte
+            {
+                /// <summary>
+                /// Defaults to border
+                /// </summary>
+                None = 0,
+                /// <summary>
+                /// Excludes the window border
+                /// </summary>
+                WindowEdgeInner = 1,
+                /// <summary>
+                /// Excludes the window border, retains 1 pixel
+                /// </summary>
+                WindowEdgeOuter = 2,
+                /// <summary>
+                /// Excludes the window border and caption
+                /// </summary>
+                ClientEdge = 3,
+            }
+
+            public class Assigned : IEquatable<Assigned>
+            {
+                public enum AssignedType : byte
+                {
+                    /// <summary>
+                    /// Equivalent to a null assigned value
+                    /// </summary>
+                    Any = 0,
+                    /// <summary>
+                    /// Reserved for a specific account
+                    /// </summary>
+                    Account = 1,
+                    /// <summary>
+                    /// Only the specified accounts can use it
+                    /// </summary>
+                    AccountsIncluding = 2,
+                    /// <summary>
+                    /// Any account except for the specified accounts can use it
+                    /// </summary>
+                    AccountsExcluding = 3,
+                    /// <summary>
+                    /// Disabled; no accounts can use it
+                    /// </summary>
+                    Disabled = 4,
+                }
+
+                /// <summary>
+                /// Assigned accounts
+                /// </summary>
+                /// <param name="type">Type of assignment</param>
+                /// <param name="accounts">UIDs; should be sorted</param>
+                public Assigned(AssignedType type, ushort[] accounts, Settings.WindowOptions options = WindowOptions.None)
+                {
+                    this.Type = type;
+                    this.Accounts = accounts;
+                    this.Options = options;
+                }
+
+                public Assigned(Settings.WindowOptions options)
+                {
+                    this.Type = AssignedType.Any;
+                    this.Options = options;
+                }
+
+                public AssignedType Type
+                {
+                    get;
+                    private set;
+                }
+
+                /// <summary>
+                /// Account UIDs; sorted
+                /// </summary>
+                public ushort[] Accounts
+                {
+                    get;
+                    private set;
+                }
+
+                public Settings.WindowOptions Options
+                {
+                    get;
+                    private set;
+                }
+
+                public bool Equals(Assigned a)
+                {
+                    if (object.ReferenceEquals(this, a))
+                        return true;
+                    if (a == null)
+                        return false;
+                    return this.Type == a.Type && this.Options == a.Options && Util.Array.Equals<ushort>(this.Accounts, a.Accounts);
+                }
+
+                public override bool Equals(object obj)
+                {
+                    if (obj is Assigned)
+                        return this.Equals((Assigned)obj);
+                    return base.Equals(obj);
+                }
+
+                public override int GetHashCode()
+                {
+                    return base.GetHashCode();
+                }
+            }
+
+            public class Assignment
+            {
+                public event EventHandler EnabledChanged;
+                public event EventHandler AssignedChanged;
+                public event EventHandler TypeChanged;
+                public event EventHandler NameChanged;
+
+                public enum AccountType : byte
+                {
+                    Any = 0,
+                    GuildWars2 = 1,
+                    GuildWars1 = 2
+                }
+
+                public Assignment()
+                {
+
+                }
+
+                public Assignment(byte enabled, string name, AccountType type, KeyValuePair<byte, Assigned>[] assigned)
+                {
+                    _Enabled = enabled;
+                    _Name = name;
+                    _Type = type;
+                    _Assigned = assigned;
+                }
+
+                private byte _Enabled;
+                public bool Enabled
+                {
+                    get
+                    {
+                        return _Enabled != 0;
+                    }
+                }
+
+                public void SetEnabled(byte key)
+                {
+                    EnabledKey = key;
+                }
+
+                public byte EnabledKey
+                {
+                    get
+                    {
+                        return _Enabled;
+                    }
+                    private set
+                    {
+                        if (_Enabled != value)
+                        {
+                            bool b;
+
+                            if (_Enabled == 0)
+                                b = value != 0;
+                            else
+                                b = value == 0;
+
+                            _Enabled = value;
+                            OnValueChanged();
+
+                            if (b && EnabledChanged != null)
+                                EnabledChanged(this, EventArgs.Empty);
+                        }
+                    }
+                }
+
+                private KeyValuePair<byte, Assigned>[] _Assigned;
+                /// <summary>
+                /// Window assignments (or null); unassigned windows are automatically assigned
+                /// </summary>
+                public KeyValuePair<byte, Assigned>[] Assigned
+                {
+                    get
+                    {
+                        return _Assigned;
+                    }
+                    set
+                    {
+                        if (!Util.Array.Equals<KeyValuePair<byte, Assigned>>(_Assigned, value))
+                        {
+                            _Assigned = value;
+                            OnValueChanged();
+
+                            if (AssignedChanged != null)
+                                AssignedChanged(this, EventArgs.Empty);
+                        }
+                    }
+                }
+
+                private string _Name;
+                public string Name
+                {
+                    get
+                    {
+                        return _Name;
+                    }
+                    set
+                    {
+                        if (_Name != value)
+                        {
+                            _Name = value;
+                            OnValueChanged();
+
+                            if (NameChanged != null)
+                                NameChanged(this, EventArgs.Empty);
+                        }
+                    }
+                }
+
+                private AccountType _Type;
+                public AccountType Type
+                {
+                    get
+                    {
+                        return _Type;
+                    }
+                    set
+                    {
+                        if (_Type != value)
+                        {
+                            _Type = value;
+                            OnValueChanged();
+
+                            if (TypeChanged != null)
+                                TypeChanged(this, EventArgs.Empty);
+                        }
+                    }
+                }
+            }
+
+            public class Screen : IEquatable<Screen>
             {
                 public Screen(Rectangle bounds, Rectangle[] windows)
                 {
@@ -398,76 +925,166 @@ namespace Gw2Launcher
                     protected set;
                 }
 
+                /// <summary>
+                /// Relative window positioning from screen bounds
+                /// </summary>
                 public Rectangle[] Windows
                 {
                     get;
                     protected set;
                 }
+
+                public bool Equals(Screen other)
+                {
+                    if (other == null || this.Bounds != other.Bounds)
+                        return false;
+
+                    return Util.Array.Equals<Rectangle>(this.Windows, other.Windows);
+                }
+
+                public override bool Equals(object obj)
+                {
+                    if (obj is Screen)
+                    {
+                        return Equals((Screen)obj);
+                    }
+                    return base.Equals(obj);
+                }
+
+                public override int GetHashCode()
+                {
+                    return base.GetHashCode();
+                }
             }
 
             public WindowTemplate(Screen[] screens)
             {
-                Screens = screens;
+                _Screens = screens;
             }
 
+            public WindowTemplate(Screen[] screens, SnapType snapType, byte[] keys, byte[] order, Assignment[] assignments)
+                : this(screens)
+            {
+                _SnapToEdges = snapType;
+                _Keys = keys;
+                _Order = order;
+                if (assignments != null)
+                    _Assignments = new ListProperty<Assignment>(assignments);
+            }
+
+            private Screen[] _Screens;
+            /// <summary>
+            /// Windows are positioned relative to screen
+            /// </summary>
             public Screen[] Screens
-            {
-                get;
-                protected set;
-            }
-        }
-
-        public class AccountGridButtonColors : IEquatable<AccountGridButtonColors>
-        {
-            public enum Colors
-            {
-                Name,
-                User,
-                StatusDefault, StatusError, StatusOK, StatusWaiting,
-                BackColorDefault, BackColorHovered, BackColorSelected,
-                ForeColorHovered, ForeColorSelected,
-                BorderLightDefault, BorderLightHovered, BorderLightSelected,
-                BorderDarkDefault, BorderDarkHovered, BorderDarkSelected,
-                FocusedHighlight, FocusedBorder,
-                ActionExitFill, ActionExitFlash,
-                ActionFocusFlash
-            }
-
-            public AccountGridButtonColors()
-            {
-                Values = new Color[Enum.GetValues(typeof(Colors)).Length];
-            }
-
-            public Color[] Values;
-
-            public Color this[Colors c]
             {
                 get
                 {
-                    return Values[(int)c];
+                    return _Screens;
                 }
                 set
                 {
-                    Values[(int)c] = value;
+                    if (!Util.Array.Equals<Screen>(_Screens, value))
+                    {
+                        _Screens = value;
+                        OnValueChanged();
+
+                        if (ScreensChanged != null)
+                            ScreensChanged(this, EventArgs.Empty);
+                    }
                 }
             }
 
-            public bool Equals(AccountGridButtonColors o)
+            private byte[] _Order;
+            /// <summary>
+            /// Order of the windows, or null if already ordered by index
+            /// </summary>
+            public byte[] Order
             {
-                for (var i = Values.Length - 1; i >= 0; --i )
+                get
                 {
-                    if (Values[i].ToArgb() != o.Values[i].ToArgb())
-                        return false;
+                    return _Order;
                 }
-
-                return true;
+                set
+                {
+                    if (!Util.Array.Equals<byte>(_Order, value))
+                    {
+                        _Order = value;
+                        OnValueChanged();
+                    }
+                }
             }
 
-            public AccountGridButtonColors Clone()
+            private byte[] _Keys;
+            /// <summary>
+            /// Each window can be assigned a key. If null, the index of the window is used as the key.
+            /// </summary>
+            public byte[] Keys
             {
-                var colors = new AccountGridButtonColors();
-                Array.Copy(Values, colors.Values, Values.Length);
-                return colors;
+                get
+                {
+                    return _Keys;
+                }
+                set
+                {
+                    if (!Util.Array.Equals<byte>(_Keys, value))
+                    {
+                        _Keys = value;
+                        OnValueChanged();
+                    }
+                }
+            }
+
+            private SnapType _SnapToEdges;
+            /// <summary>
+            /// True to exclude the window border
+            /// </summary>
+            public SnapType SnapToEdges
+            {
+                get
+                {
+                    return _SnapToEdges;
+                }
+                set
+                {
+                    if (_SnapToEdges != value)
+                    {
+                        _SnapToEdges = value;
+                        OnValueChanged();
+
+                        if (SnapToEdgesChanged != null)
+                            SnapToEdgesChanged(this, EventArgs.Empty);
+                    }
+                }
+            }
+
+            private ListProperty<Assignment> _Assignments;
+            /// <summary>
+            /// Window assignments
+            /// </summary>
+            public IListProperty<Assignment> Assignments
+            {
+                get
+                {
+                    if (_Assignments == null)
+                        _Assignments = new ListProperty<Assignment>();
+                    return _Assignments;
+                }
+            }
+        }
+
+        public class UiColors
+        {
+            public UI.UiColors.Theme Theme
+            {
+                get;
+                set;
+            }
+
+            public UI.UiColors.ColorValues Colors
+            {
+                get;
+                set;
             }
         }
 
@@ -507,7 +1124,7 @@ namespace Gw2Launcher
             public SortingMode Sorting;
             public GroupingMode Grouping;
 
-            public SortingOptions(SortMode sorting, bool sortDescending, GroupMode grouping, bool groupDescending)
+            public SortingOptions(SortMode sorting, bool sortDescending = false, GroupMode grouping = GroupMode.None, bool groupDescending = false)
             {
                 Sorting = new SortingMode(sorting,sortDescending);
                 Grouping = new GroupingMode(grouping, groupDescending);
@@ -1179,7 +1796,10 @@ namespace Gw2Launcher
                                ColorKeyChanged,
                                LastUsedUtcChanged,
                                JumpListPinningChanged,
-                               PinnedChanged;
+                               PinnedChanged,
+                               HotkeysChanged,
+                               MarkersChanged,
+                               RunAfterChanged;
 
             /// <summary>
             /// Unique identifier
@@ -1394,7 +2014,7 @@ namespace Gw2Launcher
             /// <summary>
             /// The state of the current network (whether it needs to be authenticated)
             /// </summary>
-            NetworkAuthorizationState NetworkAuthorizationState
+            NetworkAuthorizationOptions NetworkAuthorization
             {
                 get;
                 set;
@@ -1537,10 +2157,36 @@ namespace Gw2Launcher
                 get;
                 set;
             }
+
+            /// <summary>
+            /// Hotkeys
+            /// </summary>
+            Hotkey[] Hotkeys
+            {
+                get;
+                set;
+            }
+
+            AccountMarker[] Markers
+            {
+                get;
+                set;
+            }
+
+            /// <summary>
+            /// Proxy to use when launching
+            /// </summary>
+            LaunchProxy Proxy
+            {
+                get;
+                set;
+            }
         }
 
         public interface IGw2Account : IAccount
         {
+            event EventHandler DailyLoginDayChanged;
+
             /// <summary>
             /// The name of the owned Local.dat file or null if this account
             /// uses whatever is available
@@ -1627,6 +2273,39 @@ namespace Gw2Launcher
             /// Enables the -mumble option
             /// </summary>
             string MumbleLinkName
+            {
+                get;
+                set;
+            }
+
+            /// <summary>
+            /// Day of the daily login
+            /// </summary>
+            byte DailyLoginDay 
+            {
+                get;
+                set;
+            }
+
+            /// <summary>
+            /// True to include/exclude the account for localized execution
+            /// </summary>
+            bool LocalizedExecution
+            {
+                get;
+                set;
+            }
+
+            /// <summary>
+            /// Provider for this account
+            /// </summary>
+            AccountProvider Provider
+            {
+                get;
+                set;
+            }
+
+            DateTime LastDailyLoginUtc
             {
                 get;
                 set;
@@ -2117,6 +2796,11 @@ namespace Gw2Launcher
                 _list = new List<T>();
             }
 
+            public ListProperty(T[] items)
+            {
+                _list = new List<T>(items);
+            }
+
             public void Add(T item)
             {
                 lock (this)
@@ -2593,7 +3277,10 @@ namespace Gw2Launcher
                                       ColorKeyChanged,
                                       LastUsedUtcChanged,
                                       JumpListPinningChanged,
-                                      PinnedChanged;
+                                      PinnedChanged,
+                                      HotkeysChanged,
+                                      MarkersChanged,
+                                      RunAfterChanged;
 
             public Account(AccountType type, ushort uid)
                 : this(type)
@@ -2952,6 +3639,9 @@ namespace Gw2Launcher
                     {
                         _RunAfter = value;
                         OnValueChanged();
+
+                        if (RunAfterChanged != null)
+                            RunAfterChanged(this, EventArgs.Empty);
                     }
                 }
             }
@@ -3025,18 +3715,18 @@ namespace Gw2Launcher
                 }
             }
 
-            public NetworkAuthorizationState _NetworkAuthorizationState;
-            public NetworkAuthorizationState NetworkAuthorizationState
+            public NetworkAuthorizationOptions _NetworkAuthorization;
+            public NetworkAuthorizationOptions NetworkAuthorization
             {
                 get
                 {
-                    return _NetworkAuthorizationState;
+                    return _NetworkAuthorization;
                 }
                 set
                 {
-                    if (_NetworkAuthorizationState != value)
+                    if (_NetworkAuthorization != value)
                     {
-                        _NetworkAuthorizationState = value;
+                        _NetworkAuthorization = value;
                         OnValueChanged();
                     }
                 }
@@ -3302,6 +3992,63 @@ namespace Gw2Launcher
                 }
             }
 
+            public Hotkey[] _Hotkeys;
+            public Hotkey[] Hotkeys
+            {
+                get
+                {
+                    return _Hotkeys;
+                }
+                set
+                {
+                    if (_Hotkeys != value)
+                    {
+                        _Hotkeys = value;
+                        OnValueChanged();
+
+                        if (HotkeysChanged != null)
+                            HotkeysChanged(this, EventArgs.Empty);
+                    }
+                }
+            }
+
+            public AccountMarker[] _Markers;
+            public AccountMarker[] Markers
+            {
+                get
+                {
+                    return _Markers;
+                }
+                set
+                {
+                    if (_Markers != value)
+                    {
+                        _Markers = value;
+                        OnValueChanged();
+
+                        if (MarkersChanged != null)
+                            MarkersChanged(this, EventArgs.Empty);
+                    }
+                }
+            }
+
+            public LaunchProxy _Proxy;
+            public LaunchProxy Proxy
+            {
+                get
+                {
+                    return _Proxy;
+                }
+                set
+                {
+                    if (_Proxy != value)
+                    {
+                        _Proxy = value;
+                        OnValueChanged();
+                    }
+                }
+            }
+
             protected void CloneTo(Account a)
             {
                 a._Arguments = _Arguments;
@@ -3314,7 +4061,7 @@ namespace Gw2Launcher
                 a._LastUsedUtc = _LastUsedUtc;
                 a._Mute = _Mute;
                 a._Name = _Name;
-                a._NetworkAuthorizationState = _NetworkAuthorizationState;
+                a._NetworkAuthorization = _NetworkAuthorization;
                 a._Password = _Password;
                 a._ProcessAffinity = _ProcessAffinity;
                 a._ProcessPriority = _ProcessPriority;
@@ -3337,6 +4084,8 @@ namespace Gw2Launcher
                 a._BackgroundImage = _BackgroundImage;
                 //_Pages is not included
                 //_Pinned is not included
+                //_Hotkeys is not included
+                a._Proxy = _Proxy;
 
                 a._PendingFiles = _PendingFiles;
 
@@ -3356,6 +4105,8 @@ namespace Gw2Launcher
 
         private class Gw2Account : Account, IGw2Account
         {
+            public event EventHandler DailyLoginDayChanged;
+
             public Gw2Account()
                 : this(0)
             {
@@ -3365,26 +4116,6 @@ namespace Gw2Launcher
                 : base(AccountType.GuildWars2, uid)
             {
                 _LastDailyCompletionUtc = new DateTime(1);
-            }
-
-            public override Account Clone()
-            {
-                var a = new Gw2Account();
-
-                CloneTo(a);
-
-                if (_ApiData != null)
-                    a._ApiData = _ApiData.Clone();
-                a._ApiKey = _ApiKey;
-                a._AutomaticRememberedLogin = _AutomaticRememberedLogin;
-                a._ClientPort = _ClientPort;
-                a._LastDailyCompletionUtc = _LastDailyCompletionUtc;
-                a._MumbleLinkName = _MumbleLinkName;
-
-                a.GfxFile = _GfxFile;
-                a.DatFile = _DatFile;
-
-                return a;
             }
 
             public DatFile _DatFile;
@@ -3609,6 +4340,103 @@ namespace Gw2Launcher
                         OnValueChanged();
                     }
                 }
+            }
+
+            public byte _DailyLoginDay;
+            public byte DailyLoginDay
+            {
+                get
+                {
+                    return _DailyLoginDay;
+                }
+                set
+                {
+                    if (value > 28)
+                        value = 1;
+                    if (_DailyLoginDay != value)
+                    {
+                        _DailyLoginDay = value;
+                        OnValueChanged();
+
+                        if (DailyLoginDayChanged != null)
+                            DailyLoginDayChanged(this, EventArgs.Empty);
+                    }
+                }
+            }
+
+            public bool _LocalizedExecution;
+            public bool LocalizedExecution
+            {
+                get
+                {
+                    return _LocalizedExecution;
+                }
+                set
+                {
+                    if (_LocalizedExecution != value)
+                    {
+                        _LocalizedExecution = value;
+                        OnValueChanged();
+                    }
+                }
+            }
+
+            public AccountProvider _Provider;
+            public AccountProvider Provider
+            {
+                get
+                {
+                    return _Provider;
+                }
+                set
+                {
+                    if (_Provider != value)
+                    {
+                        _Provider = value;
+                        OnValueChanged();
+                    }
+                }
+            }
+
+            public DateTime _LastDailyLoginUtc;
+            public DateTime LastDailyLoginUtc
+            {
+                get
+                {
+                    return _LastDailyLoginUtc;
+                }
+                set
+                {
+                    if (_LastDailyLoginUtc != value)
+                    {
+                        _LastDailyLoginUtc = value;
+                        OnValueChanged();
+                    }
+                }
+            }
+
+            public override Account Clone()
+            {
+                var a = new Gw2Account();
+
+                CloneTo(a);
+
+                if (_ApiData != null)
+                    a._ApiData = _ApiData.Clone();
+                a._ApiKey = _ApiKey;
+                a._AutomaticRememberedLogin = _AutomaticRememberedLogin;
+                a._ClientPort = _ClientPort;
+                a._LastDailyCompletionUtc = _LastDailyCompletionUtc;
+                a._MumbleLinkName = _MumbleLinkName;
+                a._DailyLoginDay = _DailyLoginDay;
+                a._LocalizedExecution = _LocalizedExecution;
+                a._Provider = _Provider;
+                a._LastDailyLoginUtc = _LastDailyLoginUtc;
+
+                a.GfxFile = _GfxFile;
+                a.DatFile = _DatFile;
+
+                return a;
             }
         }
 
@@ -3889,10 +4717,11 @@ namespace Gw2Launcher
 
         public class LastCheckedVersion
         {
-            public LastCheckedVersion(DateTime lastCheck, ushort version)
+            public LastCheckedVersion(DateTime lastCheck, ushort version, byte retry = 0)
             {
                 LastCheck = lastCheck;
                 Version = version;
+                Retry = retry;
             }
 
             public DateTime LastCheck
@@ -3901,6 +4730,11 @@ namespace Gw2Launcher
                 private set;
             }
             public ushort Version
+            {
+                get;
+                private set;
+            }
+            public byte Retry
             {
                 get;
                 private set;
@@ -4443,6 +5277,26 @@ namespace Gw2Launcher
             {
                 get;
             }
+
+            ISettingValue<ProcessPriorityClass> DxLoadingPriority
+            {
+                get;
+            }
+
+            ISettingValue<LocalizeAccountExecutionSelectionOptions> LocalizeAccountExecutionSelection
+            {
+                get;
+            }
+
+            ISettingValue<uint> LastModified
+            {
+                get;
+            }
+
+            ISettingValue<string> PathSteam
+            {
+                get;
+            }
         }
 
         private class AccountTypeSettings : IAccountTypeSettings
@@ -4565,6 +5419,10 @@ namespace Gw2Launcher
                 _UseCustomGw2Cache = new SettingValue<bool>();
                 _PreventDefaultCoherentUI = new SettingValue<bool>();
                 _PreventRelaunching = new SettingValue<RelaunchOptions>();
+                _DxLoadingPriority = new SettingValue<ProcessPriorityClass>();
+                _LocalizeAccountExecutionSelection = new SettingValue<LocalizeAccountExecutionSelectionOptions>();
+                _LastModified = new SettingValue<uint>();
+                _PathSteam = new SettingValue<string>();
             }
 
             public SettingValue<bool> _AutomaticRememberedLogin;
@@ -4683,6 +5541,42 @@ namespace Gw2Launcher
                     return _PreventRelaunching;
                 }
             }
+
+            public SettingValue<ProcessPriorityClass> _DxLoadingPriority;
+            public ISettingValue<ProcessPriorityClass> DxLoadingPriority
+            {
+                get
+                {
+                    return _DxLoadingPriority;
+                }
+            }
+
+            public SettingValue<LocalizeAccountExecutionSelectionOptions> _LocalizeAccountExecutionSelection;
+            public ISettingValue<LocalizeAccountExecutionSelectionOptions> LocalizeAccountExecutionSelection
+            {
+                get
+                {
+                    return _LocalizeAccountExecutionSelection;
+                }
+            }
+
+            public SettingValue<uint> _LastModified;
+            public ISettingValue<uint> LastModified
+            {
+                get
+                {
+                    return _LastModified;
+                }
+            }
+
+            public SettingValue<string> _PathSteam;
+            public ISettingValue<string> PathSteam
+            {
+                get
+                {
+                    return _PathSteam;
+                }
+            }
         }
 
         public class RunAfter : IEquatable<RunAfter>
@@ -4693,13 +5587,34 @@ namespace Gw2Launcher
                 None = 0,
                 Enabled = 1,
 
-                WaitForLauncherLoaded = 2,
-                WaitForDxWindowLoaded = 4,
+                //WaitForLauncherLoaded = 2,
+                //WaitForDxWindowLoaded = 4,
+                //WaitForCharacterLoaded = 64,
+                //WaitForManual = 128,
+                //WaitForPreLaunch = 64 | 128,
+                //WaitForAllFlags = 2 | 4 | 64 | 128,
+
+                WaitUntilComplete = 2,
 
                 CloseOnExit = 8,
                 KillOnExit = 16,
 
                 UseCurrentUser = 32,
+
+            }
+
+            public enum RunAfterWhen : byte
+            {
+                /// <summary>
+                /// Same as manual, only used when disabled
+                /// </summary>
+                None = 0,
+                Manual = 1,
+                BeforeLaunching = 10,
+                AfterLaunching = 20,
+                LoadedLauncher = 30,
+                LoadedCharacterSelect = 40,
+                LoadedCharacter = 50,
             }
 
             public enum RunAfterType
@@ -4715,7 +5630,7 @@ namespace Gw2Launcher
             /// <param name="path">Program path (not used for scripts)</param>
             /// <param name="args">Arguments or commands</param>
             /// <param name="flags">Options</param>
-            public RunAfter(string name, string path, string args, RunAfterOptions flags)
+            public RunAfter(string name, string path, string args, RunAfterOptions flags, RunAfterWhen when)
             {
                 if (!string.IsNullOrEmpty(name))
                 {
@@ -4729,6 +5644,7 @@ namespace Gw2Launcher
 
                 Arguments = args;
                 Options = flags;
+                When = when;
             }
 
             public RunAfterType Type
@@ -4774,9 +5690,23 @@ namespace Gw2Launcher
                 protected set;
             }
 
+            public RunAfterWhen When
+            {
+                get;
+                protected set;
+            }
+
+            public bool Enabled
+            {
+                get
+                {
+                    return (Options & RunAfterOptions.Enabled) != 0;
+                }
+            }
+
             public bool Equals(RunAfter ra)
             {
-                return ra.Options == this.Options && ra.Arguments == this.Arguments && ra.Path == this.Path && ra.Name == this.Name;
+                return ra.Options == this.Options && ra.When == this.When && ra.Arguments == this.Arguments && ra.Path == this.Path && ra.Name == this.Name;
             }
 
             /// <summary>
@@ -4827,6 +5757,1160 @@ namespace Gw2Launcher
             }
         }
 
+        public class Hotkey
+        {
+            public Hotkey(Tools.Hotkeys.HotkeyAction action, Keys keys)
+            {
+                this.Action = action;
+                this.Keys = keys;
+            }
+
+            public Tools.Hotkeys.HotkeyAction Action
+            {
+                get;
+                protected set;
+            }
+
+            public Keys Keys
+            {
+                get;
+                protected set;
+            }
+
+            public virtual void Write(BinaryWriter w)
+            {
+            }
+
+            public virtual void Read(BinaryReader r, ushort version)
+            {
+            }
+        }
+
+        public class AccountGridButtonOffsets : IEquatable<AccountGridButtonOffsets>
+        {
+            public enum Offsets
+            {
+                Name,
+                User,
+                Status,
+            }
+
+            public AccountGridButtonOffsets()
+            {
+                Values = new Point<sbyte>[Enum.GetValues(typeof(Offsets)).Length];
+            }
+
+            public Point<sbyte>[] Values;
+            public ushort Height;
+
+            public Point<sbyte> this[Offsets k]
+            {
+                get
+                {
+                    return Values[(int)k];
+                }
+                set
+                {
+                    Values[(int)k] = value;
+                }
+            }
+
+            public bool Equals(AccountGridButtonOffsets o)
+            {
+                for (var i = Values.Length - 1; i >= 0; --i)
+                {
+                    if (Values[i].X != o.Values[i].X || Values[i].Y != o.Values[i].Y)
+                        return false;
+                }
+
+                return true;
+            }
+
+            public AccountGridButtonOffsets Clone()
+            {
+                var offsets = new AccountGridButtonOffsets();
+                Array.Copy(Values, offsets.Values, Values.Length);
+                offsets.Height = this.Height;
+                return offsets;
+            }
+        }
+
+        public interface IMarker : IEquatable<IMarker>
+        {
+            string Description
+            {
+                get;
+                set;
+            }
+
+            MarkerIconType IconType
+            {
+                get;
+                set;
+            }
+
+            Color IconColor
+            {
+                get;
+                set;
+            }
+
+            string IconPath
+            {
+                get;
+                set;
+            }
+
+            MarkerTriggerCondition[] TriggersShow
+            {
+                get;
+                set;
+            }
+
+            MarkerTriggerCondition[] TriggersHide
+            {
+                get;
+                set;
+            }
+
+            bool HideOnClick
+            {
+                get;
+                set;
+            }
+        }
+
+        private class Marker : IMarker, IEquatable<Marker>
+        {
+            public Marker()
+            {
+            }
+
+            public ushort _UID;
+            public ushort UID
+            {
+                get
+                {
+                    return _UID;
+                }
+                set
+                {
+                    if (_UID != value)
+                    {
+                        _UID = value;
+                        OnValueChanged();
+                    }
+                }
+            }
+
+            public string _Description;
+            public string Description
+            {
+                get
+                {
+                    return _Description;
+                }
+                set
+                {
+                    if (_Description != value)
+                    {
+                        _Description = value;
+                        OnValueChanged();
+                    }
+                }
+            }
+
+            public MarkerIconType _IconType;
+            public MarkerIconType IconType
+            {
+                get
+                {
+                    return _IconType;
+                }
+                set
+                {
+                    if (_IconType != value)
+                    {
+                        _IconType = value;
+                        OnValueChanged();
+                    }
+                }
+            }
+
+            public string _IconPath;
+            public string IconPath
+            {
+                get
+                {
+                    return _IconPath;
+                }
+                set
+                {
+                    if (_IconPath != value)
+                    {
+                        _IconPath = value;
+                        OnValueChanged();
+                    }
+                }
+            }
+
+            public Color _IconColor;
+            public Color IconColor
+            {
+                get
+                {
+                    return _IconColor;
+                }
+                set
+                {
+                    if (_IconColor != value)
+                    {
+                        _IconColor = value;
+                        OnValueChanged();
+                    }
+                }
+            }
+
+            public MarkerTriggerCondition[] _TriggersShow;
+            public MarkerTriggerCondition[] TriggersShow
+            {
+                get
+                {
+                    return _TriggersShow;
+                }
+                set
+                {
+                    if (_TriggersShow != value)
+                    {
+                        _TriggersShow = value;
+                        OnValueChanged();
+                    }
+                }
+            }
+
+            public MarkerTriggerCondition[] _TriggersHide;
+            public MarkerTriggerCondition[] TriggersHide
+            {
+                get
+                {
+                    return _TriggersHide;
+                }
+                set
+                {
+                    if (_TriggersHide != value)
+                    {
+                        _TriggersHide = value;
+                        OnValueChanged();
+                    }
+                }
+            }
+
+            public bool _HideOnClick;
+            public bool HideOnClick
+            {
+                get
+                {
+                    return _HideOnClick;
+                }
+                set
+                {
+                    if (_HideOnClick != value)
+                    {
+                        _HideOnClick = value;
+                        OnValueChanged();
+                    }
+                }
+            }
+
+            public bool Equals(Marker m)
+            {
+                return this._HideOnClick == m._HideOnClick
+                    && this._IconColor == m._IconColor
+                    && this._IconPath == m._IconPath
+                    && this._IconType == m._IconType
+                    && this._Description == m._Description
+                    && Util.Array.Equals<MarkerTriggerCondition>(this._TriggersHide, m._TriggersHide)
+                    && Util.Array.Equals<MarkerTriggerCondition>(this._TriggersShow, m._TriggersShow);
+            }
+
+            public bool Equals(IMarker m)
+            {
+                return Equals((Marker)m);
+            }
+        }
+
+        public class AccountMarker
+        {
+            public event EventHandler LastSetUtcChanged;
+            public event EventHandler VisibleChanged;
+
+            public AccountMarker(IMarker marker)
+            {
+                this.Settings = marker;
+            }
+
+            public IMarker Settings
+            {
+                get;
+                private set;
+            }
+
+            private DateTime _LastSetUtc;
+            /// <summary>
+            /// Automatically set when visibility is changed
+            /// </summary>
+            public DateTime LastSetUtc
+            {
+                get
+                {
+                    return _LastSetUtc;
+                }
+                set
+                {
+                    if (_LastSetUtc != value)
+                    {
+                        _LastSetUtc = value;
+                        OnValueChanged();
+                        if (LastSetUtcChanged != null)
+                            LastSetUtcChanged(this, EventArgs.Empty);
+                    }
+                }
+            }
+
+            private bool _Visible;
+            public bool Visible
+            {
+                get
+                {
+                    return _Visible;
+                }
+                set
+                {
+                    if (_Visible != value)
+                    {
+                        _Visible = value;
+                        _LastSetUtc = DateTime.UtcNow;
+                        OnValueChanged();
+                        if (VisibleChanged != null)
+                            VisibleChanged(this, EventArgs.Empty);
+                        if (LastSetUtcChanged != null)
+                            LastSetUtcChanged(this, EventArgs.Empty);
+                    }
+                }
+            }
+        }
+
+        public abstract class MarkerTriggerCondition : IEquatable<MarkerTriggerCondition>
+        {
+            public enum TriggerType : byte
+            {
+                None = 0,
+                Manual = 1,
+                TimeOfDay = 2,
+                DayOfWeek = 3,
+                DayOfMonth = 4,
+                DayOfYear = 5,
+                DurationInMinutes = 6,
+                DurationInMinutesInterval = 7,
+                Map = 8,
+                MapCoordinate = 9,
+            }
+
+            public virtual TriggerType Type
+            {
+                get
+                {
+                    return TriggerType.None;
+                }
+            }
+
+            public string Description
+            {
+                get;
+                set;
+            }
+
+            public abstract bool Equals(MarkerTriggerCondition m);
+        }
+
+        public class MarkerTriggerManual : MarkerTriggerCondition
+        {
+            public override MarkerTriggerCondition.TriggerType Type
+            {
+                get
+                {
+                    return TriggerType.Manual;
+                }
+            }
+
+            public override string ToString()
+            {
+                return "On click";
+            }
+
+            public override bool Equals(MarkerTriggerCondition m)
+            {
+                return this.Type == m.Type;
+            }
+        }
+        
+        public abstract class MarkerTriggerTime : MarkerTriggerCondition
+        {
+            protected TriggerType type;
+            protected int value;
+
+            protected MarkerTriggerTime(TriggerType type)
+            {
+                this.type = type;
+            }
+
+            public override MarkerTriggerCondition.TriggerType Type
+            {
+                get
+                {
+                    return type;
+                }
+            }
+
+            /// <summary>
+            /// Total minutes from the starting point, which is either relative or counted from the start of the day if applicable
+            /// </summary>
+            public abstract int TotalMinutes
+            {
+                get;
+            }
+
+            public int Hour
+            {
+                get
+                {
+                    return TotalMinutes / 60;
+                }
+            }
+
+            public int Minute
+            {
+                get
+                {
+                    return TotalMinutes % 60;
+                }
+            }
+
+            public abstract DateTimeKind Kind
+            {
+                get;
+            }
+
+            public virtual TimeSpan Time
+            {
+                get
+                {
+                    return new TimeSpan(0, TotalMinutes, 0);
+                }
+            }
+
+            /// <summary>
+            /// Returns the next reset in UTC, from the given time (returned date may already be expired)
+            /// </summary>
+            public DateTime GetNext(DateTime from)
+            {
+                if (Kind == DateTimeKind.Local)
+                {
+                    if (from.Kind != DateTimeKind.Local)
+                        from = from.ToLocalTime();
+                    return GetNextInternal(from).ToUniversalTime();
+                }
+                else
+                {
+                    if (from.Kind != DateTimeKind.Utc)
+                        from = from.ToUniversalTime();
+                    return GetNextInternal(from);
+                }
+            }
+
+            protected abstract DateTime GetNextInternal(DateTime from);
+
+            /// <summary>
+            /// Returns the next reset in UTC, from the current time
+            /// </summary>
+            public virtual DateTime GetNext()
+            {
+                if (Kind == DateTimeKind.Local)
+                {
+                    return GetNextInternal(DateTime.Now).ToUniversalTime();
+                }
+                else
+                {
+                    return GetNextInternal(DateTime.UtcNow);
+                }
+            }
+
+            public int ToBinary()
+            {
+                return value;
+            }
+
+            public static MarkerTriggerTime From(TriggerType type, int value)
+            {
+                MarkerTriggerTime m;
+
+                switch (type)
+                {
+                    case TriggerType.DayOfMonth:
+                        m = new MarkerTriggerDayOfMonth();
+                        break;
+                    case TriggerType.DayOfWeek:
+                        m = new MarkerTriggerDayOfWeek();
+                        break;
+                    case TriggerType.DayOfYear:
+                        m = new MarkerTriggerDayOfYear();
+                        break;
+                    case TriggerType.TimeOfDay:
+                        m = new MarkerTriggerTimeOfDay();
+                        break;
+                    case TriggerType.DurationInMinutes:
+                        m = new MarkerTriggerDurationMinutes();
+                        break;
+                    case TriggerType.DurationInMinutesInterval:
+                        m = new MarkerTriggerDurationMinutesInterval();
+                        break;
+                    default:
+                        return null;
+                }
+
+                m.value = value;
+
+                return m;
+            }
+
+            public static MarkerTriggerTime From(TriggerType type, DateTime date, TimeSpan time)
+            {
+                var utc = date.Kind != DateTimeKind.Local;
+
+                switch (type)
+                {
+                    case TriggerType.DayOfMonth:
+                        return new MarkerTriggerDayOfMonth(date.Add(time), utc);
+                    case TriggerType.DayOfWeek:
+                        return new MarkerTriggerDayOfWeek(date.Add(time), utc);
+                    case TriggerType.DayOfYear:
+                        return new MarkerTriggerDayOfYear(date.Add(time), utc);
+                    case TriggerType.TimeOfDay:
+                        return new MarkerTriggerTimeOfDay(date.Add(time), utc);
+                    case TriggerType.DurationInMinutes:
+                        return new MarkerTriggerDurationMinutes((int)time.TotalMinutes);
+                    case TriggerType.DurationInMinutesInterval:
+                        return new MarkerTriggerDurationMinutesInterval((int)time.TotalMinutes, date);
+                    default:
+                        return null;
+                }
+            }
+
+            public override bool Equals(MarkerTriggerCondition m)
+            {
+                if (m is MarkerTriggerTime)
+                {
+                    var mt = (MarkerTriggerTime)m;
+                    return this.type == mt.type && this.value == mt.value;
+                }
+                return false;
+            }
+        }
+
+        public abstract class MarkerTriggerDateTime : MarkerTriggerTime
+        {
+            protected const int UTC_FLAG = 1 << 31;
+
+            protected MarkerTriggerDateTime(TriggerType type)
+                : base(type)
+            { }
+
+            protected void SetValue(bool utc, byte month, byte day, int time)
+            {
+                value = time | day << 15 | month << 23;
+                if (utc)
+                    value |= UTC_FLAG;
+            }
+
+            protected int GetMonth()
+            {
+                return value >> 23 & 0xFF;
+            }
+
+            protected int GetDay()
+            {
+                return value >> 15 & 0xFF;
+            }
+
+            public override DateTimeKind Kind
+            {
+                get
+                {
+                    return (value & UTC_FLAG) == UTC_FLAG ? DateTimeKind.Utc : DateTimeKind.Local;
+                }
+            }
+
+            public override int TotalMinutes
+            {
+                get 
+                {
+                    return value & 0x7FF;
+                }
+            }
+
+            public virtual DateTime Date
+            {
+                get
+                {
+                    if (Kind == DateTimeKind.Local)
+                        return DateTime.Now.Date;
+                    return DateTime.UtcNow.Date;
+                }
+            }
+        }
+
+        public class MarkerTriggerDurationMinutes : MarkerTriggerTime
+        {
+            public MarkerTriggerDurationMinutes()
+                : base(TriggerType.DurationInMinutes)
+            {
+            }
+
+            protected MarkerTriggerDurationMinutes(TriggerType type)
+                :base(type)
+            {
+            }
+
+            public MarkerTriggerDurationMinutes(int minutes)
+                : this()
+            {
+                value = minutes;
+            }
+
+            public override int TotalMinutes
+            {
+                get 
+                {
+                    return value;
+                }
+            }
+
+            public override DateTimeKind Kind
+            {
+                get
+                {
+                    return DateTimeKind.Utc;
+                }
+            }
+
+            protected override DateTime GetNextInternal(DateTime from)
+            {
+                return from.AddMinutes(this.TotalMinutes);
+            }
+
+            public override string ToString()
+            {
+                var h = Hour;
+                var m = Minute;
+                var sb = new StringBuilder(25);
+
+                sb.Append("After ");
+                //After 23 hours 59 minutes
+
+                if (h > 24)
+                {
+                    var d = h / 24;
+                    h -= d * 24;
+
+                    sb.Append(d);
+                    sb.Append(d == 1 ? " day " : " days ");
+                }
+
+                if (h > 0)
+                {
+                    sb.Append(h);
+                    sb.Append(h == 1 ? " hour " : " hours ");
+                    m = 0;
+                }
+
+                if (m > 0 || TotalMinutes == 0)
+                {
+                    sb.Append(m);
+                    sb.Append(m == 1 ? " minute " : " minutes ");
+                }
+
+                --sb.Length;
+                return sb.ToString();
+            }
+        }
+
+        public class MarkerTriggerDurationMinutesInterval : MarkerTriggerTime
+        {
+            public MarkerTriggerDurationMinutesInterval()
+                : base(TriggerType.DurationInMinutesInterval)
+            {
+            }
+
+            public MarkerTriggerDurationMinutesInterval(int minutes, DateTime origin)
+                : this()
+            {
+                value = minutes;
+                Origin = origin;
+            }
+
+            public DateTime Origin
+            {
+                get;
+                private set;
+            }
+
+            public override int TotalMinutes
+            {
+                get
+                {
+                    return value;
+                }
+            }
+
+            public override DateTimeKind Kind
+            {
+                get
+                {
+                    return DateTimeKind.Utc;
+                }
+            }
+
+            protected override DateTime GetNextInternal(DateTime from)
+            {
+                if (Origin.Kind == DateTimeKind.Local)
+                {
+                    var m = ((int)from.ToLocalTime().Subtract(Origin).TotalMinutes / TotalMinutes + 1) * TotalMinutes;
+                    return Origin.AddMinutes(m).ToUniversalTime();
+                }
+                else
+                {
+                    var m = ((int)from.Subtract(Origin).TotalMinutes / TotalMinutes + 1) * TotalMinutes;
+                    return Origin.AddMinutes(m);
+                }
+            }
+
+            public override bool Equals(MarkerTriggerCondition m)
+            {
+                if (m is MarkerTriggerDurationMinutesInterval)
+                {
+                    var mt = (MarkerTriggerDurationMinutesInterval)m;
+                    return this.type == mt.type && this.value == mt.value && this.Origin == mt.Origin;
+                }
+                return false;
+            }
+        }
+
+        public class MarkerTriggerTimeOfDay : MarkerTriggerDateTime
+        {
+            public MarkerTriggerTimeOfDay()
+                : base(TriggerType.TimeOfDay)
+            {
+            }
+
+            public MarkerTriggerTimeOfDay(byte hours, byte minutes, bool utc)
+                : this()
+            {
+                SetValue(utc, 0, 0, hours * 60 + minutes);
+            }
+
+            public MarkerTriggerTimeOfDay(DateTime d, bool utc)
+                : this((byte)d.Hour, (byte)d.Minute, utc)
+            {
+            }
+
+            protected override DateTime GetNextInternal(DateTime from)
+            {
+                var d = from.Date.AddMinutes(this.TotalMinutes);
+                if (from >= d)
+                    return d.AddDays(1);
+                return d;
+            }
+
+            public override string ToString()
+            {
+                return "Daily at " + Date.Add(Time).ToString("H:mm") + (Kind != DateTimeKind.Local ? " UTC" : "");
+            }
+        }
+
+        public class MarkerTriggerDayOfYear : MarkerTriggerDateTime
+        {
+            public MarkerTriggerDayOfYear()
+                : base(TriggerType.DayOfYear)
+            {
+            }
+
+            public MarkerTriggerDayOfYear(byte month, byte day, byte hours, byte minutes, bool utc)
+                : this()
+            {
+                SetValue(utc, month, day, hours * 60 + minutes);
+            }
+
+            public MarkerTriggerDayOfYear(DateTime d, bool utc)
+                : this((byte)d.Month, (byte)d.Day, (byte)d.Hour, (byte)d.Minute, utc)
+            {
+            }
+
+            public int Day
+            {
+                get
+                {
+                    return GetDay();
+                }
+            }
+
+            public int Month
+            {
+                get
+                {
+                    return GetMonth();
+                }
+            }
+
+            public override DateTime Date
+            {
+                get
+                {
+                    var d = base.Date;
+                    var month = Month;
+                    var day = Day;
+                    var year = d.Year;
+                    var days = DateTime.DaysInMonth(year, month);
+
+                    if (days < day)
+                    {
+                        var b = DateTime.IsLeapYear(year);
+                        while (true)
+                        {
+                            ++year;
+                            if (DateTime.IsLeapYear(year) != b)
+                            {
+                                var days2 = DateTime.DaysInMonth(year, month);
+                                if (days2 > days)
+                                {
+                                    if (days2 < day)
+                                        day = days2;
+                                }
+                                else
+                                {
+                                    day = days;
+                                }
+                                break;
+                            }
+                        }
+                    }
+
+                    return new DateTime(year, month, day, 0, 0, 0, 0, Kind);
+                }
+            }
+
+            protected override DateTime GetNextInternal(DateTime from)
+            {
+                var month = Month;
+                var days = DateTime.DaysInMonth(from.Year, month);
+                var d = new DateTime(from.Year, month, days < Day ? days : Day, this.Hour, this.Minute, 0, 0, from.Kind);
+
+                if (d <= from)
+                {
+                    days = DateTime.DaysInMonth(from.Year + 1, month);
+                    d = new DateTime(from.Year + 1, month, days < Day ? days : Day, this.Hour, this.Minute, 0, 0, from.Kind);
+                }
+
+                return d;
+            }
+
+            public override string ToString()
+            {
+                var d = Date.Add(Time);
+                return "Yearly on " + d.ToString("MMMM d") + " at " + d.ToString("H:mm") + (Kind != DateTimeKind.Local ? " UTC" : "");
+            }
+        }
+
+        public class MarkerTriggerDayOfWeek : MarkerTriggerDateTime
+        {
+            public MarkerTriggerDayOfWeek()
+                : base(TriggerType.DayOfWeek)
+            {
+            }
+
+            public MarkerTriggerDayOfWeek(DayOfWeek day, byte hours, byte minutes, bool utc)
+                : this()
+            {
+                SetValue(utc, 0, (byte)day, hours * 60 + minutes);
+            }
+
+            public MarkerTriggerDayOfWeek(DateTime d, bool utc)
+                : this(d.DayOfWeek, (byte)d.Hour, (byte)d.Minute, utc)
+            {
+            }
+
+            public DayOfWeek DayOfWeek
+            {
+                get
+                {
+                    return (DayOfWeek)GetDay();
+                }
+            }
+
+            public override DateTime Date
+            {
+                get
+                {
+                    var d = base.Date;
+                    var days = this.DayOfWeek - d.DayOfWeek;
+
+                    return days != 0 ? d.AddDays(days) : d;
+                }
+            }
+
+            protected override DateTime GetNextInternal(DateTime from)
+            {
+                var day = this.DayOfWeek - from.DayOfWeek;
+                var d = new DateTime(from.Year, from.Month, from.Day, this.Hour, this.Minute, 0, 0, from.Kind);
+                if (day < 0 || day == 0 && from >= d)
+                    day += 7;
+                if (day > 0)
+                    return d.AddDays(day);
+                else
+                    return d;
+            }
+
+            public override string ToString()
+            {
+                var d = Date.Add(Time);
+                return "Weekly on " + d.ToString("dddd") + " at " + d.ToString("H:mm") + (Kind != DateTimeKind.Local ? " UTC" : "");
+            }
+        }
+
+        public class MarkerTriggerDayOfMonth : MarkerTriggerDateTime
+        {
+            public MarkerTriggerDayOfMonth()
+                : base(TriggerType.DayOfMonth)
+            {
+            }
+
+            public MarkerTriggerDayOfMonth(byte day, byte hours, byte minutes, bool utc)
+                : this()
+            {
+                SetValue(utc, 0, day, hours * 60 + minutes);
+            }
+
+            public MarkerTriggerDayOfMonth(DateTime d, bool utc)
+                : this((byte)d.Day, (byte)d.Hour, (byte)d.Minute, utc)
+            {
+            }
+
+            public int Day
+            {
+                get
+                {
+                    return GetDay();
+                }
+            }
+
+            public override DateTime Date
+            {
+                get
+                {
+                    var d = base.Date;
+                    var day = Day;
+                    var days = DateTime.DaysInMonth(d.Year, d.Month);
+
+                    if (day > days)
+                    {
+                        for (var i = 0; i < 12; i++)
+                        {
+                            d = d.AddMonths(1);
+                            days = DateTime.DaysInMonth(d.Year, d.Month);
+
+                            if (days >= day)
+                            {
+                                return new DateTime(d.Year, d.Month, day, 0, 0, 0, Kind);
+                            }
+                        }
+
+                        day = days;
+                    }
+
+                    return new DateTime(d.Year, d.Month, day, 0, 0, 0, Kind);
+                }
+            }
+
+            protected override DateTime GetNextInternal(DateTime from)
+            {
+                var day = this.Day;
+                int days;
+
+                //var days = DateTime.DaysInMonth(from.Year, from.Month);
+                //var d = new DateTime(from.Year, from.Month, days < day ? days : day, this.Hour, this.Minute, 0, 0, from.Kind);
+
+                //if (from >= d)
+                //{
+                //    d = d.AddMonths(1);
+                //    if (d.Day != day)
+                //    {
+                //        days = DateTime.DaysInMonth(d.Year, d.Month);
+                //        if (d.Day != days)
+                //        {
+                //            d = new DateTime(d.Year, d.Month, days < day ? days : day, d.Hour, d.Minute, 0, 0, from.Kind);
+                //        }
+                //    }
+                //}
+
+                if (from.Day <= day)
+                {
+                    days = DateTime.DaysInMonth(from.Year, from.Month);
+                    var d = new DateTime(from.Year, from.Month, days < day ? days : day, this.Hour, this.Minute, 0, 0, from.Kind);
+                    if (from < d)
+                        return d;
+                }
+
+                var month = from.Month % 12 + 1;
+                var year = from.Month == 12 ? from.Year + 1 : from.Year;
+
+                days = DateTime.DaysInMonth(year, month);
+                return new DateTime(year, month, days < day ? days : day, this.Hour, this.Minute, 0, 0, from.Kind);
+
+                //if (from.Day < day)
+                //{
+                //    days = DateTime.DaysInMonth(from.Year, from.Month);
+                //    if (from.Day == days)
+                //    {
+                //        from = from.AddMonths(1);
+                //        days = DateTime.DaysInMonth(from.Year, from.Month);
+                //    }
+                //}
+                //else
+                //{
+                //    from = from.AddMonths(1);
+                //    days = DateTime.DaysInMonth(from.Year, from.Month);
+                //}
+
+                //if (days < day)
+                //    day = days;
+
+                //return new DateTime(from.Year, from.Month, day, this.Hour, this.Minute, 0, 0, from.Kind);
+            }
+
+            public override string ToString()
+            {
+                var d = Date.Add(Time);
+                return "Monthly on " + d.ToString("dd") + " at " + d.ToString("H:mm") + (Kind != DateTimeKind.Local ? " UTC" : "");
+            }
+        }
+
+        public class MarkerTriggerMap : MarkerTriggerCondition
+        {
+            public MarkerTriggerMap(uint mapId)
+            {
+                this.Map = mapId;
+            }
+
+            public override TriggerType Type
+            {
+                get
+                {
+                    return TriggerType.Map;
+                }
+            }
+
+            public uint Map
+            {
+                get;
+                protected set;
+            }
+
+            public override string ToString()
+            {
+                return "Map " + Map;
+            }
+
+            public override bool Equals(MarkerTriggerCondition m)
+            {
+                if (m is MarkerTriggerMap)
+                {
+                    var mt = (MarkerTriggerMap)m;
+                    return this.Type == mt.Type && this.Map == mt.Map;
+                }
+                return false;
+            }
+        }
+
+        public class MarkerTriggerMapCoordinate : MarkerTriggerMap
+        {
+            public MarkerTriggerMapCoordinate(uint mapId, float x, float y, float z, float radius)
+                : base(mapId)
+            {
+                this.X = x;
+                this.Y = y;
+                this.Z = z;
+                this.Radius = radius;
+            }
+
+            public override TriggerType Type
+            {
+                get
+                {
+                    return TriggerType.MapCoordinate;
+                }
+            }
+
+            /// <summary>
+            /// X coordinate in meters (mumble format)
+            /// </summary>
+            public float X
+            {
+                get;
+                protected set;
+            }
+
+            /// <summary>
+            /// Y coordinate in meters (mumble format)
+            /// </summary>
+            public float Y
+            {
+                get;
+                protected set;
+            }
+
+            /// <summary>
+            /// Z coordinate in meters (mumble format; positive is up into the sky)
+            /// </summary>
+            public float Z
+            {
+                get;
+                protected set;
+            }
+
+            /// <summary>
+            /// Radius in meters (mumble format)
+            /// </summary>
+            public float Radius
+            {
+                get;
+                protected set;
+            }
+
+            public override string ToString()
+            {
+                return string.Format("Map {0} within {1} of [{2:0.##}, {3:0.##}, {4:0.##}]", Map, Radius, X, Y, Z);
+            }
+
+            public override bool Equals(MarkerTriggerCondition m)
+            {
+                if (m is MarkerTriggerMapCoordinate)
+                {
+                    var mt = (MarkerTriggerMapCoordinate)m;
+                    return this.Type == mt.Type && this.Map == mt.Map && this.X == mt.X && this.Y == mt.Y && this.Z == mt.Z && this.Radius == mt.Radius;
+                }
+                return false;
+            }
+        }
+
         #endregion
 
         private static object _lock = new object();
@@ -4838,6 +6922,7 @@ namespace Gw2Launcher
         private static ushort _datUID;
         private static ushort _gfxUID;
         private static ushort _gwdatUID;
+        private static bool _loading;
 
         static Settings()
         {
@@ -4853,6 +6938,8 @@ namespace Gw2Launcher
                 typeof(UI.formNotes),
                 typeof(UI.formAccountBar),
                 typeof(UI.formSettings),
+                typeof(UI.WindowPositioning.formTemplates),
+                typeof(UI.WindowPositioning.formTemplatesCompact),
             };
 
             _WindowBounds = new KeyedProperty<Type, Rectangle>();
@@ -4898,7 +6985,7 @@ namespace Gw2Launcher
             _ShowDailies = new SettingValue<DailiesMode>();
             _HiddenDailyCategories = new KeyedProperty<byte, bool>();
             _BackgroundPatchingProgress = new SettingValue<Rectangle>();
-            _NetworkAuthorization = new SettingValue<NetworkAuthorizationFlags>();
+            _Network = new SettingValue<NetworkOptions>();
             _ScreenshotNaming = new SettingValue<string>();
             _ScreenshotConversion = new SettingValue<ScreenshotConversionOptions>();
             _DeleteCrashLogsOnLaunch = new SettingValue<bool>();
@@ -4942,7 +7029,7 @@ namespace Gw2Launcher
             _StyleColumns = new SettingValue<byte>();
             _Sorting = new SettingValue<SortingOptions>();
             _StyleBackgroundImage = new SettingValue<string>();
-            _StyleColors = new SettingValue<AccountGridButtonColors>();
+            _StyleColors = new SettingValue<UiColors>();
             _WindowTemplates = new ListProperty<WindowTemplate>();
             _LaunchBehindOtherAccounts = new SettingValue<bool>();
             _LaunchLimiter = new SettingValue<LaunchLimiterOptions>();
@@ -4955,16 +7042,67 @@ namespace Gw2Launcher
             _ActionInactiveMClick = new SettingValue<ButtonAction>();
             _AuthenticatorPastingEnabled = new SettingValue<bool>();
             _ProcessPriority = new SettingValue<ProcessPriorityClass>();
-            _PublicIPAddress = new SettingValue<byte[]>();
+            _IPAddresses = new SettingValue<Net.IP.WildcardAddress[]>();
+            _HotkeysEnabled = new SettingValue<bool>();
+            _Hotkeys = new SettingValue<Hotkey[]>();
+            _StyleGridSpacing = new SettingValue<byte>();
+            _StyleOffsets = new SettingValue<AccountGridButtonOffsets>();
+            _WindowManagerOptions = new SettingValue<WindowManagerFlags>();
+            _StyleDisableWindowShadows = new SettingValue<bool>();
+            _StyleDisableSearchOnKeyPress = new SettingValue<bool>();
+            _TemplateBarOptions = new SettingValue<TemplateBarOptions>();
+            _TemplateBarSorting = new SettingValue<TemplateBar.SortMode>();
+            _TemplateBarDisplaySize = new SettingValue<byte>();
+            _ShowAccountBarToggle = new SettingValue<bool>();
+            _ShowMinimizeRestoreAll = new SettingValue<bool>();
+            _StyleShowDailyLoginDay = new SettingValue<DailyLoginDayIconFlags>();
+            _AffinityValues = new ListProperty<AffinityValue>();
+            _StyleDisablePageOnKeyPress = new SettingValue<bool>();
+            _ShowWindowTemplatesToggle = new SettingValue<bool>();
+            _DxTimeout = new SettingValue<byte>();
+            _ForceTaskbarGrouping = new SettingValue<bool>();
+            _StyleHighlightActive = new SettingValue<bool>();
+            _HideInitialWindow = new SettingValue<bool>();
+            _RunAfterPopupSorting = new SettingValue<RunAfterPopupSorting>();
+            _RunAfterPopupFilter = new SettingValue<RunAfterPopupFilter>();
+            _RunAfterPopupOptions = new SettingValue<RunAfterPopupOptions>();
+            _ShowDailiesLanguage = new SettingValue<Language>();
+            _LoginTweaks = new SettingValue<LoginTweaks>();
+            _LauncherTweaks = new SettingValue<LauncherTweaks>();
+            _SteamPath = new SettingValue<string>();
+            _SteamTimeout = new SettingValue<byte>();
+            _SteamLimitation = new SettingValue<SteamLimitation>();
+            _DisableMumbleLinkDailyLogin = new SettingValue<bool>();
+            _DisableAutomaticLogins = new SettingValue<bool>();
+            _DisableRunAfter = new SettingValue<bool>();
         }
 
+        /// <summary>
+        /// Loads saved settings, falling back to loading backups if necessary
+        /// </summary>
         public static void Load()
         {
             var path = _settingsFile.Path;
             var temp = _settingsFile.Temp;
 
+            if (ReadOnly)
+            {
+                _loading = true;
+                try
+                {
+                    Load(path);
+                }
+                finally
+                {
+                    _loading = false;
+                }
+                return;
+            }
+
             try
             {
+                _loading = true;
+
                 var tmp = new FileInfo(temp);
                 ushort version;
 
@@ -5024,6 +7162,10 @@ namespace Gw2Launcher
                 if (failed)
                     SetDefaults();
             }
+            finally
+            {
+                _loading = false;
+            }
         }
 
         public static void SetDefaults()
@@ -5034,7 +7176,8 @@ namespace Gw2Launcher
 
         private static void OnValueChanged()
         {
-            DelayedWrite();
+            if (!_loading)
+                DelayedWrite();
         }
 
         private static void DelayedWrite()
@@ -5132,12 +7275,21 @@ namespace Gw2Launcher
 
             return bytes;
         }
-
-        public static bool[] ExpandBooleans(byte[] bytes)
+        
+        /// <summary>
+        /// Expands booleans stored as bits
+        /// </summary>
+        /// <param name="minimumLength">Ensures a minimum number of returned booleans</param>
+        public static bool[] ExpandBooleans(byte[] bytes, int minimumLength = 0)
         {
-            bool[] bools = new bool[bytes.Length * 8];
+            int l = bytes.Length * 8;
+            if (minimumLength > l)
+                l = minimumLength;
 
-            for (int i = 0; i < bytes.Length; i++)
+            bool[] bools = new bool[l];
+            l = bytes.Length;
+
+            for (int i = 0; i < l; i++)
             {
                 var b = bytes[i];
                 if (b > 0)
@@ -5194,9 +7346,89 @@ namespace Gw2Launcher
             writer.Write(r.Height);
         }
 
+        private static void Write(BinaryWriter writer, string s)
+        {
+            if (s == null)
+                writer.Write("");
+            else
+                writer.Write(s);
+        }
+
+        private static void Write(BinaryWriter writer, RunAfter[] ra)
+        {
+            if (ra == null)
+            {
+                WriteVariableLength(writer, 0);
+                return;
+            }
+
+            WriteVariableLength(writer, ra.Length);
+            foreach (var r in ra)
+            {
+                writer.Write(r.Name == null ? "" : r.Name);
+                writer.Write(r.Path == null ? "" : r.Path);
+                writer.Write(r.Arguments);
+                writer.Write((byte)r.Options);
+                writer.Write((byte)r.When);
+            }
+        }
+
         private static Rectangle ReadRectangle(BinaryReader reader)
         {
             return new Rectangle(reader.ReadInt32(), reader.ReadInt32(), reader.ReadInt32(), reader.ReadInt32());
+        }
+
+        private static RunAfter[] ReadRunAfter(BinaryReader reader, ushort version)
+        {
+            if (version >= 14)
+            {
+                var ras = new RunAfter[ReadVariableLength(reader)];
+
+                for (var i = 0; i < ras.Length; i++)
+                {
+                    ras[i] = new RunAfter(reader.ReadString(), reader.ReadString(), reader.ReadString(), (RunAfter.RunAfterOptions)reader.ReadByte(), (RunAfter.RunAfterWhen)reader.ReadByte());
+                }
+
+                return ras;
+            }
+            else if (version >= 10)
+            {
+                var ras = new RunAfter[ReadVariableLength(reader)];
+
+                for (var i = 0; i < ras.Length; i++)
+                {
+                    var s = new string[] { reader.ReadString(), reader.ReadString(), reader.ReadString() };
+                    var o = reader.ReadByte();
+                    var raw = RunAfter.RunAfterWhen.AfterLaunching;
+
+                    switch (o & (2 | 4 | 64 | 128))
+                    {
+                        case 2:
+                            raw = RunAfter.RunAfterWhen.LoadedLauncher;
+                            break;
+                        case 4:
+                            raw = RunAfter.RunAfterWhen.LoadedCharacterSelect;
+                            break;
+                        case 64:
+                            raw = RunAfter.RunAfterWhen.LoadedCharacter;
+                            break;
+                        case 128:
+                            raw = RunAfter.RunAfterWhen.Manual;
+                            break;
+                    }
+
+                    ras[i] = new RunAfter(s[0], s[1], s[2], (RunAfter.RunAfterOptions)(o & ~(2 | 4 | 64 | 128)), raw);
+                }
+
+                return ras;
+            }
+            else
+            {
+                return new RunAfter[]
+                {
+                    new RunAfter(null, null, reader.ReadString(), RunAfter.RunAfterOptions.Enabled, RunAfter.RunAfterWhen.AfterLaunching),
+                };
+            }
         }
 
         private static Exception Write()
@@ -5206,1069 +7438,9 @@ namespace Gw2Launcher
 
             try
             {
-                IO.CrcStream crc;
-
-                using (var writer = new BinaryWriter(crc = new IO.CrcStream(new BufferedStream(File.Open(_settingsFile.Temp, FileMode.Create, FileAccess.Write, FileShare.Read)), false)))
+                using (var stream = new BufferedStream(File.Open(_settingsFile.Temp, FileMode.Create, FileAccess.Write, FileShare.Read)))
                 {
-                    writer.Write(HEADER);
-                    writer.Write(VERSION);
-
-                    bool[] booleans;
-
-                    lock (_WindowBounds)
-                    {
-                        var count = _WindowBounds.Count;
-                        var items = new KeyValuePair<Type, Rectangle>[count];
-                        int i = 0;
-
-                        foreach (var key in _WindowBounds.Keys)
-                        {
-                            if (i == count)
-                                break;
-                            var o = _WindowBounds[key];
-                            if (o.HasValue)
-                            {
-                                items[i++] = new KeyValuePair<Type, Rectangle>(key, o.Value);
-                            }
-                        }
-
-                        count = i;
-
-                        writer.Write((byte)count);
-
-                        for (i = 0; i < count; i++)
-                        {
-                            var item = items[i];
-
-                            writer.Write(GetWindowID(item.Key));
-
-                            writer.Write(item.Value.X);
-                            writer.Write(item.Value.Y);
-                            writer.Write(item.Value.Width);
-                            writer.Write(item.Value.Height);
-                        }
-                    }
-
-                    booleans = new bool[]
-                    {
-                        //0
-                        _Sorting.HasValue,
-                        _Encryption.HasValue,
-                        _StoreCredentials.HasValue,
-                        _ShowTray.HasValue,
-                        _MinimizeToTray.HasValue,
-                        _BringToFrontOnExit.HasValue,
-                        _DeleteCacheOnLaunch.HasValue,
-                        _GuildWars2._Path.HasValue && !string.IsNullOrWhiteSpace(_GuildWars2._Path.Value),
-                        //8
-                        _GuildWars2._Arguments.HasValue && !string.IsNullOrWhiteSpace(_GuildWars2._Arguments.Value),
-                        _LastKnownBuild.HasValue,
-                        _FontName.HasValue,
-                        _FontStatus.HasValue,
-                        _StyleShowAccount.HasValue,
-                        _StoreCredentials.Value,
-                        _ShowTray.Value,
-                        _MinimizeToTray.Value,
-                        //16
-                        _BringToFrontOnExit.Value,
-                        _DeleteCacheOnLaunch.Value,
-                        _StyleShowAccount.Value,
-                        _CheckForNewBuilds.HasValue,
-                        _LastProgramVersion.HasValue,
-                        _AutoUpdateInterval.HasValue,
-                        _AutoUpdate.HasValue,
-                        _BackgroundPatchingEnabled.HasValue,
-                        //24
-                        _BackgroundPatchingLang.HasValue,
-                        _BackgroundPatchingNotifications.HasValue,
-                        _BackgroundPatchingMaximumThreads.HasValue,
-                        _PatchingSpeedLimit.HasValue,
-                        _PatchingOptions.HasValue,
-                        _GuildWars2._RunAfter.HasValue,
-                        _GuildWars2._Volume.HasValue,
-                        _LocalAssetServerEnabled.HasValue,
-                        //32
-                        _CheckForNewBuilds.Value,
-                        _AutoUpdate.Value,
-                        _BackgroundPatchingEnabled.Value,
-                        _LocalAssetServerEnabled.Value,
-                        _PatchingPort.HasValue,
-                        _WindowCaption.HasValue && !string.IsNullOrWhiteSpace(_WindowCaption.Value),
-                        _PreventTaskbarGrouping.HasValue,
-                        _PreventTaskbarGrouping.Value,
-                        //40
-                        _GuildWars2._AutomaticRememberedLogin.HasValue,
-                        _GuildWars2._Mute.HasValue,
-                        _GuildWars2._ClientPort.HasValue,
-                        _GuildWars2._ScreenshotsFormat.HasValue,
-                        _GuildWars2._ScreenshotsLocation.HasValue,
-                        _TopMost.HasValue,
-                        _GuildWars2._VirtualUserPath.HasValue,
-                        _GuildWars2._VirtualUserPath.IsPending,
-                        //48
-                        _ActionActiveLClick.HasValue,
-                        _ActionActiveLPress.HasValue,
-                        _ShowDailies.HasValue,
-                        _BackgroundPatchingProgress.HasValue,
-                        _NetworkAuthorization.HasValue,
-                        _ScreenshotNaming.HasValue,
-                        _ScreenshotConversion.HasValue,
-                        _DeleteCrashLogsOnLaunch.HasValue,
-                        //56
-                        _GuildWars2._ProcessPriority.HasValue,
-                        _GuildWars2._ProcessAffinity.HasValue,
-                        _GuildWars2._PrioritizeCoherentUI.HasValue,
-                        _NotesNotifications.HasValue,
-                        _MaxPatchConnections.HasValue,
-                        _GuildWars2._AutomaticRememberedLogin.Value,
-                        _TopMost.Value,
-                        _DeleteCrashLogsOnLaunch.Value,
-                        //64
-                        _GuildWars2._PrioritizeCoherentUI.Value,
-                        _ActionInactiveLClick.HasValue,
-                        _StyleShowColor.HasValue,
-                        _StyleHighlightFocused.HasValue,
-                        _WindowIcon.HasValue,
-                        _AccountBarEnabled.HasValue,
-                        _AccountBarStyle.HasValue,
-                        _AccountBarOptions.HasValue,
-                        //72
-                        _AccountBarSorting.HasValue,
-                        _ScreenshotNotifications.HasValue,
-                        _AccountBarDocked.HasValue,
-                        _UseDefaultIconForShortcuts.HasValue,
-                        _LimitActiveAccounts.HasValue,
-                        _DelayLaunchUntilLoaded.HasValue,
-                        _DelayLaunchSeconds.HasValue,
-                        _GuildWars2._LocalizeAccountExecution.HasValue,
-                        //80
-                        _GuildWars2._LocalizeAccountExecution.IsPending,
-                        _GuildWars2._LauncherAutologinPoints.HasValue,
-                        _StyleShowColor.Value,
-                        _StyleHighlightFocused.Value,
-                        _WindowIcon.Value,
-                        _AccountBarEnabled.Value,
-                        _UseDefaultIconForShortcuts.Value,
-                        _DelayLaunchUntilLoaded.Value,
-                        //88
-                        _GuildWars2._DatUpdaterEnabled.HasValue,
-                        _GuildWars2._UseCustomGw2Cache.HasValue,
-                        _ShowKillAllAccounts.HasValue,
-                        _GuildWars2._PreventDefaultCoherentUI.HasValue,
-                        _GuildWars2._DatUpdaterEnabled.Value,
-                        _GuildWars2._UseCustomGw2Cache.Value,
-                        _ShowKillAllAccounts.Value,
-                        _GuildWars2._PreventDefaultCoherentUI.Value,
-                        //96
-                        _RepaintInitialWindow.HasValue,
-                        _RepaintInitialWindow.Value,
-                        _GuildWars2._MumbleLinkName.HasValue,
-                        _GuildWars2._ProfileMode.HasValue,
-                        _GuildWars2._ProfileOptions.HasValue,
-                        _FontUser.HasValue,
-                        _StyleColumns.HasValue,
-                        _StyleShowIcon.HasValue,
-                        //104
-                        _StyleShowIcon.Value,
-                        _StyleBackgroundImage.HasValue,
-                        _StyleColors.HasValue,
-                        _GuildWars1._Path.HasValue && !string.IsNullOrWhiteSpace(_GuildWars1._Path.Value),
-                        _GuildWars1._Arguments.HasValue && !string.IsNullOrWhiteSpace(_GuildWars1._Arguments.Value),
-                        _GuildWars1._Mute.HasValue,
-                        _GuildWars1._ProcessAffinity.HasValue,
-                        _GuildWars1._ProcessPriority.HasValue,
-                        //112
-                        _GuildWars1._RunAfter.HasValue,
-                        _GuildWars1._ScreenshotsFormat.HasValue,
-                        _GuildWars1._ScreenshotsLocation.HasValue,
-                        _GuildWars1._Volume.HasValue,
-                        _WindowTemplates.Count > 0,
-                        _LaunchBehindOtherAccounts.HasValue,
-                        _LaunchBehindOtherAccounts.Value,
-                        _LaunchLimiter.HasValue,
-                        //120
-                        _ShowLaunchAllAccounts.HasValue,
-                        _ShowLaunchAllAccounts.Value,
-                        _LaunchTimeout.HasValue,
-                        _SelectedPage.Value > 0,
-                        _JumpList.HasValue,
-                        _PreventTaskbarMinimize.HasValue,
-                        _PreventTaskbarMinimize.Value,
-                        _GuildWars2._PreventRelaunching.HasValue,
-                        //128
-                        _ActionActiveMClick.HasValue,
-                        _ActionInactiveMClick.HasValue,
-                        _AuthenticatorPastingEnabled.HasValue,
-                        _AuthenticatorPastingEnabled.Value,
-                        _ProcessPriority.HasValue,
-                        _PublicIPAddress.HasValue && _NetworkAuthorization.Value.HasFlag(Settings.NetworkAuthorizationFlags.VerifyIP),
-                        //134
-                    };
-
-                    byte[] b = CompressBooleans(booleans);
-
-                    writer.Write((byte)b.Length);
-                    writer.Write(b);
-
-                    if (booleans[0])
-                        writer.Write(_Sorting.Value.ToBytes());
-                    if (booleans[1])
-                    {
-                        var scope = _Encryption.Value.Scope;
-                        var key = _Encryption.Value.Key;
-
-                        writer.Write((byte)scope);
-
-                        if (key != null)
-                        {
-                            writer.Write((byte)key.Length);
-                            writer.Write(key);
-                        }
-                        else
-                        {
-                            writer.Write((byte)0);
-                        }
-                    }
-                    if (booleans[7])
-                        writer.Write(_GuildWars2._Path.Value);
-                    if (booleans[8])
-                        writer.Write(_GuildWars2._Arguments.Value);
-                    if (booleans[9])
-                        writer.Write(_LastKnownBuild.Value);
-                    if (booleans[10])
-                    {
-                        try
-                        {
-                            writer.Write(new FontConverter().ConvertToString(_FontName.Value));
-                        }
-                        catch (Exception e)
-                        {
-                            Util.Logging.Log(e);
-                            writer.Write("");
-                        }
-                    }
-                    if (booleans[11])
-                    {
-                        try
-                        {
-                            writer.Write(new FontConverter().ConvertToString(_FontStatus.Value));
-                        }
-                        catch (Exception e)
-                        {
-                            Util.Logging.Log(e);
-                            writer.Write("");
-                        }
-                    }
-
-                    //v2
-                    if (booleans[20])
-                    {
-                        var v = _LastProgramVersion.Value;
-                        writer.Write(v.LastCheck.ToBinary());
-                        writer.Write(v.Version);
-                    }
-                    if (booleans[21])
-                        writer.Write(_AutoUpdateInterval.Value);
-                    if (booleans[24])
-                        writer.Write(_BackgroundPatchingLang.Value);
-                    if (booleans[25])
-                    {
-                        var v = _BackgroundPatchingNotifications.Value;
-                        writer.Write((byte)v.Screen);
-                        writer.Write((byte)v.Anchor);
-                    }
-                    if (booleans[26])
-                        writer.Write(_BackgroundPatchingMaximumThreads.Value);
-                    if (booleans[27])
-                        writer.Write(_PatchingSpeedLimit.Value);
-                    if (booleans[28])
-                        writer.Write((byte)_PatchingOptions.Value);
-                    if (booleans[29])
-                    {
-                        var ra = _GuildWars2._RunAfter.Value;
-                        WriteVariableLength(writer, ra.Length);
-                        foreach (var r in ra)
-                        {
-                            writer.Write(r.Name == null ? "" : r.Name);
-                            writer.Write(r.Path == null ? "" : r.Path);
-                            writer.Write(r.Arguments);
-                            writer.Write((byte)r.Options);
-                        }
-                    }
-                    if (booleans[30])
-                        writer.Write((byte)(_GuildWars2._Volume.Value * 255));
-
-                    if (booleans[36])
-                        writer.Write(_PatchingPort.Value);
-
-                    //v3
-                    if (booleans[37])
-                        writer.Write(_WindowCaption.Value);
-
-                    //v4
-                    if (booleans[41])
-                        writer.Write((byte)_GuildWars2._Mute.Value);
-                    if (booleans[42])
-                        writer.Write(_GuildWars2._ClientPort.Value);
-                    if (booleans[43])
-                        writer.Write((byte)_GuildWars2._ScreenshotsFormat.Value);
-                    if (booleans[44])
-                        writer.Write(_GuildWars2._ScreenshotsLocation.Value);
-                    if (booleans[46])
-                        writer.Write(_GuildWars2._VirtualUserPath.Value);
-                    if (booleans[47])
-                    {
-                        if (_GuildWars2._VirtualUserPath.ValueCommit == null)
-                            writer.Write(string.Empty);
-                        else
-                            writer.Write(_GuildWars2._VirtualUserPath.ValueCommit);
-                    }
-                    if (booleans[48])
-                        writer.Write((byte)_ActionActiveLClick.Value);
-                    if (booleans[49])
-                        writer.Write((byte)_ActionActiveLPress.Value);
-                    if (booleans[50])
-                        writer.Write((byte)_ShowDailies.Value);
-                    if (booleans[51])
-                    {
-                        var r = _BackgroundPatchingProgress.Value;
-                        writer.Write(r.X);
-                        writer.Write(r.Y);
-                        writer.Write(r.Width);
-                        writer.Write(r.Height);
-                    }
-                    if (booleans[52])
-                        writer.Write((byte)_NetworkAuthorization.Value);
-                    if (booleans[53])
-                        writer.Write(_ScreenshotNaming.Value);
-                    if (booleans[54])
-                    {
-                        var v = _ScreenshotConversion.Value;
-                        writer.Write((byte)v.Format);
-                        writer.Write(v.raw);
-                    }
-                    if (booleans[56])
-                        writer.Write((byte)_GuildWars2._ProcessPriority.Value);
-                    if (booleans[57])
-                        writer.Write(_GuildWars2._ProcessAffinity.Value);
-                    if (booleans[59])
-                    {
-                        var v = _NotesNotifications.Value;
-                        writer.Write((byte)v.Screen);
-                        writer.Write((byte)v.Anchor);
-                        writer.Write(v.OnlyWhileActive);
-                    }
-                    if (booleans[60])
-                        writer.Write(_MaxPatchConnections.Value);
-
-                    //v5
-                    if (booleans[65])
-                        writer.Write((byte)_ActionInactiveLClick.Value);
-                    if (booleans[70])
-                        writer.Write((byte)_AccountBarStyle.Value);
-                    if (booleans[71])
-                        writer.Write((byte)_AccountBarOptions.Value);
-                    if (booleans[72])
-                        writer.Write(_AccountBarSorting.Value.ToBytes());
-                    if (booleans[73])
-                    {
-                        var v = _ScreenshotNotifications.Value;
-                        writer.Write((byte)v.Screen);
-                        writer.Write((byte)v.Anchor);
-                    }
-                    if (booleans[74])
-                        writer.Write((byte)_AccountBarDocked.Value);
-                    if (booleans[76])
-                        writer.Write(_LimitActiveAccounts.Value);
-                    if (booleans[78])
-                        writer.Write(_DelayLaunchSeconds.Value);
-                    if (booleans[79])
-                        writer.Write((byte)_GuildWars2._LocalizeAccountExecution.Value);
-                    if (booleans[80])
-                        writer.Write((byte)_GuildWars2._LocalizeAccountExecution.ValueCommit);
-                    if (booleans[81])
-                    {
-                        var v = _GuildWars2._LauncherAutologinPoints.Value;
-                        writer.Write(v.EmptyArea.X);
-                        writer.Write(v.EmptyArea.Y);
-                        writer.Write(v.PlayButton.X);
-                        writer.Write(v.PlayButton.Y);
-                    }
-                    if (booleans[98])
-                        writer.Write(_GuildWars2._MumbleLinkName.Value);
-                    if (booleans[99])
-                        writer.Write((byte)_GuildWars2._ProfileMode.Value);
-                    if (booleans[100])
-                        writer.Write((byte)_GuildWars2._ProfileOptions.Value);
-                    if (booleans[101])
-                    {
-                        try
-                        {
-                            writer.Write(new FontConverter().ConvertToString(_FontUser.Value));
-                        }
-                        catch (Exception e)
-                        {
-                            Util.Logging.Log(e);
-                            writer.Write("");
-                        }
-                    }
-                    if (booleans[102])
-                        writer.Write(_StyleColumns.Value);
-                    if (booleans[105])
-                        writer.Write(_StyleBackgroundImage.Value);
-                    if (booleans[106])
-                    {
-                        var colors = _StyleColors.Value.Values;
-                        writer.Write((byte)colors.Length);
-                        foreach (var c in colors)
-                        {
-                            writer.Write(c.ToArgb());
-                        }
-                    }
-                    if (booleans[107])
-                        writer.Write(_GuildWars1._Path.Value);
-                    if (booleans[108])
-                        writer.Write(_GuildWars1._Arguments.Value);
-                    if (booleans[109])
-                        writer.Write((byte)_GuildWars1._Mute.Value);
-                    if (booleans[110])
-                        writer.Write(_GuildWars1._ProcessAffinity.Value);
-                    if (booleans[111])
-                        writer.Write((byte)_GuildWars1._ProcessPriority.Value);
-                    if (booleans[112])
-                    {
-                        var ra = _GuildWars1._RunAfter.Value;
-                        WriteVariableLength(writer, ra.Length);
-                        foreach (var r in ra)
-                        {
-                            writer.Write(r.Name == null ? "" : r.Name);
-                            writer.Write(r.Path == null ? "" : r.Path);
-                            writer.Write(r.Arguments);
-                            writer.Write((byte)r.Options);
-                        }
-                    }
-                    if (booleans[113])
-                        writer.Write((byte)_GuildWars1.ScreenshotsFormat.Value);
-                    if (booleans[114])
-                        writer.Write(_GuildWars1.ScreenshotsLocation.Value);
-                    if (booleans[115])
-                        writer.Write((byte)(_GuildWars1._Volume.Value * 255));
-                    if (booleans[116])
-                    {
-                        lock (_WindowTemplates)
-                        {
-                            var wt = _WindowTemplates;
-                            var count = _WindowTemplates.Count;
-
-                            WriteVariableLength(writer, count);
-
-                            for (var i = 0; i < count; i++)
-                            {
-                                WriteVariableLength(writer, wt[i].Screens.Length);
-
-                                foreach (var screen in wt[i].Screens)
-                                {
-                                    Write(writer, screen.Bounds);
-                                    WriteVariableLength(writer, screen.Windows.Length);
-
-                                    foreach (var rect in screen.Windows)
-                                    {
-                                        Write(writer, rect);
-                                    }
-                                }
-                            }
-                        }
-                    }
-                    if (booleans[119])
-                    {
-                        var v = _LaunchLimiter.Value;
-                        writer.Write(v.Count);
-                        writer.Write(v.RechargeCount);
-                        writer.Write(v.RechargeTime);
-                    }
-                    if (booleans[122])
-                        writer.Write(_LaunchTimeout.Value);
-
-                    if (booleans[123])
-                        writer.Write(_SelectedPage.Value);
-
-                    if (booleans[124])
-                        writer.Write((byte)_JumpList.Value);
-
-                    if (booleans[127])
-                        writer.Write((byte)_GuildWars2._PreventRelaunching.Value);
-
-                    if (booleans[128])
-                        writer.Write((byte)_ActionActiveMClick.Value);
-
-                    if (booleans[129])
-                        writer.Write((byte)_ActionInactiveMClick.Value);
-
-                    if (booleans[132])
-                        writer.Write((byte)_ProcessPriority.Value);
-
-                    if (booleans[133])
-                    {
-                        var bytes = _PublicIPAddress.Value;
-                        if (bytes == null || bytes.Length == 0)
-                        {
-                            writer.Write((byte)0);
-                        }
-                        else
-                        {
-                            writer.Write((byte)bytes.Length);
-                            writer.Write(bytes);
-                        }
-                    }
-
-                    lock (_DatFiles)
-                    {
-                        var count = _DatFiles.Count;
-                        var items = new KeyValuePair<ushort, DatFile>[count];
-                        int i = 0;
-
-                        foreach (var key in _DatFiles.Keys)
-                        {
-                            if (i == count)
-                                break;
-                            var o = _DatFiles[key];
-                            if (o.HasValue && ((DatFile)o.Value).ReferenceCount > 0)
-                            {
-                                items[i++] = new KeyValuePair<ushort, DatFile>(key, (DatFile)o.Value);
-                            }
-                        }
-
-                        count = i;
-
-                        writer.Write((ushort)count);
-
-                        for (i = 0; i < count; i++)
-                        {
-                            var item = items[i];
-
-                            writer.Write(item.Value.UID);
-                            if (string.IsNullOrWhiteSpace(item.Value.Path))
-                                writer.Write("");
-                            else
-                                writer.Write(item.Value.Path);
-                            //writer.Write(item.Value.IsInitialized); //v6
-                            writer.Write((byte)item.Value._flags);
-                        }
-                    }
-
-                    //v4
-                    lock (_GfxFiles)
-                    {
-                        var count = _GfxFiles.Count;
-                        var items = new KeyValuePair<ushort, GfxFile>[count];
-                        int i = 0;
-
-                        foreach (var key in _GfxFiles.Keys)
-                        {
-                            if (i == count)
-                                break;
-                            var o = _GfxFiles[key];
-                            if (o.HasValue && ((GfxFile)o.Value).ReferenceCount > 0)
-                            {
-                                items[i++] = new KeyValuePair<ushort, GfxFile>(key, (GfxFile)o.Value);
-                            }
-                        }
-
-                        count = i;
-
-                        writer.Write((ushort)count);
-
-                        for (i = 0; i < count; i++)
-                        {
-                            var item = items[i];
-
-                            writer.Write(item.Value.UID);
-                            if (string.IsNullOrWhiteSpace(item.Value.Path))
-                                writer.Write("");
-                            else
-                                writer.Write(item.Value.Path);
-                            //writer.Write(item.Value.IsInitialized); //v6
-                            writer.Write((byte)item.Value._flags);
-                        }
-                    }
-
-                    //v10
-                    lock (_GwDatFiles)
-                    {
-                        var count = _GwDatFiles.Count;
-                        var items = new KeyValuePair<ushort, GwDatFile>[count];
-                        int i = 0;
-
-                        foreach (var key in _GwDatFiles.Keys)
-                        {
-                            if (i == count)
-                                break;
-                            var o = _GwDatFiles[key];
-                            if (o.HasValue && ((GwDatFile)o.Value).ReferenceCount > 0)
-                            {
-                                items[i++] = new KeyValuePair<ushort, GwDatFile>(key, (GwDatFile)o.Value);
-                            }
-                        }
-
-                        count = i;
-
-                        writer.Write((ushort)count);
-
-                        for (i = 0; i < count; i++)
-                        {
-                            var item = items[i];
-
-                            writer.Write(item.Value.UID);
-                            if (string.IsNullOrWhiteSpace(item.Value.Path))
-                                writer.Write("");
-                            else
-                                writer.Write(item.Value.Path);
-                            writer.Write((byte)item.Value._flags);
-                        }
-                    }
-
-                    lock (_Accounts)
-                    {
-                        var count = _Accounts.Count;
-                        var items = new KeyValuePair<ushort, Account>[count];
-                        int i = 0;
-
-                        foreach (var key in _Accounts.Keys)
-                        {
-                            if (i == count)
-                                break;
-                            var o = _Accounts[key];
-                            if (o.HasValue)
-                            {
-                                items[i++] = new KeyValuePair<ushort, Account>(key, (Account)o.Value);
-                            }
-                        }
-
-                        count = i;
-
-                        Security.Cryptography.Crypto crypto = null;
-
-                        try
-                        {
-                            writer.Write((ushort)count);
-
-                            for (i = 0; i < count; i++)
-                            {
-                                var item = items[i];
-
-                                var account = item.Value;
-
-                                writer.Write((byte)account._Type);
-                                writer.Write(account._UID);
-                                writer.Write(account._Name);
-                                writer.Write(account._WindowsAccount != null ? account._WindowsAccount : "");
-                                writer.Write(account._CreatedUtc.ToBinary());
-                                writer.Write(account._LastUsedUtc.ToBinary());
-                                writer.Write(account._TotalUses);
-                                writer.Write(account._Arguments != null ? account._Arguments : "");
-
-                                booleans = new bool[]
-                                {
-                                    //0
-                                    account._ShowDailyLogin,
-                                    account.Windowed,
-                                    account._RecordLaunches,
-                                    account._AutologinOptions != AutologinOptions.None,
-                                    account._JumpListPinning != JumpListPinning.None,
-                                    account.VolumeEnabled,
-                                    account._RunAfter != null,
-                                    !string.IsNullOrEmpty(account._Email),
-                                    //8
-                                    account._Password != null && !account._Password.Data.IsEmpty,
-                                    !string.IsNullOrEmpty(account._BackgroundImage),
-                                    account._Image != null,
-                                    account._PendingFiles,
-                                    !string.IsNullOrEmpty(account._ScreenshotsLocation),
-                                    account._Pages != null, //!string.IsNullOrEmpty(account._ApiKey),
-                                    account._TotpKey != null && account._TotpKey.Length > 0,
-                                    account._Pinned, //account._ApiData != null,
-                                    //16
-                                    !account._WindowBounds.IsEmpty,
-                                    false, //(byte)account._ProcessPriority > 0,
-                                    false, //account._ClientPort != 0,
-                                    false, //account._LastDailyCompletionUtc.Ticks != 1,
-                                    account._Mute  != 0,
-                                    account._ScreenshotsFormat != 0,
-                                    account._NetworkAuthorizationState != NetworkAuthorizationState.Disabled,
-                                    account._ProcessPriority != ProcessPriorityClass.None,
-                                    //24
-                                    account._ProcessAffinity != 0,
-                                    account._Notes != null && account._Notes.Count > 0,
-                                    !account._ColorKey.IsEmpty,
-                                    account._IconType != IconType.None,
-                                    account._SortKey != (i + 1),
-                                    false, //account._AutomaticPlay
-                                    //30
-                                };
-
-                                b = CompressBooleans(booleans);
-
-                                writer.Write((byte)b.Length);
-                                writer.Write(b);
-
-                                if (booleans[1])
-                                    writer.Write((byte)account._WindowOptions);
-
-                                if (booleans[3])
-                                    writer.Write((byte)account._AutologinOptions);
-
-                                if (booleans[4])
-                                    writer.Write((byte)account._JumpListPinning);
-
-                                if (booleans[5])
-                                    writer.Write(account._Volume);
-
-                                if (booleans[6])
-                                {
-                                    var ra = account._RunAfter;
-                                    WriteVariableLength(writer, ra.Length);
-                                    foreach (var r in ra)
-                                    {
-                                        writer.Write(r.Name == null ? "" : r.Name);
-                                        writer.Write(r.Path == null ? "" : r.Path);
-                                        writer.Write(r.Arguments);
-                                        writer.Write((byte)r.Options);
-                                    }
-                                }
-
-                                //v4
-                                if (booleans[7])
-                                    writer.Write(account._Email);
-
-                                if (booleans[8])
-                                {
-                                    byte[] data;
-                                    try
-                                    {
-                                        if (crypto == null)
-                                        {
-                                            var o = _Encryption.Value;
-                                            crypto = new Security.Cryptography.Crypto(o != null ? o.Scope : EncryptionScope.CurrentUser, Security.Cryptography.Crypto.CryptoCompressionFlags.Data | Security.Cryptography.Crypto.CryptoCompressionFlags.IV, o != null ? o.Key : null);
-                                        }
-                                        data = account._Password.Data.ToArray(crypto);
-                                    }
-                                    catch (Exception e)
-                                    {
-                                        Util.Logging.Log(e);
-                                        data = null;
-                                    }
-
-                                    if (data != null)
-                                    {
-                                        writer.Write((ushort)data.Length);
-                                        writer.Write(data);
-                                        writer.Write(account._Password.UID);
-                                    }
-                                    else
-                                    {
-                                        writer.Write((ushort)0);
-                                    }
-                                }
-
-                                if (booleans[9])
-                                    writer.Write(account._BackgroundImage);
-
-                                if (booleans[10])
-                                {
-                                    var im = account._Image;
-                                    writer.Write(im.Path);
-                                    writer.Write((byte)im.Placement);
-                                }
-
-                                if (booleans[12])
-                                    writer.Write(account._ScreenshotsLocation);
-
-                                if (booleans[13])
-                                {
-                                    var pages = account._Pages;
-                                    writer.Write((byte)pages.Length);
-                                    for (var j = 0; j < pages.Length; j++)
-                                    {
-                                        writer.Write(pages[j].Page);
-                                        writer.Write(pages[j].SortKey);
-                                        writer.Write(pages[j].Pinned);
-                                    }
-                                }
-
-                                if (booleans[14])
-                                {
-                                    writer.Write((byte)account._TotpKey.Length);
-                                    writer.Write(account._TotpKey);
-                                }
-
-                                //if (booleans[15])
-                                //{
-                                //    var ad = account._ApiData;
-
-                                //    var booleansApi = new bool[]
-                                //    {
-                                //        ad.DailyPoints != null,
-                                //        ad.Played != null
-                                //    };
-
-                                //    b = CompressBooleans(booleansApi);
-
-                                //    writer.Write((byte)b.Length);
-                                //    writer.Write(b);
-
-                                //    if (booleansApi[0])
-                                //    {
-                                //        writer.Write(ad._DailyPoints._LastChange.ToBinary());
-                                //        writer.Write((byte)ad._DailyPoints._State);
-                                //        writer.Write(ad._DailyPoints._Value);
-                                //    }
-
-                                //    if (booleansApi[1])
-                                //    {
-                                //        writer.Write(ad._Played._LastChange.ToBinary());
-                                //        writer.Write((byte)ad._Played._State);
-                                //        writer.Write(ad._Played._Value);
-                                //    }
-                                //}
-
-                                if (booleans[16])
-                                {
-                                    writer.Write(account._WindowBounds.X);
-                                    writer.Write(account._WindowBounds.Y);
-                                    writer.Write(account._WindowBounds.Width);
-                                    writer.Write(account._WindowBounds.Height);
-                                }
-
-                                //if (booleans[17])
-                                //    writer.Write((byte)account._ProcessPriority);
-
-                                //if (booleans[18])
-                                //    writer.Write(account._ClientPort);
-
-                                //if (booleans[19])
-                                //    writer.Write(account._LastDailyCompletionUtc.ToBinary());
-
-                                if (booleans[20])
-                                    writer.Write((byte)account._Mute);
-
-                                if (booleans[21])
-                                    writer.Write((byte)account._ScreenshotsFormat);
-
-                                if (booleans[22])
-                                    writer.Write((byte)account._NetworkAuthorizationState);
-
-                                if (booleans[23])
-                                    writer.Write((byte)account._ProcessPriority);
-
-                                if (booleans[24])
-                                    writer.Write(account._ProcessAffinity);
-
-                                if (booleans[25])
-                                {
-                                    var notes = account._Notes;
-
-                                    lock (notes)
-                                    {
-                                        WriteVariableLength(writer, notes.Count);
-
-                                        foreach (var n in notes)
-                                        {
-                                            writer.Write((ushort)n.SID);
-                                            writer.Write(n.Expires.ToBinary());
-                                            writer.Write(n.Notify);
-                                        }
-                                    }
-                                }
-
-                                if (booleans[26])
-                                    writer.Write(account._ColorKey.ToArgb());
-
-                                if (booleans[27])
-                                {
-                                    var v = account._IconType;
-                                    writer.Write((byte)v);
-                                    if (v == IconType.File)
-                                    {
-                                        var icon = account._Icon;
-                                        if (icon == null)
-                                            icon = "";
-                                        writer.Write(icon);
-                                    }
-                                }
-
-                                if (booleans[28])
-                                    writer.Write(account._SortKey);
-
-
-
-
-
-                                if (account._Type == AccountType.GuildWars1)
-                                {
-                                    var a = (Gw1Account)account;
-
-                                    booleans = new bool[]
-                                    {
-                                        //0
-                                        a._DatFile != null,
-                                        !string.IsNullOrEmpty(a._CharacterName),
-                                        //2
-                                    };
-
-                                    b = CompressBooleans(booleans);
-
-                                    writer.Write((byte)b.Length);
-                                    writer.Write(b);
-
-                                    if (booleans[0])
-                                        writer.Write(a._DatFile.UID);
-                                    if (booleans[1])
-                                        writer.Write(a._CharacterName);
-                                }
-                                else
-                                {
-                                    var a = (Gw2Account)account;
-
-                                    booleans = new bool[]
-                                    {
-                                        //0
-                                        a._DatFile != null,
-                                        a._GfxFile != null,
-                                        a._AutomaticRememberedLogin,
-                                        !string.IsNullOrEmpty(a._ApiKey),
-                                        a._ApiData != null,
-                                        a._ClientPort != 0,
-                                        a._LastDailyCompletionUtc.Ticks != 1,
-                                        !string.IsNullOrEmpty(a._MumbleLinkName),
-                                        //8
-                                    };
-
-                                    b = CompressBooleans(booleans);
-
-                                    writer.Write((byte)b.Length);
-                                    writer.Write(b);
-
-                                    if (booleans[0])
-                                        writer.Write(a._DatFile.UID);
-
-                                    if (booleans[1])
-                                        writer.Write(a._GfxFile.UID);
-
-                                    if (booleans[3])
-                                        writer.Write(a._ApiKey);
-
-                                    if (booleans[4])
-                                    {
-                                        var ad = a._ApiData;
-
-                                        var booleansApi = new bool[]
-                                        {
-                                            ad.DailyPoints != null,
-                                            ad.Played != null
-                                        };
-
-                                        b = CompressBooleans(booleansApi);
-
-                                        writer.Write((byte)b.Length);
-                                        writer.Write(b);
-
-                                        if (booleansApi[0])
-                                        {
-                                            writer.Write(ad._DailyPoints._LastChange.ToBinary());
-                                            writer.Write((byte)ad._DailyPoints._State);
-                                            writer.Write(ad._DailyPoints._Value);
-                                        }
-
-                                        if (booleansApi[1])
-                                        {
-                                            writer.Write(ad._Played._LastChange.ToBinary());
-                                            writer.Write((byte)ad._Played._State);
-                                            writer.Write(ad._Played._Value);
-                                        }
-                                    }
-
-                                    if (booleans[5])
-                                        writer.Write(a._ClientPort);
-
-                                    if (booleans[6])
-                                        writer.Write(a._LastDailyCompletionUtc.ToBinary());
-
-                                    if (booleans[7])
-                                        writer.Write(a._MumbleLinkName);
-                                }
-                            }
-                        }
-                        finally
-                        {
-                            if (crypto != null)
-                                crypto.Dispose();
-                        }
-                    }
-
-                    lock (_HiddenUserAccounts)
-                    {
-                        var count = _HiddenUserAccounts.Count;
-                        var items = new string[count];
-                        int i = 0;
-
-                        foreach (var key in _HiddenUserAccounts.Keys)
-                        {
-                            if (i == count)
-                                break;
-                            var o = _HiddenUserAccounts[key];
-                            if (o.HasValue && o.Value)
-                            {
-                                items[i++] = key;
-                            }
-                        }
-
-                        count = i;
-
-                        writer.Write((ushort)count);
-
-                        for (i = 0; i < count; i++)
-                        {
-                            var item = items[i];
-                            writer.Write(item);
-                        }
-                    }
-
-                    //v4
-                    lock (_HiddenDailyCategories)
-                    {
-                        var count = _HiddenDailyCategories.Count;
-                        var items = new byte[count];
-                        int i = 0;
-
-                        foreach (var key in _HiddenDailyCategories.Keys)
-                        {
-                            if (i == count)
-                                break;
-                            var o = _HiddenDailyCategories[key];
-                            if (o.HasValue && o.Value)
-                            {
-                                items[i++] = key;
-                            }
-                        }
-
-                        count = i;
-
-                        writer.Write((byte)count);
-
-                        for (i = 0; i < count; i++)
-                        {
-                            var item = items[i];
-                            writer.Write(item);
-                        }
-                    }
-
-
-
-
-
-
-
-                    writer.Write((ushort)crc.CRC);
+                    WriteTo(stream);
                 }
 
                 _settingsFile.Save();
@@ -6285,7 +7457,1337 @@ namespace Gw2Launcher
             return null;
         }
 
-        private static ushort Load(string path)
+        public static void WriteTo(Stream stream)
+        {
+            IO.CrcStream crc;
+
+            using (var writer = new BinaryWriter(crc = new IO.CrcStream(stream, true)))
+            {
+                writer.Write(HEADER);
+                writer.Write(VERSION);
+
+                bool[] booleans;
+
+                lock (_WindowBounds)
+                {
+                    var count = _WindowBounds.Count;
+                    var items = new KeyValuePair<Type, Rectangle>[count];
+                    int i = 0;
+
+                    foreach (var key in _WindowBounds.Keys)
+                    {
+                        if (i == count)
+                            break;
+                        var o = _WindowBounds[key];
+                        if (o.HasValue)
+                        {
+                            items[i++] = new KeyValuePair<Type, Rectangle>(key, o.Value);
+                        }
+                    }
+
+                    count = i;
+
+                    writer.Write((byte)count);
+
+                    for (i = 0; i < count; i++)
+                    {
+                        var item = items[i];
+
+                        writer.Write(GetWindowID(item.Key));
+
+                        writer.Write(item.Value.X);
+                        writer.Write(item.Value.Y);
+                        writer.Write(item.Value.Width);
+                        writer.Write(item.Value.Height);
+                    }
+                }
+
+                booleans = new bool[]
+                {
+                    //0
+                    _Sorting.HasValue,
+                    _Encryption.HasValue,
+                    _StoreCredentials.HasValue,
+                    _ShowTray.HasValue,
+                    _MinimizeToTray.HasValue,
+                    _BringToFrontOnExit.HasValue,
+                    _DeleteCacheOnLaunch.HasValue,
+                    _GuildWars2._Path.HasValue && !string.IsNullOrWhiteSpace(_GuildWars2._Path.Value),
+                    //8
+                    _GuildWars2._Arguments.HasValue && !string.IsNullOrWhiteSpace(_GuildWars2._Arguments.Value),
+                    _LastKnownBuild.HasValue,
+                    _FontName.HasValue,
+                    _FontStatus.HasValue,
+                    _StyleShowAccount.HasValue,
+                    _StoreCredentials.Value,
+                    _ShowTray.Value,
+                    _MinimizeToTray.Value,
+                    //16
+                    _BringToFrontOnExit.Value,
+                    _DeleteCacheOnLaunch.Value,
+                    _StyleShowAccount.Value,
+                    _CheckForNewBuilds.HasValue,
+                    _LastProgramVersion.HasValue,
+                    _AutoUpdateInterval.HasValue,
+                    _AutoUpdate.HasValue,
+                    _BackgroundPatchingEnabled.HasValue,
+                    //24
+                    _BackgroundPatchingLang.HasValue,
+                    _BackgroundPatchingNotifications.HasValue,
+                    _BackgroundPatchingMaximumThreads.HasValue,
+                    _PatchingSpeedLimit.HasValue,
+                    _PatchingOptions.HasValue,
+                    _GuildWars2._RunAfter.HasValue,
+                    _GuildWars2._Volume.HasValue,
+                    _LocalAssetServerEnabled.HasValue,
+                    //32
+                    _CheckForNewBuilds.Value,
+                    _AutoUpdate.Value,
+                    _BackgroundPatchingEnabled.Value,
+                    _LocalAssetServerEnabled.Value,
+                    _PatchingPort.HasValue,
+                    _WindowCaption.HasValue && !string.IsNullOrWhiteSpace(_WindowCaption.Value),
+                    _PreventTaskbarGrouping.HasValue,
+                    _PreventTaskbarGrouping.Value,
+                    //40
+                    _GuildWars2._AutomaticRememberedLogin.HasValue,
+                    _GuildWars2._Mute.HasValue,
+                    _GuildWars2._ClientPort.HasValue,
+                    _GuildWars2._ScreenshotsFormat.HasValue,
+                    _GuildWars2._ScreenshotsLocation.HasValue,
+                    _TopMost.HasValue,
+                    _GuildWars2._VirtualUserPath.HasValue,
+                    _GuildWars2._VirtualUserPath.IsPending,
+                    //48
+                    _ActionActiveLClick.HasValue,
+                    _ActionActiveLPress.HasValue,
+                    _ShowDailies.HasValue,
+                    _BackgroundPatchingProgress.HasValue,
+                    _Network.HasValue,
+                    _ScreenshotNaming.HasValue,
+                    _ScreenshotConversion.HasValue,
+                    _DeleteCrashLogsOnLaunch.HasValue,
+                    //56
+                    _GuildWars2._ProcessPriority.HasValue,
+                    _GuildWars2._ProcessAffinity.HasValue,
+                    _GuildWars2._PrioritizeCoherentUI.HasValue,
+                    _NotesNotifications.HasValue,
+                    _MaxPatchConnections.HasValue,
+                    _GuildWars2._AutomaticRememberedLogin.Value,
+                    _TopMost.Value,
+                    _DeleteCrashLogsOnLaunch.Value,
+                    //64
+                    _GuildWars2._PrioritizeCoherentUI.Value,
+                    _ActionInactiveLClick.HasValue,
+                    _StyleShowColor.HasValue,
+                    _StyleHighlightFocused.HasValue,
+                    _WindowIcon.HasValue,
+                    _AccountBarEnabled.HasValue,
+                    _AccountBarStyle.HasValue,
+                    _AccountBarOptions.HasValue,
+                    //72
+                    _AccountBarSorting.HasValue,
+                    _ScreenshotNotifications.HasValue,
+                    _AccountBarDocked.HasValue,
+                    _UseDefaultIconForShortcuts.HasValue,
+                    _LimitActiveAccounts.HasValue,
+                    _DelayLaunchUntilLoaded.HasValue,
+                    _DelayLaunchSeconds.HasValue,
+                    _GuildWars2._LocalizeAccountExecution.HasValue,
+                    //80
+                    _GuildWars2._LocalizeAccountExecution.IsPending,
+                    _GuildWars2._LauncherAutologinPoints.HasValue,
+                    _StyleShowColor.Value,
+                    _StyleHighlightFocused.Value,
+                    _WindowIcon.Value,
+                    _AccountBarEnabled.Value,
+                    _UseDefaultIconForShortcuts.Value,
+                    _DelayLaunchUntilLoaded.Value,
+                    //88
+                    _GuildWars2._DatUpdaterEnabled.HasValue,
+                    _GuildWars2._UseCustomGw2Cache.HasValue,
+                    _ShowKillAllAccounts.HasValue,
+                    _GuildWars2._PreventDefaultCoherentUI.HasValue,
+                    _GuildWars2._DatUpdaterEnabled.Value,
+                    _GuildWars2._UseCustomGw2Cache.Value,
+                    _ShowKillAllAccounts.Value,
+                    _GuildWars2._PreventDefaultCoherentUI.Value,
+                    //96
+                    _RepaintInitialWindow.HasValue,
+                    _RepaintInitialWindow.Value,
+                    _GuildWars2._MumbleLinkName.HasValue,
+                    _GuildWars2._ProfileMode.HasValue,
+                    _GuildWars2._ProfileOptions.HasValue,
+                    _FontUser.HasValue,
+                    _StyleColumns.HasValue,
+                    _StyleShowIcon.HasValue,
+                    //104
+                    _StyleShowIcon.Value,
+                    _StyleBackgroundImage.HasValue,
+                    _StyleColors.HasValue,
+                    _GuildWars1._Path.HasValue && !string.IsNullOrWhiteSpace(_GuildWars1._Path.Value),
+                    _GuildWars1._Arguments.HasValue && !string.IsNullOrWhiteSpace(_GuildWars1._Arguments.Value),
+                    _GuildWars1._Mute.HasValue,
+                    _GuildWars1._ProcessAffinity.HasValue,
+                    _GuildWars1._ProcessPriority.HasValue,
+                    //112
+                    _GuildWars1._RunAfter.HasValue,
+                    _GuildWars1._ScreenshotsFormat.HasValue,
+                    _GuildWars1._ScreenshotsLocation.HasValue,
+                    _GuildWars1._Volume.HasValue,
+                    _WindowTemplates.Count > 0,
+                    _LaunchBehindOtherAccounts.HasValue,
+                    _LaunchBehindOtherAccounts.Value,
+                    _LaunchLimiter.HasValue,
+                    //120
+                    _ShowLaunchAllAccounts.HasValue,
+                    _ShowLaunchAllAccounts.Value,
+                    _LaunchTimeout.HasValue,
+                    _SelectedPage.Value > 0,
+                    _JumpList.HasValue,
+                    _PreventTaskbarMinimize.HasValue,
+                    _PreventTaskbarMinimize.Value,
+                    _GuildWars2._PreventRelaunching.HasValue,
+                    //128
+                    _ActionActiveMClick.HasValue,
+                    _ActionInactiveMClick.HasValue,
+                    _AuthenticatorPastingEnabled.HasValue,
+                    _AuthenticatorPastingEnabled.Value,
+                    _ProcessPriority.HasValue,
+                    _IPAddresses.HasValue,
+                    _HotkeysEnabled.HasValue,
+                    _HotkeysEnabled.Value,
+                    //136
+                    _Hotkeys.HasValue,
+                    _StyleGridSpacing.HasValue,
+                    _StyleOffsets.HasValue,
+                    _WindowManagerOptions.HasValue,
+                    _StyleDisableWindowShadows.HasValue,
+                    _StyleDisableWindowShadows.Value,
+                    _StyleDisableSearchOnKeyPress.HasValue,
+                    _StyleDisableSearchOnKeyPress.Value,
+                    //144
+                    _TemplateBarOptions.HasValue,
+                    _TemplateBarSorting.HasValue,
+                    _TemplateBarDisplaySize.HasValue,
+                    _ShowAccountBarToggle.HasValue,
+                    _ShowAccountBarToggle.Value,
+                    _ShowMinimizeRestoreAll.HasValue,
+                    _ShowMinimizeRestoreAll.Value,
+                    _StyleShowDailyLoginDay.HasValue,
+                    //152
+                    _AffinityValues.Count > 0,
+                    _StyleDisablePageOnKeyPress.HasValue,
+                    _StyleDisablePageOnKeyPress.Value,
+                    _ShowWindowTemplatesToggle.HasValue,
+                    _ShowWindowTemplatesToggle.Value,
+                    _DxTimeout.HasValue,
+                    _ForceTaskbarGrouping.HasValue,
+                    _ForceTaskbarGrouping.Value,
+                    //160
+                    _StyleHighlightActive.HasValue,
+                    _StyleHighlightActive.Value,
+                    _HideInitialWindow.HasValue,
+                    _HideInitialWindow.Value,
+                    _RunAfterPopupSorting.HasValue,
+                    _RunAfterPopupFilter.HasValue,
+                    _RunAfterPopupOptions.HasValue,
+                    _ShowDailiesLanguage.HasValue,
+                    //168
+                    _LoginTweaks.HasValue,
+                    _LauncherTweaks.HasValue,
+                    _SteamPath.HasValue,
+                    _SteamTimeout.HasValue,
+                    _SteamLimitation.HasValue,
+                    _DisableMumbleLinkDailyLogin.HasValue,
+                    _DisableMumbleLinkDailyLogin.Value,
+                    _GuildWars2._DxLoadingPriority.HasValue,
+                    //176
+                    _GuildWars2._LocalizeAccountExecutionSelection.HasValue,
+                    _GuildWars2._LastModified.HasValue,
+                    _GuildWars2._PathSteam.HasValue,
+                    _DisableAutomaticLogins.Value,
+                    _DisableRunAfter.Value,
+                    //
+                    //
+                    //
+                    //184
+                };
+
+                byte[] b = CompressBooleans(booleans);
+
+                writer.Write((byte)b.Length);
+                writer.Write(b);
+
+                if (booleans[0])
+                    writer.Write(_Sorting.Value.ToBytes());
+                if (booleans[1])
+                {
+                    var scope = _Encryption.Value.Scope;
+                    var key = _Encryption.Value.Key;
+
+                    writer.Write((byte)scope);
+
+                    if (key != null)
+                    {
+                        writer.Write((byte)key.Length);
+                        writer.Write(key);
+                    }
+                    else
+                    {
+                        writer.Write((byte)0);
+                    }
+                }
+                if (booleans[7])
+                    writer.Write(_GuildWars2._Path.Value);
+                if (booleans[8])
+                    writer.Write(_GuildWars2._Arguments.Value);
+                if (booleans[9])
+                    writer.Write(_LastKnownBuild.Value);
+                if (booleans[10])
+                {
+                    try
+                    {
+                        writer.Write(new FontConverter().ConvertToString(_FontName.Value));
+                    }
+                    catch (Exception e)
+                    {
+                        Util.Logging.Log(e);
+                        writer.Write("");
+                    }
+                }
+                if (booleans[11])
+                {
+                    try
+                    {
+                        writer.Write(new FontConverter().ConvertToString(_FontStatus.Value));
+                    }
+                    catch (Exception e)
+                    {
+                        Util.Logging.Log(e);
+                        writer.Write("");
+                    }
+                }
+
+                //v2
+                if (booleans[20])
+                {
+                    var v = _LastProgramVersion.Value;
+                    writer.Write(v.LastCheck.ToBinary());
+                    writer.Write(v.Version);
+                    writer.Write(v.Retry);
+                }
+                if (booleans[21])
+                    writer.Write(_AutoUpdateInterval.Value);
+                if (booleans[24])
+                    writer.Write(_BackgroundPatchingLang.Value);
+                if (booleans[25])
+                {
+                    var v = _BackgroundPatchingNotifications.Value;
+                    writer.Write((byte)v.Screen);
+                    writer.Write((byte)v.Anchor);
+                }
+                if (booleans[26])
+                    writer.Write(_BackgroundPatchingMaximumThreads.Value);
+                if (booleans[27])
+                    writer.Write(_PatchingSpeedLimit.Value);
+                if (booleans[28])
+                    writer.Write((byte)_PatchingOptions.Value);
+                if (booleans[29])
+                    Write(writer, _GuildWars2._RunAfter.Value);
+                if (booleans[30])
+                    writer.Write((byte)(_GuildWars2._Volume.Value * 255));
+
+                if (booleans[36])
+                    writer.Write(_PatchingPort.Value);
+
+                //v3
+                if (booleans[37])
+                    writer.Write(_WindowCaption.Value);
+
+                //v4
+                if (booleans[41])
+                    writer.Write((byte)_GuildWars2._Mute.Value);
+                if (booleans[42])
+                    writer.Write(_GuildWars2._ClientPort.Value);
+                if (booleans[43])
+                    writer.Write((byte)_GuildWars2._ScreenshotsFormat.Value);
+                if (booleans[44])
+                    writer.Write(_GuildWars2._ScreenshotsLocation.Value);
+                if (booleans[46])
+                    writer.Write(_GuildWars2._VirtualUserPath.Value);
+                if (booleans[47])
+                {
+                    if (_GuildWars2._VirtualUserPath.ValueCommit == null)
+                        writer.Write(string.Empty);
+                    else
+                        writer.Write(_GuildWars2._VirtualUserPath.ValueCommit);
+                }
+                if (booleans[48])
+                    writer.Write((byte)_ActionActiveLClick.Value);
+                if (booleans[49])
+                    writer.Write((byte)_ActionActiveLPress.Value);
+                if (booleans[50])
+                    writer.Write((byte)_ShowDailies.Value);
+                if (booleans[51])
+                {
+                    var r = _BackgroundPatchingProgress.Value;
+                    writer.Write(r.X);
+                    writer.Write(r.Y);
+                    writer.Write(r.Width);
+                    writer.Write(r.Height);
+                }
+                if (booleans[52])
+                    writer.Write((byte)_Network.Value);
+                if (booleans[53])
+                    writer.Write(_ScreenshotNaming.Value);
+                if (booleans[54])
+                {
+                    var v = _ScreenshotConversion.Value;
+                    writer.Write((byte)v.Format);
+                    writer.Write(v.raw);
+                }
+                if (booleans[56])
+                    writer.Write((byte)_GuildWars2._ProcessPriority.Value);
+                if (booleans[57])
+                    writer.Write(_GuildWars2._ProcessAffinity.Value);
+                if (booleans[59])
+                {
+                    var v = _NotesNotifications.Value;
+                    writer.Write((byte)v.Screen);
+                    writer.Write((byte)v.Anchor);
+                    writer.Write(v.OnlyWhileActive);
+                }
+                if (booleans[60])
+                    writer.Write(_MaxPatchConnections.Value);
+
+                //v5
+                if (booleans[65])
+                    writer.Write((byte)_ActionInactiveLClick.Value);
+                if (booleans[70])
+                    writer.Write((byte)_AccountBarStyle.Value);
+                if (booleans[71])
+                    writer.Write((byte)_AccountBarOptions.Value);
+                if (booleans[72])
+                    writer.Write(_AccountBarSorting.Value.ToBytes());
+                if (booleans[73])
+                {
+                    var v = _ScreenshotNotifications.Value;
+                    writer.Write((byte)v.Screen);
+                    writer.Write((byte)v.Anchor);
+                }
+                if (booleans[74])
+                    writer.Write((byte)_AccountBarDocked.Value);
+                if (booleans[76])
+                    writer.Write(_LimitActiveAccounts.Value);
+                if (booleans[78])
+                    writer.Write(_DelayLaunchSeconds.Value);
+                if (booleans[79])
+                    writer.Write((byte)_GuildWars2._LocalizeAccountExecution.Value);
+                if (booleans[80])
+                    writer.Write((byte)_GuildWars2._LocalizeAccountExecution.ValueCommit);
+                if (booleans[81])
+                {
+                    var v = _GuildWars2._LauncherAutologinPoints.Value;
+                    writer.Write(v.EmptyArea.X);
+                    writer.Write(v.EmptyArea.Y);
+                    writer.Write(v.PlayButton.X);
+                    writer.Write(v.PlayButton.Y);
+                }
+                if (booleans[98])
+                    writer.Write(_GuildWars2._MumbleLinkName.Value);
+                if (booleans[99])
+                    writer.Write((byte)_GuildWars2._ProfileMode.Value);
+                if (booleans[100])
+                    writer.Write((byte)_GuildWars2._ProfileOptions.Value);
+                if (booleans[101])
+                {
+                    try
+                    {
+                        writer.Write(new FontConverter().ConvertToString(_FontUser.Value));
+                    }
+                    catch (Exception e)
+                    {
+                        Util.Logging.Log(e);
+                        writer.Write("");
+                    }
+                }
+                if (booleans[102])
+                    writer.Write(_StyleColumns.Value);
+                if (booleans[105])
+                    writer.Write(_StyleBackgroundImage.Value);
+                if (booleans[106])
+                {
+                    var v = _StyleColors.Value;
+
+                    writer.Write((byte)v.Theme);
+
+                    if (v.Theme == UI.UiColors.Theme.Settings)
+                    {
+                        writer.Write((byte)v.Colors.BaseTheme);
+
+                        var colors = v.Colors.Colors;
+                        var indexes = v.Colors.Indexes;
+                        var count = colors.Length;
+
+                        WriteVariableLength(writer, count);
+
+                        for (var i = 0; i < count; i++)
+                        {
+                            writer.Write(colors[i].ToArgb());
+                        }
+
+                        count = indexes != null ? indexes.Length : 0;
+
+                        WriteVariableLength(writer, count);
+
+                        for (var i = 0; i < count; i++)
+                        {
+                            writer.Write(indexes[i]);
+                        }
+                    }
+                }
+                if (booleans[107])
+                    writer.Write(_GuildWars1._Path.Value);
+                if (booleans[108])
+                    writer.Write(_GuildWars1._Arguments.Value);
+                if (booleans[109])
+                    writer.Write((byte)_GuildWars1._Mute.Value);
+                if (booleans[110])
+                    writer.Write(_GuildWars1._ProcessAffinity.Value);
+                if (booleans[111])
+                    writer.Write((byte)_GuildWars1._ProcessPriority.Value);
+                if (booleans[112])
+                    Write(writer, _GuildWars1._RunAfter.Value);
+                if (booleans[113])
+                    writer.Write((byte)_GuildWars1.ScreenshotsFormat.Value);
+                if (booleans[114])
+                    writer.Write(_GuildWars1.ScreenshotsLocation.Value);
+                if (booleans[115])
+                    writer.Write((byte)(_GuildWars1._Volume.Value * 255));
+                if (booleans[116])
+                {
+                    lock (_WindowTemplates)
+                    {
+                        var wt = _WindowTemplates;
+                        var count = wt.Count;
+
+                        WriteVariableLength(writer, count);
+
+                        for (var i = 0; i < count; i++)
+                        {
+                            WriteVariableLength(writer, wt[i].Screens.Length);
+
+                            foreach (var screen in wt[i].Screens)
+                            {
+                                Write(writer, screen.Bounds);
+                                WriteVariableLength(writer, screen.Windows.Length);
+
+                                foreach (var rect in screen.Windows)
+                                {
+                                    Write(writer, rect);
+                                }
+                            }
+
+                            writer.Write((byte)wt[i].SnapToEdges);
+
+                            int l;
+
+                            l = wt[i].Keys != null ? wt[i].Keys.Length : 0;
+                            WriteVariableLength(writer, l);
+                            if (l > 0)
+                                writer.Write(wt[i].Keys, 0, l);
+
+                            l = wt[i].Order != null ? wt[i].Order.Length : 0;
+                            WriteVariableLength(writer, l);
+                            if (l > 0)
+                                writer.Write(wt[i].Order, 0, l);
+
+                            l = wt[i].Assignments != null ? wt[i].Assignments.Count : 0;
+                            WriteVariableLength(writer, l);
+                            for (var j = 0; j < l; j++)
+                            {
+                                var a = wt[i].Assignments[j];
+
+                                writer.Write(a.EnabledKey);
+                                writer.Write(a.Name != null ? a.Name : "");
+                                writer.Write((byte)a.Type);
+                                
+                                var l2 = a.Assigned != null ? a.Assigned.Length : 0;
+                                WriteVariableLength(writer, l2);
+                                for (var j2 = 0; j2 < l2; j2++)
+                                {
+                                    var v = a.Assigned[j2].Value;
+
+                                    writer.Write(a.Assigned[j2].Key);
+                                    writer.Write((byte)v.Type);
+                                    writer.Write((byte)v.Options);
+
+                                    var l3 = v.Accounts != null ? v.Accounts.Length : 0;
+                                    WriteVariableLength(writer, l3);
+                                    for (var j3 = 0; j3 < l3; j3++)
+                                    {
+                                        writer.Write(v.Accounts[j3]);
+                                    }
+                                }
+                            }
+
+                        }
+                    }
+                }
+
+                if (booleans[119])
+                {
+                    var v = _LaunchLimiter.Value;
+                    writer.Write(v.Count);
+                    writer.Write(v.RechargeCount);
+                    writer.Write(v.RechargeTime);
+                }
+
+                if (booleans[122])
+                    writer.Write(_LaunchTimeout.Value);
+
+                if (booleans[123])
+                    writer.Write(_SelectedPage.Value);
+
+                if (booleans[124])
+                    writer.Write((byte)_JumpList.Value);
+
+                if (booleans[127])
+                    writer.Write((byte)_GuildWars2._PreventRelaunching.Value);
+
+                if (booleans[128])
+                    writer.Write((byte)_ActionActiveMClick.Value);
+
+                if (booleans[129])
+                    writer.Write((byte)_ActionInactiveMClick.Value);
+
+                if (booleans[132])
+                    writer.Write((byte)_ProcessPriority.Value);
+
+                if (booleans[133])
+                {
+                    var addresses = _IPAddresses.Value;
+                    WriteVariableLength(writer, addresses.Length);
+                    for (var i = 0; i < addresses.Length; i++)
+                    {
+                        var bytes = addresses[i].Address;
+                        writer.Write((byte)addresses[i].Type);
+                        writer.Write((byte)bytes.Length);
+                        writer.Write(bytes);
+                    }
+                }
+
+                if (booleans[136])
+                {
+                    var keys = _Hotkeys.Value;
+                    if (keys != null)
+                    {
+                        var count = keys.Length;
+
+                        WriteVariableLength(writer, count);
+
+                        for (var i = 0; i < count; i++)
+                        {
+                            var h = keys[i];
+
+                            writer.Write((int)h.Keys);
+                            writer.Write((byte)h.Action);
+                            h.Write(writer);
+                        }
+                    }
+                    else
+                    {
+                        WriteVariableLength(writer, 0);
+                    }
+                }
+
+                if (booleans[137])
+                    writer.Write(_StyleGridSpacing.Value);
+
+                if (booleans[138])
+                {
+                    var offsets = _StyleOffsets.Value;
+                    writer.Write((byte)offsets.Values.Length);
+                    foreach (var p in offsets.Values)
+                    {
+                        writer.Write(p.X);
+                        writer.Write(p.Y);
+                    }
+                    writer.Write(offsets.Height);
+                }
+
+                if (booleans[139])
+                    writer.Write((byte)_WindowManagerOptions.Value);
+
+                if (booleans[144])
+                    writer.Write((byte)_TemplateBarOptions.Value);
+
+                if (booleans[145])
+                    writer.Write((byte)_TemplateBarSorting.Value);
+
+                if (booleans[146])
+                    writer.Write(_TemplateBarDisplaySize.Value);
+
+                if (booleans[151])
+                    writer.Write((ushort)_StyleShowDailyLoginDay.Value);
+
+                if (booleans[152])
+                {
+                    lock (_AffinityValues)
+                    {
+                        var av = _AffinityValues;
+                        var count = av.Count;
+
+                        WriteVariableLength(writer, count);
+
+                        for (var i = 0; i < count; i++)
+                        {
+                            var a = av[i];
+                            Write(writer, a.Name);
+                            writer.Write(a.Affinity);
+                        }
+                    }
+                }
+
+                if (booleans[157])
+                    writer.Write(_DxTimeout.Value);
+
+                if (booleans[164])
+                    writer.Write((byte)_RunAfterPopupSorting.Value);
+
+                if (booleans[165])
+                    writer.Write((byte)_RunAfterPopupFilter.Value);
+
+                if (booleans[166])
+                    writer.Write((byte)_RunAfterPopupOptions.Value);
+
+                if (booleans[167])
+                    writer.Write((byte)_ShowDailiesLanguage.Value);
+
+                if (booleans[168])
+                {
+                    var lt = _LoginTweaks.Value;
+
+                    writer.Write(lt.Delay);
+                    writer.Write((byte)lt.Email);
+                    writer.Write((byte)lt.Password);
+                    writer.Write(lt.Verify);
+                }
+
+                if (booleans[169])
+                {
+                    var lt = _LauncherTweaks.Value;
+
+                    writer.Write(lt.Delay);
+                    writer.Write((byte)lt.CoherentOptions);
+                }
+
+                if (booleans[170])
+                    Write(writer, _SteamPath.Value);
+
+                if (booleans[171])
+                    writer.Write(_SteamTimeout.Value);
+
+                if (booleans[172])
+                    writer.Write((byte)_SteamLimitation.Value);
+
+                if (booleans[175])
+                    writer.Write((byte)_GuildWars2._DxLoadingPriority.Value);
+
+                if (booleans[176])
+                    writer.Write((byte)_GuildWars2._LocalizeAccountExecutionSelection.Value);
+
+                if (booleans[177])
+                    writer.Write(_GuildWars2._LastModified.Value);
+
+                if (booleans[178])
+                    Write(writer, _GuildWars2._PathSteam.Value);
+
+
+
+
+
+
+
+
+
+
+
+
+
+                lock (_DatFiles)
+                {
+                    var count = _DatFiles.Count;
+                    var items = new KeyValuePair<ushort, DatFile>[count];
+                    int i = 0;
+
+                    foreach (var key in _DatFiles.Keys)
+                    {
+                        if (i == count)
+                            break;
+                        var o = _DatFiles[key];
+                        if (o.HasValue && ((DatFile)o.Value).ReferenceCount > 0)
+                        {
+                            items[i++] = new KeyValuePair<ushort, DatFile>(key, (DatFile)o.Value);
+                        }
+                    }
+
+                    count = i;
+
+                    writer.Write((ushort)count);
+
+                    for (i = 0; i < count; i++)
+                    {
+                        var item = items[i];
+
+                        writer.Write(item.Value.UID);
+                        if (string.IsNullOrWhiteSpace(item.Value.Path))
+                            writer.Write("");
+                        else
+                            writer.Write(item.Value.Path);
+                        //writer.Write(item.Value.IsInitialized); //v6
+                        writer.Write((byte)item.Value._flags);
+                    }
+                }
+
+                //v4
+                lock (_GfxFiles)
+                {
+                    var count = _GfxFiles.Count;
+                    var items = new KeyValuePair<ushort, GfxFile>[count];
+                    int i = 0;
+
+                    foreach (var key in _GfxFiles.Keys)
+                    {
+                        if (i == count)
+                            break;
+                        var o = _GfxFiles[key];
+                        if (o.HasValue && ((GfxFile)o.Value).ReferenceCount > 0)
+                        {
+                            items[i++] = new KeyValuePair<ushort, GfxFile>(key, (GfxFile)o.Value);
+                        }
+                    }
+
+                    count = i;
+
+                    writer.Write((ushort)count);
+
+                    for (i = 0; i < count; i++)
+                    {
+                        var item = items[i];
+
+                        writer.Write(item.Value.UID);
+                        if (string.IsNullOrWhiteSpace(item.Value.Path))
+                            writer.Write("");
+                        else
+                            writer.Write(item.Value.Path);
+                        //writer.Write(item.Value.IsInitialized); //v6
+                        writer.Write((byte)item.Value._flags);
+                    }
+                }
+
+                //v10
+                lock (_GwDatFiles)
+                {
+                    var count = _GwDatFiles.Count;
+                    var items = new KeyValuePair<ushort, GwDatFile>[count];
+                    int i = 0;
+
+                    foreach (var key in _GwDatFiles.Keys)
+                    {
+                        if (i == count)
+                            break;
+                        var o = _GwDatFiles[key];
+                        if (o.HasValue && ((GwDatFile)o.Value).ReferenceCount > 0)
+                        {
+                            items[i++] = new KeyValuePair<ushort, GwDatFile>(key, (GwDatFile)o.Value);
+                        }
+                    }
+
+                    count = i;
+
+                    writer.Write((ushort)count);
+
+                    for (i = 0; i < count; i++)
+                    {
+                        var item = items[i];
+
+                        writer.Write(item.Value.UID);
+                        if (string.IsNullOrWhiteSpace(item.Value.Path))
+                            writer.Write("");
+                        else
+                            writer.Write(item.Value.Path);
+                        writer.Write((byte)item.Value._flags);
+                    }
+                }
+
+                lock (_Accounts)
+                {
+                    var count = _Accounts.Count;
+                    var items = new KeyValuePair<ushort, Account>[count];
+                    int i = 0;
+
+                    foreach (var key in _Accounts.Keys)
+                    {
+                        if (i == count)
+                            break;
+                        var o = _Accounts[key];
+                        if (o.HasValue)
+                        {
+                            items[i++] = new KeyValuePair<ushort, Account>(key, (Account)o.Value);
+                        }
+                    }
+
+                    count = i;
+
+                    Security.Cryptography.Crypto crypto = null;
+
+                    try
+                    {
+                        writer.Write((ushort)count);
+
+                        for (i = 0; i < count; i++)
+                        {
+                            var item = items[i];
+
+                            var account = item.Value;
+
+                            writer.Write((byte)account._Type);
+                            writer.Write(account._UID);
+                            writer.Write(account._Name);
+                            writer.Write(account._WindowsAccount != null ? account._WindowsAccount : "");
+                            writer.Write(account._CreatedUtc.ToBinary());
+                            writer.Write(account._LastUsedUtc.ToBinary());
+                            writer.Write(account._TotalUses);
+                            writer.Write(account._Arguments != null ? account._Arguments : "");
+
+                            booleans = new bool[]
+                            {
+                                //0
+                                account._ShowDailyLogin,
+                                account.Windowed,
+                                account._RecordLaunches,
+                                account._AutologinOptions != AutologinOptions.None,
+                                account._JumpListPinning != JumpListPinning.None,
+                                account.VolumeEnabled,
+                                account._RunAfter != null,
+                                !string.IsNullOrEmpty(account._Email),
+                                //8
+                                account._Password != null && !account._Password.Data.IsEmpty,
+                                !string.IsNullOrEmpty(account._BackgroundImage),
+                                account._Image != null,
+                                account._PendingFiles,
+                                !string.IsNullOrEmpty(account._ScreenshotsLocation),
+                                account._Pages != null, //!string.IsNullOrEmpty(account._ApiKey),
+                                account._TotpKey != null && account._TotpKey.Length > 0,
+                                account._Pinned, //account._ApiData != null,
+                                //16
+                                !account._WindowBounds.IsEmpty,
+                                account._Hotkeys != null, //(byte)account._ProcessPriority > 0,
+                                account._Proxy != LaunchProxy.None, //account._ClientPort != 0,
+                                false, //account._LastDailyCompletionUtc.Ticks != 1,
+                                account._Mute  != 0,
+                                account._ScreenshotsFormat != 0,
+                                account._NetworkAuthorization != NetworkAuthorizationOptions.None,
+                                account._ProcessPriority != ProcessPriorityClass.None,
+                                //24
+                                account._ProcessAffinity != 0,
+                                account._Notes != null && account._Notes.Count > 0,
+                                !account._ColorKey.IsEmpty,
+                                account._IconType != IconType.None,
+                                account._SortKey != (i + 1),
+                                false, //account._AutomaticPlay
+                                //30
+                            };
+
+                            b = CompressBooleans(booleans);
+
+                            writer.Write((byte)b.Length);
+                            writer.Write(b);
+
+                            if (booleans[1])
+                                writer.Write((byte)account._WindowOptions);
+
+                            if (booleans[3])
+                                writer.Write((byte)account._AutologinOptions);
+
+                            if (booleans[4])
+                                writer.Write((byte)account._JumpListPinning);
+
+                            if (booleans[5])
+                                writer.Write(account._Volume);
+
+                            if (booleans[6])
+                                Write(writer, account._RunAfter);
+
+                            //v4
+                            if (booleans[7])
+                                writer.Write(account._Email);
+
+                            if (booleans[8])
+                            {
+                                byte[] data;
+                                try
+                                {
+                                    if (crypto == null)
+                                    {
+                                        var o = _Encryption.Value;
+                                        crypto = new Security.Cryptography.Crypto(o != null ? o.Scope : EncryptionScope.CurrentUser, Security.Cryptography.Crypto.CryptoCompressionFlags.Data | Security.Cryptography.Crypto.CryptoCompressionFlags.IV, o != null ? o.Key : null);
+                                    }
+                                    data = account._Password.Data.ToArray(crypto, true);
+                                }
+                                catch (Exception e)
+                                {
+                                    Util.Logging.Log(e);
+                                    data = null;
+                                }
+
+                                if (data != null)
+                                {
+                                    writer.Write((ushort)data.Length);
+                                    writer.Write(data);
+                                    writer.Write(account._Password.UID);
+                                }
+                                else
+                                {
+                                    writer.Write((ushort)0);
+                                }
+                            }
+
+                            if (booleans[9])
+                                writer.Write(account._BackgroundImage);
+
+                            if (booleans[10])
+                            {
+                                var im = account._Image;
+                                writer.Write(im.Path);
+                                writer.Write((byte)im.Placement);
+                            }
+
+                            if (booleans[12])
+                                writer.Write(account._ScreenshotsLocation);
+
+                            if (booleans[13])
+                            {
+                                var pages = account._Pages;
+                                writer.Write((byte)pages.Length);
+                                for (var j = 0; j < pages.Length; j++)
+                                {
+                                    writer.Write(pages[j].Page);
+                                    writer.Write(pages[j].SortKey);
+                                    writer.Write(pages[j].Pinned);
+                                }
+                            }
+
+                            if (booleans[14])
+                            {
+                                writer.Write((byte)account._TotpKey.Length);
+                                writer.Write(account._TotpKey);
+                            }
+
+                            //if (booleans[15])
+                            //{
+                            //    var ad = account._ApiData;
+
+                            //    var booleansApi = new bool[]
+                            //    {
+                            //        ad.DailyPoints != null,
+                            //        ad.Played != null
+                            //    };
+
+                            //    b = CompressBooleans(booleansApi);
+
+                            //    writer.Write((byte)b.Length);
+                            //    writer.Write(b);
+
+                            //    if (booleansApi[0])
+                            //    {
+                            //        writer.Write(ad._DailyPoints._LastChange.ToBinary());
+                            //        writer.Write((byte)ad._DailyPoints._State);
+                            //        writer.Write(ad._DailyPoints._Value);
+                            //    }
+
+                            //    if (booleansApi[1])
+                            //    {
+                            //        writer.Write(ad._Played._LastChange.ToBinary());
+                            //        writer.Write((byte)ad._Played._State);
+                            //        writer.Write(ad._Played._Value);
+                            //    }
+                            //}
+
+                            if (booleans[16])
+                            {
+                                writer.Write(account._WindowBounds.X);
+                                writer.Write(account._WindowBounds.Y);
+                                writer.Write(account._WindowBounds.Width);
+                                writer.Write(account._WindowBounds.Height);
+                            }
+
+                            if (booleans[17])
+                            {
+                                var keys = account._Hotkeys;
+                                var l = keys.Length;
+
+                                WriteVariableLength(writer, l);
+                                for (var j = 0; j < l; j++)
+                                {
+                                    writer.Write((int)keys[j].Keys);
+                                    writer.Write((byte)keys[j].Action);
+
+                                    keys[j].Write(writer);
+                                }
+                            }
+
+                            if (booleans[18])
+                                writer.Write((byte)account._Proxy);
+
+                            //if (booleans[17])
+                            //    writer.Write((byte)account._ProcessPriority);
+
+                            //if (booleans[18])
+                            //    writer.Write(account._ClientPort);
+
+                            //if (booleans[19])
+                            //    writer.Write(account._LastDailyCompletionUtc.ToBinary());
+
+                            if (booleans[20])
+                                writer.Write((byte)account._Mute);
+
+                            if (booleans[21])
+                                writer.Write((byte)account._ScreenshotsFormat);
+
+                            if (booleans[22])
+                                writer.Write((byte)account._NetworkAuthorization);
+
+                            if (booleans[23])
+                                writer.Write((byte)account._ProcessPriority);
+
+                            if (booleans[24])
+                                writer.Write(account._ProcessAffinity);
+
+                            if (booleans[25])
+                            {
+                                var notes = account._Notes;
+
+                                lock (notes)
+                                {
+                                    WriteVariableLength(writer, notes.Count);
+
+                                    foreach (var n in notes)
+                                    {
+                                        writer.Write((ushort)n.SID);
+                                        writer.Write(n.Expires.ToBinary());
+                                        writer.Write(n.Notify);
+                                    }
+                                }
+                            }
+
+                            if (booleans[26])
+                                writer.Write(account._ColorKey.ToArgb());
+
+                            if (booleans[27])
+                            {
+                                var v = account._IconType;
+                                writer.Write((byte)v);
+                                if (v == IconType.File)
+                                {
+                                    var icon = account._Icon;
+                                    if (icon == null)
+                                        icon = "";
+                                    writer.Write(icon);
+                                }
+                            }
+
+                            if (booleans[28])
+                                writer.Write(account._SortKey);
+
+
+
+
+
+                            if (account._Type == AccountType.GuildWars1)
+                            {
+                                var a = (Gw1Account)account;
+
+                                booleans = new bool[]
+                                {
+                                    //0
+                                    a._DatFile != null,
+                                    !string.IsNullOrEmpty(a._CharacterName),
+                                    //2
+                                };
+
+                                b = CompressBooleans(booleans);
+
+                                writer.Write((byte)b.Length);
+                                writer.Write(b);
+
+                                if (booleans[0])
+                                    writer.Write(a._DatFile.UID);
+                                if (booleans[1])
+                                    writer.Write(a._CharacterName);
+                            }
+                            else
+                            {
+                                var a = (Gw2Account)account;
+
+                                booleans = new bool[]
+                                {
+                                    //0
+                                    a._DatFile != null,
+                                    a._GfxFile != null,
+                                    a._AutomaticRememberedLogin,
+                                    !string.IsNullOrEmpty(a._ApiKey),
+                                    a._ApiData != null,
+                                    a._ClientPort != 0,
+                                    a._LastDailyCompletionUtc.Ticks != 1,
+                                    !string.IsNullOrEmpty(a._MumbleLinkName),
+                                    //8
+                                    a._DailyLoginDay != 0,
+                                    a._LocalizedExecution,
+                                    a._Provider == AccountProvider.Steam,
+                                };
+
+                                b = CompressBooleans(booleans);
+
+                                writer.Write((byte)b.Length);
+                                writer.Write(b);
+
+                                if (booleans[0])
+                                    writer.Write(a._DatFile.UID);
+
+                                if (booleans[1])
+                                    writer.Write(a._GfxFile.UID);
+
+                                if (booleans[3])
+                                    writer.Write(a._ApiKey);
+
+                                if (booleans[4])
+                                {
+                                    var ad = a._ApiData;
+
+                                    var booleansApi = new bool[]
+                                        {
+                                            ad.DailyPoints != null,
+                                            ad.Played != null
+                                        };
+
+                                    b = CompressBooleans(booleansApi);
+
+                                    writer.Write((byte)b.Length);
+                                    writer.Write(b);
+
+                                    if (booleansApi[0])
+                                    {
+                                        writer.Write(ad._DailyPoints._LastChange.ToBinary());
+                                        writer.Write((byte)ad._DailyPoints._State);
+                                        writer.Write(ad._DailyPoints._Value);
+                                    }
+
+                                    if (booleansApi[1])
+                                    {
+                                        writer.Write(ad._Played._LastChange.ToBinary());
+                                        writer.Write((byte)ad._Played._State);
+                                        writer.Write(ad._Played._Value);
+                                    }
+                                }
+
+                                if (booleans[5])
+                                    writer.Write(a._ClientPort);
+
+                                if (booleans[6])
+                                    writer.Write(a._LastDailyCompletionUtc.ToBinary());
+
+                                if (booleans[7])
+                                    writer.Write(a._MumbleLinkName);
+
+                                if (booleans[8])
+                                    writer.Write(a._DailyLoginDay);
+
+                                writer.Write(a._LastDailyLoginUtc.ToBinary());
+                            }
+                        }
+                    }
+                    finally
+                    {
+                        if (crypto != null)
+                            crypto.Dispose();
+                    }
+                }
+
+                lock (_HiddenUserAccounts)
+                {
+                    var count = _HiddenUserAccounts.Count;
+                    var items = new string[count];
+                    int i = 0;
+
+                    foreach (var key in _HiddenUserAccounts.Keys)
+                    {
+                        if (i == count)
+                            break;
+                        var o = _HiddenUserAccounts[key];
+                        if (o.HasValue && o.Value)
+                        {
+                            items[i++] = key;
+                        }
+                    }
+
+                    count = i;
+
+                    writer.Write((ushort)count);
+
+                    for (i = 0; i < count; i++)
+                    {
+                        var item = items[i];
+                        writer.Write(item);
+                    }
+                }
+
+                //v4
+                lock (_HiddenDailyCategories)
+                {
+                    var count = _HiddenDailyCategories.Count;
+                    var items = new byte[count];
+                    int i = 0;
+
+                    foreach (var key in _HiddenDailyCategories.Keys)
+                    {
+                        if (i == count)
+                            break;
+                        var o = _HiddenDailyCategories[key];
+                        if (o.HasValue && o.Value)
+                        {
+                            items[i++] = key;
+                        }
+                    }
+
+                    count = i;
+
+                    writer.Write((byte)count);
+
+                    for (i = 0; i < count; i++)
+                    {
+                        var item = items[i];
+                        writer.Write(item);
+                    }
+                }
+
+
+
+
+
+
+
+                writer.Write((ushort)crc.CRC);
+            }
+        }
+
+        /// <summary>
+        /// Loads the specified settings file
+        /// </summary>
+        /// <returns>Version of the file that was loaded</returns>
+        public static ushort Load(string path)
         {
             ushort version;
             IO.CrcStream crc;
@@ -6317,7 +8819,7 @@ namespace Gw2Launcher
                 }
 
                 byte[] b = reader.ReadBytes(reader.ReadByte());
-                bool[] booleans = ExpandBooleans(b);
+                bool[] booleans = ExpandBooleans(b, 144);
 
                 if (version >= 10)
                 {
@@ -6450,7 +8952,10 @@ namespace Gw2Launcher
 
                     if (booleans[20])
                     {
-                        _LastProgramVersion.SetValue(new LastCheckedVersion(DateTime.FromBinary(reader.ReadInt64()), reader.ReadUInt16()));
+                        _LastProgramVersion.SetValue(new LastCheckedVersion(
+                            DateTime.FromBinary(reader.ReadInt64()), 
+                            reader.ReadUInt16(), 
+                            version >= 14 ? reader.ReadByte() : (byte)0));
                     }
                     else
                     {
@@ -6508,28 +9013,7 @@ namespace Gw2Launcher
                     }
 
                     if (booleans[29])
-                    {
-                        RunAfter[] ras;
-
-                        if (version >= 10)
-                        {
-                            ras = new RunAfter[ReadVariableLength(reader)];
-
-                            for (var i = 0; i < ras.Length; i++)
-                            {
-                                ras[i] = new RunAfter(reader.ReadString(), reader.ReadString(), reader.ReadString(), (RunAfter.RunAfterOptions)reader.ReadByte());
-                            }
-                        }
-                        else
-                        {
-                            ras = new RunAfter[]
-                            {
-                                new RunAfter(null, null, reader.ReadString(), RunAfter.RunAfterOptions.Enabled),
-                            };
-                        }
-
-                        _GuildWars2._RunAfter.SetValue(ras);
-                    }
+                        _GuildWars2._RunAfter.SetValue(ReadRunAfter(reader, version));
                     else
                         _GuildWars2._RunAfter.Clear();
 
@@ -6628,9 +9112,14 @@ namespace Gw2Launcher
                         _BackgroundPatchingProgress.Clear();
 
                     if (booleans[52])
-                        _NetworkAuthorization.SetValue((NetworkAuthorizationFlags)reader.ReadByte());
+                    {
+                        if (version >= 14)
+                            _Network.SetValue((NetworkOptions)reader.ReadByte());
+                        else
+                            reader.ReadByte(); //old NetworkAuthorizationFlags changed to NetworkOptions
+                    }
                     else
-                        _NetworkAuthorization.Clear();
+                        _Network.Clear();
 
                     if (booleans[53])
                         _ScreenshotNaming.SetValue(reader.ReadString());
@@ -6901,15 +9390,60 @@ namespace Gw2Launcher
 
                     if (booleans[106])
                     {
-                        var colors = new AccountGridButtonColors();
-                        var count = reader.ReadByte();
-
-                        for (var i = 0; i < count; i++)
+                        if (version >= 14)
                         {
-                            colors.Values[i] = Color.FromArgb(reader.ReadInt32());
-                        }
+                            var colors = new UiColors()
+                            {
+                                Theme = (UI.UiColors.Theme)reader.ReadByte()
+                            };
 
-                        _StyleColors.SetValue(colors);
+                            if (colors.Theme == UI.UiColors.Theme.Settings)
+                            {
+                                var baseTheme = (UI.UiColors.Theme)reader.ReadByte();
+                                var ccolors = new Color[ReadVariableLength(reader)];
+
+                                for (var i = 0; i < ccolors.Length; i++)
+                                {
+                                    ccolors[i] = Color.FromArgb(reader.ReadInt32());
+                                }
+
+                                var indexes = new ushort[ReadVariableLength(reader)];
+
+                                if (indexes.Length == 0)
+                                {
+                                    indexes = null;
+                                }
+                                else
+                                {
+                                    for (var i = 0; i < indexes.Length; i++)
+                                    {
+                                        indexes[i] = reader.ReadUInt16();
+                                    }
+                                }
+
+                                colors.Colors = UI.UiColors.EnsureColors(new UI.UiColors.ColorValues(baseTheme, ccolors, indexes, true), version);
+                            }
+
+                            _StyleColors.SetValue(colors);
+                        }
+                        else
+                        {
+                            var colors = new UiColors()
+                            {
+                                Theme = UI.UiColors.Theme.Settings,
+                            };
+
+                            var ccolors = new Color[reader.ReadByte()];
+
+                            for (var i = 0; i < ccolors.Length; i++)
+                            {
+                                ccolors[i] = Color.FromArgb(reader.ReadInt32());
+                            }
+
+                            colors.Colors = UI.UiColors.EnsureColors(new UI.UiColors.ColorValues(UI.UiColors.Theme.Light, ccolors, null, true), version);
+
+                            _StyleColors.SetValue(colors);
+                        }
                     }
                     else
                         _StyleColors.Clear();
@@ -6940,16 +9474,7 @@ namespace Gw2Launcher
                         _GuildWars1._ProcessPriority.Clear();
 
                     if (booleans[112])
-                    {
-                        var ras = new RunAfter[ReadVariableLength(reader)];
-
-                        for (var i = 0; i < ras.Length; i++)
-                        {
-                            ras[i] = new RunAfter(reader.ReadString(), reader.ReadString(), reader.ReadString(), (RunAfter.RunAfterOptions)reader.ReadByte());
-                        }
-
-                        _GuildWars1._RunAfter.SetValue(ras);
-                    }
+                        _GuildWars1._RunAfter.SetValue(ReadRunAfter(reader, version));
                     else
                         _GuildWars1._RunAfter.Clear();
 
@@ -6984,9 +9509,54 @@ namespace Gw2Launcher
                                 {
                                     rects[k] = ReadRectangle(reader);
                                 }
-                                screens[j] = new WindowTemplate.Screen(bounds,rects);
+                                screens[j] = new WindowTemplate.Screen(bounds,rects); 
                             }
-                            wt[i] = new WindowTemplate(screens);
+                            if (version >= 13)
+                            {
+                                var snapType = (WindowTemplate.SnapType)reader.ReadByte();
+
+                                var keys = reader.ReadBytes(ReadVariableLength(reader));
+                                if (keys.Length == 0)
+                                    keys = null;
+
+                                var order = reader.ReadBytes(ReadVariableLength(reader));
+                                if (order.Length == 0)
+                                    order = null;
+
+                                var assignments = new WindowTemplate.Assignment[ReadVariableLength(reader)];
+                                for (var j = 0; j < assignments.Length; j++)
+                                {
+                                    var enabled = reader.ReadByte();
+                                    var name = reader.ReadString();
+                                    var accountType = (WindowTemplate.Assignment.AccountType)reader.ReadByte();
+                                    var assigned = new KeyValuePair<byte, WindowTemplate.Assigned>[ReadVariableLength(reader)];
+                                    for (var j2 = 0; j2 < assigned.Length; j2++)
+                                    {
+                                        var key = reader.ReadByte();
+                                        var assignedType = (WindowTemplate.Assigned.AssignedType)reader.ReadByte();
+                                        var assignedOptions = WindowOptions.None;
+                                        if (version >= 14)
+                                            assignedOptions = (WindowOptions)reader.ReadByte();
+                                        var uids = new ushort[ReadVariableLength(reader)];
+                                        for (var j3 = 0; j3 < uids.Length; j3++)
+                                        {
+                                            uids[j3] = reader.ReadUInt16();
+                                        }
+                                        if (uids.Length == 0)
+                                            uids = null;
+                                        assigned[j2] = new KeyValuePair<byte, WindowTemplate.Assigned>(key, new WindowTemplate.Assigned(assignedType, uids, assignedOptions));
+                                    }
+                                    if (assigned.Length == 0)
+                                        assigned = null;
+                                    assignments[j] = new WindowTemplate.Assignment(enabled, name, accountType, assigned);
+                                }
+
+                                wt[i] = new WindowTemplate(screens, snapType, keys, order, assignments);
+                            }
+                            else
+                            {
+                                wt[i] = new WindowTemplate(screens, WindowTemplate.SnapType.WindowEdgeOuter, null, null, null);
+                            }
                         }
 
                         _WindowTemplates._list.AddRange(wt);
@@ -7055,9 +9625,290 @@ namespace Gw2Launcher
                         _ProcessPriority.Clear();
 
                     if (booleans[133])
-                        _PublicIPAddress.SetValue(reader.ReadBytes(reader.ReadByte()));
+                    {
+                        if (version >= 14)
+                        {
+                            var addresses = new Net.IP.WildcardAddress[ReadVariableLength(reader)];
+                            for (var i = 0; i < addresses.Length; i++)
+                            {
+                                addresses[i] = new Net.IP.WildcardAddress((Net.IP.WildcardAddress.AddressType)reader.ReadByte(), reader.ReadBytes(reader.ReadByte()));
+                            }
+                            _IPAddresses.SetValue(addresses);
+                        }
+                        else
+                        {
+                            var address = reader.ReadBytes(reader.ReadByte());
+
+                            switch (address.Length)
+                            {
+                                case 16:
+                                    _IPAddresses.SetValue(new Net.IP.WildcardAddress[] { new Net.IP.WildcardAddress(Net.IP.WildcardAddress.AddressType.IPv6, address) });
+                                    break;
+                                case 4:
+                                    Array.Resize<byte>(ref address, 3);
+                                    _IPAddresses.SetValue(new Net.IP.WildcardAddress[] { new Net.IP.WildcardAddress(Net.IP.WildcardAddress.AddressType.IPv4, address) });
+                                    break;
+                                default:
+                                    _IPAddresses.Clear();
+                                    break;
+                            }
+                        }
+                    }
                     else
-                        _PublicIPAddress.Clear();
+                        _IPAddresses.Clear();
+                }
+
+                if (version >= 12)
+                {
+                    if (booleans[134])
+                        _HotkeysEnabled.SetValue(booleans[135]);
+                    else
+                        _HotkeysEnabled.Clear();
+
+                    if (booleans[136])
+                    {
+                        var count = ReadVariableLength(reader);
+                        var hotkeys = new Hotkey[count];
+
+                        for (var i = 0; i < count; i++)
+                        {
+                            var keys = (Keys)reader.ReadInt32();
+                            var action = (Tools.Hotkeys.HotkeyAction)reader.ReadByte();
+                            var h = Tools.Hotkeys.HotkeyManager.From(action, keys);
+
+                            //switch (action)
+                            //{
+                            //    case Tools.Hotkeys1.HotkeyManager.HotkeyAction.Close:
+                            //    case Tools.Hotkeys1.HotkeyManager.HotkeyAction.Focus:
+                            //    case Tools.Hotkeys1.HotkeyManager.HotkeyAction.LaunchFocus:
+                            //        reader.ReadUInt16(); //invalid uid
+                            //        break;
+                            //    case Tools.Hotkeys1.HotkeyManager.HotkeyAction.RunProgram:
+                            //        try
+                            //        {
+                            //            var values = new object[] { reader.ReadString(), reader.ReadString() };
+                            //            data = Tools.Hotkeys1.HotkeyManager.HotkeyVariable.ToArray(Tools.Hotkeys1.HotkeyManager.GetHotkey(action).Variables, values);
+                            //        }
+                            //        catch { }
+                            //        break;
+                            //}
+
+                            h.Read(reader, version);
+
+                            hotkeys[i] = h;
+                        }
+
+                        _Hotkeys.SetValue(hotkeys);
+                    }
+                    else
+                        _Hotkeys.Clear();
+
+                    if (booleans[137])
+                        _StyleGridSpacing.SetValue(reader.ReadByte());
+                    else
+                        _StyleGridSpacing.Clear();
+
+                    if (booleans[138])
+                    {
+                        var offsets = new AccountGridButtonOffsets();
+                        var count = reader.ReadByte();
+
+                        for (var i = 0; i < count; i++)
+                        {
+                            offsets.Values[i] = new Point<sbyte>(reader.ReadSByte(), reader.ReadSByte());
+                        }
+
+                        offsets.Height = reader.ReadUInt16();
+                        _StyleOffsets.SetValue(offsets);
+                    }
+                    else
+                        _StyleOffsets.Clear();
+                }
+
+                if (version >= 13)
+                {
+                    if (booleans[139])
+                        _WindowManagerOptions.SetValue((WindowManagerFlags)reader.ReadByte());
+                    else
+                        _WindowManagerOptions.Clear();
+
+                    if (booleans[140])
+                        _StyleDisableWindowShadows.SetValue(booleans[141]);
+                    else
+                        _StyleDisableWindowShadows.Clear();
+
+                    if (booleans[142])
+                        _StyleDisableSearchOnKeyPress.SetValue(booleans[143]);
+                    else
+                        _StyleDisableSearchOnKeyPress.Clear();
+                }
+
+                if (version >= 14)
+                {
+                    if (booleans[144])
+                        _TemplateBarOptions.SetValue((TemplateBarOptions)reader.ReadByte());
+                    else
+                        _TemplateBarOptions.Clear();
+
+                    if (booleans[145])
+                        _TemplateBarSorting.SetValue((TemplateBar.SortMode)reader.ReadByte());
+                    else
+                        _TemplateBarSorting.Clear();
+
+                    if (booleans[146])
+                        _TemplateBarDisplaySize.SetValue(reader.ReadByte());
+                    else
+                        _TemplateBarDisplaySize.Clear();
+
+                    if (booleans[147])
+                        _ShowAccountBarToggle.SetValue(booleans[148]);
+                    else
+                        _ShowAccountBarToggle.Clear();
+
+                    if (booleans[149])
+                        _ShowMinimizeRestoreAll.SetValue(booleans[150]);
+                    else
+                        _ShowMinimizeRestoreAll.Clear();
+
+                    if (booleans[151])
+                        _StyleShowDailyLoginDay.SetValue((DailyLoginDayIconFlags)reader.ReadUInt16());
+                    else
+                        _StyleShowDailyLoginDay.Clear();
+
+                    if (booleans[152])
+                    {
+                        var values = new AffinityValue[ReadVariableLength(reader)];
+
+                        for (var i = 0; i < values.Length; i++)
+                        {
+                            var n = reader.ReadString();
+                            var a = reader.ReadInt64();
+
+                            values[i] = new AffinityValue(n, a);
+                        }
+
+                        _AffinityValues.Clear();
+                        _AffinityValues._list.AddRange(values);
+                    }
+                    else
+                        _AffinityValues.Clear();
+
+                    if (booleans[153])
+                        _StyleDisablePageOnKeyPress.SetValue(booleans[154]);
+                    else
+                        _StyleDisablePageOnKeyPress.Clear();
+
+                    if (booleans[155])
+                        _ShowWindowTemplatesToggle.SetValue(booleans[156]);
+                    else
+                        _ShowWindowTemplatesToggle.Clear();
+
+                    if (booleans[157])
+                        _DxTimeout.SetValue(reader.ReadByte());
+                    else
+                        _DxTimeout.Clear();
+
+                    if (booleans[158])
+                        _ForceTaskbarGrouping.SetValue(booleans[159]);
+                    else
+                        _ForceTaskbarGrouping.Clear();
+
+                    if (booleans[160])
+                        _StyleHighlightActive.SetValue(booleans[161]);
+                    else
+                        _StyleHighlightActive.Clear();
+
+                    if (booleans[162])
+                        _HideInitialWindow.SetValue(booleans[163]);
+                    else
+                        _HideInitialWindow.Clear();
+
+                    if (booleans[164])
+                        _RunAfterPopupSorting.SetValue((RunAfterPopupSorting)reader.ReadByte());
+                    else
+                        _RunAfterPopupSorting.Clear();
+
+                    if (booleans[165])
+                        _RunAfterPopupFilter.SetValue((RunAfterPopupFilter)reader.ReadByte());
+                    else
+                        _RunAfterPopupFilter.Clear();
+
+                    if (booleans[166])
+                        _RunAfterPopupOptions.SetValue((RunAfterPopupOptions)reader.ReadByte());
+                    else
+                        _RunAfterPopupOptions.Clear();
+
+                    if (booleans[167])
+                        _ShowDailiesLanguage.SetValue((Language)reader.ReadByte());
+                    else
+                        _ShowDailiesLanguage.Clear();
+
+                    if (booleans[168])
+                    {
+                        _LoginTweaks.SetValue(new LoginTweaks()
+                        {
+                            Delay = reader.ReadByte(),
+                            Email = (LoginInputType)reader.ReadByte(),
+                            Password = (LoginInputType)reader.ReadByte(),
+                            Verify = reader.ReadBoolean(),
+                        });
+                    }
+                    else
+                        _LoginTweaks.Clear();
+
+                    if (booleans[169])
+                    {
+                        _LauncherTweaks.SetValue(new LauncherTweaks()
+                        {
+                            Delay = reader.ReadByte(),
+                            CoherentOptions = (LauncherTweaks.CoherentFlags)reader.ReadByte(),
+                        });
+                    }
+                    else
+                        _LauncherTweaks.Clear();
+
+                    if (booleans[170])
+                        _SteamPath.SetValue(reader.ReadString());
+                    else
+                        _SteamPath.Clear();
+
+                    if (booleans[171])
+                        _SteamTimeout.SetValue(reader.ReadByte());
+                    else
+                        _SteamTimeout.Clear();
+
+                    if (booleans[172])
+                        _SteamLimitation.SetValue((SteamLimitation)reader.ReadByte());
+                    else
+                        _SteamLimitation.Clear();
+
+                    if (booleans[173])
+                        _DisableMumbleLinkDailyLogin.SetValue(booleans[174]);
+                    else
+                        _DisableMumbleLinkDailyLogin.Clear();
+
+                    if (booleans[175])
+                        _GuildWars2._DxLoadingPriority.SetValue((ProcessPriorityClass)reader.ReadByte());
+                    else
+                        _GuildWars2._DxLoadingPriority.Clear();
+
+                    if (booleans[176])
+                        _GuildWars2._LocalizeAccountExecutionSelection.SetValue((LocalizeAccountExecutionSelectionOptions)reader.ReadByte());
+                    else
+                        _GuildWars2._LocalizeAccountExecutionSelection.Clear();
+
+                    if (booleans[177])
+                        _GuildWars2._LastModified.SetValue(reader.ReadUInt32());
+                    else
+                        _GuildWars2._LastModified.Clear();
+
+                    if (booleans[178])
+                        _GuildWars2._PathSteam.SetValue(reader.ReadString());
+                    else
+                        _GuildWars2._PathSteam.Clear();
+
+                    _DisableAutomaticLogins.SetValue(booleans[179]);
+                    _DisableRunAfter.SetValue(booleans[180]);
                 }
 
                 _datUID = 0;
@@ -7204,6 +10055,11 @@ namespace Gw2Launcher
                             account._TotalUses = reader.ReadUInt16();
                             account._Arguments = reader.ReadString();
 
+                            if (version < 14 && type == AccountType.GuildWars2)
+                            {
+                                ((Gw2Account)account)._LastDailyLoginUtc = account._LastUsedUtc;
+                            }
+
                             b = reader.ReadBytes(reader.ReadByte());
                             booleans = ExpandBooleans(b);
 
@@ -7258,28 +10114,7 @@ namespace Gw2Launcher
                                 if (booleans[5])
                                     account._Volume = reader.ReadByte();
                                 if (booleans[6])
-                                {
-                                    RunAfter[] ras;
-
-                                    if (version >= 10)
-                                    {
-                                        ras = new RunAfter[ReadVariableLength(reader)];
-
-                                        for (var j = 0; j < ras.Length; j++)
-                                        {
-                                            ras[j] = new RunAfter(reader.ReadString(), reader.ReadString(), reader.ReadString(), (RunAfter.RunAfterOptions)reader.ReadByte());
-                                        }
-                                    }
-                                    else
-                                    {
-                                        ras = new RunAfter[]
-                                        {
-                                            new RunAfter(null, null, reader.ReadString(), RunAfter.RunAfterOptions.Enabled),
-                                        };
-                                    }
-
-                                    account._RunAfter = ras;
-                                }
+                                    account._RunAfter = ReadRunAfter(reader, version);
                             }
 
                             if (version >= 4)
@@ -7437,6 +10272,34 @@ namespace Gw2Launcher
                                 if (booleans[16])
                                     account._WindowBounds = new Rectangle(reader.ReadInt32(), reader.ReadInt32(), reader.ReadInt32(), reader.ReadInt32());
 
+                                if (version >= 12)
+                                {
+                                    if (booleans[17])
+                                    {
+                                        var l = ReadVariableLength(reader);
+                                        var hotkeys = new Hotkey[l];
+                                        
+                                        for (var j = 0; j < l; j++)
+                                        {
+                                            var keys = (Keys)reader.ReadInt32();
+                                            var action = (Tools.Hotkeys.HotkeyAction)reader.ReadByte();
+                                            var h = Tools.Hotkeys.HotkeyManager.From(action, keys);
+
+                                            h.Read(reader, version);
+
+                                            hotkeys[j] = h;
+                                        }
+
+                                        account._Hotkeys = hotkeys;
+                                    }
+                                }
+
+                                if (version >= 14)
+                                {
+                                    if (booleans[18])
+                                        account._Proxy = (LaunchProxy)reader.ReadByte();
+                                }
+
                                 //if (booleans[17])
                                 //    account._ProcessPriority = (ProcessPriorityClass)reader.ReadByte();
 
@@ -7456,7 +10319,7 @@ namespace Gw2Launcher
                                     account._ScreenshotsFormat = (ScreenshotFormat)reader.ReadByte();
 
                                 if (booleans[22])
-                                    account._NetworkAuthorizationState = (NetworkAuthorizationState)reader.ReadByte();
+                                    account._NetworkAuthorization = (NetworkAuthorizationOptions)reader.ReadByte();
 
                                 if (booleans[23])
                                     account._ProcessPriority = (ProcessPriorityClass)reader.ReadByte();
@@ -7601,8 +10464,21 @@ namespace Gw2Launcher
 
                                     if (booleans[7])
                                         a._MumbleLinkName = reader.ReadString();
+
+                                    if (version >= 14)
+                                    {
+                                        if (booleans[8])
+                                            a._DailyLoginDay = reader.ReadByte();
+
+                                        a._LocalizedExecution = booleans[9];
+
+                                        a._LastDailyLoginUtc = DateTime.FromBinary(reader.ReadInt64());
+                                    }
                                 }
                             }
+
+
+
 
 
 
@@ -7853,6 +10729,30 @@ namespace Gw2Launcher
                     #endregion
                 }
 
+                if (version <= 13)
+                {
+                    #region Version 13
+
+                    foreach (var uid in _Accounts.GetKeys())
+                    {
+                        var a = (Account)_Accounts[uid].Value;
+                        if (a.Type != AccountType.GuildWars2)
+                            continue;
+                        if (!string.IsNullOrWhiteSpace(a._Arguments))
+                        {
+                            var key = "provider Steam";
+
+                            if (Util.Args.Contains(a._Arguments, key))
+                            {
+                                ((Gw2Account)a)._Provider = AccountProvider.Steam;
+                                a._Arguments = Util.Args.AddOrReplace(a._Arguments, key, "");
+                            }
+                        }
+                    }
+
+                    #endregion
+                }
+
                 #endregion
 
                 if (version >= 10)
@@ -7865,6 +10765,73 @@ namespace Gw2Launcher
 
             return version;
         }
+
+        #region Temporary settings
+
+        private static void LoadTempSettings()
+        {
+            try
+            {
+                if (File.Exists(Path.Combine(DataPath.AppDataAccountDataTemp, "settings.txt")))
+                {
+                    var lines = File.ReadAllLines(Path.Combine(DataPath.AppDataAccountDataTemp, "settings.txt"));
+
+                    foreach (var l in lines)
+                    {
+                        var i = l.IndexOf('=');
+                        if (i == -1)
+                            continue;
+                        var k = l.Substring(0, i).Trim();
+                        var v = l.Substring(i + 1);
+
+                        i = v.IndexOf('|');
+                        if (i != -1)
+                            v = v.Substring(0, i).Trim();
+                        else
+                            v = v.Trim();
+
+                        switch (k.ToLower())
+                        {
+                            case "dxtimeout":
+
+                                if (int.TryParse(v, out i))
+                                {
+                                    Settings.DxTimeout.Value = (byte)i;
+                                }
+
+                                break;
+                            case "dxloadingprocesspriority":
+
+                                if (int.TryParse(v, out i) && i > 0 && i <= 5 && i != (int)Settings.ProcessPriorityClass.None)
+                                {
+                                    Settings.GuildWars2.DxLoadingPriority.Value = (Settings.ProcessPriorityClass)i;
+                                }
+
+                                break;
+                            case "forcetaskbargrouping":
+
+                                if (int.TryParse(v, out i) && i == 1)
+                                {
+                                    Settings.ForceTaskbarGrouping.Value = true;
+                                }
+
+                                break;
+                        }
+                    }
+                }
+
+//                File.WriteAllText(Path.Combine(DataPath.AppDataAccountDataTemp, "settings.txt"),
+//@"DxTimeout=" + Settings.DxTimeout.Value + @"
+//DxLoadingProcessPriority=" + (int)Settings.GuildWars2.DxLoadingPriority.Value + @"
+//ForceTaskbarGrouping=" + (Settings.ForceTaskbarGrouping.Value ? 1 : 0) + @"
+//");
+            }
+            catch
+            {
+            }
+        }
+
+        #endregion
 
         #region Historical v1 I/O
 
@@ -8703,12 +11670,12 @@ namespace Gw2Launcher
             }
         }
 
-        private static SettingValue<NetworkAuthorizationFlags> _NetworkAuthorization;
-        public static ISettingValue<NetworkAuthorizationFlags> NetworkAuthorization
+        private static SettingValue<NetworkOptions> _Network;
+        public static ISettingValue<NetworkOptions> Network
         {
             get
             {
-                return _NetworkAuthorization;
+                return _Network;
             }
         }
 
@@ -8842,6 +11809,46 @@ namespace Gw2Launcher
             }
         }
 
+        private static SettingValue<TemplateBarOptions> _TemplateBarOptions;
+        private static SettingValue<TemplateBar.SortMode> _TemplateBarSorting;
+        private static SettingValue<byte> _TemplateBarDisplaySize;
+
+        public static class TemplateBar
+        {
+            [Flags]
+            public enum SortMode : byte
+            {
+                None = 0,
+                Descending = 1,
+                Active = 2,
+                Name = 4,
+            }
+
+            public static ISettingValue<TemplateBarOptions> Options
+            {
+                get
+                {
+                    return _TemplateBarOptions;
+                }
+            }
+
+            public static ISettingValue<SortMode> Sorting
+            {
+                get
+                {
+                    return _TemplateBarSorting;
+                }
+            }
+
+            public static ISettingValue<byte> DisplaySize
+            {
+                get
+                {
+                    return _TemplateBarDisplaySize;
+                }
+            }
+        }
+
         private static SettingValue<byte> _LimitActiveAccounts;
         public static ISettingValue<byte> LimitActiveAccounts
         {
@@ -8875,6 +11882,24 @@ namespace Gw2Launcher
             get
             {
                 return _ShowKillAllAccounts;
+            }
+        }
+
+        private static SettingValue<bool> _ShowAccountBarToggle;
+        public static ISettingValue<bool> ShowAccountBarToggle
+        {
+            get
+            {
+                return _ShowAccountBarToggle;
+            }
+        }
+
+        private static SettingValue<bool> _ShowMinimizeRestoreAll;
+        public static ISettingValue<bool> ShowMinimizeRestoreAll
+        {
+            get
+            {
+                return _ShowMinimizeRestoreAll;
             }
         }
 
@@ -8968,8 +11993,8 @@ namespace Gw2Launcher
             }
         }
 
-        private static SettingValue<AccountGridButtonColors> _StyleColors;
-        public static ISettingValue<AccountGridButtonColors> StyleColors
+        private static SettingValue<UiColors> _StyleColors;
+        public static ISettingValue<UiColors> StyleColors
         {
             get
             {
@@ -9067,19 +12092,277 @@ namespace Gw2Launcher
             }
         }
 
-        private static SettingValue<byte[]> _PublicIPAddress;
-        public static ISettingValue<byte[]> PublicIPAddress
+        private static SettingValue<Net.IP.WildcardAddress[]> _IPAddresses;
+        public static ISettingValue<Net.IP.WildcardAddress[]> IPAddresses
         {
             get
             {
-                return _PublicIPAddress;
+                return _IPAddresses;
             }
         }
 
-        public static bool DisableAutomaticLogins
+        private static SettingValue<bool> _HotkeysEnabled;
+        public static ISettingValue<bool> HotkeysEnabled
         {
-            get;
-            set;
+            get
+            {
+                return _HotkeysEnabled;
+            }
+        }
+
+        private static SettingValue<Hotkey[]> _Hotkeys;
+        public static ISettingValue<Hotkey[]> Hotkeys
+        {
+            get
+            {
+                return _Hotkeys;
+            }
+        }
+
+        private static SettingValue<byte> _StyleGridSpacing;
+        public static ISettingValue<byte> StyleGridSpacing
+        {
+            get
+            {
+                return _StyleGridSpacing;
+            }
+        }
+
+        private static SettingValue<AccountGridButtonOffsets> _StyleOffsets;
+        public static ISettingValue<AccountGridButtonOffsets> StyleOffsets
+        {
+            get
+            {
+                return _StyleOffsets;
+            }
+        }
+
+        private static SettingValue<WindowManagerFlags> _WindowManagerOptions;
+        public static ISettingValue<WindowManagerFlags> WindowManagerOptions
+        {
+            get
+            {
+                return _WindowManagerOptions;
+            }
+        }
+
+        private static SettingValue<bool> _StyleDisableWindowShadows;
+        public static ISettingValue<bool> StyleDisableWindowShadows
+        {
+            get
+            {
+                return _StyleDisableWindowShadows;
+            }
+        }
+
+        private static SettingValue<bool> _StyleDisableSearchOnKeyPress;
+        public static ISettingValue<bool> StyleDisableSearchOnKeyPress
+        {
+            get
+            {
+                return _StyleDisableSearchOnKeyPress;
+            }
+        }
+
+        private static SettingValue<DailyLoginDayIconFlags> _StyleShowDailyLoginDay;
+        public static ISettingValue<DailyLoginDayIconFlags> StyleShowDailyLoginDay
+        {
+            get
+            {
+                return _StyleShowDailyLoginDay;
+            }
+        }
+
+        private static ListProperty<AffinityValue> _AffinityValues;
+        public static IListProperty<AffinityValue> AffinityValues
+        {
+            get
+            {
+                return _AffinityValues;
+            }
+        }
+
+        private static SettingValue<bool> _StyleDisablePageOnKeyPress;
+        public static ISettingValue<bool> StyleDisablePageOnKeyPress
+        {
+            get
+            {
+                return _StyleDisablePageOnKeyPress;
+            }
+        }
+
+        private static SettingValue<bool> _ShowWindowTemplatesToggle;
+        public static ISettingValue<bool> ShowWindowTemplatesToggle
+        {
+            get
+            {
+                return _ShowWindowTemplatesToggle;
+            }
+        }
+
+        private static ListProperty<IMarker> _Markers;
+        public static IListProperty<IMarker> Markers
+        {
+            get
+            {
+                return _Markers;
+            }
+        }
+
+        private static SettingValue<byte> _DxTimeout;
+        public static ISettingValue<byte> DxTimeout
+        {
+            get
+            {
+                return _DxTimeout;
+            }
+        }
+
+        private static SettingValue<bool> _ForceTaskbarGrouping;
+        public static ISettingValue<bool> ForceTaskbarGrouping
+        {
+            get
+            {
+                return _ForceTaskbarGrouping;
+            }
+        }
+
+        private static SettingValue<bool> _StyleHighlightActive;
+        public static ISettingValue<bool> StyleHighlightActive
+        {
+            get
+            {
+                return _StyleHighlightActive;
+            }
+        }
+
+        private static SettingValue<bool> _HideInitialWindow;
+        public static ISettingValue<bool> HideInitialWindow
+        {
+            get
+            {
+                return _HideInitialWindow;
+            }
+        }
+
+        private static SettingValue<RunAfterPopupSorting> _RunAfterPopupSorting;
+        private static SettingValue<RunAfterPopupFilter> _RunAfterPopupFilter;
+        private static SettingValue<RunAfterPopupOptions> _RunAfterPopupOptions;
+
+        public static class RunAfterPopup
+        {
+            public static ISettingValue<RunAfterPopupOptions> Options
+            {
+                get
+                {
+                    return _RunAfterPopupOptions;
+                }
+            }
+
+            public static ISettingValue<RunAfterPopupFilter> Filter
+            {
+                get
+                {
+                    return _RunAfterPopupFilter;
+                }
+            }
+
+            public static ISettingValue<RunAfterPopupSorting> Sorting
+            {
+                get
+                {
+                    return _RunAfterPopupSorting;
+                }
+            }
+        }
+
+        private static SettingValue<Language> _ShowDailiesLanguage;
+        public static ISettingValue<Language> ShowDailiesLanguage
+        {
+            get
+            {
+                return _ShowDailiesLanguage;
+            }
+        }
+
+        private static SettingValue<LoginTweaks> _LoginTweaks;
+        private static SettingValue<LauncherTweaks> _LauncherTweaks;
+        private static SettingValue<bool> _DisableMumbleLinkDailyLogin;
+
+        public static class Tweaks
+        {
+            public static ISettingValue<LoginTweaks> Login
+            {
+                get
+                {
+                    return _LoginTweaks;
+                }
+            }
+
+            public static ISettingValue<LauncherTweaks> Launcher
+            {
+                get
+                {
+                    return _LauncherTweaks;
+                }
+            }
+
+            public static ISettingValue<bool> DisableMumbleLinkDailyLogin
+            {
+                get
+                {
+                    return _DisableMumbleLinkDailyLogin;
+                }
+            }
+        }
+
+        private static SettingValue<string> _SteamPath;
+        private static SettingValue<byte> _SteamTimeout;
+        private static SettingValue<SteamLimitation> _SteamLimitation;
+
+        public static class Steam
+        {
+            public static ISettingValue<string> Path
+            {
+                get
+                {
+                    return _SteamPath;
+                }
+            }
+
+            public static ISettingValue<byte> Timeout
+            {
+                get
+                {
+                    return _SteamTimeout;
+                }
+            }
+
+            public static ISettingValue<SteamLimitation> Limitation
+            {
+                get
+                {
+                    return _SteamLimitation;
+                }
+            }
+        }
+
+        private static SettingValue<bool> _DisableAutomaticLogins;
+        public static ISettingValue<bool> DisableAutomaticLogins
+        {
+            get
+            {
+                return _DisableAutomaticLogins;
+            }
+        }
+
+        private static SettingValue<bool> _DisableRunAfter;
+        public static ISettingValue<bool> DisableRunAfter
+        {
+            get
+            {
+                return _DisableRunAfter;
+            }
         }
 
         public static bool Silent
@@ -9249,6 +12532,11 @@ namespace Gw2Launcher
             }
         }
 
+        public static IMarker CreateMarker()
+        {
+            return new Marker();
+        }
+
         public static IAccountTypeSettings GetSettings(AccountType type)
         {
             switch (type)
@@ -9263,6 +12551,24 @@ namespace Gw2Launcher
             }
 
             return null;
+        }
+
+        public static string GetLanguageCode(Language l)
+        {
+            switch (l)
+            {
+                case Language.EN:
+                    return "en";
+                case Language.DE:
+                    return "de";
+                case Language.ES:
+                    return "es";
+                case Language.FR:
+                    return "fr";
+                case Language.ZH:
+                    return "zh";
+            }
+            return "";
         }
 
         public static void Save()

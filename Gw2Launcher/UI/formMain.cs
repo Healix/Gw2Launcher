@@ -9,9 +9,10 @@ using System.Threading.Tasks;
 using System.Windows.Forms;
 using System.IO;
 using System.Diagnostics;
+using System.Runtime.InteropServices;
 using Gw2Launcher.UI.Controls;
 using Gw2Launcher.Windows.Native;
-using System.Runtime.InteropServices;
+using Gw2Launcher.Tools.Hotkeys;
 
 namespace Gw2Launcher.UI
 {
@@ -87,7 +88,7 @@ namespace Gw2Launcher.UI
             }
         }
 
-        private class TitleLabel : Control
+        private class TitleLabel : Base.BaseControl
         {
             private bool remeasure;
             private Size measured;
@@ -129,8 +130,13 @@ namespace Gw2Launcher.UI
                 var mw = measured.Width;
                 var x = pw / 2 - mw / 2 - this.Left;
                 var y = h / 2 - measured.Height / 2;
-                if (x < 0)
-                    x = 0;
+                //if (x < 0)
+                //    x = 0;
+                if (x < 5)
+                {
+                    //hiding the title if it's too close to the side
+                    return;
+                }
                 var r = x + mw;
 
                 if (r > w)
@@ -141,6 +147,8 @@ namespace Gw2Launcher.UI
                         x = 0;
                         mw = w;
                     }
+
+                    return;
                 }
 
                 TextRenderer.DrawText(e.Graphics, this.Text, this.Font, new Rectangle(x, y, mw, measured.Height), this.ForeColor, this.BackColor, TextFormatFlags.EndEllipsis | TextFormatFlags.SingleLine);
@@ -200,11 +208,19 @@ namespace Gw2Launcher.UI
             }
         }
 
+        private enum VersionState
+        {
+            OK,
+            UnknownError,
+            MovedError,
+        }
+
         private bool autoSizeGrid;
         private NotifyIcon notifyIcon;
         private bool canShow, initialized;
         private DateTime lastCrashDelete;
         private bool isInModalLoop;
+        private int lastDigitKeyPress;
 
         private Dictionary<ushort, AccountGridButton> buttons;
         private formAccountTooltip tooltip;
@@ -224,6 +240,9 @@ namespace Gw2Launcher.UI
         private Image defaultBackground;
         private formMenu mpWindow;
         private formMaskOverlay.Manager maskManager;
+        private Tools.Hotkeys.HotkeyManager hotkeys;
+        private WindowPositioning.formTemplates templatesManager;
+        private WindowPositioning.formTemplatesCompact templatesCompact;
 
         private bool shown;
 
@@ -290,9 +309,10 @@ namespace Gw2Launcher.UI
             Client.Launcher.AnyActiveProcessCountChanged += Launcher_AnyActiveProcessCountChanged;
             Client.Launcher.BuildUpdated += Launcher_BuildUpdated;
             Client.Launcher.AccountQueued += Launcher_AccountQueued;
-            Client.Launcher.NetworkAuthorizationRequired += Launcher_NetworkAuthorizationRequired;
+            Client.Launcher.NetworkChanged += Launcher_NetworkChanged;
             Client.Launcher.AccountWindowEvent+=Launcher_AccountWindowEvent;
             Client.Launcher.AllQueuedLaunchesCompleteAllAccountsExited += Launcher_AllQueuedLaunchesCompleteAllAccountsExited;
+            Client.Launcher.MumbleLinkVerified += Launcher_MumbleLinkVerified;
 
             contextNotify.Opening += contextNotify_Opening;
 
@@ -303,7 +323,7 @@ namespace Gw2Launcher.UI
             notifyIcon.ContextMenuStrip = contextNotify;
             notifyIcon.DoubleClick += notifyIcon_DoubleClick;
 
-            mpWindow = new formMenu();
+            mpWindow = new formMenu(this);
             mpWindow.VisibleChanged += mpWindow_VisibleChanged;
             mpWindow.PageChanged += mpWindow_PageChanged;
             mpWindow.MenuItemSelected += mpWindow_MenuItemSelected;
@@ -318,7 +338,7 @@ namespace Gw2Launcher.UI
                 gridContainer.GridColumnsAuto = true;
             }
 
-            gridContainer.GridSpacing = 3;
+            gridContainer.GridSpacing = Settings.StyleGridSpacing.HasValue ? Settings.StyleGridSpacing.Value : 3;
             gridContainer.AddAccountClick += gridContainer_AddAccountClick;
             gridContainer.AccountMouseClick += gridContainer_AccountMouseClick;
             gridContainer.AccountBeginDrag += gridContainer_AccountBeginDrag;
@@ -353,6 +373,15 @@ namespace Gw2Launcher.UI
             Settings.JumpList.ValueChanged += JumpList_ValueChanged;
             Settings.PreventTaskbarMinimize.ValueChanged += PreventTaskbarMinimize_ValueChanged;
             Settings.ProcessPriority.ValueChanged += ProcessPriority_ValueChanged;
+            Settings.HotkeysEnabled.ValueChanged += HotkeysEnabled_ValueChanged;
+            Settings.StyleOffsets.ValueChanged += OnButtonStyleChanged;
+            Settings.StyleGridSpacing.ValueChanged += OnGridStyleChanged;
+            Settings.StyleDisableWindowShadows.ValueChanged += OnDisableShadowsChanged;
+            Settings.ShowAccountBarToggle.ValueChanged += ShowAccountBarToggle_ValueChanged;
+            Settings.ShowMinimizeRestoreAll.ValueChanged += ShowMinimizeRestoreAll_ValueChanged;
+            Settings.ShowWindowTemplatesToggle.ValueChanged += ShowWindowTemplatesToggle_ValueChanged;
+            Settings.StyleHighlightActive.ValueChanged += OnButtonStyleChanged;
+            Settings.StyleShowDailyLoginDay.ValueChanged += OnButtonStyleChanged;
 
             Tools.BackgroundPatcher.Instance.PatchReady += bp_PatchReady;
             Tools.BackgroundPatcher.Instance.PatchBeginning += bp_PatchBeginning;
@@ -360,6 +389,7 @@ namespace Gw2Launcher.UI
             Tools.BackgroundPatcher.Instance.Error += bp_Error;
             Tools.BackgroundPatcher.Instance.Complete += bp_Complete;
             Tools.AutoUpdate.NewBuildAvailable += AutoUpdate_NewBuildAvailable;
+            Tools.WindowManager.Load();
 
             Util.ScheduledEvents.Register(OnDailyResetCallback, GetNextDaily());
             Util.ScheduledEvents.Register(PurgeTemp, 0);
@@ -387,62 +417,6 @@ namespace Gw2Launcher.UI
 
         void formMain_FormClosing(object sender, FormClosingEventArgs e)
         {
-            if (Client.Launcher.HasPendingNetworkAuthorizationRequests)
-            {
-                this.FormClosing -= formMain_FormClosing;
-
-                //try to close remaining sessions within a few seconds
-                //not including sessions currently being used
-
-                Task t = null;
-                try
-                {
-                    t = Client.Launcher.ClearNetworkAuthorization(true, true);
-                    if (t.IsCompleted)
-                    {
-                        t.Dispose();
-                        t = null;
-                    }
-                    else
-                    {
-                        t = Task.WhenAny(t, Task.Delay(5000));
-                    }
-                }
-                catch
-                {
-                    t = null;
-                }
-
-                if (t == null || t.IsCompleted)
-                {
-                    return;
-                }
-
-                e.Cancel = true;
-
-                Util.Invoke.Async(this,
-                    delegate
-                    {
-                        using (BeforeShowDialog(false))
-                        {
-                            ShowWaiting(async delegate(formWaiting f, Action close)
-                            {
-                                try
-                                {
-                                    await t;
-                                }
-                                catch (Exception ex)
-                                {
-                                    Util.Logging.Log(ex);
-                                }
-
-                                close();
-                            });
-                        }
-
-                        this.Close();
-                    });
-            }
         }
 
         protected override void OnInitializeComponents()
@@ -456,7 +430,7 @@ namespace Gw2Launcher.UI
         {
             base.OnDpiChanged();
 
-            gridContainer.GridSpacing = Scale(3);
+            gridContainer.GridSpacing = Settings.StyleGridSpacing.HasValue ? Settings.StyleGridSpacing.Value : Scale(3);
 
             panelTop.Width = this.Width - panelTop.Left * 2;
             panelContainer.Width = this.Width - panelContainer.Left * 2;
@@ -539,6 +513,7 @@ namespace Gw2Launcher.UI
             buttonMenu.Page = e;
             gridContainer.Page = e;
             Settings.SelectedPage.Value = e;
+            gridContainer.Invalidate(); //autosizing form can cause overlapped paints
         }
 
         void StyleBackgroundImage_ValueChanged(object sender, EventArgs e)
@@ -594,6 +569,24 @@ namespace Gw2Launcher.UI
         {
             var v = (Settings.ISettingValue<bool>)sender;
             buttonLaunchAll.Visible = v.Value;
+        }
+
+        void ShowMinimizeRestoreAll_ValueChanged(object sender, EventArgs e)
+        {
+            var v = (Settings.ISettingValue<bool>)sender;
+            buttonMinimizeRestoreAll.Visible = v.Value && Client.Launcher.GetActiveProcessCount() > 0;
+        }
+
+        void ShowAccountBarToggle_ValueChanged(object sender, EventArgs e)
+        {
+            var v = (Settings.ISettingValue<bool>)sender;
+            buttonAccountBar.Visible = v.Value;
+        }
+
+        void ShowWindowTemplatesToggle_ValueChanged(object sender, EventArgs e)
+        {
+            var v = (Settings.ISettingValue<bool>)sender;
+            buttonTemplates.Visible = v.Value;
         }
 
         void AccountSorting_SortingChanged(object sender, EventArgs e)
@@ -661,6 +654,14 @@ namespace Gw2Launcher.UI
             {
                 abWindow.Form.CanLaunch = !isInModalLoop;
             }
+        }
+
+        protected override void OnBackColorChanged(EventArgs e)
+        {
+            redraw = true;
+            this.Invalidate();
+
+            base.OnBackColorChanged(e);
         }
 
         protected override void OnTextChanged(EventArgs e)
@@ -973,6 +974,19 @@ namespace Gw2Launcher.UI
             }
         }
 
+        public void HideAccountBar()
+        {
+            var fv = abWindow;
+
+            if (fv != null && !fv.IsDisposed)
+            {
+                Util.Invoke.Required(fv.Form, delegate
+                {
+                    fv.Form.Hide();
+                });
+            }
+        }
+
         public void ShowAccountBar(bool forceShow)
         {
             if (Util.Invoke.IfRequired(this, 
@@ -1168,16 +1182,26 @@ namespace Gw2Launcher.UI
                 if (account != null)
                 {
                     var refresh = account.ShowDailyLogin;
-
+                    
                     if (account.Type == Settings.AccountType.GuildWars2)
                     {
                         var gw2 = (Settings.IGw2Account)account;
+
                         //set the last used for active accounts if either the daily or played time is being tracked, so that the login icon doesn't take priority
                         if ((gw2.ShowDailyCompletion || gw2.ApiData != null && gw2.ApiData.Played != null) && Client.Launcher.GetState(gw2) == Client.Launcher.AccountState.ActiveGame)
                         {
                             if (gw2.ApiData != null && gw2.ApiData.Played != null)
                                 QueuedAccountApi.Schedule(gw2, gw2.LastUsedUtc.Date, 0);
-                            button.LastUsedUtc = DateTime.UtcNow;
+                            SetLastUsed(button, DateTime.UtcNow);
+                        }
+
+                        if (!Settings.Tweaks.DisableMumbleLinkDailyLogin.Value)
+                        {
+                            var mumble = Client.Launcher.GetMumbleLink(gw2);
+                            if (mumble != null)
+                            {
+                                mumble.Verify();
+                            }
                         }
 
                         refresh = refresh || gw2.ShowDailyCompletion;
@@ -1205,6 +1229,11 @@ namespace Gw2Launcher.UI
             if (jumplist != null)
             {
                 jumplist.RefreshAsync();
+            }
+
+            if (gridContainer.FilterDailyLogin)
+            {
+                gridContainer.RefreshFilter();
             }
 
             return GetNextDaily();
@@ -1500,6 +1529,8 @@ namespace Gw2Launcher.UI
                 jumplist = new Tools.JumpList(this.Handle);
             }
 
+            HotkeysEnabled_ValueChanged(Settings.HotkeysEnabled, EventArgs.Empty);
+
             if (Settings.Silent)
             {
                 if (Settings.ShowTray.Value && Settings.MinimizeToTray.Value)
@@ -1581,6 +1612,10 @@ namespace Gw2Launcher.UI
                     assetProxyWindow.Dispose();
                 if (buffer != null)
                     buffer.Dispose();
+                if (jumplist != null)
+                    jumplist.Dispose();
+                if (hotkeys != null)
+                    hotkeys.Dispose();
             }
         }
 
@@ -1799,12 +1834,13 @@ namespace Gw2Launcher.UI
 
         void Launcher_AllQueuedLaunchesCompleteAllAccountsExited(object sender, EventArgs e)
         {
-            if (Settings.ShowKillAllAccounts.Value)
+            if (Settings.ShowKillAllAccounts.Value || Settings.ShowMinimizeRestoreAll.Value)
             {
                 Util.Invoke.Async(this,
                     delegate
                     {
                         buttonKillAll.Visible = false;
+                        buttonMinimizeRestoreAll.Visible = false;
                     });
             }
         }
@@ -1820,8 +1856,12 @@ namespace Gw2Launcher.UI
                     {
                         mpWindow.ShowCloseAll = b;
 
+                        b = b || Client.Launcher.GetPendingLaunchCount() > 0;
+
                         if (!b || Settings.ShowKillAllAccounts.Value)
-                            buttonKillAll.Visible = b || Client.Launcher.GetPendingLaunchCount() > 0;
+                            buttonKillAll.Visible = b;
+                        if (!b || Settings.ShowMinimizeRestoreAll.Value)
+                            buttonMinimizeRestoreAll.Visible = b;
                     });
             }
 
@@ -1835,6 +1875,76 @@ namespace Gw2Launcher.UI
                             ShowToFront();
                         });
                 }
+            }
+        }
+
+        void Launcher_MumbleLinkVerified(Settings.IAccount account, Tools.Mumble.MumbleMonitor.IMumbleProcess e)
+        {
+            if (Util.Invoke.IfRequiredAsync(this,
+                delegate
+                {
+                    Launcher_MumbleLinkVerified(account, e);
+                }))
+                return;
+
+            AccountGridButton b;
+            if (buttons.TryGetValue(account.UID, out b))
+            {
+                SetLastUsed(b, DateTime.UtcNow, true);
+            }
+        }
+
+        private void SetLastUsed(AccountGridButton b, DateTime d)
+        {
+            var a = b.AccountData;
+            var daily = a == null || a.Type != Settings.AccountType.GuildWars2;
+
+            if (!daily)
+            {
+                var gw2 = (Settings.IGw2Account)a;
+                daily = Settings.Tweaks.DisableMumbleLinkDailyLogin.Value && (gw2.ApiData == null || gw2.ApiData.Played == null);
+            }
+
+            SetLastUsed(b, d, daily);
+        }
+
+        private void SetLastUsed(AccountGridButton b, DateTime d, bool daily)
+        {
+            var a = b.AccountData;
+
+            if (daily)
+            {
+                SetLastDailyLogin(b, d);
+            }
+
+            if (a != null)
+                a.LastUsedUtc = d;
+            b.LastUsedUtc = d;
+        }
+
+        private void SetLastDailyLogin(AccountGridButton b, DateTime d)
+        {
+            var a = b.AccountData;
+
+            if (a != null && a.Type == Settings.AccountType.GuildWars2)
+            {
+                var gw2 = (Settings.IGw2Account)a;
+
+                if (gw2.LastDailyLoginUtc != d.Date)
+                {
+                    if (gw2.DailyLoginDay > 0)
+                    {
+                        gw2.DailyLoginDay = (byte)(gw2.DailyLoginDay + 1);
+                        b.DailyLoginDay = gw2.DailyLoginDay;
+                    }
+
+                    gw2.LastDailyLoginUtc = d;
+                    b.LastDailyLoginUtc = d;
+                }
+            }
+            else
+            {
+                b.LastDailyLoginUtc = d;
             }
         }
 
@@ -1967,8 +2077,13 @@ namespace Gw2Launcher.UI
 
                     break;
                 case Client.Launcher.AccountWindowEventEventArgs.EventType.WindowLoaded:
+                //case Client.Launcher.AccountWindowEventEventArgs.EventType.TemplateChanged:
+                case Client.Launcher.AccountWindowEventEventArgs.EventType.WindowOptionsChanged:
 
-                    if (account.WindowOptions.HasFlag(Settings.WindowOptions.Windowed | Settings.WindowOptions.PreventChanges) && !Settings.IsRunningWine) //&& !account.WindowBounds.IsEmpty
+                    var wo = Client.Launcher.GetWindowOptions(account);
+                    var wv = Settings.WindowOptions.PreventChanges | Settings.WindowOptions.Windowed;
+
+                    if ((wo & wv) == wv && !Settings.IsRunningWine)
                     {
                         lock (this)
                         {
@@ -1976,7 +2091,11 @@ namespace Gw2Launcher.UI
                                 maskManager = new formMaskOverlay.Manager();
                         }
 
-                        maskManager.Add(account, e.Process, e.Handle);
+                        maskManager.Add(account, e.Process, e.Handle, wo);
+                    }
+                    else if (maskManager != null)
+                    {
+                        maskManager.Remove(account);
                     }
 
                     break;
@@ -2029,11 +2148,11 @@ namespace Gw2Launcher.UI
             }
         }
 
-        void Launcher_NetworkAuthorizationRequired(object sender, Client.Launcher.NetworkAuthorizationRequiredEventsArgs e)
+        void Launcher_NetworkChanged(object sender, Client.Launcher.NetworkChangedEventArgs e)
         {
             Util.Invoke.Required(this, delegate
             {
-                OnNetworkAuthorizationRequired(e);
+                OnNetworkChanged(e);
             });
         }
 
@@ -2088,6 +2207,41 @@ namespace Gw2Launcher.UI
                     e.Retry = OnDatFileNotInitialized(account) == DialogResult.OK;
                 });
             }
+            else if (e.Exception is Client.Launcher.Gw2LockException)
+            {
+                Util.Invoke.Required(this,
+                    delegate
+                    {
+                        e.Retry = OnLocalizedExecutionRequired() == System.Windows.Forms.DialogResult.OK;
+                    });
+            }
+        }
+
+        private DialogResult OnLocalizedExecutionRequired()
+        {
+            using (BeforeShowDialog())
+            {
+                using (var f = AddMessageBox(this))
+                {
+                    DialogResult r = MessageBox.Show(f, "Localized execution is required to launch multiple clients when using the Chinese version of Guild Wars 2.\n\nEnable localized execution?", "Localized execution required", MessageBoxButtons.YesNo, MessageBoxIcon.Exclamation);
+                    switch (r)
+                    {
+                        case DialogResult.Yes:
+                            
+                            foreach (var a in Util.Accounts.GetGw2Accounts())
+                            {
+                                a.LocalizedExecution = false;
+                            }
+
+                            Settings.GuildWars2.LocalizeAccountExecutionSelection.Value = Settings.LocalizeAccountExecutionSelectionOptions.Exclude;
+                            Settings.GuildWars2.LocalizeAccountExecution.Value |= Settings.LocalizeAccountExecutionOptions.Enabled;
+
+                            return DialogResult.OK;
+                        default:
+                            return DialogResult.Cancel;
+                    }
+                }
+            }
         }
 
         private DialogResult OnDatFileNotInitialized(Settings.IAccount account)
@@ -2141,7 +2295,7 @@ namespace Gw2Launcher.UI
         {
             using (BeforeShowDialog())
             {
-                using (var f = (formSettings)AddWindow(new formSettings()))
+                using (var f = (formSettings)AddWindow(new formSettings(this)))
                 {
                     f.SampleButton.Width = gridContainer.CurrentButtonWidth;
 
@@ -2164,11 +2318,11 @@ namespace Gw2Launcher.UI
             }
         }
 
-        private void OnNetworkAuthorizationRequired(Client.Launcher.NetworkAuthorizationRequiredEventsArgs e)
+        private void OnNetworkChanged(Client.Launcher.NetworkChangedEventArgs e)
         {
             using (BeforeShowDialog())
             {
-                using (var f = AddWindow(new formNetworkAuthorizationRequired(e)))
+                using (var f = AddWindow(new formNetworkChanged(e)))
                 {
                     f.Shown += delegate
                     {
@@ -2178,7 +2332,7 @@ namespace Gw2Launcher.UI
                         }
                         catch { }
                     };
-                    f.ShowDialog(this);
+                    e.Abort = f.ShowDialog(this) != System.Windows.Forms.DialogResult.OK;
                 }
             }
         }
@@ -2201,6 +2355,8 @@ namespace Gw2Launcher.UI
                     OnButtonDataChanged(button, e.Data);
                 }
 
+                button.IsActive = e.State == Client.Launcher.AccountState.Active || e.State == Client.Launcher.AccountState.ActiveGame;
+
                 if (button.AccountData != null)
                 {
                     var account = button.AccountData;
@@ -2217,10 +2373,13 @@ namespace Gw2Launcher.UI
                     if (exited)
                     {
                         var d = DateTime.UtcNow;
-                        account.LastUsedUtc = d;
-                        button.LastUsedUtc = d;
 
-                        if (Settings.Sorting.Value.Sorting.Mode == Settings.SortMode.LastUsed || Settings.Sorting.Value.Grouping.HasFlag(Settings.GroupMode.Active))
+                        SetLastUsed(button, d);
+
+                        var sort = Settings.Sorting.Value.Sorting.Mode == Settings.SortMode.LastUsed || Settings.Sorting.Value.Grouping.HasFlag(Settings.GroupMode.Active);
+                        if (gridContainer.FilterDailyLogin)
+                            gridContainer.RefreshFilter(button, !sort);
+                        if (sort)
                             gridContainer.Sort(Settings.Sorting.Value);
 
                         if (account.Type == Settings.AccountType.GuildWars2)
@@ -2294,11 +2453,26 @@ namespace Gw2Launcher.UI
                         break;
                     case Client.Launcher.AccountState.ActiveGame:
                         button.SetStatus("active", AccountGridButton.StatusColors.Ok);
-                        DateTime d = DateTime.UtcNow;
-                        if (button.AccountData != null)
-                            button.AccountData.LastUsedUtc = d;
-                        button.LastUsedUtc = d;
-                        if (Settings.Sorting.Value.Sorting.Mode == Settings.SortMode.LastUsed || Settings.Sorting.Value.Grouping.HasFlag(Settings.GroupMode.Active))
+                        //var d = DateTime.UtcNow;
+                        //if (button.AccountData != null)
+                        //{
+                        //    if (button.AccountData.Type == Settings.AccountType.GuildWars2 && Settings.Tweaks.DisableMumbleLinkDailyLogin.Value && button.AccountData.LastUsedUtc.Date != d.Date)
+                        //    {
+                        //        var gw2 = (Settings.IGw2Account)button.AccountData;
+                        //        if (gw2.DailyLoginDay > 0)
+                        //        {
+                        //            gw2.DailyLoginDay = (byte)(gw2.DailyLoginDay + 1);
+                        //            button.DailyLoginDay = gw2.DailyLoginDay;
+                        //        }
+                        //    }
+                        //    button.AccountData.LastUsedUtc = d;
+                        //}
+                        //button.LastUsedUtc = d;
+                        SetLastUsed(button, DateTime.UtcNow);
+                        var sort = Settings.Sorting.Value.Sorting.Mode == Settings.SortMode.LastUsed || Settings.Sorting.Value.Grouping.HasFlag(Settings.GroupMode.Active);
+                        if (gridContainer.FilterDailyLogin)
+                            gridContainer.RefreshFilter(button, !sort);
+                        if (sort)
                             gridContainer.Sort(Settings.Sorting.Value);
                         break;
                     case Client.Launcher.AccountState.Waiting:
@@ -2469,7 +2643,7 @@ namespace Gw2Launcher.UI
                 else
                     points.State = Settings.ApiCacheState.OK;
 
-                if (e.Account.ShowDailyCompletion)
+                if (e.Account.ShowDailyCompletion && points.LastChange > e.Account.LastDailyCompletionUtc)
                 {
                     e.Account.LastDailyCompletionUtc = points.LastChange;
 
@@ -2481,13 +2655,14 @@ namespace Gw2Launcher.UI
             if (updatedPlayed)
             {
                 played.Value = e.Response.Age;
+                played.LastChange = e.Response.LastModified;
                 played.State = Settings.ApiCacheState.Pending; //it's always outdated
 
                 if (e.Account.ShowDailyLogin)
                 {
                     AccountGridButton b;
-                    if (buttons.TryGetValue(e.Account.UID, out b))
-                        b.LastDailyLoginUtc = played.LastChange;
+                    if (buttons.TryGetValue(e.Account.UID, out b) && played.LastChange > b.LastDailyLoginUtc)
+                        SetLastDailyLogin(b, played.LastChange);
                 }
             }
         }
@@ -2530,20 +2705,41 @@ namespace Gw2Launcher.UI
 
         private void OnStyleChanged()
         {
-            var fontName = Settings.FontName.HasValue ? Settings.FontName.Value : UI.Controls.AccountGridButton.FONT_NAME;
-            var fontStatus = Settings.FontStatus.HasValue ? Settings.FontStatus.Value : UI.Controls.AccountGridButton.FONT_STATUS;
-            var fontUser = Settings.FontUser.HasValue ? Settings.FontUser.Value : UI.Controls.AccountGridButton.FONT_USER;
-            bool showAccount = !Settings.StyleShowAccount.HasValue || Settings.StyleShowAccount.Value,
-                 showColor = Settings.StyleShowColor.Value,
-                 showIcon = Settings.StyleShowIcon.Value;
-            var colors =  Settings.StyleColors.HasValue ?  Settings.StyleColors.Value : AccountGridButton.DefaultColors;
+            var s = new AccountGridButtonContainer.Style()
+            {
+                FontName = Settings.FontName.HasValue ? Settings.FontName.Value : UI.Controls.AccountGridButton.FONT_NAME,
+                FontStatus = Settings.FontStatus.HasValue ? Settings.FontStatus.Value : UI.Controls.AccountGridButton.FONT_STATUS,
+                FontUser = Settings.FontUser.HasValue ? Settings.FontUser.Value : UI.Controls.AccountGridButton.FONT_USER,
+                ShowAccount = !Settings.StyleShowAccount.HasValue || Settings.StyleShowAccount.Value,
+                ShowColor = Settings.StyleShowColor.Value,
+                ShowIcon = Settings.StyleShowIcon.Value,
+                ShowActiveHighlight = Settings.StyleHighlightActive.Value,
+                Colors =  UiColors.GetTheme(),
+                Offsets = Settings.StyleOffsets.Value,
+                ShowDailyLoginDay = Settings.StyleShowDailyLoginDay.Value,
+            };
 
-            gridContainer.SetStyle(fontName, fontStatus, fontUser, showAccount, showColor, showIcon, colors);
+            gridContainer.SetStyle(s);
         }
 
         void OnButtonStyleChanged(object sender, EventArgs e)
         {
             Util.Invoke.Async(this, OnStyleChanged);
+        }
+
+        private void OnGridStyleChanged()
+        {
+            gridContainer.GridSpacing = Settings.StyleGridSpacing.HasValue ? Settings.StyleGridSpacing.Value : Scale(3);
+        }
+
+        void OnGridStyleChanged(object sender, EventArgs e)
+        {
+            Util.Invoke.Async(this, OnGridStyleChanged);
+        }
+
+        void OnDisableShadowsChanged(object sender, EventArgs e)
+        {
+            Windows.WindowShadow.Enable(this.Handle, !((Settings.ISettingValue<bool>)sender).Value);
         }
 
         void StyleHighlightFocused_ValueChanged(object sender, EventArgs e)
@@ -2880,7 +3076,17 @@ namespace Gw2Launcher.UI
             ScreenshotSettings_ValueChanged(Settings.ScreenshotConversion, EventArgs.Empty);
             StyleBackgroundImage_ValueChanged(Settings.StyleBackgroundImage, EventArgs.Empty);
             buttonLaunchAll.Visible = Settings.ShowLaunchAllAccounts.Value;
+            buttonAccountBar.Visible = Settings.ShowAccountBarToggle.Value;
+            buttonTemplates.Visible = Settings.ShowWindowTemplatesToggle.Value;
             ProcessPriority_ValueChanged(Settings.ProcessPriority, EventArgs.Empty);
+
+            disableAutomaticLoginsToolStripMenuItem.Checked = Settings.DisableAutomaticLogins.Value;
+            disableAutomaticLoginsToolStripMenuItem1.Checked = Settings.DisableAutomaticLogins.Value;
+            disableAutomaticLoginsToolStripMenuItem2.Checked = Settings.DisableAutomaticLogins.Value;
+
+            disableRunAfterToolStripMenuItem.Checked = Settings.DisableRunAfter.Value;
+            disableRunAfterToolStripMenuItem1.Checked = Settings.DisableRunAfter.Value;
+            disableRunAfterToolStripMenuItem2.Checked = Settings.DisableRunAfter.Value;
         }
 
         private void LoadAccounts()
@@ -2966,9 +3172,10 @@ namespace Gw2Launcher.UI
         {
             base.OnActivated(e);
 
-            labelTitle.ForeColor = Color.Black;
-            buttonClose.ForeColor = buttonMenu.ForeColor = Color.FromArgb(100, 100, 100);
-            buttonMinimize.ForeColor = Color.FromArgb(128, 128, 128);
+            labelTitle.ForeColorName = UiColors.Colors.BarTitle;
+            buttonClose.ForeColorName = UiColors.Colors.BarCloseForeColor;
+            buttonMenu.ForeColorName = UiColors.Colors.BarForeColor;
+            buttonMinimize.ForeColorName = UiColors.Colors.BarMinimizeForeColor;
 
             if (this.Opacity < 1 && Fading == null)
             {
@@ -2980,9 +3187,10 @@ namespace Gw2Launcher.UI
         {
             base.OnDeactivate(e);
 
-            labelTitle.ForeColor = Color.FromArgb(140, 140, 140);
-            buttonClose.ForeColor = buttonMenu.ForeColor = Color.FromArgb(150, 150, 150);
-            buttonMinimize.ForeColor = Color.FromArgb(168, 168, 168);
+            labelTitle.ForeColorName = UiColors.Colors.BarTitleInactive;
+            buttonClose.ForeColorName = UiColors.Colors.BarCloseForeColorInactive;
+            buttonMenu.ForeColorName = UiColors.Colors.BarForeColorInactive;
+            buttonMinimize.ForeColorName = UiColors.Colors.BarMinimizeForeColorInactive;
         }
 
         protected override void OnResizeBegin(EventArgs e)
@@ -3200,7 +3408,7 @@ namespace Gw2Launcher.UI
                     if (p != null)
                     {
                         e.Handled = true;
-                        e.FlashColor = button.Colors[Settings.AccountGridButtonColors.Colors.ActionFocusFlash];
+                        e.FlashColor = button.Colors[UiColors.Colors.AccountActionFocusFlash];
 
                         FocusWindowAsync(p);
                     }
@@ -3209,7 +3417,7 @@ namespace Gw2Launcher.UI
                 case Settings.ButtonAction.Close:
 
                     e.Handled = true;
-                    e.FlashColor = button.Colors[Settings.AccountGridButtonColors.Colors.ActionExitFlash];
+                    e.FlashColor = button.Colors[UiColors.Colors.AccountActionExitFlash];
 
                     Client.Launcher.Kill(button.AccountData);
 
@@ -3271,8 +3479,8 @@ namespace Gw2Launcher.UI
                         if (setting.Value == Settings.ButtonAction.Close || !setting.HasValue)
                         {
                             e.Handled = true;
-                            e.FlashColor = button.Colors[Settings.AccountGridButtonColors.Colors.ActionExitFlash];
-                            e.FillColor = button.Colors[Settings.AccountGridButtonColors.Colors.ActionExitFill];
+                            e.FlashColor = button.Colors[UiColors.Colors.AccountActionExitFlash];
+                            e.FillColor = button.Colors[UiColors.Colors.AccountActionExitFill];
                         }
 
                         break;
@@ -3608,18 +3816,45 @@ namespace Gw2Launcher.UI
                     Util.ScheduledEvents.Register(OnCheckVersionCallback, int.MaxValue);
                 }
             }
-            else if (v == -2) //no longer exists
-            {
-                Settings.LastProgramVersion.Value = new Settings.LastCheckedVersion(DateTime.UtcNow, 0);
-            }
             else
             {
-                //failed, retry in 12 hours
-                Util.ScheduledEvents.Register(OnCheckVersionCallback, 43200000);
+                var retries = Settings.LastProgramVersion.HasValue ? Settings.LastProgramVersion.Value.Retry : (byte)0;
+
+                if (v == -2 || ++retries >= 10) //no longer exists
+                {
+                    var state = v == -2 ? VersionState.MovedError : VersionState.UnknownError;
+
+                    if (!this.Visible || !this.ContainsFocus)
+                    {
+                        EventHandler onActivated = null;
+                        onActivated = delegate
+                        {
+                            this.Activated -= onActivated;
+                            ShowNewVersion(null, state);
+                        };
+                        this.Activated += onActivated;
+                    }
+                    else
+                    {
+                        ShowNewVersion(null, state);
+                    }
+                }
+                else 
+                {
+                    var value = Settings.LastProgramVersion.Value;
+
+                    if (value != null)
+                    {
+                        Settings.LastProgramVersion.Value = new Settings.LastCheckedVersion(value.LastCheck, value.Version, ++retries);
+                        
+                        //failed, retry in 12 hours
+                        Util.ScheduledEvents.Register(OnCheckVersionCallback, 43200000);
+                    }
+                }
             }
         }
 
-        private async void ShowNewVersion(formChangelog fc)
+        private async void ShowNewVersion(formChangelog fc, VersionState state = VersionState.OK)
         {
             await Task.Delay(1000);
 
@@ -3631,7 +3866,7 @@ namespace Gw2Launcher.UI
                     if (count == 0)
                     {
                         ActiveWindowsChanged -= onChanged;
-                        ShowNewVersion(fc);
+                        ShowNewVersion(fc, state);
                     }
                 };
                 ActiveWindowsChanged += onChanged;
@@ -3646,7 +3881,22 @@ namespace Gw2Launcher.UI
                 {
                     using (fc)
                     {
-                        if (fc != null && fc.ShowDialog(this) == System.Windows.Forms.DialogResult.Yes ||
+                        if (state != VersionState.OK)
+                        {
+                            string message;
+
+                            switch (state)
+                            {
+                                case VersionState.MovedError:
+                                case VersionState.UnknownError:
+                                default:
+                                    message = "Unable to check for updates. Checking for updates has been disabled after repeated failures.\n\nYou will need to manually check for a new version.";
+                                    break;
+                            }
+                            MessageBox.Show(parent, message, "Updating has been disabled", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                            Settings.LastProgramVersion.Clear();
+                        }
+                        else if (fc != null && fc.ShowDialog(this) == System.Windows.Forms.DialogResult.Yes ||
                             fc == null && MessageBox.Show(parent, "A new version of Gw2Launcher is available.\n\nWould you like to update now?", "Update available", MessageBoxButtons.YesNo, MessageBoxIcon.Question) == DialogResult.Yes)
                         {
                             using (formVersionUpdate f = (formVersionUpdate)AddWindow(new formVersionUpdate()))
@@ -3667,7 +3917,7 @@ namespace Gw2Launcher.UI
         {
             using (BeforeShowDialog())
             {
-                using (var f = (formSettings)AddWindow(new formSettings()))
+                using (var f = (formSettings)AddWindow(new formSettings(this)))
                 {
                     f.SampleButton.Width = gridContainer.CurrentButtonWidth;
 
@@ -3784,6 +4034,8 @@ namespace Gw2Launcher.UI
             toolsToolStripMenuItem.Enabled = isFree;
             settingsToolStripMenuItem1.Enabled = isFree;
 
+            HotkeysEnabled = isFree;
+
             if (ActiveWindowsChanged != null)
                 ActiveWindowsChanged(this, activeWindows);
         }
@@ -3852,13 +4104,49 @@ namespace Gw2Launcher.UI
                             f.Account.Pages = new Settings.PageData[] { new Settings.PageData(mpWindow.Page, ushort.MaxValue) };
                         }
 
-                        if (mpWindow.Page == mpWindow.Pages && mpWindow.Pages < MAX_PAGES)
-                            ++mpWindow.Pages;
+                        var pg = mpWindow.Page;
+                        if (pg < MAX_PAGES)
+                            ++pg;
+                        if (pg > mpWindow.Pages)
+                            mpWindow.Pages = pg;
 
                         AddAccount(f.Account, true);
                     }
                 }
             }
+        }
+
+        public void AddAccounts(IList<Settings.IAccount> accounts, bool addToCurrentPage = false)
+        {
+            var count = accounts.Count;
+
+            if (count == 0)
+                return;
+
+            var pg = mpWindow.Page;
+            if (pg < MAX_PAGES)
+                ++pg;
+            if (pg > mpWindow.Pages)
+                mpWindow.Pages = pg;
+
+            gridContainer.SuspendAdd();
+
+            for (var i = 0; i < count; i++)
+            {
+                var a = accounts[i];
+
+                if (addToCurrentPage && mpWindow.Page > 0)
+                {
+                    a.Pages = new Settings.PageData[] { new Settings.PageData(mpWindow.Page, ushort.MaxValue) };
+                }
+
+                AddAccount(a, i == count - 1);
+            }
+
+            gridContainer.ResumeAdd();
+
+            if (!Settings.Sorting.Value.IsEmpty)
+                gridContainer.Sort(Settings.Sorting.Value);
         }
 
         private void AddAccount(Settings.IAccount account, bool sort)
@@ -5070,7 +5358,8 @@ namespace Gw2Launcher.UI
         {
             base.OnHandleCreated(e);
 
-            Windows.WindowShadow.Enable(this.Handle);
+            if (!Settings.StyleDisableWindowShadows.Value)
+                Windows.WindowShadow.Enable(this.Handle);
         }
 
         protected override void WndProc(ref Message m)
@@ -5324,44 +5613,91 @@ namespace Gw2Launcher.UI
                     }
 
                     return;
+                case WindowMessages.WM_HOTKEY:
+
+                    if (hotkeys != null)
+                        hotkeys.Process(ref m);
+
+                    break;
             }
 
             base.WndProc(ref m);
         }
 
-        private void PrintTotpCodeToForegroundWindow()
+        private bool GetAccountFromForegroundWindow(out IntPtr handle, out Settings.IAccount account, out Process process)
         {
             uint pid;
-            var h = NativeMethods.GetForegroundWindow();
-            NativeMethods.GetWindowThreadProcessId(h, out pid);
+            handle = NativeMethods.GetForegroundWindow();
+            NativeMethods.GetWindowThreadProcessId(handle, out pid);
 
-            foreach (var a in Client.Launcher.GetActiveProcesses())
+            account = Client.Launcher.GetAccountFromProcessId((int)pid);
+            if (account != null)
             {
-                var p = Client.Launcher.GetProcess(a);
-                if (p != null)
-                {
-                    if (p.Id == pid)
-                    {
-                        if (a.TotpKey != null)
-                        {
-                            try
-                            {
-                                foreach (var c in Tools.Totp.Generate(a.TotpKey))
-                                {
-                                    if (!NativeMethods.PostMessage(h, 0x0102, (IntPtr)c, IntPtr.Zero))
-                                        break;
-                                }
-                            }
-                            catch { }
-                        }
+                process = Client.Launcher.GetProcess(account);
+                if (process != null)
+                    return true;
+            }
 
-                        return;
+            process = null;
+            return false;
+        }
+
+        private void ShowProcessSettingsForForegroundWindow()
+        {
+            Settings.IAccount a;
+            Process p;
+            IntPtr h;
+            if (GetAccountFromForegroundWindow(out h, out a, out p))
+            {
+                Util.Invoke.Required(this,
+                    delegate
+                    {
+                        var f = new formProcessSettingsPopup(a, p);
+                        f.Show();
+                    });
+            }
+        }
+
+        private void ShowRunAfterForForegroundWindow()
+        {
+            Settings.IAccount a;
+            Process p;
+            IntPtr h;
+            if (GetAccountFromForegroundWindow(out h, out a, out p))
+            {
+                Util.Invoke.Required(this,
+                    delegate
+                    {
+                        var f = new formRunAfterPopup(a, p);
+                        f.Show();
+                    });
+            }
+        }
+
+        private void PrintTotpCodeToForegroundWindow()
+        {
+            Settings.IAccount a;
+            Process p;
+            IntPtr h;
+            if (GetAccountFromForegroundWindow(out h, out a, out p))
+            {
+                if (a.TotpKey != null)
+                {
+                    try
+                    {
+                        foreach (var c in Tools.Totp.Generate(a.TotpKey))
+                        {
+                            if (!NativeMethods.PostMessage(h, 0x0102, (IntPtr)c, IntPtr.Zero))
+                                break;
+                        }
                     }
+                    catch { }
                 }
+
+                return;
             }
 
             //unknown
-
             ShowTotpCodeWindow();
         }
 
@@ -5398,9 +5734,12 @@ namespace Gw2Launcher.UI
 
                             f.VariableSelected += delegate(object o, Client.Variables.Variable v)
                             {
+                                var ok = false;
+                                char[] totp = null;
+
                                 try
                                 {
-                                    var totp = Tools.Totp.Generate((byte[])v.GetValue(null));
+                                    totp = Tools.Totp.Generate((byte[])v.GetValue(null));
 
                                     //note there's no restriction on where the code will be pasted, thus the clipboard will be used
 
@@ -5409,19 +5748,21 @@ namespace Gw2Launcher.UI
                                     if (NativeMethods.SetForegroundWindow(h))
                                     {
                                         SendKeys.SendWait("^V");
-                                    }
-                                    else
-                                    {
-                                        //not all windows will support this
-
-                                        foreach (var c in totp)
-                                        {
-                                            if (!NativeMethods.PostMessage(h, WindowMessages.WM_CHAR, (IntPtr)c, IntPtr.Zero))
-                                                break;
-                                        }
+                                        ok = true;
                                     }
                                 }
                                 catch { }
+
+                                if (!ok && totp != null)
+                                {
+                                    //not all windows will support this
+
+                                    foreach (var c in totp)
+                                    {
+                                        if (!NativeMethods.PostMessage(h, WindowMessages.WM_CHAR, (IntPtr)c, IntPtr.Zero))
+                                            break;
+                                    }
+                                }
 
                                 f.Close();
                             };
@@ -5464,7 +5805,7 @@ namespace Gw2Launcher.UI
             disableAutomaticLoginsToolStripMenuItem1.Checked = disableAutomaticLoginsToolStripMenuItem.Checked;
             disableAutomaticLoginsToolStripMenuItem2.Checked = disableAutomaticLoginsToolStripMenuItem.Checked;
 
-            Settings.DisableAutomaticLogins = disableAutomaticLoginsToolStripMenuItem.Checked;
+            Settings.DisableAutomaticLogins.Value = disableAutomaticLoginsToolStripMenuItem.Checked;
         }
 
         private async void applyWindowedBoundsToolStripMenuItem1_Click(object sender, EventArgs e)
@@ -5512,21 +5853,6 @@ namespace Gw2Launcher.UI
                     }
                 }
             }
-        }
-
-        private async void authenticateOnNextLaunchToolStripMenuItem_Click(object sender, EventArgs e)
-        {
-            reauthenticateOnNextLaunchToolStripMenuItem.Enabled = false;
-
-            foreach (var a in Util.Accounts.GetAccounts())
-            {
-                if (a.NetworkAuthorizationState == Settings.NetworkAuthorizationState.OK)
-                    a.NetworkAuthorizationState = Settings.NetworkAuthorizationState.Unknown;
-            }
-
-            await Client.Launcher.ClearNetworkAuthorization(false, false);
-
-            reauthenticateOnNextLaunchToolStripMenuItem.Enabled = true;
         }
 
         private void ShowNotesDialog(AccountGridButton button)
@@ -5685,23 +6011,9 @@ namespace Gw2Launcher.UI
                 {
                     using (var f = (formClone)AddWindow(new formClone(accounts)))
                     {
-                        if (f.ShowDialog(this) == DialogResult.OK)
+                        if (f.ShowDialog(this) == DialogResult.OK && f.Accounts.Count > 0)
                         {
-                            if (mpWindow.Page == mpWindow.Pages && mpWindow.Pages < MAX_PAGES)
-                                ++mpWindow.Pages;
-
-                            if (f.Accounts.Count > 0)
-                            {
-                                foreach (var a in f.Accounts)
-                                {
-                                    if (mpWindow.Page > 0)
-                                    {
-                                        a.Pages = new Settings.PageData[] { new Settings.PageData(mpWindow.Page, ushort.MaxValue) };
-                                    }
-
-                                    AddAccount(a, true);
-                                }
-                            }
+                            AddAccounts(f.Accounts, true);
                         }
                     }
                 }
@@ -5736,7 +6048,7 @@ namespace Gw2Launcher.UI
             var psize = (int)(GetScaling() + 0.5f);
             var phalf = psize / 2;
 
-            using (var p = new Pen(Color.FromArgb(200, 200, 200), psize))
+            using (var p = new Pen(UiColors.GetColor(UiColors.Colors.BarBorder), psize))
             {
                 int y;
 
@@ -5746,7 +6058,7 @@ namespace Gw2Launcher.UI
                 y = panelBottom.Top + phalf - psize;
                 g.DrawLine(p, panelBottom.Left, y, w - panelBottom.Left, y);
 
-                p.Color = Color.FromArgb(120, 120, 120);
+                p.Color = UiColors.GetColor(UiColors.Colors.MainBorder);
                 g.DrawRectangle(p, phalf, phalf, w - psize, h - psize);
             }
         }
@@ -5962,6 +6274,22 @@ namespace Gw2Launcher.UI
                         e.SuppressKeyPress = true;
 
                         break;
+                    case Keys.Left:
+
+                        mpWindow.PagePrevious();
+
+                        e.Handled = true;
+                        e.SuppressKeyPress = true;
+
+                        break;
+                    case Keys.Right:
+
+                        mpWindow.PageNext();
+
+                        e.Handled = true;
+                        e.SuppressKeyPress = true;
+
+                        break;
                 }
             }
 
@@ -5970,11 +6298,37 @@ namespace Gw2Launcher.UI
 
         protected override void OnKeyPress(KeyPressEventArgs e)
         {
-            if (!char.IsControl(e.KeyChar))
+            if (!Settings.StyleDisablePageOnKeyPress.Value && char.IsDigit(e.KeyChar) && (!_ShowFilter || !textFilter.ContainsFocus))
+            {
+                var i = e.KeyChar - '0';
+                if (i < 10)
+                {
+                    if (lastDigitKeyPress != 0 && Environment.TickCount - lastDigitKeyPress < 500)
+                    {
+                        var x = mpWindow.Page * 10 + i;
+                        if (x < mpWindow.Pages || x == 99 && x == mpWindow.Pages)
+                            i = x;
+                    }
+                    lastDigitKeyPress = Environment.TickCount;
+                    if (i > MAX_PAGES)
+                        i = MAX_PAGES;
+                    mpWindow.Page = (byte)i;
+                }
+                else
+                {
+                    if (!mpWindow.Visible)
+                    {
+                        mpWindow.Show(this, buttonMenu);
+                    }
+                    mpWindow.ShowPageInput();
+                }
+                e.Handled = true;
+            }
+            else if (!Settings.StyleDisableSearchOnKeyPress.Value && !char.IsControl(e.KeyChar))
             {
                 if (_ShowFilter)
                 {
-                    textFilter.SelectedText = e.KeyChar.ToString();
+                    textFilter.TextBox.SelectedText = e.KeyChar.ToString();
                     textFilter.Focus();
                 }
                 else
@@ -6084,6 +6438,10 @@ namespace Gw2Launcher.UI
             if (!mpWindow.Visible)
             {
                 mpWindow.Show(this, buttonMenu);
+            }
+            else
+            {
+                mpWindow.HidePopup();
             }
         }
 
@@ -6236,7 +6594,7 @@ namespace Gw2Launcher.UI
                             var pages = page;
                             if (pages < MAX_PAGES)
                                 ++pages;
-                            if (pages >= mpWindow.Pages)
+                            if (pages > mpWindow.Pages)
                                 mpWindow.Pages = (byte)pages;
                         }
 
@@ -6347,6 +6705,506 @@ namespace Gw2Launcher.UI
                     MessageBox.Show(parent, message, "DX11?", MessageBoxButtons.OK, MessageBoxIcon.Information);
                 }
             }
+        }
+
+        void HotkeysEnabled_ValueChanged(object sender, EventArgs e)
+        {
+            var v = ((Settings.ISettingValue<bool>)sender).Value;
+
+            if (v)
+            {
+                if (hotkeys == null)
+                {
+                    hotkeys = new Tools.Hotkeys.HotkeyManager(this.Handle);
+                    hotkeys.Pressed += hotkeys_Pressed;
+                }
+                if (activeWindows == 0)
+                    hotkeys.Enabled = true;
+            }
+            else if (hotkeys != null)
+            {
+                hotkeys.Dispose();
+                hotkeys = null;
+            }
+        }
+
+        private bool HotkeysEnabled
+        {
+            get
+            {
+                return hotkeys != null && hotkeys.Enabled;
+            }
+            set
+            {
+                if (hotkeys != null)
+                {
+                    hotkeys.Enabled = value;
+                }
+            }
+        }
+
+        void hotkeys_Pressed(object sender, Tools.Hotkeys.HotkeyManager.HotkeyPressEventArgs e)
+        {
+            switch (e.Hotkey.Action)
+            {
+                case HotkeyAction.Close:
+
+                    try
+                    {
+                        var p = Client.Launcher.GetProcess(e.Account);
+                        if (p != null)
+                            p.Kill();
+                    }
+                    catch { }
+
+                    break;
+                case HotkeyAction.Focus:
+
+                    try
+                    {
+                        var p = Client.Launcher.GetProcess(e.Account);
+                        if (p != null)
+                            FocusWindowAsync(p);
+                    }
+                    catch { }
+
+                    break;
+                case HotkeyAction.LaunchFocus:
+
+                    try
+                    {
+                        if (Client.Launcher.IsActive(e.Account))
+                        {
+                            var p = Client.Launcher.GetProcess(e.Account);
+                            if (p != null)
+                                FocusWindowAsync(p);
+                        }
+                        else
+                        {
+                            Util.Invoke.Async(this,
+                                delegate
+                                {
+                                    Client.Launcher.LaunchMode mode;
+                                    if (Settings.ActionInactiveLClick.Value == Settings.ButtonAction.LaunchSingle)
+                                        mode = Client.Launcher.LaunchMode.LaunchSingle;
+                                    else
+                                        mode = Client.Launcher.LaunchMode.Launch;
+                                    Client.Launcher.Launch(e.Account, mode);
+                                });
+                        }
+                    }
+                    catch { }
+
+                    break;
+                case HotkeyAction.Authenticator:
+
+                    Task.Run(
+                        delegate
+                        {
+                            try
+                            {
+                                PrintTotpCodeToForegroundWindow();
+                            }
+                            catch { }
+                        });
+
+                    break;
+                case HotkeyAction.QuickLaunch:
+                    
+                    Util.Invoke.Async(this,
+                        delegate
+                        {
+                            ShowQuickLaunch();
+                        });
+
+                    break;
+                case HotkeyAction.RunProgram:
+
+                    try
+                    {
+                        var r = (RunProgramHotkey)e.Hotkey;
+                        
+                        Task.Run(
+                            delegate
+                            {
+                                try
+                                {
+                                    var si = new ProcessStartInfo(r.Path, r.Arguments)
+                                    {
+                                        WorkingDirectory = Path.GetDirectoryName(r.Path)
+                                    };
+                                    Process.Start(si);
+                                }
+                                catch { }
+                            });
+                    }
+                    catch { }
+
+                    break;
+                case HotkeyAction.CloseAll:
+
+                    Util.Invoke.Async(this,
+                        delegate
+                        {
+                            buttonKillAll_Click(null, null);
+                        });
+
+                    break;
+                case HotkeyAction.LaunchAll:
+
+                    Util.Invoke.Async(this,
+                        delegate
+                        {
+                            launchAllToolStripMenuItem_Click(null, null);
+                        });
+
+                    break;
+                case HotkeyAction.ShowToFront:
+
+                    Util.Invoke.Async(this,
+                        delegate
+                        {
+                            ShowToFront();
+                        });
+
+                    break;
+                case HotkeyAction.WindowOptions:
+
+                    ShowProcessSettingsForForegroundWindow();
+
+                    break;
+                case HotkeyAction.RunAfter:
+
+                    ShowRunAfterForForegroundWindow();
+
+                    break;
+                case HotkeyAction.MinimizeRestoreAll:
+
+                    Util.Invoke.Async(this,
+                        delegate
+                        {
+                            buttonMinimizeRestoreAll_Click(null, null);
+                        });
+
+                    break;
+                case HotkeyAction.WindowTemplates:
+
+                    Util.Invoke.Async(this,
+                        delegate
+                        {
+                            ShowWindowTemplatesPopup();
+                        });
+
+                    break;
+                case HotkeyAction.MinimizeRestore:
+
+                    MinimizeOrRestore(Client.Launcher.GetActiveProcesses());
+
+                    break;
+                case HotkeyAction.LaunchNext:
+
+                    Settings.IAccount oldest = null;
+
+                    foreach (var b in GetVisible())
+                    {
+                        var a = b.AccountData;
+                        if (a != null && !Client.Launcher.IsActive(a))
+                        {
+                            if (oldest == null || a.LastUsedUtc < oldest.LastUsedUtc)
+                            {
+                                oldest = a;
+                            }
+                        }
+                    }
+
+                    if (oldest != null)
+                    {
+                        Client.Launcher.LaunchMode mode;
+                        if (Settings.ActionInactiveLClick.Value == Settings.ButtonAction.LaunchSingle)
+                            mode = Client.Launcher.LaunchMode.LaunchSingle;
+                        else
+                            mode = Client.Launcher.LaunchMode.Launch;
+                        Client.Launcher.Launch(oldest, mode);
+                    }
+
+                    break;
+                case HotkeyAction.LaunchDaily:
+                    {
+                        var d = DateTime.UtcNow.Date;
+
+                        foreach (var b in GetVisible())
+                        {
+                            var a = b.AccountData;
+                            if (a != null && b.LastUsedUtc.Date != d)
+                            {
+                                Client.Launcher.LaunchMode mode;
+                                if (Settings.ActionInactiveLClick.Value == Settings.ButtonAction.LaunchSingle)
+                                    mode = Client.Launcher.LaunchMode.LaunchSingle;
+                                else
+                                    mode = Client.Launcher.LaunchMode.Launch;
+
+                                Client.Launcher.Launch(a, mode);
+
+                                break;
+                            }
+                        }
+                    }
+                    break;
+                case HotkeyAction.AccountBar:
+
+                    buttonAccountBar_Click(null, null);
+
+                    break;
+                case HotkeyAction.KeyPress:
+
+                    try
+                    {
+                        if (e.SuppressHotkey)
+                            return;
+
+                        var hotkey = (KeyPressHotkey)e.Hotkey;
+
+                        if (hotkey.KeyPress != Keys.None)
+                        {
+                            e.SuppressHotkey = true;
+
+                            if (hotkey.Method == KeyPressHotkey.KeyPressMethod.WindowMessage)
+                            {
+                                var w = NativeMethods.GetForegroundWindow();
+                                if (w != IntPtr.Zero)
+                                {
+                                    Windows.Keyboard.SendKeyPress(w, hotkey.KeyPress, true);
+                                }
+                            }
+                            else
+                            {
+                                hotkeys.SendKeyPress(hotkey.Keys, hotkey.KeyPress);
+                            }
+                        }
+                    }
+                    catch { }
+
+                    break;
+                default:
+
+                    Util.Logging.Log("Unknown hotkey " + e.Hotkey.Action.ToString());
+
+                    break;
+            }
+        }
+
+        private void ShowWindowTemplatesPopup()
+        {
+            if (templatesCompact == null || templatesCompact.IsDisposed)
+            {
+                var f = templatesCompact = new WindowPositioning.formTemplatesCompact();
+                var bounds = Settings.WindowBounds[f.GetType()];
+                if (bounds.HasValue)
+                {
+                    f.StartPosition = FormStartPosition.Manual;
+                    f.Bounds = Util.ScreenUtil.Constrain(bounds.Value);
+                }
+                else
+                {
+                    f.StartPosition = FormStartPosition.Manual;
+                    f.Location = new Point(Cursor.Position.X - f.Width / 2, Cursor.Position.Y - f.Height / 2);
+                    f.DesktopBounds = Util.RectangleConstraint.ConstrainToScreen(f.DesktopBounds);
+                }
+                f.Show();
+            }
+            else
+            {
+                if (!templatesCompact.Visible)
+                    templatesCompact.Show();
+                FocusFormWindow(templatesCompact);
+            }
+        }
+
+        private void launchIfDailyLoginToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            var d = DateTime.UtcNow.Date;
+
+            foreach (var button in GetVisible())
+            {
+                var account = button.AccountData;
+                if (account != null && button.LastUsedUtc.Date != d)
+                {
+                    Client.Launcher.Launch(account, Client.Launcher.LaunchMode.Launch);
+                }
+            }
+        }
+
+        private void dailyLoginToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            ShowFilter = true;
+
+            var t = "daily";
+
+            if (textFilter.Text.IndexOf(t, StringComparison.OrdinalIgnoreCase)==-1)
+            {
+                if (textFilter.TextLength == 0 || textFilter.Text[textFilter.TextLength - 1] == ' ')
+                    textFilter.Text += t;
+                else
+                    textFilter.Text += " " + t;
+
+                textFilter.Select(textFilter.TextLength, 0);
+            }
+        }
+
+        private void windowManagerToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            if (templatesManager == null || templatesManager.IsDisposed)
+            {
+                var f = templatesManager = new WindowPositioning.formTemplates();
+                var bounds = Settings.WindowBounds[f.GetType()];
+                if (bounds.HasValue)
+                {
+                    f.StartPosition = FormStartPosition.Manual;
+                    f.Bounds = Util.ScreenUtil.Constrain(bounds.Value);
+                }
+                else
+                {
+                    if (this.WindowState != FormWindowState.Minimized)
+                    {
+                        f.StartPosition = FormStartPosition.Manual;
+                        var screen = Screen.FromRectangle(this.Bounds);
+                        int x = this.Location.X + this.Width + 5;
+                        if (x >= screen.WorkingArea.Width / 2)
+                            x = this.Location.X - f.Width - 5;
+                        f.Location = new Point(x, this.Location.Y + this.Height / 2 - f.Height / 2);
+                        f.DesktopBounds = Util.RectangleConstraint.ConstrainToScreen(f.DesktopBounds);
+                    }
+                    else
+                        f.StartPosition = FormStartPosition.CenterScreen;
+                }
+
+                f.ShowCompact += templateManager_ShowCompact;
+                f.Show();
+            }
+            else
+            {
+                if (!templatesManager.Visible)
+                    templatesManager.Show();
+                FocusFormWindow(templatesManager);
+            }
+        }
+
+        void templateManager_ShowCompact(object sender, EventArgs e)
+        {
+            ShowWindowTemplatesPopup();
+        }
+
+        private void buttonAccountBar_Click(object sender, EventArgs e)
+        {
+            var fv = abWindow;
+            if (fv != null && !fv.IsDisposed && fv.Form.Visible)
+                HideAccountBar();
+            else
+                ShowAccountBar(true);
+        }
+
+        private void buttonMinimizeRestoreAll_Click(object sender, EventArgs e)
+        {
+            MinimizeOrRestore(Client.Launcher.GetActiveProcesses());
+        }
+
+        /// <summary>
+        /// Minimizes or restores accounts
+        /// </summary>
+        /// <param name="autoselect">If true, minimize or restore is based on the first account (if the first is minimized, all accounts will be restored)</param>
+        /// <param name="minimize">If not using autoselect, true to minimize, otherwise restore</param>
+        private void MinimizeOrRestore(IEnumerable<Settings.IAccount> accounts, bool autoselect = true, bool minimize = false)
+        {
+            var flags = ShowWindowCommands.Minimize;
+
+            if (!autoselect)
+            {
+                minimize = !minimize;
+                if (minimize)
+                    flags = ShowWindowCommands.Restore;
+            }
+
+            foreach (var a in accounts)
+            {
+                var p = Client.Launcher.GetProcess(a);
+                if (p == null)
+                    continue;
+
+                try
+                {
+                    var h = Windows.FindWindow.FindMainWindow(p);
+                    if (h == IntPtr.Zero || !NativeMethods.IsWindow(h))
+                        continue;
+
+                    if (autoselect)
+                    {
+                        if (minimize = Windows.FindWindow.IsMinimized(h))
+                        {
+                            flags = ShowWindowCommands.Restore;
+                        }
+                        autoselect = false;
+                        NativeMethods.ShowWindowAsync(h, flags);
+                    }
+                    else if (minimize == Windows.FindWindow.IsMinimized(h))
+                    {
+                        NativeMethods.ShowWindowAsync(h, flags);
+                    }
+                }
+                catch { }
+            }
+        }
+
+        private void runToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            var accounts = new List<Settings.IAccount>(GetSelectedAccounts());
+            if (accounts.Count > 0)
+            {
+                var f = new formRunAfterPopup(accounts);
+                f.Show();
+            }
+        }
+
+        private void disableRunAfterToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            disableRunAfterToolStripMenuItem.Checked = !disableRunAfterToolStripMenuItem.Checked;
+            disableRunAfterToolStripMenuItem1.Checked = disableRunAfterToolStripMenuItem.Checked;
+            disableRunAfterToolStripMenuItem2.Checked = disableRunAfterToolStripMenuItem.Checked;
+
+            Settings.DisableRunAfter.Value = disableRunAfterToolStripMenuItem.Checked;
+        }
+
+        private void buttonTemplates_Click(object sender, EventArgs e)
+        {
+            if (templatesCompact != null && !templatesCompact.IsDisposed && templatesCompact.Visible)
+                templatesCompact.Hide();
+            else
+                ShowWindowTemplatesPopup();
+        }
+
+        private void buttonMinimizeRestoreAll_MouseDown(object sender, MouseEventArgs e)
+        {
+            if (e.Button == System.Windows.Forms.MouseButtons.Right)
+            {
+                contextMinimizeRestore.Show(Cursor.Position);
+            }
+        }
+
+        private void minimizeRestoreToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            MinimizeOrRestore(Client.Launcher.GetActiveProcesses(), false, sender == minimizeToolStripMenuItem);
+        }
+
+        public override void RefreshColors()
+        {
+            base.RefreshColors();
+
+            redraw = true;
+            this.Invalidate();
+        }
+
+        private void colorsToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            AddWindow(new formColors()).Show(this);
         }
     }
 }
