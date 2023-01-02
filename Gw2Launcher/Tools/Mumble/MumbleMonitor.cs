@@ -76,6 +76,13 @@ namespace Gw2Launcher.Tools.Mumble
             {
                 get;
             }
+            /// <summary>
+            /// An invalid link will not have any data
+            /// </summary>
+            bool IsValid
+            {
+                get;
+            }
             Settings.IAccount Account
             {
                 get;
@@ -98,6 +105,14 @@ namespace Gw2Launcher.Tools.Mumble
             ~MumbleProcessSubscriber()
             {
                 Dispose();
+            }
+
+            public bool IsValid
+            {
+                get
+                {
+                    return Parent.Parent.IsValid;
+                }
             }
 
             public MumbleProcess Parent
@@ -221,6 +236,14 @@ namespace Gw2Launcher.Tools.Mumble
             ~MumbleProcess()
             {
                 Dispose();
+            }
+
+            public bool IsValid
+            {
+                get
+                {
+                    return Parent.IsValid;
+                }
             }
 
             public MumbleLink Parent
@@ -369,6 +392,9 @@ namespace Gw2Launcher.Tools.Mumble
                 {
                     if (!await Query() && State == LinkState.Unknown)
                     {
+                        if (!Parent.IsValid)
+                            break;
+
                         //current link data isn't valid for this process; only need to check for 1 update
                         lock (this)
                         {
@@ -742,11 +768,18 @@ namespace Gw2Launcher.Tools.Mumble
                 this.Parent = parent;
                 this.Name = name;
                 this.buffer = new DataBuffer();
+                this.IsValid = name[0] != '0';
             }
 
             ~MumbleLink()
             {
                 Dispose();
+            }
+
+            public bool IsValid
+            {
+                get;
+                private set;
             }
 
             public MumbleMonitor Parent
@@ -805,13 +838,18 @@ namespace Gw2Launcher.Tools.Mumble
             {
                 if (IsOpened)
                     return true;
+                if (!IsValid)
+                    return false;
 
                 _file = NativeMethods.OpenFileMapping(FileMapAccess.FileMapRead, false, this.Name);
                 if (_file == IntPtr.Zero)
                 {
                     _file = NativeMethods.CreateFileMapping(IntPtr.Zero, IntPtr.Zero, FileMapProtection.PageReadWrite, 0, MUMBLE_DATA_LENGTH, this.Name);
                     if (_file == IntPtr.Zero)
+                    {
+                        IsValid = false;
                         return false;
+                    }
                 }
 
                 _view = NativeMethods.MapViewOfFile(_file, FileMapAccess.FileMapRead, 0, 0, MUMBLE_DATA_LENGTH);
@@ -1119,6 +1157,8 @@ namespace Gw2Launcher.Tools.Mumble
             {
                 if (string.IsNullOrEmpty(name))
                     name = MUMBLE_DEFAULT_NAME;
+                else if (name.Length > 2 && name[0] == '"' && name[name.Length - 1] == '"')
+                    name = name.Substring(1, name.Length - 2);
                 var l = GetLink(name);
                 var p = l.Add(pid);
 

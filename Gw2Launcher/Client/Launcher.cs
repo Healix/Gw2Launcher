@@ -1957,6 +1957,13 @@ namespace Gw2Launcher.Client
             return GetAccount(account).MumbleLink;
         }
 
+        public static bool IsMumbleLinkInvalid(Settings.IAccount account)
+        {
+            var m = GetAccount(account).MumbleLink;
+
+            return m != null && !m.IsValid;
+        }
+
         public static Process GetProcess(Settings.IAccount account)
         {
             lock (accounts)
@@ -6212,7 +6219,6 @@ namespace Gw2Launcher.Client
             var account = watcher.Account;
             var settings = account.Settings;
             var s = watcher.Session;
-
 
             switch (e.Type)
             {
