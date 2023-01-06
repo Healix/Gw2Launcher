@@ -615,6 +615,11 @@ namespace Gw2Launcher.UI
 
                 if (gw2.Proxy == Settings.LaunchProxy.Steam)
                     checkLaunchSteam.Checked = true;
+
+                if (!gw2.DisableMumbleLinkDailyLogin)
+                    checkDailyLoginMumbleLink.CheckState = Settings.Tweaks.DisableMumbleLinkDailyLogin.Value ? CheckState.Indeterminate : CheckState.Checked;
+                else
+                    checkDailyLoginMumbleLink.Checked = false;
             }
             else
             {
@@ -2759,6 +2764,11 @@ namespace Gw2Launcher.UI
                                 gw2.Proxy = checkLaunchSteam.Checked ? Settings.LaunchProxy.Steam : Settings.LaunchProxy.None;
                             }
 
+                            if (isMaster || aaDailyLoginMumbleLink.Checked)
+                            {
+                                gw2.DisableMumbleLinkDailyLogin = !checkDailyLoginMumbleLink.Checked;
+                            }
+
                             break;
                         case Settings.AccountType.GuildWars1:
 
@@ -2915,7 +2925,6 @@ namespace Gw2Launcher.UI
                         break;
                     }
                 }
-
 
 
 
@@ -4533,6 +4542,8 @@ namespace Gw2Launcher.UI
             {
                 SelectLoginRewardButton(GetLoginRewardButton(textTrackLoginRewardsDay.Value));
             }
+
+            checkTrackLoginRewardsDay.Checked = true;
         }
 
         private FlatMarkerIconButton GetLoginRewardButton(int day)
@@ -4774,6 +4785,21 @@ namespace Gw2Launcher.UI
             if (e.Button == System.Windows.Forms.MouseButtons.Right)
             {
                 contextAffinity.Show(Cursor.Position);
+            }
+        }
+
+        private void checkDailyLoginMumbleLink_CheckedChanged(object sender, EventArgs e)
+        {
+            if (checkDailyLoginMumbleLink.Checked && Settings.Tweaks.DisableMumbleLinkDailyLogin.Value && checkDailyLoginMumbleLink.Focused)
+            {
+                if (MessageBox.Show(this, "Tracking daily logins using MumbleLink is required and has been disabled under the settings.\n\nEnable the use of MumbleLink?", "Enable use of MumbleLink?", MessageBoxButtons.YesNo, MessageBoxIcon.Exclamation) == System.Windows.Forms.DialogResult.Yes)
+                {
+                    Settings.Tweaks.DisableMumbleLinkDailyLogin.Value = false;
+                }
+                else
+                {
+                    checkDailyLoginMumbleLink.CheckState = CheckState.Indeterminate;
+                }
             }
         }
     }

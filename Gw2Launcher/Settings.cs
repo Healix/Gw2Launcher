@@ -2310,6 +2310,12 @@ namespace Gw2Launcher
                 get;
                 set;
             }
+
+            bool DisableMumbleLinkDailyLogin
+            {
+                get;
+                set;
+            }
         }
 
         public interface IGw1Account : IAccount
@@ -4415,6 +4421,23 @@ namespace Gw2Launcher
                 }
             }
 
+            public bool _DisableMumbleLinkDailyLogin;
+            public bool DisableMumbleLinkDailyLogin
+            {
+                get
+                {
+                    return _DisableMumbleLinkDailyLogin;
+                }
+                set
+                {
+                    if (_DisableMumbleLinkDailyLogin != value)
+                    {
+                        _DisableMumbleLinkDailyLogin = value;
+                        OnValueChanged();
+                    }
+                }
+            }
+
             public override Account Clone()
             {
                 var a = new Gw2Account();
@@ -4432,6 +4455,7 @@ namespace Gw2Launcher
                 a._LocalizedExecution = _LocalizedExecution;
                 a._Provider = _Provider;
                 a._LastDailyLoginUtc = _LastDailyLoginUtc;
+                a._DisableMumbleLinkDailyLogin = _DisableMumbleLinkDailyLogin;
 
                 a.GfxFile = _GfxFile;
                 a.DatFile = _DatFile;
@@ -8647,6 +8671,7 @@ namespace Gw2Launcher
                                     a._DailyLoginDay != 0,
                                     a._LocalizedExecution,
                                     a._Provider == AccountProvider.Steam,
+                                    a._DisableMumbleLinkDailyLogin,
                                 };
 
                                 b = CompressBooleans(booleans);
@@ -10471,6 +10496,8 @@ namespace Gw2Launcher
                                             a._DailyLoginDay = reader.ReadByte();
 
                                         a._LocalizedExecution = booleans[9];
+                                        a._Provider = booleans[10] ? AccountProvider.Steam : AccountProvider.ArenaNet;
+                                        a._DisableMumbleLinkDailyLogin = booleans[11];
 
                                         a._LastDailyLoginUtc = DateTime.FromBinary(reader.ReadInt64());
                                     }

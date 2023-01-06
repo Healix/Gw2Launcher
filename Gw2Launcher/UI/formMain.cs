@@ -1195,7 +1195,7 @@ namespace Gw2Launcher.UI
                             SetLastUsed(button, DateTime.UtcNow);
                         }
 
-                        if (!Settings.Tweaks.DisableMumbleLinkDailyLogin.Value)
+                        if (!gw2.DisableMumbleLinkDailyLogin && !Settings.Tweaks.DisableMumbleLinkDailyLogin.Value)
                         {
                             var mumble = Client.Launcher.GetMumbleLink(gw2);
                             if (mumble != null)
@@ -1902,7 +1902,7 @@ namespace Gw2Launcher.UI
             if (!daily)
             {
                 var gw2 = (Settings.IGw2Account)a;
-                daily = (Settings.Tweaks.DisableMumbleLinkDailyLogin.Value || Client.Launcher.IsMumbleLinkInvalid(gw2)) && (gw2.ApiData == null || gw2.ApiData.Played == null);
+                daily = (gw2.DisableMumbleLinkDailyLogin || Settings.Tweaks.DisableMumbleLinkDailyLogin.Value || Client.Launcher.IsMumbleLinkInvalid(gw2)) && (gw2.ApiData == null || gw2.ApiData.Played == null);
             }
 
             SetLastUsed(b, d, daily);
