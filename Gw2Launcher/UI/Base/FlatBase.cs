@@ -60,7 +60,22 @@ namespace Gw2Launcher.UI.Base
         {
             base.OnHandleCreated(e);
 
-            Windows.WindowShadow.Enable(this.Handle);
+            if (!DesignMode)
+            {
+                this.Opacity = 0;
+                Windows.WindowShadow.Enable(this.Handle);
+            }
+        }
+
+        protected override void OnShown(EventArgs e)
+        {
+            base.OnShown(e);
+
+            if (!DesignMode)
+            {
+                this.Refresh();
+                this.Opacity = 1;
+            }
         }
 
         /// <returns>True if handled</returns>

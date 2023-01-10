@@ -22,17 +22,15 @@ namespace Gw2Launcher.UI.Controls
         protected Color colorHighlight;
         protected PointF[] points;
         protected SolidBrush brush;
-        protected Pen pen;
         protected bool highlighted;
         protected ArrowDirection direction;
         protected bool redraw;
-        
+
         public ArrowButton()
         {
-            points = new PointF[6];
+            points = new PointF[3];
 
             brush = new SolidBrush(this.ForeColor);
-            pen = new Pen(brush);
 
             this.ForeColor = Color.FromArgb(150, 150, 150);
             colorHighlight = Color.FromArgb(20, 20, 20);
@@ -42,6 +40,7 @@ namespace Gw2Launcher.UI.Controls
             SetStyle(ControlStyles.UserPaint, true);
             SetStyle(ControlStyles.AllPaintingInWmPaint, true);
             SetStyle(ControlStyles.OptimizedDoubleBuffer, true);
+            SetStyle(ControlStyles.ResizeRedraw, true);
         }
 
         protected override void OnForeColorChanged(EventArgs e)
@@ -50,7 +49,7 @@ namespace Gw2Launcher.UI.Controls
             OnColorChanged();
         }
 
-        [DefaultValue(typeof(Color),"20,20,20")]
+        [DefaultValue(typeof(Color), "20,20,20")]
         public Color ForeColorHighlight
         {
             get
@@ -87,10 +86,17 @@ namespace Gw2Launcher.UI.Controls
 
         protected void OnColorChanged()
         {
-            if (highlighted)
-                pen.Color = brush.Color = colorHighlight;
+            if (this.Enabled)
+            {
+                if (highlighted)
+                    brush.Color = colorHighlight;
+                else
+                    brush.Color = this.ForeColor;
+            }
             else
-                pen.Color = brush.Color = this.ForeColor;
+            {
+                brush.Color = Util.Color.Lighten(this.ForeColor, 0.5f);
+            }
             this.Invalidate();
         }
 
@@ -128,7 +134,6 @@ namespace Gw2Launcher.UI.Controls
 
             if (disposing)
             {
-                pen.Dispose();
                 brush.Dispose();
             }
         }
@@ -137,6 +142,9 @@ namespace Gw2Launcher.UI.Controls
         {
             base.OnSizeChanged(e);
             redraw = true;
+            var w = this.Height / 2 + 1;
+            if (this.Width != w)
+                this.Width = w;
         }
 
         protected override void OnMouseEnter(EventArgs e)
@@ -145,7 +153,7 @@ namespace Gw2Launcher.UI.Controls
             if (!highlighted)
             {
                 highlighted = true;
-                pen.Color = brush.Color = colorHighlight;
+                brush.Color = colorHighlight;
                 this.Invalidate();
             }
         }
@@ -156,9 +164,19 @@ namespace Gw2Launcher.UI.Controls
             if (highlighted)
             {
                 highlighted = false;
-                pen.Color = brush.Color = this.ForeColor;
-                this.Invalidate();
+                if (this.Enabled)
+                {
+                    brush.Color = this.ForeColor;
+                    this.Invalidate();
+                }
             }
+        }
+
+        protected override void OnEnabledChanged(EventArgs e)
+        {
+            base.OnEnabledChanged(e);
+
+            OnColorChanged();
         }
 
         protected override void OnPaintBackground(PaintEventArgs pevent)
@@ -170,38 +188,27 @@ namespace Gw2Launcher.UI.Controls
             if (redraw)
             {
                 redraw = false;
-                int w = this.Width - 1, h = this.Height - 1;
+                var h = this.Height;
 
                 if (direction == ArrowDirection.Right)
                 {
-                    points[0] = points[5] = new PointF(0, 0);
-                    points[1] = points[2] = new PointF(0, h);
-                    points[3] = points[4] = new PointF(w, h / 2);
+                    var w = h / 2;
+
+                    points[0] = new PointF(0, 0);
+                    points[1] = new PointF(w, h / 2f);
+                    points[2] = new PointF(0, h);
                 }
                 else
                 {
-                    points[0] = points[5] = new PointF(w, 0);
-                    points[1] = points[2] = new PointF(w, h);
-                    points[3] = points[4] = new PointF(0, h / 2);
+                    var w = (int)(h / 2f + 0.5f);
+
+                    points[0] = new PointF(w, 0);
+                    points[1] = new PointF(0, h / 2f);
+                    points[2] = new PointF(w, h);
                 }
             }
 
-            if (this.Enabled)
-            {
-                g.FillClosedCurve(brush, points);
-                g.DrawLines(pen, points);
-            }
-            else
-            {
-                using (var brush = new SolidBrush(Util.Color.Lighten(this.ForeColor, 0.5f)))
-                {
-                    g.FillClosedCurve(brush, points);
-                    using (var pen = new Pen(brush))
-                    {
-                        g.DrawLines(pen, points);
-                    }
-                }
-            }
+            g.FillPolygon(brush, points);
         }
 
         public override void RefreshColors()

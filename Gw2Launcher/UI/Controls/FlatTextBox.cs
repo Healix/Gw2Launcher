@@ -25,11 +25,16 @@ namespace Gw2Launcher.UI.Controls
 
             this.Controls.Add(this.TextBox);
 
-            SetTextBoxBounds();
-
             this.TextBox.GotFocus += OnFocusChanged;
             this.TextBox.LostFocus += OnFocusChanged;
             this.TextBox.TextChanged += TextBox_TextChanged;
+        }
+
+        protected override void OnHandleCreated(EventArgs e)
+        {
+            base.OnHandleCreated(e);
+
+            SetTextBoxBounds();
         }
 
         void TextBox_TextChanged(object sender, EventArgs e)
@@ -44,6 +49,7 @@ namespace Gw2Launcher.UI.Controls
                 BackColor = this.BackColor,
                 ForeColor = this.ForeColor,
                 BorderStyle = BorderStyle.None,
+                Margin = new Padding(3),
             };
         }
 
@@ -76,14 +82,20 @@ namespace Gw2Launcher.UI.Controls
         {
             base.OnSizeChanged(e);
 
-            SetTextBoxBounds();
+            if (IsHandleCreated)
+            {
+                SetTextBoxBounds();
+            }
         }
 
         protected override void OnFontChanged(EventArgs e)
         {
             base.OnFontChanged(e);
 
-            SetTextBoxBounds();
+            if (IsHandleCreated)
+            {
+                SetTextBoxBounds();
+            }
         }
 
         protected override void OnClick(EventArgs e)
@@ -260,9 +272,12 @@ namespace Gw2Launcher.UI.Controls
         {
             base.OnPaint(e);
 
-            using (var p = new Pen(BorderColorCurrent))
+            var pw = (int)(e.Graphics.DpiX / 96f + 0.5f);
+            var phalf = pw / 2;
+
+            using (var p = new Pen(BorderColorCurrent, pw))
             {
-                e.Graphics.DrawRectangle(p, 0, 0, this.Width - 1, this.Height - 1);
+                e.Graphics.DrawRectangle(p, phalf, phalf, this.Width - pw, this.Height - pw);
             }
         }
 
