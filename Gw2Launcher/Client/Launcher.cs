@@ -3451,6 +3451,11 @@ namespace Gw2Launcher.Client
                         FileManager.VerifyLinks(FileManager.FileType.Dat, dat);
                         FileManager.VerifyLocalDatBuild(false);
 
+                        if (q.mode == LaunchMode.UpdateVisible)
+                        {
+                            FileManager.VerifyLocalDatBuild(false);
+                        }
+
                         if (Settings.GuildWars2.DatUpdaterEnabled.Value || Settings.GuildWars2.UseCustomGw2Cache.Value)
                         {
                             if (q.mode == LaunchMode.UpdateVisible)

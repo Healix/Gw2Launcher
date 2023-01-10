@@ -4864,7 +4864,11 @@ namespace Gw2Launcher.Client
 
             var d = (uint)((File.GetLastWriteTimeUtc(path).Ticks / 1000) % uint.MaxValue);
 
-            if (Settings.GuildWars2.LastModified.HasValue && Settings.GuildWars2.LastModified.Value != d)
+            verify = verify && Settings.GuildWars2.LastModified.HasValue && Settings.GuildWars2.LastModified.Value != d;
+
+            Settings.GuildWars2.LastModified.Value = d;
+
+            if (verify)
             {
                 var pd = new PathData();
                 var build = 0;
@@ -4927,8 +4931,6 @@ namespace Gw2Launcher.Client
                     return false;
                 }
             }
-
-            Settings.GuildWars2.LastModified.Value = d;
 
             return true;
         }
