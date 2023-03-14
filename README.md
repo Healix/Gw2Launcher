@@ -3,6 +3,11 @@
 
 See the [**wiki**](https://github.com/Healix/Gw2Launcher/wiki) for more information and recent [**changes**](https://github.com/Healix/Gw2Launcher/wiki/Changes). Simply [**download**](/Gw2Launcher/bin64/Release/Gw2Launcher.exe?raw=true) (64-bit) and place the executable wherever you'd like it.
 
+## CEF Update
+Add the following option under "Settings > Guild Wars 2 > Launch options > Arguments" to continue using CoherentUI:
+
+-usecoherent
+
 ## Gw2Launcher
 GW2 uses a mutex to prevent multiple instances from being opened at the same time. In addition, GW2 also locks access to Gw2.dat, which prevents other processes from reading it. By killing the mutex and enabling -shareArchive, multiple clients can be launched simultaneously.
 
