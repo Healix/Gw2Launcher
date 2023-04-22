@@ -1,10 +1,13 @@
 **Last release:** January 1, 2023
-<br>**Download:** [Gw2Launcher.exe](/Gw2Launcher/bin64/Release/Gw2Launcher.exe?raw=true)
+<br>**Download:** [Gw2Launcher.exe](/Gw2Launcher/bin64/Release/Gw2Launcher.exe?raw=true) (nonfunctional due to CEF)
+<br>**Beta:** [Gw2Launcher.exe](/Gw2Launcher/bin64/Beta/Gw2Launcher.exe?raw=true)
 
 See the [**wiki**](https://github.com/Healix/Gw2Launcher/wiki) for more information and recent [**changes**](https://github.com/Healix/Gw2Launcher/wiki/Changes). Simply [**download**](/Gw2Launcher/bin64/Release/Gw2Launcher.exe?raw=true) (64-bit) and place the executable wherever you'd like it.
 
 ## CEF Update
-Add the following option under "Settings > Guild Wars 2 > Launch options > Arguments" to continue using CoherentUI:
+Use the [beta version](/Gw2Launcher/bin64/Beta/Gw2Launcher.exe?raw=true) for compatibility.
+
+To continue using CoherentUI, add the following option under "Settings > Guild Wars 2 > Launch options > Arguments":
 
 -usecoherent
 
