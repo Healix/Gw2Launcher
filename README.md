@@ -11,6 +11,14 @@ To continue using CoherentUI, add the following option under "Settings > Guild W
 
 -usecoherent
 
+## Indefinite black screen while loading character select
+This is a bug GW2 introduced back when DX11 was implemented. The slower GW2 is to load, the more likely it is to occur. There are a few options to help with this:
+<br>
+<br>Settings > Guild Wars 2 > Process priority while initializing the game: high.
+<br>Settings > General > Launching > Timeout: relaunch if character select hasn't loaded within 15~30 seconds.
+<br>Settings > General > Launching > Delay until the main window is loaded.
+
+
 ## Gw2Launcher
 GW2 uses a mutex to prevent multiple instances from being opened at the same time. In addition, GW2 also locks access to Gw2.dat, which prevents other processes from reading it. By killing the mutex and enabling -shareArchive, multiple clients can be launched simultaneously.
 
