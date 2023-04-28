@@ -3853,7 +3853,7 @@ namespace Gw2Launcher.UI
         private void checkAutomaticLoginGw1_CheckedChanged(object sender, EventArgs e)
         {
             textAutoLoginCharacter.Enabled = textAutoLoginEmail.Enabled = textAutoLoginPassword.Enabled = checkAutomaticLoginGw1.Checked;
-            tableLogin.Visible = checkAutomaticLoginGw1.Checked;
+            tableLogin.Visible = tableLogin.Enabled = checkAutomaticLoginGw1.Checked;
         }
 
         private void checkGw2MumbleName_CheckedChanged(object sender, EventArgs e)
@@ -4625,7 +4625,7 @@ namespace Gw2Launcher.UI
                         BackColorSelected = Color.LightSteelBlue,
                         BorderColorSelected = Color.SteelBlue,
                         BorderStyle = AnchorStyles.Bottom | AnchorStyles.Left | AnchorStyles.Right | AnchorStyles.Top,
-                        Cursor = Cursors.Hand,
+                        Cursor = Windows.Cursors.Hand,
                         Tag = day,
                         PrioritizeSelectedColoring = true,
                         ImageOpacity = 0.5f,

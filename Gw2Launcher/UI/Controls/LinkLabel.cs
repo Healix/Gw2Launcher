@@ -20,7 +20,7 @@ namespace Gw2Launcher.UI.Controls
 
         public LinkLabel()
         {
-            Cursor = Cursors.Hand;
+            Cursor = Windows.Cursors.Hand;
             base.ForeColor = foreColor = Color.FromArgb(DEFAULT_FORECOLOR);
             foreColorHighlight = Color.FromArgb(34, 85, 169);
         }

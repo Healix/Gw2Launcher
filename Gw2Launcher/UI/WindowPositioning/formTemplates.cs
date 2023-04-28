@@ -767,7 +767,7 @@ namespace Gw2Launcher.UI.WindowPositioning
             {
                 redraw = true;
                 SetColor();
-                Cursor = Cursors.Hand;
+                Cursor = Windows.Cursors.Hand;
                 //Padding = new Padding(3, 3, 3, 3);
             }
 

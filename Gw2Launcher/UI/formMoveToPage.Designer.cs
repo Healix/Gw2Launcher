@@ -134,7 +134,7 @@ namespace Gw2Launcher.UI
             // 
             this.arrowFirst.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom) 
             | System.Windows.Forms.AnchorStyles.Left)));
-            this.arrowFirst.Cursor = System.Windows.Forms.Cursors.Hand;
+            this.arrowFirst.Cursor = Windows.Cursors.Hand;
             this.arrowFirst.ForeColorHoveredName = Gw2Launcher.UI.UiColors.Colors.ArrowForeColorHovered;
             this.arrowFirst.ForeColorName = Gw2Launcher.UI.UiColors.Colors.ArrowForeColor;
             this.arrowFirst.Location = new System.Drawing.Point(0, 0);
@@ -149,7 +149,7 @@ namespace Gw2Launcher.UI
             // 
             this.arrowPrevious.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom) 
             | System.Windows.Forms.AnchorStyles.Left)));
-            this.arrowPrevious.Cursor = System.Windows.Forms.Cursors.Hand;
+            this.arrowPrevious.Cursor = Windows.Cursors.Hand;
             this.arrowPrevious.ForeColorHoveredName = Gw2Launcher.UI.UiColors.Colors.ArrowForeColorHovered;
             this.arrowPrevious.ForeColorName = Gw2Launcher.UI.UiColors.Colors.ArrowForeColor;
             this.arrowPrevious.Location = new System.Drawing.Point(24, 0);
@@ -163,7 +163,7 @@ namespace Gw2Launcher.UI
             // 
             this.arrowNext.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom) 
             | System.Windows.Forms.AnchorStyles.Left)));
-            this.arrowNext.Cursor = System.Windows.Forms.Cursors.Hand;
+            this.arrowNext.Cursor = Windows.Cursors.Hand;
             this.arrowNext.ForeColorHoveredName = Gw2Launcher.UI.UiColors.Colors.ArrowForeColorHovered;
             this.arrowNext.ForeColorName = Gw2Launcher.UI.UiColors.Colors.ArrowForeColor;
             this.arrowNext.Location = new System.Drawing.Point(118, 0);
@@ -178,7 +178,7 @@ namespace Gw2Launcher.UI
             // 
             this.arrowLast.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom) 
             | System.Windows.Forms.AnchorStyles.Left)));
-            this.arrowLast.Cursor = System.Windows.Forms.Cursors.Hand;
+            this.arrowLast.Cursor = Windows.Cursors.Hand;
             this.arrowLast.ForeColorHoveredName = Gw2Launcher.UI.UiColors.Colors.ArrowForeColorHovered;
             this.arrowLast.ForeColorName = Gw2Launcher.UI.UiColors.Colors.ArrowForeColor;
             this.arrowLast.Location = new System.Drawing.Point(130, 0);

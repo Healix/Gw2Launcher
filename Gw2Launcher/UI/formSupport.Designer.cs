@@ -374,7 +374,7 @@ namespace Gw2Launcher.UI
             // 
             // copyLogin
             // 
-            this.copyLogin.Cursor = System.Windows.Forms.Cursors.Hand;
+            this.copyLogin.Cursor = Windows.Cursors.Hand;
             this.copyLogin.Location = new System.Drawing.Point(349, 122);
             this.copyLogin.Size = new System.Drawing.Size(16, 16);
             this.copyLogin.Tooltip = "Copy to clipboard";
@@ -385,7 +385,7 @@ namespace Gw2Launcher.UI
             // 
             this.arrowLoginExpand.ForeColor = System.Drawing.Color.FromArgb(((int)(((byte)(150)))), ((int)(((byte)(150)))), ((int)(((byte)(150)))));
             this.arrowLoginExpand.ForeColorHighlight = System.Drawing.Color.FromArgb(((int)(((byte)(20)))), ((int)(((byte)(20)))), ((int)(((byte)(20)))));
-            this.arrowLoginExpand.Cursor = System.Windows.Forms.Cursors.Hand;
+            this.arrowLoginExpand.Cursor = Windows.Cursors.Hand;
             this.arrowLoginExpand.Direction = Gw2Launcher.UI.Controls.ArrowButton.ArrowDirection.Right;
             this.arrowLoginExpand.Location = new System.Drawing.Point(353, 102);
             this.arrowLoginExpand.Size = new System.Drawing.Size(6, 11);
@@ -539,7 +539,7 @@ namespace Gw2Launcher.UI
             // 
             // copyAsset
             // 
-            this.copyAsset.Cursor = System.Windows.Forms.Cursors.Hand;
+            this.copyAsset.Cursor = Windows.Cursors.Hand;
             this.copyAsset.Location = new System.Drawing.Point(349, 122);
             this.copyAsset.Size = new System.Drawing.Size(16, 16);
             this.copyAsset.Tooltip = "Copy to clipboard";
@@ -550,7 +550,7 @@ namespace Gw2Launcher.UI
             // 
             this.arrowAssetExpand.ForeColor = System.Drawing.Color.FromArgb(((int)(((byte)(150)))), ((int)(((byte)(150)))), ((int)(((byte)(150)))));
             this.arrowAssetExpand.ForeColorHighlight = System.Drawing.Color.FromArgb(((int)(((byte)(20)))), ((int)(((byte)(20)))), ((int)(((byte)(20)))));
-            this.arrowAssetExpand.Cursor = System.Windows.Forms.Cursors.Hand;
+            this.arrowAssetExpand.Cursor = Windows.Cursors.Hand;
             this.arrowAssetExpand.Direction = Gw2Launcher.UI.Controls.ArrowButton.ArrowDirection.Right;
             this.arrowAssetExpand.Location = new System.Drawing.Point(353, 102);
             this.arrowAssetExpand.Size = new System.Drawing.Size(6, 11);
@@ -752,7 +752,7 @@ namespace Gw2Launcher.UI
             this.buttonPatchingIntercept.ArrowColor = System.Drawing.SystemColors.Control;
             this.buttonPatchingIntercept.BackColor = System.Drawing.Color.White;
             this.buttonPatchingIntercept.BorderColor = System.Drawing.SystemColors.ControlDark;
-            this.buttonPatchingIntercept.Cursor = System.Windows.Forms.Cursors.Hand;
+            this.buttonPatchingIntercept.Cursor = Windows.Cursors.Hand;
             this.buttonPatchingIntercept.Font = new System.Drawing.Font("Segoe UI", 8.25F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
             this.buttonPatchingIntercept.Index = -1;
             this.buttonPatchingIntercept.Location = new System.Drawing.Point(0, 200);
@@ -772,7 +772,7 @@ namespace Gw2Launcher.UI
             this.buttonPatching.ArrowColor = System.Drawing.SystemColors.Control;
             this.buttonPatching.BackColor = System.Drawing.Color.White;
             this.buttonPatching.BorderColor = System.Drawing.SystemColors.ControlDark;
-            this.buttonPatching.Cursor = System.Windows.Forms.Cursors.Hand;
+            this.buttonPatching.Cursor = Windows.Cursors.Hand;
             this.buttonPatching.Font = new System.Drawing.Font("Segoe UI", 8.25F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
             this.buttonPatching.Index = -1;
             this.buttonPatching.Location = new System.Drawing.Point(0, 160);
@@ -792,7 +792,7 @@ namespace Gw2Launcher.UI
             this.buttonAuthentication.ArrowColor = System.Drawing.SystemColors.Control;
             this.buttonAuthentication.BackColor = System.Drawing.Color.White;
             this.buttonAuthentication.BorderColor = System.Drawing.SystemColors.ControlDark;
-            this.buttonAuthentication.Cursor = System.Windows.Forms.Cursors.Hand;
+            this.buttonAuthentication.Cursor = Windows.Cursors.Hand;
             this.buttonAuthentication.Font = new System.Drawing.Font("Segoe UI", 8.25F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
             this.buttonAuthentication.Index = -1;
             this.buttonAuthentication.Location = new System.Drawing.Point(0, 120);
@@ -812,7 +812,7 @@ namespace Gw2Launcher.UI
             this.buttonRepair.ArrowColor = System.Drawing.SystemColors.Control;
             this.buttonRepair.BackColor = System.Drawing.Color.White;
             this.buttonRepair.BorderColor = System.Drawing.SystemColors.ControlDark;
-            this.buttonRepair.Cursor = System.Windows.Forms.Cursors.Hand;
+            this.buttonRepair.Cursor = Windows.Cursors.Hand;
             this.buttonRepair.Font = new System.Drawing.Font("Segoe UI", 8.25F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
             this.buttonRepair.Index = -1;
             this.buttonRepair.Location = new System.Drawing.Point(0, 80);
@@ -832,7 +832,7 @@ namespace Gw2Launcher.UI
             this.buttonDiagnostics.ArrowColor = System.Drawing.SystemColors.Control;
             this.buttonDiagnostics.BackColor = System.Drawing.Color.White;
             this.buttonDiagnostics.BorderColor = System.Drawing.SystemColors.ControlDark;
-            this.buttonDiagnostics.Cursor = System.Windows.Forms.Cursors.Hand;
+            this.buttonDiagnostics.Cursor = Windows.Cursors.Hand;
             this.buttonDiagnostics.Font = new System.Drawing.Font("Segoe UI", 8.25F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
             this.buttonDiagnostics.Index = -1;
             this.buttonDiagnostics.Location = new System.Drawing.Point(0, 40);

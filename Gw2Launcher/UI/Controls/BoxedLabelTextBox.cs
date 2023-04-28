@@ -25,7 +25,7 @@ namespace Gw2Launcher.UI.Controls
 
             this.Padding = new Padding(5, 0, 0, 1);
             this.TextAlign = ContentAlignment.MiddleLeft;
-            this.Cursor = Cursors.Hand;
+            this.Cursor = Windows.Cursors.Hand;
 
             this.Controls.Add(textbox);
         }

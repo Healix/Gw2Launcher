@@ -12,7 +12,7 @@ namespace Gw2Launcher.Net.AssetProxy
 {
     class Client : IDisposable
     {
-        private const int BUFFER_LENGTH = 102400; //16384
+        private const int BUFFER_LENGTH = 1048576; //16384
         private const string ASSET_HOST = Settings.ASSET_HOST;
         protected const byte CONNECTION_TIMEOUT_SECONDS = 5;
         protected const byte CONNECTION_TRANSFER_TIMEOUT_SECONDS = 180;
@@ -224,6 +224,7 @@ namespace Gw2Launcher.Net.AssetProxy
                                     while ((read = cache.Read(buffer, 0, BUFFER_LENGTH)) > 0)
                                     {
                                         httpIn.Write(buffer, 0, read);
+
                                     }
 
                                     continue;
@@ -355,7 +356,7 @@ namespace Gw2Launcher.Net.AssetProxy
                         }
                         catch
                         {
-                            if (doIPPool)
+                            if (doIPPool && clientIn.Connected)
                                 ipPool.AddSample(remoteEP.Address, double.MaxValue);
 
                             throw;

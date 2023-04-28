@@ -16,7 +16,6 @@ namespace Gw2Launcher.Client
     {
         private class WindowWatcher : IDisposable
         {
-
             public class TimeoutEventArgs : EventArgs
             {
                 public enum TimeoutReason
@@ -621,10 +620,6 @@ namespace Gw2Launcher.Client
                 public HiddenWindow(int pid, ProcessOptions options = null)
                 {
                     dt = Windows.DebugEvents.Instance.Add(pid, options != null ? options.UserName : null, options != null ? options.Password : null);
-                    //if (h != IntPtr.Zero)
-                    //{
-                    //    this.Handle = h;
-                    //}
                 }
 
                 ~HiddenWindow()
@@ -636,15 +631,11 @@ namespace Gw2Launcher.Client
                 {
                     this.Handle = handle;
 
-                    NativeMethods.ShowWindow(handle, ShowWindowCommands.ForceMinimize);
-
                     //hides window by setting opacity to 0 - will freeze if the window is not responding
                     Task.Run(new Action(delegate
                     {
                         wasLayered = Windows.WindowLong.Add(handle, GWL.GWL_EXSTYLE, WindowStyle.WS_EX_LAYERED) == IntPtr.Zero;
                         var b2 = NativeMethods.SetLayeredWindowAttributes(handle, 0, 0, LayeredWindowFlags.LWA_ALPHA);
-
-                        Util.Logging.Log(handle + ": " + wasLayered + ", " + b2);
                     }));
                 }
 
@@ -692,6 +683,41 @@ namespace Gw2Launcher.Client
                 }
             }
 
+            struct ProcessInfo : IDisposable
+            {
+                public Process Process;
+                private object info;
+
+                public ProcessInfo(Process process, Windows.ProcessInfo info)
+                {
+                    this.Process = process;
+                    this.info = info;
+                }
+
+                public ProcessInfo(Process process, string commandLine)
+                {
+                    this.Process = process;
+                    this.info = commandLine;
+                }
+
+                public string GetCommandLine()
+                {
+                    if (info is string)
+                    {
+                        return (string)info;
+                    }
+                    else
+                    {
+                        return ((Windows.ProcessInfo)info).GetCommandLine();
+                    }
+                }
+
+                public void Dispose()
+                {
+                    Process.Dispose();
+                }
+            }
+
             public event EventHandler<WindowChangedEventArgs> WindowChanged;
             public event EventHandler<CrashReason> WindowCrashed;
             public event EventHandler<int> LoginComplete;
@@ -717,6 +743,13 @@ namespace Gw2Launcher.Client
                 PatchRequired,
                 NoPatchUI,
                 ErrorDialog,
+            }
+
+            public enum HostType
+            {
+                Unknown,
+                CoherentUI,
+                CEF,
             }
 
             private static Watchers watchers;
@@ -751,6 +784,17 @@ namespace Gw2Launcher.Client
                 this.Session = session;
 
                 canReadMemory = Environment.Is64BitProcess || !Environment.Is64BitOperatingSystem;
+            }
+
+            /// <summary>
+            /// Changes the watched process, abandoning the current watcher thread
+            /// </summary>
+            public void SetProcess(Process p)
+            {
+                process = p;
+                if (watcher != null && watcher.IsCompleted)
+                    watcher.Dispose();
+                watcher = null;
             }
 
             public void Dispose()
@@ -804,6 +848,81 @@ namespace Gw2Launcher.Client
             {
                 get;
                 private set;
+            }
+
+            /// <summary>
+            /// Finds child processes
+            /// </summary>
+            /// <param name="parent">Parent process</param>
+            private IEnumerable<ProcessInfo> EnumerateChildProcesses(Process parent)
+            {
+                var pid = parent.Id;
+                var startTime = parent.StartTime;
+
+                if (canReadMemory)
+                {
+                    var processes = Process.GetProcesses();
+
+                    using (var pi = new Windows.ProcessInfo())
+                    {
+                        foreach (var p in processes)
+                        {
+                            bool b;
+
+                            try
+                            {
+                                b = pi.Open(p.Id) && pi.GetParent() == pid && p.StartTime >= startTime;
+                            }
+                            catch (Exception e)
+                            {
+                                b = false;
+                                Util.Logging.Log(e);
+                            }
+
+                            if (b)
+                            {
+                                yield return new ProcessInfo(p, pi);
+                            }
+                            else
+                            {
+                                p.Dispose();
+                            }
+                        }
+                    }
+                }
+                else
+                {
+                    using (var searcher = new ManagementObjectSearcher("SELECT ProcessId, CommandLine FROM Win32_Process WHERE ParentProcessID=" + pid))
+                    {
+                        using (var results = searcher.Get())
+                        {
+                            foreach (ManagementObject o in results)
+                            {
+                                Process p = null;
+                                bool b;
+
+                                try
+                                {
+                                    p = Process.GetProcessById((int)(uint)o["ProcessId"]);
+                                    b = p.StartTime >= startTime;
+                                }
+                                catch
+                                {
+                                    b = false;
+                                }
+
+                                if (b)
+                                {
+                                    yield return new ProcessInfo(p, o["CommandLine"] as string);
+                                }
+                                else if (p != null)
+                                {
+                                    p.Dispose();
+                                }
+                            }
+                        }
+                    }
+                }
             }
 
             /// <summary>
@@ -881,57 +1000,52 @@ namespace Gw2Launcher.Client
                 return i;
             }
 
-            private int GetChildProcess(int pid)
+            private Process GetHostProcess(Process parent)
             {
-                if (canReadMemory)
+                foreach (var p in EnumerateChildProcesses(parent))
                 {
-                    var noChild = true;
-                    var processes = Process.GetProcesses();
-                    var cid = 0;
-
-                    using (var pi = new Windows.ProcessInfo())
+                    try
                     {
-                        foreach (var p in processes)
+                        if (GetHostType(p.Process.ProcessName) != HostType.Unknown)
                         {
-                            using (p)
+                            return p.Process;
+                        }
+                    }
+                    catch { }
+
+                    p.Dispose();
+                }
+
+                return null;
+            }
+
+            private int GetRendererProcess(Process parent, Process[] result)
+            {
+                int i = 0;
+
+                foreach (var p in EnumerateChildProcesses(parent))
+                {
+                    try
+                    {
+                        if (GetHostType(p.Process.ProcessName) != HostType.Unknown)
+                        {
+                            if (p.GetCommandLine().IndexOf("-type=renderer") != -1)
                             {
-                                if (noChild)
-                                {
-                                    try
-                                    {
-                                        if (pi.Open(p.Id))
-                                        {
-                                            if (pi.GetParent() == pid)
-                                            {
-                                                noChild = false;
-                                                cid = p.Id;
-                                            }
-                                        }
-                                    }
-                                    catch (Exception e)
-                                    {
-                                        Util.Logging.Log(e);
-                                    }
-                                }
+                                result[i] = p.Process;
+
+                                if (++i == result.Length)
+                                    return i;
+
+                                continue;
                             }
                         }
                     }
+                    catch { }
 
-                    return cid;
+                    p.Dispose();
                 }
 
-                using (var searcher = new ManagementObjectSearcher("SELECT ProcessId FROM Win32_Process WHERE ParentProcessID=" + pid))
-                {
-                    using (var results = searcher.Get())
-                    {
-                        foreach (ManagementObject o in results)
-                        {
-                            return (int)(uint)o["ProcessId"];
-                        }
-                    }
-                }
-
-                return 0;
+                return i;
             }
 
             private Windows.FindWindow.SearchResult Find(IntPtr handle, Windows.FindWindow.TextComparer classCallback, Windows.FindWindow.TextComparer textCallback)
@@ -958,6 +1072,11 @@ namespace Gw2Launcher.Client
                 }
                 catch (Exception e)
                 {
+                    if (Util.Logging.Enabled)
+                    {
+                        Util.Logging.LogEvent(this.Account.Settings, "Error while watching window: " + e.Message);
+                    }
+
                     Util.Logging.Log(e);
                 }
 
@@ -972,6 +1091,7 @@ namespace Gw2Launcher.Client
 
             private void WatchWindow()
             {
+                var process = this.process;
                 IntPtr handle;
                 try
                 {
@@ -1015,13 +1135,14 @@ namespace Gw2Launcher.Client
                     timeoutStart = 0, 
                     delay = 500;
 
-                var _wasAlreadyStarted = processWasAlreadyStarted;
+                var _wasAlreadyStarted = processWasAlreadyStarted && handle != IntPtr.Zero;
 
                 FileSystemWatcher fwatcher = null;
                 var authWatch = Settings.AuthenticatorPastingEnabled.Value && isGw2 && this.Account.Settings.TotpKey != null;
                 var weventwaiter = new ManualResetEvent(false);
                 var hasEvents = false;
                 var weventT = WindowChangedEventArgs.EventType.WatcherExited;
+                var hProcess = (Settings.HideInitialWindow.Value || Settings.RepaintInitialWindow.Value) ? NativeMethods.OpenProcess(ProcessAccessFlags.SuspendResume, false, process.Id) : IntPtr.Zero;
                 var wevent = windowEvents.Register(process.Id, 0x8000, 0x8002,
                     delegate(IntPtr hWinEventHook, uint eventType, IntPtr hwnd, int idObject, int idChild, uint dwEventThread, uint dwmsEventTime)
                     {
@@ -1057,10 +1178,36 @@ namespace Gw2Launcher.Client
                                                     break;
                                                 case DX_WINDOW_CLASSNAME_LENGTH:
 
-                                                    var s = weventbuffer.ToString();
-                                                    if (s.Equals(DX_WINDOW_CLASSNAME_DX11BETA) || s.Equals(DX_WINDOW_CLASSNAME))
+                                                    var suspended = hProcess != IntPtr.Zero && NativeMethods.NtSuspendProcess(hProcess) == IntPtr.Zero;
+
+                                                    try
                                                     {
-                                                        t = WindowChangedEventArgs.EventType.DxWindowHandleCreated;
+                                                        var s = weventbuffer.ToString();
+                                                        if (s.Equals(DX_WINDOW_CLASSNAME_DX11BETA) || s.Equals(DX_WINDOW_CLASSNAME))
+                                                        {
+                                                            t = WindowChangedEventArgs.EventType.DxWindowHandleCreated;
+
+                                                            if (suspended && t != weventT)
+                                                            {
+                                                                weventT = t;
+
+                                                                WindowChanged(this, new WindowChangedEventArgs()
+                                                                {
+                                                                    Handle = hwnd,
+                                                                    Type = t,
+                                                                    WasAlreadyStarted = _wasAlreadyStarted,
+                                                                });
+
+                                                                break;
+                                                            }
+                                                        }
+                                                    }
+                                                    finally
+                                                    {
+                                                        if (suspended)
+                                                        {
+                                                            NativeMethods.NtResumeProcess(hProcess);
+                                                        }
                                                     }
 
                                                     break;
@@ -1107,15 +1254,6 @@ namespace Gw2Launcher.Client
                     }
                     catch { }
                 };
-                EventHandler onThreadExit = delegate
-                {
-                    try
-                    {
-                        using (wevent) { }
-                    }
-                    catch { }
-                };
-                System.Windows.Forms.Application.ThreadExit += onThreadExit;
                 this.Account.Process.Exited += onExit;
 
                 try
@@ -1251,13 +1389,14 @@ namespace Gw2Launcher.Client
                                     //gw2: title change > volume (window is ready) > coherentui
                                     //gw1: ArenaNet_Dialog_Class > ArenaNet_Dx_Window_Class > volume (window is ready)
 
-                                    int pidChild = 0;
+                                    //int pidChild = 0;
+                                    Process host = null;
                                     bool hasVolume = false;
                                     DateTime limit;
 
                                     using (var volumeControl = new Windows.Volume.VolumeControl(process.Id))
                                     {
-                                        if (wasAlreadyStarted && ((hasVolume = volumeControl.Query()) || isGw2 && (pidChild = GetChildProcess(process.Id)) > 0))
+                                        if (wasAlreadyStarted && ((hasVolume = volumeControl.Query()) || isGw2 && (host = GetHostProcess(process)) != null))
                                         {
                                             //window is already loaded
 
@@ -1320,7 +1459,7 @@ namespace Gw2Launcher.Client
 
                                                 do
                                                 {
-                                                    if (hasVolume = volumeControl.Query() || (pidChild = GetChildProcess(process.Id)) > 0)
+                                                    if (hasVolume = volumeControl.Query() || (host = GetHostProcess(process)) != null)
                                                     {
                                                         break;
                                                     }
@@ -1414,7 +1553,7 @@ namespace Gw2Launcher.Client
 
                                                     do
                                                     {
-                                                        if (hasVolume = volumeControl.Query() || FindModules(canRead ? pi : null, modules, false))
+                                                        if (hasVolume = volumeControl.Query() || FindModules(process, canRead ? pi : null, modules, false))
                                                         {
                                                             break;
                                                         }
@@ -1435,41 +1574,180 @@ namespace Gw2Launcher.Client
                                     {
                                         using (var pi = new Windows.ProcessInfo())
                                         {
-                                            var modules = new string[] { "icm32.dll", "mscms.dll" };
                                             var canRead = pi.Open(process.Id);
                                             var foundModules = false;
+                                            var hostType = HostType.Unknown;
 
-                                            //coherentui's child process will exit after loading a character, making this unsuitable for clients that were already started
-                                            FindCoherentChildProcess(_handle, pidChild,
-                                                delegate
+                                            if (Util.Logging.Enabled)
+                                            {
+                                                Util.Logging.LogEvent(Account.Settings, "Waiting for host or modules to load...");
+                                            }
+
+                                            if (host != null)
+                                            {
+                                                try
                                                 {
-                                                    //alternatively look for loaded modules; icm32.dll is loaded after CoherentUI, but before it's finished loading
-                                                    //either way, character select is loaded at this point
+                                                    hostType = GetHostType(host.ProcessName);
+                                                }
+                                                catch
+                                                {
+                                                    host.Dispose();
+                                                    host = null;
+                                                }
+                                            }
 
-                                                    if (FindModules(canRead ? pi : null, modules, false))
+                                            if (host == null)
+                                            {
+                                                host = WaitForHostProcess(process, _handle, out hostType);
+                                            }
+
+                                            string[] modules;
+
+                                            if (hostType == HostType.CEF)
+                                                modules = new string[] { "icm32.dll" }; //other modules are loaded on launch
+                                            else
+                                                modules = new string[] { "icm32.dll", "mscms.dll", "USERENV.dll" };
+
+                                            using (host)
+                                            {
+                                                this.Account.hostType = hostType;
+
+                                                limit = DateTime.UtcNow.AddSeconds(Settings.DxTimeout.Value > 0 ? Settings.DxTimeout.Value : 30);
+
+                                                WaitForHostProcesses(process, _handle, hostType, hostType == HostType.CoherentUI ? host : process, false, 1,
+                                                    delegate
                                                     {
-                                                        foundModules = true;
-                                                        return false;
+                                                        //alternatively look for loaded modules; icm32.dll is loaded after CoherentUI, but before it's finished loading
+                                                        //either way, character select is loaded at this point
+
+                                                        if (FindModules(process, canRead ? pi : null, modules, false))
+                                                        {
+                                                            foundModules = true;
+                                                            return false;
+                                                        }
+
+                                                        if (DateTime.UtcNow > limit)
+                                                        {
+                                                            return false;
+                                                        }
+
+                                                        return true;
+                                                    });
+
+                                                if (DateTime.UtcNow > limit)
+                                                {
+                                                    if (Util.Logging.Enabled)
+                                                    {
+                                                        Util.Logging.LogEvent(Account.Settings, "Waiting for host or modules to load... FAILED");
+
+                                                        var sb = new StringBuilder(1000);
+
+                                                        try
+                                                        {
+                                                            if (pi != null)
+                                                            {
+                                                                foreach (var m in pi.GetModules())
+                                                                {
+                                                                    sb.Append(Path.GetFileName(m));
+                                                                    sb.Append(", ");
+                                                                }
+                                                            }
+                                                            else
+                                                            {
+                                                                process.Refresh();
+                                                                foreach (ProcessModule m in process.Modules)
+                                                                {
+                                                                    sb.Append(m.ModuleName);
+                                                                    sb.Append(", ");
+                                                                }
+                                                            }
+
+                                                            if (sb.Length > 0)
+                                                            {
+                                                                sb.Length -= 2;
+                                                            }
+                                                        }
+                                                        catch (Exception e)
+                                                        {
+                                                            sb.Append(e.Message);
+                                                        }
+
+                                                        Util.Logging.LogEvent(Account.Settings, "Modules: " + sb.ToString());
                                                     }
 
-                                                    return true;
-                                                });
+                                                    if (Settings.DxTimeout.Value > 0 && Timeout != null)
+                                                    {
+                                                        var te = new TimeoutEventArgs(TimeoutEventArgs.TimeoutReason.DxWindow);
+                                                        Timeout(this, te);
+                                                        if (te.Handled)
+                                                            return;
+                                                    }
+                                                }
+                                            }
 
                                             //forcing module check - after loading CoherentUI, the game game can hang prior to loading modules
-                                            if (!foundModules)
+                                            if (!foundModules && (DateTime.UtcNow < limit || Settings.DxTimeout.Value == 0))
                                             {
-                                                limit = DateTime.UtcNow.AddSeconds(Settings.DxTimeout.Value > 0 ? Settings.DxTimeout.Value : 180);
+                                                if (Util.Logging.Enabled)
+                                                {
+                                                    Util.Logging.LogEvent(Account.Settings, "Waiting for modules to load...");
+                                                }
+
+                                                //limit = DateTime.UtcNow.AddSeconds(Settings.DxTimeout.Value > 0 ? Settings.DxTimeout.Value : 30);
 
                                                 do
                                                 {
-                                                    if (FindModules(canRead ? pi : null, modules, false))
+                                                    if (FindModules(process, canRead ? pi : null, modules, false))
                                                     {
+                                                        if (Util.Logging.Enabled)
+                                                        {
+                                                            Util.Logging.LogEvent(Account.Settings, "Waiting for modules to load... OK");
+                                                        }
                                                         foundModules = true;
                                                         break;
                                                     }
 
                                                     if (DateTime.UtcNow > limit)
                                                     {
+                                                        if (Util.Logging.Enabled)
+                                                        {
+                                                            Util.Logging.LogEvent(Account.Settings, "Waiting for modules to load... FAILED");
+
+                                                            var sb = new StringBuilder(1000);
+
+                                                            try
+                                                            {
+                                                                if (pi != null)
+                                                                {
+                                                                    foreach (var m in pi.GetModules())
+                                                                    {
+                                                                        sb.Append(Path.GetFileName(m));
+                                                                        sb.Append(", ");
+                                                                    }
+                                                                }
+                                                                else
+                                                                {
+                                                                    process.Refresh();
+                                                                    foreach (ProcessModule m in process.Modules)
+                                                                    {
+                                                                        sb.Append(m.ModuleName);
+                                                                        sb.Append(", ");
+                                                                    }
+                                                                }
+
+                                                                if (sb.Length > 0)
+                                                                {
+                                                                    sb.Length -= 2;
+                                                                }
+                                                            }
+                                                            catch (Exception e)
+                                                            {
+                                                                sb.Append(e.Message);
+                                                            }
+
+                                                            Util.Logging.LogEvent(Account.Settings, "Modules: " + sb.ToString());
+                                                        }
+
                                                         if (Settings.DxTimeout.Value > 0 && Timeout != null)
                                                         {
                                                             var te = new TimeoutEventArgs(TimeoutEventArgs.TimeoutReason.DxWindow);
@@ -1477,15 +1755,26 @@ namespace Gw2Launcher.Client
                                                             if (te.Handled)
                                                                 return;
                                                         }
-
-                                                        limit = DateTime.UtcNow.AddMinutes(1);
+                                                        else
+                                                        {
+                                                            break;
+                                                        }
                                                     }
 
-                                                    process.Refresh();
-                                                    if (_handle != Windows.FindWindow.FindMainWindow(this.process))
+                                                    int r;
+                                                    if (WaitForExit(process, process, 1000, _handle, null, out r))
+                                                    {
                                                         break;
+                                                    }
                                                 }
-                                                while (!process.WaitForExit(1000));
+                                                while (true);
+                                            }
+                                            else
+                                            {
+                                                if (Util.Logging.Enabled)
+                                                {
+                                                    Util.Logging.LogEvent(Account.Settings, "Waiting for host or modules to load... OK");
+                                                }
                                             }
                                         }
                                     }
@@ -1501,7 +1790,7 @@ namespace Gw2Launcher.Client
 
                                             do
                                             {
-                                                if (FindModules(canRead ? pi : null, modules, false))
+                                                if (FindModules(process, canRead ? pi : null, modules, false))
                                                 {
                                                     break;
                                                 }
@@ -1574,55 +1863,99 @@ namespace Gw2Launcher.Client
                                     }
 
                                     int r;
+                                    var hostType = HostType.Unknown;
                                     CoherentWatcher cw = null;
 
-                                    if (!Settings.Tweaks.Launcher.HasValue || (Settings.Tweaks.Launcher.Value.CoherentOptions & (Settings.LauncherTweaks.CoherentFlags.WaitForLoaded | Settings.LauncherTweaks.CoherentFlags.WaitForMemory)) != 0)
+                                    using (var host = WaitForHostProcess(process, _handle, out hostType))
                                     {
-                                        if (!Settings.Tweaks.Launcher.HasValue || Settings.Tweaks.Launcher.Value.WaitForCoherentLoaded)
+                                        this.Account.hostType = hostType;
+
+                                        if (host == null)
+                                            break;
+
+                                        if (!Settings.Tweaks.Launcher.HasValue || (Settings.Tweaks.Launcher.Value.CoherentOptions & (Settings.LauncherTweaks.CoherentFlags.WaitForLoaded | Settings.LauncherTweaks.CoherentFlags.WaitForMemory)) != 0)
                                         {
-                                            try
+                                            if (hostType == HostType.CoherentUI)
                                             {
-                                                cw = WaitForCoherentHost(_handle, out r);
-                                                if (cw == null && r == -1)
-                                                    break;
-                                            }
-                                            catch (Exception e)
-                                            {
-                                                Util.Logging.Log(e);
-                                            }
-
-                                            if (cw != null)
-                                            {
-                                                var cwe = WaitForCoherentEvent(handle, cw);
-
-                                                if (cwe == CoherentWatcher.EventType.Error || cwe == CoherentWatcher.EventType.Exited)
+                                                if (!Settings.Tweaks.Launcher.HasValue || Settings.Tweaks.Launcher.Value.WaitForCoherentLoaded)
                                                 {
-                                                    cw.Dispose();
-                                                    cw = null;
+                                                    try
+                                                    {
+                                                        cw = WaitForCoherentHost(process, _handle, out r, host);
+                                                        if (cw == null && r == -1)
+                                                            break;
+                                                    }
+                                                    catch (Exception e)
+                                                    {
+                                                        Util.Logging.Log(e);
+                                                    }
+
+                                                    if (cw != null)
+                                                    {
+                                                        if (Util.Logging.Enabled)
+                                                        {
+                                                            Util.Logging.LogEvent(Account.Settings, "Waiting for Coherent event...");
+                                                        }
+
+                                                        var cwe = WaitForCoherentEvent(process, handle, cw);
+
+                                                        if (cwe == CoherentWatcher.EventType.Error || cwe == CoherentWatcher.EventType.Exited)
+                                                        {
+                                                            if (Util.Logging.Enabled)
+                                                            {
+                                                                Util.Logging.LogEvent(Account.Settings, "Waiting for Coherent event... aborting (" + cwe + ")");
+                                                            }
+
+                                                            cw.Dispose();
+                                                            cw = null;
+                                                        }
+                                                        else
+                                                        {
+                                                            if (Util.Logging.Enabled)
+                                                            {
+                                                                Util.Logging.LogEvent(Account.Settings, "Waiting for Coherent event... OK (" + cwe + ")");
+                                                            }
+                                                        }
+                                                    }
+                                                }
+
+                                                if (cw == null)
+                                                {
+                                                    do
+                                                    {
+                                                        //it's possible for the launcher to never fully load, such as when failing to initially connect
+                                                        r = WaitForHostProcesses(process, _handle, hostType, host, true, 1, null);
+                                                        if (r > 0 || r == -1)
+                                                            break;
+                                                    }
+                                                    while (!process.WaitForExit(500));
+                                                }
+                                                else
+                                                {
+                                                    r = 0;
                                                 }
                                             }
-                                        }
-
-                                        if (cw == null)
-                                        {
-                                            do
+                                            else
                                             {
-                                                //it's possible for the launcher to never fully load, such as when failing to initially connect
-                                                r = FindCoherentChildProcesses(_handle, 0, 2, null);
-                                                if (r > 0 || r == -1)
-                                                    break;
+                                                do
+                                                {
+                                                    //it's possible for the launcher to never fully load, such as when failing to initially connect
+                                                    r = WaitForHostProcesses(process, _handle, hostType, process, true, 2, null);
+                                                    if (r > 0 || r == -1)
+                                                        break;
+                                                }
+                                                while (!process.WaitForExit(500));
                                             }
-                                            while (!process.WaitForExit(500));
                                         }
                                         else
                                         {
                                             r = 0;
+
+                                            if (Util.Logging.Enabled)
+                                            {
+                                                Util.Logging.LogEvent(Account.Settings, "Skipping all CoherentUI checks due to settings");
+                                            }
                                         }
-                                    }
-                                    else
-                                    {
-                                        r = 0;
-                                        Util.Logging.LogEvent(Account.Settings, "Skipping all CoherentUI checks due to settings");
                                     }
 
                                     SupportsLoginEvents = cw != null;
@@ -1643,7 +1976,8 @@ namespace Gw2Launcher.Client
 
                                     if (!wasAlreadyStarted)
                                     {
-                                        if (LoginComplete != null || cw == null)
+                                        //CEF has delayed writing
+                                        if (this.Account.hostType == HostType.CoherentUI && (LoginComplete != null || cw == null))
                                         {
                                             var gw2cache = Tools.Gw2Cache.FindPath(this.Account.Settings.UID);
                                             if (gw2cache != null)
@@ -1760,11 +2094,19 @@ namespace Gw2Launcher.Client
 
                                             while (r == 0)
                                             {
-                                                var cwe = WaitForCoherentEvent(handle, cw,
+                                                var cwe = WaitForCoherentEvent(process, handle, cw,
                                                     delegate
                                                     {
                                                         return timeout == 0 || Environment.TickCount - timeoutStart <= timeout;
                                                     });
+
+                                                if (Util.Logging.Enabled)
+                                                {
+                                                    if (cwe != CoherentWatcher.EventType.None)
+                                                    {
+                                                        Util.Logging.LogEvent(Account.Settings, "Coherent event: " + cwe);
+                                                    }
+                                                }
 
                                                 switch (cwe)
                                                 {
@@ -1896,6 +2238,11 @@ namespace Gw2Launcher.Client
 
                                 if (isGw2 && buffer[0] == '#')
                                 {
+                                    if (Util.Logging.Enabled)
+                                    {
+                                        Util.Logging.LogEvent(Account.Settings, "Crash detected");
+                                    }
+
                                     timeout = 0;
 
                                     var result = Find(handle, classCallback, textCallback);
@@ -1937,8 +2284,6 @@ namespace Gw2Launcher.Client
                         fwatcher.Dispose();
                     }
 
-                    System.Windows.Forms.Application.ThreadExit -= onThreadExit;
-
                     lock (this)
                     {
                         this.Account.Process.Exited -= onExit;
@@ -1956,6 +2301,11 @@ namespace Gw2Launcher.Client
                     if (authWatch)
                     {
                         watchers.AuthWatcher.Remove(this.Account);
+                    }
+
+                    if (hProcess != IntPtr.Zero)
+                    {
+                        NativeMethods.CloseHandle(hProcess);
                     }
                 }
             }
@@ -2017,7 +2367,7 @@ namespace Gw2Launcher.Client
             /// <param name="module">Module to find</param>
             /// <param name="limit">Timeout in milliseconds; 0 to run once, -1 to run until found</param>
             /// <returns>True if found</returns>
-            private bool FindModule(string module, int limit = 0)
+            private bool FindModule(Process process, string module, int limit = 0)
             {
                 var start = limit > 0 ? Environment.TickCount : 0;
 
@@ -2060,7 +2410,7 @@ namespace Gw2Launcher.Client
             /// <param name="all">True to find all of the specified modules, otherwise only 1</param>
             /// <param name="limit">Timeout in milliseconds; 0 to run once, -1 to run until found</param>
             /// <returns>True if found</returns>
-            private bool FindModules(string[] modules, bool all, int limit = 0)
+            private bool FindModules(Process process, string[] modules, bool all, int limit = 0)
             {
                 var start = limit > 0 ? Environment.TickCount : 0;
 
@@ -2120,11 +2470,11 @@ namespace Gw2Launcher.Client
             /// <param name="all">True to find all of the specified modules, otherwise only 1</param>
             /// <param name="limit">Timeout in milliseconds; 0 to run once, -1 to run until found</param>
             /// <returns>True if found</returns>
-            private bool FindModules(Windows.ProcessInfo pi, string[] modules, bool all, int limit = 0)
+            private bool FindModules(Process process, Windows.ProcessInfo pi, string[] modules, bool all, int limit = 0)
             {
                 if (pi == null)
                 {
-                    return FindModules(modules, all, limit);
+                    return FindModules(process, modules, all, limit);
                 }
 
                 var start = limit > 0 ? Environment.TickCount : 0;
@@ -2172,7 +2522,7 @@ namespace Gw2Launcher.Client
                     }
                     catch { }
 
-                    if (!hasRead && FindModules(modules, all, 0))
+                    if (!hasRead && FindModules(process, modules, all, 0))
                         return true;
 
                     if (limit == 0 || limit > 0 && Environment.TickCount - start > limit || process.WaitForExit(500))
@@ -2182,7 +2532,7 @@ namespace Gw2Launcher.Client
                 return false;
             }
 
-            private bool WaitForFonts(IntPtr window, Process parent, Process[] processes)
+            private int WaitForFonts(Process process, IntPtr window, Process parent, Process[] processes, int length, int timeout = 0)
             {
                 if (!Util.Users.IsCurrentUser(Account.Settings.WindowsAccount))
                 {
@@ -2193,7 +2543,7 @@ namespace Gw2Launcher.Client
 
                         using (Security.Impersonation.Impersonate(username, password))
                         {
-                            return _WaitForFonts(window, parent, processes);
+                            return _WaitForFonts(process, window, parent, processes, length, timeout);
                         }
                     }
                     catch (NotSupportedException)
@@ -2204,43 +2554,56 @@ namespace Gw2Launcher.Client
                     {
                         Util.Logging.Log(e);
                     }
-                    return false;
+                    return 0;
                 }
                 else
                 {
-                    return _WaitForFonts(window, parent, processes);
+                    return _WaitForFonts(process, window, parent, processes, length, timeout);
                 }
             }
 
-            private bool _WaitForFonts(IntPtr window, Process parent, Process[] processes)
+            private int _WaitForFonts(Process process, IntPtr window, Process parent, Process[] processes, int length, int timeout)
             {
-                var pids = new UIntPtr[processes.Length];
+                var pids = new UIntPtr[length];
 
-                for (var i = 0; i < processes.Length; i++)
+                for (var i = 0; i < length; i++)
                 {
                     pids[i] = (UIntPtr)processes[i].Id;
                 }
 
-                var limit = DateTime.UtcNow.AddMinutes(3);
+                DateTime limit;
+
+                if (timeout == 0)
+                {
+                    limit = DateTime.UtcNow.AddMinutes(3);
+                }
+                else
+                {
+                    limit = DateTime.UtcNow.AddMilliseconds(timeout);
+                }
+
+                var pid = UIntPtr.Zero;
+                int counter = 0;
 
                 do
                 {
-                    int counter = 0;
-
                     var h = Windows.Win32Handles.GetHandle(pids, Windows.Win32Handles.HandleType.File, new Func<Windows.Win32Handles.IObject, Windows.Win32Handles.CallbackResponse>(
                         delegate(Windows.Win32Handles.IObject o)
                         {
                             ++counter;
 
-                            if (o.Name.Length > 3 && o.Name[o.Name.Length - 4] == '.')
-                            {
-                                switch (o.Name.Substring(o.Name.Length - 3).ToLower())
-                                {
-                                    case "ttf":
-                                    case "otf":
-                                    case "fnt":
+                            var l = o.Name.Length;
 
-                                        return Windows.Win32Handles.CallbackResponse.Return;
+                            if (l > 3 && o.Name[l - 4] == '.')
+                            {
+                                var ext = o.Name.Substring(l - 3);
+
+                                if (ext.Equals("ttf", StringComparison.OrdinalIgnoreCase) ||
+                                    ext.Equals("otf", StringComparison.OrdinalIgnoreCase) ||
+                                    ext.Equals("fnt", StringComparison.OrdinalIgnoreCase))
+                                {
+                                    pid = o.PID;
+                                    return Windows.Win32Handles.CallbackResponse.Return;
                                 }
                             }
 
@@ -2248,37 +2611,39 @@ namespace Gw2Launcher.Client
                         }));
 
                     if (h != null)
-                        return true;
-
-                    if (counter == 0)
                     {
-                        throw new NotSupportedException();
+                        return (int)pid.ToUInt32();
                     }
 
-                    for (var i = 1; i < processes.Length; i++)
+                    for (var i = 0; i < length; i++)
                     {
                         try
                         {
                             if (processes[i].HasExited)
                             {
-                                return false;
+                                return 0;
                             }
                         }
                         catch { }
                     }
 
-                    this.process.Refresh();
-                    if (window != Windows.FindWindow.FindMainWindow(this.process))
+                    process.Refresh();
+                    if (window != Windows.FindWindow.FindMainWindow(process))
                     {
-                        return false;
+                        return 0;
                     }
                 }
                 while (DateTime.UtcNow < limit && !processes[0].WaitForExit(500));
 
-                return false;
+                if (counter == 0)
+                {
+                    throw new NotSupportedException();
+                }
+
+                return 0;
             }
 
-            private bool WaitForExit(Process p, int delay, IntPtr window, Func<bool> onContinue, out int result)
+            private bool WaitForExit(Process process, Process p, int delay, IntPtr window, Func<bool> onContinue, out int result)
             {
                 if (p != null && p.WaitForExit(delay))
                 {
@@ -2286,8 +2651,8 @@ namespace Gw2Launcher.Client
                     return true;
                 }
 
-                this.process.Refresh();
-                if (window != Windows.FindWindow.FindMainWindow(this.process) || onContinue != null && !onContinue())
+                process.Refresh();
+                if (window != Windows.FindWindow.FindMainWindow(process) || onContinue != null && !onContinue())
                 {
                     result = -1;
                     return true;
@@ -2297,7 +2662,7 @@ namespace Gw2Launcher.Client
                 return false;
             }
 
-            private CoherentWatcher.EventType WaitForCoherentEvent(IntPtr window, CoherentWatcher cw, Func<bool> onContinue = null)
+            private CoherentWatcher.EventType WaitForCoherentEvent(Process process, IntPtr window, CoherentWatcher cw, Func<bool> onContinue = null)
             {
                 var e = CoherentWatcher.EventType.None;
 
@@ -2318,7 +2683,7 @@ namespace Gw2Launcher.Client
                                 return e;
                             
                             int w;
-                            if (WaitForExit(this.process, 0, window, null, out w))
+                            if (WaitForExit(process, process, 0, window, null, out w))
                                 return CoherentWatcher.EventType.Error;
                             if (onContinue != null && !onContinue())
                                 return CoherentWatcher.EventType.None;
@@ -2331,7 +2696,97 @@ namespace Gw2Launcher.Client
                 while (true);
             }
 
-            private CoherentWatcher WaitForCoherentHost(IntPtr window, out int result, int pidChild = 0, Func<bool> onContinue = null)
+            private HostType GetHostType(string n)
+            {
+                //CefHost
+                //CoherentUI_Host
+
+                if (n.Length > 3 && n[0] == 'C')
+                {
+                    switch (n[2])
+                    {
+                        case 'h': return HostType.CoherentUI;
+                        case 'f': return HostType.CEF;
+                    }
+                }
+
+                return HostType.Unknown;
+            }
+
+            private Process WaitForHostProcess(Process process, IntPtr window, out HostType type, Func<bool> onContinue = null)
+            {
+                int r;
+                HashSet<int> ids = null;
+
+                if (Util.Logging.Enabled)
+                {
+                    Util.Logging.LogEvent(Account.Settings, "Waiting for host process...");
+                }
+
+                while (true)
+                {
+                    foreach (var p in EnumerateChildProcesses(process))
+                    {
+                        try
+                        {
+                            var n = p.Process.ProcessName;
+
+                            if (Util.Logging.Enabled)
+                            {
+                                if (ids == null)
+                                    ids = new HashSet<int>();
+                                if (ids.Add(p.Process.Id))
+                                {
+                                    string path;
+
+                                    try
+                                    {
+                                        path = Util.Logging.GetDisplayPath(Util.ProcessUtil.GetPath(p.Process), 1);
+                                    }
+                                    catch
+                                    {
+                                        path = "";
+                                    }
+
+                                    Util.Logging.LogEvent(Account.Settings, n + " (" + p.Process.Id + ") [" + path + "]");
+                                }
+                            }
+
+                            type = GetHostType(n);
+
+                            if (type == HostType.Unknown)
+                            {
+                                p.Dispose();
+                                continue;
+                            }
+
+                            if (Util.Logging.Enabled)
+                            {
+                                Util.Logging.LogEvent(Account.Settings, "Found " + type + " host process");
+                            }
+
+                            return p.Process;
+                        }
+                        catch
+                        {
+                            p.Dispose();
+                        }
+                    }
+
+                    if (WaitForExit(process, process, 500, window, onContinue, out r))
+                    {
+                        if (Util.Logging.Enabled)
+                        {
+                            Util.Logging.LogEvent(Account.Settings, "Waiting for host process... cancelled");
+                        }
+
+                        type = HostType.Unknown;
+                        return null;
+                    }
+                }
+            }
+
+            private CoherentWatcher WaitForCoherentHost(Process process, IntPtr window, out int result, Process host = null, Func<bool> onContinue = null)
             {
                 if (!Util.Users.IsCurrentUser(Account.Settings.WindowsAccount))
                 {
@@ -2342,7 +2797,7 @@ namespace Gw2Launcher.Client
 
                         using (Security.Impersonation.Impersonate(username, password))
                         {
-                            return _WaitForCoherentHost(window, out result, pidChild, onContinue);
+                            return _WaitForCoherentHost(process, window, out result, host, onContinue);
                         }
                     }
                     catch (NotSupportedException)
@@ -2358,50 +2813,52 @@ namespace Gw2Launcher.Client
                 }
                 else
                 {
-                    return _WaitForCoherentHost(window, out result, pidChild, onContinue);
+                    return _WaitForCoherentHost(process, window, out result, host, onContinue);
                 }
             }
 
-            private CoherentWatcher _WaitForCoherentHost(IntPtr window, out int result, int pidChild, Func<bool> onContinue)
+            private CoherentWatcher _WaitForCoherentHost(Process process, IntPtr window, out int result, Process host, Func<bool> onContinue)
             {
                 var limit = DateTime.UtcNow.AddMinutes(3);
+                var dispose = host == null;
                 result = 0;
 
+                if (Util.Logging.Enabled)
+                {
+                    Util.Logging.LogEvent(Account.Settings, "Waiting for Coherent view...");
+                }
+                
                 //note the CoherentUI host process can change after it's initially started - if something goes wrong, it will start a new process until it's successful
-
+                
                 while (true)
                 {
-                    if (pidChild == 0)
+                    if (host == null)
                     {
                         do
                         {
-                            if ((pidChild = GetChildProcess(process.Id)) > 0)
+                            host = GetHostProcess(process);
+
+                            if (host != null)
                             {
                                 break;
                             }
+                            //if ((pidChild = GetChildProcess(process.Id)) > 0)
+                            //{
+                            //    break;
+                            //}
 
-                            if (WaitForExit(this.process, 500, window, onContinue, out result))
+                            if (WaitForExit(process, process, 500, window, onContinue, out result))
                                 return null;
                         }
                         while (DateTime.UtcNow < limit);
                     }
 
-                    if (pidChild > 0)
+                    if (host != null)
                     {
-                        Process p;
-                        try
-                        {
-                            p = Process.GetProcessById(pidChild);
-                        }
-                        catch
-                        {
-                            p = null;
-                        }
-
                         var errors = 0;
                         var pids = new UIntPtr[] 
                         { 
-                            (UIntPtr)pidChild
+                            (UIntPtr)host.Id
                         };
 
                         CoherentWatcher.FileMap m = null;
@@ -2413,7 +2870,16 @@ namespace Gw2Launcher.Client
                                 m = CoherentWatcher.Find(pids);
                                 if (m != null)
                                 {
-                                    using (p) { }
+                                    if (dispose)
+                                    {
+                                        host.Dispose();
+                                    }
+
+                                    if (Util.Logging.Enabled)
+                                    {
+                                        Util.Logging.LogEvent(Account.Settings, "Waiting for Coherent view... OK");
+                                    }
+
                                     return new CoherentWatcher(m);
                                 }
                             }
@@ -2423,197 +2889,184 @@ namespace Gw2Launcher.Client
                                     throw;
                             }
 
-                            if (WaitForExit(this.process, 500, window, onContinue, out result))
+                            if (WaitForExit(process, process, 500, window, onContinue, out result))
                                 return null;
 
-                            if (p == null)
+                            try
                             {
-                                break;
+                                if (host.HasExited)
+                                    throw new Exception();
                             }
-                            else
+                            catch
                             {
-                                try
+                                if (dispose)
                                 {
-                                    if (p.HasExited)
-                                        throw new Exception();
+                                    host.Dispose();
                                 }
-                                catch
+                                else
                                 {
-                                    p.Dispose();
-                                    p = null;
-                                    break;
+                                    dispose = true;
                                 }
+                                host = null;
+                                break;
                             }
                         }
                         while (DateTime.UtcNow < limit);
 
-                        if (p == null)
+                        if (host == null)
                         {
-                            pidChild = 0;
                             continue;
                         }
+                    }
+
+                    if (Util.Logging.Enabled)
+                    {
+                        Util.Logging.LogEvent(Account.Settings, "Waiting for Coherent view... not found");
                     }
 
                     return null;
                 }
             }
-
-            /// <summary>
-            /// Returns a CoherentUI child process
-            /// </summary>
-            /// <param name="window">Main window handle</param>
-            /// <param name="pidChild">The main CoherentUI process to start from, or 0 to find it</param>
-            /// <param name="childCount">Number of child processes to search for; launcher has 1 main process with 2 child processes, game has 1 main with 1 child until used</param>
-            /// <param name="onContinue">Loop callback, return false to interrupt</param>
-            /// <returns>Main CoherentUI process ID</returns>
-            private int FindCoherentChildProcesses(IntPtr window, int pidChild, int childCount = 1, Func<bool> onContinue = null)
+            
+            private int WaitForHostProcesses(Process process, IntPtr window, HostType hostType, Process host, bool waitUntilLoaded = true, int childCount = 1, Func<bool> onContinue = null)
             {
                 byte r = 1;
-                sbyte once = 0;
                 bool skipFiles = false;
+
+                if (hostType == HostType.CEF && host == null)
+                {
+                    //CEF has all (5) processes under GW2
+                    host = process;
+                }
 
                 do
                 {
-                    Util.Logging.LogEvent(Account.Settings, "Waiting for CoherentUI (" + r + ")");
+                    if (Util.Logging.Enabled)
+                    {
+                        Util.Logging.LogEvent(Account.Settings, "Waiting for host process (" + r + ")");
+                    }
 
                     var limit = DateTime.UtcNow.AddSeconds(30 * r);
 
-                    if (pidChild == 0)
+                    if (hostType == HostType.CoherentUI && host == null)
                     {
+                        //CoherentUI has a host process (1) under GW2 and all other processes (2) under the host
                         do
                         {
-                            if ((pidChild = GetChildProcess(process.Id)) > 0)
+                            host = GetHostProcess(process);
+
+                            if (host != null)
                             {
                                 break;
                             }
 
                             int w;
-                            if (WaitForExit(this.process, 500 * r, window, onContinue, out w))
+                            if (WaitForExit(process, process, 500 * r, window, onContinue, out w))
                                 return w;
                         }
                         while (DateTime.UtcNow < limit);
                     }
 
-                    if (pidChild > 0)
+                    if (host != null)
                     {
-                        var cids = new int[childCount];
-                        var _childCount = 0;
-
-                        Util.Logging.LogEvent(Account.Settings, "CoherentUI found (" + pidChild + "), waiting for sub processes (" + childCount + ")");
-
-                        try
+                        if (Util.Logging.Enabled)
                         {
-                            using (var child = Process.GetProcessById(pidChild))
+                            Util.Logging.LogEvent(Account.Settings, "Waiting for renderer under PID " + host.Id);
+                        }
+
+                        var renderers = new Process[childCount];
+                        var t = Environment.TickCount;
+
+                        while (true)
+                        {
+                            var count = GetRendererProcess(host, renderers);
+
+                            try
                             {
-                                limit = DateTime.UtcNow.AddSeconds(30 * r);
-
-                                if (once == 0)
+                                if (count > 0)
                                 {
-                                    try
+                                    if (Util.Logging.Enabled)
                                     {
-                                        if (DateTime.Now.Subtract(child.StartTime).TotalMinutes >= 1)
+                                        var ids = renderers[0].Id.ToString();
+
+                                        for (var i = 1; i < count; i++)
                                         {
-                                            once = -1;
+                                            ids += ", " + renderers[i].Id;
                                         }
-                                        else
-                                        {
-                                            once = 1;
-                                        }
-                                    }
-                                    catch
-                                    {
-                                        once = -1;
-                                    }
-                                }
 
-                                do
-                                {
-                                    _childCount = GetChildProcesses(child, cids);
-
-                                    if (_childCount == childCount)
-                                    {
-                                        break;
-                                    }
-                                    //else if (_childCount > 0)
-                                    //{
-                                    //    break;
-                                    //}
-                                    else if (once == -1)
-                                    {
-                                        return pidChild;
+                                        Util.Logging.LogEvent(Account.Settings, "Found renderer (" + ids + ")");
                                     }
 
-                                    int w;
-                                    if (WaitForExit(child, 500 * r, window, onContinue, out w))
-                                        return w;
-                                }
-                                while (DateTime.UtcNow < limit);
-                            }
-
-                            Util.Logging.LogEvent(Account.Settings, "Found " + _childCount + " CoherentUI sub processes");
-
-                            if (_childCount > 0)
-                            {
-                                var processes = new Process[_childCount];
-                                var oldest = 0;
-
-                                if (_childCount > 1)
-                                {
-                                    for (var i = 0; i < _childCount; ++i)
+                                    if (!waitUntilLoaded)
                                     {
-                                        var p = processes[i] = Process.GetProcessById(cids[i]);
-                                        if (i != 0 && p.StartTime < processes[oldest].StartTime)
-                                        {
-                                            oldest = i;
-                                        }
+                                        return renderers[0].Id;
                                     }
 
                                     if (!skipFiles)
                                     {
                                         if (!Settings.Tweaks.Launcher.HasValue || Settings.Tweaks.Launcher.Value.WaitForCoherentLoaded)
                                         {
-                                            Util.Logging.LogEvent(Account.Settings, "Waiting for CoherentUI to load files");
-
+                                            if (Util.Logging.Enabled)
+                                            {
+                                                Util.Logging.LogEvent(Account.Settings, "Waiting for files to load");
+                                            }
                                             try
                                             {
-                                                if (WaitForFonts(window, process, processes))
+                                                var pid = WaitForFonts(process, window, host, renderers, count, count == childCount ? 0 : 500);
+
+                                                if (pid != 0)
                                                 {
-                                                    Util.Logging.LogEvent(Account.Settings, "Waiting for CoherentUI to load files... OK");
-                                                    return pidChild;
+                                                    if (Util.Logging.Enabled)
+                                                    {
+                                                        Util.Logging.LogEvent(Account.Settings, "Waiting for files to load... OK");
+                                                    }
+                                                    return pid;
+                                                }
+                                                else if (count != childCount)
+                                                {
+                                                    continue;
                                                 }
                                                 else
                                                 {
-                                                    Util.Logging.LogEvent(Account.Settings, "Waiting for CoherentUI to load files... FAILED");
+                                                    if (Util.Logging.Enabled)
+                                                    {
+                                                        Util.Logging.LogEvent(Account.Settings, "Waiting for files to load... FAILED");
+                                                    }
                                                 }
                                             }
                                             catch (NotSupportedException)
                                             {
-                                                Util.Logging.LogEvent(Account.Settings, "Waiting for CoherentUI to load files was not supported");
+                                                if (count < childCount && Environment.TickCount - t < 30000)
+                                                {
+                                                    continue;
+                                                }
+                                                if (Util.Logging.Enabled)
+                                                {
+                                                    Util.Logging.LogEvent(Account.Settings, "Waiting for files to load was not supported");
+                                                }
                                                 skipFiles = true;
                                             }
                                         }
                                         else
                                         {
                                             skipFiles = true;
-                                            Util.Logging.LogEvent(Account.Settings, "Skipping wait for CoherentUI to load files due to settings");
+                                            if (Util.Logging.Enabled)
+                                            {
+                                                Util.Logging.LogEvent(Account.Settings, "Skipping wait for files to load due to settings");
+                                            }
                                             if (!Settings.Tweaks.Launcher.Value.WaitForCoherentMemory)
-                                                return pidChild;
+                                                return renderers[0].Id;
                                         }
                                     }
-                                }
-                                else
-                                {
-                                    processes[0] = Process.GetProcessById(cids[0]);
-                                }
 
-                                //this should only be used as a backup - first priority is checking for fonts (when detecting the launcher) or modules (when detecting character select)
+                                    //this should only be used as a backup - first priority is checking for fonts (when detecting the launcher) or modules (when detecting character select)
 
-                                try
-                                {
                                     if (!Settings.Tweaks.Launcher.HasValue || Settings.Tweaks.Launcher.Value.WaitForCoherentMemory)
                                     {
-                                        Util.Logging.LogEvent(Account.Settings, "Waiting for CoherentUI to load");
-
+                                        if (Util.Logging.Enabled)
+                                        {
+                                            Util.Logging.LogEvent(Account.Settings, "Waiting for host to load (using fallback)");
+                                        }
                                         long mem = 0;
                                         byte counter = 0;
                                         byte check = 0;
@@ -2625,212 +3078,81 @@ namespace Gw2Launcher.Client
                                             if (++check == 5)
                                             {
                                                 int w;
-                                                if (WaitForExit(null, 0, window, onContinue, out w))
+                                                if (WaitForExit(process, null, 0, window, onContinue, out w))
                                                     return w;
                                                 check = 0;
                                             }
 
                                             long _mem = 0;
 
-                                            for (var i = processes.Length - 1; i >= 0; --i)
+                                            renderers[0].Refresh();
+
+                                            try
                                             {
-                                                var p = processes[i];
-
-                                                p.Refresh();
-
-                                                try
-                                                {
-                                                    if (i == oldest)
-                                                        _mem += p.PrivateMemorySize64;
-                                                }
-                                                catch { }
+                                                _mem = renderers[0].PrivateMemorySize64;
                                             }
+                                            catch { }
 
                                             if (_mem > mem)
                                             {
-                                                mem = _mem + 102400;
+                                                mem = _mem + 10000;
                                                 counter = 0;
                                             }
                                             else if (++counter > 10)
                                             {
                                                 //CoherentUI can stall and never fully load
 
-                                                //if (mem < 40000000)
-                                                //{
-                                                //    counter = 0;
-                                                //    continue;
-                                                //}
-
                                                 break;
                                             }
                                         }
-                                        while (DateTime.UtcNow < limit && !processes[oldest].WaitForExit(100));
+                                        while (DateTime.UtcNow < limit && !renderers[0].WaitForExit(100));
                                     }
                                     else
                                     {
-                                        Util.Logging.LogEvent(Account.Settings, "Skipping wait for CoherentUI to load due to settings");
-
+                                        if (Util.Logging.Enabled)
+                                        {
+                                            Util.Logging.LogEvent(Account.Settings, "Skipping wait for host to load due to settings");
+                                        }
                                         int w;
-                                        if (WaitForExit(null, 0, window, onContinue, out w))
+                                        if (WaitForExit(process, null, 0, window, onContinue, out w))
                                             return w;
                                     }
 
-                                    if (_childCount == childCount)
-                                    {
-                                        return pidChild;
-                                    }
-                                    else if (r > 1)
-                                    {
-                                        return pidChild;
-                                    }
-                                }
-                                finally
-                                {
-                                    foreach (var p in processes)
-                                    {
-                                        using (p) { }
-                                    }
+                                    return renderers[0].Id;
                                 }
                             }
-                        }
-                        catch (Exception ex)
-                        {
-                            Util.Logging.Log(ex);
-                            Util.Logging.LogEvent(Account.Settings, "Waiting for CoherentUI failed: " + ex.Message);
-                        }
-                    }
-                    else
-                    {
-                        Util.Logging.LogEvent(Account.Settings, "CoherentUI not found");
-                    }
-
-                    pidChild = 0;
-                }
-                while (++r < 3);
-
-                Util.Logging.Log("Unable to find CoherentUI for " + window);
-
-                return 0;
-            }
-
-            private int FindCoherentChildProcess(IntPtr window, int pidChild, Func<bool> onContinue = null)
-            {
-                byte r = 1;
-                sbyte once = 0;
-
-                do
-                {
-                    var limit = DateTime.UtcNow.AddSeconds(30 * r);
-
-                    if (pidChild == 0)
-                    {
-                        do
-                        {
-                            if ((pidChild = GetChildProcess(process.Id)) > 0)
+                            finally
                             {
-                                break;
+                                for (var i = 0; i < count; i++)
+                                {
+                                    using (renderers[i]) { };
+                                    renderers[i] = null;
+                                }
                             }
 
-                            int w;
-                            if (WaitForExit(this.process, 500 * r, window, onContinue, out w))
-                                return w;
-                        }
-                        while (DateTime.UtcNow < limit);
-                    }
-
-                    if (pidChild > 0)
-                    {
-                        try
-                        {
-                            using (var child = Process.GetProcessById(pidChild))
+                            int we;
+                            if (WaitForExit(process, host, 500, window, onContinue, out we))
                             {
-                                limit = DateTime.UtcNow.AddSeconds(30 * r);
-                                var pid = pidChild;
-
-                                if (once == 0)
+                                if (we == 0)
                                 {
-                                    try
-                                    {
-                                        if (DateTime.Now.Subtract(child.StartTime).TotalMinutes >= 1)
-                                        {
-                                            once = -1;
-                                        }
-                                        else
-                                        {
-                                            once = 1;
-                                        }
-                                    }
-                                    catch
-                                    {
-                                        once = -1;
-                                    }
-                                }
+                                    //host process has exited
 
-                                do
-                                {
-                                    if ((pidChild = GetChildProcess(pid)) > 0)
+                                    if (hostType == HostType.CoherentUI)
                                     {
+                                        //CoherentUI can restart its host process
+                                        host = null;
                                         break;
                                     }
-
-                                    if (once == -1)
-                                    {
-                                        return pid;
-                                    }
-
-                                    int w;
-                                    if (WaitForExit(child, 500 * r, window, onContinue, out w))
-                                        return w;
-                                }
-                                while (DateTime.UtcNow < limit);
-                            }
-
-                            if (pidChild > 0)
-                            {
-                                using (var child = Process.GetProcessById(pidChild))
-                                {
-                                    long mem = 0;
-                                    byte counter = 0;
-                                    byte check = 0;
-                                    limit = DateTime.UtcNow.AddSeconds(60);
-
-                                    do
-                                    {
-                                        if (++check == 5)
-                                        {
-                                            int w;
-                                            if (WaitForExit(null, 0, window, onContinue, out w))
-                                                return w;
-                                            check = 0;
-                                        }
-                                        if (mem > 0)
-                                            child.Refresh();
-                                        var _mem = child.PeakWorkingSet64;
-                                        if (_mem > mem)
-                                        {
-                                            mem = _mem;
-                                            counter = 0;
-                                        }
-                                        else if (++counter > 2)
-                                            break;
-                                    }
-                                    while (DateTime.UtcNow < limit && !child.WaitForExit(100));
                                 }
 
-                                return pidChild;
+                                return r;
                             }
-                        }
-                        catch (Exception ex)
-                        {
-                            Util.Logging.Log(ex);
                         }
                     }
-
-                    pidChild = 0;
                 }
                 while (++r < 3);
 
-                Util.Logging.Log("Unable to find CoherentUI for " + window);
+                Util.Logging.Log("Unable to find host");
 
                 return 0;
             }

@@ -178,7 +178,7 @@ namespace Gw2Launcher.UI.QuickStart
             // textEmail
             // 
             this.textEmail.BackColor = System.Drawing.SystemColors.Window;
-            this.textEmail.Cursor = System.Windows.Forms.Cursors.Hand;
+            this.textEmail.Cursor = Windows.Cursors.Hand;
             this.textEmail.Font = new System.Drawing.Font("Segoe UI Semilight", 8.25F);
             this.textEmail.FontText = new System.Drawing.Font("Segoe UI", 8.25F);
             this.textEmail.ForeColor = System.Drawing.SystemColors.GrayText;
@@ -193,7 +193,7 @@ namespace Gw2Launcher.UI.QuickStart
             // textPassword
             // 
             this.textPassword.BackColor = System.Drawing.SystemColors.Window;
-            this.textPassword.Cursor = System.Windows.Forms.Cursors.Hand;
+            this.textPassword.Cursor = Windows.Cursors.Hand;
             this.textPassword.Font = new System.Drawing.Font("Segoe UI Semilight", 8.25F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
             this.textPassword.FontText = new System.Drawing.Font("Segoe UI", 8.25F);
             this.textPassword.ForeColor = System.Drawing.SystemColors.GrayText;

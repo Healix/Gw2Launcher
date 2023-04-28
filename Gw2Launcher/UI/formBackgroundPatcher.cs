@@ -269,7 +269,7 @@ namespace Gw2Launcher.UI
                 else
                 {
                     status = "Inactive";
-                    cursor = Cursors.Hand;
+                    cursor = Windows.Cursors.Hand;
                     color = Color.FromArgb(49, 121, 242);
                     rescanEnabled = true;
                 }

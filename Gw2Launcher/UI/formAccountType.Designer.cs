@@ -36,7 +36,7 @@ namespace Gw2Launcher.UI
             // 
             // buttonGw1
             // 
-            this.buttonGw1.Cursor = System.Windows.Forms.Cursors.Hand;
+            this.buttonGw1.Cursor = Windows.Cursors.Hand;
             this.buttonGw1.Font = new System.Drawing.Font("Segoe UI", 9.75F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
             this.buttonGw1.Location = new System.Drawing.Point(0, 0);
             this.buttonGw1.Margin = new System.Windows.Forms.Padding(0);
@@ -46,7 +46,7 @@ namespace Gw2Launcher.UI
             // 
             // buttonGw2
             // 
-            this.buttonGw2.Cursor = System.Windows.Forms.Cursors.Hand;
+            this.buttonGw2.Cursor = Windows.Cursors.Hand;
             this.buttonGw2.Font = new System.Drawing.Font("Segoe UI", 9.75F);
             this.buttonGw2.Location = new System.Drawing.Point(0, 70);
             this.buttonGw2.Margin = new System.Windows.Forms.Padding(0, 10, 0, 0);

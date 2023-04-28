@@ -457,5 +457,37 @@ namespace Gw2Launcher.Util
 
             return null;
         }
+
+        public static string GetPath(Process p)
+        {
+            string path;
+
+            try
+            {
+                path = p.MainModule.FileName;
+            }
+            catch
+            {
+                path = null;
+            }
+
+            if (string.IsNullOrEmpty(path))
+            {
+                try
+                {
+                    foreach (ProcessModule m in p.Modules)
+                    {
+                        if (m.FileName.EndsWith(".exe", StringComparison.OrdinalIgnoreCase))
+                        {
+                            path = m.FileName;
+                            break;
+                        }
+                    }
+                }
+                catch { }
+            }
+
+            return path;
+        }
     }
 }

@@ -31,7 +31,12 @@ namespace Gw2Launcher.Util
             return false;
         }
 
-        private static int IndexOf<T>(T[] array, T[] value, int startIndex, int count)
+        public static int IndexOf<T>(T[] array, T[] value)
+        {
+            return IndexOf<T>(array, value, 0, array.Length);
+        }
+
+        public static int IndexOf<T>(T[] array, T[] value, int startIndex, int count)
         {
             var limit = count - startIndex - value.Length;
 

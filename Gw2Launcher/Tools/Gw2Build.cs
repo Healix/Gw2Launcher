@@ -28,6 +28,9 @@ namespace Gw2Launcher.Tools
             return Task.Factory.StartNew<int>(new Func<int>(GetBuild));
         }
 
+        /// <summary>
+        /// OBSOLETE: build API has been stuck on 115267 since 2021
+        /// </summary>
         private static int GetBuildFromApi()
         {
             try
@@ -71,13 +74,14 @@ namespace Gw2Launcher.Tools
             return -1;
         }
 
-        private static int GetBuildFromLatest()
+        private static int GetBuildFromLatest(bool origin = false)
         {
             try
             {
-                var url = string.Format(URL_LATEST, Net.Dns.GetHostAddresses(Settings.ASSET_HOST)[0]);
+                var host = origin ? Settings.ASSET_HOST_ORIGIN : Settings.ASSET_HOST;
+                var url = string.Format(URL_LATEST, Net.Dns.GetHostAddresses(host)[0]);
                 var request = HttpWebRequest.CreateHttp(url);
-                request.Host = Settings.ASSET_HOST;
+                request.Host = host;
                 request.Headers.Add(HttpRequestHeader.Cookie, Settings.ASSET_COOKIE);
                 request.Timeout = 5000;
 
@@ -118,9 +122,18 @@ namespace Gw2Launcher.Tools
 
                 try
                 {
-                    var b = GetBuildFromLatest();
+                    var b = GetBuildFromLatest(false);
+
                     if (b == -1)
-                        b = GetBuildFromApi();
+                    {
+                        b = GetBuildFromLatest(true);
+
+                        if (b == -1)
+                        {
+                            //build api is dead
+                            //b = GetBuildFromApi();
+                        }
+                    }
 
                     if (b != -1)
                     {

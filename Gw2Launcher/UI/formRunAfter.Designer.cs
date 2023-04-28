@@ -244,7 +244,7 @@ namespace Gw2Launcher.UI
             // 
             this.labelArgumentsVariables.AutoSize = true;
             this.labelArgumentsVariables.BorderSize = ((byte)(1));
-            this.labelArgumentsVariables.Cursor = System.Windows.Forms.Cursors.Hand;
+            this.labelArgumentsVariables.Cursor = Windows.Cursors.Hand;
             this.labelArgumentsVariables.Font = new System.Drawing.Font("Calibri", 8.25F);
             this.labelArgumentsVariables.Location = new System.Drawing.Point(8, 181);
             this.labelArgumentsVariables.Margin = new System.Windows.Forms.Padding(8, 5, 0, 0);

@@ -264,7 +264,27 @@ namespace Gw2Launcher.Tools
                 bool used = false;
                 try
                 {
-                    if (!p.ProcessName.Equals("CoherentUI_Host", StringComparison.OrdinalIgnoreCase) || processes.ContainsKey(p.Id))
+                    if (processes.ContainsKey(p.Id))
+                        continue;
+
+                    var n = p.ProcessName;
+                    int parent;
+
+                    //CefHost
+                    //CoherentUI_Host
+                    if (n.Length > 3 && n[0] == 'C' && (n[2] == 'h' || n[2] == 'e'))
+                    {
+                        if (processInfo.Open(p.Id))
+                        {
+                            parent = (int)processInfo.GetParent();
+
+                            if (!processes.ContainsKey(parent))
+                                continue;
+                        }
+                        else
+                            continue;
+                    }
+                    else
                         continue;
 
                     if (added == null)
@@ -278,10 +298,11 @@ namespace Gw2Launcher.Tools
                     {
                         pid = p.Id,
                         process = p,
+                        parent = parent,
                     };
 
-                    if (processInfo.Open(p.Id))
-                        pi.parent = (int)processInfo.GetParent();
+                    //if (processInfo.Open(p.Id))
+                    //    pi.parent = (int)processInfo.GetParent();
 
                     added.Add(pi);
                 }

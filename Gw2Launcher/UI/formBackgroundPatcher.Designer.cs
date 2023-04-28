@@ -382,7 +382,7 @@ namespace Gw2Launcher.UI
             // labelAdvanced
             // 
             this.labelAdvanced.AutoSize = true;
-            this.labelAdvanced.Cursor = System.Windows.Forms.Cursors.Hand;
+            this.labelAdvanced.Cursor = Windows.Cursors.Hand;
             this.labelAdvanced.Font = new System.Drawing.Font("Segoe UI Semilight", 8.25F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
             this.labelAdvanced.ForeColor = System.Drawing.Color.FromArgb(((int)(((byte)(49)))), ((int)(((byte)(121)))), ((int)(((byte)(242)))));
             this.labelAdvanced.Location = new System.Drawing.Point(229, 12);
@@ -394,7 +394,7 @@ namespace Gw2Launcher.UI
             // labelLang
             // 
             this.labelLang.AutoSize = true;
-            this.labelLang.Cursor = System.Windows.Forms.Cursors.Hand;
+            this.labelLang.Cursor = Windows.Cursors.Hand;
             this.labelLang.Font = new System.Drawing.Font("Segoe UI Semilight", 8.25F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
             this.labelLang.ForeColor = System.Drawing.Color.FromArgb(((int)(((byte)(49)))), ((int)(((byte)(121)))), ((int)(((byte)(242)))));
             this.labelLang.Location = new System.Drawing.Point(192, 12);

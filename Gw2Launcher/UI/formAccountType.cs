@@ -21,7 +21,7 @@ namespace Gw2Launcher.UI
 
             public SelectButton()
             {
-                this.Cursor = Cursors.Hand;
+                this.Cursor = Windows.Cursors.Hand;
                 this.DoubleBuffered = true;
 
                 RefreshColors();

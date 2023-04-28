@@ -447,6 +447,13 @@ namespace Gw2Launcher.UI
                 this.Location = new Point(x, y);
             }
 
+            public override void RefreshColors()
+            {
+                base.RefreshColors();
+
+                this.Invalidate();
+            }
+
             protected override void Dispose(bool disposing)
             {
                 if (disposing)
@@ -1744,6 +1751,7 @@ namespace Gw2Launcher.UI
             base.RefreshColors();
 
             panelContent.BackColor = UiColors.GetColor(UiColors.Colors.DailiesSeparator);
+            this.Invalidate();
         }
     }
 }

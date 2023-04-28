@@ -75,7 +75,7 @@ namespace Gw2Launcher.UI.ColorPicker
             // 
             this.panelOriginal.Color1 = System.Drawing.Color.Empty;
             this.panelOriginal.Color2 = System.Drawing.Color.Empty;
-            this.panelOriginal.Cursor = System.Windows.Forms.Cursors.Hand;
+            this.panelOriginal.Cursor = Windows.Cursors.Hand;
             this.panelOriginal.Label = "old";
             this.panelOriginal.LabelAlignment = System.Drawing.ContentAlignment.BottomRight;
             this.panelOriginal.Location = new System.Drawing.Point(2, 54);
@@ -302,7 +302,7 @@ namespace Gw2Launcher.UI.ColorPicker
             | System.Windows.Forms.AnchorStyles.Right)));
             this.panelDefaultColor.Color1 = System.Drawing.Color.Empty;
             this.panelDefaultColor.Color2 = System.Drawing.Color.Empty;
-            this.panelDefaultColor.Cursor = System.Windows.Forms.Cursors.Hand;
+            this.panelDefaultColor.Cursor = Windows.Cursors.Hand;
             this.panelDefaultColor.Label = null;
             this.panelDefaultColor.LabelAlignment = System.Drawing.ContentAlignment.BottomRight;
             this.panelDefaultColor.Location = new System.Drawing.Point(2, 2);

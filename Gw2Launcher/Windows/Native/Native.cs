@@ -128,7 +128,8 @@ namespace Gw2Launcher.Windows.Native
         SetInformation = 0x00000200,
         QueryInformation = 0x00000400,
         QueryLimitedInformation = 0x00001000,
-        Synchronize = 0x00100000
+        Synchronize = 0x00100000,
+        SuspendResume = 0x0800,
     }
 
     [StructLayout(LayoutKind.Sequential)]
@@ -386,6 +387,8 @@ namespace Gw2Launcher.Windows.Native
         WM_NCACTIVATE = 0x86,
         WM_ACTIVATEAPP = 0x001C,
         WM_ACTIVATE = 0x6,
+        WM_RENDERFORMAT = 0x0305,
+        WM_RENDERALLFORMATS = 0x0306,
     }
 
     public enum Sizing
@@ -1287,7 +1290,8 @@ namespace Gw2Launcher.Windows.Native
         ExcludedFromPeek,
         Cloak,
         Cloaked,
-        FreezeRepresentation
+        FreezeRepresentation,
+        CornerPreference=33,
     }
 
     internal enum DWMNCRENDERINGPOLICY
@@ -1573,6 +1577,34 @@ namespace Gw2Launcher.Windows.Native
         LWA_COLORKEY = 0x00000001,
     }
 
+    public delegate uint PTHREAD_START_ROUTINE(IntPtr lpThreadParameter);
+
+    [StructLayout(LayoutKind.Sequential)]
+    public struct CREATE_PROCESS_DEBUG_INFO
+    {
+        public IntPtr hFile;
+        public IntPtr hProcess;
+        public IntPtr hThread;
+        public IntPtr lpBaseOfImage;
+        public uint dwDebugInfoFileOffset;
+        public uint nDebugInfoSize;
+        public IntPtr lpThreadLocalBase;
+        public PTHREAD_START_ROUTINE lpStartAddress;
+        public IntPtr lpImageName;
+        public ushort fUnicode;
+    }
+
+    [StructLayout(LayoutKind.Sequential)]
+    public struct LOAD_DLL_DEBUG_INFO
+    {
+        public IntPtr hFile;
+        public IntPtr lpBaseOfDll;
+        public uint dwDebugInfoFileOffset;
+        public uint nDebugInfoSize;
+        public IntPtr lpImageName;
+        public ushort fUnicode;
+    }
+
     [StructLayout(LayoutKind.Sequential)]
     public struct DEBUG_EVENT
     {
@@ -1580,8 +1612,40 @@ namespace Gw2Launcher.Windows.Native
         public int dwProcessId;
         public int dwThreadId;
 
-        [MarshalAs(UnmanagedType.ByValArray, SizeConst = 86, ArraySubType = UnmanagedType.U1)]
-        byte[] debugInfo;
+#if x86
+        [MarshalAs(UnmanagedType.ByValArray, SizeConst = 88, ArraySubType = UnmanagedType.U1)]
+        public byte[] debugInfo;
+#else
+        private int reserved;
+
+        [MarshalAs(UnmanagedType.ByValArray, SizeConst = 148, ArraySubType = UnmanagedType.U1)]
+        public byte[] debugInfo;
+#endif
+        
+        private T GetDebugInfo<T>() where T : struct
+        {
+            var structSize = Marshal.SizeOf(typeof(T));
+            var pointer = Marshal.AllocHGlobal(structSize);
+            try
+            {
+                Marshal.Copy(debugInfo, 4, pointer, structSize);
+                return (T)Marshal.PtrToStructure(pointer, typeof(T));
+            }
+            finally
+            {
+                Marshal.FreeHGlobal(pointer);
+            }
+        }
+
+        public CREATE_PROCESS_DEBUG_INFO GetCreateProcessInfo()
+        {
+            return GetDebugInfo<CREATE_PROCESS_DEBUG_INFO>();
+        }
+
+        public LOAD_DLL_DEBUG_INFO GetLoadDllInfo()
+        {
+            return GetDebugInfo<LOAD_DLL_DEBUG_INFO>();
+        }
     }
 
     public enum DebugEventType : uint

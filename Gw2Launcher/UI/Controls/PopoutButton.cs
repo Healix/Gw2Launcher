@@ -30,7 +30,7 @@ namespace Gw2Launcher.UI.Controls
             brush = new SolidBrush(colorArrow);
             pen = new Pen(colorBorder, 1);
 
-            this.Cursor = Cursors.Hand;
+            this.Cursor = Windows.Cursors.Hand;
 
             SetStyle(ControlStyles.UserPaint, true);
             SetStyle(ControlStyles.AllPaintingInWmPaint, true);

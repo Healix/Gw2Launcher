@@ -302,6 +302,8 @@ namespace Gw2Launcher.Client
             public byte isRelaunch;
             public byte inQueueCount;
             public byte errors;
+            public WindowWatcher.HostType hostType;
+            public bool isLaunching;
 
             //public void Dispose()
             //{
@@ -506,7 +508,10 @@ namespace Gw2Launcher.Client
 
             public void OnExited()
             {
-                this.Session = null;
+                if (!isLaunching)
+                {
+                    this.Session = null;
+                }
 
                 if (Exited != null)
                     Exited(this, this);

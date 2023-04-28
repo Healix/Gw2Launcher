@@ -26,7 +26,7 @@ namespace Gw2Launcher.UI.Controls
             colorHighlight = Color.FromArgb(20, 20, 20);
             pen = new Pen(colorBorder);
 
-            this.Cursor = Cursors.Hand;
+            this.Cursor = Windows.Cursors.Hand;
 
             SetStyle(ControlStyles.UserPaint, true);
             SetStyle(ControlStyles.AllPaintingInWmPaint, true);

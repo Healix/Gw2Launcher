@@ -12,6 +12,37 @@ namespace Gw2Launcher.Util
     static class Logging
     {
         public static readonly string PATH;
+        public static event EventHandler<LogEventArgs> LogMessage;
+
+        public static bool Enabled;
+
+        public class LogEventArgs : EventArgs
+        {
+            public LogEventArgs(Settings.IAccount account, string message)
+            {
+                this.Account = account;
+                this.Message = message;
+                this.Timestamp = DateTime.UtcNow;
+            }
+
+            public Settings.IAccount Account
+            {
+                get;
+                set;
+            }
+
+            public string Message
+            {
+                get;
+                set;
+            }
+
+            public DateTime Timestamp
+            {
+                get;
+                set;
+            }
+        }
 
         static Logging()
         {
@@ -100,7 +131,39 @@ namespace Gw2Launcher.Util
 
         public static void LogEvent(Settings.IAccount account, string message)
         {
+            if (LogMessage != null)
+            {
+                try
+                {
+                    LogMessage(null, new LogEventArgs(account, message));
+                }
+                catch { }
+            }
+        }
 
+        /// <summary>
+        /// Returns the name of the file and the specified depth. For example, C:\1\2\3.txt at 1 depth becomes \2\3.txt.
+        /// </summary>
+        public static string GetDisplayPath(string path, int depth)
+        {
+            if (depth == 0)
+            {
+                return Path.GetFileName(path);
+            }
+            else
+            {
+                var folder = path;
+
+                while (depth-- >= 0 && !string.IsNullOrEmpty(folder))
+                {
+                    folder = Path.GetDirectoryName(folder);
+                }
+
+                if (folder == null)
+                    return path;
+
+                return path.Substring(folder.Length);
+            }
         }
     }
 }

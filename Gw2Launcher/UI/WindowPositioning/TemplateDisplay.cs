@@ -19,7 +19,7 @@ namespace Gw2Launcher.UI.WindowPositioning
         {
             redraw = true;
             this.ForeColor = Color.FromArgb(200, 200, 200);
-            Cursor = Cursors.Hand;
+            Cursor = Windows.Cursors.Hand;
             //Padding = new Padding(3, 3, 3, 3);
         }
 

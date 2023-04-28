@@ -139,6 +139,18 @@ namespace Gw2Launcher.UI.Base
             }
         }
 
+        public bool Deactivated
+        {
+            get
+            {
+                return deactivated;
+            }
+            set
+            {
+                deactivated = value;
+            }
+        }
+
         public void Dispose()
         {
             this.Enabled = false;

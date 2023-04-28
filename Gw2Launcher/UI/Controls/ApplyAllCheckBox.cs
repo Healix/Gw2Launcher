@@ -29,7 +29,7 @@ namespace Gw2Launcher.UI.Controls
 
             DefaultState = true;
 
-            this.Cursor = Cursors.Hand;
+            this.Cursor = Windows.Cursors.Hand;
         }
 
         [Browsable(false)]

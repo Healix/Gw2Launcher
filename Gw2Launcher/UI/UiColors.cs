@@ -155,6 +155,10 @@ namespace Gw2Launcher.UI
             AccountPinnedColor = 113,
             AccountPinnedBorder = 114,
             AccountSelectionHighlight = 115,
+            BarLaunchDailyBackColor = 116,
+            BarLaunchDailyBackColorHovered = 117,
+            BarLaunchDailyBorder = 118,
+            BarLaunchDailyForeColor = 119,
         }
 
         public interface IColors
@@ -518,13 +522,13 @@ namespace Gw2Launcher.UI
                 Color.FromArgb(-1039838), Color.FromArgb(-11266031), Color.FromArgb(-4276546), Color.FromArgb(-2763307), Color.FromArgb(-11908534), Color.FromArgb(-13487566), Color.FromArgb(-735546), 
                 Color.FromArgb(-740943), Color.FromArgb(-4479839), Color.FromArgb(-5863548), Color.FromArgb(-5658199), Color.FromArgb(-9605779), Color.FromArgb(-13158601), Color.FromArgb(-4274996), 
                 Color.FromArgb(-2697514), Color.FromArgb(-10855846), Color.FromArgb(-13534734), Color.FromArgb(-14527063), Color.FromArgb(-16776961), Color.FromArgb(-8388608), Color.FromArgb(-14803426), 
-                Color.FromArgb(-16746281), 
+                Color.FromArgb(-16746281), Color.FromArgb(-15572098), Color.FromArgb(-15303780), Color.FromArgb(-16045001), 
             };
 
             var indexes = new ushort[]
             {
                 0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,21,6,22,11,14,23,24,0,25,26,6,11,27,28,7,29,0,30,31,0,32,33,2,34,32,6,33,35,26,36,37,6,26,36,37,6,38,39,40,6,41,
-                42,43,6,44,45,46,6,6,11,0,33,47,31,0,48,49,50,51,52,53,54,33,47,47,0,11,8,29,55,0,53,6,27,28,53,11,6,27,53,54,56,33,57,58,59,53,60,61,6,26,62,2,6,63,
+                42,43,6,44,45,46,6,6,11,0,33,47,31,0,48,49,50,51,52,53,54,33,47,47,0,11,8,29,55,0,53,6,27,28,53,11,6,27,53,54,56,33,57,58,59,53,60,61,6,26,62,2,6,63,64,65,66,6,
             };
 
             return new ColorValues(Theme.Light, colors, indexes, false);
@@ -544,13 +548,14 @@ namespace Gw2Launcher.UI
                 Color.FromArgb(-4121572), Color.FromArgb(-2613473), Color.FromArgb(-11790833), Color.FromArgb(-8882056), Color.FromArgb(-7368817), Color.FromArgb(-13882324), Color.FromArgb(-10197916), 
                 Color.FromArgb(-7697782), Color.FromArgb(-14474461), Color.FromArgb(-2302756), Color.FromArgb(-6738900), Color.FromArgb(-5428694), Color.FromArgb(-11004144), Color.FromArgb(-9605779), 
                 Color.FromArgb(-13158601), Color.FromArgb(-14145496), Color.FromArgb(-15066598), Color.FromArgb(-8947849), Color.FromArgb(-4812528), Color.FromArgb(-8428277), Color.FromArgb(-16776961), 
-                Color.FromArgb(-8388608), Color.FromArgb(-13487566), Color.FromArgb(-8355712), Color.FromArgb(-16754272), 
+                Color.FromArgb(-8388608), Color.FromArgb(-13487566), Color.FromArgb(-8355712), Color.FromArgb(-16754272), Color.FromArgb(-15573378), Color.FromArgb(-15438196), Color.FromArgb(-15849422), 
             };
 
             var indexes = new ushort[]
             {
                 0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,21,6,22,11,14,23,24,0,25,6,26,7,26,27,28,29,30,31,32,0,33,34,35,36,37,38,39,40,41,42,43,44,41,42,43,44,45,46,47,
-                48,49,50,51,48,52,53,54,44,6,7,0,55,56,57,58,59,60,51,61,55,62,63,55,56,0,48,43,64,15,43,0,53,6,26,27,39,65,6,7,2,0,28,55,66,67,68,62,69,70,71,29,29,72,38,73,
+                48,49,50,51,48,52,53,54,44,6,7,0,55,56,57,58,59,60,51,61,55,62,63,55,56,0,48,43,64,15,43,0,53,6,26,27,39,65,6,7,2,0,28,55,66,67,68,62,69,70,71,29,29,72,38,73,74,75,76,
+                48,
             };
 
             return new ColorValues(Theme.Dark, colors, indexes, false);

@@ -14,7 +14,7 @@ namespace Gw2Launcher.UI.Controls
             : base()
         {
             this.ForeColor = Color.FromArgb(49, 121, 242);
-            this.Cursor = Cursors.Hand;
+            this.Cursor = Windows.Cursors.Hand;
             this.Padding = new Padding(6, 0, 6, 0);
         }
 

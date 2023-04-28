@@ -14,7 +14,10 @@ namespace Gw2Launcher
         private const ushort VERSION = 14;
 
         public const string ASSET_HOST = "assetcdn.101.arenanetworks.com";
+        public const string ASSET_HOST_ORIGIN = "origincdn.101.arenanetworks.com";
         public const string ASSET_COOKIE = "authCookie=access=/latest/*!/manifest/program/*!/program/*~md5=4e51ad868f87201ad93e428ff30c6691";
+
+        private const int EXPAND_MIN_COUNT = 189;
 
         private const ushort WRITE_DELAY = 10000;
         private const string FILE_NAME = "settings.dat";
@@ -7099,6 +7102,10 @@ namespace Gw2Launcher
             _DisableMumbleLinkDailyLogin = new SettingValue<bool>();
             _DisableAutomaticLogins = new SettingValue<bool>();
             _DisableRunAfter = new SettingValue<bool>();
+            _CloseToTray = new SettingValue<bool>();
+            _ShowLaunchDailyAccounts = new SettingValue<bool>();
+            _HideExit = new SettingValue<bool>();
+            _HideMinimize = new SettingValue<bool>();
         }
 
         /// <summary>
@@ -7732,10 +7739,20 @@ namespace Gw2Launcher
                     _GuildWars2._PathSteam.HasValue,
                     _DisableAutomaticLogins.Value,
                     _DisableRunAfter.Value,
-                    //
-                    //
-                    //
+                    _CloseToTray.HasValue,
+                    _CloseToTray.Value,
+                    _ShowLaunchDailyAccounts.HasValue,
                     //184
+                    _ShowLaunchDailyAccounts.Value,
+                    _HideExit.HasValue,
+                    _HideExit.Value,
+                    _HideMinimize.HasValue,
+                    _HideMinimize.Value,
+                    //
+                    //
+                    //
+                    //192
+                    //EXPAND_MIN_COUNT
                 };
 
                 byte[] b = CompressBooleans(booleans);
@@ -8844,7 +8861,7 @@ namespace Gw2Launcher
                 }
 
                 byte[] b = reader.ReadBytes(reader.ReadByte());
-                bool[] booleans = ExpandBooleans(b, 144);
+                bool[] booleans = ExpandBooleans(b, EXPAND_MIN_COUNT);
 
                 if (version >= 10)
                 {
@@ -9934,6 +9951,26 @@ namespace Gw2Launcher
 
                     _DisableAutomaticLogins.SetValue(booleans[179]);
                     _DisableRunAfter.SetValue(booleans[180]);
+
+                    if (booleans[181])
+                        _CloseToTray.SetValue(booleans[182]);
+                    else
+                        _CloseToTray.Clear();
+
+                    if (booleans[183])
+                        _ShowLaunchDailyAccounts.SetValue(booleans[184]);
+                    else
+                        _ShowLaunchDailyAccounts.Clear();
+
+                    if (booleans[185])
+                        _HideExit.SetValue(booleans[186]);
+                    else
+                        _HideExit.Clear();
+
+                    if (booleans[187])
+                        _HideMinimize.SetValue(booleans[188]);
+                    else
+                        _HideMinimize.Clear();
                 }
 
                 _datUID = 0;
@@ -12392,6 +12429,42 @@ namespace Gw2Launcher
             }
         }
 
+        private static SettingValue<bool> _CloseToTray;
+        public static ISettingValue<bool> CloseToTray
+        {
+            get
+            {
+                return _CloseToTray;
+            }
+        }
+
+        private static SettingValue<bool> _ShowLaunchDailyAccounts;
+        public static ISettingValue<bool> ShowLaunchDailyAccounts
+        {
+            get
+            {
+                return _ShowLaunchDailyAccounts;
+            }
+        }
+
+        private static SettingValue<bool> _HideExit;
+        public static ISettingValue<bool> HideExit
+        {
+            get
+            {
+                return _HideExit;
+            }
+        }
+
+        private static SettingValue<bool> _HideMinimize;
+        public static ISettingValue<bool> HideMinimize
+        {
+            get
+            {
+                return _HideMinimize;
+            }
+        }
+
         public static bool Silent
         {
             get;
@@ -12609,6 +12682,18 @@ namespace Gw2Launcher
                 cancelWrite.Cancel();
             }
             t.Wait();
+        }
+
+        public static bool DisableLocalDatErrorHandling
+        {
+            get;
+            set;
+        }
+
+        public static bool DisableLocalDatVerification
+        {
+            get;
+            set;
         }
     }
 }

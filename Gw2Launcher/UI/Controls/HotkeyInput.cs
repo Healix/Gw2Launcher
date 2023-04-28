@@ -27,7 +27,7 @@ namespace Gw2Launcher.UI.Controls
             SetStyle(ControlStyles.ResizeRedraw, true);
 
             this.Text = null;
-            this.Cursor = Cursors.Hand;
+            this.Cursor = Windows.Cursors.Hand;
 
             penBorder = new Pen(Color.DarkGray, 1);
         }

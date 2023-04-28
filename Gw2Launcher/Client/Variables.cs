@@ -120,6 +120,11 @@ namespace Gw2Launcher.Client
                 {
                     return v.Account.Name;
                 }));
+            Add(new Variable(VariableType.Account, "%email%", "Email used for automatic logins",
+                delegate(DataSource v)
+                {
+                    return v.Account.Email;
+                }));
             Add(new Variable(VariableType.Process, "%handle%", "Window handle",
                 delegate(DataSource v)
                 {

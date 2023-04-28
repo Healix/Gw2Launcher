@@ -88,7 +88,7 @@ namespace Gw2Launcher.UI
             this.labelVariableTemplate.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left) 
             | System.Windows.Forms.AnchorStyles.Right)));
             this.labelVariableTemplate.AutoSize = true;
-            this.labelVariableTemplate.Cursor = System.Windows.Forms.Cursors.Hand;
+            this.labelVariableTemplate.Cursor = Windows.Cursors.Hand;
             this.labelVariableTemplate.Font = new System.Drawing.Font("Segoe UI Semibold", 8.25F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
             this.labelVariableTemplate.Location = new System.Drawing.Point(2, 2);
             this.labelVariableTemplate.Margin = new System.Windows.Forms.Padding(0);
@@ -169,7 +169,7 @@ namespace Gw2Launcher.UI
             this.buttonVariables.BackColorHovered = System.Drawing.SystemColors.ControlLight;
             this.buttonVariables.BackColorSelected = System.Drawing.SystemColors.Window;
             this.buttonVariables.BorderColor = System.Drawing.Color.Empty;
-            this.buttonVariables.Cursor = System.Windows.Forms.Cursors.Hand;
+            this.buttonVariables.Cursor = Windows.Cursors.Hand;
             this.buttonVariables.ForeColorHovered = System.Drawing.SystemColors.ControlText;
             this.buttonVariables.ForeColorSelected = System.Drawing.SystemColors.ControlText;
             this.buttonVariables.Location = new System.Drawing.Point(0, 22);

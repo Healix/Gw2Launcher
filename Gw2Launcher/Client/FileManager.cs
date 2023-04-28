@@ -4868,31 +4868,36 @@ namespace Gw2Launcher.Client
 
             Settings.GuildWars2.LastModified.Value = d;
 
-            if (verify)
+            if (verify && !Settings.DisableLocalDatVerification)
             {
                 var pd = new PathData();
                 var build = 0;
                 var changed = false;
                 var defaultPath = Path.Combine(pd.GetUserPath(PathData.SpecialPath.Gw2AppDataDefault), DAT_NAME);
-                var hasDefault = false;
+                var defaultBuild = 0;
 
                 if (File.Exists(defaultPath))
                 {
                     try
                     {
-                        build = Tools.Dat.DatFile.ReadBuild(defaultPath);
-                        hasDefault = true;
+                        defaultBuild = Tools.Dat.DatFile.ReadBuild(defaultPath);
                     }
                     catch (Exception e)
                     {
                         Util.Logging.Log(e);
+
+                        return true;
                     }
+                }
+                else
+                {
+                    return true;
                 }
 
                 foreach (var uid in Settings.DatFiles.GetKeys())
                 {
                     var dat = Settings.DatFiles[uid].Value;
-                    if (dat != null)
+                    if (dat != null && dat.References > 0)
                     {
                         try
                         {
@@ -4901,7 +4906,7 @@ namespace Gw2Launcher.Client
                                 var b = Tools.Dat.DatFile.ReadBuild(dat.Path);
                                 if (build != b)
                                 {
-                                    if (changed = build != 0)
+                                    if (changed = build != 0 || b < defaultBuild)
                                         break;
                                     build = b;
                                 }
@@ -4913,17 +4918,6 @@ namespace Gw2Launcher.Client
                             break;
                         }
                     }
-                }
-
-                if (!hasDefault && !changed && build > 0)
-                {
-                    try
-                    {
-                        var b = Tools.Gw2Build.Build;
-                        if (b > 0)
-                            changed = b != build;
-                    }
-                    catch { }
                 }
 
                 if (changed)

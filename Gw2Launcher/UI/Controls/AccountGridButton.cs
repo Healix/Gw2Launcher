@@ -279,7 +279,7 @@ namespace Gw2Launcher.UI.Controls
 
             _Colors = UiColors.GetTheme();
 
-            this.Cursor = System.Windows.Forms.Cursors.Hand;
+            this.Cursor = Windows.Cursors.Hand;
 
             icons = new DisplayedIcon[]
             {

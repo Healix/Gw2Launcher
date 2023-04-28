@@ -66,6 +66,15 @@ namespace Gw2Launcher.Tools
                         File.Delete(path);
                 }
                 catch { }
+
+                path = Path.Combine(root, "user", "Cache", "Local Storage", "leveldb", "MANIFEST-000001");
+
+                try
+                {
+                    if (File.Exists(path))
+                        File.Delete(path);
+                }
+                catch { }
             }
         }
 

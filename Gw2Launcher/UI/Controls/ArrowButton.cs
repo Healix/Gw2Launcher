@@ -35,7 +35,7 @@ namespace Gw2Launcher.UI.Controls
             this.ForeColor = Color.FromArgb(150, 150, 150);
             colorHighlight = Color.FromArgb(20, 20, 20);
 
-            this.Cursor = Cursors.Hand;
+            this.Cursor = Windows.Cursors.Hand;
 
             SetStyle(ControlStyles.UserPaint, true);
             SetStyle(ControlStyles.AllPaintingInWmPaint, true);

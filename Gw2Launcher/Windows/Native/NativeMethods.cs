@@ -506,5 +506,49 @@ namespace Gw2Launcher.Windows.Native
 
         [DllImport(USER32)]
         internal static extern uint MapVirtualKeyEx(uint uCode, VkMapType uMapType, IntPtr dwhkl);
+
+        [DllImport(USER32)]
+        internal static extern IntPtr GetOpenClipboardWindow();
+
+        [DllImport(USER32, SetLastError = true)]
+        internal static extern bool OpenClipboard(IntPtr hWndNewOwner);
+
+        [DllImport(USER32, SetLastError = true)]
+        internal static extern bool CloseClipboard();
+
+        [DllImport(USER32)]
+        internal static extern bool EmptyClipboard();
+
+        [DllImport(USER32)]
+        internal static extern IntPtr SetClipboardData(uint uFormat, IntPtr hMem);
+
+        [DllImport(USER32)]
+        internal static extern IntPtr GetClipboardData(uint uFormat);
+
+        [DllImport(KERNEL32, SetLastError = true)]
+        internal static extern IntPtr GlobalLock(IntPtr hMem);
+
+        [DllImport(KERNEL32, SetLastError = true)]
+        [return: MarshalAs(UnmanagedType.Bool)]
+        internal static extern bool GlobalUnlock(IntPtr hMem);
+
+        [DllImport(KERNEL32, SetLastError = true)]
+        internal static extern int GlobalSize(IntPtr hMem);
+
+        [DllImport(USER32, SetLastError = true)]
+        [return: MarshalAs(UnmanagedType.Bool)]
+        internal static extern bool IsClipboardFormatAvailable(uint format);
+
+        [DllImport(USER32, SetLastError = true)]
+        internal static extern IntPtr GetClipboardOwner();
+
+        [DllImport(NTDLL, SetLastError = true)]
+        internal static extern IntPtr NtSuspendProcess(IntPtr ProcessHandle);
+
+        [DllImport(NTDLL, SetLastError = true)]
+        internal static extern IntPtr NtResumeProcess(IntPtr processHandle);
+
+        [DllImport(USER32)]
+        internal static extern IntPtr LoadCursor(IntPtr hInstance, int lpCursorName);
     }
 }

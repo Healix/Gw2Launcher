@@ -22,7 +22,7 @@ namespace Gw2Launcher.UI.Controls
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.BackColor = System.Drawing.Color.White;
-            this.Cursor = System.Windows.Forms.Cursors.Hand;
+            this.Cursor = Windows.Cursors.Hand;
             this.Font = new System.Drawing.Font("Segoe UI", 8.25F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
             this.Size = new System.Drawing.Size(242, 93);
             this.Load += new System.EventHandler(this.SidebarButton_Load);

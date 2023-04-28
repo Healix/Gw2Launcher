@@ -63,6 +63,8 @@ namespace Gw2Launcher.Client
 
             private class RegisteredEvent : IDisposable
             {
+                public event EventHandler Disposed;
+
                 private WinEventDelegate proc;
                 private IntPtr handle;
                 private SynchronizationContext context;
@@ -121,6 +123,12 @@ namespace Gw2Launcher.Client
                         {
                             Util.Logging.Log(e);
                         }
+                    }
+
+                    if (Disposed != null)
+                    {
+                        Disposed(this, EventArgs.Empty);
+                        Disposed = null;
                     }
                 }
 
@@ -329,6 +337,20 @@ namespace Gw2Launcher.Client
             {
                 var e = new RegisteredEvent(context, pid, eventMin, eventMax, proc);
 
+                var onThreadExit = new EventHandler(
+                    delegate
+                    {
+                        if (contextId == Thread.CurrentThread.ManagedThreadId)
+                            e.Dispose();
+                    });
+
+                System.Windows.Forms.Application.ThreadExit += onThreadExit;
+
+                e.Disposed += delegate
+                {
+                    System.Windows.Forms.Application.ThreadExit -= onThreadExit;
+                };
+
                 return e;
             }
 
@@ -406,7 +428,8 @@ namespace Gw2Launcher.Client
 
             void Application_ThreadExit(object sender, EventArgs e)
             {
-                Dispose();
+                if (contextId == Thread.CurrentThread.ManagedThreadId)
+                    Dispose();
             }
 
             public void Dispose()

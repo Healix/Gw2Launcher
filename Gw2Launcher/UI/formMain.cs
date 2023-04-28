@@ -370,6 +370,7 @@ namespace Gw2Launcher.UI
             Settings.ScreenshotConversion.ValueChanged += ScreenshotSettings_ValueChanged;
             Settings.ShowKillAllAccounts.ValueChanged += ShowKillAllAccounts_ValueChanged;
             Settings.ShowLaunchAllAccounts.ValueChanged += ShowLaunchAllAccounts_ValueChanged;
+            Settings.ShowLaunchDailyAccounts.ValueChanged += ShowLaunchDailyAccounts_ValueChanged;
             Settings.JumpList.ValueChanged += JumpList_ValueChanged;
             Settings.PreventTaskbarMinimize.ValueChanged += PreventTaskbarMinimize_ValueChanged;
             Settings.ProcessPriority.ValueChanged += ProcessPriority_ValueChanged;
@@ -382,6 +383,8 @@ namespace Gw2Launcher.UI
             Settings.ShowWindowTemplatesToggle.ValueChanged += ShowWindowTemplatesToggle_ValueChanged;
             Settings.StyleHighlightActive.ValueChanged += OnButtonStyleChanged;
             Settings.StyleShowDailyLoginDay.ValueChanged += OnButtonStyleChanged;
+            Settings.HideExit.ValueChanged += HideExit_ValueChanged;
+            Settings.HideMinimize.ValueChanged += HideMinimize_ValueChanged;
 
             Tools.BackgroundPatcher.Instance.PatchReady += bp_PatchReady;
             Tools.BackgroundPatcher.Instance.PatchBeginning += bp_PatchBeginning;
@@ -406,10 +409,17 @@ namespace Gw2Launcher.UI
             PurgeNotes();
 
             MainWindowHandle = this.Handle; //force creation (required for Scan)
+            MainWindow = this;
             Client.Launcher.Scan(Client.Launcher.AccountType.Any);
         }
 
         public static IntPtr MainWindowHandle
+        {
+            get;
+            private set;
+        }
+
+        public static formMain MainWindow
         {
             get;
             private set;
@@ -569,6 +579,24 @@ namespace Gw2Launcher.UI
         {
             var v = (Settings.ISettingValue<bool>)sender;
             buttonLaunchAll.Visible = v.Value;
+        }
+
+        void ShowLaunchDailyAccounts_ValueChanged(object sender, EventArgs e)
+        {
+            var v = (Settings.ISettingValue<bool>)sender;
+            buttonLaunchDaily.Visible = v.Value;
+        }
+
+        void HideExit_ValueChanged(object sender, EventArgs e)
+        {
+            var v = (Settings.ISettingValue<bool>)sender;
+            buttonClose.Visible = !v.Value;
+        }
+
+        void HideMinimize_ValueChanged(object sender, EventArgs e)
+        {
+            var v = (Settings.ISettingValue<bool>)sender;
+            buttonMinimize.Visible = !v.Value;
         }
 
         void ShowMinimizeRestoreAll_ValueChanged(object sender, EventArgs e)
@@ -3076,8 +3104,11 @@ namespace Gw2Launcher.UI
             ScreenshotSettings_ValueChanged(Settings.ScreenshotConversion, EventArgs.Empty);
             StyleBackgroundImage_ValueChanged(Settings.StyleBackgroundImage, EventArgs.Empty);
             buttonLaunchAll.Visible = Settings.ShowLaunchAllAccounts.Value;
+            buttonLaunchDaily.Visible = Settings.ShowLaunchDailyAccounts.Value;
             buttonAccountBar.Visible = Settings.ShowAccountBarToggle.Value;
             buttonTemplates.Visible = Settings.ShowWindowTemplatesToggle.Value;
+            buttonClose.Visible = !Settings.HideExit.Value;
+            buttonMinimize.Visible = !Settings.HideMinimize.Value;
             ProcessPriority_ValueChanged(Settings.ProcessPriority, EventArgs.Empty);
 
             disableAutomaticLoginsToolStripMenuItem.Checked = Settings.DisableAutomaticLogins.Value;
@@ -3455,7 +3486,7 @@ namespace Gw2Launcher.UI
                             var code = new String(Tools.Totp.Generate(totp, ticks));
                             button.ShowTotpCode(code, remaining / 10000);
                             if (action != Settings.ButtonAction.ShowAuthenticator)
-                                Clipboard.SetText(code);
+                                Windows.Clipboard.SetText(code);
                         }
                         catch { }
                     }
@@ -5060,12 +5091,18 @@ namespace Gw2Launcher.UI
 
         private void launchAllToolStripMenuItem_Click(object sender, EventArgs e)
         {
+            Client.Launcher.LaunchMode mode;
+            if (Settings.ActionInactiveLClick.Value == Settings.ButtonAction.LaunchSingle)
+                mode = Client.Launcher.LaunchMode.LaunchSingle;
+            else
+                mode = Client.Launcher.LaunchMode.Launch;
+
             foreach (var button in GetVisible())
             {
                 var account = button.AccountData;
                 if (account != null)
                 {
-                    Client.Launcher.Launch(account, Client.Launcher.LaunchMode.Launch);
+                    Client.Launcher.Launch(account, mode);
                 }
             }
         }
@@ -5358,6 +5395,9 @@ namespace Gw2Launcher.UI
         {
             base.OnHandleCreated(e);
 
+            int rounded = 1;
+            NativeMethods.DwmSetWindowAttribute(this.Handle, DWMWINDOWATTRIBUTE.CornerPreference, ref rounded, sizeof(int));
+
             if (!Settings.StyleDisableWindowShadows.Value)
                 Windows.WindowShadow.Enable(this.Handle);
         }
@@ -5619,6 +5659,15 @@ namespace Gw2Launcher.UI
                         hotkeys.Process(ref m);
 
                     break;
+                case WindowMessages.WM_RENDERFORMAT:
+                case WindowMessages.WM_RENDERALLFORMATS:
+
+                    if (Windows.Clipboard.ProcessMessage(ref m))
+                    {
+                        return;
+                    }
+
+                    break;
             }
 
             base.WndProc(ref m);
@@ -5743,7 +5792,7 @@ namespace Gw2Launcher.UI
 
                                     //note there's no restriction on where the code will be pasted, thus the clipboard will be used
 
-                                    Clipboard.SetText(new string(totp));
+                                    Windows.Clipboard.SetText(new string(totp));
 
                                     if (NativeMethods.SetForegroundWindow(h))
                                     {
@@ -6094,7 +6143,14 @@ namespace Gw2Launcher.UI
 
         private void buttonClose_Click(object sender, EventArgs e)
         {
-            this.Close();
+            if (Settings.CloseToTray.Value)
+            {
+                this.Hide();
+            }
+            else
+            {
+                this.Close();
+            }
         }
 
         private async void buttonMinimize_Click(object sender, EventArgs e)
@@ -6274,17 +6330,12 @@ namespace Gw2Launcher.UI
                         e.SuppressKeyPress = true;
 
                         break;
-                    case Keys.Left:
+                    case Keys.Apps:
 
-                        mpWindow.PagePrevious();
-
-                        e.Handled = true;
-                        e.SuppressKeyPress = true;
-
-                        break;
-                    case Keys.Right:
-
-                        mpWindow.PageNext();
+                        if (!mpWindow.Visible)
+                        {
+                            mpWindow.Show(this, buttonMenu);
+                        }
 
                         e.Handled = true;
                         e.SuppressKeyPress = true;
@@ -6294,6 +6345,33 @@ namespace Gw2Launcher.UI
             }
 
             base.OnKeyDown(e);
+        }
+
+        protected override void OnKeyUp(KeyEventArgs e)
+        {
+            //arrows should be used for selection
+
+            //switch (e.KeyCode)
+            //{
+            //    case Keys.Left:
+
+            //        if (!_ShowFilter || !textFilter.ContainsFocus)
+            //        {
+            //            mpWindow.PagePrevious();
+            //        }
+
+            //        break;
+            //    case Keys.Right:
+
+            //        if (!_ShowFilter || !textFilter.ContainsFocus)
+            //        {
+            //            mpWindow.PageNext();
+            //        }
+
+            //        break;
+            //}
+
+            base.OnKeyUp(e);
         }
 
         protected override void OnKeyPress(KeyPressEventArgs e)
@@ -6935,7 +7013,7 @@ namespace Gw2Launcher.UI
                         foreach (var b in GetVisible())
                         {
                             var a = b.AccountData;
-                            if (a != null && b.LastUsedUtc.Date != d)
+                            if (a != null && b.ShowDailyLogin && b.LastDailyLoginUtc.Date != d && !Client.Launcher.IsActive(a))
                             {
                                 Client.Launcher.LaunchMode mode;
                                 if (Settings.ActionInactiveLClick.Value == Settings.ButtonAction.LaunchSingle)
@@ -7205,6 +7283,56 @@ namespace Gw2Launcher.UI
         private void colorsToolStripMenuItem_Click(object sender, EventArgs e)
         {
             AddWindow(new formColors()).Show(this);
+        }
+
+        private void disableLocaldatVerificationToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            disableLocaldatVerificationToolStripMenuItem.Checked ^= true;
+            Settings.DisableLocalDatVerification = disableLocaldatVerificationToolStripMenuItem.Checked;
+        }
+
+        private void disableLocaldatErrorHandlingToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            disableLocaldatErrorHandlingToolStripMenuItem.Checked ^= true;
+            Settings.DisableLocalDatErrorHandling = disableLocaldatErrorHandlingToolStripMenuItem.Checked;
+        }
+
+        private void logToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            formLog f;
+
+            if (logToolStripMenuItem.Tag != null)
+            {
+                f = (formLog)logToolStripMenuItem.Tag;
+                if (f.Visible)
+                {
+                    return;
+                }
+            }
+
+            f = new formLog();
+            logToolStripMenuItem.Tag = f;
+            f.Show(this);
+        }
+
+        private void buttonLaunchDaily_Click(object sender, EventArgs e)
+        {
+            var d = DateTime.UtcNow.Date;
+
+            Client.Launcher.LaunchMode mode;
+            if (Settings.ActionInactiveLClick.Value == Settings.ButtonAction.LaunchSingle)
+                mode = Client.Launcher.LaunchMode.LaunchSingle;
+            else
+                mode = Client.Launcher.LaunchMode.Launch;
+
+            foreach (var b in GetVisible())
+            {
+                var a = b.AccountData;
+                if (a != null && b.ShowDailyLogin && b.LastDailyLoginUtc.Date != d)
+                {
+                    Client.Launcher.Launch(a, mode);
+                }
+            }
         }
     }
 }

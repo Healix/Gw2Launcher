@@ -49,13 +49,13 @@ namespace Gw2Launcher.Client
             /// <summary>
             /// Starts the process from settings and returns the process
             /// </summary>
-            IRunAfterProcess Start(Settings.RunAfter r);
+            IRunAfterProcess Start(Settings.RunAfter r, bool silent);
 
             /// <summary>
             /// Starts the process
             /// </summary>
             /// <returns>False if the process was already started or failed to start</returns>
-            bool Start(IRunAfterProcess p);
+            bool Start(IRunAfterProcess p, bool silent);
 
             /// <summary>
             /// All run after processes linked to the account
@@ -98,14 +98,14 @@ namespace Gw2Launcher.Client
                 Dispose();
             }
 
-            public IRunAfterProcess Start(Settings.RunAfter r)
+            public IRunAfterProcess Start(Settings.RunAfter r, bool silent)
             {
-                return m.Start(r);
+                return m.Start(r, silent);
             }
 
-            public bool Start(IRunAfterProcess p)
+            public bool Start(IRunAfterProcess p, bool silent)
             {
-                return m.Start(p);
+                return m.Start(p, silent);
             }
 
             public IRunAfterProcess[] GetProcesses()
@@ -159,7 +159,7 @@ namespace Gw2Launcher.Client
                     settings = r;
                 }
 
-                public bool Start(RunAfterManager ra)
+                public bool Start(RunAfterManager ra, bool silent)
                 {
                     if (IsActive)
                         return false;
@@ -248,6 +248,14 @@ namespace Gw2Launcher.Client
                             process.Dispose();
                             process = null;
                         }
+
+                        if (Util.Logging.Enabled)
+                        {
+                            Util.Logging.LogEvent(ra.Account, "Error when running [" + settings.GetName() + "]: " + e.Message);
+                        }
+
+                        if (!silent)
+                            throw;
                     }
 
                     return false;
@@ -670,7 +678,7 @@ namespace Gw2Launcher.Client
                                 if (HasState(ManagerState.Closing))
                                     break;
 
-                                Start(p);
+                                Start(p, true);
 
                                 ++started;
                             }
@@ -684,7 +692,7 @@ namespace Gw2Launcher.Client
             /// <summary>
             /// Starts the process, adding it if it doesn't already exist
             /// </summary>
-            public IRunAfterProcess Start(Settings.RunAfter r)
+            public IRunAfterProcess Start(Settings.RunAfter r, bool silent)
             {
                 RunAfterProcess p;
 
@@ -718,7 +726,7 @@ namespace Gw2Launcher.Client
                     }
                 }
 
-                Start(p);
+                Start(p, silent);
 
                 return p;
             }
@@ -726,10 +734,10 @@ namespace Gw2Launcher.Client
             /// <summary>
             /// Starts the process
             /// </summary>
-            public bool Start(IRunAfterProcess p)
+            public bool Start(IRunAfterProcess p, bool silent)
             {
                 if (p != null && p is RunAfterProcess)
-                    return Start((RunAfterProcess)p);
+                    return Start((RunAfterProcess)p, silent);
                 return false;
             }
 
@@ -737,7 +745,7 @@ namespace Gw2Launcher.Client
             /// Starts the process
             /// </summary>
             /// <returns>False if the process was already started or failed to start</returns>
-            private bool Start(RunAfterProcess p)
+            private bool Start(RunAfterProcess p, bool silent)
             {
                 lock (p)
                 {
@@ -746,7 +754,7 @@ namespace Gw2Launcher.Client
 
                     p.Started += OnProcessStarted;
 
-                    if (!p.Start(this))
+                    if (!p.Start(this, silent))
                     {
                         p.Started -= OnProcessStarted;
 
@@ -954,8 +962,6 @@ namespace Gw2Launcher.Client
                 }
                 catch { }
 
-                Util.Logging.Log("locking account");
-
                 lock (account)
                 {
                     account.Process.Exited -= OnAccountExited;
@@ -967,12 +973,7 @@ namespace Gw2Launcher.Client
 
                     if (object.ReferenceEquals(account.RunAfter, this))
                     {
-                        Util.Logging.Log("nulling account");
                         account.RunAfter = null;
-                    }
-                    else
-                    {
-                        Util.Logging.Log("unknown runafter");
                     }
                 }
 

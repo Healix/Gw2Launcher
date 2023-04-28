@@ -334,7 +334,6 @@ namespace Gw2Launcher.UI
             if (Settings.GuildWars1.Path.HasValue)
             {
                 textGw1Path.Text = Settings.GuildWars1.Path.Value;
-                textGw1Path.Select(textGw1Path.TextLength, 0);
             }
 
             if (Settings.GuildWars2.Arguments.HasValue)
@@ -344,6 +343,7 @@ namespace Gw2Launcher.UI
                 textGw1Arguments.Text = Settings.GuildWars1.Arguments.Value;
 
             checkMinimizeToTray.Checked = Settings.MinimizeToTray.Value;
+            checkCloseToTray.Checked = Settings.CloseToTray.Value;
             checkShowTrayIcon.Checked = !Settings.ShowTray.HasValue || Settings.ShowTray.Value;
             checkBringToFrontOnExit.Checked = Settings.BringToFrontOnExit.Value;
             checkStoreCredentials.Checked = Settings.StoreCredentials.Value;
@@ -450,7 +450,6 @@ namespace Gw2Launcher.UI
                 {
                     checkCustomUsername.Checked = true;
                     textCustomUsername.Text = Settings.GuildWars2.VirtualUserPath.Value;
-                    textCustomUsername.Select(textCustomUsername.TextLength, 0);
                 }
                 else
                 {
@@ -517,12 +516,10 @@ namespace Gw2Launcher.UI
                 if (checkGw2ScreenshotsLocation.Checked = Settings.GuildWars2.ScreenshotsLocation.HasValue)
                 {
                     textGw2ScreenshotsLocation.Text = Settings.GuildWars2.ScreenshotsLocation.Value;
-                    textGw2ScreenshotsLocation.Select(textGw2ScreenshotsLocation.TextLength, 0);
                 }
                 if (checkGw1ScreenshotsLocation.Checked = Settings.GuildWars1.ScreenshotsLocation.HasValue)
                 {
                     textGw1ScreenshotsLocation.Text = Settings.GuildWars1.ScreenshotsLocation.Value;
-                    textGw1ScreenshotsLocation.Select(textGw1ScreenshotsLocation.TextLength, 0);
                 }
             }
             else
@@ -1042,6 +1039,10 @@ namespace Gw2Launcher.UI
                 radioLocalizedExecutionAccountsExclude.Checked = !b;
             }
 
+            checkStyleShowLaunchDaily.Checked = Settings.ShowLaunchDailyAccounts.Value;
+            checkStyleHideExit.Checked = Settings.HideExit.Value;
+            checkStyleHideMinimize.Checked = Settings.HideMinimize.Value;
+
 
 
 
@@ -1271,6 +1272,7 @@ namespace Gw2Launcher.UI
 
             comboActionInactiveLClick.Items.AddRange(new object[]
                 {
+                    none,
                     launch,
                     launchNormal,
                 });
@@ -1676,6 +1678,7 @@ namespace Gw2Launcher.UI
             Settings.GuildWars1.Arguments.Value = textGw1Arguments.Text;
 
             Settings.MinimizeToTray.Value = checkMinimizeToTray.Checked;
+            Settings.CloseToTray.Value = checkCloseToTray.Checked;
             Settings.ShowTray.Value = checkShowTrayIcon.Checked;
             Settings.BringToFrontOnExit.Value = checkBringToFrontOnExit.Checked;
             Settings.StoreCredentials.Value = checkStoreCredentials.Checked;
@@ -2350,6 +2353,10 @@ namespace Gw2Launcher.UI
             else
                 Settings.Tweaks.DisableMumbleLinkDailyLogin.Value = true;
 
+            Settings.ShowLaunchDailyAccounts.Value = checkStyleShowLaunchDaily.Checked;
+            Settings.HideExit.Value = checkStyleHideExit.Checked;
+            Settings.HideMinimize.Value = checkStyleHideMinimize.Checked;
+
 
 
 
@@ -2361,6 +2368,7 @@ namespace Gw2Launcher.UI
         private void checkShowTrayIcon_CheckedChanged(object sender, EventArgs e)
         {
             checkMinimizeToTray.Enabled = checkShowTrayIcon.Checked;
+            checkCloseToTray.Enabled = checkShowTrayIcon.Checked;
         }
 
         private void buttonWindowReset_Click(object sender, EventArgs e)
@@ -4897,7 +4905,7 @@ namespace Gw2Launcher.UI
                 Margin = panelColorTemplate.Margin,
                 Anchor = AnchorStyles.Left,
                 BorderStyle = BorderStyle.FixedSingle,
-                Cursor = Cursors.Hand,
+                Cursor = Windows.Cursors.Hand,
                 ColorName = color,
                 Tooltip = tooltip,
                 Size = panelColorTemplate.Size,

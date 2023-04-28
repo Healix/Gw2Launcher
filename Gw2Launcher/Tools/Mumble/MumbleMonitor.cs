@@ -88,6 +88,10 @@ namespace Gw2Launcher.Tools.Mumble
                 get;
             }
             IMumbleSubscriber Subscribe(DataScope scope);
+            string LinkName
+            {
+                get;
+            }
         }
 
         private class MumbleProcessSubscriber : IMumbleSubscriber
@@ -250,6 +254,14 @@ namespace Gw2Launcher.Tools.Mumble
             {
                 get;
                 private set;
+            }
+
+            public string LinkName
+            {
+                get
+                {
+                    return Parent.Name;
+                }
             }
 
             public int Id
@@ -1161,7 +1173,7 @@ namespace Gw2Launcher.Tools.Mumble
                     name = name.Substring(1, name.Length - 2);
                 var l = GetLink(name);
                 var p = l.Add(pid);
-
+                
                 p.Account = account;
 
                 return p;

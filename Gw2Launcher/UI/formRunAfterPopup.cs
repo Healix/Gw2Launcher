@@ -47,17 +47,13 @@ namespace Gw2Launcher.UI
 
                         _RunAfterProcess = value;
 
-                        bool b;
-
-                        if (b = value != null)
+                        if (value != null)
                         {
                             value.Started += process_Started;
                             value.Exited += process_Exited;
 
-                            b = value.IsActive;
+                            this.Selected = value.IsActive;
                         }
-
-                        this.Selected = b;
                     }
                 }
             }
@@ -371,6 +367,7 @@ namespace Gw2Launcher.UI
         private System.Diagnostics.Process process;
         private Dictionary<Settings.IAccount, AccountContainerPanel> panels;
         private Tools.Shared.Images images;
+        private bool disableAutoClose;
 
         [Flags]
         private enum SortingAction : byte
@@ -731,7 +728,7 @@ namespace Gw2Launcher.UI
                     boundsChanged = false;
                     bounds = Rectangle.Inflate(this.Bounds, Cursor.Size.Width / 2, Cursor.Size.Height / 2);
                 }
-                if (!bounds.Contains(Cursor.Position) && !contextMenu.Visible)
+                if (!disableAutoClose && !bounds.Contains(Cursor.Position) && !contextMenu.Visible)
                 {
                     this.Dispose();
                     break;
@@ -1064,6 +1061,7 @@ namespace Gw2Launcher.UI
                 b.RunAfter = r;
                 b.Index = index;
                 b.RunAfterProcess = p;
+                b.CloseVisible = b.Selected && (options & Settings.RunAfterPopupOptions.ShowClose) != 0;
 
                 var v = IsFilteredVisible(b, panel);
                 if (v)
@@ -1158,7 +1156,16 @@ namespace Gw2Launcher.UI
 
             if (m != null)
             {
-                m.Start(b.RunAfterProcess);
+                try
+                {
+                    m.Start(b.RunAfterProcess, false);
+                }
+                catch (Exception ex)
+                {
+                    disableAutoClose = true;
+                    MessageBox.Show(this, ex.HResult.ToString("x") + ": " + ex.Message + "\n\n" + ex.StackTrace, "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                    disableAutoClose = false;
+                }
             }
         }
 

@@ -210,7 +210,7 @@ namespace Gw2Launcher.UI.QuickStart
             this.buttonOptions.BackColorHovered = System.Drawing.SystemColors.Control;
             this.buttonOptions.BackColorSelected = System.Drawing.SystemColors.Control;
             this.buttonOptions.BorderColor = System.Drawing.Color.Empty;
-            this.buttonOptions.Cursor = System.Windows.Forms.Cursors.Hand;
+            this.buttonOptions.Cursor = Windows.Cursors.Hand;
             this.buttonOptions.ForeColor = System.Drawing.Color.FromArgb(((int)(((byte)(100)))), ((int)(((byte)(100)))), ((int)(((byte)(100)))));
             this.buttonOptions.ForeColorHovered = System.Drawing.Color.Black;
             this.buttonOptions.ForeColorSelected = System.Drawing.Color.FromArgb(((int)(((byte)(100)))), ((int)(((byte)(100)))), ((int)(((byte)(100)))));

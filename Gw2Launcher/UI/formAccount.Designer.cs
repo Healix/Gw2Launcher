@@ -413,6 +413,7 @@ namespace Gw2Launcher.UI
             this.contextAffinity = new System.Windows.Forms.ContextMenuStrip(this.components);
             this.saveToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.loadToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.label227 = new System.Windows.Forms.Label();
             this.contextIcon.SuspendLayout();
             this.contextImage.SuspendLayout();
             this.contextColor.SuspendLayout();
@@ -724,7 +725,6 @@ namespace Gw2Launcher.UI
             // 
             this.panelIdentifierIconLarge.BackgroundImageLayout = System.Windows.Forms.ImageLayout.Stretch;
             this.panelIdentifierIconLarge.BorderStyle = System.Windows.Forms.BorderStyle.FixedSingle;
-            this.panelIdentifierIconLarge.Cursor = System.Windows.Forms.Cursors.Hand;
             this.panelIdentifierIconLarge.Location = new System.Drawing.Point(185, 470);
             this.panelIdentifierIconLarge.MaximumSize = new System.Drawing.Size(128, 128);
             this.panelIdentifierIconLarge.Name = "panelIdentifierIconLarge";
@@ -845,7 +845,6 @@ namespace Gw2Launcher.UI
             this.buttonStatistics.ArrowColor = System.Drawing.SystemColors.Control;
             this.buttonStatistics.BackColor = System.Drawing.Color.White;
             this.buttonStatistics.BorderColor = System.Drawing.SystemColors.ControlDark;
-            this.buttonStatistics.Cursor = System.Windows.Forms.Cursors.Hand;
             this.buttonStatistics.Font = new System.Drawing.Font("Segoe UI", 8.25F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
             this.buttonStatistics.Index = -1;
             this.buttonStatistics.Location = new System.Drawing.Point(0, 200);
@@ -867,7 +866,6 @@ namespace Gw2Launcher.UI
             this.buttonLaunchOptions.ArrowColor = System.Drawing.SystemColors.Control;
             this.buttonLaunchOptions.BackColor = System.Drawing.Color.White;
             this.buttonLaunchOptions.BorderColor = System.Drawing.SystemColors.ControlDark;
-            this.buttonLaunchOptions.Cursor = System.Windows.Forms.Cursors.Hand;
             this.buttonLaunchOptions.Font = new System.Drawing.Font("Segoe UI", 8.25F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
             this.buttonLaunchOptions.Index = -1;
             this.buttonLaunchOptions.Location = new System.Drawing.Point(0, 80);
@@ -889,7 +887,6 @@ namespace Gw2Launcher.UI
             this.buttonSecurity.ArrowColor = System.Drawing.SystemColors.Control;
             this.buttonSecurity.BackColor = System.Drawing.Color.White;
             this.buttonSecurity.BorderColor = System.Drawing.SystemColors.ControlDark;
-            this.buttonSecurity.Cursor = System.Windows.Forms.Cursors.Hand;
             this.buttonSecurity.Font = new System.Drawing.Font("Segoe UI", 8.25F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
             this.buttonSecurity.Index = -1;
             this.buttonSecurity.Location = new System.Drawing.Point(0, 160);
@@ -911,7 +908,6 @@ namespace Gw2Launcher.UI
             this.buttonGeneral.ArrowColor = System.Drawing.SystemColors.Control;
             this.buttonGeneral.BackColor = System.Drawing.Color.White;
             this.buttonGeneral.BorderColor = System.Drawing.SystemColors.ControlDark;
-            this.buttonGeneral.Cursor = System.Windows.Forms.Cursors.Hand;
             this.buttonGeneral.Font = new System.Drawing.Font("Segoe UI", 8.25F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
             this.buttonGeneral.Index = -1;
             this.buttonGeneral.Location = new System.Drawing.Point(0, 40);
@@ -933,7 +929,6 @@ namespace Gw2Launcher.UI
             this.buttonLocalDat.ArrowColor = System.Drawing.SystemColors.Control;
             this.buttonLocalDat.BackColor = System.Drawing.Color.White;
             this.buttonLocalDat.BorderColor = System.Drawing.SystemColors.ControlDark;
-            this.buttonLocalDat.Cursor = System.Windows.Forms.Cursors.Hand;
             this.buttonLocalDat.Font = new System.Drawing.Font("Segoe UI", 8.25F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
             this.buttonLocalDat.Index = -1;
             this.buttonLocalDat.Location = new System.Drawing.Point(0, 120);
@@ -1045,7 +1040,6 @@ namespace Gw2Launcher.UI
             // 
             this.aaArguments.Anchor = System.Windows.Forms.AnchorStyles.Left;
             this.aaArguments.Checked = false;
-            this.aaArguments.Cursor = System.Windows.Forms.Cursors.Hand;
             this.aaArguments.Enabled = false;
             this.aaArguments.Location = new System.Drawing.Point(0, 3);
             this.aaArguments.Margin = new System.Windows.Forms.Padding(0);
@@ -1083,7 +1077,6 @@ namespace Gw2Launcher.UI
             // 
             this.labelLaunchOptionsAdvanced.Anchor = System.Windows.Forms.AnchorStyles.None;
             this.labelLaunchOptionsAdvanced.AutoSize = true;
-            this.labelLaunchOptionsAdvanced.Cursor = System.Windows.Forms.Cursors.Hand;
             this.labelLaunchOptionsAdvanced.Font = new System.Drawing.Font("Segoe UI Semilight", 8.25F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
             this.labelLaunchOptionsAdvanced.ForeColor = System.Drawing.Color.FromArgb(((int)(((byte)(45)))), ((int)(((byte)(45)))), ((int)(((byte)(45)))));
             this.labelLaunchOptionsAdvanced.Location = new System.Drawing.Point(0, 0);
@@ -1098,7 +1091,6 @@ namespace Gw2Launcher.UI
             // arrowButton1
             // 
             this.arrowButton1.Anchor = System.Windows.Forms.AnchorStyles.None;
-            this.arrowButton1.Cursor = System.Windows.Forms.Cursors.Hand;
             this.arrowButton1.Direction = Gw2Launcher.UI.Controls.ArrowButton.ArrowDirection.Right;
             this.arrowButton1.ForeColor = System.Drawing.Color.FromArgb(((int)(((byte)(150)))), ((int)(((byte)(150)))), ((int)(((byte)(150)))));
             this.arrowButton1.ForeColorHighlight = System.Drawing.Color.FromArgb(((int)(((byte)(150)))), ((int)(((byte)(150)))), ((int)(((byte)(150)))));
@@ -1161,7 +1153,6 @@ namespace Gw2Launcher.UI
             // 
             this.aaAccountTypeGw2.Anchor = System.Windows.Forms.AnchorStyles.Left;
             this.aaAccountTypeGw2.Checked = false;
-            this.aaAccountTypeGw2.Cursor = System.Windows.Forms.Cursors.Hand;
             this.aaAccountTypeGw2.Enabled = false;
             this.aaAccountTypeGw2.Location = new System.Drawing.Point(0, 11);
             this.aaAccountTypeGw2.Margin = new System.Windows.Forms.Padding(0);
@@ -1262,7 +1253,6 @@ namespace Gw2Launcher.UI
             // 
             this.aaWindowed.Anchor = System.Windows.Forms.AnchorStyles.Left;
             this.aaWindowed.Checked = false;
-            this.aaWindowed.Cursor = System.Windows.Forms.Cursors.Hand;
             this.aaWindowed.DefaultState = false;
             this.aaWindowed.Enabled = false;
             this.aaWindowed.Location = new System.Drawing.Point(0, 4);
@@ -1342,7 +1332,6 @@ namespace Gw2Launcher.UI
             // 
             this.aaWindowedOptions.Anchor = System.Windows.Forms.AnchorStyles.Left;
             this.aaWindowedOptions.Checked = false;
-            this.aaWindowedOptions.Cursor = System.Windows.Forms.Cursors.Hand;
             this.aaWindowedOptions.Enabled = false;
             this.aaWindowedOptions.Location = new System.Drawing.Point(0, 31);
             this.aaWindowedOptions.Margin = new System.Windows.Forms.Padding(0);
@@ -1508,7 +1497,6 @@ namespace Gw2Launcher.UI
             // 
             this.aaAutoLoginGw2.Anchor = System.Windows.Forms.AnchorStyles.Left;
             this.aaAutoLoginGw2.Checked = false;
-            this.aaAutoLoginGw2.Cursor = System.Windows.Forms.Cursors.Hand;
             this.aaAutoLoginGw2.Enabled = false;
             this.aaAutoLoginGw2.Location = new System.Drawing.Point(0, 11);
             this.aaAutoLoginGw2.Margin = new System.Windows.Forms.Padding(0);
@@ -1571,7 +1559,6 @@ namespace Gw2Launcher.UI
             // 
             this.aaAutoLoginGw1.Anchor = System.Windows.Forms.AnchorStyles.Left;
             this.aaAutoLoginGw1.Checked = false;
-            this.aaAutoLoginGw1.Cursor = System.Windows.Forms.Cursors.Hand;
             this.aaAutoLoginGw1.Enabled = false;
             this.aaAutoLoginGw1.Location = new System.Drawing.Point(0, 1);
             this.aaAutoLoginGw1.Margin = new System.Windows.Forms.Padding(0);
@@ -1638,7 +1625,6 @@ namespace Gw2Launcher.UI
             // textAutoLoginPassword
             // 
             this.textAutoLoginPassword.BackColor = System.Drawing.SystemColors.Window;
-            this.textAutoLoginPassword.Cursor = System.Windows.Forms.Cursors.Hand;
             this.textAutoLoginPassword.Enabled = false;
             this.textAutoLoginPassword.Font = new System.Drawing.Font("Segoe UI Semilight", 8.25F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
             this.textAutoLoginPassword.FontText = new System.Drawing.Font("Segoe UI", 8.25F);
@@ -1671,7 +1657,6 @@ namespace Gw2Launcher.UI
             // textAutoLoginCharacter
             // 
             this.textAutoLoginCharacter.BackColor = System.Drawing.SystemColors.Window;
-            this.textAutoLoginCharacter.Cursor = System.Windows.Forms.Cursors.Hand;
             this.textAutoLoginCharacter.Enabled = false;
             this.textAutoLoginCharacter.Font = new System.Drawing.Font("Segoe UI Semilight", 8.25F);
             this.textAutoLoginCharacter.FontText = new System.Drawing.Font("Segoe UI Semilight", 8.25F);
@@ -1727,7 +1712,6 @@ namespace Gw2Launcher.UI
             // textAutoLoginEmail
             // 
             this.textAutoLoginEmail.BackColor = System.Drawing.SystemColors.Window;
-            this.textAutoLoginEmail.Cursor = System.Windows.Forms.Cursors.Hand;
             this.textAutoLoginEmail.Enabled = false;
             this.textAutoLoginEmail.Font = new System.Drawing.Font("Segoe UI Semilight", 8.25F);
             this.textAutoLoginEmail.FontText = new System.Drawing.Font("Segoe UI", 8.25F);
@@ -1806,7 +1790,6 @@ namespace Gw2Launcher.UI
             // 
             this.aaAutomaticLauncherLogin.Anchor = System.Windows.Forms.AnchorStyles.Left;
             this.aaAutomaticLauncherLogin.Checked = false;
-            this.aaAutomaticLauncherLogin.Cursor = System.Windows.Forms.Cursors.Hand;
             this.aaAutomaticLauncherLogin.Enabled = false;
             this.aaAutomaticLauncherLogin.Location = new System.Drawing.Point(0, 1);
             this.aaAutomaticLauncherLogin.Margin = new System.Windows.Forms.Padding(0);
@@ -1908,7 +1891,6 @@ namespace Gw2Launcher.UI
             // 
             this.aaLaunchSteam.Anchor = System.Windows.Forms.AnchorStyles.Left;
             this.aaLaunchSteam.Checked = false;
-            this.aaLaunchSteam.Cursor = System.Windows.Forms.Cursors.Hand;
             this.aaLaunchSteam.Enabled = false;
             this.aaLaunchSteam.Location = new System.Drawing.Point(0, 1);
             this.aaLaunchSteam.Margin = new System.Windows.Forms.Padding(0);
@@ -1973,7 +1955,6 @@ namespace Gw2Launcher.UI
             // 
             this.aaVolume.Anchor = System.Windows.Forms.AnchorStyles.Left;
             this.aaVolume.Checked = false;
-            this.aaVolume.Cursor = System.Windows.Forms.Cursors.Hand;
             this.aaVolume.Enabled = false;
             this.aaVolume.Location = new System.Drawing.Point(0, 2);
             this.aaVolume.Margin = new System.Windows.Forms.Padding(0);
@@ -2050,7 +2031,6 @@ namespace Gw2Launcher.UI
             // 
             this.aaMute.Anchor = System.Windows.Forms.AnchorStyles.Left;
             this.aaMute.Checked = false;
-            this.aaMute.Cursor = System.Windows.Forms.Cursors.Hand;
             this.aaMute.Enabled = false;
             this.aaMute.Location = new System.Drawing.Point(0, 1);
             this.aaMute.Margin = new System.Windows.Forms.Padding(0);
@@ -2188,7 +2168,6 @@ namespace Gw2Launcher.UI
             // 
             this.labelGw2MumbleNameVariables.AutoSize = true;
             this.labelGw2MumbleNameVariables.BorderSize = ((byte)(1));
-            this.labelGw2MumbleNameVariables.Cursor = System.Windows.Forms.Cursors.Hand;
             this.labelGw2MumbleNameVariables.Enabled = false;
             this.labelGw2MumbleNameVariables.Font = new System.Drawing.Font("Calibri", 8.25F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
             this.labelGw2MumbleNameVariables.Location = new System.Drawing.Point(51, 27);
@@ -2218,7 +2197,6 @@ namespace Gw2Launcher.UI
             // 
             this.aaGw2MumbleName.Anchor = System.Windows.Forms.AnchorStyles.Left;
             this.aaGw2MumbleName.Checked = false;
-            this.aaGw2MumbleName.Cursor = System.Windows.Forms.Cursors.Hand;
             this.aaGw2MumbleName.Enabled = false;
             this.aaGw2MumbleName.Location = new System.Drawing.Point(0, 0);
             this.aaGw2MumbleName.Margin = new System.Windows.Forms.Padding(0);
@@ -2293,7 +2271,6 @@ namespace Gw2Launcher.UI
             // 
             this.aaPort.Anchor = System.Windows.Forms.AnchorStyles.Left;
             this.aaPort.Checked = false;
-            this.aaPort.Cursor = System.Windows.Forms.Cursors.Hand;
             this.aaPort.Enabled = false;
             this.aaPort.Location = new System.Drawing.Point(0, 1);
             this.aaPort.Margin = new System.Windows.Forms.Padding(0);
@@ -2366,7 +2343,6 @@ namespace Gw2Launcher.UI
             // 
             this.aaScreenshotsBmp.Anchor = System.Windows.Forms.AnchorStyles.Left;
             this.aaScreenshotsBmp.Checked = false;
-            this.aaScreenshotsBmp.Cursor = System.Windows.Forms.Cursors.Hand;
             this.aaScreenshotsBmp.Enabled = false;
             this.aaScreenshotsBmp.Location = new System.Drawing.Point(0, 1);
             this.aaScreenshotsBmp.Margin = new System.Windows.Forms.Padding(0);
@@ -2430,7 +2406,6 @@ namespace Gw2Launcher.UI
             // 
             this.aaScreenshotsLocation.Anchor = System.Windows.Forms.AnchorStyles.Left;
             this.aaScreenshotsLocation.Checked = false;
-            this.aaScreenshotsLocation.Cursor = System.Windows.Forms.Cursors.Hand;
             this.aaScreenshotsLocation.Enabled = false;
             this.aaScreenshotsLocation.Location = new System.Drawing.Point(0, 4);
             this.aaScreenshotsLocation.Margin = new System.Windows.Forms.Padding(0);
@@ -2519,7 +2494,6 @@ namespace Gw2Launcher.UI
             // 
             this.aaRunAfterPrograms.Anchor = System.Windows.Forms.AnchorStyles.Left;
             this.aaRunAfterPrograms.Checked = false;
-            this.aaRunAfterPrograms.Cursor = System.Windows.Forms.Cursors.Hand;
             this.aaRunAfterPrograms.Enabled = false;
             this.aaRunAfterPrograms.Location = new System.Drawing.Point(5, 9);
             this.aaRunAfterPrograms.Margin = new System.Windows.Forms.Padding(5, 0, 0, 0);
@@ -2604,7 +2578,6 @@ namespace Gw2Launcher.UI
             // 
             // buttonLoginRewardsDayTemplate
             // 
-            this.buttonLoginRewardsDayTemplate.Cursor = System.Windows.Forms.Cursors.Hand;
             this.buttonLoginRewardsDayTemplate.ImageOpacity = 1F;
             this.buttonLoginRewardsDayTemplate.ImageSource = null;
             this.buttonLoginRewardsDayTemplate.Location = new System.Drawing.Point(0, 0);
@@ -2779,7 +2752,6 @@ namespace Gw2Launcher.UI
             // 
             this.aaIdentifierColor.Anchor = System.Windows.Forms.AnchorStyles.Left;
             this.aaIdentifierColor.Checked = false;
-            this.aaIdentifierColor.Cursor = System.Windows.Forms.Cursors.Hand;
             this.aaIdentifierColor.DefaultState = false;
             this.aaIdentifierColor.Enabled = false;
             this.aaIdentifierColor.Location = new System.Drawing.Point(0, 3);
@@ -2793,7 +2765,6 @@ namespace Gw2Launcher.UI
             // panelIdentifierColor
             // 
             this.panelIdentifierColor.BorderStyle = System.Windows.Forms.BorderStyle.FixedSingle;
-            this.panelIdentifierColor.Cursor = System.Windows.Forms.Cursors.Hand;
             this.panelIdentifierColor.Location = new System.Drawing.Point(20, 0);
             this.panelIdentifierColor.Margin = new System.Windows.Forms.Padding(0);
             this.panelIdentifierColor.Name = "panelIdentifierColor";
@@ -2842,7 +2813,6 @@ namespace Gw2Launcher.UI
             // 
             this.aaIdentifierIcon.Anchor = System.Windows.Forms.AnchorStyles.Left;
             this.aaIdentifierIcon.Checked = false;
-            this.aaIdentifierIcon.Cursor = System.Windows.Forms.Cursors.Hand;
             this.aaIdentifierIcon.DefaultState = false;
             this.aaIdentifierIcon.Enabled = false;
             this.aaIdentifierIcon.Location = new System.Drawing.Point(0, 3);
@@ -2857,7 +2827,6 @@ namespace Gw2Launcher.UI
             // 
             this.panelIdentifierIcon.BackgroundImageLayout = System.Windows.Forms.ImageLayout.Stretch;
             this.panelIdentifierIcon.BorderStyle = System.Windows.Forms.BorderStyle.FixedSingle;
-            this.panelIdentifierIcon.Cursor = System.Windows.Forms.Cursors.Hand;
             this.panelIdentifierIcon.Location = new System.Drawing.Point(20, 0);
             this.panelIdentifierIcon.Margin = new System.Windows.Forms.Padding(0);
             this.panelIdentifierIcon.Name = "panelIdentifierIcon";
@@ -2906,7 +2875,6 @@ namespace Gw2Launcher.UI
             // 
             this.aaImages.Anchor = System.Windows.Forms.AnchorStyles.Left;
             this.aaImages.Checked = false;
-            this.aaImages.Cursor = System.Windows.Forms.Cursors.Hand;
             this.aaImages.DefaultState = false;
             this.aaImages.Enabled = false;
             this.aaImages.Location = new System.Drawing.Point(0, 25);
@@ -2924,7 +2892,6 @@ namespace Gw2Launcher.UI
             this.buttonSample.AccountType = Gw2Launcher.Settings.AccountType.GuildWars2;
             this.buttonSample.BackColor = System.Drawing.Color.White;
             this.buttonSample.ColorKey = System.Drawing.Color.Empty;
-            this.buttonSample.Cursor = System.Windows.Forms.Cursors.Hand;
             this.buttonSample.DailyLoginDay = ((byte)(0));
             this.buttonSample.DefaultBackgroundImage = null;
             this.buttonSample.DisplayName = "Preview";
@@ -3004,7 +2971,6 @@ namespace Gw2Launcher.UI
             // 
             this.aaWindowsAccount.Anchor = System.Windows.Forms.AnchorStyles.Left;
             this.aaWindowsAccount.Checked = false;
-            this.aaWindowsAccount.Cursor = System.Windows.Forms.Cursors.Hand;
             this.aaWindowsAccount.Enabled = false;
             this.aaWindowsAccount.Location = new System.Drawing.Point(0, 4);
             this.aaWindowsAccount.Margin = new System.Windows.Forms.Padding(0);
@@ -3082,7 +3048,6 @@ namespace Gw2Launcher.UI
             // 
             this.aaShowDailyLogin.Anchor = System.Windows.Forms.AnchorStyles.Left;
             this.aaShowDailyLogin.Checked = false;
-            this.aaShowDailyLogin.Cursor = System.Windows.Forms.Cursors.Hand;
             this.aaShowDailyLogin.Enabled = false;
             this.aaShowDailyLogin.Location = new System.Drawing.Point(0, 1);
             this.aaShowDailyLogin.Margin = new System.Windows.Forms.Padding(0);
@@ -3149,7 +3114,6 @@ namespace Gw2Launcher.UI
             // 
             this.aaDailyLoginMumbleLink.Anchor = System.Windows.Forms.AnchorStyles.Left;
             this.aaDailyLoginMumbleLink.Checked = false;
-            this.aaDailyLoginMumbleLink.Cursor = System.Windows.Forms.Cursors.Hand;
             this.aaDailyLoginMumbleLink.Enabled = false;
             this.aaDailyLoginMumbleLink.Location = new System.Drawing.Point(0, 1);
             this.aaDailyLoginMumbleLink.Margin = new System.Windows.Forms.Padding(0);
@@ -3205,7 +3169,6 @@ namespace Gw2Launcher.UI
             // 
             this.aaTrackLoginRewardsDay.Anchor = System.Windows.Forms.AnchorStyles.Left;
             this.aaTrackLoginRewardsDay.Checked = false;
-            this.aaTrackLoginRewardsDay.Cursor = System.Windows.Forms.Cursors.Hand;
             this.aaTrackLoginRewardsDay.Enabled = false;
             this.aaTrackLoginRewardsDay.Location = new System.Drawing.Point(0, 4);
             this.aaTrackLoginRewardsDay.Margin = new System.Windows.Forms.Padding(0);
@@ -3286,7 +3249,6 @@ namespace Gw2Launcher.UI
             // 
             this.aaShowDailyCompletion.Anchor = System.Windows.Forms.AnchorStyles.Left;
             this.aaShowDailyCompletion.Checked = false;
-            this.aaShowDailyCompletion.Cursor = System.Windows.Forms.Cursors.Hand;
             this.aaShowDailyCompletion.Enabled = false;
             this.aaShowDailyCompletion.Location = new System.Drawing.Point(0, 1);
             this.aaShowDailyCompletion.Margin = new System.Windows.Forms.Padding(0);
@@ -3373,7 +3335,6 @@ namespace Gw2Launcher.UI
             // 
             this.aaDisableJumpList.Anchor = System.Windows.Forms.AnchorStyles.Left;
             this.aaDisableJumpList.Checked = false;
-            this.aaDisableJumpList.Cursor = System.Windows.Forms.Cursors.Hand;
             this.aaDisableJumpList.Enabled = false;
             this.aaDisableJumpList.Location = new System.Drawing.Point(0, 1);
             this.aaDisableJumpList.Margin = new System.Windows.Forms.Padding(0);
@@ -3421,12 +3382,13 @@ namespace Gw2Launcher.UI
             this.stackPanel32.Controls.Add(this.stackPanel42);
             this.stackPanel32.Controls.Add(this.label52);
             this.stackPanel32.Controls.Add(this.label47);
+            this.stackPanel32.Controls.Add(this.label227);
             this.stackPanel32.Controls.Add(this.stackPanel43);
             this.stackPanel32.Location = new System.Drawing.Point(0, 0);
             this.stackPanel32.Margin = new System.Windows.Forms.Padding(0, 0, 13, 0);
             this.stackPanel32.Name = "stackPanel32";
             this.stackPanel32.Padding = new System.Windows.Forms.Padding(13, 10, 0, 10);
-            this.stackPanel32.Size = new System.Drawing.Size(366, 289);
+            this.stackPanel32.Size = new System.Drawing.Size(366, 304);
             this.stackPanel32.TabIndex = 0;
             // 
             // label50
@@ -3468,7 +3430,6 @@ namespace Gw2Launcher.UI
             // 
             this.aaAuthorization.Anchor = System.Windows.Forms.AnchorStyles.Left;
             this.aaAuthorization.Checked = false;
-            this.aaAuthorization.Cursor = System.Windows.Forms.Cursors.Hand;
             this.aaAuthorization.DefaultState = false;
             this.aaAuthorization.Enabled = false;
             this.aaAuthorization.Location = new System.Drawing.Point(4, 17);
@@ -3528,7 +3489,6 @@ namespace Gw2Launcher.UI
             // textEmail
             // 
             this.textEmail.BackColor = System.Drawing.SystemColors.Window;
-            this.textEmail.Cursor = System.Windows.Forms.Cursors.Hand;
             this.textEmail.Font = new System.Drawing.Font("Segoe UI Semilight", 8.25F);
             this.textEmail.FontText = new System.Drawing.Font("Segoe UI", 8.25F);
             this.textEmail.ForeColor = System.Drawing.SystemColors.GrayText;
@@ -3558,7 +3518,6 @@ namespace Gw2Launcher.UI
             // textPassword
             // 
             this.textPassword.BackColor = System.Drawing.SystemColors.Window;
-            this.textPassword.Cursor = System.Windows.Forms.Cursors.Hand;
             this.textPassword.Font = new System.Drawing.Font("Segoe UI Semilight", 8.25F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
             this.textPassword.FontText = new System.Drawing.Font("Segoe UI", 8.25F);
             this.textPassword.ForeColor = System.Drawing.SystemColors.GrayText;
@@ -3626,7 +3585,6 @@ namespace Gw2Launcher.UI
             // 
             this.aaAuthenticatorKey.Anchor = System.Windows.Forms.AnchorStyles.Left;
             this.aaAuthenticatorKey.Checked = false;
-            this.aaAuthenticatorKey.Cursor = System.Windows.Forms.Cursors.Hand;
             this.aaAuthenticatorKey.DefaultState = false;
             this.aaAuthenticatorKey.Enabled = false;
             this.aaAuthenticatorKey.Location = new System.Drawing.Point(0, 15);
@@ -3668,7 +3626,6 @@ namespace Gw2Launcher.UI
             // 
             this.textAuthenticatorKey.Anchor = System.Windows.Forms.AnchorStyles.Left;
             this.textAuthenticatorKey.BackColor = System.Drawing.SystemColors.Window;
-            this.textAuthenticatorKey.Cursor = System.Windows.Forms.Cursors.Hand;
             this.textAuthenticatorKey.Font = new System.Drawing.Font("Segoe UI Semilight", 8.25F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
             this.textAuthenticatorKey.FontText = new System.Drawing.Font("Segoe UI", 8.25F);
             this.textAuthenticatorKey.ForeColor = System.Drawing.SystemColors.GrayText;
@@ -3788,7 +3745,7 @@ namespace Gw2Launcher.UI
             this.label47.AutoSize = true;
             this.label47.Font = new System.Drawing.Font("Segoe UI Semilight", 8.25F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
             this.label47.Location = new System.Drawing.Point(14, 221);
-            this.label47.Margin = new System.Windows.Forms.Padding(1, 1, 0, 8);
+            this.label47.Margin = new System.Windows.Forms.Padding(1, 1, 0, 1);
             this.label47.Name = "label47";
             this.label47.Size = new System.Drawing.Size(278, 13);
             this.label47.TabIndex = 7;
@@ -3801,7 +3758,7 @@ namespace Gw2Launcher.UI
             this.stackPanel43.Controls.Add(this.aaEnableNetworkAuthorization);
             this.stackPanel43.Controls.Add(this.stackPanel50);
             this.stackPanel43.FlowDirection = System.Windows.Forms.FlowDirection.LeftToRight;
-            this.stackPanel43.Location = new System.Drawing.Point(21, 242);
+            this.stackPanel43.Location = new System.Drawing.Point(21, 257);
             this.stackPanel43.Margin = new System.Windows.Forms.Padding(8, 0, 0, 0);
             this.stackPanel43.Name = "stackPanel43";
             this.stackPanel43.Size = new System.Drawing.Size(266, 37);
@@ -3811,7 +3768,6 @@ namespace Gw2Launcher.UI
             // 
             this.aaEnableNetworkAuthorization.Anchor = System.Windows.Forms.AnchorStyles.Left;
             this.aaEnableNetworkAuthorization.Checked = false;
-            this.aaEnableNetworkAuthorization.Cursor = System.Windows.Forms.Cursors.Hand;
             this.aaEnableNetworkAuthorization.Enabled = false;
             this.aaEnableNetworkAuthorization.Location = new System.Drawing.Point(0, 11);
             this.aaEnableNetworkAuthorization.Margin = new System.Windows.Forms.Padding(0);
@@ -4051,7 +4007,6 @@ namespace Gw2Launcher.UI
             // 
             this.aaGfxSettings.Anchor = System.Windows.Forms.AnchorStyles.Left;
             this.aaGfxSettings.Checked = false;
-            this.aaGfxSettings.Cursor = System.Windows.Forms.Cursors.Hand;
             this.aaGfxSettings.Enabled = false;
             this.aaGfxSettings.Location = new System.Drawing.Point(0, 4);
             this.aaGfxSettings.Margin = new System.Windows.Forms.Padding(0);
@@ -4353,7 +4308,6 @@ namespace Gw2Launcher.UI
             // 
             this.aaGwDat.Anchor = System.Windows.Forms.AnchorStyles.Left;
             this.aaGwDat.Checked = false;
-            this.aaGwDat.Cursor = System.Windows.Forms.Cursors.Hand;
             this.aaGwDat.Enabled = false;
             this.aaGwDat.Location = new System.Drawing.Point(0, 4);
             this.aaGwDat.Margin = new System.Windows.Forms.Padding(0);
@@ -4486,7 +4440,6 @@ namespace Gw2Launcher.UI
             // 
             this.aaLocalDat.Anchor = System.Windows.Forms.AnchorStyles.Left;
             this.aaLocalDat.Checked = false;
-            this.aaLocalDat.Cursor = System.Windows.Forms.Cursors.Hand;
             this.aaLocalDat.Enabled = false;
             this.aaLocalDat.Location = new System.Drawing.Point(0, 4);
             this.aaLocalDat.Margin = new System.Windows.Forms.Padding(0);
@@ -4606,7 +4559,6 @@ namespace Gw2Launcher.UI
             // 
             this.aaProcessPriority.Anchor = System.Windows.Forms.AnchorStyles.Left;
             this.aaProcessPriority.Checked = false;
-            this.aaProcessPriority.Cursor = System.Windows.Forms.Cursors.Hand;
             this.aaProcessPriority.Enabled = false;
             this.aaProcessPriority.Location = new System.Drawing.Point(0, 3);
             this.aaProcessPriority.Margin = new System.Windows.Forms.Padding(0);
@@ -4667,7 +4619,6 @@ namespace Gw2Launcher.UI
             // 
             this.aaProcessAffinity.Anchor = System.Windows.Forms.AnchorStyles.Left;
             this.aaProcessAffinity.Checked = false;
-            this.aaProcessAffinity.Cursor = System.Windows.Forms.Cursors.Hand;
             this.aaProcessAffinity.Enabled = false;
             this.aaProcessAffinity.Location = new System.Drawing.Point(0, 1);
             this.aaProcessAffinity.Margin = new System.Windows.Forms.Padding(0);
@@ -4965,7 +4916,6 @@ namespace Gw2Launcher.UI
             // 
             this.aaRecordLaunch.Anchor = System.Windows.Forms.AnchorStyles.Left;
             this.aaRecordLaunch.Checked = false;
-            this.aaRecordLaunch.Cursor = System.Windows.Forms.Cursors.Hand;
             this.aaRecordLaunch.Enabled = false;
             this.aaRecordLaunch.Location = new System.Drawing.Point(0, 1);
             this.aaRecordLaunch.Margin = new System.Windows.Forms.Padding(0);
@@ -5082,7 +5032,6 @@ namespace Gw2Launcher.UI
             // 
             this.aaApiKey.Anchor = System.Windows.Forms.AnchorStyles.Left;
             this.aaApiKey.Checked = false;
-            this.aaApiKey.Cursor = System.Windows.Forms.Cursors.Hand;
             this.aaApiKey.Enabled = false;
             this.aaApiKey.Location = new System.Drawing.Point(0, 3);
             this.aaApiKey.Margin = new System.Windows.Forms.Padding(0);
@@ -5194,7 +5143,6 @@ namespace Gw2Launcher.UI
             // 
             this.aaTrackPlayedApi.Anchor = System.Windows.Forms.AnchorStyles.Left;
             this.aaTrackPlayedApi.Checked = false;
-            this.aaTrackPlayedApi.Cursor = System.Windows.Forms.Cursors.Hand;
             this.aaTrackPlayedApi.Enabled = false;
             this.aaTrackPlayedApi.Location = new System.Drawing.Point(0, 1);
             this.aaTrackPlayedApi.Margin = new System.Windows.Forms.Padding(0);
@@ -5282,7 +5230,6 @@ namespace Gw2Launcher.UI
             // 
             this.aaTrackDailyCompletionApi.Anchor = System.Windows.Forms.AnchorStyles.Left;
             this.aaTrackDailyCompletionApi.Checked = false;
-            this.aaTrackDailyCompletionApi.Cursor = System.Windows.Forms.Cursors.Hand;
             this.aaTrackDailyCompletionApi.Enabled = false;
             this.aaTrackDailyCompletionApi.Location = new System.Drawing.Point(0, 1);
             this.aaTrackDailyCompletionApi.Margin = new System.Windows.Forms.Padding(0);
@@ -5363,7 +5310,6 @@ namespace Gw2Launcher.UI
             // arrowButton4
             // 
             this.arrowButton4.Anchor = System.Windows.Forms.AnchorStyles.None;
-            this.arrowButton4.Cursor = System.Windows.Forms.Cursors.Hand;
             this.arrowButton4.Direction = Gw2Launcher.UI.Controls.ArrowButton.ArrowDirection.Left;
             this.arrowButton4.ForeColor = System.Drawing.Color.FromArgb(((int)(((byte)(150)))), ((int)(((byte)(150)))), ((int)(((byte)(150)))));
             this.arrowButton4.ForeColorHighlight = System.Drawing.Color.FromArgb(((int)(((byte)(150)))), ((int)(((byte)(150)))), ((int)(((byte)(150)))));
@@ -5378,7 +5324,6 @@ namespace Gw2Launcher.UI
             // 
             this.labelLaunchOptionsAdvancedBack.Anchor = System.Windows.Forms.AnchorStyles.None;
             this.labelLaunchOptionsAdvancedBack.AutoSize = true;
-            this.labelLaunchOptionsAdvancedBack.Cursor = System.Windows.Forms.Cursors.Hand;
             this.labelLaunchOptionsAdvancedBack.Font = new System.Drawing.Font("Segoe UI Semilight", 8.25F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
             this.labelLaunchOptionsAdvancedBack.ForeColor = System.Drawing.Color.FromArgb(((int)(((byte)(45)))), ((int)(((byte)(45)))), ((int)(((byte)(45)))));
             this.labelLaunchOptionsAdvancedBack.Location = new System.Drawing.Point(5, 0);
@@ -5584,17 +5529,28 @@ namespace Gw2Launcher.UI
             this.loadToolStripMenuItem.Text = "Load";
             this.loadToolStripMenuItem.Click += new System.EventHandler(this.loadToolStripMenuItem_Click);
             // 
+            // label227
+            // 
+            this.label227.AutoSize = true;
+            this.label227.Font = new System.Drawing.Font("Segoe UI Semilight", 8.25F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+            this.label227.ForeColor = System.Drawing.Color.MediumBlue;
+            this.label227.Location = new System.Drawing.Point(14, 236);
+            this.label227.Margin = new System.Windows.Forms.Padding(1, 1, 0, 8);
+            this.label227.Name = "label227";
+            this.label227.Size = new System.Drawing.Size(104, 13);
+            this.label227.TabIndex = 9;
+            this.label227.Text = "Requires CoherentUI";
+            // 
             // formAccount
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(96F, 96F);
-            this.BackColorName = Gw2Launcher.UI.UiColors.Colors.Custom;
             this.ClientSize = new System.Drawing.Size(574, 507);
+            this.Controls.Add(this.panelSecurity);
             this.Controls.Add(this.panelIdentifierIconLarge);
             this.Controls.Add(this.buttonCancel);
             this.Controls.Add(this.buttonOK);
             this.Controls.Add(this.sidebarPanel1);
             this.Controls.Add(this.panelGeneral);
-            this.Controls.Add(this.panelSecurity);
             this.Controls.Add(this.panelHotkeys);
             this.Controls.Add(this.panelGraphics);
             this.Controls.Add(this.panelGwDat);
@@ -5605,7 +5561,6 @@ namespace Gw2Launcher.UI
             this.Controls.Add(this.panelLaunchOptionsAdvanced);
             this.Controls.Add(this.panelLaunchOptions);
             this.Font = new System.Drawing.Font("Segoe UI", 8.25F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            this.ForeColorName = Gw2Launcher.UI.UiColors.Colors.Custom;
             this.Icon = global::Gw2Launcher.Properties.Resources.Gw2Launcher;
             this.MaximizeBox = false;
             this.MinimizeBox = false;
@@ -6213,5 +6168,6 @@ namespace Gw2Launcher.UI
         private Controls.StackPanel stackPanel51;
         private Controls.ApplyAllCheckBox aaDailyLoginMumbleLink;
         private System.Windows.Forms.CheckBox checkDailyLoginMumbleLink;
+        private System.Windows.Forms.Label label227;
     }
 }

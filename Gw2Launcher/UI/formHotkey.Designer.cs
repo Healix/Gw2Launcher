@@ -235,7 +235,7 @@ namespace Gw2Launcher.UI
             // 
             this.keysHotkey.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left) 
             | System.Windows.Forms.AnchorStyles.Right)));
-            this.keysHotkey.Cursor = System.Windows.Forms.Cursors.Hand;
+            this.keysHotkey.Cursor = Windows.Cursors.Hand;
             this.keysHotkey.Keys = System.Windows.Forms.Keys.None;
             this.keysHotkey.Location = new System.Drawing.Point(3, 194);
             this.keysHotkey.Margin = new System.Windows.Forms.Padding(3, 0, 3, 0);
@@ -431,7 +431,7 @@ namespace Gw2Launcher.UI
             // 
             this.keysKeyPress.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left) 
             | System.Windows.Forms.AnchorStyles.Right)));
-            this.keysKeyPress.Cursor = System.Windows.Forms.Cursors.Hand;
+            this.keysKeyPress.Cursor = Windows.Cursors.Hand;
             this.keysKeyPress.Keys = System.Windows.Forms.Keys.None;
             this.keysKeyPress.Location = new System.Drawing.Point(3, 25);
             this.keysKeyPress.Margin = new System.Windows.Forms.Padding(3, 0, 3, 0);

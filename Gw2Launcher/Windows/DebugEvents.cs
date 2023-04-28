@@ -216,9 +216,32 @@ namespace Gw2Launcher.Windows
                 if (NativeMethods.WaitForDebugEvent(ref d, 100))
                 {
                     if (d.dwDebugEventCode == DebugEventType.EXCEPTION_DEBUG_EVENT)
+                    {
                         c = ContinueStatus.DBG_EXCEPTION_NOT_HANDLED;
+                    }
                     else
+                    {
                         c = ContinueStatus.DBG_CONTINUE;
+
+                        switch (d.dwDebugEventCode)
+                        {
+                            case DebugEventType.CREATE_PROCESS_DEBUG_EVENT:
+                            case DebugEventType.LOAD_DLL_DEBUG_EVENT:
+
+                                IntPtr hFile;
+#if x86
+                                hFile = new IntPtr(BitConverter.ToInt32(d.debugInfo, 0));
+#else
+                                hFile = new IntPtr(BitConverter.ToInt64(d.debugInfo, 0));
+#endif
+                                if (hFile != IntPtr.Zero)
+                                {
+                                    NativeMethods.CloseHandle(hFile);
+                                }
+
+                                break;
+                        }
+                    }
 
                     if (!NativeMethods.ContinueDebugEvent(d.dwProcessId, d.dwThreadId, c) || d.dwDebugEventCode == DebugEventType.EXIT_PROCESS_DEBUG_EVENT)
                     {
@@ -253,10 +276,17 @@ namespace Gw2Launcher.Windows
 
         private bool SetDebugging(bool enabled, int pid)
         {
-            if (enabled)
-                return NativeMethods.DebugActiveProcess(pid);
-            else
-                return NativeMethods.DebugActiveProcessStop(pid);
+            try
+            {
+                if (enabled)
+                    return NativeMethods.DebugActiveProcess(pid);
+                else
+                    return NativeMethods.DebugActiveProcessStop(pid);
+            }
+            catch
+            {
+                return false;
+            }
         }
     }
 }

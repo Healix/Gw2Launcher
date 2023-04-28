@@ -142,7 +142,7 @@ namespace Gw2Launcher.UI.Backup
             // 
             this.labelShowAccounts.Anchor = System.Windows.Forms.AnchorStyles.None;
             this.labelShowAccounts.AutoSize = true;
-            this.labelShowAccounts.Cursor = System.Windows.Forms.Cursors.Hand;
+            this.labelShowAccounts.Cursor = Windows.Cursors.Hand;
             this.labelShowAccounts.Font = new System.Drawing.Font("Segoe UI Semilight", 8.25F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
             this.labelShowAccounts.ForeColor = System.Drawing.Color.FromArgb(((int)(((byte)(45)))), ((int)(((byte)(45)))), ((int)(((byte)(45)))));
             this.labelShowAccounts.Location = new System.Drawing.Point(0, 0);
@@ -157,7 +157,7 @@ namespace Gw2Launcher.UI.Backup
             this.arrowButton3.Anchor = System.Windows.Forms.AnchorStyles.None;
             this.arrowButton3.ForeColor = System.Drawing.Color.FromArgb(((int)(((byte)(150)))), ((int)(((byte)(150)))), ((int)(((byte)(150)))));
             this.arrowButton3.ForeColorHighlight = System.Drawing.Color.FromArgb(((int)(((byte)(150)))), ((int)(((byte)(150)))), ((int)(((byte)(150)))));
-            this.arrowButton3.Cursor = System.Windows.Forms.Cursors.Hand;
+            this.arrowButton3.Cursor = Windows.Cursors.Hand;
             this.arrowButton3.Direction = Gw2Launcher.UI.Controls.ArrowButton.ArrowDirection.Right;
             this.arrowButton3.Location = new System.Drawing.Point(51, 3);
             this.arrowButton3.Margin = new System.Windows.Forms.Padding(0, 1, 0, 0);
@@ -241,7 +241,7 @@ namespace Gw2Launcher.UI.Backup
             this.arrowButton1.Anchor = System.Windows.Forms.AnchorStyles.None;
             this.arrowButton1.ForeColor = System.Drawing.Color.FromArgb(((int)(((byte)(150)))), ((int)(((byte)(150)))), ((int)(((byte)(150)))));
             this.arrowButton1.ForeColorHighlight = System.Drawing.Color.FromArgb(((int)(((byte)(150)))), ((int)(((byte)(150)))), ((int)(((byte)(150)))));
-            this.arrowButton1.Cursor = System.Windows.Forms.Cursors.Hand;
+            this.arrowButton1.Cursor = Windows.Cursors.Hand;
             this.arrowButton1.Direction = Gw2Launcher.UI.Controls.ArrowButton.ArrowDirection.Left;
             this.arrowButton1.Location = new System.Drawing.Point(0, 3);
             this.arrowButton1.Margin = new System.Windows.Forms.Padding(0, 1, 0, 0);
@@ -252,7 +252,7 @@ namespace Gw2Launcher.UI.Backup
             // 
             this.labelAccountsBack.Anchor = System.Windows.Forms.AnchorStyles.None;
             this.labelAccountsBack.AutoSize = true;
-            this.labelAccountsBack.Cursor = System.Windows.Forms.Cursors.Hand;
+            this.labelAccountsBack.Cursor = Windows.Cursors.Hand;
             this.labelAccountsBack.Font = new System.Drawing.Font("Segoe UI Semilight", 8.25F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
             this.labelAccountsBack.ForeColor = System.Drawing.Color.FromArgb(((int)(((byte)(45)))), ((int)(((byte)(45)))), ((int)(((byte)(45)))));
             this.labelAccountsBack.Location = new System.Drawing.Point(5, 0);

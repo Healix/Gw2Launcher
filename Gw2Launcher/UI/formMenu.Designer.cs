@@ -129,7 +129,7 @@ namespace Gw2Launcher.UI
             // arrowLeft
             // 
             this.arrowLeft.Anchor = System.Windows.Forms.AnchorStyles.Left;
-            this.arrowLeft.Cursor = System.Windows.Forms.Cursors.Hand;
+            this.arrowLeft.Cursor = Windows.Cursors.Hand;
             this.arrowLeft.Direction = Gw2Launcher.UI.Controls.ArrowButton.ArrowDirection.Left;
             this.arrowLeft.ForeColorHighlightName = Gw2Launcher.UI.UiColors.Colors.MenuArrowHovered;
             this.arrowLeft.ForeColorName = Gw2Launcher.UI.UiColors.Colors.MenuArrow;
@@ -155,7 +155,7 @@ namespace Gw2Launcher.UI
             // arrowRight
             // 
             this.arrowRight.Anchor = System.Windows.Forms.AnchorStyles.Left;
-            this.arrowRight.Cursor = System.Windows.Forms.Cursors.Hand;
+            this.arrowRight.Cursor = Windows.Cursors.Hand;
             this.arrowRight.Direction = Gw2Launcher.UI.Controls.ArrowButton.ArrowDirection.Right;
             this.arrowRight.ForeColorHighlightName = Gw2Launcher.UI.UiColors.Colors.MenuArrowHovered;
             this.arrowRight.ForeColorName = Gw2Launcher.UI.UiColors.Colors.MenuArrow;

@@ -9,7 +9,7 @@
     <AppDesignerFolder>Properties</AppDesignerFolder>
     <RootNamespace>Gw2Launcher</RootNamespace>
     <AssemblyName>Gw2Launcher</AssemblyName>
-    <TargetFrameworkVersion>v4.5</TargetFrameworkVersion>
+    <TargetFrameworkVersion>v4.7.2</TargetFrameworkVersion>
     <FileAlignment>512</FileAlignment>
     <IsWebBootstrapper>false</IsWebBootstrapper>
     <PublishUrl>publish\</PublishUrl>
@@ -26,6 +26,7 @@
     <ApplicationVersion>1.0.0.%2a</ApplicationVersion>
     <UseApplicationTrust>false</UseApplicationTrust>
     <BootstrapperEnabled>true</BootstrapperEnabled>
+    <TargetFrameworkProfile />
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
     <PlatformTarget>AnyCPU</PlatformTarget>
@@ -39,7 +40,7 @@
     <Prefer32Bit>false</Prefer32Bit>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
-    <PlatformTarget>x86</PlatformTarget>
+    <PlatformTarget>x64</PlatformTarget>
     <DebugType>none</DebugType>
     <Optimize>true</Optimize>
     <OutputPath>bin\Release\</OutputPath>
@@ -183,6 +184,12 @@
     <Compile Include="UI\formColors.Designer.cs">
       <DependentUpon>formColors.cs</DependentUpon>
     </Compile>
+    <Compile Include="UI\formLog.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="UI\formLog.Designer.cs">
+      <DependentUpon>formLog.cs</DependentUpon>
+    </Compile>
     <Compile Include="UI\UiProperty.cs" />
     <Compile Include="UI\UiColors.cs" />
     <Compile Include="UI\Controls\AffinityAccountsPanel.cs">
@@ -310,6 +317,8 @@
     </Compile>
     <Compile Include="Util\Array.cs" />
     <Compile Include="Util\Dpi.cs" />
+    <Compile Include="Windows\Clipboard.cs" />
+    <Compile Include="Windows\Cursors.cs" />
     <Compile Include="Windows\DebugEvents.cs" />
     <Compile Include="Windows\Hotkeys.cs" />
     <Compile Include="Tools\Icons.cs" />
@@ -902,6 +911,9 @@
     </EmbeddedResource>
     <EmbeddedResource Include="UI\formHotkey.resx">
       <DependentUpon>formHotkey.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="UI\formLog.resx">
+      <DependentUpon>formLog.cs</DependentUpon>
     </EmbeddedResource>
     <EmbeddedResource Include="UI\formNetworkChanged.resx">
       <DependentUpon>formNetworkChanged.cs</DependentUpon>

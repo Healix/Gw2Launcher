@@ -61,7 +61,7 @@ namespace Gw2Launcher.UI
             this.labelTemplate.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left)
             | System.Windows.Forms.AnchorStyles.Right)));
             this.labelTemplate.AutoSize = true;
-            this.labelTemplate.Cursor = System.Windows.Forms.Cursors.Hand;
+            this.labelTemplate.Cursor = Windows.Cursors.Hand;
             this.labelTemplate.Font = new System.Drawing.Font("Segoe UI Semibold", 8.25F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
             this.labelTemplate.Location = new System.Drawing.Point(0, 0);
             this.labelTemplate.Margin = new System.Windows.Forms.Padding(0);

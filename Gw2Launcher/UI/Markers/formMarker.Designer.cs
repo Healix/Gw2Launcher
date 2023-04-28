@@ -172,7 +172,7 @@ namespace Gw2Launcher.UI.Markers
             // 
             this.panelColor.BackColor = System.Drawing.Color.White;
             this.panelColor.BorderStyle = System.Windows.Forms.BorderStyle.FixedSingle;
-            this.panelColor.Cursor = System.Windows.Forms.Cursors.Hand;
+            this.panelColor.Cursor = Windows.Cursors.Hand;
             this.panelColor.Location = new System.Drawing.Point(5, 19);
             this.panelColor.Margin = new System.Windows.Forms.Padding(5, 0, 0, 0);
             this.panelColor.Size = new System.Drawing.Size(39, 22);

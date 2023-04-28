@@ -935,7 +935,7 @@ namespace Gw2Launcher.UI.Controls
             {
                 if (_DailyLogin)
                 {
-                    return button.LastUsedUtc.Date != DateTime.UtcNow.Date;
+                    return button.ShowDailyLogin && button.LastDailyLoginUtc.Date != DateTime.UtcNow.Date;
                 }
 
                 return true;

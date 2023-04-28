@@ -673,15 +673,20 @@ namespace Gw2Launcher.UI
                     buffer = BufferedGraphicsManager.Current.Allocate(e.Graphics, this.ClientRectangle);
 
                 var g = buffer.Graphics;
-                var pw = (int)(g.DpiX / 96f + 0.5f);
+                var pw = (int)(GetScaling() + 0.5f);
 
                 if (background == null)
                 {
-                    int l = pw / 2,
-                        t = pw / 2,
-                        r = this.Width - (pw + 1) / 2,
-                        b = this.Height - (pw + 1) / 2;
-                    var arrowSize = panelContainer.Top - 1;
+                    int l = 0,
+                        t = 0,
+                        r = this.Width,
+                        b = this.Height;
+                    if (pw <= 1)
+                    {
+                        --r;
+                        --b;
+                    }
+                    var arrowSize = panelContainer.Top - pw;
                     var arrowBounds = new Rectangle(arrowSize + 1, t, arrowSize * 2, arrowSize);
 
                     background = new Point[]
@@ -703,7 +708,10 @@ namespace Gw2Launcher.UI
                     g.FillPolygon(brush, background);
                 }
 
-                using (var pen = new Pen(UiColors.GetColor(UiColors.Colors.MainBorder), pw))
+                using (var pen = new Pen(UiColors.GetColor(UiColors.Colors.MainBorder), pw)
+                    {
+                        Alignment = System.Drawing.Drawing2D.PenAlignment.Inset,
+                    })
                 {
                     g.DrawPolygon(pen, background);
                 }
@@ -721,7 +729,14 @@ namespace Gw2Launcher.UI
         {
             PageNext();
         }
-
+        protected override void OnVisibleChanged(EventArgs e)
+        {
+            if (this.Visible)
+            {
+                Windows.Native.NativeMethods.BringWindowToTop(this.Handle);
+            }
+            base.OnVisibleChanged(e);
+        }
 
         protected override void OnActivated(EventArgs e)
         {
@@ -749,6 +764,10 @@ namespace Gw2Launcher.UI
                     if (!Gw2Launcher.Windows.Native.NativeMethods.SetForegroundWindow(this.Handle))
                     {
                         AutoHide();
+                    }
+                    else
+                    {
+                        popup.Deactivated = false;
                     }
                     return;
                 }

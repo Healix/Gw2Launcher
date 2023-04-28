@@ -247,16 +247,16 @@ namespace Gw2Launcher.UI
                 StartPosition = FormStartPosition.Manual,
                 Location = this.Location,
                 Size = this.Size,
-                Cursor = Cursors.Hand,
+                Cursor = Windows.Cursors.Hand,
             };
 
             foreach (Control c in this.Controls)
             {
-                c.Cursor = Cursors.Hand;
+                c.Cursor = Windows.Cursors.Hand;
                 c.Click += control_Click;
             }
 
-            this.Cursor = Cursors.Hand;
+            this.Cursor = Windows.Cursors.Hand;
             this.Click += control_Click;
             background.Click += control_Click;
 

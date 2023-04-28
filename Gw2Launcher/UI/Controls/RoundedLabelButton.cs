@@ -21,7 +21,7 @@ namespace Gw2Launcher.UI.Controls
             SetStyle(ControlStyles.Selectable, true);
 
             base.Padding = new Padding(10, 2, 10, 2);
-            this.Cursor = Cursors.Hand;
+            this.Cursor = Windows.Cursors.Hand;
 
             base.BackColor = backColor = SystemColors.ControlLight;
             base.ForeColor = foreColor = SystemColors.ControlText;
