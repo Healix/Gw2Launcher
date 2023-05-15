@@ -37,7 +37,7 @@ namespace Gw2Launcher.Tools.Mumble
             /// </summary>
             Extended = 2,
         }
-        
+
         public interface IMumbleSubscriber : IDisposable
         {
             event EventHandler DataAvailable;
@@ -1173,7 +1173,7 @@ namespace Gw2Launcher.Tools.Mumble
                     name = name.Substring(1, name.Length - 2);
                 var l = GetLink(name);
                 var p = l.Add(pid);
-                
+
                 p.Account = account;
 
                 return p;
@@ -1202,5 +1202,6 @@ namespace Gw2Launcher.Tools.Mumble
             links.Add(l);
             return l;
         }
+
     }
 }

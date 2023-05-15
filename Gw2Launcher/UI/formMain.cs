@@ -4140,7 +4140,6 @@ namespace Gw2Launcher.UI
                             ++pg;
                         if (pg > mpWindow.Pages)
                             mpWindow.Pages = pg;
-
                         AddAccount(f.Account, true);
                     }
                 }
@@ -4159,7 +4158,6 @@ namespace Gw2Launcher.UI
                 ++pg;
             if (pg > mpWindow.Pages)
                 mpWindow.Pages = pg;
-
             gridContainer.SuspendAdd();
 
             for (var i = 0; i < count; i++)
@@ -5661,6 +5659,7 @@ namespace Gw2Launcher.UI
                     break;
                 case WindowMessages.WM_RENDERFORMAT:
                 case WindowMessages.WM_RENDERALLFORMATS:
+                case WindowMessages.WM_CLIPBOARDUPDATE:
 
                     if (Windows.Clipboard.ProcessMessage(ref m))
                     {
@@ -6349,28 +6348,6 @@ namespace Gw2Launcher.UI
 
         protected override void OnKeyUp(KeyEventArgs e)
         {
-            //arrows should be used for selection
-
-            //switch (e.KeyCode)
-            //{
-            //    case Keys.Left:
-
-            //        if (!_ShowFilter || !textFilter.ContainsFocus)
-            //        {
-            //            mpWindow.PagePrevious();
-            //        }
-
-            //        break;
-            //    case Keys.Right:
-
-            //        if (!_ShowFilter || !textFilter.ContainsFocus)
-            //        {
-            //            mpWindow.PageNext();
-            //        }
-
-            //        break;
-            //}
-
             base.OnKeyUp(e);
         }
 
@@ -7283,18 +7260,6 @@ namespace Gw2Launcher.UI
         private void colorsToolStripMenuItem_Click(object sender, EventArgs e)
         {
             AddWindow(new formColors()).Show(this);
-        }
-
-        private void disableLocaldatVerificationToolStripMenuItem_Click(object sender, EventArgs e)
-        {
-            disableLocaldatVerificationToolStripMenuItem.Checked ^= true;
-            Settings.DisableLocalDatVerification = disableLocaldatVerificationToolStripMenuItem.Checked;
-        }
-
-        private void disableLocaldatErrorHandlingToolStripMenuItem_Click(object sender, EventArgs e)
-        {
-            disableLocaldatErrorHandlingToolStripMenuItem.Checked ^= true;
-            Settings.DisableLocalDatErrorHandling = disableLocaldatErrorHandlingToolStripMenuItem.Checked;
         }
 
         private void logToolStripMenuItem_Click(object sender, EventArgs e)

@@ -201,10 +201,6 @@ namespace Gw2Launcher.UI
             this.DialogResult = DialogResult.Cancel;
         }
 
-        private void labelTitle_SizeChanged(object sender, EventArgs e)
-        {
-        }
-
         private void sortMenuItem_Click(object sender, EventArgs e)
         {
             var c = ((ToolStripMenuItem)sender);

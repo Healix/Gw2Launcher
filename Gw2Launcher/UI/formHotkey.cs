@@ -15,7 +15,6 @@ namespace Gw2Launcher.UI
     {
         private bool accountMode;
         private List<Control> controls;
-
         public formHotkey(bool accountMode = false)
         {
             this.accountMode = accountMode;
@@ -440,6 +439,7 @@ namespace Gw2Launcher.UI
 
                     break;
             }
+
 
             this.Result = hotkey;
             this.DialogResult = System.Windows.Forms.DialogResult.OK;

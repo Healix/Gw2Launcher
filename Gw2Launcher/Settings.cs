@@ -17,6 +17,7 @@ namespace Gw2Launcher
         public const string ASSET_HOST_ORIGIN = "origincdn.101.arenanetworks.com";
         public const string ASSET_COOKIE = "authCookie=access=/latest/*!/manifest/program/*!/program/*~md5=4e51ad868f87201ad93e428ff30c6691";
 
+        public const bool TEMP_SETTINGS_ENABLED = false;
         private const int EXPAND_MIN_COUNT = 189;
 
         private const ushort WRITE_DELAY = 10000;
@@ -249,6 +250,9 @@ namespace Gw2Launcher
         [Flags]
         public enum NetworkAuthorizationOptions : byte
         {
+            //Disabled = 0,
+            //Unknown = 1,
+            //OK = 2,
             None = 0,
             Enabled = 1,
             Remember = 2,
@@ -417,6 +421,7 @@ namespace Gw2Launcher
             None = 0,
             UseHttps = 1,
             OverrideHosts = 2,
+            DisableCaching = 4,
         }
 
         [Flags]
@@ -2284,7 +2289,7 @@ namespace Gw2Launcher
             /// <summary>
             /// Day of the daily login
             /// </summary>
-            byte DailyLoginDay 
+            byte DailyLoginDay
             {
                 get;
                 set;
@@ -7106,6 +7111,9 @@ namespace Gw2Launcher
             _ShowLaunchDailyAccounts = new SettingValue<bool>();
             _HideExit = new SettingValue<bool>();
             _HideMinimize = new SettingValue<bool>();
+
+
+            //_Markers = new ListProperty<IMarker>();
         }
 
         /// <summary>
@@ -9485,6 +9493,8 @@ namespace Gw2Launcher
                             colors.Colors = UI.UiColors.EnsureColors(new UI.UiColors.ColorValues(UI.UiColors.Theme.Light, ccolors, null, true), version);
 
                             _StyleColors.SetValue(colors);
+
+
                         }
                     }
                     else
@@ -9551,7 +9561,7 @@ namespace Gw2Launcher
                                 {
                                     rects[k] = ReadRectangle(reader);
                                 }
-                                screens[j] = new WindowTemplate.Screen(bounds,rects); 
+                                screens[j] = new WindowTemplate.Screen(bounds,rects);
                             }
                             if (version >= 13)
                             {
@@ -12682,18 +12692,6 @@ namespace Gw2Launcher
                 cancelWrite.Cancel();
             }
             t.Wait();
-        }
-
-        public static bool DisableLocalDatErrorHandling
-        {
-            get;
-            set;
-        }
-
-        public static bool DisableLocalDatVerification
-        {
-            get;
-            set;
         }
     }
 }

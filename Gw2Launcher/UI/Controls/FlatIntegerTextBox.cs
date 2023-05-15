@@ -25,7 +25,7 @@ namespace Gw2Launcher.UI.Controls
                 BackColor = this.BackColor,
                 ForeColor = this.ForeColor,
                 BorderStyle = BorderStyle.None,
-                Margin = new Padding(3)
+                Margin = new Padding(3),
             };
         }
 

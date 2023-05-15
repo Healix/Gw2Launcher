@@ -652,7 +652,7 @@ namespace Gw2Launcher.UI
             }
             else
                 Util.ComboItem<Settings.ProcessPriorityClass>.Select(comboProcessPriority, Settings.ProcessPriorityClass.Normal);
-            
+
             if (Settings.GuildWars2.ProcessAffinity.HasValue)
             {
                 adGw2ProcessAffinity.Affinity = Settings.GuildWars2.ProcessAffinity.Value;
@@ -970,8 +970,8 @@ namespace Gw2Launcher.UI
             }
             else
             {
-                Util.ComboItem<Settings.LoginInputType>.Select(comboTweakEmailMethod, Settings.LoginInputType.Post);
-                Util.ComboItem<Settings.LoginInputType>.Select(comboTweakPasswordMethod, Settings.LoginInputType.Clipboard);
+                Util.ComboItem<Settings.LoginInputType>.Select(comboTweakEmailMethod, Settings.LoginInputType.Clipboard);
+                Util.ComboItem<Settings.LoginInputType>.Select(comboTweakPasswordMethod, Settings.LoginInputType.Post);
             }
 
             if (Settings.Tweaks.Launcher.HasValue)
@@ -1042,6 +1042,11 @@ namespace Gw2Launcher.UI
             checkStyleShowLaunchDaily.Checked = Settings.ShowLaunchDailyAccounts.Value;
             checkStyleHideExit.Checked = Settings.HideExit.Value;
             checkStyleHideMinimize.Checked = Settings.HideMinimize.Value;
+
+
+
+
+
 
 
 
@@ -2071,7 +2076,7 @@ namespace Gw2Launcher.UI
                 Settings.StyleBackgroundImage.Value = (string)checkStyleBackgroundImage.Tag;
             else
                 Settings.StyleBackgroundImage.Clear();
-            
+
             Settings.LaunchBehindOtherAccounts.Value = checkLaunchBehindWindows.Checked;
 
             if (checkLaunchLimiter.Checked)
@@ -3610,6 +3615,7 @@ namespace Gw2Launcher.UI
                 }
 
                 f.DefaultColor = colorInfo.Defaults[c];
+
                 f.AllowAlphaTransparency = UiColors.SupportsAlpha(c);
                 f.Color = color;
 
@@ -3641,6 +3647,7 @@ namespace Gw2Launcher.UI
                     {
                         buttonSample.Colors = colorInfo.Values;
                     }
+
                 }
 
                 locationColorDialog = f.Location;
@@ -4446,6 +4453,18 @@ namespace Gw2Launcher.UI
 
         private void deleteMarkerToolStripMenuItem_Click(object sender, EventArgs e)
         {
+            var l = (MarkerListPanel.MarkerListItem)contextMarker.Tag;
+            var m = (Settings.IMarker)l.Value;
+            var inUse = false;
+
+            foreach (var a in Util.Accounts.GetAccounts())
+            {
+            }
+
+            if (inUse && MessageBox.Show(this, "Deleting this marker will remove it from any account using it. Are you sure?", "Marker in use", MessageBoxButtons.YesNo, MessageBoxIcon.Exclamation) != System.Windows.Forms.DialogResult.Yes)
+                return;
+
+            l.Hidden = true;
         }
 
         private void panelMarkersContainer_MarkerMouseClick(object sender, ControlListPanel.ListItemMouseEventArgs e)

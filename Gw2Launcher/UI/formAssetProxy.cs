@@ -31,6 +31,7 @@ namespace Gw2Launcher.UI
         private long cacheStorage;
         private Net.AssetProxy.Cache.PurgeProgressEventArgs purgeProgress;
         private bool forceShowPanel;
+        private int clients;
 
         private class DataRecord
         {
@@ -153,7 +154,9 @@ namespace Gw2Launcher.UI
             DateTime nextUpdate = DateTime.UtcNow.AddSeconds(3);
             string dcache = Util.Text.FormatBytes(0), ucache = Util.Text.FormatBytes(0), dscache = "";
             long cacheStorage = -1;
+            bool cacheInit = false;
             int lastPurge = 0;
+            int lastClients = -1;
 
             while (true)
             {
@@ -190,7 +193,11 @@ namespace Gw2Launcher.UI
                     ucache = Util.Text.FormatBytes(lastUploaded);
                     update = true;
                 }
-
+                if (lastClients != clients)
+                {
+                    lastClients = clients;
+                    labelClients.Text = lastClients.ToString();
+                }
                 if (purgeProgress != null)
                 {
                     if (purgeProgress.purged == purgeProgress.total)
@@ -215,7 +222,22 @@ namespace Gw2Launcher.UI
                 else if (cacheStorage != this.cacheStorage)
                 {
                     cacheStorage = this.cacheStorage;
-                    labelCached.Text = Util.Text.FormatBytes(cacheStorage);
+
+                    if (cacheInit)
+                    {
+                        labelCached.Text = Util.Text.FormatBytes(cacheStorage);
+                    }
+                    else
+                    {
+                        if (cacheInit = Net.AssetProxy.Cache.IsInitialized)
+                            cacheStorage = -1;
+                        labelCached.Text = "---";
+                    }
+                }
+                else if (!cacheInit && Net.AssetProxy.Cache.IsInitialized)
+                {
+                    cacheInit = true;
+                    cacheStorage = -1;
                 }
 
                 if (bytesDownloaded > 0)
@@ -314,6 +336,7 @@ namespace Gw2Launcher.UI
         void ServerController_Created(object sender, Net.AssetProxy.ProxyServer e)
         {
             server = e;
+
             e.ClientClosed += server_ClientClosed;
             e.ClientError += server_ClientError;
             e.ResponseHeaderReceived += server_ResponseHeaderReceived;
@@ -324,8 +347,16 @@ namespace Gw2Launcher.UI
             e.ServerStopped += server_ServerStopped;
             e.ServerRestarted += server_ServerRestarted;
             e.ServerError += server_ServerError;
+            e.ClientsChanged += server_ClientsChanged;
+
+            clients = e.Clients;
 
             UpdateStatus();
+        }
+
+        void server_ClientsChanged(object sender, int e)
+        {
+            clients = e;
         }
 
         void server_ServerError(object sender, Exception e)
@@ -697,6 +728,7 @@ namespace Gw2Launcher.UI
 
             var v = ((Settings.ISettingValue<Settings.PatchingFlags>)sender).Value;
 
+            checkDisableCaching.Checked = v.HasFlag(Settings.PatchingFlags.DisableCaching);
             checkUseHttps.Checked = v.HasFlag(Settings.PatchingFlags.UseHttps);
             checkOverrideHosts.Checked = v.HasFlag(Settings.PatchingFlags.OverrideHosts);
         }
@@ -749,6 +781,7 @@ namespace Gw2Launcher.UI
                 server.ServerStopped -= server_ServerStopped;
                 server.ServerRestarted -= server_ServerRestarted;
                 server.ServerError -= server_ServerError;
+                server.ClientsChanged -= server_ClientsChanged;
             }
 
             Net.AssetProxy.ServerController.EnabledChanged -= ServerController_EnabledChanged;
@@ -925,6 +958,11 @@ namespace Gw2Launcher.UI
                 Settings.PatchingSpeedLimit.Clear();
 
             var options = Settings.PatchingOptions.Value;
+
+            if (checkDisableCaching.Checked)
+                options |= Settings.PatchingFlags.DisableCaching;
+            else
+                options &= Settings.PatchingFlags.DisableCaching;
 
             if (checkUseHttps.Checked)
                 options |= Settings.PatchingFlags.UseHttps;

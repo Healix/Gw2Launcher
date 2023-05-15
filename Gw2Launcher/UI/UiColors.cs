@@ -654,6 +654,7 @@ namespace Gw2Launcher.UI
                     }
                 }
             }
+
         }
 
         public static bool SupportsAlpha(Colors c)

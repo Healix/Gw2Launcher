@@ -58,6 +58,7 @@ namespace Gw2Launcher.Tools
         {
             foreach (var root in Directory.GetDirectories(path, GW2CACHE, SearchOption.TopDirectoryOnly))
             {
+                //CoherentUI
                 path = Path.Combine(root, "user", "Local Storage", "coui_web_0.localstorage");
 
                 try
@@ -67,6 +68,7 @@ namespace Gw2Launcher.Tools
                 }
                 catch { }
 
+                //CEF
                 path = Path.Combine(root, "user", "Cache", "Local Storage", "leveldb", "MANIFEST-000001");
 
                 try

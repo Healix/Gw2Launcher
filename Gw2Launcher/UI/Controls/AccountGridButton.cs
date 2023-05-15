@@ -1235,7 +1235,6 @@ namespace Gw2Launcher.UI.Controls
                     var hovered = activeIcon != null && activeIcon.type == DisplayedIcon.IconType.Daily && activeIcon.Hovered;
 
                     OnPaintIcon(g, DisplayedIcon.IconType.Daily, Properties.Resources.daily, -2, 0, hovered, 255);
-
                     return;
                 }
             }

@@ -54,11 +54,11 @@ namespace Gw2Launcher.Tools
             lock (queue)
             {
                 queue.Enqueue(new QueueItem()
-                    {
-                        type = QueueItem.QueueType.Add,
-                        process = p,
-                        account = account,
-                    });
+                {
+                    type = QueueItem.QueueType.Add,
+                    process = p,
+                    account = account,
+                });
 
                 if (task == null || task.IsCompleted)
                     task = DoProcesses();
@@ -70,10 +70,10 @@ namespace Gw2Launcher.Tools
             lock (queue)
             {
                 queue.Enqueue(new QueueItem()
-                    {
-                        type = QueueItem.QueueType.Remove,
-                        account = account,
-                    });
+                {
+                    type = QueueItem.QueueType.Remove,
+                    account = account,
+                });
 
                 if (task == null || task.IsCompleted)
                     task = DoProcesses();
@@ -398,10 +398,10 @@ namespace Gw2Launcher.Tools
                             lock (queue)
                             {
                                 queue.Enqueue(new QueueItem()
-                                    {
-                                        type = QueueItem.QueueType.Exited,
-                                        process = pi.process,
-                                    });
+                                {
+                                    type = QueueItem.QueueType.Exited,
+                                    process = pi.process,
+                                });
                             }
                         }
                     }
@@ -416,13 +416,13 @@ namespace Gw2Launcher.Tools
 
         void p_Exited(object sender, EventArgs e)
         {
-            lock(queue)
+            lock (queue)
             {
                 queue.Enqueue(new QueueItem()
-                    {
-                        type = QueueItem.QueueType.Exited,
-                        process = (Process)sender,
-                    });
+                {
+                    type = QueueItem.QueueType.Exited,
+                    process = (Process)sender,
+                });
             }
         }
 

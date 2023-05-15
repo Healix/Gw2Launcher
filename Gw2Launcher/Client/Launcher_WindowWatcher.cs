@@ -16,6 +16,7 @@ namespace Gw2Launcher.Client
     {
         private class WindowWatcher : IDisposable
         {
+
             public class TimeoutEventArgs : EventArgs
             {
                 public enum TimeoutReason
@@ -61,6 +62,7 @@ namespace Gw2Launcher.Client
                     LauncherLoginComplete,
                     LauncherLoginCodeRequired,
                     LauncherLoginError,
+                    LauncherCefLoginEvent,
 
                     WatcherExited
                 }
@@ -631,11 +633,12 @@ namespace Gw2Launcher.Client
                 {
                     this.Handle = handle;
 
-                    //hides window by setting opacity to 0 - will freeze if the window is not responding
+                    //NativeMethods.ShowWindow(handle, ShowWindowCommands.ForceMinimize);
+
                     Task.Run(new Action(delegate
                     {
                         wasLayered = Windows.WindowLong.Add(handle, GWL.GWL_EXSTYLE, WindowStyle.WS_EX_LAYERED) == IntPtr.Zero;
-                        var b2 = NativeMethods.SetLayeredWindowAttributes(handle, 0, 0, LayeredWindowFlags.LWA_ALPHA);
+                        NativeMethods.SetLayeredWindowAttributes(handle, 0, 0, LayeredWindowFlags.LWA_ALPHA);
                     }));
                 }
 
@@ -718,15 +721,15 @@ namespace Gw2Launcher.Client
                 }
             }
 
+            struct WaitForFontsResult
+            {
+                public int PID;
+            }
+
             public event EventHandler<WindowChangedEventArgs> WindowChanged;
             public event EventHandler<CrashReason> WindowCrashed;
             public event EventHandler<int> LoginComplete;
             public event EventHandler<TimeoutEventArgs> Timeout;
-            /// <summary>
-            /// OBSOLETE: was used with "-nopatchui -email -password", which would stay on a black screen when authentication failed
-            /// </summary>
-            //public event EventHandler<Tools.ArenaAccount> AuthenticationRequired;
-
             private const string DX_WINDOW_CLASSNAME = "ArenaNet_Dx_Window_Class"; //gw2 and gw1 main game window
             private const string DX_WINDOW_CLASSNAME_DX11BETA = "ArenaNet_Gr_Window_Class"; //gw2 dx11 main game window
             private const int DX_WINDOW_CLASSNAME_LENGTH = 24;
@@ -1046,6 +1049,7 @@ namespace Gw2Launcher.Client
                 }
 
                 return i;
+
             }
 
             private Windows.FindWindow.SearchResult Find(IntPtr handle, Windows.FindWindow.TextComparer classCallback, Windows.FindWindow.TextComparer textCallback)
@@ -1057,7 +1061,7 @@ namespace Gw2Launcher.Client
                         return r[0];
                 }
                 catch (Exception e)
-                { 
+                {
                     Util.Logging.Log(e);
                 }
 
@@ -1123,7 +1127,7 @@ namespace Gw2Launcher.Client
 
                         return true;
                     });
-                
+
                 var isGw2 = this.Account.Type == AccountType.GuildWars2;
                 var buffer = new StringBuilder(DX_WINDOW_CLASSNAME_LENGTH + 1);
                 var weventbuffer = new StringBuilder(DX_WINDOW_CLASSNAME_LENGTH + 1);
@@ -1131,8 +1135,8 @@ namespace Gw2Launcher.Client
                 var wce = new WindowChangedEventArgs();
                 var _handle = IntPtr.Zero;
 
-                int timeout = 0, 
-                    timeoutStart = 0, 
+                int timeout = 0,
+                    timeoutStart = 0,
                     delay = 500;
 
                 var _wasAlreadyStarted = processWasAlreadyStarted && handle != IntPtr.Zero;
@@ -1354,7 +1358,7 @@ namespace Gw2Launcher.Client
                         }
 
                         switch (NativeMethods.GetClassName(handle, buffer, buffer.Capacity + 1))
-                        { 
+                        {
                             case 0:
 
                                 continue;
@@ -1362,7 +1366,7 @@ namespace Gw2Launcher.Client
                             case DX_WINDOW_CLASSNAME_LENGTH:
 
                                 #region DX_WINDOW_CLASSNAME_LENGTH
-                                
+
                                 var s = buffer.ToString();
                                 if (s.Equals(DX_WINDOW_CLASSNAME_DX11BETA) || s.Equals(DX_WINDOW_CLASSNAME))
                                 {
@@ -1685,7 +1689,6 @@ namespace Gw2Launcher.Client
                                                 }
                                             }
 
-                                            //forcing module check - after loading CoherentUI, the game game can hang prior to loading modules
                                             if (!foundModules && (DateTime.UtcNow < limit || Settings.DxTimeout.Value == 0))
                                             {
                                                 if (Util.Logging.Enabled)
@@ -1956,91 +1959,48 @@ namespace Gw2Launcher.Client
                                                 Util.Logging.LogEvent(Account.Settings, "Skipping all CoherentUI checks due to settings");
                                             }
                                         }
-                                    }
 
-                                    SupportsLoginEvents = cw != null;
+                                        SupportsLoginEvents = cw != null;
 
-                                    if (r != -1 && Settings.Tweaks.Launcher.HasValue && Settings.Tweaks.Launcher.Value.Delay > 0)
-                                    {
-                                        var d = DateTime.UtcNow.AddSeconds(Settings.Tweaks.Launcher.Value.Delay);
-                                        while (!process.WaitForExit(500) && DateTime.UtcNow < d) { }
-                                    }
-
-                                    if (process.HasExited || r == -1)
-                                    {
-                                        using (cw) { }
-                                        break;
-                                    }
-
-                                    var loginComplete = false;
-
-                                    if (!wasAlreadyStarted)
-                                    {
-                                        //CEF has delayed writing
-                                        if (this.Account.hostType == HostType.CoherentUI && (LoginComplete != null || cw == null))
+                                        if (r != -1 && Settings.Tweaks.Launcher.HasValue && Settings.Tweaks.Launcher.Value.Delay > 0)
                                         {
-                                            var gw2cache = Tools.Gw2Cache.FindPath(this.Account.Settings.UID);
-                                            if (gw2cache != null)
+                                            var d = DateTime.UtcNow.AddSeconds(Settings.Tweaks.Launcher.Value.Delay);
+                                            while (!process.WaitForExit(500) && DateTime.UtcNow < d) { }
+                                        }
+
+                                        if (process.HasExited || r == -1)
+                                        {
+                                            using (cw) { }
+                                            break;
+                                        }
+
+                                        var loginComplete = false;
+
+                                        #region CoherentUI login watch
+
+                                        if (!wasAlreadyStarted)
+                                        {
+                                            //CEF has delayed writing
+                                            if (this.Account.hostType == HostType.CoherentUI && (LoginComplete != null || cw == null))
                                             {
-                                                try
+                                                var gw2cache = Tools.Gw2Cache.FindPath(this.Account.Settings.UID);
+                                                if (gw2cache != null)
                                                 {
-                                                    fwatcher = new FileSystemWatcher(Path.Combine(gw2cache, "user", "Local Storage"), "coui_web_0.localstorage");
-                                                    fwatcher.NotifyFilter = NotifyFilters.CreationTime | NotifyFilters.LastWrite;
-
-                                                    var start = Environment.TickCount;
-                                                    FileSystemEventHandler onWrite = delegate(object o, FileSystemEventArgs e)
+                                                    try
                                                     {
-                                                        try
+                                                        fwatcher = new FileSystemWatcher(Path.Combine(gw2cache, "user", "Local Storage"), "coui_web_0.localstorage");
+                                                        fwatcher.NotifyFilter = NotifyFilters.CreationTime | NotifyFilters.LastWrite;
+
+                                                        var start = Environment.TickCount;
+                                                        FileSystemEventHandler onWrite = delegate(object o, FileSystemEventArgs e)
                                                         {
-                                                            fwatcher.Dispose();
-                                                            fwatcher = null;
-                                                        }
-                                                        catch { }
-
-                                                        lock (this)
-                                                        {
-                                                            if (weventwaiter == null || loginComplete)
-                                                                return;
-                                                            loginComplete = true;
-                                                        }
-
-                                                        timeout = 0;
-
-                                                        if (LoginComplete != null)
-                                                            LoginComplete(this, Environment.TickCount - start);
-
-                                                        if (WindowChanged != null)
-                                                        {
-                                                            WindowChanged(this, new WindowChangedEventArgs()
+                                                            try
                                                             {
-                                                                Handle = handle,
-                                                                Type = WindowChangedEventArgs.EventType.LauncherLoginComplete,
-                                                                WasAlreadyStarted = wasAlreadyStarted,
-                                                            });
-                                                        }
-                                                    };
-                                                    fwatcher.Changed += onWrite;
-                                                    fwatcher.Created += onWrite;
-                                                    fwatcher.EnableRaisingEvents = true;
-                                                }
-                                                catch
-                                                {
-                                                    if (fwatcher != null)
-                                                    {
-                                                        fwatcher.Dispose();
-                                                        fwatcher = null;
-                                                    }
-                                                }
+                                                                fwatcher.Dispose();
+                                                                fwatcher = null;
+                                                            }
+                                                            catch { }
 
-                                                if (fwatcher == null)
-                                                {
-                                                    WatchLogin(Path.Combine(gw2cache, "user", "Local Storage", "coui_web_0.localstorage"),
-                                                        delegate
-                                                        {
-                                                            return weventwaiter != null && !loginComplete;
-                                                        },
-                                                        delegate(int duration)
-                                                        {
                                                             lock (this)
                                                             {
                                                                 if (weventwaiter == null || loginComplete)
@@ -2051,7 +2011,7 @@ namespace Gw2Launcher.Client
                                                             timeout = 0;
 
                                                             if (LoginComplete != null)
-                                                                LoginComplete(this, duration);
+                                                                LoginComplete(this, Environment.TickCount - start);
 
                                                             if (WindowChanged != null)
                                                             {
@@ -2062,171 +2022,257 @@ namespace Gw2Launcher.Client
                                                                     WasAlreadyStarted = wasAlreadyStarted,
                                                                 });
                                                             }
-                                                        });
+                                                        };
+                                                        fwatcher.Changed += onWrite;
+                                                        fwatcher.Created += onWrite;
+                                                        fwatcher.EnableRaisingEvents = true;
+                                                    }
+                                                    catch
+                                                    {
+                                                        if (fwatcher != null)
+                                                        {
+                                                            fwatcher.Dispose();
+                                                            fwatcher = null;
+                                                        }
+                                                    }
+
+                                                    if (fwatcher == null)
+                                                    {
+                                                        WatchLogin(Path.Combine(gw2cache, "user", "Local Storage", "coui_web_0.localstorage"),
+                                                            delegate
+                                                            {
+                                                                return weventwaiter != null && !loginComplete;
+                                                            },
+                                                            delegate(int duration)
+                                                            {
+                                                                lock (this)
+                                                                {
+                                                                    if (weventwaiter == null || loginComplete)
+                                                                        return;
+                                                                    loginComplete = true;
+                                                                }
+
+                                                                timeout = 0;
+
+                                                                if (LoginComplete != null)
+                                                                    LoginComplete(this, duration);
+
+                                                                if (WindowChanged != null)
+                                                                {
+                                                                    WindowChanged(this, new WindowChangedEventArgs()
+                                                                    {
+                                                                        Handle = handle,
+                                                                        Type = WindowChangedEventArgs.EventType.LauncherLoginComplete,
+                                                                        WasAlreadyStarted = wasAlreadyStarted,
+                                                                    });
+                                                                }
+                                                            });
+                                                    }
                                                 }
+                                            }
+
+                                            if (Settings.LaunchTimeout.HasValue)
+                                            {
+                                                timeout = Settings.LaunchTimeout.Value * 1000;
+                                                timeoutStart = Environment.TickCount;
                                             }
                                         }
 
-                                        if (Settings.LaunchTimeout.HasValue)
+                                        #endregion
+
+                                        if (authWatch)
                                         {
-                                            timeout = Settings.LaunchTimeout.Value * 1000;
-                                            timeoutStart = Environment.TickCount;
+                                            watchers.AuthWatcher.Add(this.Account, handle);
                                         }
-                                    }
 
-                                    if (authWatch)
-                                    {
-                                        watchers.AuthWatcher.Add(this.Account, handle);
-                                    }
-
-                                    if (WindowChanged != null)
-                                    {
-                                        wce.Type = WindowChangedEventArgs.EventType.LauncherWindowLoaded;
-                                        WindowChanged(this, wce);
-                                    }
-
-                                    if (cw != null)
-                                    {
-                                        using (cw)
+                                        if (WindowChanged != null)
                                         {
-                                            var loginStart = Environment.TickCount;
-                                            r = 0;
+                                            wce.Type = WindowChangedEventArgs.EventType.LauncherWindowLoaded;
+                                            WindowChanged(this, wce);
+                                        }
 
-                                            while (r == 0)
+                                        #region CoherentWatcher
+
+                                        if (cw != null)
+                                        {
+                                            using (cw)
                                             {
-                                                var cwe = WaitForCoherentEvent(process, handle, cw,
-                                                    delegate
-                                                    {
-                                                        return timeout == 0 || Environment.TickCount - timeoutStart <= timeout;
-                                                    });
+                                                var loginStart = Environment.TickCount;
+                                                r = 0;
 
-                                                if (Util.Logging.Enabled)
+                                                while (r == 0)
                                                 {
-                                                    if (cwe != CoherentWatcher.EventType.None)
+                                                    var cwe = WaitForCoherentEvent(process, handle, cw,
+                                                        delegate
+                                                        {
+                                                            return timeout == 0 || Environment.TickCount - timeoutStart <= timeout;
+                                                        });
+
+                                                    if (Util.Logging.Enabled)
                                                     {
-                                                        Util.Logging.LogEvent(Account.Settings, "Coherent event: " + cwe);
+                                                        if (cwe != CoherentWatcher.EventType.None)
+                                                        {
+                                                            Util.Logging.LogEvent(Account.Settings, "Coherent event: " + cwe);
+                                                        }
                                                     }
-                                                }
 
-                                                switch (cwe)
-                                                {
-                                                    case CoherentWatcher.EventType.Exited:
-                                                    case CoherentWatcher.EventType.Error:
+                                                    switch (cwe)
+                                                    {
+                                                        case CoherentWatcher.EventType.Exited:
+                                                        case CoherentWatcher.EventType.Error:
 
-                                                        r = -1;
+                                                            r = -1;
 
-                                                        break;
-                                                    case CoherentWatcher.EventType.LoginCode:
-
-                                                        if (WindowChanged != null)
-                                                        {
-                                                            wce.Type = WindowChangedEventArgs.EventType.LauncherLoginCodeRequired;
-                                                            WindowChanged(this, wce);
-                                                        }
-
-                                                        break;
-                                                    case CoherentWatcher.EventType.LoginComplete:
-
-                                                        var b = false;
-
-                                                        lock (this)
-                                                        {
-                                                            if (!loginComplete)
-                                                            {
-                                                                loginComplete = true;
-                                                                b = true;
-                                                            }
-                                                        }
-
-                                                        if (b)
-                                                        {
-                                                            timeout = 0;
-
-                                                            if (LoginComplete != null)
-                                                                LoginComplete(this, Environment.TickCount - loginStart);
+                                                            break;
+                                                        case CoherentWatcher.EventType.LoginCode:
 
                                                             if (WindowChanged != null)
                                                             {
-                                                                wce.Type = WindowChangedEventArgs.EventType.LauncherLoginComplete;
+                                                                wce.Type = WindowChangedEventArgs.EventType.LauncherLoginCodeRequired;
                                                                 WindowChanged(this, wce);
                                                             }
-                                                        }
 
-                                                        break;
-                                                    case CoherentWatcher.EventType.LoginError:
+                                                            break;
+                                                        case CoherentWatcher.EventType.LoginComplete:
 
-                                                        if (WindowChanged != null)
-                                                        {
-                                                            wce.Type = WindowChangedEventArgs.EventType.LauncherLoginError;
-                                                            WindowChanged(this, wce);
-                                                        }
+                                                            var b = false;
 
-                                                        r = -1;
-
-                                                        break;
-                                                    case CoherentWatcher.EventType.LoginReady:
-
-                                                        //this will trigger if the launcher returns to the login box (logout or code entry cancelled)
-                                                        //could retry the login or restart the launcher
-
-                                                        break;
-                                                    case CoherentWatcher.EventType.None:
-
-                                                        if (timeout != 0 && Environment.TickCount - timeoutStart > timeout)
-                                                        {
-                                                            if (Timeout != null)
+                                                            lock (this)
                                                             {
-                                                                var te = new TimeoutEventArgs(TimeoutEventArgs.TimeoutReason.Launcher);
-                                                                Timeout(this, te);
-                                                                if (te.Handled)
-                                                                    return;
+                                                                if (!loginComplete)
+                                                                {
+                                                                    loginComplete = true;
+                                                                    b = true;
+                                                                }
                                                             }
 
-                                                            timeout = 0;
-                                                        }
+                                                            if (b)
+                                                            {
+                                                                timeout = 0;
 
-                                                        break;
+                                                                if (LoginComplete != null)
+                                                                    LoginComplete(this, Environment.TickCount - loginStart);
+
+                                                                if (WindowChanged != null)
+                                                                {
+                                                                    wce.Type = WindowChangedEventArgs.EventType.LauncherLoginComplete;
+                                                                    WindowChanged(this, wce);
+                                                                }
+                                                            }
+
+                                                            break;
+                                                        case CoherentWatcher.EventType.LoginError:
+
+                                                            if (WindowChanged != null)
+                                                            {
+                                                                wce.Type = WindowChangedEventArgs.EventType.LauncherLoginError;
+                                                                WindowChanged(this, wce);
+                                                            }
+
+                                                            r = -1;
+
+                                                            break;
+                                                        case CoherentWatcher.EventType.LoginReady:
+
+                                                            //this will trigger if the launcher returns to the login box (logout or code entry cancelled)
+                                                            //could retry the login or restart the launcher
+
+                                                            break;
+                                                        case CoherentWatcher.EventType.None:
+
+                                                            if (timeout != 0 && Environment.TickCount - timeoutStart > timeout)
+                                                            {
+                                                                if (Timeout != null)
+                                                                {
+                                                                    var te = new TimeoutEventArgs(TimeoutEventArgs.TimeoutReason.Launcher);
+                                                                    Timeout(this, te);
+                                                                    if (te.Handled)
+                                                                        return;
+                                                                }
+
+                                                                timeout = 0;
+                                                            }
+
+                                                            break;
+                                                    }
                                                 }
                                             }
                                         }
+
+                                        #endregion
+
+                                        #region CEF watcher
+
+                                        if (hostType == HostType.CEF)
+                                        {
+                                            var loginStart = Environment.TickCount;
+                                            var et = WatchCefEvents(process, handle);
+
+                                            switch (et)
+                                            {
+                                                case CoherentWatcher.EventType.LoginError:
+
+                                                    if (WindowChanged != null)
+                                                    {
+                                                        wce.Type = WindowChangedEventArgs.EventType.LauncherLoginError;
+                                                        WindowChanged(this, wce);
+                                                    }
+
+                                                    break;
+                                                case CoherentWatcher.EventType.LoginCode:
+
+                                                    if (WindowChanged != null)
+                                                    {
+                                                        wce.Type = WindowChangedEventArgs.EventType.LauncherCefLoginEvent;
+                                                        WindowChanged(this, wce);
+                                                    }
+
+                                                    if (LoginComplete != null)
+                                                        LoginComplete(this, Environment.TickCount - loginStart);
+
+                                                    break;
+                                            }
+                                        }
+
+                                        #endregion
+
+                                        #region Detect remembered logins
+
+                                        //DPAPI.dll is loaded after clicking login, but only when opting to save the login
+                                        //this would only be useful for detecting manual logins
+
+                                        //if (LoginBegin != null)
+                                        //{
+                                        //    var b = false;
+
+                                        //    do
+                                        //    {
+                                        //        try
+                                        //        {
+                                        //            if (b && handle != Windows.FindWindow.FindMainWindow(process))
+                                        //            {
+                                        //                break;
+                                        //            }
+                                        //            else if (FindModule("DPAPI.dll"))
+                                        //            {
+                                        //                if (b) //only report if it wasn't already available
+                                        //                    LoginBegin(this, EventArgs.Empty);
+                                        //                break;
+                                        //            }
+
+                                        //            b = true;
+                                        //            process.Refresh();
+                                        //        }
+                                        //        catch
+                                        //        {
+                                        //            break;
+                                        //        }
+                                        //    }
+                                        //    while (!process.WaitForExit(500));
+                                        //}
+
+                                        #endregion
                                     }
-
-                                    #region Detect remembered logins
-
-                                    //DPAPI.dll is loaded after clicking login, but only when opting to save the login
-                                    //this would only be useful for detecting manual logins
-
-                                    //if (LoginBegin != null)
-                                    //{
-                                    //    var b = false;
-
-                                    //    do
-                                    //    {
-                                    //        try
-                                    //        {
-                                    //            if (b && handle != Windows.FindWindow.FindMainWindow(process))
-                                    //            {
-                                    //                break;
-                                    //            }
-                                    //            else if (FindModule("DPAPI.dll"))
-                                    //            {
-                                    //                if (b) //only report if it wasn't already available
-                                    //                    LoginBegin(this, EventArgs.Empty);
-                                    //                break;
-                                    //            }
-
-                                    //            b = true;
-                                    //            process.Refresh();
-                                    //        }
-                                    //        catch
-                                    //        {
-                                    //            break;
-                                    //        }
-                                    //    }
-                                    //    while (!process.WaitForExit(500));
-                                    //}
-
-                                    #endregion
                                 }
 
                                 #endregion
@@ -2532,7 +2578,7 @@ namespace Gw2Launcher.Client
                 return false;
             }
 
-            private int WaitForFonts(Process process, IntPtr window, Process parent, Process[] processes, int length, int timeout = 0)
+            private WaitForFontsResult WaitForFonts(Process process, IntPtr window, Process host, Process[] renderers, int renderersLength, bool ignoreExisting = true, int timeout = 0, Func<Windows.Win32Handles.HandleMonitor.IHandle, bool> onFontLoaded = null)
             {
                 if (!Util.Users.IsCurrentUser(Account.Settings.WindowsAccount))
                 {
@@ -2541,9 +2587,9 @@ namespace Gw2Launcher.Client
                         var username = Util.Users.GetUserName(Account.Settings.WindowsAccount);
                         var password = Security.Credentials.GetPassword(username);
 
-                        using (Security.Impersonation.Impersonate(username, password))
+                        using (var identity = Security.Impersonation.GetIdentity(username, password))
                         {
-                            return _WaitForFonts(process, window, parent, processes, length, timeout);
+                            return _WaitForFonts(process, window, host, renderers, renderersLength, identity, ignoreExisting, timeout, onFontLoaded);
                         }
                     }
                     catch (NotSupportedException)
@@ -2554,23 +2600,16 @@ namespace Gw2Launcher.Client
                     {
                         Util.Logging.Log(e);
                     }
-                    return 0;
+                    return new WaitForFontsResult();
                 }
                 else
                 {
-                    return _WaitForFonts(process, window, parent, processes, length, timeout);
+                    return _WaitForFonts(process, window, host, renderers, renderersLength, null, ignoreExisting, timeout, onFontLoaded);
                 }
             }
 
-            private int _WaitForFonts(Process process, IntPtr window, Process parent, Process[] processes, int length, int timeout)
+            private WaitForFontsResult _WaitForFonts(Process process, IntPtr window, Process host, Process[] renderers, int renderersLength, Security.Impersonation.IIdentity identity = null, bool ignoreExisting = true, int timeout = 0, Func<Windows.Win32Handles.HandleMonitor.IHandle, bool> onFontLoaded = null)
             {
-                var pids = new UIntPtr[length];
-
-                for (var i = 0; i < length; i++)
-                {
-                    pids[i] = (UIntPtr)processes[i].Id;
-                }
-
                 DateTime limit;
 
                 if (timeout == 0)
@@ -2582,65 +2621,157 @@ namespace Gw2Launcher.Client
                     limit = DateTime.UtcNow.AddMilliseconds(timeout);
                 }
 
-                var pid = UIntPtr.Zero;
-                int counter = 0;
+                var result = new WaitForFontsResult();
+                var monitors = new Windows.Win32Handles.HandleMonitor.IMonitor[renderersLength];
+                var counter = 0;
+                var pid = 0;
 
-                do
+                EventHandler<Windows.Win32Handles.HandleMonitor.IHandle> onAdded = delegate(object o, Windows.Win32Handles.HandleMonitor.IHandle h)
                 {
-                    var h = Windows.Win32Handles.GetHandle(pids, Windows.Win32Handles.HandleType.File, new Func<Windows.Win32Handles.IObject, Windows.Win32Handles.CallbackResponse>(
-                        delegate(Windows.Win32Handles.IObject o)
+                    var n = h.GetName(identity);
+                    if (n == null)
+                        return;
+                    var l = n.Length;
+
+                    ++counter;
+
+                    if (l > 3 && n[l - 4] == '.')
+                    {
+                        //only ttf is used, but checking for others
+
+                        var isFont = false;
+
+                        #region Extension: ttf, otf, fnt
+
+                        switch (n[l - 1])
                         {
-                            ++counter;
+                            case 'f':
+                            case 'F':
 
-                            var l = o.Name.Length;
-
-                            if (l > 3 && o.Name[l - 4] == '.')
-                            {
-                                var ext = o.Name.Substring(l - 3);
-
-                                if (ext.Equals("ttf", StringComparison.OrdinalIgnoreCase) ||
-                                    ext.Equals("otf", StringComparison.OrdinalIgnoreCase) ||
-                                    ext.Equals("fnt", StringComparison.OrdinalIgnoreCase))
+                                switch (n[l - 2])
                                 {
-                                    pid = o.PID;
-                                    return Windows.Win32Handles.CallbackResponse.Return;
+                                    case 't':
+                                    case 'T':
+
+                                        switch (n[l - 3])
+                                        {
+                                            case 't':
+                                            case 'T':
+                                            case 'o':
+                                            case 'O':
+
+                                                isFont = true;
+
+                                                break;
+                                        }
+
+                                        break;
+                                }
+
+                                break;
+                            case 't':
+                            case 'T':
+
+                                switch (n[l - 2])
+                                {
+                                    case 'n':
+                                    case 'N':
+
+                                        switch (n[l - 3])
+                                        {
+                                            case 'f':
+                                            case 'F':
+
+                                                isFont = true;
+
+                                                break;
+                                        }
+
+                                        break;
+                                }
+
+                                break;
+                        }
+
+                        #endregion
+
+                        if (isFont)
+                        {
+                            if (onFontLoaded == null || onFontLoaded(h))
+                            {
+                                using (var m = (Windows.Win32Handles.HandleMonitor.IMonitor)o)
+                                {
+                                    pid = m.PID;
                                 }
                             }
-
-                            return Windows.Win32Handles.CallbackResponse.Continue;
-                        }));
-
-                    if (h != null)
-                    {
-                        return (int)pid.ToUInt32();
-                    }
-
-                    for (var i = 0; i < length; i++)
-                    {
-                        try
-                        {
-                            if (processes[i].HasExited)
-                            {
-                                return 0;
-                            }
                         }
-                        catch { }
                     }
+                };
 
-                    process.Refresh();
-                    if (window != Windows.FindWindow.FindMainWindow(process))
-                    {
-                        return 0;
-                    }
-                }
-                while (DateTime.UtcNow < limit && !processes[0].WaitForExit(500));
-
-                if (counter == 0)
+                for (var i = 0; i < renderersLength; i++)
                 {
-                    throw new NotSupportedException();
+                    monitors[i] = Windows.Win32Handles.HandleMonitor.Create(Windows.Win32Handles.HandleType.File, renderers[i].Id, ignoreExisting);
+                    monitors[i].HandleAdded += onAdded;
+                    monitors[i].Start();
                 }
 
-                return 0;
+                var ticks = 0;
+
+                EventHandler onTick = delegate
+                {
+                    ++ticks;
+                };
+
+                try
+                {
+                    Windows.Win32Handles.HandleMonitor.Tick += onTick;
+
+                    do
+                    {
+                        if (pid != 0)
+                        {
+                            result.PID = pid;
+                            return result;
+                        }
+
+                        process.Refresh();
+                        if (window != Windows.FindWindow.FindMainWindow(process))
+                        {
+                            break;
+                        }
+
+                        for (var i = 1; i < renderersLength; i++)
+                        {
+                            try
+                            {
+                                if (renderers[i].HasExited)
+                                {
+                                    return result;
+                                }
+                            }
+                            catch { }
+                        }
+
+                        if (DateTime.UtcNow > limit && (ticks > 1 || monitors[0].Cycles > 0) || !Windows.Win32Handles.HandleMonitor.IsActive)
+                            break;
+                    }
+                    while (!renderers[0].WaitForExit(500));
+                }
+                finally
+                {
+                    Windows.Win32Handles.HandleMonitor.Tick -= onTick;
+
+                    for (var i = 0; i < renderersLength;i++)
+                    {
+                        using (monitors[i]) { }
+                    }
+                }
+
+                return result;
+
+
+
+
             }
 
             private bool WaitForExit(Process process, Process p, int delay, IntPtr window, Func<bool> onContinue, out int result)
@@ -2681,7 +2812,7 @@ namespace Gw2Launcher.Client
 
                             if (e != ev)
                                 return e;
-                            
+
                             int w;
                             if (WaitForExit(process, process, 0, window, null, out w))
                                 return CoherentWatcher.EventType.Error;
@@ -2784,6 +2915,7 @@ namespace Gw2Launcher.Client
                         return null;
                     }
                 }
+
             }
 
             private CoherentWatcher WaitForCoherentHost(Process process, IntPtr window, out int result, Process host = null, Func<bool> onContinue = null)
@@ -2827,9 +2959,9 @@ namespace Gw2Launcher.Client
                 {
                     Util.Logging.LogEvent(Account.Settings, "Waiting for Coherent view...");
                 }
-                
+
                 //note the CoherentUI host process can change after it's initially started - if something goes wrong, it will start a new process until it's successful
-                
+
                 while (true)
                 {
                     if (host == null)
@@ -2927,7 +3059,7 @@ namespace Gw2Launcher.Client
                     return null;
                 }
             }
-            
+
             private int WaitForHostProcesses(Process process, IntPtr window, HostType hostType, Process host, bool waitUntilLoaded = true, int childCount = 1, Func<bool> onContinue = null)
             {
                 byte r = 1;
@@ -3012,7 +3144,7 @@ namespace Gw2Launcher.Client
                                             }
                                             try
                                             {
-                                                var pid = WaitForFonts(process, window, host, renderers, count, count == childCount ? 0 : 500);
+                                                var pid = WaitForFonts(process, window, host, renderers, count, false, count == childCount ? 0 : -1).PID;
 
                                                 if (pid != 0)
                                                 {
@@ -3149,12 +3281,76 @@ namespace Gw2Launcher.Client
                             }
                         }
                     }
+
                 }
                 while (++r < 3);
 
                 Util.Logging.Log("Unable to find host");
 
                 return 0;
+            }
+
+            private CoherentWatcher.EventType WatchCefEvents(Process process, IntPtr window)
+            {
+                var renderers = new Process[2];
+                var count = GetRendererProcess(process, renderers);
+                var monitors = new Windows.Win32Handles.HandleMonitor.IMonitor[count];
+                var t = CoherentWatcher.EventType.None;
+
+                Func<Windows.Win32Handles.HandleMonitor.IHandle, bool> onFont;
+
+                onFont = delegate(Windows.Win32Handles.HandleMonitor.IHandle h)
+                {
+                    var n = Path.GetFileName(h.GetName());
+
+
+                    if (n.Equals("timesi.ttf", StringComparison.OrdinalIgnoreCase))
+                    {
+                        //occurs when an error is showing
+                        t = CoherentWatcher.EventType.LoginError;
+                        return true;
+                    }
+                    else
+                    {
+                        //assuming any change is a login
+
+                        if (n.Equals("segoeuii.ttf", StringComparison.OrdinalIgnoreCase))
+                        {
+                            //occurs when it changes to the code entry or on successful login
+                        }
+                        else
+                        {
+                            if (Util.Logging.Enabled)
+                            {
+                                Util.Logging.LogEvent(Account.Settings, "Unexpected: " + n);
+                            }
+                        }
+
+                        t = CoherentWatcher.EventType.LoginCode;
+                        return true;
+                    }
+
+                    //return false;
+                };
+
+
+                try
+                {
+                    var r = WaitForFonts(process, window, process, renderers, count, true, 90000, onFont);
+                }
+                catch (NotSupportedException)
+                {
+                    if (Util.Logging.Enabled)
+                    {
+                        Util.Logging.LogEvent(Account.Settings, "Watching for CEF events was not supported");
+                    }
+                }
+                catch (Exception e)
+                {
+                    Util.Logging.Log(e);
+                }
+
+                return t;
             }
 
             /// <summary>

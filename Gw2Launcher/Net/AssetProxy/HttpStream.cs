@@ -690,6 +690,37 @@ namespace Gw2Launcher.Net.AssetProxy
             }
         }
 
+        public bool IsChunked
+        {
+            get
+            {
+                return isContentChunked;
+            }
+        }
+
+        public int ChunkLengthRemaining
+        {
+            get
+            {
+                return chunkBytesRemaining;
+            }
+        }
+
+        public bool EndOfContent
+        {
+            get
+            {
+                if (isContentChunked)
+                {
+                    return chunkBytesRemaining == -1;
+                }
+                else
+                {
+                    return contentBytesRead == contentLength;
+                }
+            }
+        }
+
         private void ResetContentStream()
         {
             this.contentLength = 0;
@@ -699,7 +730,7 @@ namespace Gw2Launcher.Net.AssetProxy
             this.chunkBytesRemaining = 0;
         }
 
-        public int ReadHeader(byte[] buffer, int offset, out HttpHeader header)
+        public int ReadHeader(byte[] buffer, int offset, out HttpHeader header, bool throwErrors = false)
         {
             ResetContentStream();
 
@@ -727,12 +758,12 @@ namespace Gw2Launcher.Net.AssetProxy
                                 {
                                     offset++;
 
-                                    header = this.header = HttpHeader.Create(this.Encoding.GetString(buffer, 0, offset));
+                                    headerLength = offset - start;
+                                    header = this.header = HttpHeader.Create(this.Encoding.GetString(buffer, start, headerLength));
 
                                     ProcessHeader(this.header);
 
-                                    headerLength = offset - start;
-                                    return offset - start;
+                                    return headerLength;
                                 }
 
                                 break;
@@ -751,6 +782,8 @@ namespace Gw2Launcher.Net.AssetProxy
                 }
                 catch
                 {
+                    if (!throwErrors)
+                        throw;
                     break;
                 }
             }
@@ -894,8 +927,9 @@ namespace Gw2Launcher.Net.AssetProxy
                 {
                     total = read = inner.Read(buffer, offset, count);
                 }
-                catch
+                catch(Exception ex)
                 {
+                    Util.Logging.LogEvent(null, "read error " + ex.ToString());
                     throw;
                 }
             }

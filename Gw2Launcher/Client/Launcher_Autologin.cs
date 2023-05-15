@@ -127,30 +127,6 @@ namespace Gw2Launcher.Client
                 }
             }
 
-            private class DataObject : System.Windows.Forms.DataObject
-            {
-                public event EventHandler DataRequested;
-
-                public override object GetData(string format)
-                {
-                    var DataRequested = this.DataRequested;
-                    if (DataRequested != null)
-                    {
-                        DataRequested.BeginInvoke(this, EventArgs.Empty,
-                           delegate(IAsyncResult r)
-                           {
-                               try
-                               {
-                                   DataRequested.EndInvoke(r);
-                               }
-                               catch { }
-                           }, null);
-                    }
-
-                    return base.GetData(format);
-                }
-            }
-
             private class ClipboardText
             {
                 private string text;
@@ -181,6 +157,43 @@ namespace Gw2Launcher.Client
                 public void Clear()
                 {
                     text = null;
+                }
+            }
+
+            private class ModifierMonitor : IDisposable
+            {
+                private bool disposed;
+
+                public ModifierMonitor()
+                {
+                    DoMonitor();
+                }
+
+                private async void DoMonitor()
+                {
+                    var keys = System.Windows.Forms.Keys.Shift | System.Windows.Forms.Keys.Control | System.Windows.Forms.Keys.Alt;
+
+                    while (!disposed)
+                    {
+                        await Task.Delay(50);
+
+                        if ((System.Windows.Forms.Form.ModifierKeys & keys) != 0)
+                        {
+                            Pressed = true;
+                            break;
+                        }
+                    }
+                }
+
+                public bool Pressed
+                {
+                    get;
+                    private set;
+                }
+
+                public void Dispose()
+                {
+                    disposed = true;
                 }
             }
 
@@ -230,9 +243,27 @@ namespace Gw2Launcher.Client
 
                     //note entering the code has no easy way to reset it (compared to the login being the first tab) - either tab through all the links on the launcher, or click the textbox
 
-                    foreach (var c in Tools.Totp.Generate(key))
+                    if (q.Account.hostType == WindowWatcher.HostType.CEF)
                     {
-                        NativeMethods.PostMessage(q.Handle, (uint)WindowMessages.WM_CHAR, (IntPtr)c, IntPtr.Zero);
+                        if (!await WaitForKeys(System.Windows.Forms.Keys.Shift | System.Windows.Forms.Keys.Control | System.Windows.Forms.Keys.Alt, 5000))
+                            return false;
+
+                        var clipboard = new ClipboardText();
+
+                        if (!await DoTextEntry(q, Settings.LoginInputType.Clipboard, q.Handle, Tools.Totp.Generate(key), clipboard))
+                        {
+                            return false;
+                        }
+
+                        if (clipboard.HasText)
+                            await Windows.Clipboard.SetClipboardText(clipboard.Text);
+                    }
+                    else
+                    {
+                        foreach (var c in Tools.Totp.Generate(key))
+                        {
+                            NativeMethods.PostMessage(q.Handle, (uint)WindowMessages.WM_CHAR, (IntPtr)c, IntPtr.Zero);
+                        }
                     }
 
                     //wait for the submit button to enable
@@ -248,17 +279,31 @@ namespace Gw2Launcher.Client
                             //tab to the check
                             Windows.Keyboard.SendKey(q.Handle, System.Windows.Forms.Keys.Tab, Windows.Keyboard.KeyMessage.Down, true);
                             //check requires a key down+up to trigger
-                            Windows.Keyboard.SendKey(q.Handle, System.Windows.Forms.Keys.Space, Windows.Keyboard.KeyMessage.Press, true);
+                            Windows.Keyboard.SendKey(q.Handle, System.Windows.Forms.Keys.F1, Windows.Keyboard.KeyMessage.Press, true);
 
                             await Task.Delay(500);
                         }
+
                     }
 
                     if (!IsHandleOkay(q))
                         return false;
 
-                    //pressing enter on the checkbox will return to the login if the code wasn't entered properly
-                    Windows.Keyboard.SendKey(q.Handle, System.Windows.Forms.Keys.Return, Windows.Keyboard.KeyMessage.Down, true);
+                    if (q.Account.hostType == WindowWatcher.HostType.CEF)
+                    {
+                        //pressing enter to submit is bugged for CEF
+                        uint coord;
+                        if (!GetCoordinates(q.Handle, 0.205357, 0.503074, out coord))
+                            return false;
+
+                        NativeMethods.SendMessage(q.Handle, 0x0201, 1, coord); //WM_LBUTTONDOWN
+                        NativeMethods.SendMessage(q.Handle, 0x0202, 0, coord); //WM_LBUTTONUP
+                    }
+                    else
+                    {
+                        //pressing enter on the checkbox will return to the login if the code wasn't entered properly
+                        Windows.Keyboard.SendKey(q.Handle, System.Windows.Forms.Keys.Return, Windows.Keyboard.KeyMessage.Down, true);
+                    }
 
                     return true;
                 }
@@ -491,6 +536,22 @@ namespace Gw2Launcher.Client
 
                                     break;
                                 case AccountState.WaitingOnTotp:
+
+                                    if (q.Account.hostType == WindowWatcher.HostType.CEF)
+                                    {
+                                        if (!Settings.DisableAutomaticLogins.Value && ((Settings.IGw2Account)q.Account.Settings).AutomaticPlay)
+                                        {
+                                            DoPlay(q);
+
+                                            await Task.Delay(500);
+
+                                            if (!IsHandleOkay(q))
+                                            {
+                                                p.Dispose();
+                                                continue;
+                                            }
+                                        }
+                                    }
 
                                     await DoTotp(q);
                                     p.Dispose();
@@ -731,6 +792,7 @@ namespace Gw2Launcher.Client
                 GetAllChildProcesses(parent.Id, result);
 
                 return result;
+
             }
 
             private bool DoAutoLogin(QueuedAccount q)
@@ -739,6 +801,28 @@ namespace Gw2Launcher.Client
                 Windows.Keyboard.SendKey(q.Handle, System.Windows.Forms.Keys.Return, Windows.Keyboard.KeyMessage.Down, true);
 
                 return true;
+            }
+
+            private bool GetCoordinates(IntPtr handle, double x, double y, out uint coords)
+            {
+                RECT r;
+                if (NativeMethods.GetWindowRect(handle, out r))
+                {
+                    var h = r.bottom - r.top;
+                    var w = r.right - r.left;
+
+                    if (w == 0 || h == 0)
+                    {
+                        coords = 0;
+                        return false;
+                    }
+
+                    coords = (uint)(((uint)(h * y) << 16) | (uint)(w * x));
+                    return true;
+                }
+
+                coords = 0;
+                return false;
             }
 
             private bool GetCoordinates(IntPtr handle, CoordinateType type, out uint coords)
@@ -913,18 +997,34 @@ namespace Gw2Launcher.Client
                     else
                         tabs = 1;
 
-                    //"click" the background area to remove focus
-                    NativeMethods.SendMessage(handle, 0x0201, 1, coord); //WM_LBUTTONDOWN
-                    NativeMethods.SendMessage(handle, 0x0202, 0, coord); //WM_LBUTTONUP
-
-                    wait();
-
                     if (!await WaitForKeys(System.Windows.Forms.Keys.Shift | System.Windows.Forms.Keys.Control | System.Windows.Forms.Keys.Alt, 5000))
                         return false;
 
-                    //tab back to the email field, which will highlight any existing text
-                    Windows.Keyboard.SendKey(handle, System.Windows.Forms.Keys.Tab, Windows.Keyboard.KeyMessage.Down, false, tabs);
-                    Windows.Keyboard.SendKey(handle, System.Windows.Forms.Keys.Tab, Windows.Keyboard.KeyMessage.Up, false);
+                    while (true)
+                    {
+                        using (var mm = new ModifierMonitor())
+                        {
+                            //"click" the background area to remove focus
+                            NativeMethods.SendMessage(handle, 0x0201, 1, coord); //WM_LBUTTONDOWN
+                            NativeMethods.SendMessage(handle, 0x0202, 0, coord); //WM_LBUTTONUP
+
+                            wait();
+
+                            //tab back to the email field, which will highlight any existing text
+                            Windows.Keyboard.SendKey(handle, System.Windows.Forms.Keys.Tab, Windows.Keyboard.KeyMessage.Down, false, tabs);
+                            Windows.Keyboard.SendKey(handle, System.Windows.Forms.Keys.Tab, Windows.Keyboard.KeyMessage.Up, false);
+
+                            if (mm.Pressed)
+                            {
+                                if (Util.Logging.Enabled)
+                                {
+                                    Util.Logging.LogEvent(q.Account.Settings, "Interrupted by modifier key, retrying");
+                                }
+                            }
+                            else
+                                break;
+                        }
+                    }
 
                     var clipboard = new ClipboardText();
                     var canClipboard = await CanUseClipboard();
@@ -983,19 +1083,26 @@ namespace Gw2Launcher.Client
 
                     try
                     {
+                        if (Util.Logging.Enabled)
+                        {
+                            Util.Logging.LogEvent(q.Account.Settings, "Entering password using " + (Settings.Tweaks.Login.HasValue ? Settings.Tweaks.Login.Value.Password : Settings.LoginInputType.Post));
+                        }
+
                         if (!Settings.Tweaks.Login.HasValue && canClipboard)
                         {
                             //pasting an empty character to verify it's processing text input
                             if (!IsPrivilegedProcessFocused() && !await DoTextEntry(q, Settings.LoginInputType.Clipboard, handle, null, clipboard))
                             {
+                                if (Util.Logging.Enabled)
+                                {
+                                    Util.Logging.LogEvent(q.Account.Settings, "Failed to verify password entry");
+                                }
                                 return false;
                             }
                         }
 
-                        if (Util.Logging.Enabled)
-                        {
-                            Util.Logging.LogEvent(q.Account.Settings, "Entering password using " + (Settings.Tweaks.Login.HasValue ? Settings.Tweaks.Login.Value.Password : Settings.LoginInputType.Post));
-                        }
+                        if (!await WaitForKeys(System.Windows.Forms.Keys.Shift | System.Windows.Forms.Keys.Control | System.Windows.Forms.Keys.Alt, 5000))
+                            return false;
 
                         if (!await DoTextEntry(q, Settings.Tweaks.Login.HasValue ? Settings.Tweaks.Login.Value.Password : Settings.LoginInputType.Post, handle, c, clipboard))
                         {
@@ -1049,37 +1156,101 @@ namespace Gw2Launcher.Client
 
                         var verify = 0;
 
-                        while (true)
+                        using (var listener = Windows.Clipboard.AddListener())
                         {
-                            ++verify;
+                            var pid = q.Process.Id;
+                            var lpid = uint.MaxValue;
 
-                            //copy to clipboard and verify
-                            try
+                            listener.Changed += delegate
                             {
-                                Windows.Keyboard.SetKeyState(System.Windows.Forms.Keys.ControlKey, true);
-                                Windows.Keyboard.SendKey(handle, System.Windows.Forms.Keys.C, Windows.Keyboard.KeyMessage.Down, false);
-                            }
-                            finally
+                                lpid = Windows.Clipboard.GetClipboardProcess(true);
+                            };
+
+                            while (true)
                             {
-                                Windows.Keyboard.SetKeyState(System.Windows.Forms.Keys.ControlKey, false);
-                            }
-
-                            wait();
-
-                            if (q.Account.hostType == WindowWatcher.HostType.CEF)
-                            {
-                                Windows.Clipboard.SetBlocked();
-                            }
-
-                            var clipboard2 = await Windows.Clipboard.GetClipboardText(verify * 1500);
-
-                            if (clipboard2 == null)
-                            {
-                                if (verify >= 2)
+                                if (++verify > 1)
                                 {
                                     if (Util.Logging.Enabled)
                                     {
-                                        Util.Logging.LogEvent(q.Account.Settings, "Unable to verify email, no data was available");
+                                        Util.Logging.LogEvent(q.Account.Settings, "Retrying login verification");
+                                    }
+                                }
+
+                                //copy to clipboard and verify
+                                try
+                                {
+                                    Windows.Keyboard.SetKeyState(System.Windows.Forms.Keys.ControlKey, true);
+                                    if (verify > 1)
+                                    {
+                                        Windows.Keyboard.SendKey(handle, System.Windows.Forms.Keys.A, Windows.Keyboard.KeyMessage.Down, false);
+                                    }
+                                    listener.Reset();
+                                    Windows.Keyboard.SendKey(handle, System.Windows.Forms.Keys.C, Windows.Keyboard.KeyMessage.Press, false);
+                                }
+                                finally
+                                {
+                                    Windows.Keyboard.SetKeyState(System.Windows.Forms.Keys.ControlKey, false);
+                                }
+
+                                wait();
+
+                                if (q.Account.hostType == WindowWatcher.HostType.CEF)
+                                {
+                                    Windows.Clipboard.SetBlocked();
+                                }
+
+                                string clipboard2;
+
+                                if (listener.Enabled)
+                                {
+                                    if (await listener.Wait(verify * 1500, false))
+                                    {
+                                        clipboard2 = await Windows.Clipboard.GetClipboardText(500);
+                                    }
+                                    else
+                                    {
+                                        clipboard2 = null;
+                                    }
+                                }
+                                else
+                                {
+                                    clipboard2 = await Windows.Clipboard.GetClipboardText(verify * 1500);
+                                }
+
+                                if (clipboard2 == null)
+                                {
+                                    if (verify >= 2)
+                                    {
+                                        if (Util.Logging.Enabled)
+                                        {
+                                            Util.Logging.LogEvent(q.Account.Settings, "Unable to verify email, no data was available");
+                                        }
+
+                                        if (clipboard.HasText)
+                                            await Windows.Clipboard.SetClipboardText(clipboard.Text);
+
+                                        return false;
+                                    }
+
+                                    continue;
+                                }
+
+                                if (!q.Account.Settings.Email.Replace(" ", "").Equals(clipboard2, StringComparison.OrdinalIgnoreCase))
+                                {
+                                    if (Util.Logging.Enabled)
+                                    {
+                                        if (lpid == q.Process.Id)
+                                            Util.Logging.LogEvent(q.Account.Settings, "Email does not match, clipboard was set to \"" + clipboard2 + "\"");
+                                        else
+                                            Util.Logging.LogEvent(q.Account.Settings, "Email does not match, clipboard was changed by PID " + (lpid == uint.MaxValue ? "[unknown]" : lpid.ToString()));
+                                    }
+
+                                    if (lpid != uint.MaxValue && lpid != pid && verify == 1)
+                                    {
+                                        //something else set the clipboard, try again
+                                        await Windows.Clipboard.SetClipboardText("");
+
+                                        continue;
                                     }
 
                                     if (clipboard.HasText)
@@ -1089,37 +1260,15 @@ namespace Gw2Launcher.Client
                                 }
                                 else
                                 {
-                                    if (Util.Logging.Enabled)
-                                    {
-                                        Util.Logging.LogEvent(q.Account.Settings, "Retrying login verification");
-                                    }
+                                    break;
                                 }
-
-                                continue;
-                            }
-
-                            if (!q.Account.Settings.Email.Equals(clipboard2, StringComparison.Ordinal))
-                            {
-                                if (Util.Logging.Enabled)
-                                {
-                                    Util.Logging.LogEvent(q.Account.Settings, "Email does not match");
-                                }
-
-                                if (clipboard.HasText)
-                                    await Windows.Clipboard.SetClipboardText(clipboard.Text);
-
-                                return false;
-                            }
-                            else
-                            {
-                                break;
                             }
                         }
-                    }
 
-                    if (q.Account.hostType == WindowWatcher.HostType.CEF)
-                    {
-                        Windows.Clipboard.SetBlocked();
+                        if (q.Account.hostType == WindowWatcher.HostType.CEF)
+                        {
+                            Windows.Clipboard.SetBlocked();
+                        }
                     }
 
                     if (clipboard.HasText)
@@ -1165,6 +1314,7 @@ namespace Gw2Launcher.Client
                 }
             }
             
+
             private async Task<bool> DoTextEntry(QueuedAccount q, Settings.LoginInputType type, IntPtr handle, IEnumerable<char> text, ClipboardText clipboard)
             {
                 switch (type)
@@ -1201,25 +1351,31 @@ namespace Gw2Launcher.Client
                         }
                     default:
 
-                        if (type == Settings.LoginInputType.Send)
+                        using (var mm = new ModifierMonitor())
                         {
-                            foreach (char c in text)
+                            if (type == Settings.LoginInputType.Send)
                             {
-                                NativeMethods.SendMessage(handle, WindowMessages.WM_CHAR, (IntPtr)c, IntPtr.Zero);
+                                foreach (char c in text)
+                                {
+                                    NativeMethods.SendMessage(handle, WindowMessages.WM_CHAR, (IntPtr)c, IntPtr.Zero);
+                                }
+                            }
+                            else
+                            {
+                                foreach (char c in text)
+                                {
+                                    NativeMethods.PostMessage(handle, WindowMessages.WM_CHAR, (IntPtr)c, IntPtr.Zero);
+                                }
+
+                                await Task.Delay(500);
                             }
 
-                            return true;
-                        }
-                        else
-                        {
-                            foreach (char c in text)
+                            if (mm.Pressed && Util.Logging.Enabled)
                             {
-                                NativeMethods.PostMessage(handle, WindowMessages.WM_CHAR, (IntPtr)c, IntPtr.Zero);
+                                Util.Logging.LogEvent(q.Account.Settings, "Interrupted by modifier key");
                             }
 
-                            await Task.Delay(500);
-
-                            return true;
+                            return !mm.Pressed;
                         }
                 }
             }
@@ -1234,112 +1390,156 @@ namespace Gw2Launcher.Client
                 var ctext = reset && resetText == null ? await Windows.Clipboard.GetClipboardText() : reset ? resetText : null;
                 var attempt = 0;
                 var pid = q.Process.Id;
+                var self = Process.GetCurrentProcess().Id;
 
-                while (true)
+                using (var listener = Windows.Clipboard.AddListener())
                 {
-                    var cancel = new CancellationTokenSource();
-                    var data = new Windows.Clipboard.DataText()
+                    for (; ; ++attempt)
                     {
-                        Text = text,
-                    };
-
-                    try
-                    {
-                        var completed = false;
-                        var isWaiting = true;
-                        var rpid = uint.MaxValue;
-
-                        data.DataRequested += delegate(object o, Windows.Clipboard.DataRequestedEventArgs e)
+                        var cancel = new CancellationTokenSource();
+                        var data = new Windows.Clipboard.DataText()
                         {
-                            rpid = e.GetProcess();
-
-                            //CoherentUI uses 0
-                            //CEF uses GW2
-
-                            if (rpid != 0 && rpid != pid)
-                            {
-                                e.Abort = true;
-                            }
+                            Text = text,
                         };
-
-                        data.Complete += delegate(object o, bool success)
-                        {
-                            completed = success;
-
-                            if (isWaiting)
-                            {
-                                cancel.Cancel(); //could fail, but will be caught by the event
-                            }
-                        };
-
-                        if (Windows.Clipboard.IsBlocked)
-                        {
-                            if (Util.Logging.Enabled)
-                            {
-                                Util.Logging.LogEvent(q.Account.Settings, "Waiting for clipboard to unblock");
-                            }
-                            await Windows.Clipboard.WaitForBlocked();
-                        }
-
-                        if (!await Windows.Clipboard.SetClipboardData(data))
-                        {
-                            return false;
-                        }
 
                         try
                         {
-                            Windows.Keyboard.SetKeyState(System.Windows.Forms.Keys.ControlKey, true);
-                            Windows.Keyboard.SendKey(handle, System.Windows.Forms.Keys.V, Windows.Keyboard.KeyMessage.Down, false);
+                            var completed = false;
+                            var isWaiting = true;
+
+                            data.DataRequested += delegate(object o, Windows.Clipboard.DataRequestedEventArgs e)
+                            {
+                                var rpid = e.GetProcess();
+
+                                //CoherentUI uses 0
+                                //CEF uses GW2
+
+                                if (rpid != 0 && rpid != pid)
+                                {
+                                    if (Util.Logging.Enabled)
+                                    {
+                                        Util.Logging.LogEvent(q.Account.Settings, "Clipboard intercepted by PID " + rpid);
+                                    }
+
+                                    e.Action = Windows.Clipboard.DataRequestedEventArgs.ResponseAction.Skip;
+                                }
+                            };
+
+                            data.Complete += delegate(object o, bool success)
+                            {
+                                completed = success;
+
+                                if (isWaiting)
+                                {
+                                    cancel.Cancel(); //could fail, but will be caught by the event
+                                }
+                            };
+
+                            if (Windows.Clipboard.IsBlocked)
+                            {
+                                if (Util.Logging.Enabled)
+                                {
+                                    Util.Logging.LogEvent(q.Account.Settings, "Waiting for clipboard to unblock");
+                                }
+                                await Windows.Clipboard.WaitForBlocked();
+                            }
+
+                            listener.Reset();
+
+                            if (!await Windows.Clipboard.SetClipboardData(data))
+                            {
+                                return false;
+                            }
+
+                            //there may be a slight delay until the clipboard is set
+
+                            if (listener.Enabled && !await listener.Wait(5000, false))
+                            {
+                                //clipboard wasn't set
+                                //using the clipboard is probably not support
+
+                                if (Util.Logging.Enabled)
+                                {
+                                    Util.Logging.LogEvent(q.Account.Settings, "Warning: use of the clipboard may not be supported");
+                                }
+                            }
+
+                            EventHandler onChanged = delegate
+                            {
+                                if (isWaiting)
+                                {
+                                    var lpid = Windows.Clipboard.GetClipboardProcess(true);
+
+                                    if (lpid != self)
+                                    {
+                                        if (Util.Logging.Enabled)
+                                        {
+                                            Util.Logging.LogEvent(q.Account.Settings, "Clipboard was changed by PID " + lpid.ToString());
+                                        }
+                                        cancel.Cancel();
+                                    }
+                                }
+                            };
+
+                            listener.Reset();
+                            listener.Changed += onChanged;
+
+                            try
+                            {
+                                Windows.Keyboard.SetKeyState(System.Windows.Forms.Keys.ControlKey, true);
+                                if (attempt > 0)
+                                {
+                                    Windows.Keyboard.SendKey(handle, System.Windows.Forms.Keys.A, Windows.Keyboard.KeyMessage.Down, false);
+                                }
+                                Windows.Keyboard.SendKey(handle, System.Windows.Forms.Keys.V, Windows.Keyboard.KeyMessage.Press, false);
+                            }
+                            finally
+                            {
+                                Windows.Keyboard.SetKeyState(System.Windows.Forms.Keys.ControlKey, false);
+                            }
+
+                            try
+                            {
+                                //gw2 could potentially take more than 5s to use the clipboard
+                                await Task.Delay(5000, cancel.Token);
+                            }
+                            catch { }
+
+                            isWaiting = false;
+
+                            listener.Changed -= onChanged;
+
+                            if (completed)
+                            {
+                                await Task.Delay(100);
+                            }
+                            else if (listener.HasChanged)
+                            {
+                                //something else set the clipboard
+
+                                if (attempt < 3)
+                                {
+                                    await Task.Delay(100);
+
+                                    continue;
+                                }
+                            }
+
+                            if (reset)
+                            {
+                                if (!await Windows.Clipboard.SetClipboardText(ctext))
+                                {
+                                    //failed to restore clipboard
+                                }
+                            }
+
+                            return completed;
                         }
                         finally
                         {
-                            Windows.Keyboard.SetKeyState(System.Windows.Forms.Keys.ControlKey, false);
+                            data.Dispose();
+                            cancel.Dispose();
                         }
-
-                        try
-                        {
-                            //gw2 could potentially take more than 5s to use the clipboard
-                            await Task.Delay(5000, cancel.Token);
-                        }
-                        catch { }
-
-                        isWaiting = false;
-
-                        if (completed)
-                        {
-                            await Task.Delay(100);
-                        }
-                        else if (rpid != uint.MaxValue)
-                        {
-                            //something else took the clipboard
-
-                            if (Util.Logging.Enabled)
-                            {
-                                Util.Logging.LogEvent(q.Account.Settings, "Clipboard intercepted by PID " + rpid);
-                            }
-
-                            if (++attempt <= 3)
-                            {
-                                await Task.Delay(100);
-
-                                continue;
-                            }
-                        }
-
-                        if (reset)
-                        {
-                            if (!await Windows.Clipboard.SetClipboardText(ctext))
-                            {
-                                //failed to restore clipboard
-                            }
-                        }
-
-                        return completed;
-                    }
-                    finally
-                    {
-                        data.Dispose();
-                        cancel.Dispose();
                     }
                 }
             }

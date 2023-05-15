@@ -1429,7 +1429,6 @@ namespace Gw2Launcher.Client
             public LaunchMode mode;
             public string args;
             public bool disableProxy;
-
             public void OnDequeued(DequeuedState state)
             {
                 if (Dequeued != null)
@@ -1630,7 +1629,6 @@ namespace Gw2Launcher.Client
             autologin.LoginEntered += Autologin_LoginEntered;
             LinkedProcess.ProcessExited += LinkedProcess_ProcessExited;
             LinkedProcess.ProcessActive += LinkedProcess_ProcessActive;
-
             Settings.GuildWars2.PreventDefaultCoherentUI.ValueChanged += PreventDefaultCoherentUI_ValueChanged;
             Settings.LaunchLimiter.ValueChanged += LaunchLimiter_ValueChanged;
             Settings.LaunchBehindOtherAccounts.ValueChanged += LaunchBehindOtherAccounts_ValueChanged;
@@ -1996,10 +1994,6 @@ namespace Gw2Launcher.Client
             {
                 try
                 {
-                    if (Util.Logging.Enabled)
-                    {
-                        Util.Logging.LogEvent(account, "Killing " + p.Id);
-                    }
                     p.Kill();
                     return true;
                 }
@@ -2091,7 +2085,7 @@ namespace Gw2Launcher.Client
         {
             if (Util.Logging.Enabled)
             {
-                Util.Logging.LogEvent(account.Settings, "Queued for " + mode);
+                Util.Logging.LogEvent(account.Settings, "Queued [" + mode + "]");
             }
 
             lock (account)
@@ -2943,6 +2937,7 @@ namespace Gw2Launcher.Client
                         else if (build == 0)
                         {
                             build = -1;
+
                             if (!doUpdate && !FileManager.VerifyLocalDatBuild())
                             {
                                 doUpdate = true;
@@ -3234,7 +3229,6 @@ namespace Gw2Launcher.Client
                         {
                             Util.Logging.LogEvent(q.account.Settings, "Delaying launch due to limiter");
                         }
-
                         l.Wait(cancel);
                         continue;
                     }
@@ -3949,11 +3943,6 @@ namespace Gw2Launcher.Client
                         {
                             try
                             {
-                                if (Util.Logging.Enabled)
-                                {
-                                    Util.Logging.LogEvent(q.account.Settings, "Activating localized path");
-                                }
-
                                 var path = FileManager.ActivateLocalizedPath(gw2, fi);
                                 if (path != null)
                                     fi = new FileInfo(path);
@@ -3971,6 +3960,11 @@ namespace Gw2Launcher.Client
                             }
                             catch (Exception e)
                             {
+                                if (Util.Logging.Enabled)
+                                {
+                                    Util.Logging.LogEvent(q.account.Settings, "Failed to activate localized path");
+                                    Util.Logging.LogEvent(q.account.Settings, e.Message);
+                                }
                                 throw new Exception("Failed to create localized path:\n" + e.Message);
                             }
                         }
@@ -4002,14 +3996,14 @@ namespace Gw2Launcher.Client
                         //needs to update localized path regardless of mode
                         if (customProfile != null && customProfile.IsBasic)
                         {
-                            if (Util.Logging.Enabled)
-                            {
-                                Util.Logging.LogEvent(q.account.Settings, "Activating basic profile");
-                            }
-
                             try
                             {
                                 FileManager.ActivateBasic(gw2, identity, customProfile);
+
+                                if (Util.Logging.Enabled)
+                                {
+                                    Util.Logging.LogEvent(q.account.Settings, "Using basic profile");
+                                }
                             }
                             catch (Exception e)
                             {
@@ -4242,7 +4236,6 @@ namespace Gw2Launcher.Client
 
                     KillMutex(type);
 
-
                     var processOptions = GetProcessStartInfo(q, customProfile, fi);
                     var isWindowed = IsWindowed(account.Settings);
 
@@ -4255,7 +4248,6 @@ namespace Gw2Launcher.Client
 
                     if (!isUpdate)
                     {
-                        
                         s.RunAfter = RunAfterManager.Create(account, true);
 
                         if (RunAfter(Settings.RunAfter.RunAfterWhen.BeforeLaunching, account) > 0)
@@ -4278,7 +4270,7 @@ namespace Gw2Launcher.Client
                     {
                         var e = Network.Elapsed;
                         var check = false;
-                    
+
                         if (e < 30000)
                         {
                             check = GetActiveProcessCount() == 0 && attempt == 1;
@@ -4295,7 +4287,7 @@ namespace Gw2Launcher.Client
                     }
 
                     #endregion
-                    
+
                     const byte WINDOW_STATE_INITIALIZED = 1;
                     const byte WINDOW_STATE_LOADED = 2;
                     const byte WINDOW_STATE_DX_CREATED = 3;
@@ -4392,7 +4384,7 @@ namespace Gw2Launcher.Client
                             {
                                 if (Util.Logging.Enabled)
                                 {
-                                    Util.Logging.LogEvent(q.account.Settings, "Starting via proxy (" + (mode == LaunchMode.Launch && (Settings.PreventTaskbarGrouping.Value || Settings.ForceTaskbarGrouping.Value) ? "shortcut/" : "none/") + (Settings.ForceTaskbarGrouping.Value ? "shared" : "none"));
+                                    Util.Logging.LogEvent(q.account.Settings, "Starting via proxy (" + (mode == LaunchMode.Launch && (Settings.PreventTaskbarGrouping.Value || Settings.ForceTaskbarGrouping.Value) ? "shortcut/" : "none/") + (Settings.ForceTaskbarGrouping.Value ? "shared" : "none") + ")");
                                 }
 
                                 p = ProxyLauncher.Launch(account.Settings, processOptions, mode == LaunchMode.Launch && (Settings.PreventTaskbarGrouping.Value || Settings.ForceTaskbarGrouping.Value), Settings.ForceTaskbarGrouping.Value);
@@ -4445,7 +4437,6 @@ namespace Gw2Launcher.Client
                                     WindowOptions = account.Settings.WindowOptions,
                                 };
 
-
                                 if (wtemplate != null)
                                 {
                                     s.WindowTemplate = wtemplate;
@@ -4463,8 +4454,6 @@ namespace Gw2Launcher.Client
                                 watcher.WindowCrashed += OnWatchedWindowCrashed;
                                 if (account.Type == AccountType.GuildWars2)
                                     watcher.Timeout += OnWatchedWindowTimeout;
-
-
                                 watcher.ProcessOptions = processOptions;
 
                                 var l = limiter;
@@ -5054,11 +5043,6 @@ namespace Gw2Launcher.Client
         /// <param name="mode">Only launch modes of this type will be killed, or all if none are specified</param>
         public static async void CancelAndKillActiveLaunches(AccountType type, params LaunchMode[] mode)
         {
-            if (Util.Logging.Enabled)
-            {
-                Util.Logging.LogEvent(null, "Killing all active launches");
-            }
-
             CancelPendingLaunches();
 
             Task t;
@@ -5125,10 +5109,6 @@ namespace Gw2Launcher.Client
                 {
                     try
                     {
-                        if (Util.Logging.Enabled)
-                        {
-                            Util.Logging.LogEvent(null, "Killing " + p.Id + " due to killing all active launches");
-                        }
                         p.Kill();
                         count++;
                     }
@@ -5417,7 +5397,6 @@ namespace Gw2Launcher.Client
                         {
                             arguments = Util.Args.AddOrReplace(arguments, "dx11", "");
                         }
-
                         args.Append(' ');
                         if (disableAutologin)
                             args.Append(Util.Args.AddOrReplace(account.Arguments, "autologin", ""));
@@ -5674,9 +5653,14 @@ namespace Gw2Launcher.Client
                 {
                     if (type.HasFlag(p.Account.Type))
                     {
-                        if (p.HasMutex && p.KillMutex())
+                        if (p.HasMutex && p.KillMutex(true))
                         {
                             killed = true;
+
+                            type = type & ~p.Account.Type;
+
+                            if (type == AccountType.None)
+                                break;
                         }
                     }
                 }
@@ -5745,11 +5729,6 @@ namespace Gw2Launcher.Client
         /// <returns></returns>
         private static int Scan(ScanPaths paths, ScanOptions options, HashSet<LaunchMode> modes = null)
         {
-            if (Util.Logging.Enabled)
-            {
-                Util.Logging.LogEvent(null, "Running scan with options " + options);
-            }
-
             var startTime = DateTime.UtcNow;
             int counter = 0;
 
@@ -5796,10 +5775,6 @@ namespace Gw2Launcher.Client
                                         {
                                             try
                                             {
-                                                if (Util.Logging.Enabled)
-                                                {
-                                                    Util.Logging.LogEvent(null, "Killing " + p.Id + " via scanner (2)");
-                                                }
                                                 counter++;
                                                 p.Kill();
                                             }
@@ -5904,10 +5879,6 @@ namespace Gw2Launcher.Client
                                         counter++;
                                         try
                                         {
-                                            if (Util.Logging.Enabled)
-                                            {
-                                                Util.Logging.LogEvent(null, "Killing " + p.Id + " via scanner (3)");
-                                            }
                                             p.Kill();
                                             continue;
                                         }
@@ -6020,10 +5991,6 @@ namespace Gw2Launcher.Client
                                                     counter++;
                                                     try
                                                     {
-                                                        if (Util.Logging.Enabled)
-                                                        {
-                                                            Util.Logging.LogEvent(account.Settings, "Killing " + p.Id + " via scanner (4)");
-                                                        }
                                                         p.Kill();
                                                         continue;
                                                     }
@@ -6112,7 +6079,7 @@ namespace Gw2Launcher.Client
                                                             {
                                                                 if (Util.Logging.Enabled)
                                                                 {
-                                                                    Util.Logging.LogEvent(account.Settings, "Killing " + p.Id + " due to profile");
+                                                                    Util.Logging.LogEvent(account.Settings, "Killing " + p.Id + " due to unsupported relaunch");
                                                                 }
                                                                 p.Kill();
                                                                 break;
@@ -6139,11 +6106,6 @@ namespace Gw2Launcher.Client
                                                     {
                                                         try
                                                         {
-                                                            if (Util.Logging.Enabled)
-                                                            {
-                                                                Util.Logging.LogEvent(account.Settings, "Starting watcher for recovered account");
-                                                            }
-
                                                             bool isWindowed = IsWindowed(account.Settings);
                                                             var watcher = s.Watcher = new WindowWatcher(account, p, false, isWindowed, s);
                                                             watcher.WindowChanged += OnWatchedWindowChanged;
@@ -6175,10 +6137,6 @@ namespace Gw2Launcher.Client
                                         counter++;
                                         try
                                         {
-                                            if (Util.Logging.Enabled)
-                                            {
-                                                Util.Logging.LogEvent(null, "Killing " + p.Id + " via scanner (1)");
-                                            }
                                             p.Kill();
                                             continue;
                                         }
@@ -6570,7 +6528,7 @@ namespace Gw2Launcher.Client
                     code = process.ExitCode;
                     elapsed = process.ExitTime.Subtract(process.StartTime);
                 }
-                catch{}
+                catch { }
 
                 Util.Logging.LogEvent(account.Settings, "Process " + id + " exited [" + elapsed.ToString() + "] (" + code + ")");
             }
@@ -6677,6 +6635,14 @@ namespace Gw2Launcher.Client
                     }
 
                     RunAfter(Settings.RunAfter.RunAfterWhen.LoadedLauncher, account);
+
+                    break;
+                case WindowWatcher.WindowChangedEventArgs.EventType.LauncherCefLoginEvent:
+
+                    if ((settings.NetworkAuthorization & Settings.NetworkAuthorizationOptions.Enabled) != 0 && settings.TotpKey != null)
+                    {
+                        autologin.Queue(account, watcher.Process, Autologin.EventAction.Totp);
+                    }
 
                     break;
                 case WindowWatcher.WindowChangedEventArgs.EventType.LauncherLoginCodeRequired:
@@ -6972,7 +6938,7 @@ namespace Gw2Launcher.Client
                         var h = s.Hidden;
                         if (h != null && !h.Disposing)
                             s.Hidden = null;
-                        
+
                         if (!account.isLaunching)
                         {
                             s.Watcher = null;
@@ -7479,6 +7445,7 @@ namespace Gw2Launcher.Client
                     {
                         Util.Logging.LogEvent(account.Settings, "Killing " + p.Id + " due to timeout");
                     }
+
                     p.Kill();
                     p.WaitForExit();
                 }
@@ -7537,8 +7504,9 @@ namespace Gw2Launcher.Client
                         {
                             if (Util.Logging.Enabled)
                             {
-                                Util.Logging.LogEvent(account.Settings, "Killing " + p.Id + " due to update");
+                                Util.Logging.LogEvent(account.Settings, "Killing " + p.Id + " due to a patch");
                             }
+
                             p.Kill();
                             p.WaitForExit();
 
@@ -7551,12 +7519,13 @@ namespace Gw2Launcher.Client
                         //unknown error - GW2 needs to be patched or Local.dat/Gw2.dat can't be accessed
                         //assuming a patch is required
 
-                        if (!Settings.DisableLocalDatErrorHandling && p != null && !p.HasExited && account.errors == 0 && watcher.Session.Mode == LaunchMode.Launch)
+                        if (p != null && !p.HasExited && account.errors == 0 && watcher.Session.Mode == LaunchMode.Launch)
                         {
                             if (Util.Logging.Enabled)
                             {
-                                Util.Logging.LogEvent(account.Settings, "Killing " + p.Id + " due to error window");
+                                Util.Logging.LogEvent(account.Settings, "Killing " + p.Id + " due to an error");
                             }
+
                             p.Kill();
                             p.WaitForExit();
 
@@ -7611,7 +7580,7 @@ namespace Gw2Launcher.Client
                     {
                         path = Util.Logging.GetDisplayPath(Util.ProcessUtil.GetPath(p), 1);
                     }
-                    catch 
+                    catch
                     {
                         path = "";
                     }
@@ -7627,7 +7596,7 @@ namespace Gw2Launcher.Client
 
                                 if (string.IsNullOrEmpty(args))
                                 {
-                                    args="";
+                                    args = "";
                                 }
                                 else if (args[0] == '"')
                                 {
@@ -7647,7 +7616,7 @@ namespace Gw2Launcher.Client
                     }
                     catch { }
 
-                    Util.Logging.LogEvent(e.Settings, "PID " + p.Id + " (from " + parent + ") [" + path + "] [" + args + "]");
+                    Util.Logging.LogEvent(e.Settings, "Process " + p.Id + " (from " + parent + ") [" + path + "] [" + args + "]");
                 }
                 catch { }
             }

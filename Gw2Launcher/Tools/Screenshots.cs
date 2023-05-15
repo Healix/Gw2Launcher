@@ -445,8 +445,13 @@ namespace Gw2Launcher.Tools
                     watcher.EnableRaisingEvents = false;
                     watcher.EnableRaisingEvents = true;
                 }
-                catch
+                catch (Exception ex)
                 {
+                    if (Util.Logging.Enabled)
+                    {
+                        Util.Logging.LogEvent(null, "Error while monitoring screenshots: " + ex.Message + " (" + ex.HResult.ToString("x") + ")");
+                    }
+
                     using (watcher)
                     {
                         watcher = null;
@@ -665,10 +670,22 @@ namespace Gw2Launcher.Tools
                             }
 
                             if (!isLocked || --retry == 0)
+                            {
+                                if (Util.Logging.Enabled)
+                                {
+                                    Util.Logging.LogEvent(null, "Error while converting screenshot (" + first.value + "): " + e.Message + " (" + e.HResult.ToString("x") + ")");
+                                }
+
                                 break;
+                            }
                         }
                         catch (Exception e)
                         {
+                            if (Util.Logging.Enabled)
+                            {
+                                Util.Logging.LogEvent(null, "Error while converting screenshot (" + first.value + "): " + e.Message + " (" + e.HResult.ToString("x") + ")");
+                            }
+
                             Util.Logging.Log(e);
                             break;
                         }
@@ -782,12 +799,20 @@ namespace Gw2Launcher.Tools
                                     }
                                     else
                                     {
+                                        if (Util.Logging.Enabled)
+                                        {
+                                            Util.Logging.LogEvent(null, "Unable to move screenshot (" + first.value + "): " + ex.Message + " (" + ex.HResult.ToString("x") + ")");
+                                        }
                                         index--;
                                         break;
                                     }
                                 }
                                 catch (Exception ex)
                                 {
+                                    if (Util.Logging.Enabled)
+                                    {
+                                        Util.Logging.LogEvent(null, "Unable to move screenshot (" + first.value + "): " + ex.Message + " (" + ex.HResult.ToString("x") + ")");
+                                    }
                                     Util.Logging.Log(ex);
                                     index--;
                                     break;
@@ -796,6 +821,10 @@ namespace Gw2Launcher.Tools
                         }
                         catch (Exception e)
                         {
+                            if (Util.Logging.Enabled)
+                            {
+                                Util.Logging.LogEvent(null, "Error while handling screenshot (" + first.value + "): " + e.Message + " (" + e.HResult.ToString("x") + ")");
+                            }
                             Util.Logging.Log(e);
                         }
                     }
@@ -968,8 +997,12 @@ namespace Gw2Launcher.Tools
                         watcher = new Watcher(this, path);
                         watcher.Error += watcher_Error;
                     }
-                    catch
+                    catch (Exception ex)
                     {
+                        if (Util.Logging.Enabled)
+                        {
+                            Util.Logging.LogEvent(account, "Unable to monitor screenshots: " + ex.Message + " (" + ex.HResult.ToString("x") + ")");
+                        }
                         return;
                     }
                     watchers[path] = watcher;

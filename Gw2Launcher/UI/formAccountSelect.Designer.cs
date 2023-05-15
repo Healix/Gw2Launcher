@@ -78,7 +78,6 @@ namespace Gw2Launcher.UI
             this.labelTitle.Size = new System.Drawing.Size(85, 13);
             this.labelTitle.TabIndex = 34;
             this.labelTitle.Text = "Which accounts?";
-            this.labelTitle.SizeChanged += new System.EventHandler(this.labelTitle_SizeChanged);
             // 
             // gridAccounts
             // 

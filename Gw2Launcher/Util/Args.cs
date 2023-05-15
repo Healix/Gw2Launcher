@@ -20,10 +20,13 @@ namespace Gw2Launcher.Util
 
         private static string GetValue(string args, string key, out int from, out int to)
         {
+            from = to = -1;
+            if (args == null)
+                return null;
+
             int i = -1;
             int l = args.Length;
             int kl = key.Length;
-            from = to = -1;
 
             //formats: 
             //"-key value"

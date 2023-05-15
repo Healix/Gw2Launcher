@@ -25,7 +25,7 @@ namespace Gw2Launcher.UI.Controls
         protected bool highlighted;
         protected ArrowDirection direction;
         protected bool redraw;
-
+        
         public ArrowButton()
         {
             points = new PointF[3];
@@ -49,7 +49,7 @@ namespace Gw2Launcher.UI.Controls
             OnColorChanged();
         }
 
-        [DefaultValue(typeof(Color), "20,20,20")]
+        [DefaultValue(typeof(Color),"20,20,20")]
         public Color ForeColorHighlight
         {
             get

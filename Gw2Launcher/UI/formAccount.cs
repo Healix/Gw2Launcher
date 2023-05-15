@@ -412,7 +412,7 @@ namespace Gw2Launcher.UI
                 });
 
             Util.ComboItem<Settings.ProcessPriorityClass>.Select(comboProcessPriority, Settings.ProcessPriorityClass.Normal);
-            
+
             if (!hasData)
             {
                 panelIdentifierColor.BackColor = Util.Color.FromUID(Settings.GetNextUID());
@@ -2925,6 +2925,7 @@ namespace Gw2Launcher.UI
                         break;
                     }
                 }
+
 
 
 

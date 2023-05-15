@@ -389,6 +389,7 @@ namespace Gw2Launcher.Windows.Native
         WM_ACTIVATE = 0x6,
         WM_RENDERFORMAT = 0x0305,
         WM_RENDERALLFORMATS = 0x0306,
+        WM_CLIPBOARDUPDATE = 0x031D,
     }
 
     public enum Sizing
@@ -1291,7 +1292,7 @@ namespace Gw2Launcher.Windows.Native
         Cloak,
         Cloaked,
         FreezeRepresentation,
-        CornerPreference=33,
+        CornerPreference = 33,
     }
 
     internal enum DWMNCRENDERINGPOLICY
@@ -1621,7 +1622,7 @@ namespace Gw2Launcher.Windows.Native
         [MarshalAs(UnmanagedType.ByValArray, SizeConst = 148, ArraySubType = UnmanagedType.U1)]
         public byte[] debugInfo;
 #endif
-        
+
         private T GetDebugInfo<T>() where T : struct
         {
             var structSize = Marshal.SizeOf(typeof(T));
@@ -1686,5 +1687,14 @@ namespace Gw2Launcher.Windows.Native
         MAPVK_VK_TO_CHAR = 2,
         MAPVK_VSC_TO_VK_EX = 3,
         MAPVK_VK_TO_VSC_EX = 4,
+    }
+
+    public enum FileType : uint
+    {
+        FileTypeChar = 0x0002,
+        FileTypeDisk = 0x0001,
+        FileTypePipe = 0x0003,
+        FileTypeRemote = 0x8000,
+        FileTypeUnknown = 0x0000,
     }
 }

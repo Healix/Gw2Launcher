@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Runtime.InteropServices;
@@ -14,6 +14,22 @@ namespace Gw2Launcher.Windows
 
         public class DataRequestedEventArgs : EventArgs
         {
+            public enum ResponseAction
+            {
+                /// <summary>
+                /// Sets the clipboard, allowing the requester to retrieve the data
+                /// </summary>
+                Accept,
+                /// <summary>
+                /// Clipboard is left unchanged and the operation is aborted
+                /// </summary>
+                Abort,
+                /// <summary>
+                /// Clipboard is left unchanged, allowing for another requester
+                /// </summary>
+                Skip,
+            }
+
             /// <summary>
             /// True if clipboard data was already set and shouldn't be changed
             /// </summary>
@@ -23,10 +39,7 @@ namespace Gw2Launcher.Windows
                 set;
             }
 
-            /// <summary>
-            /// True to cancel
-            /// </summary>
-            public bool Abort
+            public ResponseAction Action
             {
                 get;
                 set;
@@ -37,19 +50,7 @@ namespace Gw2Launcher.Windows
             /// </summary>
             public uint GetProcess()
             {
-                var hwnd = NativeMethods.GetOpenClipboardWindow();
-                uint pid;
-
-                if (hwnd != IntPtr.Zero)
-                {
-                    NativeMethods.GetWindowThreadProcessId(hwnd, out pid);
-                }
-                else
-                {
-                    pid = 0;
-                }
-
-                return pid;
+                return GetClipboardProcess(false);
             }
         }
 
@@ -79,31 +80,55 @@ namespace Gw2Launcher.Windows
                     catch { }
                 }
 
-                if (!e.Handled && !e.Abort)
+                if (!e.Handled)
                 {
-                    var t = GetData();
-
-                    if (t == null)
-                        t = string.Empty;
-
-                    var ptr = Marshal.StringToHGlobalUni(pending.Text);
-
-                    try
+                    switch (e.Action)
                     {
-                        if (NativeMethods.SetClipboardData(CF_UNICODE, ptr) != IntPtr.Zero)
-                        {
-                            //system owns it
-                            ptr = IntPtr.Zero;
-                        }
-                    }
-                    finally
-                    {
-                        if (ptr != IntPtr.Zero)
-                            Marshal.FreeHGlobal(ptr);
+                        case DataRequestedEventArgs.ResponseAction.Accept:
+
+                            var t = GetData();
+
+                            if (t == null)
+                                t = string.Empty;
+
+                            var ptr = Marshal.StringToHGlobalUni(pending.Text);
+
+                            try
+                            {
+                                if (NativeMethods.SetClipboardData(CF_UNICODE, ptr) != IntPtr.Zero)
+                                {
+                                    //system owns it
+                                    ptr = IntPtr.Zero;
+                                }
+                            }
+                            finally
+                            {
+                                if (ptr != IntPtr.Zero)
+                                    Marshal.FreeHGlobal(ptr);
+                            }
+
+                            OnComplete(true);
+
+                            break;
+                        case DataRequestedEventArgs.ResponseAction.Skip:
+
+                            //do nothing
+
+                            break;
+                        case DataRequestedEventArgs.ResponseAction.Abort:
+                        default:
+
+                            OnComplete(false);
+                            e.Handled = true;
+
+                            break;
                     }
                 }
-
-                OnComplete(!e.Abort);
+                else
+                {
+                    OnComplete(e.Action == DataRequestedEventArgs.ResponseAction.Accept);
+                    e.Handled = true;
+                }
             }
 
             public void OnComplete(bool success)
@@ -130,7 +155,158 @@ namespace Gw2Launcher.Windows
             }
         }
 
+        public interface IListener : IDisposable
+        {
+            event EventHandler Changed;
+
+            /// <summary>
+            /// Returns true if listening for clipboard changes (listening may not be supported)
+            /// </summary>
+            bool Enabled
+            {
+                get;
+            }
+
+            /// <summary>
+            /// Returns true if the clipboard has changed
+            /// </summary>
+            bool HasChanged
+            {
+                get;
+            }
+
+            /// <summary>
+            /// Resets if the clipboard has changed
+            /// </summary>
+            void Reset();
+
+            /// <summary>
+            /// Waits until the clipboard changes
+            /// </summary>
+            /// <param name="timeout">Milliseconds to wait</param>
+            /// <param name="reset">True to reset if the clipboard has already been changed</param>
+            /// <returns>True if the clipboard was changed</returns>
+            Task<bool> Wait(int timeout, bool reset = true);
+        }
+
+        private class ClipboardListener : IListener
+        {
+            public event EventHandler Changed;
+            private bool disposed;
+            private bool hasChanged;
+            private bool enabled;
+
+            public ClipboardListener(bool enabled)
+            {
+                this.enabled = enabled;
+                Clipboard.ClipboardChanged += Clipboard_ClipboardChanged;
+            }
+
+            ~ClipboardListener()
+            {
+                Dispose();
+            }
+
+            public bool Enabled
+            {
+                get
+                {
+                    return enabled;
+                }
+            }
+
+            void Clipboard_ClipboardChanged(object sender, EventArgs e)
+            {
+                hasChanged = true;
+                if (Changed != null)
+                    Changed(this, e);
+            }
+
+            public bool HasChanged
+            {
+                get
+                {
+                    return hasChanged;
+                }
+            }
+
+            /// <summary>
+            /// Waits until the clipboard changes
+            /// </summary>
+            /// <param name="timeout">Milliseconds to wait</param>
+            /// <param name="reset">True to reset if the clipboard has already been changed</param>
+            /// <returns>True if the clipboard was changed</returns>
+            public async Task<bool> Wait(int timeout, bool reset = true)
+            {
+                if (hasChanged)
+                {
+                    if (reset)
+                        hasChanged = false;
+                    else
+                        return true;
+                }
+
+                using (var c = new System.Threading.CancellationTokenSource())
+                {
+                    EventHandler onChange = delegate
+                    {
+                        c.Cancel();
+                    };
+
+                    Changed += onChange;
+
+                    try
+                    {
+                        if (hasChanged)
+                            return true;
+                        await Task.Delay(timeout, c.Token);
+                    }
+                    catch 
+                    { 
+                    }
+                    finally
+                    {
+                        Changed -= onChange;
+                    }
+
+                    return c.IsCancellationRequested;
+                }
+            }
+
+            public void Reset()
+            {
+                hasChanged = false;
+            }
+
+            public void Dispose()
+            {
+                if (!disposed)
+                {
+                    GC.SuppressFinalize(this);
+
+                    disposed = true;
+                    Clipboard.ClipboardChanged -= Clipboard_ClipboardChanged;
+                    Changed = null;
+
+                    if (enabled)
+                    {
+                        enabled = false;
+
+                        lock (UI.formMain.MainWindow)
+                        {
+                            if (--listeners == 0)
+                            {
+                                NativeMethods.RemoveClipboardFormatListener(UI.formMain.MainWindowHandle);
+                            }
+                        }
+                    }
+                }
+            }
+        }
+
+        private static event EventHandler ClipboardChanged;
         private static DataText pending;
+        private static byte listeners;
 
         /// <summary>
         /// Retrieves text from the clipboard
@@ -196,6 +372,47 @@ namespace Gw2Launcher.Windows
             }
         }
 
+        public static string GetClipboardText(IntPtr hwnd)
+        {
+            try
+            {
+                if (NativeMethods.OpenClipboard(hwnd))
+                {
+                    try
+                    {
+                        if (NativeMethods.IsClipboardFormatAvailable(CF_UNICODE))
+                        {
+                            var ptr = NativeMethods.GetClipboardData(CF_UNICODE);
+
+                            if (ptr != IntPtr.Zero)
+                            {
+                                var l = NativeMethods.GlobalLock(ptr);
+
+                                if (l != IntPtr.Zero)
+                                {
+                                    try
+                                    {
+                                        return Marshal.PtrToStringUni(l);
+                                    }
+                                    finally
+                                    {
+                                        NativeMethods.GlobalUnlock(l);
+                                    }
+                                }
+                            }
+                        }
+                    }
+                    finally
+                    {
+                        NativeMethods.CloseClipboard();
+                    }
+                }
+            }
+            catch { }
+
+            return null;
+        }
+
         /// <summary>
         /// Empties the clipboard
         /// </summary>
@@ -249,7 +466,6 @@ namespace Gw2Launcher.Windows
                     {
                         try
                         {
-                            var t = Environment.TickCount;
                             //using the clipboard to copy from CEF will cause EmptyClipboard() to block for 5s
                             if (NativeMethods.EmptyClipboard())
                             {
@@ -353,27 +569,43 @@ namespace Gw2Launcher.Windows
 
         public static bool ProcessMessage(ref System.Windows.Forms.Message m)
         {
-            var data = pending;
-
-            if (data == null)
-            {
-                return false;
-            }
-
-            var e = new DataRequestedEventArgs();
-
             switch ((WindowMessages)m.Msg)
             {
                 case WindowMessages.WM_RENDERFORMAT:
+                    
+                    var data = pending;
+
+                    if (data == null)
+                    {
+                        return false;
+                    }
+
+                    var e = new DataRequestedEventArgs();
 
                     data.OnDataRequested(e);
-                    pending = null;
+
+                    if (e.Handled)
+                    {
+                        pending = null;
+                    }
 
                     return true;
                 case WindowMessages.WM_RENDERALLFORMATS:
 
                     //occurs when the clipboard owner is exiting
                     //not needed
+
+                    break;
+                case WindowMessages.WM_CLIPBOARDUPDATE:
+
+                    if (ClipboardChanged != null)
+                    {
+                        try
+                        {
+                            ClipboardChanged(null, EventArgs.Empty);
+                        }
+                        catch { }
+                    }
 
                     break;
             }
@@ -443,6 +675,41 @@ namespace Gw2Launcher.Windows
 
                 return false;
             }
+        }
+
+        public static IListener AddListener()
+        {
+            lock (UI.formMain.MainWindow)
+            {
+                if (listeners == 0)
+                {
+                    if (!NativeMethods.AddClipboardFormatListener(UI.formMain.MainWindowHandle))
+                        return new ClipboardListener(false);
+                }
+                ++listeners;
+                return new ClipboardListener(true);
+            }
+        }
+
+        /// <summary>
+        /// Returns the ID of the process using the clipboard
+        /// </summary>
+        /// <param name="owner">True: returns the process owning the clipboard, False: returns the process with the clipboard open</param>
+        public static uint GetClipboardProcess(bool owner)
+        {
+            var hwnd = owner ? NativeMethods.GetClipboardOwner() : NativeMethods.GetOpenClipboardWindow();
+            uint pid;
+
+            if (hwnd != IntPtr.Zero)
+            {
+                NativeMethods.GetWindowThreadProcessId(hwnd, out pid);
+            }
+            else
+            {
+                pid = 0;
+            }
+
+            return pid;
         }
     }
 }

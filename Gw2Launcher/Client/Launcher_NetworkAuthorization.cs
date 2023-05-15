@@ -113,5 +113,7 @@ namespace Gw2Launcher.Client
             }
 
         }
+
+
     }
 }

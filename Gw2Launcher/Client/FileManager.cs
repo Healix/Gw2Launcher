@@ -4868,7 +4868,7 @@ namespace Gw2Launcher.Client
 
             Settings.GuildWars2.LastModified.Value = d;
 
-            if (verify && !Settings.DisableLocalDatVerification)
+            if (verify)
             {
                 var pd = new PathData();
                 var build = 0;

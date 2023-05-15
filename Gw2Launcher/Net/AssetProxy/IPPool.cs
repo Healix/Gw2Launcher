@@ -9,134 +9,294 @@ namespace Gw2Launcher.Net.AssetProxy
 {
     class IPPool
     {
-        private class Sample
+        public event EventHandler<RefreshAddressesEventArgs> RefreshAddresses;
+
+        public class RefreshAddressesEventArgs : EventArgs
+        {
+            public bool Handled
+            {
+                get;
+                set;
+            }
+
+            public IPEndPoint[] Addresses
+            {
+                get;
+                set;
+            }
+        }
+
+        public interface IAddress
+        {
+            IPEndPoint IP
+            {
+                get;
+            }
+            IPEndPoint GetAddress(int defaultPort);
+            void Sample(double sample);
+            void Error();
+            void OK();
+        }
+
+        private class Address : IAddress
         {
             public double total;
             public int count;
             public double avg;
-            public int index;
-            public IPAddress ip;
-            public DateTime lastUsed;
+            public ushort errors;
+            public int timestamp;
+
+            public Address(IPEndPoint address)
+            {
+                this.IP = address;
+            }
+
+            public IPEndPoint IP
+            {
+                get;
+                private set;
+            }
+
+            public IPEndPoint GetAddress(int port)
+            {
+                if (IP.Port != 0)
+                    return IP;
+                return new IPEndPoint(IP.Address, port);
+            }
+
+            public void Sample(double sample)
+            {
+                lock (this)
+                {
+                    if (double.MaxValue - total <= sample)
+                        total = double.MaxValue;
+                    else
+                        total += sample;
+                    ++count;
+                    timestamp = Environment.TickCount;
+                }
+            }
+
+            public void Error()
+            {
+                lock (this)
+                {
+                    ++errors;
+                    timestamp = Environment.TickCount;
+                }
+            }
+
+            public void OK()
+            {
+                lock (this)
+                {
+                    errors = 0;
+                    timestamp = Environment.TickCount;
+                }
+            }
+
+            public void Reset()
+            {
+                lock(this)
+                {
+                    avg = 0;
+                    total = 0;
+                    count = 0;
+                }
+            }
+
+            public double Average
+            {
+                get
+                {
+                    return avg;
+                }
+            }
+
+            public int Count
+            {
+                get
+                {
+                    return count;
+                }
+            }
         }
 
-        private Dictionary<IPAddress, Sample> samples;
-        private Sample[] sorted;
-        private DateTime reset;
-        private byte errors;
+        private Address[] addresses;
+        private int reset;
+        private int lastRefresh;
 
-        public IPPool(IPAddress[] ips)
+        public IPPool()
         {
-            this.samples = new Dictionary<IPAddress, Sample>(ips.Length);
-            sorted = new Sample[ips.Length];
-            reset = DateTime.UtcNow.AddMinutes(10);
 
-            int i = 0;
-            foreach (IPAddress ip in ips)
+        }
+
+        public IPPool(IPEndPoint[] addresses)
+        {
+            if (addresses != null)
             {
-                samples[ip] = sorted[i] = new Sample()
+                SetAddresses(addresses);
+            }
+        }
+
+        /// <summary>
+        /// Addresses will be refreshed on the next request
+        /// </summary>
+        /// <param name="now">True to refresh immediately</param>
+        public void Refresh(bool now = false)
+        {
+            addresses = null;
+
+            if (now)
+            {
+                OnRefreshAddresses();
+            }
+        }
+
+        private bool OnRefreshAddresses()
+        {
+            if (RefreshAddresses != null)
+            {
+                lastRefresh = Environment.TickCount;
+
+                var e = new RefreshAddressesEventArgs();
+
+                try
                 {
-                    ip = ip,
-                    index = i++
+                    RefreshAddresses(this, e);
+                }
+                catch { }
+
+                if (e.Handled)
+                {
+                    SetAddresses(e.Addresses);
+
+                    return true;
+                }
+            }
+
+            return false;
+        }
+
+        private void SetAddresses(IPEndPoint[] addresses)
+        {
+            var _addresses = new Address[addresses.Length];
+            var t = Environment.TickCount;
+
+            for (var i = 0; i < addresses.Length; i++)
+            {
+                _addresses[i] = new Address(addresses[i])
+                {
+                    timestamp = t,
                 };
             }
+
+            reset = lastRefresh = t;
+            this.addresses = _addresses;
         }
 
         public bool IsAlive()
         {
-            lock (sorted)
-            {
-                if (errors >= sorted.Length)
-                    return false;
-
-                return true;
-
-                //for (int i = 0, l = sorted.Length; i < l; i++)
-                //{
-                //    var s = sorted[i];
-                //    if (s.total >= 0 && s.total < double.MaxValue - 1)
-                //        return true;
-                //}
-            }
-
-            //return false;
+            return true;
         }
 
-        public void AddSample(IPAddress ip, double sample)
+        public IPAddress[] GetAddresses()
         {
-            lock (sorted)
+            lock (this)
             {
-                var s = samples[ip];
-                if (double.MaxValue - s.total <= sample)
+                if (addresses != null)
                 {
-                    if (s.total != double.MaxValue)
+                    var ips = new IPAddress[addresses.Length];
+
+                    for (var i = 0; i < addresses.Length; i++)
                     {
-                        s.total = double.MaxValue;
+                        ips[i] = addresses[i].IP.Address;
+                    }
+
+                    return ips;
+                }
+            }
+
+            return null;
+        }
+
+        /// <summary>
+        /// Returns the next address
+        /// </summary>
+        /// <param name="skip">Optional callback to skip addresses</param>
+        public IAddress GetAddress(Func<IPAddress, bool> skip = null)
+        {
+            lock (this)
+            {
+                if (addresses == null)
+                {
+                    if ((lastRefresh == 0 || Environment.TickCount - lastRefresh > 10000) && OnRefreshAddresses())
+                    {
+                        //ok
+                    }
+                    else
+                    {
+                        throw new Exception("No addresses available");
+                    }
+                }
+
+                var t = Environment.TickCount;
+                var r = t - reset > 600000;
+
+                var index = -1;
+                var last = int.MinValue;
+                var errors = 0;
+
+                for (var i = 0; i < addresses.Length; i++)
+                {
+                    if (skip == null || !skip(addresses[i].IP.Address))
+                    {
+                        if (t - addresses[i].timestamp > last)
+                        {
+                            last = t - addresses[i].timestamp;
+                            index = i;
+                        }
+                    }
+
+                    if (r)
+                        addresses[i].Reset();
+                    if (addresses[i].errors > 0)
                         ++errors;
-                    }
                 }
-                else
-                    s.total += sample;
-                s.count++;
-                s.avg = s.total / s.count;
 
-                for (int i = s.index - 1; i >= 0; i--)
+                if (errors == addresses.Length)
                 {
-                    var s2 = sorted[i];
-                    if (s2.avg > s.avg)
+                    if (Environment.TickCount - lastRefresh > 60000)
                     {
-                        sorted[s2.index = s.index] = s2;
-                        sorted[s.index = i] = s;
+                        Refresh(true);
+                        return GetAddress();
                     }
-                    else
-                        break;
                 }
-                for (int i = s.index + 1, l = sorted.Length; i < l; i++)
-                {
-                    var s2 = sorted[i];
-                    if (s2.avg < s.avg)
-                    {
-                        sorted[s2.index = s.index] = s2;
-                        sorted[s.index = i] = s;
-                    }
-                    else
-                        break;
-                }
+
+                if (index == -1)
+                    return null;
+
+                addresses[index].timestamp = t;
+                return addresses[index];
             }
         }
 
-        public IPAddress GetIP()
+        public int Count
         {
-            lock (sorted)
+            get
             {
-                double limit = sorted[0].avg * 1.5;
-                if (limit == 0)
-                    limit = double.MaxValue;
-                var now = DateTime.UtcNow;
-
-                if (now > reset)
+                if (addresses == null || !OnRefreshAddresses())
                 {
-                    reset = now.AddMinutes(10);
-                    for (int i = 0, l = sorted.Length; i < l; i++)
-                    {
-                        var s = sorted[i];
-                        s.avg = s.total = s.count = 0;
-                    }
+                    return 0;
                 }
-
-                for (int i = 0, l = sorted.Length; i < l; i++)
-                {
-                    var s = sorted[i];
-                    var lu = now.Subtract(s.lastUsed).TotalSeconds;
-
-                    if (s.count > 100 || lu > 5 || i == l - 1 || sorted[i + 1].avg > limit)
-                    {
-                        s.lastUsed = now;
-                        return s.ip;
-                    }
-                }
-
-                return sorted[0].ip;
+                return addresses.Length;
             }
+        }
+
+        public IPPool Alternate
+        {
+            get;
+            set;
         }
     }
 }

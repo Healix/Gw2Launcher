@@ -14,7 +14,21 @@ namespace Gw2Launcher.Util
         public static readonly string PATH;
         public static event EventHandler<LogEventArgs> LogMessage;
 
+#if DEBUG
+        public static bool Enabled
+        {
+            get
+            {
+                return true;
+            }
+            set
+            {
+
+            }
+        }
+#else
         public static bool Enabled;
+#endif
 
         public class LogEventArgs : EventArgs
         {
@@ -131,6 +145,18 @@ namespace Gw2Launcher.Util
 
         public static void LogEvent(Settings.IAccount account, string message)
         {
+#if DEBUG
+            try
+            {
+                var methodBase = new StackTrace().GetFrame(1).GetMethod();
+                Debug.WriteLine(message, "[" + DateTime.Now.ToString("MM/dd/yyyy HH:mm:ss.fff") + "][" + methodBase.ReflectedType.Name + "." + methodBase.Name + "]" + (account != null ? "[" + account.UID + "]" : ""));
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine(ex.ToString());
+            }
+#endif
+
             if (LogMessage != null)
             {
                 try

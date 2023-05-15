@@ -715,6 +715,8 @@ namespace Gw2Launcher.UI
                 {
                     g.DrawPolygon(pen, background);
                 }
+
+
             }
 
             buffer.Render(e.Graphics);
@@ -729,6 +731,7 @@ namespace Gw2Launcher.UI
         {
             PageNext();
         }
+
         protected override void OnVisibleChanged(EventArgs e)
         {
             if (this.Visible)
@@ -737,6 +740,7 @@ namespace Gw2Launcher.UI
             }
             base.OnVisibleChanged(e);
         }
+
 
         protected override void OnActivated(EventArgs e)
         {

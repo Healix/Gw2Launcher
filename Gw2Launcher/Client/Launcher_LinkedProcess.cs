@@ -442,7 +442,7 @@ namespace Gw2Launcher.Client
                 }
             }
 
-            public bool KillMutex()
+            public bool KillMutex(bool test = false)
             {
                 if (!Util.Users.IsCurrentUser(account.Settings.WindowsAccount))
                 {
@@ -452,7 +452,7 @@ namespace Gw2Launcher.Client
                     {
                         using (Security.Impersonation.Impersonate(username, password))
                         {
-                            if (!_KillMutex())
+                            if (!_KillMutex(test))
                                 return false;
                         }
                     }
@@ -462,7 +462,7 @@ namespace Gw2Launcher.Client
                         Util.ProcessUtil.KillMutexWindow(account.Settings.Type, this.Process.Id, username, password);
                     }
                 }
-                else if (!_KillMutex())
+                else if (!_KillMutex(test))
                 {
                     return false;
                 }
@@ -472,55 +472,46 @@ namespace Gw2Launcher.Client
                 return true;
             }
 
-            private bool _KillMutex()
+            private bool _KillMutex(bool test)
             {
+                if (test && !IsMutexOpen(account.Type))
+                {
+                    return true;
+                }
+
                 var p = this.Process;
                 var hasWindow = false;
                 var name = Util.ProcessUtil.GetMutexName(this.account.Settings.Type);
+                var limit = DateTime.UtcNow.AddSeconds(30);
+
+                //wait for the window to be created before checking the mutex
 
                 do
                 {
-                    var handle = Windows.Win32Handles.GetHandle(p.Id, name, Windows.Win32Handles.MatchMode.EndsWith);
-
-                    if (handle != null)
+                    var h = Windows.FindWindow.FindMainWindow(p);
+                    if (h != IntPtr.Zero)
                     {
-                        handle.Kill();
-                        return true;
+                        hasWindow = true;
+                        break;
                     }
-                    else if (hasWindow)
-                    {
-                        return true;
-                    }
-
-                    //wait for the window to be created before checking the mutex
-
-                    try
-                    {
-                        var limit = DateTime.UtcNow.AddSeconds(30);
-
-                        do
-                        {
-                            var h = Windows.FindWindow.FindMainWindow(p);
-                            if (h != IntPtr.Zero)
-                            {
-                                hasWindow = true;
-                                break;
-                            }
-                            else if (DateTime.UtcNow > limit)
-                            {
-                                return false;
-                            }
-                        }
-                        while (!p.WaitForExit(500));
-                    }
-                    catch 
+                    else if (DateTime.UtcNow > limit || p.WaitForExit(100))
                     {
                         return false;
                     }
                 }
-                while (hasWindow);
+                while (true);
 
-                return false;
+                var handle = Windows.Win32Handles.GetHandle(p.Id, Windows.Win32Handles.HandleType.Mutex, name, Windows.Win32Handles.MatchMode.EndsWith);
+
+                if (handle != null)
+                {
+                    handle.Kill();
+                    return true;
+                }
+                else
+                {
+                    return hasWindow;
+                }
             }
 
             public void Dispose()

@@ -101,14 +101,14 @@ namespace Gw2Launcher.Net.AssetProxy
                 if (!string.IsNullOrEmpty(assetsrv))
                 {
                     IPEndPoint ipEp;
-                    if (Util.IPEndPoint.TryParse(assetsrv, 80, out ipEp))
+                    if (Util.IPEndPoint.TryParse(assetsrv, 0, out ipEp))
                     {
                         remoteEp = ipEp;
                     }
                     else
                     {
                         DnsEndPoint dnsEp;
-                        if (Util.DnsEndPoint.TryParse(assetsrv, 80, out dnsEp))
+                        if (Util.DnsEndPoint.TryParse(assetsrv, 0, out dnsEp))
                         {
                             remoteEp = dnsEp;
                         }

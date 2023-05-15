@@ -215,6 +215,15 @@ namespace Gw2Launcher.Tools
                 }
             }
 
+            if (Settings.TEMP_SETTINGS_ENABLED)
+            {
+                try
+                {
+                    File.SetLastWriteTimeUtc(Path.Combine(DataPath.AppDataAccountDataTemp, "settings.txt"), DateTime.UtcNow);
+                }
+                catch { }
+            }
+
             DeleteFileSystemEntries(DataPath.AppDataAccountDataTemp, days, false, false);
 
             if ((Settings.GuildWars2.LocalizeAccountExecution.Value & Settings.LocalizeAccountExecutionOptions.Enabled) == Settings.LocalizeAccountExecutionOptions.Enabled)

@@ -303,6 +303,9 @@ namespace Gw2Launcher.UI.Controls
                                     size = new Size(w, size.Height);
                             }
                         }
+                        else if (panel.AutoSizeMode == AutoSizeMode.GrowAndShrink)
+                        {
+                        }
                     }
                 }
                 else if (panel.cache.size == panel.ClientSize)
@@ -1270,7 +1273,6 @@ namespace Gw2Launcher.UI.Controls
             this.SuspendLayout();
 
             cache = new StackPanelLayout.Cache();
-
             base.AutoSizeMode = AutoSizeMode.GrowAndShrink;
             base.FlowDirection = FlowDirection.TopDown;
             base.WrapContents = false;
@@ -1406,7 +1408,6 @@ namespace Gw2Launcher.UI.Controls
 
             public override void SetChildIndex(Control child, int newIndex)
             {
-                //prevent invisible controls from changing order when the control is created
                 if (canSetIndex)
                     base.SetChildIndex(child, newIndex);
             }
@@ -1462,7 +1463,6 @@ namespace Gw2Launcher.UI.Controls
                     else
                     {
                         var min = new Size(cache.proposed.Width, cache.minimum.Height);
-
                         return min;
                     }
                 }

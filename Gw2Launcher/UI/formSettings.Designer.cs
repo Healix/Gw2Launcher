@@ -949,26 +949,22 @@ namespace Gw2Launcher.UI
             this.menuImageBackgroundToolStripMenuItem,
             this.toolStripMenuItem2,
             this.menuImageBackgroundDefaultToolStripMenuItem});
-            this.contextImage.Name = "contextImage";
             this.contextImage.Size = new System.Drawing.Size(201, 54);
             // 
             // menuImageBackgroundToolStripMenuItem
             // 
-            this.menuImageBackgroundToolStripMenuItem.Name = "menuImageBackgroundToolStripMenuItem";
             this.menuImageBackgroundToolStripMenuItem.Size = new System.Drawing.Size(200, 22);
             this.menuImageBackgroundToolStripMenuItem.Text = "Background...";
             this.menuImageBackgroundToolStripMenuItem.Click += new System.EventHandler(this.menuImageBackgroundToolStripMenuItem_Click);
             // 
             // toolStripMenuItem2
             // 
-            this.toolStripMenuItem2.Name = "toolStripMenuItem2";
             this.toolStripMenuItem2.Size = new System.Drawing.Size(197, 6);
             // 
             // menuImageBackgroundDefaultToolStripMenuItem
             // 
             this.menuImageBackgroundDefaultToolStripMenuItem.Checked = true;
             this.menuImageBackgroundDefaultToolStripMenuItem.CheckState = System.Windows.Forms.CheckState.Checked;
-            this.menuImageBackgroundDefaultToolStripMenuItem.Name = "menuImageBackgroundDefaultToolStripMenuItem";
             this.menuImageBackgroundDefaultToolStripMenuItem.Size = new System.Drawing.Size(200, 22);
             this.menuImageBackgroundDefaultToolStripMenuItem.Text = "Use default background";
             this.menuImageBackgroundDefaultToolStripMenuItem.Click += new System.EventHandler(this.menuImageBackgroundDefaultToolStripMenuItem_Click);
@@ -978,19 +974,16 @@ namespace Gw2Launcher.UI
             this.contextRunAfterProgram.Items.AddRange(new System.Windows.Forms.ToolStripItem[] {
             this.editRunAfterToolStripMenuItem,
             this.deleteRunAfterToolStripMenuItem});
-            this.contextRunAfterProgram.Name = "contextRunAfterProgram";
             this.contextRunAfterProgram.Size = new System.Drawing.Size(108, 48);
             // 
             // editRunAfterToolStripMenuItem
             // 
-            this.editRunAfterToolStripMenuItem.Name = "editRunAfterToolStripMenuItem";
             this.editRunAfterToolStripMenuItem.Size = new System.Drawing.Size(107, 22);
             this.editRunAfterToolStripMenuItem.Text = "Edit";
             this.editRunAfterToolStripMenuItem.Click += new System.EventHandler(this.editRunAfterToolStripMenuItem_Click);
             // 
             // deleteRunAfterToolStripMenuItem
             // 
-            this.deleteRunAfterToolStripMenuItem.Name = "deleteRunAfterToolStripMenuItem";
             this.deleteRunAfterToolStripMenuItem.Size = new System.Drawing.Size(107, 22);
             this.deleteRunAfterToolStripMenuItem.Text = "Delete";
             this.deleteRunAfterToolStripMenuItem.Click += new System.EventHandler(this.deleteRunAfterToolStripMenuItem_Click);
@@ -1000,19 +993,16 @@ namespace Gw2Launcher.UI
             this.contextHotkey.Items.AddRange(new System.Windows.Forms.ToolStripItem[] {
             this.editHotkeyToolStripMenuItem,
             this.deleteHotkeyToolStripMenuItem});
-            this.contextHotkey.Name = "contextHotkey";
             this.contextHotkey.Size = new System.Drawing.Size(108, 48);
             // 
             // editHotkeyToolStripMenuItem
             // 
-            this.editHotkeyToolStripMenuItem.Name = "editHotkeyToolStripMenuItem";
             this.editHotkeyToolStripMenuItem.Size = new System.Drawing.Size(107, 22);
             this.editHotkeyToolStripMenuItem.Text = "Edit";
             this.editHotkeyToolStripMenuItem.Click += new System.EventHandler(this.editHotkeyToolStripMenuItem_Click);
             // 
             // deleteHotkeyToolStripMenuItem
             // 
-            this.deleteHotkeyToolStripMenuItem.Name = "deleteHotkeyToolStripMenuItem";
             this.deleteHotkeyToolStripMenuItem.Size = new System.Drawing.Size(107, 22);
             this.deleteHotkeyToolStripMenuItem.Text = "Delete";
             this.deleteHotkeyToolStripMenuItem.Click += new System.EventHandler(this.deleteHotkeyToolStripMenuItem_Click);
@@ -1022,19 +1012,16 @@ namespace Gw2Launcher.UI
             this.contextMarker.Items.AddRange(new System.Windows.Forms.ToolStripItem[] {
             this.editToolStripMenuItem,
             this.deleteToolStripMenuItem});
-            this.contextMarker.Name = "contextMarker";
             this.contextMarker.Size = new System.Drawing.Size(108, 48);
             // 
             // editToolStripMenuItem
             // 
-            this.editToolStripMenuItem.Name = "editToolStripMenuItem";
             this.editToolStripMenuItem.Size = new System.Drawing.Size(107, 22);
             this.editToolStripMenuItem.Text = "Edit";
             this.editToolStripMenuItem.Click += new System.EventHandler(this.editMarkerToolStripMenuItem_Click);
             // 
             // deleteToolStripMenuItem
             // 
-            this.deleteToolStripMenuItem.Name = "deleteToolStripMenuItem";
             this.deleteToolStripMenuItem.Size = new System.Drawing.Size(107, 22);
             this.deleteToolStripMenuItem.Text = "Delete";
             this.deleteToolStripMenuItem.Click += new System.EventHandler(this.deleteMarkerToolStripMenuItem_Click);
@@ -1044,9 +1031,7 @@ namespace Gw2Launcher.UI
             this.buttonCancel.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Right)));
             this.buttonCancel.Font = new System.Drawing.Font("Segoe UI", 8.25F);
             this.buttonCancel.Location = new System.Drawing.Point(374, 460);
-            this.buttonCancel.Name = "buttonCancel";
             this.buttonCancel.Size = new System.Drawing.Size(86, 35);
-            this.buttonCancel.TabIndex = 10;
             this.buttonCancel.Text = "Cancel";
             this.buttonCancel.UseVisualStyleBackColor = true;
             this.buttonCancel.Click += new System.EventHandler(this.buttonCancel_Click);
@@ -1056,16 +1041,14 @@ namespace Gw2Launcher.UI
             this.buttonOK.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Right)));
             this.buttonOK.Font = new System.Drawing.Font("Segoe UI", 8.25F);
             this.buttonOK.Location = new System.Drawing.Point(470, 460);
-            this.buttonOK.Name = "buttonOK";
             this.buttonOK.Size = new System.Drawing.Size(86, 35);
-            this.buttonOK.TabIndex = 11;
             this.buttonOK.Text = "OK";
             this.buttonOK.UseVisualStyleBackColor = true;
             this.buttonOK.Click += new System.EventHandler(this.buttonOK_Click);
             // 
             // sidebarPanel1
             // 
-            this.sidebarPanel1.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom)
+            this.sidebarPanel1.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom) 
             | System.Windows.Forms.AnchorStyles.Left)));
             this.sidebarPanel1.BackColor = System.Drawing.Color.White;
             this.sidebarPanel1.BorderColor = System.Drawing.SystemColors.ControlDark;
@@ -1080,13 +1063,11 @@ namespace Gw2Launcher.UI
             this.sidebarPanel1.Controls.Add(this.buttonTools);
             this.sidebarPanel1.Location = new System.Drawing.Point(0, 0);
             this.sidebarPanel1.Margin = new System.Windows.Forms.Padding(0);
-            this.sidebarPanel1.Name = "sidebarPanel1";
             this.sidebarPanel1.Size = new System.Drawing.Size(180, 507);
-            this.sidebarPanel1.TabIndex = 12;
             // 
             // buttonBackup
             // 
-            this.buttonBackup.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left)
+            this.buttonBackup.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left) 
             | System.Windows.Forms.AnchorStyles.Right)));
             this.buttonBackup.ArrowColor = System.Drawing.SystemColors.Control;
             this.buttonBackup.BackColor = System.Drawing.Color.White;
@@ -1096,19 +1077,17 @@ namespace Gw2Launcher.UI
             this.buttonBackup.Index = -1;
             this.buttonBackup.Location = new System.Drawing.Point(0, 320);
             this.buttonBackup.Margin = new System.Windows.Forms.Padding(0);
-            this.buttonBackup.Name = "buttonBackup";
             this.buttonBackup.Panels = null;
             this.buttonBackup.Selected = false;
             this.buttonBackup.SelectedColor = System.Drawing.SystemColors.Control;
             this.buttonBackup.Size = new System.Drawing.Size(180, 40);
             this.buttonBackup.SubitemForeColor = System.Drawing.Color.FromArgb(((int)(((byte)(75)))), ((int)(((byte)(75)))), ((int)(((byte)(75)))));
             this.buttonBackup.SubItems = null;
-            this.buttonBackup.TabIndex = 0;
             this.buttonBackup.Text = "Backup";
             // 
             // buttonUpdates
             // 
-            this.buttonUpdates.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left)
+            this.buttonUpdates.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left) 
             | System.Windows.Forms.AnchorStyles.Right)));
             this.buttonUpdates.ArrowColor = System.Drawing.SystemColors.Control;
             this.buttonUpdates.BackColor = System.Drawing.Color.White;
@@ -1118,19 +1097,17 @@ namespace Gw2Launcher.UI
             this.buttonUpdates.Index = -1;
             this.buttonUpdates.Location = new System.Drawing.Point(0, 280);
             this.buttonUpdates.Margin = new System.Windows.Forms.Padding(0);
-            this.buttonUpdates.Name = "buttonUpdates";
             this.buttonUpdates.Panels = null;
             this.buttonUpdates.Selected = false;
             this.buttonUpdates.SelectedColor = System.Drawing.SystemColors.Control;
             this.buttonUpdates.Size = new System.Drawing.Size(180, 40);
             this.buttonUpdates.SubitemForeColor = System.Drawing.Color.FromArgb(((int)(((byte)(75)))), ((int)(((byte)(75)))), ((int)(((byte)(75)))));
             this.buttonUpdates.SubItems = null;
-            this.buttonUpdates.TabIndex = 1;
             this.buttonUpdates.Text = "Updates";
             // 
             // buttonGuildWars2
             // 
-            this.buttonGuildWars2.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left)
+            this.buttonGuildWars2.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left) 
             | System.Windows.Forms.AnchorStyles.Right)));
             this.buttonGuildWars2.ArrowColor = System.Drawing.SystemColors.Control;
             this.buttonGuildWars2.BackColor = System.Drawing.Color.White;
@@ -1140,19 +1117,17 @@ namespace Gw2Launcher.UI
             this.buttonGuildWars2.Index = -1;
             this.buttonGuildWars2.Location = new System.Drawing.Point(0, 80);
             this.buttonGuildWars2.Margin = new System.Windows.Forms.Padding(0);
-            this.buttonGuildWars2.Name = "buttonGuildWars2";
             this.buttonGuildWars2.Panels = null;
             this.buttonGuildWars2.Selected = false;
             this.buttonGuildWars2.SelectedColor = System.Drawing.SystemColors.Control;
             this.buttonGuildWars2.Size = new System.Drawing.Size(180, 40);
             this.buttonGuildWars2.SubitemForeColor = System.Drawing.Color.FromArgb(((int)(((byte)(75)))), ((int)(((byte)(75)))), ((int)(((byte)(75)))));
             this.buttonGuildWars2.SubItems = null;
-            this.buttonGuildWars2.TabIndex = 2;
             this.buttonGuildWars2.Text = "Guild Wars 2";
             // 
             // buttonGeneral
             // 
-            this.buttonGeneral.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left)
+            this.buttonGeneral.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left) 
             | System.Windows.Forms.AnchorStyles.Right)));
             this.buttonGeneral.ArrowColor = System.Drawing.SystemColors.Control;
             this.buttonGeneral.BackColor = System.Drawing.Color.White;
@@ -1162,14 +1137,12 @@ namespace Gw2Launcher.UI
             this.buttonGeneral.Index = -1;
             this.buttonGeneral.Location = new System.Drawing.Point(0, 40);
             this.buttonGeneral.Margin = new System.Windows.Forms.Padding(0);
-            this.buttonGeneral.Name = "buttonGeneral";
             this.buttonGeneral.Panels = null;
             this.buttonGeneral.Selected = false;
             this.buttonGeneral.SelectedColor = System.Drawing.SystemColors.Control;
             this.buttonGeneral.Size = new System.Drawing.Size(180, 40);
             this.buttonGeneral.SubitemForeColor = System.Drawing.Color.FromArgb(((int)(((byte)(75)))), ((int)(((byte)(75)))), ((int)(((byte)(75)))));
             this.buttonGeneral.SubItems = null;
-            this.buttonGeneral.TabIndex = 3;
             this.buttonGeneral.Text = "General";
             // 
             // panel3
@@ -1179,9 +1152,7 @@ namespace Gw2Launcher.UI
             this.panel3.Controls.Add(this.tableContainerPanel3);
             this.panel3.Controls.Add(this.tableLayoutPanel1);
             this.panel3.Location = new System.Drawing.Point(3, 354);
-            this.panel3.Name = "panel3";
             this.panel3.Size = new System.Drawing.Size(168, 150);
-            this.panel3.TabIndex = 4;
             this.panel3.Visible = false;
             // 
             // stackPanel6
@@ -1189,19 +1160,15 @@ namespace Gw2Launcher.UI
             this.stackPanel6.FlowDirection = System.Windows.Forms.FlowDirection.LeftToRight;
             this.stackPanel6.Location = new System.Drawing.Point(104, 59);
             this.stackPanel6.Margin = new System.Windows.Forms.Padding(0);
-            this.stackPanel6.Name = "stackPanel6";
             this.stackPanel6.Size = new System.Drawing.Size(100, 20);
-            this.stackPanel6.TabIndex = 0;
             // 
             // stackPanel1
             // 
             this.stackPanel1.AutoSizeFill = Gw2Launcher.UI.Controls.StackPanel.AutoSizeFillMode.Width;
             this.stackPanel1.Location = new System.Drawing.Point(7, 9);
             this.stackPanel1.Margin = new System.Windows.Forms.Padding(0, 0, 13, 0);
-            this.stackPanel1.Name = "stackPanel1";
             this.stackPanel1.Padding = new System.Windows.Forms.Padding(13, 10, 0, 10);
             this.stackPanel1.Size = new System.Drawing.Size(330, 43);
-            this.stackPanel1.TabIndex = 1;
             // 
             // tableContainerPanel3
             // 
@@ -1212,11 +1179,9 @@ namespace Gw2Launcher.UI
             this.tableContainerPanel3.ColumnStyles.Add(new System.Windows.Forms.ColumnStyle(System.Windows.Forms.SizeType.Percent, 33.33333F));
             this.tableContainerPanel3.Location = new System.Drawing.Point(7, 122);
             this.tableContainerPanel3.Margin = new System.Windows.Forms.Padding(0);
-            this.tableContainerPanel3.Name = "tableContainerPanel3";
             this.tableContainerPanel3.RowCount = 1;
             this.tableContainerPanel3.RowStyles.Add(new System.Windows.Forms.RowStyle());
             this.tableContainerPanel3.Size = new System.Drawing.Size(88, 59);
-            this.tableContainerPanel3.TabIndex = 2;
             // 
             // tableLayoutPanel1
             // 
@@ -1225,17 +1190,15 @@ namespace Gw2Launcher.UI
             this.tableLayoutPanel1.ColumnStyles.Add(new System.Windows.Forms.ColumnStyle(System.Windows.Forms.SizeType.Percent, 100F));
             this.tableLayoutPanel1.Location = new System.Drawing.Point(7, 56);
             this.tableLayoutPanel1.Margin = new System.Windows.Forms.Padding(0, 7, 0, 7);
-            this.tableLayoutPanel1.Name = "tableLayoutPanel1";
             this.tableLayoutPanel1.RowCount = 3;
             this.tableLayoutPanel1.RowStyles.Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.Absolute, 20F));
             this.tableLayoutPanel1.RowStyles.Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.Absolute, 20F));
             this.tableLayoutPanel1.RowStyles.Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.Absolute, 20F));
             this.tableLayoutPanel1.Size = new System.Drawing.Size(88, 59);
-            this.tableLayoutPanel1.TabIndex = 3;
             // 
             // buttonGuildWars1
             // 
-            this.buttonGuildWars1.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left)
+            this.buttonGuildWars1.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left) 
             | System.Windows.Forms.AnchorStyles.Right)));
             this.buttonGuildWars1.ArrowColor = System.Drawing.SystemColors.Control;
             this.buttonGuildWars1.BackColor = System.Drawing.Color.White;
@@ -1245,19 +1208,17 @@ namespace Gw2Launcher.UI
             this.buttonGuildWars1.Index = -1;
             this.buttonGuildWars1.Location = new System.Drawing.Point(0, 120);
             this.buttonGuildWars1.Margin = new System.Windows.Forms.Padding(0);
-            this.buttonGuildWars1.Name = "buttonGuildWars1";
             this.buttonGuildWars1.Panels = null;
             this.buttonGuildWars1.Selected = false;
             this.buttonGuildWars1.SelectedColor = System.Drawing.SystemColors.Control;
             this.buttonGuildWars1.Size = new System.Drawing.Size(180, 40);
             this.buttonGuildWars1.SubitemForeColor = System.Drawing.Color.FromArgb(((int)(((byte)(75)))), ((int)(((byte)(75)))), ((int)(((byte)(75)))));
             this.buttonGuildWars1.SubItems = null;
-            this.buttonGuildWars1.TabIndex = 5;
             this.buttonGuildWars1.Text = "Guild Wars 1";
             // 
             // buttonSecurity
             // 
-            this.buttonSecurity.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left)
+            this.buttonSecurity.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left) 
             | System.Windows.Forms.AnchorStyles.Right)));
             this.buttonSecurity.ArrowColor = System.Drawing.SystemColors.Control;
             this.buttonSecurity.BackColor = System.Drawing.Color.White;
@@ -1267,19 +1228,17 @@ namespace Gw2Launcher.UI
             this.buttonSecurity.Index = -1;
             this.buttonSecurity.Location = new System.Drawing.Point(0, 160);
             this.buttonSecurity.Margin = new System.Windows.Forms.Padding(0);
-            this.buttonSecurity.Name = "buttonSecurity";
             this.buttonSecurity.Panels = null;
             this.buttonSecurity.Selected = false;
             this.buttonSecurity.SelectedColor = System.Drawing.SystemColors.Control;
             this.buttonSecurity.Size = new System.Drawing.Size(180, 40);
             this.buttonSecurity.SubitemForeColor = System.Drawing.Color.FromArgb(((int)(((byte)(75)))), ((int)(((byte)(75)))), ((int)(((byte)(75)))));
             this.buttonSecurity.SubItems = null;
-            this.buttonSecurity.TabIndex = 6;
             this.buttonSecurity.Text = "Security";
             // 
             // buttonStyle
             // 
-            this.buttonStyle.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left)
+            this.buttonStyle.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left) 
             | System.Windows.Forms.AnchorStyles.Right)));
             this.buttonStyle.ArrowColor = System.Drawing.SystemColors.Control;
             this.buttonStyle.BackColor = System.Drawing.Color.White;
@@ -1289,19 +1248,17 @@ namespace Gw2Launcher.UI
             this.buttonStyle.Index = -1;
             this.buttonStyle.Location = new System.Drawing.Point(0, 200);
             this.buttonStyle.Margin = new System.Windows.Forms.Padding(0);
-            this.buttonStyle.Name = "buttonStyle";
             this.buttonStyle.Panels = null;
             this.buttonStyle.Selected = false;
             this.buttonStyle.SelectedColor = System.Drawing.SystemColors.Control;
             this.buttonStyle.Size = new System.Drawing.Size(180, 40);
             this.buttonStyle.SubitemForeColor = System.Drawing.Color.FromArgb(((int)(((byte)(75)))), ((int)(((byte)(75)))), ((int)(((byte)(75)))));
             this.buttonStyle.SubItems = null;
-            this.buttonStyle.TabIndex = 7;
             this.buttonStyle.Text = "Style";
             // 
             // buttonTools
             // 
-            this.buttonTools.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left)
+            this.buttonTools.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left) 
             | System.Windows.Forms.AnchorStyles.Right)));
             this.buttonTools.ArrowColor = System.Drawing.SystemColors.Control;
             this.buttonTools.BackColor = System.Drawing.Color.White;
@@ -1311,32 +1268,28 @@ namespace Gw2Launcher.UI
             this.buttonTools.Index = -1;
             this.buttonTools.Location = new System.Drawing.Point(0, 240);
             this.buttonTools.Margin = new System.Windows.Forms.Padding(0);
-            this.buttonTools.Name = "buttonTools";
             this.buttonTools.Panels = null;
             this.buttonTools.Selected = false;
             this.buttonTools.SelectedColor = System.Drawing.SystemColors.Control;
             this.buttonTools.Size = new System.Drawing.Size(180, 40);
             this.buttonTools.SubitemForeColor = System.Drawing.Color.FromArgb(((int)(((byte)(75)))), ((int)(((byte)(75)))), ((int)(((byte)(75)))));
             this.buttonTools.SubItems = null;
-            this.buttonTools.TabIndex = 8;
             this.buttonTools.Text = "Tools";
             // 
             // panelLaunchConfigurationGw2
             // 
-            this.panelLaunchConfigurationGw2.Anchor = ((System.Windows.Forms.AnchorStyles)((((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom)
-            | System.Windows.Forms.AnchorStyles.Left)
+            this.panelLaunchConfigurationGw2.Anchor = ((System.Windows.Forms.AnchorStyles)((((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom) 
+            | System.Windows.Forms.AnchorStyles.Left) 
             | System.Windows.Forms.AnchorStyles.Right)));
             this.panelLaunchConfigurationGw2.Controls.Add(this.stackPanel23);
             this.panelLaunchConfigurationGw2.Location = new System.Drawing.Point(183, 12);
-            this.panelLaunchConfigurationGw2.Name = "panelLaunchConfigurationGw2";
             this.panelLaunchConfigurationGw2.Size = new System.Drawing.Size(373, 439);
-            this.panelLaunchConfigurationGw2.TabIndex = 6;
             this.panelLaunchConfigurationGw2.Visible = false;
             this.panelLaunchConfigurationGw2.PreVisiblePropertyChanged += new System.EventHandler<bool>(this.panelLaunchConfigurationGw2_PreVisiblePropertyChanged);
             // 
             // stackPanel23
             // 
-            this.stackPanel23.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left)
+            this.stackPanel23.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left) 
             | System.Windows.Forms.AnchorStyles.Right)));
             this.stackPanel23.AutoSize = true;
             this.stackPanel23.AutoSizeFill = Gw2Launcher.UI.Controls.StackPanel.AutoSizeFillMode.Width;
@@ -1362,10 +1315,8 @@ namespace Gw2Launcher.UI
             this.stackPanel23.Controls.Add(this.stackPanel44);
             this.stackPanel23.Location = new System.Drawing.Point(0, 0);
             this.stackPanel23.Margin = new System.Windows.Forms.Padding(0, 0, 13, 0);
-            this.stackPanel23.Name = "stackPanel23";
             this.stackPanel23.Padding = new System.Windows.Forms.Padding(13, 10, 0, 10);
             this.stackPanel23.Size = new System.Drawing.Size(343, 931);
-            this.stackPanel23.TabIndex = 0;
             // 
             // label117
             // 
@@ -1373,9 +1324,7 @@ namespace Gw2Launcher.UI
             this.label117.Font = new System.Drawing.Font("Segoe UI Semibold", 9F, System.Drawing.FontStyle.Bold);
             this.label117.Location = new System.Drawing.Point(13, 10);
             this.label117.Margin = new System.Windows.Forms.Padding(0);
-            this.label117.Name = "label117";
             this.label117.Size = new System.Drawing.Size(38, 15);
-            this.label117.TabIndex = 0;
             this.label117.Text = "Mode";
             // 
             // label118
@@ -1384,9 +1333,7 @@ namespace Gw2Launcher.UI
             this.label118.Font = new System.Drawing.Font("Segoe UI Semilight", 8.25F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
             this.label118.Location = new System.Drawing.Point(14, 26);
             this.label118.Margin = new System.Windows.Forms.Padding(1, 1, 0, 8);
-            this.label118.Name = "label118";
             this.label118.Size = new System.Drawing.Size(214, 13);
-            this.label118.TabIndex = 1;
             this.label118.Text = "Changes how account profiles are managed";
             // 
             // stackPanel64
@@ -1398,9 +1345,7 @@ namespace Gw2Launcher.UI
             this.stackPanel64.FlowDirection = System.Windows.Forms.FlowDirection.LeftToRight;
             this.stackPanel64.Location = new System.Drawing.Point(13, 47);
             this.stackPanel64.Margin = new System.Windows.Forms.Padding(0);
-            this.stackPanel64.Name = "stackPanel64";
             this.stackPanel64.Size = new System.Drawing.Size(159, 17);
-            this.stackPanel64.TabIndex = 2;
             // 
             // radioGw2ModeAdvanced
             // 
@@ -1408,9 +1353,7 @@ namespace Gw2Launcher.UI
             this.radioGw2ModeAdvanced.Checked = true;
             this.radioGw2ModeAdvanced.Location = new System.Drawing.Point(8, 0);
             this.radioGw2ModeAdvanced.Margin = new System.Windows.Forms.Padding(8, 0, 0, 0);
-            this.radioGw2ModeAdvanced.Name = "radioGw2ModeAdvanced";
             this.radioGw2ModeAdvanced.Size = new System.Drawing.Size(59, 17);
-            this.radioGw2ModeAdvanced.TabIndex = 0;
             this.radioGw2ModeAdvanced.TabStop = true;
             this.radioGw2ModeAdvanced.Text = "Virtual";
             this.radioGw2ModeAdvanced.UseVisualStyleBackColor = true;
@@ -1424,9 +1367,7 @@ namespace Gw2Launcher.UI
             this.label140.ForeColor = System.Drawing.SystemColors.GrayText;
             this.label140.Location = new System.Drawing.Point(68, 2);
             this.label140.Margin = new System.Windows.Forms.Padding(1, 0, 0, 0);
-            this.label140.Name = "label140";
             this.label140.Size = new System.Drawing.Size(91, 13);
-            this.label140.TabIndex = 1;
             this.label140.Text = "uses custom paths";
             this.label140.Visible = false;
             // 
@@ -1439,18 +1380,14 @@ namespace Gw2Launcher.UI
             this.stackPanel65.FlowDirection = System.Windows.Forms.FlowDirection.LeftToRight;
             this.stackPanel65.Location = new System.Drawing.Point(13, 67);
             this.stackPanel65.Margin = new System.Windows.Forms.Padding(0, 3, 0, 0);
-            this.stackPanel65.Name = "stackPanel65";
             this.stackPanel65.Size = new System.Drawing.Size(159, 17);
-            this.stackPanel65.TabIndex = 3;
             // 
             // radioGw2ModeBasic
             // 
             this.radioGw2ModeBasic.AutoSize = true;
             this.radioGw2ModeBasic.Location = new System.Drawing.Point(8, 0);
             this.radioGw2ModeBasic.Margin = new System.Windows.Forms.Padding(8, 0, 0, 0);
-            this.radioGw2ModeBasic.Name = "radioGw2ModeBasic";
             this.radioGw2ModeBasic.Size = new System.Drawing.Size(50, 17);
-            this.radioGw2ModeBasic.TabIndex = 0;
             this.radioGw2ModeBasic.Text = "Basic";
             this.radioGw2ModeBasic.UseVisualStyleBackColor = true;
             this.radioGw2ModeBasic.CheckedChanged += new System.EventHandler(this.radioGw2Mode_CheckedChanged);
@@ -1463,9 +1400,7 @@ namespace Gw2Launcher.UI
             this.label142.ForeColor = System.Drawing.SystemColors.GrayText;
             this.label142.Location = new System.Drawing.Point(59, 2);
             this.label142.Margin = new System.Windows.Forms.Padding(1, 0, 0, 0);
-            this.label142.Name = "label142";
             this.label142.Size = new System.Drawing.Size(100, 13);
-            this.label142.TabIndex = 1;
             this.label142.Text = "shares default paths";
             this.label142.Visible = false;
             // 
@@ -1478,9 +1413,7 @@ namespace Gw2Launcher.UI
             this.panelGw2ModeAdvanced.Controls.Add(this.label123);
             this.panelGw2ModeAdvanced.Location = new System.Drawing.Point(13, 92);
             this.panelGw2ModeAdvanced.Margin = new System.Windows.Forms.Padding(0, 8, 0, 0);
-            this.panelGw2ModeAdvanced.Name = "panelGw2ModeAdvanced";
             this.panelGw2ModeAdvanced.Size = new System.Drawing.Size(313, 88);
-            this.panelGw2ModeAdvanced.TabIndex = 4;
             // 
             // labelGw2ModeAdvancedWarning1
             // 
@@ -1489,9 +1422,7 @@ namespace Gw2Launcher.UI
             this.labelGw2ModeAdvancedWarning1.ForeColor = System.Drawing.Color.MediumBlue;
             this.labelGw2ModeAdvancedWarning1.Location = new System.Drawing.Point(1, 0);
             this.labelGw2ModeAdvancedWarning1.Margin = new System.Windows.Forms.Padding(1, 0, 0, 0);
-            this.labelGw2ModeAdvancedWarning1.Name = "labelGw2ModeAdvancedWarning1";
             this.labelGw2ModeAdvancedWarning1.Size = new System.Drawing.Size(178, 13);
-            this.labelGw2ModeAdvancedWarning1.TabIndex = 0;
             this.labelGw2ModeAdvancedWarning1.Text = "Not supported on the current system";
             this.labelGw2ModeAdvancedWarning1.Visible = false;
             // 
@@ -1502,9 +1433,7 @@ namespace Gw2Launcher.UI
             this.labelGw2ModeAdvancedWarning2.ForeColor = System.Drawing.SystemColors.GrayText;
             this.labelGw2ModeAdvancedWarning2.Location = new System.Drawing.Point(1, 14);
             this.labelGw2ModeAdvancedWarning2.Margin = new System.Windows.Forms.Padding(1, 1, 0, 6);
-            this.labelGw2ModeAdvancedWarning2.Name = "labelGw2ModeAdvancedWarning2";
             this.labelGw2ModeAdvancedWarning2.Size = new System.Drawing.Size(289, 13);
-            this.labelGw2ModeAdvancedWarning2.TabIndex = 1;
             this.labelGw2ModeAdvancedWarning2.Text = "The location of %appdata% has been overriden by Windows";
             this.labelGw2ModeAdvancedWarning2.Visible = false;
             // 
@@ -1514,9 +1443,7 @@ namespace Gw2Launcher.UI
             this.label149.Font = new System.Drawing.Font("Segoe UI Semilight", 8.25F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
             this.label149.Location = new System.Drawing.Point(1, 33);
             this.label149.Margin = new System.Windows.Forms.Padding(1, 0, 0, 0);
-            this.label149.Name = "label149";
             this.label149.Size = new System.Drawing.Size(312, 26);
-            this.label149.TabIndex = 2;
             this.label149.Text = "Each account will use its own path, allowing for variable access to resources wit" +
     "hout interferring with the default game";
             // 
@@ -1527,9 +1454,7 @@ namespace Gw2Launcher.UI
             this.label123.ForeColor = System.Drawing.Color.Maroon;
             this.label123.Location = new System.Drawing.Point(1, 62);
             this.label123.Margin = new System.Windows.Forms.Padding(1, 3, 0, 0);
-            this.label123.Name = "label123";
             this.label123.Size = new System.Drawing.Size(289, 26);
-            this.label123.TabIndex = 3;
             this.label123.Text = "May cause other programs that access the game to behave unexpectedly; notably som" +
     "e web browsers when using /wiki";
             // 
@@ -1545,9 +1470,7 @@ namespace Gw2Launcher.UI
             this.panelGw2ModeBasic.Controls.Add(this.checkGw2ModeBasicClearTemporary);
             this.panelGw2ModeBasic.Location = new System.Drawing.Point(13, 188);
             this.panelGw2ModeBasic.Margin = new System.Windows.Forms.Padding(0, 8, 0, 0);
-            this.panelGw2ModeBasic.Name = "panelGw2ModeBasic";
             this.panelGw2ModeBasic.Size = new System.Drawing.Size(321, 141);
-            this.panelGw2ModeBasic.TabIndex = 5;
             this.panelGw2ModeBasic.Visible = false;
             // 
             // labelGw2ModeBasicWarning1
@@ -1557,9 +1480,7 @@ namespace Gw2Launcher.UI
             this.labelGw2ModeBasicWarning1.ForeColor = System.Drawing.Color.MediumBlue;
             this.labelGw2ModeBasicWarning1.Location = new System.Drawing.Point(1, 0);
             this.labelGw2ModeBasicWarning1.Margin = new System.Windows.Forms.Padding(1, 0, 0, 0);
-            this.labelGw2ModeBasicWarning1.Name = "labelGw2ModeBasicWarning1";
             this.labelGw2ModeBasicWarning1.Size = new System.Drawing.Size(170, 13);
-            this.labelGw2ModeBasicWarning1.TabIndex = 0;
             this.labelGw2ModeBasicWarning1.Text = "Not supported on the current drive";
             this.labelGw2ModeBasicWarning1.Visible = false;
             // 
@@ -1570,9 +1491,7 @@ namespace Gw2Launcher.UI
             this.labelGw2ModeBasicWarning2.ForeColor = System.Drawing.SystemColors.GrayText;
             this.labelGw2ModeBasicWarning2.Location = new System.Drawing.Point(1, 14);
             this.labelGw2ModeBasicWarning2.Margin = new System.Windows.Forms.Padding(1, 1, 0, 6);
-            this.labelGw2ModeBasicWarning2.Name = "labelGw2ModeBasicWarning2";
             this.labelGw2ModeBasicWarning2.Size = new System.Drawing.Size(215, 13);
-            this.labelGw2ModeBasicWarning2.TabIndex = 1;
             this.labelGw2ModeBasicWarning2.Text = "The current file system does not support links";
             this.labelGw2ModeBasicWarning2.Visible = false;
             // 
@@ -1582,9 +1501,7 @@ namespace Gw2Launcher.UI
             this.label147.Font = new System.Drawing.Font("Segoe UI Semilight", 8.25F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
             this.label147.Location = new System.Drawing.Point(1, 33);
             this.label147.Margin = new System.Windows.Forms.Padding(1, 0, 0, 0);
-            this.label147.Name = "label147";
             this.label147.Size = new System.Drawing.Size(272, 13);
-            this.label147.TabIndex = 2;
             this.label147.Text = "All accounts will share the default path used by the game";
             // 
             // label163
@@ -1594,9 +1511,7 @@ namespace Gw2Launcher.UI
             this.label163.ForeColor = System.Drawing.Color.Maroon;
             this.label163.Location = new System.Drawing.Point(1, 49);
             this.label163.Margin = new System.Windows.Forms.Padding(1, 3, 0, 8);
-            this.label163.Name = "label163";
             this.label163.Size = new System.Drawing.Size(320, 26);
-            this.label163.TabIndex = 3;
             this.label163.Text = "You will be unable to start the game outside of Gw2Launcher while the original pa" +
     "th is in use";
             // 
@@ -1606,9 +1521,7 @@ namespace Gw2Launcher.UI
             this.label148.Font = new System.Drawing.Font("Segoe UI Semilight", 8.25F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
             this.label148.Location = new System.Drawing.Point(1, 83);
             this.label148.Margin = new System.Windows.Forms.Padding(1, 0, 0, 8);
-            this.label148.Name = "label148";
             this.label148.Size = new System.Drawing.Size(42, 13);
-            this.label148.TabIndex = 4;
             this.label148.Text = "Options";
             // 
             // checkGw2ModeBasicRestorePath
@@ -1616,9 +1529,7 @@ namespace Gw2Launcher.UI
             this.checkGw2ModeBasicRestorePath.AutoSize = true;
             this.checkGw2ModeBasicRestorePath.Location = new System.Drawing.Point(8, 104);
             this.checkGw2ModeBasicRestorePath.Margin = new System.Windows.Forms.Padding(8, 0, 0, 0);
-            this.checkGw2ModeBasicRestorePath.Name = "checkGw2ModeBasicRestorePath";
             this.checkGw2ModeBasicRestorePath.Size = new System.Drawing.Size(241, 17);
-            this.checkGw2ModeBasicRestorePath.TabIndex = 5;
             this.checkGw2ModeBasicRestorePath.Text = "Restore the original path while not in use";
             this.checkGw2ModeBasicRestorePath.UseVisualStyleBackColor = true;
             // 
@@ -1627,9 +1538,7 @@ namespace Gw2Launcher.UI
             this.checkGw2ModeBasicClearTemporary.AutoSize = true;
             this.checkGw2ModeBasicClearTemporary.Location = new System.Drawing.Point(8, 124);
             this.checkGw2ModeBasicClearTemporary.Margin = new System.Windows.Forms.Padding(8, 3, 0, 0);
-            this.checkGw2ModeBasicClearTemporary.Name = "checkGw2ModeBasicClearTemporary";
             this.checkGw2ModeBasicClearTemporary.Size = new System.Drawing.Size(217, 17);
-            this.checkGw2ModeBasicClearTemporary.TabIndex = 6;
             this.checkGw2ModeBasicClearTemporary.Text = "Clear temporary files while not in use";
             this.checkGw2ModeBasicClearTemporary.UseVisualStyleBackColor = true;
             // 
@@ -1639,9 +1548,7 @@ namespace Gw2Launcher.UI
             this.label101.Font = new System.Drawing.Font("Segoe UI Semibold", 9F, System.Drawing.FontStyle.Bold);
             this.label101.Location = new System.Drawing.Point(13, 342);
             this.label101.Margin = new System.Windows.Forms.Padding(0, 13, 0, 0);
-            this.label101.Name = "label101";
             this.label101.Size = new System.Drawing.Size(112, 15);
-            this.label101.TabIndex = 6;
             this.label101.Text = "Localized execution";
             // 
             // label100
@@ -1650,9 +1557,7 @@ namespace Gw2Launcher.UI
             this.label100.Font = new System.Drawing.Font("Segoe UI Semilight", 8.25F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
             this.label100.Location = new System.Drawing.Point(14, 358);
             this.label100.Margin = new System.Windows.Forms.Padding(1, 1, 0, 1);
-            this.label100.Name = "label100";
             this.label100.Size = new System.Drawing.Size(297, 26);
-            this.label100.TabIndex = 7;
             this.label100.Text = "Gives each account its own virtualized copy of the game\'s files, allowing for ind" +
     "ividual modifications to each account";
             // 
@@ -1663,9 +1568,7 @@ namespace Gw2Launcher.UI
             this.label227.ForeColor = System.Drawing.Color.MediumBlue;
             this.label227.Location = new System.Drawing.Point(14, 386);
             this.label227.Margin = new System.Windows.Forms.Padding(1, 1, 0, 0);
-            this.label227.Name = "label227";
             this.label227.Size = new System.Drawing.Size(307, 26);
-            this.label227.TabIndex = 8;
             this.label227.Text = "Each account will appear to have its own copy of the game; disk usage will not be" +
     " affected";
             // 
@@ -1676,9 +1579,7 @@ namespace Gw2Launcher.UI
             this.label92.ForeColor = System.Drawing.SystemColors.GrayText;
             this.label92.Location = new System.Drawing.Point(14, 413);
             this.label92.Margin = new System.Windows.Forms.Padding(1, 1, 0, 8);
-            this.label92.Name = "label92";
             this.label92.Size = new System.Drawing.Size(328, 26);
-            this.label92.TabIndex = 9;
             this.label92.Text = "Folders will be created on launch and can be safely deleted while not in use";
             // 
             // stackPanel24
@@ -1692,18 +1593,14 @@ namespace Gw2Launcher.UI
             this.stackPanel24.FlowDirection = System.Windows.Forms.FlowDirection.LeftToRight;
             this.stackPanel24.Location = new System.Drawing.Point(13, 447);
             this.stackPanel24.Margin = new System.Windows.Forms.Padding(0);
-            this.stackPanel24.Name = "stackPanel24";
             this.stackPanel24.Size = new System.Drawing.Size(288, 17);
-            this.stackPanel24.TabIndex = 10;
             // 
             // checkLocalizedExecution
             // 
             this.checkLocalizedExecution.AutoSize = true;
             this.checkLocalizedExecution.Location = new System.Drawing.Point(8, 0);
             this.checkLocalizedExecution.Margin = new System.Windows.Forms.Padding(8, 0, 0, 0);
-            this.checkLocalizedExecution.Name = "checkLocalizedExecution";
             this.checkLocalizedExecution.Size = new System.Drawing.Size(162, 17);
-            this.checkLocalizedExecution.TabIndex = 0;
             this.checkLocalizedExecution.Text = "Enable localized execution";
             this.checkLocalizedExecution.UseVisualStyleBackColor = true;
             this.checkLocalizedExecution.CheckedChanged += new System.EventHandler(this.checkLocalizedExecution_CheckedChanged);
@@ -1715,9 +1612,7 @@ namespace Gw2Launcher.UI
             this.labelShowLocalizedExecution.Icon = null;
             this.labelShowLocalizedExecution.Location = new System.Drawing.Point(171, 1);
             this.labelShowLocalizedExecution.Margin = new System.Windows.Forms.Padding(1, 0, 0, 1);
-            this.labelShowLocalizedExecution.Name = "labelShowLocalizedExecution";
             this.labelShowLocalizedExecution.Size = new System.Drawing.Size(68, 13);
-            this.labelShowLocalizedExecution.TabIndex = 1;
             this.labelShowLocalizedExecution.Text = "open folder";
             this.labelShowLocalizedExecution.Visible = false;
             this.labelShowLocalizedExecution.Click += new System.EventHandler(this.labelShowLocalizedExecution_Click);
@@ -1730,9 +1625,7 @@ namespace Gw2Launcher.UI
             this.labelShowLocalizedExecutionSeparator.ForeColor = System.Drawing.SystemColors.GrayText;
             this.labelShowLocalizedExecutionSeparator.Location = new System.Drawing.Point(239, 1);
             this.labelShowLocalizedExecutionSeparator.Margin = new System.Windows.Forms.Padding(0, 0, 0, 1);
-            this.labelShowLocalizedExecutionSeparator.Name = "labelShowLocalizedExecutionSeparator";
             this.labelShowLocalizedExecutionSeparator.Size = new System.Drawing.Size(10, 13);
-            this.labelShowLocalizedExecutionSeparator.TabIndex = 2;
             this.labelShowLocalizedExecutionSeparator.Text = "|";
             this.labelShowLocalizedExecutionSeparator.Visible = false;
             // 
@@ -1743,9 +1636,7 @@ namespace Gw2Launcher.UI
             this.labelResyncLocalizedExecution.Icon = null;
             this.labelResyncLocalizedExecution.Location = new System.Drawing.Point(249, 1);
             this.labelResyncLocalizedExecution.Margin = new System.Windows.Forms.Padding(0, 0, 0, 1);
-            this.labelResyncLocalizedExecution.Name = "labelResyncLocalizedExecution";
             this.labelResyncLocalizedExecution.Size = new System.Drawing.Size(39, 13);
-            this.labelResyncLocalizedExecution.TabIndex = 3;
             this.labelResyncLocalizedExecution.Text = "resync";
             this.labelResyncLocalizedExecution.Visible = false;
             this.labelResyncLocalizedExecution.Click += new System.EventHandler(this.labelResyncLocalizedExecution_Click);
@@ -1768,9 +1659,7 @@ namespace Gw2Launcher.UI
             this.panelLocalizedExecution.Controls.Add(this.stackPanel100);
             this.panelLocalizedExecution.Location = new System.Drawing.Point(13, 464);
             this.panelLocalizedExecution.Margin = new System.Windows.Forms.Padding(0);
-            this.panelLocalizedExecution.Name = "panelLocalizedExecution";
             this.panelLocalizedExecution.Size = new System.Drawing.Size(330, 260);
-            this.panelLocalizedExecution.TabIndex = 11;
             this.panelLocalizedExecution.Visible = false;
             this.panelLocalizedExecution.VisibleChanged += new System.EventHandler(this.panelLocalizedExecution_VisibleChanged);
             // 
@@ -1779,9 +1668,7 @@ namespace Gw2Launcher.UI
             this.checkLocalizedExecutionExcludeUnknown.AutoSize = true;
             this.checkLocalizedExecutionExcludeUnknown.Location = new System.Drawing.Point(8, 3);
             this.checkLocalizedExecutionExcludeUnknown.Margin = new System.Windows.Forms.Padding(8, 3, 0, 0);
-            this.checkLocalizedExecutionExcludeUnknown.Name = "checkLocalizedExecutionExcludeUnknown";
             this.checkLocalizedExecutionExcludeUnknown.Size = new System.Drawing.Size(238, 17);
-            this.checkLocalizedExecutionExcludeUnknown.TabIndex = 0;
             this.checkLocalizedExecutionExcludeUnknown.Text = "Exclude addons when generating folders";
             this.checkLocalizedExecutionExcludeUnknown.UseVisualStyleBackColor = true;
             // 
@@ -1791,9 +1678,7 @@ namespace Gw2Launcher.UI
             this.label141.Font = new System.Drawing.Font("Segoe UI Semilight", 8.25F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
             this.label141.Location = new System.Drawing.Point(1, 28);
             this.label141.Margin = new System.Windows.Forms.Padding(1, 8, 0, 8);
-            this.label141.Name = "label141";
             this.label141.Size = new System.Drawing.Size(67, 13);
-            this.label141.TabIndex = 1;
             this.label141.Text = "Desired level";
             // 
             // stackPanel35
@@ -1806,9 +1691,7 @@ namespace Gw2Launcher.UI
             this.stackPanel35.FlowDirection = System.Windows.Forms.FlowDirection.LeftToRight;
             this.stackPanel35.Location = new System.Drawing.Point(0, 49);
             this.stackPanel35.Margin = new System.Windows.Forms.Padding(0);
-            this.stackPanel35.Name = "stackPanel35";
             this.stackPanel35.Size = new System.Drawing.Size(225, 17);
-            this.stackPanel35.TabIndex = 2;
             // 
             // radioLocalizedExecutionFull
             // 
@@ -1816,9 +1699,7 @@ namespace Gw2Launcher.UI
             this.radioLocalizedExecutionFull.Checked = true;
             this.radioLocalizedExecutionFull.Location = new System.Drawing.Point(8, 0);
             this.radioLocalizedExecutionFull.Margin = new System.Windows.Forms.Padding(8, 0, 0, 0);
-            this.radioLocalizedExecutionFull.Name = "radioLocalizedExecutionFull";
             this.radioLocalizedExecutionFull.Size = new System.Drawing.Size(44, 17);
-            this.radioLocalizedExecutionFull.TabIndex = 0;
             this.radioLocalizedExecutionFull.TabStop = true;
             this.radioLocalizedExecutionFull.Text = "Full";
             this.radioLocalizedExecutionFull.UseVisualStyleBackColor = true;
@@ -1831,9 +1712,7 @@ namespace Gw2Launcher.UI
             this.label144.ForeColor = System.Drawing.SystemColors.GrayText;
             this.label144.Location = new System.Drawing.Point(53, 2);
             this.label144.Margin = new System.Windows.Forms.Padding(1, 0, 0, 0);
-            this.label144.Name = "label144";
             this.label144.Size = new System.Drawing.Size(77, 13);
-            this.label144.TabIndex = 1;
             this.label144.Text = "includes all files";
             // 
             // label228
@@ -1844,9 +1723,7 @@ namespace Gw2Launcher.UI
             this.label228.ForeColor = System.Drawing.Color.MediumBlue;
             this.label228.Location = new System.Drawing.Point(131, 2);
             this.label228.Margin = new System.Windows.Forms.Padding(1, 0, 0, 0);
-            this.label228.Name = "label228";
             this.label228.Size = new System.Drawing.Size(94, 13);
-            this.label228.TabIndex = 2;
             this.label228.Text = "(required for DX11)";
             // 
             // stackPanel63
@@ -1859,18 +1736,14 @@ namespace Gw2Launcher.UI
             this.stackPanel63.FlowDirection = System.Windows.Forms.FlowDirection.LeftToRight;
             this.stackPanel63.Location = new System.Drawing.Point(0, 69);
             this.stackPanel63.Margin = new System.Windows.Forms.Padding(0, 3, 0, 0);
-            this.stackPanel63.Name = "stackPanel63";
             this.stackPanel63.Size = new System.Drawing.Size(317, 17);
-            this.stackPanel63.TabIndex = 3;
             // 
             // radioLocalizedExecutionBinaries
             // 
             this.radioLocalizedExecutionBinaries.AutoSize = true;
             this.radioLocalizedExecutionBinaries.Location = new System.Drawing.Point(8, 0);
             this.radioLocalizedExecutionBinaries.Margin = new System.Windows.Forms.Padding(8, 0, 0, 0);
-            this.radioLocalizedExecutionBinaries.Name = "radioLocalizedExecutionBinaries";
             this.radioLocalizedExecutionBinaries.Size = new System.Drawing.Size(65, 17);
-            this.radioLocalizedExecutionBinaries.TabIndex = 0;
             this.radioLocalizedExecutionBinaries.Text = "Binaries";
             this.radioLocalizedExecutionBinaries.UseVisualStyleBackColor = true;
             this.radioLocalizedExecutionBinaries.CheckedChanged += new System.EventHandler(this.radioLocalizedExecutionBinaries_CheckedChanged);
@@ -1883,9 +1756,7 @@ namespace Gw2Launcher.UI
             this.labelLocalizedExecutionBinariesNote.ForeColor = System.Drawing.SystemColors.GrayText;
             this.labelLocalizedExecutionBinariesNote.Location = new System.Drawing.Point(74, 2);
             this.labelLocalizedExecutionBinariesNote.Margin = new System.Windows.Forms.Padding(1, 0, 0, 0);
-            this.labelLocalizedExecutionBinariesNote.Name = "labelLocalizedExecutionBinariesNote";
             this.labelLocalizedExecutionBinariesNote.Size = new System.Drawing.Size(131, 13);
-            this.labelLocalizedExecutionBinariesNote.TabIndex = 1;
             this.labelLocalizedExecutionBinariesNote.Text = "only includes the bin folder";
             // 
             // labelLocalizedExecutionBinariesCache
@@ -1895,9 +1766,7 @@ namespace Gw2Launcher.UI
             this.labelLocalizedExecutionBinariesCache.Icon = null;
             this.labelLocalizedExecutionBinariesCache.Location = new System.Drawing.Point(206, 2);
             this.labelLocalizedExecutionBinariesCache.Margin = new System.Windows.Forms.Padding(1, 0, 0, 0);
-            this.labelLocalizedExecutionBinariesCache.Name = "labelLocalizedExecutionBinariesCache";
             this.labelLocalizedExecutionBinariesCache.Size = new System.Drawing.Size(111, 13);
-            this.labelLocalizedExecutionBinariesCache.TabIndex = 2;
             this.labelLocalizedExecutionBinariesCache.Text = "requires static cache";
             this.labelLocalizedExecutionBinariesCache.Visible = false;
             this.labelLocalizedExecutionBinariesCache.Click += new System.EventHandler(this.labelLocalizedExecutionBinariesCache_Click);
@@ -1908,9 +1777,7 @@ namespace Gw2Launcher.UI
             this.label172.Font = new System.Drawing.Font("Segoe UI Semilight", 8.25F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
             this.label172.Location = new System.Drawing.Point(1, 94);
             this.label172.Margin = new System.Windows.Forms.Padding(1, 8, 0, 8);
-            this.label172.Name = "label172";
             this.label172.Size = new System.Drawing.Size(72, 13);
-            this.label172.TabIndex = 4;
             this.label172.Text = "Synchronizing";
             // 
             // stackPanel83
@@ -1922,9 +1789,7 @@ namespace Gw2Launcher.UI
             this.stackPanel83.FlowDirection = System.Windows.Forms.FlowDirection.LeftToRight;
             this.stackPanel83.Location = new System.Drawing.Point(0, 115);
             this.stackPanel83.Margin = new System.Windows.Forms.Padding(0);
-            this.stackPanel83.Name = "stackPanel83";
             this.stackPanel83.Size = new System.Drawing.Size(216, 17);
-            this.stackPanel83.TabIndex = 5;
             // 
             // radioLocalizedExecutionAutoSyncBasic
             // 
@@ -1932,9 +1797,7 @@ namespace Gw2Launcher.UI
             this.radioLocalizedExecutionAutoSyncBasic.Checked = true;
             this.radioLocalizedExecutionAutoSyncBasic.Location = new System.Drawing.Point(8, 0);
             this.radioLocalizedExecutionAutoSyncBasic.Margin = new System.Windows.Forms.Padding(8, 0, 0, 0);
-            this.radioLocalizedExecutionAutoSyncBasic.Name = "radioLocalizedExecutionAutoSyncBasic";
             this.radioLocalizedExecutionAutoSyncBasic.Size = new System.Drawing.Size(49, 17);
-            this.radioLocalizedExecutionAutoSyncBasic.TabIndex = 0;
             this.radioLocalizedExecutionAutoSyncBasic.TabStop = true;
             this.radioLocalizedExecutionAutoSyncBasic.Text = "Core";
             this.radioLocalizedExecutionAutoSyncBasic.UseVisualStyleBackColor = true;
@@ -1947,9 +1810,7 @@ namespace Gw2Launcher.UI
             this.label177.ForeColor = System.Drawing.SystemColors.GrayText;
             this.label177.Location = new System.Drawing.Point(58, 2);
             this.label177.Margin = new System.Windows.Forms.Padding(1, 0, 0, 0);
-            this.label177.Name = "label177";
             this.label177.Size = new System.Drawing.Size(158, 13);
-            this.label177.TabIndex = 1;
             this.label177.Text = "only required files will be verified";
             // 
             // stackPanel84
@@ -1961,18 +1822,14 @@ namespace Gw2Launcher.UI
             this.stackPanel84.FlowDirection = System.Windows.Forms.FlowDirection.LeftToRight;
             this.stackPanel84.Location = new System.Drawing.Point(0, 135);
             this.stackPanel84.Margin = new System.Windows.Forms.Padding(0, 3, 0, 0);
-            this.stackPanel84.Name = "stackPanel84";
             this.stackPanel84.Size = new System.Drawing.Size(128, 17);
-            this.stackPanel84.TabIndex = 6;
             // 
             // radioLocalizedExecutionAutoSyncAll
             // 
             this.radioLocalizedExecutionAutoSyncAll.AutoSize = true;
             this.radioLocalizedExecutionAutoSyncAll.Location = new System.Drawing.Point(8, 0);
             this.radioLocalizedExecutionAutoSyncAll.Margin = new System.Windows.Forms.Padding(8, 0, 0, 0);
-            this.radioLocalizedExecutionAutoSyncAll.Name = "radioLocalizedExecutionAutoSyncAll";
             this.radioLocalizedExecutionAutoSyncAll.Size = new System.Drawing.Size(38, 17);
-            this.radioLocalizedExecutionAutoSyncAll.TabIndex = 0;
             this.radioLocalizedExecutionAutoSyncAll.Text = "All";
             this.radioLocalizedExecutionAutoSyncAll.UseVisualStyleBackColor = true;
             this.radioLocalizedExecutionAutoSyncAll.CheckedChanged += new System.EventHandler(this.radioLocalizedExecutionAutoSyncAll_CheckedChanged);
@@ -1985,9 +1842,7 @@ namespace Gw2Launcher.UI
             this.label178.ForeColor = System.Drawing.SystemColors.GrayText;
             this.label178.Location = new System.Drawing.Point(47, 2);
             this.label178.Margin = new System.Windows.Forms.Padding(1, 0, 0, 0);
-            this.label178.Name = "label178";
             this.label178.Size = new System.Drawing.Size(81, 13);
-            this.label178.TabIndex = 1;
             this.label178.Text = "includes addons";
             // 
             // checkLocalizedExecutionAutoSyncDelete
@@ -1996,9 +1851,7 @@ namespace Gw2Launcher.UI
             this.checkLocalizedExecutionAutoSyncDelete.Enabled = false;
             this.checkLocalizedExecutionAutoSyncDelete.Location = new System.Drawing.Point(8, 158);
             this.checkLocalizedExecutionAutoSyncDelete.Margin = new System.Windows.Forms.Padding(8, 6, 0, 0);
-            this.checkLocalizedExecutionAutoSyncDelete.Name = "checkLocalizedExecutionAutoSyncDelete";
             this.checkLocalizedExecutionAutoSyncDelete.Size = new System.Drawing.Size(266, 17);
-            this.checkLocalizedExecutionAutoSyncDelete.TabIndex = 7;
             this.checkLocalizedExecutionAutoSyncDelete.Text = "Delete files that were not in the original folder";
             this.checkLocalizedExecutionAutoSyncDelete.UseVisualStyleBackColor = true;
             // 
@@ -2008,9 +1861,7 @@ namespace Gw2Launcher.UI
             this.label224.Font = new System.Drawing.Font("Segoe UI Semilight", 8.25F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
             this.label224.Location = new System.Drawing.Point(1, 183);
             this.label224.Margin = new System.Windows.Forms.Padding(1, 8, 0, 8);
-            this.label224.Name = "label224";
             this.label224.Size = new System.Drawing.Size(49, 13);
-            this.label224.TabIndex = 8;
             this.label224.Text = "Accounts";
             // 
             // stackPanel98
@@ -2022,18 +1873,14 @@ namespace Gw2Launcher.UI
             this.stackPanel98.FlowDirection = System.Windows.Forms.FlowDirection.LeftToRight;
             this.stackPanel98.Location = new System.Drawing.Point(0, 204);
             this.stackPanel98.Margin = new System.Windows.Forms.Padding(0);
-            this.stackPanel98.Name = "stackPanel98";
             this.stackPanel98.Size = new System.Drawing.Size(276, 17);
-            this.stackPanel98.TabIndex = 9;
             // 
             // radioLocalizedExecutionAccountsInclude
             // 
             this.radioLocalizedExecutionAccountsInclude.AutoSize = true;
             this.radioLocalizedExecutionAccountsInclude.Location = new System.Drawing.Point(8, 0);
             this.radioLocalizedExecutionAccountsInclude.Margin = new System.Windows.Forms.Padding(8, 0, 0, 0);
-            this.radioLocalizedExecutionAccountsInclude.Name = "radioLocalizedExecutionAccountsInclude";
             this.radioLocalizedExecutionAccountsInclude.Size = new System.Drawing.Size(63, 17);
-            this.radioLocalizedExecutionAccountsInclude.TabIndex = 0;
             this.radioLocalizedExecutionAccountsInclude.Text = "Include";
             this.radioLocalizedExecutionAccountsInclude.UseVisualStyleBackColor = true;
             // 
@@ -2045,9 +1892,7 @@ namespace Gw2Launcher.UI
             this.label225.ForeColor = System.Drawing.SystemColors.GrayText;
             this.label225.Location = new System.Drawing.Point(72, 2);
             this.label225.Margin = new System.Windows.Forms.Padding(1, 0, 0, 0);
-            this.label225.Name = "label225";
             this.label225.Size = new System.Drawing.Size(204, 13);
-            this.label225.TabIndex = 1;
             this.label225.Text = "only the selected accounts will be localized";
             // 
             // stackPanel99
@@ -2059,9 +1904,7 @@ namespace Gw2Launcher.UI
             this.stackPanel99.FlowDirection = System.Windows.Forms.FlowDirection.LeftToRight;
             this.stackPanel99.Location = new System.Drawing.Point(0, 224);
             this.stackPanel99.Margin = new System.Windows.Forms.Padding(0, 3, 0, 0);
-            this.stackPanel99.Name = "stackPanel99";
             this.stackPanel99.Size = new System.Drawing.Size(255, 17);
-            this.stackPanel99.TabIndex = 10;
             // 
             // radioLocalizedExecutionAccountsExclude
             // 
@@ -2069,9 +1912,7 @@ namespace Gw2Launcher.UI
             this.radioLocalizedExecutionAccountsExclude.Checked = true;
             this.radioLocalizedExecutionAccountsExclude.Location = new System.Drawing.Point(8, 0);
             this.radioLocalizedExecutionAccountsExclude.Margin = new System.Windows.Forms.Padding(8, 0, 0, 0);
-            this.radioLocalizedExecutionAccountsExclude.Name = "radioLocalizedExecutionAccountsExclude";
             this.radioLocalizedExecutionAccountsExclude.Size = new System.Drawing.Size(64, 17);
-            this.radioLocalizedExecutionAccountsExclude.TabIndex = 0;
             this.radioLocalizedExecutionAccountsExclude.TabStop = true;
             this.radioLocalizedExecutionAccountsExclude.Text = "Exclude";
             this.radioLocalizedExecutionAccountsExclude.UseVisualStyleBackColor = true;
@@ -2084,9 +1925,7 @@ namespace Gw2Launcher.UI
             this.label226.ForeColor = System.Drawing.SystemColors.GrayText;
             this.label226.Location = new System.Drawing.Point(73, 2);
             this.label226.Margin = new System.Windows.Forms.Padding(1, 0, 0, 0);
-            this.label226.Name = "label226";
             this.label226.Size = new System.Drawing.Size(182, 13);
-            this.label226.TabIndex = 1;
             this.label226.Text = "selected accounts will not be localized";
             // 
             // stackPanel100
@@ -2098,9 +1937,7 @@ namespace Gw2Launcher.UI
             this.stackPanel100.FlowDirection = System.Windows.Forms.FlowDirection.LeftToRight;
             this.stackPanel100.Location = new System.Drawing.Point(0, 247);
             this.stackPanel100.Margin = new System.Windows.Forms.Padding(0, 6, 0, 0);
-            this.stackPanel100.Name = "stackPanel100";
             this.stackPanel100.Size = new System.Drawing.Size(146, 13);
-            this.stackPanel100.TabIndex = 11;
             // 
             // labelLocalizedExecutionAccountsSelected
             // 
@@ -2109,9 +1946,7 @@ namespace Gw2Launcher.UI
             this.labelLocalizedExecutionAccountsSelected.Icon = null;
             this.labelLocalizedExecutionAccountsSelected.Location = new System.Drawing.Point(6, 0);
             this.labelLocalizedExecutionAccountsSelected.Margin = new System.Windows.Forms.Padding(6, 0, 0, 0);
-            this.labelLocalizedExecutionAccountsSelected.Name = "labelLocalizedExecutionAccountsSelected";
             this.labelLocalizedExecutionAccountsSelected.Size = new System.Drawing.Size(85, 13);
-            this.labelLocalizedExecutionAccountsSelected.TabIndex = 0;
             this.labelLocalizedExecutionAccountsSelected.Text = "select accounts";
             this.labelLocalizedExecutionAccountsSelected.TextAlign = System.Drawing.ContentAlignment.MiddleLeft;
             this.labelLocalizedExecutionAccountsSelected.Click += new System.EventHandler(this.labelLocalizedExecutionAccountsSelected_Click);
@@ -2124,9 +1959,7 @@ namespace Gw2Launcher.UI
             this.labelLocalizedExecutionAccountsSelectedCount.ForeColor = System.Drawing.SystemColors.GrayText;
             this.labelLocalizedExecutionAccountsSelectedCount.Location = new System.Drawing.Point(92, 0);
             this.labelLocalizedExecutionAccountsSelectedCount.Margin = new System.Windows.Forms.Padding(1, 0, 0, 0);
-            this.labelLocalizedExecutionAccountsSelectedCount.Name = "labelLocalizedExecutionAccountsSelectedCount";
             this.labelLocalizedExecutionAccountsSelectedCount.Size = new System.Drawing.Size(54, 13);
-            this.labelLocalizedExecutionAccountsSelectedCount.TabIndex = 1;
             this.labelLocalizedExecutionAccountsSelectedCount.Text = "0 selected";
             this.labelLocalizedExecutionAccountsSelectedCount.Visible = false;
             // 
@@ -2136,9 +1969,7 @@ namespace Gw2Launcher.UI
             this.label109.Font = new System.Drawing.Font("Segoe UI Semibold", 9F, System.Drawing.FontStyle.Bold);
             this.label109.Location = new System.Drawing.Point(13, 737);
             this.label109.Margin = new System.Windows.Forms.Padding(0, 13, 0, 0);
-            this.label109.Name = "label109";
             this.label109.Size = new System.Drawing.Size(120, 15);
-            this.label109.TabIndex = 12;
             this.label109.Text = "Localized CoherentUI";
             // 
             // label103
@@ -2147,9 +1978,7 @@ namespace Gw2Launcher.UI
             this.label103.Font = new System.Drawing.Font("Segoe UI Semilight", 8.25F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
             this.label103.Location = new System.Drawing.Point(14, 753);
             this.label103.Margin = new System.Windows.Forms.Padding(1, 1, 0, 1);
-            this.label103.Name = "label103";
             this.label103.Size = new System.Drawing.Size(305, 26);
-            this.label103.TabIndex = 13;
             this.label103.Text = "Prevents CoherentUI from crashing when multiple accounts are started in rapid suc" +
     "cession";
             // 
@@ -2160,9 +1989,7 @@ namespace Gw2Launcher.UI
             this.labelPreventDefaultCoherentUILocalizedNote.ForeColor = System.Drawing.SystemColors.GrayText;
             this.labelPreventDefaultCoherentUILocalizedNote.Location = new System.Drawing.Point(14, 781);
             this.labelPreventDefaultCoherentUILocalizedNote.Margin = new System.Windows.Forms.Padding(1, 1, 0, 1);
-            this.labelPreventDefaultCoherentUILocalizedNote.Name = "labelPreventDefaultCoherentUILocalizedNote";
             this.labelPreventDefaultCoherentUILocalizedNote.Size = new System.Drawing.Size(221, 13);
-            this.labelPreventDefaultCoherentUILocalizedNote.TabIndex = 14;
             this.labelPreventDefaultCoherentUILocalizedNote.Text = "Not applicable when using localized execution";
             this.labelPreventDefaultCoherentUILocalizedNote.Visible = false;
             // 
@@ -2171,9 +1998,7 @@ namespace Gw2Launcher.UI
             this.checkPreventDefaultCoherentUI.AutoSize = true;
             this.checkPreventDefaultCoherentUI.Location = new System.Drawing.Point(21, 802);
             this.checkPreventDefaultCoherentUI.Margin = new System.Windows.Forms.Padding(8, 7, 0, 0);
-            this.checkPreventDefaultCoherentUI.Name = "checkPreventDefaultCoherentUI";
             this.checkPreventDefaultCoherentUI.Size = new System.Drawing.Size(282, 17);
-            this.checkPreventDefaultCoherentUI.TabIndex = 15;
             this.checkPreventDefaultCoherentUI.Text = "Give each account its own instance of CoherentUI";
             this.checkPreventDefaultCoherentUI.UseVisualStyleBackColor = true;
             // 
@@ -2183,9 +2008,7 @@ namespace Gw2Launcher.UI
             this.label49.Font = new System.Drawing.Font("Segoe UI Semibold", 9F, System.Drawing.FontStyle.Bold);
             this.label49.Location = new System.Drawing.Point(13, 832);
             this.label49.Margin = new System.Windows.Forms.Padding(0, 13, 0, 0);
-            this.label49.Name = "label49";
             this.label49.Size = new System.Drawing.Size(69, 15);
-            this.label49.TabIndex = 16;
             this.label49.Text = "Virtual path";
             // 
             // label48
@@ -2194,9 +2017,7 @@ namespace Gw2Launcher.UI
             this.label48.Font = new System.Drawing.Font("Segoe UI Semilight", 8.25F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
             this.label48.Location = new System.Drawing.Point(14, 848);
             this.label48.Margin = new System.Windows.Forms.Padding(1, 1, 0, 1);
-            this.label48.Name = "label48";
             this.label48.Size = new System.Drawing.Size(328, 26);
-            this.label48.TabIndex = 17;
             this.label48.Text = "Changes the username (or path) shown by the game, which is mainly seen when takin" +
     "g screenshots";
             // 
@@ -2207,15 +2028,13 @@ namespace Gw2Launcher.UI
             this.labelCustomUsernameBasicWarning.ForeColor = System.Drawing.Color.MediumBlue;
             this.labelCustomUsernameBasicWarning.Location = new System.Drawing.Point(14, 876);
             this.labelCustomUsernameBasicWarning.Margin = new System.Windows.Forms.Padding(1, 1, 0, 1);
-            this.labelCustomUsernameBasicWarning.Name = "labelCustomUsernameBasicWarning";
             this.labelCustomUsernameBasicWarning.Size = new System.Drawing.Size(300, 13);
-            this.labelCustomUsernameBasicWarning.TabIndex = 18;
             this.labelCustomUsernameBasicWarning.Text = "Not available in basic mode when using different user accounts";
             this.labelCustomUsernameBasicWarning.Visible = false;
             // 
             // stackPanel44
             // 
-            this.stackPanel44.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left)
+            this.stackPanel44.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left) 
             | System.Windows.Forms.AnchorStyles.Right)));
             this.stackPanel44.AutoSize = true;
             this.stackPanel44.Controls.Add(this.checkCustomUsername);
@@ -2224,9 +2043,7 @@ namespace Gw2Launcher.UI
             this.stackPanel44.FlowDirection = System.Windows.Forms.FlowDirection.LeftToRight;
             this.stackPanel44.Location = new System.Drawing.Point(13, 897);
             this.stackPanel44.Margin = new System.Windows.Forms.Padding(0, 7, 0, 0);
-            this.stackPanel44.Name = "stackPanel44";
             this.stackPanel44.Size = new System.Drawing.Size(330, 24);
-            this.stackPanel44.TabIndex = 19;
             // 
             // checkCustomUsername
             // 
@@ -2235,9 +2052,7 @@ namespace Gw2Launcher.UI
             this.checkCustomUsername.Font = new System.Drawing.Font("Segoe UI", 8.25F);
             this.checkCustomUsername.Location = new System.Drawing.Point(8, 5);
             this.checkCustomUsername.Margin = new System.Windows.Forms.Padding(8, 0, 0, 0);
-            this.checkCustomUsername.Name = "checkCustomUsername";
             this.checkCustomUsername.Size = new System.Drawing.Size(15, 14);
-            this.checkCustomUsername.TabIndex = 0;
             this.checkCustomUsername.UseVisualStyleBackColor = true;
             this.checkCustomUsername.CheckedChanged += new System.EventHandler(this.checkCustomUsername_CheckedChanged);
             // 
@@ -2248,9 +2063,7 @@ namespace Gw2Launcher.UI
             this.textCustomUsername.Font = new System.Drawing.Font("Segoe UI", 8.25F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
             this.textCustomUsername.Location = new System.Drawing.Point(30, 1);
             this.textCustomUsername.Margin = new System.Windows.Forms.Padding(7, 1, 0, 1);
-            this.textCustomUsername.Name = "textCustomUsername";
             this.textCustomUsername.Size = new System.Drawing.Size(251, 22);
-            this.textCustomUsername.TabIndex = 1;
             this.textCustomUsername.Text = "Gw2Launcher";
             // 
             // buttonCustomUsername
@@ -2261,29 +2074,25 @@ namespace Gw2Launcher.UI
             this.buttonCustomUsername.Font = new System.Drawing.Font("Segoe UI", 8.25F);
             this.buttonCustomUsername.Location = new System.Drawing.Point(287, 0);
             this.buttonCustomUsername.Margin = new System.Windows.Forms.Padding(6, 0, 0, 0);
-            this.buttonCustomUsername.Name = "buttonCustomUsername";
             this.buttonCustomUsername.Padding = new System.Windows.Forms.Padding(8, 0, 8, 0);
             this.buttonCustomUsername.Size = new System.Drawing.Size(43, 24);
-            this.buttonCustomUsername.TabIndex = 2;
             this.buttonCustomUsername.Text = "...";
             this.buttonCustomUsername.UseVisualStyleBackColor = true;
             this.buttonCustomUsername.Click += new System.EventHandler(this.buttonCustomUsername_Click);
             // 
             // panelScreenshots
             // 
-            this.panelScreenshots.Anchor = ((System.Windows.Forms.AnchorStyles)((((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom)
-            | System.Windows.Forms.AnchorStyles.Left)
+            this.panelScreenshots.Anchor = ((System.Windows.Forms.AnchorStyles)((((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom) 
+            | System.Windows.Forms.AnchorStyles.Left) 
             | System.Windows.Forms.AnchorStyles.Right)));
             this.panelScreenshots.Controls.Add(this.stackPanel40);
             this.panelScreenshots.Location = new System.Drawing.Point(183, 12);
-            this.panelScreenshots.Name = "panelScreenshots";
             this.panelScreenshots.Size = new System.Drawing.Size(373, 439);
-            this.panelScreenshots.TabIndex = 21;
             this.panelScreenshots.Visible = false;
             // 
             // stackPanel40
             // 
-            this.stackPanel40.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left)
+            this.stackPanel40.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left) 
             | System.Windows.Forms.AnchorStyles.Right)));
             this.stackPanel40.AutoSize = true;
             this.stackPanel40.AutoSizeFill = Gw2Launcher.UI.Controls.StackPanel.AutoSizeFillMode.Width;
@@ -2305,10 +2114,8 @@ namespace Gw2Launcher.UI
             this.stackPanel40.Controls.Add(this.buttonScreenshotsExistingApply);
             this.stackPanel40.Location = new System.Drawing.Point(0, 0);
             this.stackPanel40.Margin = new System.Windows.Forms.Padding(0, 0, 13, 0);
-            this.stackPanel40.Name = "stackPanel40";
             this.stackPanel40.Padding = new System.Windows.Forms.Padding(13, 10, 0, 10);
             this.stackPanel40.Size = new System.Drawing.Size(360, 405);
-            this.stackPanel40.TabIndex = 0;
             // 
             // label65
             // 
@@ -2316,9 +2123,7 @@ namespace Gw2Launcher.UI
             this.label65.Font = new System.Drawing.Font("Segoe UI Semibold", 9F, System.Drawing.FontStyle.Bold);
             this.label65.Location = new System.Drawing.Point(13, 10);
             this.label65.Margin = new System.Windows.Forms.Padding(0);
-            this.label65.Name = "label65";
             this.label65.Size = new System.Drawing.Size(126, 15);
-            this.label65.TabIndex = 0;
             this.label65.Text = "Renaming screenshots";
             // 
             // label64
@@ -2327,9 +2132,7 @@ namespace Gw2Launcher.UI
             this.label64.Font = new System.Drawing.Font("Segoe UI Semilight", 8.25F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
             this.label64.Location = new System.Drawing.Point(14, 26);
             this.label64.Margin = new System.Windows.Forms.Padding(1, 1, 0, 8);
-            this.label64.Name = "label64";
             this.label64.Size = new System.Drawing.Size(273, 13);
-            this.label64.TabIndex = 1;
             this.label64.Text = "Rename newly added screenshots in the following format";
             // 
             // stackPanel85
@@ -2340,9 +2143,7 @@ namespace Gw2Launcher.UI
             this.stackPanel85.FlowDirection = System.Windows.Forms.FlowDirection.LeftToRight;
             this.stackPanel85.Location = new System.Drawing.Point(13, 47);
             this.stackPanel85.Margin = new System.Windows.Forms.Padding(0, 0, 0, 6);
-            this.stackPanel85.Name = "stackPanel85";
             this.stackPanel85.Size = new System.Drawing.Size(330, 21);
-            this.stackPanel85.TabIndex = 2;
             // 
             // checkScreenshotNameFormat
             // 
@@ -2351,9 +2152,7 @@ namespace Gw2Launcher.UI
             this.checkScreenshotNameFormat.Font = new System.Drawing.Font("Segoe UI", 8.25F);
             this.checkScreenshotNameFormat.Location = new System.Drawing.Point(8, 3);
             this.checkScreenshotNameFormat.Margin = new System.Windows.Forms.Padding(8, 0, 0, 0);
-            this.checkScreenshotNameFormat.Name = "checkScreenshotNameFormat";
             this.checkScreenshotNameFormat.Size = new System.Drawing.Size(15, 14);
-            this.checkScreenshotNameFormat.TabIndex = 0;
             this.checkScreenshotNameFormat.UseVisualStyleBackColor = true;
             this.checkScreenshotNameFormat.CheckedChanged += new System.EventHandler(this.checkScreenshotNameFormat_CheckedChanged);
             // 
@@ -2367,14 +2166,12 @@ namespace Gw2Launcher.UI
             "<00000>-<yyyy.MM.dd_HH.mm.ss>"});
             this.comboScreenshotNameFormat.Location = new System.Drawing.Point(30, 0);
             this.comboScreenshotNameFormat.Margin = new System.Windows.Forms.Padding(7, 0, 0, 0);
-            this.comboScreenshotNameFormat.Name = "comboScreenshotNameFormat";
             this.comboScreenshotNameFormat.Size = new System.Drawing.Size(300, 21);
-            this.comboScreenshotNameFormat.TabIndex = 1;
             this.comboScreenshotNameFormat.TextChanged += new System.EventHandler(this.comboScreenshotNameFormat_TextChanged);
             // 
             // stackPanel58
             // 
-            this.stackPanel58.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left)
+            this.stackPanel58.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left) 
             | System.Windows.Forms.AnchorStyles.Right)));
             this.stackPanel58.AutoSize = true;
             this.stackPanel58.Controls.Add(this.label46);
@@ -2382,9 +2179,7 @@ namespace Gw2Launcher.UI
             this.stackPanel58.FlowDirection = System.Windows.Forms.FlowDirection.LeftToRight;
             this.stackPanel58.Location = new System.Drawing.Point(41, 74);
             this.stackPanel58.Margin = new System.Windows.Forms.Padding(28, 0, 0, 0);
-            this.stackPanel58.Name = "stackPanel58";
             this.stackPanel58.Size = new System.Drawing.Size(319, 13);
-            this.stackPanel58.TabIndex = 3;
             // 
             // label46
             // 
@@ -2392,23 +2187,19 @@ namespace Gw2Launcher.UI
             this.label46.Font = new System.Drawing.Font("Segoe UI Semilight", 8.25F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
             this.label46.Location = new System.Drawing.Point(0, 0);
             this.label46.Margin = new System.Windows.Forms.Padding(0);
-            this.label46.Name = "label46";
             this.label46.Size = new System.Drawing.Size(44, 13);
-            this.label46.TabIndex = 0;
             this.label46.Text = "Sample:";
             // 
             // labelScreenshotNameFormatSample
             // 
-            this.labelScreenshotNameFormatSample.Anchor = ((System.Windows.Forms.AnchorStyles)((((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom)
-            | System.Windows.Forms.AnchorStyles.Left)
+            this.labelScreenshotNameFormatSample.Anchor = ((System.Windows.Forms.AnchorStyles)((((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom) 
+            | System.Windows.Forms.AnchorStyles.Left) 
             | System.Windows.Forms.AnchorStyles.Right)));
             this.labelScreenshotNameFormatSample.AutoEllipsis = true;
             this.labelScreenshotNameFormatSample.Font = new System.Drawing.Font("Segoe UI Semilight", 8.25F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
             this.labelScreenshotNameFormatSample.Location = new System.Drawing.Point(49, 0);
             this.labelScreenshotNameFormatSample.Margin = new System.Windows.Forms.Padding(5, 0, 0, 0);
-            this.labelScreenshotNameFormatSample.Name = "labelScreenshotNameFormatSample";
             this.labelScreenshotNameFormatSample.Size = new System.Drawing.Size(270, 13);
-            this.labelScreenshotNameFormatSample.TabIndex = 1;
             this.labelScreenshotNameFormatSample.Text = "-";
             // 
             // label66
@@ -2417,9 +2208,7 @@ namespace Gw2Launcher.UI
             this.label66.Font = new System.Drawing.Font("Segoe UI Semibold", 9F, System.Drawing.FontStyle.Bold);
             this.label66.Location = new System.Drawing.Point(13, 100);
             this.label66.Margin = new System.Windows.Forms.Padding(0, 13, 0, 0);
-            this.label66.Name = "label66";
             this.label66.Size = new System.Drawing.Size(141, 15);
-            this.label66.TabIndex = 4;
             this.label66.Text = "Image format conversion";
             // 
             // label63
@@ -2428,9 +2217,7 @@ namespace Gw2Launcher.UI
             this.label63.Font = new System.Drawing.Font("Segoe UI Semilight", 8.25F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
             this.label63.Location = new System.Drawing.Point(14, 116);
             this.label63.Margin = new System.Windows.Forms.Padding(1, 1, 0, 8);
-            this.label63.Name = "label63";
             this.label63.Size = new System.Drawing.Size(229, 13);
-            this.label63.TabIndex = 5;
             this.label63.Text = "Convert *.bmp screenshots to a different format";
             // 
             // stackPanel55
@@ -2441,9 +2228,7 @@ namespace Gw2Launcher.UI
             this.stackPanel55.FlowDirection = System.Windows.Forms.FlowDirection.LeftToRight;
             this.stackPanel55.Location = new System.Drawing.Point(13, 137);
             this.stackPanel55.Margin = new System.Windows.Forms.Padding(0, 0, 0, 6);
-            this.stackPanel55.Name = "stackPanel55";
             this.stackPanel55.Size = new System.Drawing.Size(187, 21);
-            this.stackPanel55.TabIndex = 6;
             // 
             // checkScreenshotImageFormat
             // 
@@ -2452,9 +2237,7 @@ namespace Gw2Launcher.UI
             this.checkScreenshotImageFormat.Font = new System.Drawing.Font("Segoe UI", 8.25F);
             this.checkScreenshotImageFormat.Location = new System.Drawing.Point(8, 3);
             this.checkScreenshotImageFormat.Margin = new System.Windows.Forms.Padding(8, 0, 0, 0);
-            this.checkScreenshotImageFormat.Name = "checkScreenshotImageFormat";
             this.checkScreenshotImageFormat.Size = new System.Drawing.Size(15, 14);
-            this.checkScreenshotImageFormat.TabIndex = 0;
             this.checkScreenshotImageFormat.UseVisualStyleBackColor = true;
             this.checkScreenshotImageFormat.CheckedChanged += new System.EventHandler(this.checkScreenshotImageFormat_CheckedChanged);
             // 
@@ -2465,9 +2248,7 @@ namespace Gw2Launcher.UI
             this.comboScreenshotImageFormat.FormattingEnabled = true;
             this.comboScreenshotImageFormat.Location = new System.Drawing.Point(30, 0);
             this.comboScreenshotImageFormat.Margin = new System.Windows.Forms.Padding(7, 0, 0, 0);
-            this.comboScreenshotImageFormat.Name = "comboScreenshotImageFormat";
             this.comboScreenshotImageFormat.Size = new System.Drawing.Size(157, 21);
-            this.comboScreenshotImageFormat.TabIndex = 1;
             this.comboScreenshotImageFormat.SelectedIndexChanged += new System.EventHandler(this.comboScreenshotImageFormat_SelectedIndexChanged);
             // 
             // stackPanel57
@@ -2479,9 +2260,7 @@ namespace Gw2Launcher.UI
             this.stackPanel57.FlowDirection = System.Windows.Forms.FlowDirection.LeftToRight;
             this.stackPanel57.Location = new System.Drawing.Point(41, 164);
             this.stackPanel57.Margin = new System.Windows.Forms.Padding(28, 0, 0, 8);
-            this.stackPanel57.Name = "stackPanel57";
             this.stackPanel57.Size = new System.Drawing.Size(199, 43);
-            this.stackPanel57.TabIndex = 7;
             this.stackPanel57.Visible = false;
             // 
             // panelScreenshotImageFormatJpg
@@ -2491,9 +2270,7 @@ namespace Gw2Launcher.UI
             this.panelScreenshotImageFormatJpg.Controls.Add(this.stackPanel59);
             this.panelScreenshotImageFormatJpg.Location = new System.Drawing.Point(0, 0);
             this.panelScreenshotImageFormatJpg.Margin = new System.Windows.Forms.Padding(0);
-            this.panelScreenshotImageFormatJpg.Name = "panelScreenshotImageFormatJpg";
             this.panelScreenshotImageFormatJpg.Size = new System.Drawing.Size(71, 43);
-            this.panelScreenshotImageFormatJpg.TabIndex = 0;
             this.panelScreenshotImageFormatJpg.Visible = false;
             // 
             // label68
@@ -2502,9 +2279,7 @@ namespace Gw2Launcher.UI
             this.label68.Font = new System.Drawing.Font("Segoe UI Semilight", 8.25F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
             this.label68.Location = new System.Drawing.Point(0, 0);
             this.label68.Margin = new System.Windows.Forms.Padding(0, 0, 0, 8);
-            this.label68.Name = "label68";
             this.label68.Size = new System.Drawing.Size(39, 13);
-            this.label68.TabIndex = 0;
             this.label68.Text = "Quality";
             // 
             // stackPanel59
@@ -2515,17 +2290,13 @@ namespace Gw2Launcher.UI
             this.stackPanel59.FlowDirection = System.Windows.Forms.FlowDirection.LeftToRight;
             this.stackPanel59.Location = new System.Drawing.Point(0, 21);
             this.stackPanel59.Margin = new System.Windows.Forms.Padding(0);
-            this.stackPanel59.Name = "stackPanel59";
             this.stackPanel59.Size = new System.Drawing.Size(71, 22);
-            this.stackPanel59.TabIndex = 1;
             // 
             // numericScreenshotImageFormatJpgQuality
             // 
             this.numericScreenshotImageFormatJpgQuality.Location = new System.Drawing.Point(4, 0);
             this.numericScreenshotImageFormatJpgQuality.Margin = new System.Windows.Forms.Padding(4, 0, 0, 0);
-            this.numericScreenshotImageFormatJpgQuality.Name = "numericScreenshotImageFormatJpgQuality";
             this.numericScreenshotImageFormatJpgQuality.Size = new System.Drawing.Size(45, 22);
-            this.numericScreenshotImageFormatJpgQuality.TabIndex = 0;
             this.numericScreenshotImageFormatJpgQuality.Value = new decimal(new int[] {
             90,
             0,
@@ -2539,9 +2310,7 @@ namespace Gw2Launcher.UI
             this.label69.Font = new System.Drawing.Font("Segoe UI Semilight", 8.25F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
             this.label69.Location = new System.Drawing.Point(55, 4);
             this.label69.Margin = new System.Windows.Forms.Padding(6, 0, 0, 0);
-            this.label69.Name = "label69";
             this.label69.Size = new System.Drawing.Size(16, 13);
-            this.label69.TabIndex = 1;
             this.label69.Text = "%";
             // 
             // panelScreenshotImageFormatPng
@@ -2551,9 +2320,7 @@ namespace Gw2Launcher.UI
             this.panelScreenshotImageFormatPng.Controls.Add(this.stackPanel61);
             this.panelScreenshotImageFormatPng.Location = new System.Drawing.Point(71, 0);
             this.panelScreenshotImageFormatPng.Margin = new System.Windows.Forms.Padding(0);
-            this.panelScreenshotImageFormatPng.Name = "panelScreenshotImageFormatPng";
             this.panelScreenshotImageFormatPng.Size = new System.Drawing.Size(128, 40);
-            this.panelScreenshotImageFormatPng.TabIndex = 1;
             this.panelScreenshotImageFormatPng.Visible = false;
             // 
             // label71
@@ -2562,9 +2329,7 @@ namespace Gw2Launcher.UI
             this.label71.Font = new System.Drawing.Font("Segoe UI Semilight", 8.25F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
             this.label71.Location = new System.Drawing.Point(0, 0);
             this.label71.Margin = new System.Windows.Forms.Padding(0, 0, 0, 10);
-            this.label71.Name = "label71";
             this.label71.Size = new System.Drawing.Size(62, 13);
-            this.label71.TabIndex = 0;
             this.label71.Text = "Color depth";
             // 
             // stackPanel61
@@ -2575,9 +2340,7 @@ namespace Gw2Launcher.UI
             this.stackPanel61.FlowDirection = System.Windows.Forms.FlowDirection.LeftToRight;
             this.stackPanel61.Location = new System.Drawing.Point(0, 23);
             this.stackPanel61.Margin = new System.Windows.Forms.Padding(0);
-            this.stackPanel61.Name = "stackPanel61";
             this.stackPanel61.Size = new System.Drawing.Size(128, 17);
-            this.stackPanel61.TabIndex = 1;
             // 
             // radioScreenshotImageFormat24
             // 
@@ -2585,9 +2348,7 @@ namespace Gw2Launcher.UI
             this.radioScreenshotImageFormat24.Checked = true;
             this.radioScreenshotImageFormat24.Location = new System.Drawing.Point(7, 0);
             this.radioScreenshotImageFormat24.Margin = new System.Windows.Forms.Padding(7, 0, 0, 0);
-            this.radioScreenshotImageFormat24.Name = "radioScreenshotImageFormat24";
             this.radioScreenshotImageFormat24.Size = new System.Drawing.Size(55, 17);
-            this.radioScreenshotImageFormat24.TabIndex = 0;
             this.radioScreenshotImageFormat24.TabStop = true;
             this.radioScreenshotImageFormat24.Text = "24-bit";
             this.radioScreenshotImageFormat24.UseVisualStyleBackColor = true;
@@ -2597,9 +2358,7 @@ namespace Gw2Launcher.UI
             this.radioScreenshotImageFormat16.AutoSize = true;
             this.radioScreenshotImageFormat16.Location = new System.Drawing.Point(73, 0);
             this.radioScreenshotImageFormat16.Margin = new System.Windows.Forms.Padding(11, 0, 0, 0);
-            this.radioScreenshotImageFormat16.Name = "radioScreenshotImageFormat16";
             this.radioScreenshotImageFormat16.Size = new System.Drawing.Size(55, 17);
-            this.radioScreenshotImageFormat16.TabIndex = 1;
             this.radioScreenshotImageFormat16.Text = "16-bit";
             this.radioScreenshotImageFormat16.UseVisualStyleBackColor = true;
             // 
@@ -2609,9 +2368,7 @@ namespace Gw2Launcher.UI
             this.checkScreenshotDeleteOriginal.Font = new System.Drawing.Font("Segoe UI", 8.25F);
             this.checkScreenshotDeleteOriginal.Location = new System.Drawing.Point(21, 215);
             this.checkScreenshotDeleteOriginal.Margin = new System.Windows.Forms.Padding(8, 0, 0, 0);
-            this.checkScreenshotDeleteOriginal.Name = "checkScreenshotDeleteOriginal";
             this.checkScreenshotDeleteOriginal.Size = new System.Drawing.Size(207, 17);
-            this.checkScreenshotDeleteOriginal.TabIndex = 8;
             this.checkScreenshotDeleteOriginal.Text = "Delete original file after conversion";
             this.checkScreenshotDeleteOriginal.UseVisualStyleBackColor = true;
             // 
@@ -2621,9 +2378,7 @@ namespace Gw2Launcher.UI
             this.label104.Font = new System.Drawing.Font("Segoe UI Semibold", 9F, System.Drawing.FontStyle.Bold);
             this.label104.Location = new System.Drawing.Point(13, 245);
             this.label104.Margin = new System.Windows.Forms.Padding(0, 13, 0, 0);
-            this.label104.Name = "label104";
             this.label104.Size = new System.Drawing.Size(48, 15);
-            this.label104.TabIndex = 9;
             this.label104.Text = "Preview";
             // 
             // label114
@@ -2632,9 +2387,7 @@ namespace Gw2Launcher.UI
             this.label114.Font = new System.Drawing.Font("Segoe UI Semilight", 8.25F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
             this.label114.Location = new System.Drawing.Point(14, 261);
             this.label114.Margin = new System.Windows.Forms.Padding(1, 1, 0, 8);
-            this.label114.Name = "label114";
             this.label114.Size = new System.Drawing.Size(295, 13);
-            this.label114.TabIndex = 10;
             this.label114.Text = "Show a notification after converting or renaming a screenshot";
             // 
             // stackPanel54
@@ -2646,18 +2399,14 @@ namespace Gw2Launcher.UI
             this.stackPanel54.FlowDirection = System.Windows.Forms.FlowDirection.LeftToRight;
             this.stackPanel54.Location = new System.Drawing.Point(13, 282);
             this.stackPanel54.Margin = new System.Windows.Forms.Padding(0);
-            this.stackPanel54.Name = "stackPanel54";
             this.stackPanel54.Size = new System.Drawing.Size(189, 17);
-            this.stackPanel54.TabIndex = 11;
             // 
             // checkScreenshotNotification
             // 
             this.checkScreenshotNotification.AutoSize = true;
             this.checkScreenshotNotification.Location = new System.Drawing.Point(8, 0);
             this.checkScreenshotNotification.Margin = new System.Windows.Forms.Padding(8, 0, 0, 0);
-            this.checkScreenshotNotification.Name = "checkScreenshotNotification";
             this.checkScreenshotNotification.Size = new System.Drawing.Size(123, 17);
-            this.checkScreenshotNotification.TabIndex = 0;
             this.checkScreenshotNotification.Text = "Show notifications";
             this.checkScreenshotNotification.UseVisualStyleBackColor = true;
             // 
@@ -2668,9 +2417,7 @@ namespace Gw2Launcher.UI
             this.labelScreenshotNotification.Icon = null;
             this.labelScreenshotNotification.Location = new System.Drawing.Point(132, 1);
             this.labelScreenshotNotification.Margin = new System.Windows.Forms.Padding(1, 0, 0, 1);
-            this.labelScreenshotNotification.Name = "labelScreenshotNotification";
             this.labelScreenshotNotification.Size = new System.Drawing.Size(57, 13);
-            this.labelScreenshotNotification.TabIndex = 1;
             this.labelScreenshotNotification.Text = "configure";
             this.labelScreenshotNotification.Click += new System.EventHandler(this.labelScreenshotNotification_Click);
             // 
@@ -2680,9 +2427,7 @@ namespace Gw2Launcher.UI
             this.label70.Font = new System.Drawing.Font("Segoe UI Semibold", 9F, System.Drawing.FontStyle.Bold);
             this.label70.Location = new System.Drawing.Point(13, 312);
             this.label70.Margin = new System.Windows.Forms.Padding(0, 13, 0, 0);
-            this.label70.Name = "label70";
             this.label70.Size = new System.Drawing.Size(113, 15);
-            this.label70.TabIndex = 12;
             this.label70.Text = "Existing screenshots";
             // 
             // label72
@@ -2691,9 +2436,7 @@ namespace Gw2Launcher.UI
             this.label72.Font = new System.Drawing.Font("Segoe UI Semilight", 8.25F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
             this.label72.Location = new System.Drawing.Point(14, 328);
             this.label72.Margin = new System.Windows.Forms.Padding(1, 1, 0, 8);
-            this.label72.Name = "label72";
             this.label72.Size = new System.Drawing.Size(179, 13);
-            this.label72.TabIndex = 13;
             this.label72.Text = "Rename/convert existing screenshots";
             // 
             // checkScreenshotsExistingApplyOnlyToDefault
@@ -2704,9 +2447,7 @@ namespace Gw2Launcher.UI
             this.checkScreenshotsExistingApplyOnlyToDefault.Font = new System.Drawing.Font("Segoe UI", 8.25F);
             this.checkScreenshotsExistingApplyOnlyToDefault.Location = new System.Drawing.Point(21, 349);
             this.checkScreenshotsExistingApplyOnlyToDefault.Margin = new System.Windows.Forms.Padding(8, 0, 0, 0);
-            this.checkScreenshotsExistingApplyOnlyToDefault.Name = "checkScreenshotsExistingApplyOnlyToDefault";
             this.checkScreenshotsExistingApplyOnlyToDefault.Size = new System.Drawing.Size(266, 17);
-            this.checkScreenshotsExistingApplyOnlyToDefault.TabIndex = 14;
             this.checkScreenshotsExistingApplyOnlyToDefault.Text = "Only apply to screenshots in the format gw000";
             this.checkScreenshotsExistingApplyOnlyToDefault.UseVisualStyleBackColor = true;
             // 
@@ -2717,28 +2458,24 @@ namespace Gw2Launcher.UI
             this.buttonScreenshotsExistingApply.Font = new System.Drawing.Font("Segoe UI", 8.25F);
             this.buttonScreenshotsExistingApply.Location = new System.Drawing.Point(20, 372);
             this.buttonScreenshotsExistingApply.Margin = new System.Windows.Forms.Padding(7, 6, 0, 0);
-            this.buttonScreenshotsExistingApply.Name = "buttonScreenshotsExistingApply";
             this.buttonScreenshotsExistingApply.Size = new System.Drawing.Size(128, 23);
-            this.buttonScreenshotsExistingApply.TabIndex = 15;
             this.buttonScreenshotsExistingApply.Text = "Rename / Convert";
             this.buttonScreenshotsExistingApply.UseVisualStyleBackColor = true;
             this.buttonScreenshotsExistingApply.Click += new System.EventHandler(this.buttonScreenshotsExistingApply_Click);
             // 
             // panelAccountBar
             // 
-            this.panelAccountBar.Anchor = ((System.Windows.Forms.AnchorStyles)((((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom)
-            | System.Windows.Forms.AnchorStyles.Left)
+            this.panelAccountBar.Anchor = ((System.Windows.Forms.AnchorStyles)((((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom) 
+            | System.Windows.Forms.AnchorStyles.Left) 
             | System.Windows.Forms.AnchorStyles.Right)));
             this.panelAccountBar.Controls.Add(this.stackPanel41);
             this.panelAccountBar.Location = new System.Drawing.Point(183, 12);
-            this.panelAccountBar.Name = "panelAccountBar";
             this.panelAccountBar.Size = new System.Drawing.Size(373, 439);
-            this.panelAccountBar.TabIndex = 22;
             this.panelAccountBar.Visible = false;
             // 
             // stackPanel41
             // 
-            this.stackPanel41.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left)
+            this.stackPanel41.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left) 
             | System.Windows.Forms.AnchorStyles.Right)));
             this.stackPanel41.AutoSize = true;
             this.stackPanel41.AutoSizeFill = Gw2Launcher.UI.Controls.StackPanel.AutoSizeFillMode.Width;
@@ -2754,10 +2491,8 @@ namespace Gw2Launcher.UI
             this.stackPanel41.Controls.Add(this.stackPanel78);
             this.stackPanel41.Location = new System.Drawing.Point(0, 0);
             this.stackPanel41.Margin = new System.Windows.Forms.Padding(0, 0, 13, 0);
-            this.stackPanel41.Name = "stackPanel41";
             this.stackPanel41.Padding = new System.Windows.Forms.Padding(13, 10, 0, 10);
             this.stackPanel41.Size = new System.Drawing.Size(360, 300);
-            this.stackPanel41.TabIndex = 0;
             // 
             // label91
             // 
@@ -2765,9 +2500,7 @@ namespace Gw2Launcher.UI
             this.label91.Font = new System.Drawing.Font("Segoe UI Semibold", 9F, System.Drawing.FontStyle.Bold);
             this.label91.Location = new System.Drawing.Point(13, 10);
             this.label91.Margin = new System.Windows.Forms.Padding(0);
-            this.label91.Name = "label91";
             this.label91.Size = new System.Drawing.Size(72, 15);
-            this.label91.TabIndex = 0;
             this.label91.Text = "Account bar";
             // 
             // label90
@@ -2776,9 +2509,7 @@ namespace Gw2Launcher.UI
             this.label90.Font = new System.Drawing.Font("Segoe UI Semilight", 8.25F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
             this.label90.Location = new System.Drawing.Point(14, 26);
             this.label90.Margin = new System.Windows.Forms.Padding(1, 1, 0, 8);
-            this.label90.Name = "label90";
             this.label90.Size = new System.Drawing.Size(179, 13);
-            this.label90.TabIndex = 1;
             this.label90.Text = "Displays accounts in a taskbar format";
             // 
             // checkAccountBarEnable
@@ -2787,9 +2518,7 @@ namespace Gw2Launcher.UI
             this.checkAccountBarEnable.Font = new System.Drawing.Font("Segoe UI", 8.25F);
             this.checkAccountBarEnable.Location = new System.Drawing.Point(21, 47);
             this.checkAccountBarEnable.Margin = new System.Windows.Forms.Padding(8, 0, 0, 0);
-            this.checkAccountBarEnable.Name = "checkAccountBarEnable";
             this.checkAccountBarEnable.Size = new System.Drawing.Size(145, 17);
-            this.checkAccountBarEnable.TabIndex = 2;
             this.checkAccountBarEnable.Text = "Enable the account bar";
             this.checkAccountBarEnable.UseVisualStyleBackColor = true;
             // 
@@ -2799,9 +2528,7 @@ namespace Gw2Launcher.UI
             this.label93.Font = new System.Drawing.Font("Segoe UI Semibold", 9F, System.Drawing.FontStyle.Bold);
             this.label93.Location = new System.Drawing.Point(13, 77);
             this.label93.Margin = new System.Windows.Forms.Padding(0, 13, 0, 0);
-            this.label93.Name = "label93";
             this.label93.Size = new System.Drawing.Size(71, 15);
-            this.label93.TabIndex = 3;
             this.label93.Text = "Information";
             // 
             // labelAccountBarInfo
@@ -2810,9 +2537,7 @@ namespace Gw2Launcher.UI
             this.labelAccountBarInfo.Font = new System.Drawing.Font("Segoe UI Semilight", 8.25F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
             this.labelAccountBarInfo.Location = new System.Drawing.Point(14, 93);
             this.labelAccountBarInfo.Margin = new System.Windows.Forms.Padding(1, 1, 0, 8);
-            this.labelAccountBarInfo.Name = "labelAccountBarInfo";
             this.labelAccountBarInfo.Size = new System.Drawing.Size(342, 78);
-            this.labelAccountBarInfo.TabIndex = 4;
             this.labelAccountBarInfo.Text = resources.GetString("labelAccountBarInfo.Text");
             // 
             // stackPanel42
@@ -2824,9 +2549,7 @@ namespace Gw2Launcher.UI
             this.stackPanel42.FlowDirection = System.Windows.Forms.FlowDirection.LeftToRight;
             this.stackPanel42.Location = new System.Drawing.Point(13, 186);
             this.stackPanel42.Margin = new System.Windows.Forms.Padding(0, 7, 0, 0);
-            this.stackPanel42.Name = "stackPanel42";
             this.stackPanel42.Size = new System.Drawing.Size(164, 23);
-            this.stackPanel42.TabIndex = 5;
             // 
             // buttonAccountBarShow
             // 
@@ -2835,9 +2558,7 @@ namespace Gw2Launcher.UI
             this.buttonAccountBarShow.Font = new System.Drawing.Font("Segoe UI", 8.25F);
             this.buttonAccountBarShow.Location = new System.Drawing.Point(6, 0);
             this.buttonAccountBarShow.Margin = new System.Windows.Forms.Padding(6, 0, 0, 0);
-            this.buttonAccountBarShow.Name = "buttonAccountBarShow";
             this.buttonAccountBarShow.Size = new System.Drawing.Size(74, 23);
-            this.buttonAccountBarShow.TabIndex = 0;
             this.buttonAccountBarShow.Text = "Show";
             this.buttonAccountBarShow.UseVisualStyleBackColor = true;
             this.buttonAccountBarShow.Click += new System.EventHandler(this.buttonAccountBarShow_Click);
@@ -2849,9 +2570,7 @@ namespace Gw2Launcher.UI
             this.buttonAccountBarReset.Font = new System.Drawing.Font("Segoe UI", 8.25F);
             this.buttonAccountBarReset.Location = new System.Drawing.Point(90, 0);
             this.buttonAccountBarReset.Margin = new System.Windows.Forms.Padding(10, 0, 0, 0);
-            this.buttonAccountBarReset.Name = "buttonAccountBarReset";
             this.buttonAccountBarReset.Size = new System.Drawing.Size(74, 23);
-            this.buttonAccountBarReset.TabIndex = 1;
             this.buttonAccountBarReset.Text = "Reset";
             this.buttonAccountBarReset.UseVisualStyleBackColor = true;
             this.buttonAccountBarReset.Click += new System.EventHandler(this.buttonAccountBarReset_Click);
@@ -2862,9 +2581,7 @@ namespace Gw2Launcher.UI
             this.label124.Font = new System.Drawing.Font("Segoe UI Semibold", 9F, System.Drawing.FontStyle.Bold);
             this.label124.Location = new System.Drawing.Point(13, 222);
             this.label124.Margin = new System.Windows.Forms.Padding(0, 13, 0, 0);
-            this.label124.Name = "label124";
             this.label124.Size = new System.Drawing.Size(77, 15);
-            this.label124.TabIndex = 6;
             this.label124.Text = "Quick launch";
             // 
             // label125
@@ -2873,9 +2590,7 @@ namespace Gw2Launcher.UI
             this.label125.Font = new System.Drawing.Font("Segoe UI Semilight", 8.25F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
             this.label125.Location = new System.Drawing.Point(14, 238);
             this.label125.Margin = new System.Windows.Forms.Padding(1, 1, 0, 8);
-            this.label125.Name = "label125";
             this.label125.Size = new System.Drawing.Size(336, 13);
-            this.label125.TabIndex = 7;
             this.label125.Text = "Show a popup version of the account bar by launching with the option:";
             // 
             // labelQuickLaunch
@@ -2884,9 +2599,7 @@ namespace Gw2Launcher.UI
             this.labelQuickLaunch.Icon = null;
             this.labelQuickLaunch.Location = new System.Drawing.Point(21, 259);
             this.labelQuickLaunch.Margin = new System.Windows.Forms.Padding(8, 0, 0, 0);
-            this.labelQuickLaunch.Name = "labelQuickLaunch";
             this.labelQuickLaunch.Size = new System.Drawing.Size(74, 13);
-            this.labelQuickLaunch.TabIndex = 8;
             this.labelQuickLaunch.Text = "-quicklaunch";
             this.labelQuickLaunch.Click += new System.EventHandler(this.labelQuickLaunch_Click);
             // 
@@ -2900,9 +2613,7 @@ namespace Gw2Launcher.UI
             this.stackPanel78.FlowDirection = System.Windows.Forms.FlowDirection.LeftToRight;
             this.stackPanel78.Location = new System.Drawing.Point(13, 277);
             this.stackPanel78.Margin = new System.Windows.Forms.Padding(0, 5, 0, 0);
-            this.stackPanel78.Name = "stackPanel78";
             this.stackPanel78.Size = new System.Drawing.Size(146, 13);
-            this.stackPanel78.TabIndex = 9;
             this.stackPanel78.Visible = false;
             // 
             // label164
@@ -2911,9 +2622,7 @@ namespace Gw2Launcher.UI
             this.label164.Icon = null;
             this.label164.Location = new System.Drawing.Point(8, 0);
             this.label164.Margin = new System.Windows.Forms.Padding(8, 0, 0, 0);
-            this.label164.Name = "label164";
             this.label164.Size = new System.Drawing.Size(99, 13);
-            this.label164.TabIndex = 0;
             this.label164.Text = "-quicklaunch gw2";
             this.label164.Click += new System.EventHandler(this.labelQuickLaunch_Click);
             // 
@@ -2924,9 +2633,7 @@ namespace Gw2Launcher.UI
             this.label166.ForeColor = System.Drawing.SystemColors.GrayText;
             this.label166.Location = new System.Drawing.Point(107, 0);
             this.label166.Margin = new System.Windows.Forms.Padding(0);
-            this.label166.Name = "label166";
             this.label166.Size = new System.Drawing.Size(10, 13);
-            this.label166.TabIndex = 1;
             this.label166.Text = "|";
             // 
             // label165
@@ -2935,27 +2642,23 @@ namespace Gw2Launcher.UI
             this.label165.Icon = null;
             this.label165.Location = new System.Drawing.Point(117, 0);
             this.label165.Margin = new System.Windows.Forms.Padding(0);
-            this.label165.Name = "label165";
             this.label165.Size = new System.Drawing.Size(29, 13);
-            this.label165.TabIndex = 2;
             this.label165.Text = "gw1";
             this.label165.Click += new System.EventHandler(this.labelQuickLaunch_Click);
             // 
             // panelLocalDat
             // 
-            this.panelLocalDat.Anchor = ((System.Windows.Forms.AnchorStyles)((((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom)
-            | System.Windows.Forms.AnchorStyles.Left)
+            this.panelLocalDat.Anchor = ((System.Windows.Forms.AnchorStyles)((((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom) 
+            | System.Windows.Forms.AnchorStyles.Left) 
             | System.Windows.Forms.AnchorStyles.Right)));
             this.panelLocalDat.Controls.Add(this.stackPanel2);
             this.panelLocalDat.Location = new System.Drawing.Point(183, 12);
-            this.panelLocalDat.Name = "panelLocalDat";
             this.panelLocalDat.Size = new System.Drawing.Size(373, 439);
-            this.panelLocalDat.TabIndex = 20;
             this.panelLocalDat.Visible = false;
             // 
             // stackPanel2
             // 
-            this.stackPanel2.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left)
+            this.stackPanel2.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left) 
             | System.Windows.Forms.AnchorStyles.Right)));
             this.stackPanel2.AutoSize = true;
             this.stackPanel2.AutoSizeFill = Gw2Launcher.UI.Controls.StackPanel.AutoSizeFillMode.Width;
@@ -2970,10 +2673,8 @@ namespace Gw2Launcher.UI
             this.stackPanel2.Controls.Add(this.checkLocalDatCache);
             this.stackPanel2.Location = new System.Drawing.Point(0, 0);
             this.stackPanel2.Margin = new System.Windows.Forms.Padding(0, 0, 13, 0);
-            this.stackPanel2.Name = "stackPanel2";
             this.stackPanel2.Padding = new System.Windows.Forms.Padding(13, 10, 0, 10);
             this.stackPanel2.Size = new System.Drawing.Size(360, 239);
-            this.stackPanel2.TabIndex = 0;
             // 
             // label111
             // 
@@ -2982,9 +2683,7 @@ namespace Gw2Launcher.UI
             this.label111.ForeColor = System.Drawing.Color.Maroon;
             this.label111.Location = new System.Drawing.Point(14, 10);
             this.label111.Margin = new System.Windows.Forms.Padding(1, 0, 0, 0);
-            this.label111.Name = "label111";
             this.label111.Size = new System.Drawing.Size(343, 26);
-            this.label111.TabIndex = 0;
             this.label111.Text = "These options directly modify Local.dat and could potentially cause Guild Wars 2 " +
     "to repair on launch or fail to start";
             // 
@@ -2995,9 +2694,7 @@ namespace Gw2Launcher.UI
             this.label107.ForeColor = System.Drawing.Color.Maroon;
             this.label107.Location = new System.Drawing.Point(14, 41);
             this.label107.Margin = new System.Windows.Forms.Padding(1, 5, 0, 0);
-            this.label107.Name = "label107";
             this.label107.Size = new System.Drawing.Size(291, 13);
-            this.label107.TabIndex = 1;
             this.label107.Text = "Disable these options and update normally if this is a problem";
             // 
             // label113
@@ -3006,9 +2703,7 @@ namespace Gw2Launcher.UI
             this.label113.Font = new System.Drawing.Font("Segoe UI Semibold", 9F, System.Drawing.FontStyle.Bold);
             this.label113.Location = new System.Drawing.Point(13, 67);
             this.label113.Margin = new System.Windows.Forms.Padding(0, 13, 0, 0);
-            this.label113.Name = "label113";
             this.label113.Size = new System.Drawing.Size(139, 15);
-            this.label113.TabIndex = 2;
             this.label113.Text = "Faster Local.dat patching";
             // 
             // label112
@@ -3017,9 +2712,7 @@ namespace Gw2Launcher.UI
             this.label112.Font = new System.Drawing.Font("Segoe UI Semilight", 8.25F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
             this.label112.Location = new System.Drawing.Point(14, 83);
             this.label112.Margin = new System.Windows.Forms.Padding(1, 1, 0, 8);
-            this.label112.Name = "label112";
             this.label112.Size = new System.Drawing.Size(337, 26);
-            this.label112.TabIndex = 3;
             this.label112.Text = "Copies updates between Local.dat files, rather than patching each one individuall" +
     "y";
             // 
@@ -3029,9 +2722,7 @@ namespace Gw2Launcher.UI
             this.checkLocalDatDirectUpdates.Font = new System.Drawing.Font("Segoe UI", 8.25F);
             this.checkLocalDatDirectUpdates.Location = new System.Drawing.Point(21, 117);
             this.checkLocalDatDirectUpdates.Margin = new System.Windows.Forms.Padding(8, 0, 0, 0);
-            this.checkLocalDatDirectUpdates.Name = "checkLocalDatDirectUpdates";
             this.checkLocalDatDirectUpdates.Size = new System.Drawing.Size(195, 17);
-            this.checkLocalDatDirectUpdates.TabIndex = 4;
             this.checkLocalDatDirectUpdates.Text = "Allow directly updating Local.dat";
             this.checkLocalDatDirectUpdates.UseVisualStyleBackColor = true;
             // 
@@ -3041,9 +2732,7 @@ namespace Gw2Launcher.UI
             this.label106.Font = new System.Drawing.Font("Segoe UI Semibold", 9F, System.Drawing.FontStyle.Bold);
             this.label106.Location = new System.Drawing.Point(13, 147);
             this.label106.Margin = new System.Windows.Forms.Padding(0, 13, 0, 0);
-            this.label106.Name = "label106";
             this.label106.Size = new System.Drawing.Size(117, 15);
-            this.label106.TabIndex = 5;
             this.label106.Text = "Static cache location";
             // 
             // label105
@@ -3052,9 +2741,7 @@ namespace Gw2Launcher.UI
             this.label105.Font = new System.Drawing.Font("Segoe UI Semilight", 8.25F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
             this.label105.Location = new System.Drawing.Point(14, 163);
             this.label105.Margin = new System.Windows.Forms.Padding(1, 1, 0, 1);
-            this.label105.Name = "label105";
             this.label105.Size = new System.Drawing.Size(345, 26);
-            this.label105.TabIndex = 6;
             this.label105.Text = "Allows the cache to be reused rather than creating a new one for every launch";
             // 
             // label30
@@ -3064,9 +2751,7 @@ namespace Gw2Launcher.UI
             this.label30.ForeColor = System.Drawing.SystemColors.GrayText;
             this.label30.Location = new System.Drawing.Point(14, 191);
             this.label30.Margin = new System.Windows.Forms.Padding(1, 1, 0, 8);
-            this.label30.Name = "label30";
             this.label30.Size = new System.Drawing.Size(284, 13);
-            this.label30.TabIndex = 7;
             this.label30.Text = "Launching normally after patching will have the same effect";
             // 
             // checkLocalDatCache
@@ -3075,27 +2760,23 @@ namespace Gw2Launcher.UI
             this.checkLocalDatCache.Font = new System.Drawing.Font("Segoe UI", 8.25F);
             this.checkLocalDatCache.Location = new System.Drawing.Point(21, 212);
             this.checkLocalDatCache.Margin = new System.Windows.Forms.Padding(8, 0, 0, 0);
-            this.checkLocalDatCache.Name = "checkLocalDatCache";
             this.checkLocalDatCache.Size = new System.Drawing.Size(265, 17);
-            this.checkLocalDatCache.TabIndex = 8;
             this.checkLocalDatCache.Text = "Allow the cache to be remembered and reused";
             this.checkLocalDatCache.UseVisualStyleBackColor = true;
             // 
             // panelLaunchOptionsAdvancedGw1
             // 
-            this.panelLaunchOptionsAdvancedGw1.Anchor = ((System.Windows.Forms.AnchorStyles)((((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom)
-            | System.Windows.Forms.AnchorStyles.Left)
+            this.panelLaunchOptionsAdvancedGw1.Anchor = ((System.Windows.Forms.AnchorStyles)((((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom) 
+            | System.Windows.Forms.AnchorStyles.Left) 
             | System.Windows.Forms.AnchorStyles.Right)));
             this.panelLaunchOptionsAdvancedGw1.Controls.Add(this.stackPanel18);
             this.panelLaunchOptionsAdvancedGw1.Location = new System.Drawing.Point(183, 12);
-            this.panelLaunchOptionsAdvancedGw1.Name = "panelLaunchOptionsAdvancedGw1";
             this.panelLaunchOptionsAdvancedGw1.Size = new System.Drawing.Size(373, 439);
-            this.panelLaunchOptionsAdvancedGw1.TabIndex = 23;
             this.panelLaunchOptionsAdvancedGw1.Visible = false;
             // 
             // stackPanel18
             // 
-            this.stackPanel18.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left)
+            this.stackPanel18.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left) 
             | System.Windows.Forms.AnchorStyles.Right)));
             this.stackPanel18.AutoSize = true;
             this.stackPanel18.AutoSizeFill = Gw2Launcher.UI.Controls.StackPanel.AutoSizeFillMode.Width;
@@ -3103,10 +2784,8 @@ namespace Gw2Launcher.UI
             this.stackPanel18.Controls.Add(this.panelArgsGw1);
             this.stackPanel18.Location = new System.Drawing.Point(0, 0);
             this.stackPanel18.Margin = new System.Windows.Forms.Padding(0, 0, 13, 0);
-            this.stackPanel18.Name = "stackPanel18";
             this.stackPanel18.Padding = new System.Windows.Forms.Padding(13, 10, 0, 10);
             this.stackPanel18.Size = new System.Drawing.Size(360, 30);
-            this.stackPanel18.TabIndex = 0;
             // 
             // stackPanel53
             // 
@@ -3118,9 +2797,7 @@ namespace Gw2Launcher.UI
             this.stackPanel53.FlowDirection = System.Windows.Forms.FlowDirection.LeftToRight;
             this.stackPanel53.Location = new System.Drawing.Point(323, 10);
             this.stackPanel53.Margin = new System.Windows.Forms.Padding(0);
-            this.stackPanel53.Name = "stackPanel53";
             this.stackPanel53.Size = new System.Drawing.Size(37, 13);
-            this.stackPanel53.TabIndex = 0;
             // 
             // arrowButton4
             // 
@@ -3131,9 +2808,7 @@ namespace Gw2Launcher.UI
             this.arrowButton4.ForeColorHighlight = System.Drawing.Color.FromArgb(((int)(((byte)(150)))), ((int)(((byte)(150)))), ((int)(((byte)(150)))));
             this.arrowButton4.Location = new System.Drawing.Point(0, 3);
             this.arrowButton4.Margin = new System.Windows.Forms.Padding(0, 1, 0, 0);
-            this.arrowButton4.Name = "arrowButton4";
             this.arrowButton4.Size = new System.Drawing.Size(5, 9);
-            this.arrowButton4.TabIndex = 0;
             this.arrowButton4.Click += new System.EventHandler(this.labelLaunchOptionsAdvancedGw1Back_Click);
             // 
             // labelLaunchOptionsAdvancedGw1Back
@@ -3145,10 +2820,8 @@ namespace Gw2Launcher.UI
             this.labelLaunchOptionsAdvancedGw1Back.ForeColor = System.Drawing.Color.FromArgb(((int)(((byte)(45)))), ((int)(((byte)(45)))), ((int)(((byte)(45)))));
             this.labelLaunchOptionsAdvancedGw1Back.Location = new System.Drawing.Point(5, 0);
             this.labelLaunchOptionsAdvancedGw1Back.Margin = new System.Windows.Forms.Padding(0);
-            this.labelLaunchOptionsAdvancedGw1Back.Name = "labelLaunchOptionsAdvancedGw1Back";
             this.labelLaunchOptionsAdvancedGw1Back.Padding = new System.Windows.Forms.Padding(3, 0, 0, 0);
             this.labelLaunchOptionsAdvancedGw1Back.Size = new System.Drawing.Size(32, 13);
-            this.labelLaunchOptionsAdvancedGw1Back.TabIndex = 1;
             this.labelLaunchOptionsAdvancedGw1Back.Text = "back";
             this.labelLaunchOptionsAdvancedGw1Back.Click += new System.EventHandler(this.labelLaunchOptionsAdvancedGw1Back_Click);
             // 
@@ -3159,25 +2832,21 @@ namespace Gw2Launcher.UI
             this.panelArgsGw1.Location = new System.Drawing.Point(13, 10);
             this.panelArgsGw1.Margin = new System.Windows.Forms.Padding(0);
             this.panelArgsGw1.MinimumSize = new System.Drawing.Size(0, 10);
-            this.panelArgsGw1.Name = "panelArgsGw1";
             this.panelArgsGw1.Size = new System.Drawing.Size(347, 10);
-            this.panelArgsGw1.TabIndex = 1;
             // 
             // panelActions
             // 
-            this.panelActions.Anchor = ((System.Windows.Forms.AnchorStyles)((((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom)
-            | System.Windows.Forms.AnchorStyles.Left)
+            this.panelActions.Anchor = ((System.Windows.Forms.AnchorStyles)((((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom) 
+            | System.Windows.Forms.AnchorStyles.Left) 
             | System.Windows.Forms.AnchorStyles.Right)));
             this.panelActions.Controls.Add(this.stackPanel28);
             this.panelActions.Location = new System.Drawing.Point(183, 12);
-            this.panelActions.Name = "panelActions";
             this.panelActions.Size = new System.Drawing.Size(373, 439);
-            this.panelActions.TabIndex = 32;
             this.panelActions.Visible = false;
             // 
             // stackPanel28
             // 
-            this.stackPanel28.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left)
+            this.stackPanel28.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left) 
             | System.Windows.Forms.AnchorStyles.Right)));
             this.stackPanel28.AutoSize = true;
             this.stackPanel28.AutoSizeFill = Gw2Launcher.UI.Controls.StackPanel.AutoSizeFillMode.Width;
@@ -3187,10 +2856,8 @@ namespace Gw2Launcher.UI
             this.stackPanel28.Controls.Add(this.checkStyleDisablePageOnKeyPress);
             this.stackPanel28.Location = new System.Drawing.Point(0, 0);
             this.stackPanel28.Margin = new System.Windows.Forms.Padding(0, 0, 13, 0);
-            this.stackPanel28.Name = "stackPanel28";
             this.stackPanel28.Padding = new System.Windows.Forms.Padding(13, 10, 0, 10);
             this.stackPanel28.Size = new System.Drawing.Size(360, 319);
-            this.stackPanel28.TabIndex = 0;
             // 
             // tableContainerPanel80
             // 
@@ -3216,7 +2883,6 @@ namespace Gw2Launcher.UI
             this.tableContainerPanel80.Controls.Add(this.comboActionActiveLClick, 2, 2);
             this.tableContainerPanel80.Location = new System.Drawing.Point(13, 10);
             this.tableContainerPanel80.Margin = new System.Windows.Forms.Padding(0);
-            this.tableContainerPanel80.Name = "tableContainerPanel80";
             this.tableContainerPanel80.RowCount = 9;
             this.tableContainerPanel80.RowStyles.Add(new System.Windows.Forms.RowStyle());
             this.tableContainerPanel80.RowStyles.Add(new System.Windows.Forms.RowStyle());
@@ -3228,7 +2894,6 @@ namespace Gw2Launcher.UI
             this.tableContainerPanel80.RowStyles.Add(new System.Windows.Forms.RowStyle());
             this.tableContainerPanel80.RowStyles.Add(new System.Windows.Forms.RowStyle());
             this.tableContainerPanel80.Size = new System.Drawing.Size(270, 223);
-            this.tableContainerPanel80.TabIndex = 0;
             // 
             // label50
             // 
@@ -3237,9 +2902,7 @@ namespace Gw2Launcher.UI
             this.label50.Font = new System.Drawing.Font("Segoe UI Semibold", 9F, System.Drawing.FontStyle.Bold);
             this.label50.Location = new System.Drawing.Point(0, 0);
             this.label50.Margin = new System.Windows.Forms.Padding(0);
-            this.label50.Name = "label50";
             this.label50.Size = new System.Drawing.Size(150, 15);
-            this.label50.TabIndex = 0;
             this.label50.Text = "Actions for active accounts";
             // 
             // comboActionInactiveLClick
@@ -3248,9 +2911,7 @@ namespace Gw2Launcher.UI
             this.comboActionInactiveLClick.FormattingEnabled = true;
             this.comboActionInactiveLClick.Location = new System.Drawing.Point(90, 169);
             this.comboActionInactiveLClick.Margin = new System.Windows.Forms.Padding(0, 0, 0, 6);
-            this.comboActionInactiveLClick.Name = "comboActionInactiveLClick";
             this.comboActionInactiveLClick.Size = new System.Drawing.Size(170, 21);
-            this.comboActionInactiveLClick.TabIndex = 1;
             // 
             // label86
             // 
@@ -3259,9 +2920,7 @@ namespace Gw2Launcher.UI
             this.label86.Font = new System.Drawing.Font("Segoe UI Semilight", 8.25F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
             this.label86.Location = new System.Drawing.Point(1, 148);
             this.label86.Margin = new System.Windows.Forms.Padding(1, 1, 0, 8);
-            this.label86.Name = "label86";
             this.label86.Size = new System.Drawing.Size(269, 13);
-            this.label86.TabIndex = 2;
             this.label86.Text = "When an account is not active, the following actions will...";
             // 
             // label87
@@ -3270,9 +2929,7 @@ namespace Gw2Launcher.UI
             this.label87.AutoSize = true;
             this.label87.Location = new System.Drawing.Point(1, 173);
             this.label87.Margin = new System.Windows.Forms.Padding(1, 0, 0, 6);
-            this.label87.Name = "label87";
             this.label87.Size = new System.Drawing.Size(51, 13);
-            this.label87.TabIndex = 3;
             this.label87.Text = "Left click";
             // 
             // comboActionInactiveMClick
@@ -3281,9 +2938,7 @@ namespace Gw2Launcher.UI
             this.comboActionInactiveMClick.FormattingEnabled = true;
             this.comboActionInactiveMClick.Location = new System.Drawing.Point(90, 196);
             this.comboActionInactiveMClick.Margin = new System.Windows.Forms.Padding(0, 0, 0, 6);
-            this.comboActionInactiveMClick.Name = "comboActionInactiveMClick";
             this.comboActionInactiveMClick.Size = new System.Drawing.Size(170, 21);
-            this.comboActionInactiveMClick.TabIndex = 4;
             // 
             // label190
             // 
@@ -3291,9 +2946,7 @@ namespace Gw2Launcher.UI
             this.label190.AutoSize = true;
             this.label190.Location = new System.Drawing.Point(1, 200);
             this.label190.Margin = new System.Windows.Forms.Padding(1, 0, 0, 6);
-            this.label190.Name = "label190";
             this.label190.Size = new System.Drawing.Size(68, 13);
-            this.label190.TabIndex = 5;
             this.label190.Text = "Middle click";
             // 
             // comboActionActiveMClick
@@ -3302,9 +2955,7 @@ namespace Gw2Launcher.UI
             this.comboActionActiveMClick.FormattingEnabled = true;
             this.comboActionActiveMClick.Location = new System.Drawing.Point(90, 91);
             this.comboActionActiveMClick.Margin = new System.Windows.Forms.Padding(0, 0, 0, 6);
-            this.comboActionActiveMClick.Name = "comboActionActiveMClick";
             this.comboActionActiveMClick.Size = new System.Drawing.Size(170, 21);
-            this.comboActionActiveMClick.TabIndex = 6;
             // 
             // label189
             // 
@@ -3312,9 +2963,7 @@ namespace Gw2Launcher.UI
             this.label189.AutoSize = true;
             this.label189.Location = new System.Drawing.Point(1, 95);
             this.label189.Margin = new System.Windows.Forms.Padding(1, 0, 0, 6);
-            this.label189.Name = "label189";
             this.label189.Size = new System.Drawing.Size(68, 13);
-            this.label189.TabIndex = 7;
             this.label189.Text = "Middle click";
             // 
             // label85
@@ -3324,9 +2973,7 @@ namespace Gw2Launcher.UI
             this.label85.Font = new System.Drawing.Font("Segoe UI Semibold", 9F, System.Drawing.FontStyle.Bold);
             this.label85.Location = new System.Drawing.Point(0, 132);
             this.label85.Margin = new System.Windows.Forms.Padding(0, 14, 0, 0);
-            this.label85.Name = "label85";
             this.label85.Size = new System.Drawing.Size(160, 15);
-            this.label85.TabIndex = 8;
             this.label85.Text = "Actions for inactive accounts";
             // 
             // label51
@@ -3336,9 +2983,7 @@ namespace Gw2Launcher.UI
             this.label51.Font = new System.Drawing.Font("Segoe UI Semilight", 8.25F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
             this.label51.Location = new System.Drawing.Point(1, 16);
             this.label51.Margin = new System.Windows.Forms.Padding(1, 1, 0, 8);
-            this.label51.Name = "label51";
             this.label51.Size = new System.Drawing.Size(249, 13);
-            this.label51.TabIndex = 9;
             this.label51.Text = "While an account is active, the following actions will...";
             // 
             // label52
@@ -3347,9 +2992,7 @@ namespace Gw2Launcher.UI
             this.label52.AutoSize = true;
             this.label52.Location = new System.Drawing.Point(1, 41);
             this.label52.Margin = new System.Windows.Forms.Padding(1, 0, 0, 6);
-            this.label52.Name = "label52";
             this.label52.Size = new System.Drawing.Size(51, 13);
-            this.label52.TabIndex = 10;
             this.label52.Text = "Left click";
             // 
             // label53
@@ -3358,9 +3001,7 @@ namespace Gw2Launcher.UI
             this.label53.AutoSize = true;
             this.label53.Location = new System.Drawing.Point(1, 68);
             this.label53.Margin = new System.Windows.Forms.Padding(1, 0, 0, 6);
-            this.label53.Name = "label53";
             this.label53.Size = new System.Drawing.Size(69, 13);
-            this.label53.TabIndex = 11;
             this.label53.Text = "Left pressed";
             // 
             // comboActionActiveLPress
@@ -3369,9 +3010,7 @@ namespace Gw2Launcher.UI
             this.comboActionActiveLPress.FormattingEnabled = true;
             this.comboActionActiveLPress.Location = new System.Drawing.Point(90, 64);
             this.comboActionActiveLPress.Margin = new System.Windows.Forms.Padding(0, 0, 0, 6);
-            this.comboActionActiveLPress.Name = "comboActionActiveLPress";
             this.comboActionActiveLPress.Size = new System.Drawing.Size(170, 21);
-            this.comboActionActiveLPress.TabIndex = 12;
             // 
             // comboActionActiveLClick
             // 
@@ -3379,9 +3018,7 @@ namespace Gw2Launcher.UI
             this.comboActionActiveLClick.FormattingEnabled = true;
             this.comboActionActiveLClick.Location = new System.Drawing.Point(90, 37);
             this.comboActionActiveLClick.Margin = new System.Windows.Forms.Padding(0, 0, 0, 6);
-            this.comboActionActiveLClick.Name = "comboActionActiveLClick";
             this.comboActionActiveLClick.Size = new System.Drawing.Size(170, 21);
-            this.comboActionActiveLClick.TabIndex = 13;
             // 
             // label258
             // 
@@ -3389,9 +3026,7 @@ namespace Gw2Launcher.UI
             this.label258.Font = new System.Drawing.Font("Segoe UI Semibold", 9F, System.Drawing.FontStyle.Bold);
             this.label258.Location = new System.Drawing.Point(13, 246);
             this.label258.Margin = new System.Windows.Forms.Padding(0, 13, 0, 8);
-            this.label258.Name = "label258";
             this.label258.Size = new System.Drawing.Size(49, 15);
-            this.label258.TabIndex = 1;
             this.label258.Text = "Options";
             // 
             // checkStyleDisableSearchOnKeyPress
@@ -3399,9 +3034,7 @@ namespace Gw2Launcher.UI
             this.checkStyleDisableSearchOnKeyPress.AutoSize = true;
             this.checkStyleDisableSearchOnKeyPress.Location = new System.Drawing.Point(21, 272);
             this.checkStyleDisableSearchOnKeyPress.Margin = new System.Windows.Forms.Padding(8, 3, 0, 0);
-            this.checkStyleDisableSearchOnKeyPress.Name = "checkStyleDisableSearchOnKeyPress";
             this.checkStyleDisableSearchOnKeyPress.Size = new System.Drawing.Size(139, 17);
-            this.checkStyleDisableSearchOnKeyPress.TabIndex = 2;
             this.checkStyleDisableSearchOnKeyPress.Text = "Disable type to search";
             this.checkStyleDisableSearchOnKeyPress.UseVisualStyleBackColor = true;
             // 
@@ -3410,27 +3043,23 @@ namespace Gw2Launcher.UI
             this.checkStyleDisablePageOnKeyPress.AutoSize = true;
             this.checkStyleDisablePageOnKeyPress.Location = new System.Drawing.Point(21, 292);
             this.checkStyleDisablePageOnKeyPress.Margin = new System.Windows.Forms.Padding(8, 3, 0, 0);
-            this.checkStyleDisablePageOnKeyPress.Name = "checkStyleDisablePageOnKeyPress";
             this.checkStyleDisablePageOnKeyPress.Size = new System.Drawing.Size(164, 17);
-            this.checkStyleDisablePageOnKeyPress.TabIndex = 3;
             this.checkStyleDisablePageOnKeyPress.Text = "Disable type to select page";
             this.checkStyleDisablePageOnKeyPress.UseVisualStyleBackColor = true;
             // 
             // panelPasswords
             // 
-            this.panelPasswords.Anchor = ((System.Windows.Forms.AnchorStyles)((((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom)
-            | System.Windows.Forms.AnchorStyles.Left)
+            this.panelPasswords.Anchor = ((System.Windows.Forms.AnchorStyles)((((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom) 
+            | System.Windows.Forms.AnchorStyles.Left) 
             | System.Windows.Forms.AnchorStyles.Right)));
             this.panelPasswords.Controls.Add(this.stackPanel7);
             this.panelPasswords.Location = new System.Drawing.Point(183, 12);
-            this.panelPasswords.Name = "panelPasswords";
             this.panelPasswords.Size = new System.Drawing.Size(373, 439);
-            this.panelPasswords.TabIndex = 24;
             this.panelPasswords.Visible = false;
             // 
             // stackPanel7
             // 
-            this.stackPanel7.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left)
+            this.stackPanel7.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left) 
             | System.Windows.Forms.AnchorStyles.Right)));
             this.stackPanel7.AutoSize = true;
             this.stackPanel7.AutoSizeFill = Gw2Launcher.UI.Controls.StackPanel.AutoSizeFillMode.Width;
@@ -3442,10 +3071,8 @@ namespace Gw2Launcher.UI
             this.stackPanel7.Controls.Add(this.buttonClearPasswords);
             this.stackPanel7.Location = new System.Drawing.Point(0, 0);
             this.stackPanel7.Margin = new System.Windows.Forms.Padding(0, 0, 13, 0);
-            this.stackPanel7.Name = "stackPanel7";
             this.stackPanel7.Padding = new System.Windows.Forms.Padding(13, 10, 0, 10);
             this.stackPanel7.Size = new System.Drawing.Size(360, 160);
-            this.stackPanel7.TabIndex = 0;
             // 
             // label8
             // 
@@ -3453,9 +3080,7 @@ namespace Gw2Launcher.UI
             this.label8.Font = new System.Drawing.Font("Segoe UI Semibold", 9F, System.Drawing.FontStyle.Bold);
             this.label8.Location = new System.Drawing.Point(13, 10);
             this.label8.Margin = new System.Windows.Forms.Padding(0);
-            this.label8.Name = "label8";
             this.label8.Size = new System.Drawing.Size(224, 15);
-            this.label8.TabIndex = 0;
             this.label8.Text = "Remember passwords for Windows users";
             // 
             // label6
@@ -3464,9 +3089,7 @@ namespace Gw2Launcher.UI
             this.label6.Font = new System.Drawing.Font("Segoe UI Semilight", 8.25F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
             this.label6.Location = new System.Drawing.Point(14, 26);
             this.label6.Margin = new System.Windows.Forms.Padding(1, 1, 0, 8);
-            this.label6.Name = "label6";
             this.label6.Size = new System.Drawing.Size(200, 13);
-            this.label6.TabIndex = 1;
             this.label6.Text = "Passwords will be saved between sessions";
             // 
             // checkStoreCredentials
@@ -3475,9 +3098,7 @@ namespace Gw2Launcher.UI
             this.checkStoreCredentials.Font = new System.Drawing.Font("Segoe UI", 8.25F);
             this.checkStoreCredentials.Location = new System.Drawing.Point(21, 47);
             this.checkStoreCredentials.Margin = new System.Windows.Forms.Padding(8, 0, 0, 0);
-            this.checkStoreCredentials.Name = "checkStoreCredentials";
             this.checkStoreCredentials.Size = new System.Drawing.Size(138, 17);
-            this.checkStoreCredentials.TabIndex = 2;
             this.checkStoreCredentials.Text = "Remember passwords";
             this.checkStoreCredentials.UseVisualStyleBackColor = true;
             // 
@@ -3487,9 +3108,7 @@ namespace Gw2Launcher.UI
             this.label12.Font = new System.Drawing.Font("Segoe UI Semibold", 9F, System.Drawing.FontStyle.Bold);
             this.label12.Location = new System.Drawing.Point(13, 77);
             this.label12.Margin = new System.Windows.Forms.Padding(0, 13, 0, 0);
-            this.label12.Name = "label12";
             this.label12.Size = new System.Drawing.Size(220, 15);
-            this.label12.TabIndex = 3;
             this.label12.Text = "Clear all stored Windows user passwords";
             // 
             // label11
@@ -3498,9 +3117,7 @@ namespace Gw2Launcher.UI
             this.label11.Font = new System.Drawing.Font("Segoe UI Semilight", 8.25F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
             this.label11.Location = new System.Drawing.Point(14, 93);
             this.label11.Margin = new System.Windows.Forms.Padding(1, 1, 0, 8);
-            this.label11.Name = "label11";
             this.label11.Size = new System.Drawing.Size(317, 26);
-            this.label11.TabIndex = 4;
             this.label11.Text = "All stored passwords will be cleared, including those cached by the current sessi" +
     "on";
             // 
@@ -3510,28 +3127,24 @@ namespace Gw2Launcher.UI
             this.buttonClearPasswords.Font = new System.Drawing.Font("Segoe UI", 8.25F);
             this.buttonClearPasswords.Location = new System.Drawing.Point(20, 127);
             this.buttonClearPasswords.Margin = new System.Windows.Forms.Padding(7, 0, 0, 0);
-            this.buttonClearPasswords.Name = "buttonClearPasswords";
             this.buttonClearPasswords.Size = new System.Drawing.Size(75, 23);
-            this.buttonClearPasswords.TabIndex = 5;
             this.buttonClearPasswords.Text = "Clear";
             this.buttonClearPasswords.UseVisualStyleBackColor = true;
             this.buttonClearPasswords.Click += new System.EventHandler(this.buttonClearPasswords_Click);
             // 
             // panelLaunchOptionsAdvancedGw2
             // 
-            this.panelLaunchOptionsAdvancedGw2.Anchor = ((System.Windows.Forms.AnchorStyles)((((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom)
-            | System.Windows.Forms.AnchorStyles.Left)
+            this.panelLaunchOptionsAdvancedGw2.Anchor = ((System.Windows.Forms.AnchorStyles)((((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom) 
+            | System.Windows.Forms.AnchorStyles.Left) 
             | System.Windows.Forms.AnchorStyles.Right)));
             this.panelLaunchOptionsAdvancedGw2.Controls.Add(this.stackPanel8);
             this.panelLaunchOptionsAdvancedGw2.Location = new System.Drawing.Point(183, 12);
-            this.panelLaunchOptionsAdvancedGw2.Name = "panelLaunchOptionsAdvancedGw2";
             this.panelLaunchOptionsAdvancedGw2.Size = new System.Drawing.Size(373, 439);
-            this.panelLaunchOptionsAdvancedGw2.TabIndex = 25;
             this.panelLaunchOptionsAdvancedGw2.Visible = false;
             // 
             // stackPanel8
             // 
-            this.stackPanel8.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left)
+            this.stackPanel8.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left) 
             | System.Windows.Forms.AnchorStyles.Right)));
             this.stackPanel8.AutoSize = true;
             this.stackPanel8.AutoSizeFill = Gw2Launcher.UI.Controls.StackPanel.AutoSizeFillMode.Width;
@@ -3543,10 +3156,8 @@ namespace Gw2Launcher.UI
             this.stackPanel8.Controls.Add(this.stackPanel9);
             this.stackPanel8.Location = new System.Drawing.Point(0, 0);
             this.stackPanel8.Margin = new System.Windows.Forms.Padding(0, 0, 13, 0);
-            this.stackPanel8.Name = "stackPanel8";
             this.stackPanel8.Padding = new System.Windows.Forms.Padding(13, 10, 0, 10);
             this.stackPanel8.Size = new System.Drawing.Size(360, 176);
-            this.stackPanel8.TabIndex = 0;
             // 
             // stackPanel52
             // 
@@ -3558,9 +3169,7 @@ namespace Gw2Launcher.UI
             this.stackPanel52.FlowDirection = System.Windows.Forms.FlowDirection.LeftToRight;
             this.stackPanel52.Location = new System.Drawing.Point(323, 10);
             this.stackPanel52.Margin = new System.Windows.Forms.Padding(0);
-            this.stackPanel52.Name = "stackPanel52";
             this.stackPanel52.Size = new System.Drawing.Size(37, 13);
-            this.stackPanel52.TabIndex = 0;
             // 
             // arrowButton3
             // 
@@ -3571,9 +3180,7 @@ namespace Gw2Launcher.UI
             this.arrowButton3.ForeColorHighlight = System.Drawing.Color.FromArgb(((int)(((byte)(150)))), ((int)(((byte)(150)))), ((int)(((byte)(150)))));
             this.arrowButton3.Location = new System.Drawing.Point(0, 3);
             this.arrowButton3.Margin = new System.Windows.Forms.Padding(0, 1, 0, 0);
-            this.arrowButton3.Name = "arrowButton3";
             this.arrowButton3.Size = new System.Drawing.Size(5, 9);
-            this.arrowButton3.TabIndex = 0;
             this.arrowButton3.Click += new System.EventHandler(this.labelLaunchOptionsAdvancedGw2Back_Click);
             // 
             // labelLaunchOptionsAdvancedGw2Back
@@ -3585,10 +3192,8 @@ namespace Gw2Launcher.UI
             this.labelLaunchOptionsAdvancedGw2Back.ForeColor = System.Drawing.Color.FromArgb(((int)(((byte)(45)))), ((int)(((byte)(45)))), ((int)(((byte)(45)))));
             this.labelLaunchOptionsAdvancedGw2Back.Location = new System.Drawing.Point(5, 0);
             this.labelLaunchOptionsAdvancedGw2Back.Margin = new System.Windows.Forms.Padding(0);
-            this.labelLaunchOptionsAdvancedGw2Back.Name = "labelLaunchOptionsAdvancedGw2Back";
             this.labelLaunchOptionsAdvancedGw2Back.Padding = new System.Windows.Forms.Padding(3, 0, 0, 0);
             this.labelLaunchOptionsAdvancedGw2Back.Size = new System.Drawing.Size(32, 13);
-            this.labelLaunchOptionsAdvancedGw2Back.TabIndex = 1;
             this.labelLaunchOptionsAdvancedGw2Back.Text = "back";
             this.labelLaunchOptionsAdvancedGw2Back.Click += new System.EventHandler(this.labelLaunchOptionsAdvancedGw2Back_Click);
             // 
@@ -3601,9 +3206,7 @@ namespace Gw2Launcher.UI
             this.panelArgsGw2.Controls.Add(this.labelArgsTemplateDesc);
             this.panelArgsGw2.Location = new System.Drawing.Point(13, 10);
             this.panelArgsGw2.Margin = new System.Windows.Forms.Padding(0);
-            this.panelArgsGw2.Name = "panelArgsGw2";
             this.panelArgsGw2.Size = new System.Drawing.Size(347, 70);
-            this.panelArgsGw2.TabIndex = 1;
             // 
             // labelArgsTemplateHeader
             // 
@@ -3611,9 +3214,7 @@ namespace Gw2Launcher.UI
             this.labelArgsTemplateHeader.Font = new System.Drawing.Font("Segoe UI Semibold", 9F, System.Drawing.FontStyle.Bold);
             this.labelArgsTemplateHeader.Location = new System.Drawing.Point(0, 7);
             this.labelArgsTemplateHeader.Margin = new System.Windows.Forms.Padding(0, 7, 0, 8);
-            this.labelArgsTemplateHeader.Name = "labelArgsTemplateHeader";
             this.labelArgsTemplateHeader.Size = new System.Drawing.Size(47, 15);
-            this.labelArgsTemplateHeader.TabIndex = 0;
             this.labelArgsTemplateHeader.Text = "Sample";
             this.labelArgsTemplateHeader.Visible = false;
             // 
@@ -3622,9 +3223,7 @@ namespace Gw2Launcher.UI
             this.checkArgsTemplate.AutoSize = true;
             this.checkArgsTemplate.Location = new System.Drawing.Point(8, 30);
             this.checkArgsTemplate.Margin = new System.Windows.Forms.Padding(8, 0, 0, 3);
-            this.checkArgsTemplate.Name = "checkArgsTemplate";
             this.checkArgsTemplate.Size = new System.Drawing.Size(63, 17);
-            this.checkArgsTemplate.TabIndex = 1;
             this.checkArgsTemplate.Text = "Sample";
             this.checkArgsTemplate.UseVisualStyleBackColor = true;
             this.checkArgsTemplate.Visible = false;
@@ -3636,22 +3235,18 @@ namespace Gw2Launcher.UI
             this.labelArgsTemplateDesc.ForeColor = System.Drawing.SystemColors.GrayText;
             this.labelArgsTemplateDesc.Location = new System.Drawing.Point(24, 50);
             this.labelArgsTemplateDesc.Margin = new System.Windows.Forms.Padding(24, 0, 0, 7);
-            this.labelArgsTemplateDesc.Name = "labelArgsTemplateDesc";
             this.labelArgsTemplateDesc.Size = new System.Drawing.Size(42, 13);
-            this.labelArgsTemplateDesc.TabIndex = 2;
             this.labelArgsTemplateDesc.Text = "Sample";
             this.labelArgsTemplateDesc.Visible = false;
             // 
             // panel4
             // 
-            this.panel4.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left)
+            this.panel4.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left) 
             | System.Windows.Forms.AnchorStyles.Right)));
             this.panel4.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(224)))), ((int)(((byte)(224)))), ((int)(((byte)(224)))));
             this.panel4.Location = new System.Drawing.Point(23, 93);
             this.panel4.Margin = new System.Windows.Forms.Padding(10, 13, 10, 0);
-            this.panel4.Name = "panel4";
             this.panel4.Size = new System.Drawing.Size(327, 1);
-            this.panel4.TabIndex = 2;
             // 
             // label82
             // 
@@ -3659,9 +3254,7 @@ namespace Gw2Launcher.UI
             this.label82.Font = new System.Drawing.Font("Segoe UI Semibold", 9F, System.Drawing.FontStyle.Bold);
             this.label82.Location = new System.Drawing.Point(13, 107);
             this.label82.Margin = new System.Windows.Forms.Padding(0, 13, 0, 0);
-            this.label82.Name = "label82";
             this.label82.Size = new System.Drawing.Size(184, 15);
-            this.label82.TabIndex = 3;
             this.label82.Text = "Maximum concurrent downloads";
             // 
             // label84
@@ -3670,9 +3263,7 @@ namespace Gw2Launcher.UI
             this.label84.Font = new System.Drawing.Font("Segoe UI Semilight", 8.25F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
             this.label84.Location = new System.Drawing.Point(14, 123);
             this.label84.Margin = new System.Windows.Forms.Padding(1, 1, 0, 8);
-            this.label84.Name = "label84";
             this.label84.Size = new System.Drawing.Size(254, 13);
-            this.label84.TabIndex = 4;
             this.label84.Text = "The maximum number of connections while patching";
             // 
             // stackPanel9
@@ -3684,9 +3275,7 @@ namespace Gw2Launcher.UI
             this.stackPanel9.FlowDirection = System.Windows.Forms.FlowDirection.LeftToRight;
             this.stackPanel9.Location = new System.Drawing.Point(13, 144);
             this.stackPanel9.Margin = new System.Windows.Forms.Padding(0);
-            this.stackPanel9.Name = "stackPanel9";
             this.stackPanel9.Size = new System.Drawing.Size(74, 22);
-            this.stackPanel9.TabIndex = 5;
             // 
             // checkMaxPatchConnections
             // 
@@ -3694,9 +3283,7 @@ namespace Gw2Launcher.UI
             this.checkMaxPatchConnections.AutoSize = true;
             this.checkMaxPatchConnections.Location = new System.Drawing.Point(8, 4);
             this.checkMaxPatchConnections.Margin = new System.Windows.Forms.Padding(8, 0, 0, 0);
-            this.checkMaxPatchConnections.Name = "checkMaxPatchConnections";
             this.checkMaxPatchConnections.Size = new System.Drawing.Size(15, 14);
-            this.checkMaxPatchConnections.TabIndex = 0;
             this.checkMaxPatchConnections.UseVisualStyleBackColor = true;
             this.checkMaxPatchConnections.CheckedChanged += new System.EventHandler(this.checkMaxPatchConnections_CheckedChanged);
             // 
@@ -3715,9 +3302,7 @@ namespace Gw2Launcher.UI
             0,
             0,
             0});
-            this.numericMaxPatchConnections.Name = "numericMaxPatchConnections";
             this.numericMaxPatchConnections.Size = new System.Drawing.Size(44, 22);
-            this.numericMaxPatchConnections.TabIndex = 1;
             this.numericMaxPatchConnections.Value = new decimal(new int[] {
             8,
             0,
@@ -3726,19 +3311,17 @@ namespace Gw2Launcher.UI
             // 
             // panelTools
             // 
-            this.panelTools.Anchor = ((System.Windows.Forms.AnchorStyles)((((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom)
-            | System.Windows.Forms.AnchorStyles.Left)
+            this.panelTools.Anchor = ((System.Windows.Forms.AnchorStyles)((((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom) 
+            | System.Windows.Forms.AnchorStyles.Left) 
             | System.Windows.Forms.AnchorStyles.Right)));
             this.panelTools.Controls.Add(this.stackPanel37);
             this.panelTools.Location = new System.Drawing.Point(183, 12);
-            this.panelTools.Name = "panelTools";
             this.panelTools.Size = new System.Drawing.Size(373, 439);
-            this.panelTools.TabIndex = 26;
             this.panelTools.Visible = false;
             // 
             // stackPanel37
             // 
-            this.stackPanel37.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left)
+            this.stackPanel37.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left) 
             | System.Windows.Forms.AnchorStyles.Right)));
             this.stackPanel37.AutoSize = true;
             this.stackPanel37.AutoSizeFill = Gw2Launcher.UI.Controls.StackPanel.AutoSizeFillMode.Width;
@@ -3765,10 +3348,8 @@ namespace Gw2Launcher.UI
             this.stackPanel37.Controls.Add(this.stackPanel39);
             this.stackPanel37.Location = new System.Drawing.Point(0, 0);
             this.stackPanel37.Margin = new System.Windows.Forms.Padding(0, 0, 13, 0);
-            this.stackPanel37.Name = "stackPanel37";
             this.stackPanel37.Padding = new System.Windows.Forms.Padding(13, 10, 0, 10);
             this.stackPanel37.Size = new System.Drawing.Size(343, 506);
-            this.stackPanel37.TabIndex = 0;
             // 
             // label55
             // 
@@ -3776,9 +3357,7 @@ namespace Gw2Launcher.UI
             this.label55.Font = new System.Drawing.Font("Segoe UI Semibold", 9F, System.Drawing.FontStyle.Bold);
             this.label55.Location = new System.Drawing.Point(13, 10);
             this.label55.Margin = new System.Windows.Forms.Padding(0, 0, 0, 8);
-            this.label55.Name = "label55";
             this.label55.Size = new System.Drawing.Size(110, 15);
-            this.label55.TabIndex = 0;
             this.label55.Text = "Daily achievements";
             // 
             // checkShowDailies
@@ -3787,9 +3366,7 @@ namespace Gw2Launcher.UI
             this.checkShowDailies.Font = new System.Drawing.Font("Segoe UI", 8.25F);
             this.checkShowDailies.Location = new System.Drawing.Point(21, 33);
             this.checkShowDailies.Margin = new System.Windows.Forms.Padding(8, 0, 0, 0);
-            this.checkShowDailies.Name = "checkShowDailies";
             this.checkShowDailies.Size = new System.Drawing.Size(154, 17);
-            this.checkShowDailies.TabIndex = 1;
             this.checkShowDailies.Text = "Show daily achievements";
             this.checkShowDailies.UseVisualStyleBackColor = true;
             this.checkShowDailies.CheckedChanged += new System.EventHandler(this.checkShowDailies_CheckedChanged);
@@ -3801,9 +3378,7 @@ namespace Gw2Launcher.UI
             this.checkShowDailiesAuto.Font = new System.Drawing.Font("Segoe UI", 8.25F);
             this.checkShowDailiesAuto.Location = new System.Drawing.Point(21, 53);
             this.checkShowDailiesAuto.Margin = new System.Windows.Forms.Padding(8, 3, 0, 0);
-            this.checkShowDailiesAuto.Name = "checkShowDailiesAuto";
             this.checkShowDailiesAuto.Size = new System.Drawing.Size(296, 17);
-            this.checkShowDailiesAuto.TabIndex = 2;
             this.checkShowDailiesAuto.Text = "Automatically pop up when new dailies are available";
             this.checkShowDailiesAuto.UseVisualStyleBackColor = true;
             // 
@@ -3813,9 +3388,7 @@ namespace Gw2Launcher.UI
             this.label223.Font = new System.Drawing.Font("Segoe UI Semilight", 8.25F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
             this.label223.Location = new System.Drawing.Point(14, 76);
             this.label223.Margin = new System.Windows.Forms.Padding(1, 6, 0, 8);
-            this.label223.Name = "label223";
             this.label223.Size = new System.Drawing.Size(54, 13);
-            this.label223.TabIndex = 3;
             this.label223.Text = "Language";
             // 
             // comboShowDailiesLang
@@ -3824,9 +3397,7 @@ namespace Gw2Launcher.UI
             this.comboShowDailiesLang.FormattingEnabled = true;
             this.comboShowDailiesLang.Location = new System.Drawing.Point(21, 97);
             this.comboShowDailiesLang.Margin = new System.Windows.Forms.Padding(8, 0, 0, 0);
-            this.comboShowDailiesLang.Name = "comboShowDailiesLang";
             this.comboShowDailiesLang.Size = new System.Drawing.Size(65, 21);
-            this.comboShowDailiesLang.TabIndex = 4;
             // 
             // label187
             // 
@@ -3834,9 +3405,7 @@ namespace Gw2Launcher.UI
             this.label187.Font = new System.Drawing.Font("Segoe UI Semibold", 9F, System.Drawing.FontStyle.Bold);
             this.label187.Location = new System.Drawing.Point(13, 131);
             this.label187.Margin = new System.Windows.Forms.Padding(0, 13, 0, 0);
-            this.label187.Name = "label187";
             this.label187.Size = new System.Drawing.Size(139, 15);
-            this.label187.TabIndex = 5;
             this.label187.Text = "Authenticator code entry";
             // 
             // label188
@@ -3845,9 +3414,7 @@ namespace Gw2Launcher.UI
             this.label188.Font = new System.Drawing.Font("Segoe UI Semilight", 8.25F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
             this.label188.Location = new System.Drawing.Point(14, 147);
             this.label188.Margin = new System.Windows.Forms.Padding(1, 1, 0, 1);
-            this.label188.Name = "label188";
             this.label188.Size = new System.Drawing.Size(303, 26);
-            this.label188.TabIndex = 6;
             this.label188.Text = "Hold the right mouse button while on the launcher to paste the current authentica" +
     "tor code";
             // 
@@ -3858,9 +3425,7 @@ namespace Gw2Launcher.UI
             this.label192.ForeColor = System.Drawing.SystemColors.GrayText;
             this.label192.Location = new System.Drawing.Point(14, 175);
             this.label192.Margin = new System.Windows.Forms.Padding(1, 1, 0, 8);
-            this.label192.Name = "label192";
             this.label192.Size = new System.Drawing.Size(254, 13);
-            this.label192.TabIndex = 7;
             this.label192.Text = "Only applies to accounts with attached authenticators";
             // 
             // checkManualAuthenticator
@@ -3869,9 +3434,7 @@ namespace Gw2Launcher.UI
             this.checkManualAuthenticator.Font = new System.Drawing.Font("Segoe UI", 8.25F);
             this.checkManualAuthenticator.Location = new System.Drawing.Point(21, 196);
             this.checkManualAuthenticator.Margin = new System.Windows.Forms.Padding(8, 0, 0, 0);
-            this.checkManualAuthenticator.Name = "checkManualAuthenticator";
             this.checkManualAuthenticator.Size = new System.Drawing.Size(197, 17);
-            this.checkManualAuthenticator.TabIndex = 8;
             this.checkManualAuthenticator.Text = "Hold right click to paste the code";
             this.checkManualAuthenticator.UseVisualStyleBackColor = true;
             // 
@@ -3881,9 +3444,7 @@ namespace Gw2Launcher.UI
             this.label193.Font = new System.Drawing.Font("Segoe UI Semilight", 8.25F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
             this.label193.Location = new System.Drawing.Point(14, 219);
             this.label193.Margin = new System.Windows.Forms.Padding(1, 6, 0, 1);
-            this.label193.Name = "label193";
             this.label193.Size = new System.Drawing.Size(227, 13);
-            this.label193.TabIndex = 9;
             this.label193.Text = "The code can also be pasted by launching with:";
             // 
             // label194
@@ -3893,9 +3454,7 @@ namespace Gw2Launcher.UI
             this.label194.ForeColor = System.Drawing.SystemColors.GrayText;
             this.label194.Location = new System.Drawing.Point(14, 234);
             this.label194.Margin = new System.Windows.Forms.Padding(1, 1, 0, 8);
-            this.label194.Name = "label194";
             this.label194.Size = new System.Drawing.Size(283, 13);
-            this.label194.TabIndex = 10;
             this.label194.Text = "If no valid window is selected, a menu will be shown instead";
             // 
             // labelShowTotpCodeOption
@@ -3904,9 +3463,7 @@ namespace Gw2Launcher.UI
             this.labelShowTotpCodeOption.Icon = null;
             this.labelShowTotpCodeOption.Location = new System.Drawing.Point(21, 255);
             this.labelShowTotpCodeOption.Margin = new System.Windows.Forms.Padding(8, 0, 0, 0);
-            this.labelShowTotpCodeOption.Name = "labelShowTotpCodeOption";
             this.labelShowTotpCodeOption.Size = new System.Drawing.Size(58, 13);
-            this.labelShowTotpCodeOption.TabIndex = 11;
             this.labelShowTotpCodeOption.Text = "-totpcode";
             this.labelShowTotpCodeOption.Click += new System.EventHandler(this.labelShowTotpCodeOption_Click);
             // 
@@ -3916,9 +3473,7 @@ namespace Gw2Launcher.UI
             this.label56.Font = new System.Drawing.Font("Segoe UI Semibold", 9F, System.Drawing.FontStyle.Bold);
             this.label56.Location = new System.Drawing.Point(13, 281);
             this.label56.Margin = new System.Windows.Forms.Padding(0, 13, 0, 0);
-            this.label56.Name = "label56";
             this.label56.Size = new System.Drawing.Size(141, 15);
-            this.label56.TabIndex = 12;
             this.label56.Text = "Delete old files on launch";
             // 
             // label57
@@ -3927,9 +3482,7 @@ namespace Gw2Launcher.UI
             this.label57.Font = new System.Drawing.Font("Segoe UI Semilight", 8.25F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
             this.label57.Location = new System.Drawing.Point(14, 297);
             this.label57.Margin = new System.Windows.Forms.Padding(1, 1, 0, 1);
-            this.label57.Name = "label57";
             this.label57.Size = new System.Drawing.Size(319, 39);
-            this.label57.TabIndex = 13;
             this.label57.Text = "Temporary cache files are created when starting the launcher and BLTC, log files " +
     "are created when the game or its internal web browser crashes";
             // 
@@ -3940,9 +3493,7 @@ namespace Gw2Launcher.UI
             this.label67.ForeColor = System.Drawing.SystemColors.GrayText;
             this.label67.Location = new System.Drawing.Point(14, 338);
             this.label67.Margin = new System.Windows.Forms.Padding(1, 1, 0, 8);
-            this.label67.Name = "label67";
             this.label67.Size = new System.Drawing.Size(267, 13);
-            this.label67.TabIndex = 14;
             this.label67.Text = "Temporary files will be automatically deleted periodically";
             // 
             // checkDeleteCacheOnLaunch
@@ -3951,9 +3502,7 @@ namespace Gw2Launcher.UI
             this.checkDeleteCacheOnLaunch.Font = new System.Drawing.Font("Segoe UI", 8.25F);
             this.checkDeleteCacheOnLaunch.Location = new System.Drawing.Point(21, 359);
             this.checkDeleteCacheOnLaunch.Margin = new System.Windows.Forms.Padding(8, 0, 0, 0);
-            this.checkDeleteCacheOnLaunch.Name = "checkDeleteCacheOnLaunch";
             this.checkDeleteCacheOnLaunch.Size = new System.Drawing.Size(135, 17);
-            this.checkDeleteCacheOnLaunch.TabIndex = 15;
             this.checkDeleteCacheOnLaunch.Text = "Delete old cache files";
             this.checkDeleteCacheOnLaunch.UseVisualStyleBackColor = true;
             // 
@@ -3963,9 +3512,7 @@ namespace Gw2Launcher.UI
             this.checkDeleteCrashLogsOnLaunch.Font = new System.Drawing.Font("Segoe UI", 8.25F);
             this.checkDeleteCrashLogsOnLaunch.Location = new System.Drawing.Point(21, 379);
             this.checkDeleteCrashLogsOnLaunch.Margin = new System.Windows.Forms.Padding(8, 3, 0, 0);
-            this.checkDeleteCrashLogsOnLaunch.Name = "checkDeleteCrashLogsOnLaunch";
             this.checkDeleteCrashLogsOnLaunch.Size = new System.Drawing.Size(123, 17);
-            this.checkDeleteCrashLogsOnLaunch.TabIndex = 16;
             this.checkDeleteCrashLogsOnLaunch.Text = "Delete old log files";
             this.checkDeleteCrashLogsOnLaunch.UseVisualStyleBackColor = true;
             // 
@@ -3975,9 +3522,7 @@ namespace Gw2Launcher.UI
             this.label81.Font = new System.Drawing.Font("Segoe UI Semibold", 9F, System.Drawing.FontStyle.Bold);
             this.label81.Location = new System.Drawing.Point(13, 409);
             this.label81.Margin = new System.Windows.Forms.Padding(0, 13, 0, 0);
-            this.label81.Name = "label81";
             this.label81.Size = new System.Drawing.Size(146, 15);
-            this.label81.TabIndex = 17;
             this.label81.Text = "Notes / account messages";
             // 
             // label80
@@ -3986,9 +3531,7 @@ namespace Gw2Launcher.UI
             this.label80.Font = new System.Drawing.Font("Segoe UI Semilight", 8.25F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
             this.label80.Location = new System.Drawing.Point(14, 425);
             this.label80.Margin = new System.Windows.Forms.Padding(1, 1, 0, 8);
-            this.label80.Name = "label80";
             this.label80.Size = new System.Drawing.Size(283, 26);
-            this.label80.TabIndex = 18;
             this.label80.Text = "Notes can be added to accounts and configured to show a notification after a spec" +
     "ified amount of time";
             // 
@@ -4001,18 +3544,14 @@ namespace Gw2Launcher.UI
             this.stackPanel38.FlowDirection = System.Windows.Forms.FlowDirection.LeftToRight;
             this.stackPanel38.Location = new System.Drawing.Point(13, 459);
             this.stackPanel38.Margin = new System.Windows.Forms.Padding(0);
-            this.stackPanel38.Name = "stackPanel38";
             this.stackPanel38.Size = new System.Drawing.Size(189, 17);
-            this.stackPanel38.TabIndex = 19;
             // 
             // checkNoteNotifications
             // 
             this.checkNoteNotifications.AutoSize = true;
             this.checkNoteNotifications.Location = new System.Drawing.Point(8, 0);
             this.checkNoteNotifications.Margin = new System.Windows.Forms.Padding(8, 0, 0, 0);
-            this.checkNoteNotifications.Name = "checkNoteNotifications";
             this.checkNoteNotifications.Size = new System.Drawing.Size(123, 17);
-            this.checkNoteNotifications.TabIndex = 0;
             this.checkNoteNotifications.Text = "Show notifications";
             this.checkNoteNotifications.UseVisualStyleBackColor = true;
             this.checkNoteNotifications.CheckedChanged += new System.EventHandler(this.checkNoteNotifications_CheckedChanged);
@@ -4024,9 +3563,7 @@ namespace Gw2Launcher.UI
             this.labelNoteNotifications.Icon = null;
             this.labelNoteNotifications.Location = new System.Drawing.Point(132, 1);
             this.labelNoteNotifications.Margin = new System.Windows.Forms.Padding(1, 0, 0, 1);
-            this.labelNoteNotifications.Name = "labelNoteNotifications";
             this.labelNoteNotifications.Size = new System.Drawing.Size(57, 13);
-            this.labelNoteNotifications.TabIndex = 1;
             this.labelNoteNotifications.Text = "configure";
             this.labelNoteNotifications.Click += new System.EventHandler(this.labelNoteNotifications_Click);
             // 
@@ -4040,18 +3577,14 @@ namespace Gw2Launcher.UI
             this.stackPanel39.FlowDirection = System.Windows.Forms.FlowDirection.LeftToRight;
             this.stackPanel39.Location = new System.Drawing.Point(13, 479);
             this.stackPanel39.Margin = new System.Windows.Forms.Padding(0, 3, 0, 0);
-            this.stackPanel39.Name = "stackPanel39";
             this.stackPanel39.Size = new System.Drawing.Size(273, 17);
-            this.stackPanel39.TabIndex = 20;
             // 
             // checkNoteNotificationsOnlyWhileActive
             // 
             this.checkNoteNotificationsOnlyWhileActive.AutoSize = true;
             this.checkNoteNotificationsOnlyWhileActive.Location = new System.Drawing.Point(8, 0);
             this.checkNoteNotificationsOnlyWhileActive.Margin = new System.Windows.Forms.Padding(8, 0, 0, 0);
-            this.checkNoteNotificationsOnlyWhileActive.Name = "checkNoteNotificationsOnlyWhileActive";
             this.checkNoteNotificationsOnlyWhileActive.Size = new System.Drawing.Size(113, 17);
-            this.checkNoteNotificationsOnlyWhileActive.TabIndex = 0;
             this.checkNoteNotificationsOnlyWhileActive.Text = "Only while active";
             this.checkNoteNotificationsOnlyWhileActive.UseVisualStyleBackColor = true;
             // 
@@ -4063,27 +3596,23 @@ namespace Gw2Launcher.UI
             this.label83.ForeColor = System.Drawing.SystemColors.GrayText;
             this.label83.Location = new System.Drawing.Point(122, 1);
             this.label83.Margin = new System.Windows.Forms.Padding(1, 0, 0, 1);
-            this.label83.Name = "label83";
             this.label83.Size = new System.Drawing.Size(151, 13);
-            this.label83.TabIndex = 1;
             this.label83.Text = "(recent keyboard/mouse input)";
             // 
             // panelBackup
             // 
-            this.panelBackup.Anchor = ((System.Windows.Forms.AnchorStyles)((((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom)
-            | System.Windows.Forms.AnchorStyles.Left)
+            this.panelBackup.Anchor = ((System.Windows.Forms.AnchorStyles)((((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom) 
+            | System.Windows.Forms.AnchorStyles.Left) 
             | System.Windows.Forms.AnchorStyles.Right)));
             this.panelBackup.Controls.Add(this.stackPanel91);
             this.panelBackup.Location = new System.Drawing.Point(183, 12);
-            this.panelBackup.Name = "panelBackup";
             this.panelBackup.Size = new System.Drawing.Size(373, 439);
-            this.panelBackup.TabIndex = 19;
             this.panelBackup.Visible = false;
             this.panelBackup.PreVisiblePropertyChanged += new System.EventHandler<bool>(this.panelBackup_PreVisiblePropertyChanged);
             // 
             // stackPanel91
             // 
-            this.stackPanel91.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left)
+            this.stackPanel91.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left) 
             | System.Windows.Forms.AnchorStyles.Right)));
             this.stackPanel91.AutoSize = true;
             this.stackPanel91.AutoSizeFill = Gw2Launcher.UI.Controls.StackPanel.AutoSizeFillMode.Width;
@@ -4107,10 +3636,8 @@ namespace Gw2Launcher.UI
             this.stackPanel91.Controls.Add(this.stackPanel90);
             this.stackPanel91.Location = new System.Drawing.Point(0, 0);
             this.stackPanel91.Margin = new System.Windows.Forms.Padding(0, 0, 13, 0);
-            this.stackPanel91.Name = "stackPanel91";
             this.stackPanel91.Padding = new System.Windows.Forms.Padding(13, 10, 0, 10);
             this.stackPanel91.Size = new System.Drawing.Size(360, 366);
-            this.stackPanel91.TabIndex = 0;
             // 
             // label132
             // 
@@ -4118,9 +3645,7 @@ namespace Gw2Launcher.UI
             this.label132.Font = new System.Drawing.Font("Segoe UI Semibold", 9F, System.Drawing.FontStyle.Bold);
             this.label132.Location = new System.Drawing.Point(13, 10);
             this.label132.Margin = new System.Windows.Forms.Padding(0);
-            this.label132.Name = "label132";
             this.label132.Size = new System.Drawing.Size(46, 15);
-            this.label132.TabIndex = 0;
             this.label132.Text = "Backup";
             // 
             // label211
@@ -4129,9 +3654,7 @@ namespace Gw2Launcher.UI
             this.label211.Font = new System.Drawing.Font("Segoe UI Semilight", 8.25F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
             this.label211.Location = new System.Drawing.Point(14, 28);
             this.label211.Margin = new System.Windows.Forms.Padding(1, 3, 0, 8);
-            this.label211.Name = "label211";
             this.label211.Size = new System.Drawing.Size(173, 13);
-            this.label211.TabIndex = 1;
             this.label211.Text = "Package everything into a single file";
             // 
             // checkBackupSingleFile
@@ -4141,9 +3664,7 @@ namespace Gw2Launcher.UI
             this.checkBackupSingleFile.CheckState = System.Windows.Forms.CheckState.Checked;
             this.checkBackupSingleFile.Location = new System.Drawing.Point(21, 49);
             this.checkBackupSingleFile.Margin = new System.Windows.Forms.Padding(8, 0, 0, 5);
-            this.checkBackupSingleFile.Name = "checkBackupSingleFile";
             this.checkBackupSingleFile.Size = new System.Drawing.Size(123, 17);
-            this.checkBackupSingleFile.TabIndex = 2;
             this.checkBackupSingleFile.Text = "Single file package";
             this.checkBackupSingleFile.UseVisualStyleBackColor = true;
             // 
@@ -4153,9 +3674,7 @@ namespace Gw2Launcher.UI
             this.labelBackupPasswords.Font = new System.Drawing.Font("Segoe UI Semilight", 8.25F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
             this.labelBackupPasswords.Location = new System.Drawing.Point(14, 71);
             this.labelBackupPasswords.Margin = new System.Windows.Forms.Padding(1, 0, 0, 4);
-            this.labelBackupPasswords.Name = "labelBackupPasswords";
             this.labelBackupPasswords.Size = new System.Drawing.Size(55, 13);
-            this.labelBackupPasswords.TabIndex = 3;
             this.labelBackupPasswords.Text = "Passwords";
             // 
             // labelBackupPasswordUser
@@ -4165,9 +3684,7 @@ namespace Gw2Launcher.UI
             this.labelBackupPasswordUser.ForeColor = System.Drawing.Color.Maroon;
             this.labelBackupPasswordUser.Location = new System.Drawing.Point(18, 88);
             this.labelBackupPasswordUser.Margin = new System.Windows.Forms.Padding(5, 0, 0, 0);
-            this.labelBackupPasswordUser.Name = "labelBackupPasswordUser";
             this.labelBackupPasswordUser.Size = new System.Drawing.Size(142, 13);
-            this.labelBackupPasswordUser.TabIndex = 4;
             this.labelBackupPasswordUser.Text = "Restricted to the current user";
             // 
             // labelBackupPasswordMachine
@@ -4177,9 +3694,7 @@ namespace Gw2Launcher.UI
             this.labelBackupPasswordMachine.ForeColor = System.Drawing.Color.Maroon;
             this.labelBackupPasswordMachine.Location = new System.Drawing.Point(18, 101);
             this.labelBackupPasswordMachine.Margin = new System.Windows.Forms.Padding(5, 0, 0, 0);
-            this.labelBackupPasswordMachine.Name = "labelBackupPasswordMachine";
             this.labelBackupPasswordMachine.Size = new System.Drawing.Size(135, 13);
-            this.labelBackupPasswordMachine.TabIndex = 5;
             this.labelBackupPasswordMachine.Text = "Restricted to the current PC";
             // 
             // labelBackupPasswordChange
@@ -4188,9 +3703,7 @@ namespace Gw2Launcher.UI
             this.labelBackupPasswordChange.Icon = null;
             this.labelBackupPasswordChange.Location = new System.Drawing.Point(18, 115);
             this.labelBackupPasswordChange.Margin = new System.Windows.Forms.Padding(5, 1, 0, 5);
-            this.labelBackupPasswordChange.Name = "labelBackupPasswordChange";
             this.labelBackupPasswordChange.Size = new System.Drawing.Size(103, 13);
-            this.labelBackupPasswordChange.TabIndex = 6;
             this.labelBackupPasswordChange.Text = "change encryption";
             this.labelBackupPasswordChange.Click += new System.EventHandler(this.labelBackupPasswordChange_Click);
             // 
@@ -4200,9 +3713,7 @@ namespace Gw2Launcher.UI
             this.label215.Font = new System.Drawing.Font("Segoe UI Semilight", 8.25F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
             this.label215.Location = new System.Drawing.Point(14, 133);
             this.label215.Margin = new System.Windows.Forms.Padding(1, 0, 0, 8);
-            this.label215.Name = "label215";
             this.label215.Size = new System.Drawing.Size(131, 13);
-            this.label215.TabIndex = 7;
             this.label215.Text = "Optional files used by GW2";
             // 
             // checkBackupIncludeLocalDat
@@ -4211,9 +3722,7 @@ namespace Gw2Launcher.UI
             this.checkBackupIncludeLocalDat.AutoSize = true;
             this.checkBackupIncludeLocalDat.Location = new System.Drawing.Point(21, 154);
             this.checkBackupIncludeLocalDat.Margin = new System.Windows.Forms.Padding(8, 0, 0, 0);
-            this.checkBackupIncludeLocalDat.Name = "checkBackupIncludeLocalDat";
             this.checkBackupIncludeLocalDat.Size = new System.Drawing.Size(113, 17);
-            this.checkBackupIncludeLocalDat.TabIndex = 8;
             this.checkBackupIncludeLocalDat.Text = "Include Local.dat";
             this.checkBackupIncludeLocalDat.UseVisualStyleBackColor = true;
             // 
@@ -4222,9 +3731,7 @@ namespace Gw2Launcher.UI
             this.checkBackupIncludeGfxSettings.AutoSize = true;
             this.checkBackupIncludeGfxSettings.Location = new System.Drawing.Point(21, 174);
             this.checkBackupIncludeGfxSettings.Margin = new System.Windows.Forms.Padding(8, 3, 0, 5);
-            this.checkBackupIncludeGfxSettings.Name = "checkBackupIncludeGfxSettings";
             this.checkBackupIncludeGfxSettings.Size = new System.Drawing.Size(149, 17);
-            this.checkBackupIncludeGfxSettings.TabIndex = 9;
             this.checkBackupIncludeGfxSettings.Text = "Include GFXSettings.xml";
             this.checkBackupIncludeGfxSettings.UseVisualStyleBackColor = true;
             // 
@@ -4234,9 +3741,7 @@ namespace Gw2Launcher.UI
             this.label216.Font = new System.Drawing.Font("Segoe UI Semilight", 8.25F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
             this.label216.Location = new System.Drawing.Point(14, 196);
             this.label216.Margin = new System.Windows.Forms.Padding(1, 0, 0, 8);
-            this.label216.Name = "label216";
             this.label216.Size = new System.Drawing.Size(230, 13);
-            this.label216.TabIndex = 10;
             this.label216.Text = "Create a backup file to recover files and settings";
             // 
             // labelBackup
@@ -4245,9 +3750,7 @@ namespace Gw2Launcher.UI
             this.labelBackup.Icon = null;
             this.labelBackup.Location = new System.Drawing.Point(21, 217);
             this.labelBackup.Margin = new System.Windows.Forms.Padding(8, 0, 0, 0);
-            this.labelBackup.Name = "labelBackup";
             this.labelBackup.Size = new System.Drawing.Size(45, 13);
-            this.labelBackup.TabIndex = 11;
             this.labelBackup.Text = "backup";
             this.labelBackup.Click += new System.EventHandler(this.buttonBackupBackup_Click);
             // 
@@ -4257,9 +3760,7 @@ namespace Gw2Launcher.UI
             this.label212.Font = new System.Drawing.Font("Segoe UI Semibold", 9F, System.Drawing.FontStyle.Bold);
             this.label212.Location = new System.Drawing.Point(13, 243);
             this.label212.Margin = new System.Windows.Forms.Padding(0, 13, 0, 0);
-            this.label212.Name = "label212";
             this.label212.Size = new System.Drawing.Size(46, 15);
-            this.label212.TabIndex = 12;
             this.label212.Text = "Restore";
             // 
             // label213
@@ -4268,9 +3769,7 @@ namespace Gw2Launcher.UI
             this.label213.Font = new System.Drawing.Font("Segoe UI Semilight", 8.25F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
             this.label213.Location = new System.Drawing.Point(14, 259);
             this.label213.Margin = new System.Windows.Forms.Padding(1, 1, 0, 8);
-            this.label213.Name = "label213";
             this.label213.Size = new System.Drawing.Size(132, 13);
-            this.label213.TabIndex = 13;
             this.label213.Text = "Recover from a backup file";
             // 
             // labelBackupRestore
@@ -4279,9 +3778,7 @@ namespace Gw2Launcher.UI
             this.labelBackupRestore.Icon = null;
             this.labelBackupRestore.Location = new System.Drawing.Point(21, 280);
             this.labelBackupRestore.Margin = new System.Windows.Forms.Padding(8, 0, 0, 0);
-            this.labelBackupRestore.Name = "labelBackupRestore";
             this.labelBackupRestore.Size = new System.Drawing.Size(43, 13);
-            this.labelBackupRestore.TabIndex = 14;
             this.labelBackupRestore.Text = "restore";
             this.labelBackupRestore.Click += new System.EventHandler(this.labelBackupRestore_Click);
             // 
@@ -4291,9 +3788,7 @@ namespace Gw2Launcher.UI
             this.label143.Font = new System.Drawing.Font("Segoe UI Semibold", 9F, System.Drawing.FontStyle.Bold);
             this.label143.Location = new System.Drawing.Point(13, 306);
             this.label143.Margin = new System.Windows.Forms.Padding(0, 13, 0, 0);
-            this.label143.Name = "label143";
             this.label143.Size = new System.Drawing.Size(140, 15);
-            this.label143.TabIndex = 15;
             this.label143.Text = "Import / export accounts";
             // 
             // label204
@@ -4302,9 +3797,7 @@ namespace Gw2Launcher.UI
             this.label204.Font = new System.Drawing.Font("Segoe UI Semilight", 8.25F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
             this.label204.Location = new System.Drawing.Point(14, 322);
             this.label204.Margin = new System.Windows.Forms.Padding(1, 1, 0, 8);
-            this.label204.Name = "label204";
             this.label204.Size = new System.Drawing.Size(285, 13);
-            this.label204.TabIndex = 16;
             this.label204.Text = "Import or export account information in XML or CSV format";
             // 
             // stackPanel90
@@ -4317,9 +3810,7 @@ namespace Gw2Launcher.UI
             this.stackPanel90.FlowDirection = System.Windows.Forms.FlowDirection.LeftToRight;
             this.stackPanel90.Location = new System.Drawing.Point(21, 343);
             this.stackPanel90.Margin = new System.Windows.Forms.Padding(8, 0, 0, 0);
-            this.stackPanel90.Name = "stackPanel90";
             this.stackPanel90.Size = new System.Drawing.Size(91, 13);
-            this.stackPanel90.TabIndex = 17;
             // 
             // labelImportAccounts
             // 
@@ -4327,9 +3818,7 @@ namespace Gw2Launcher.UI
             this.labelImportAccounts.Icon = null;
             this.labelImportAccounts.Location = new System.Drawing.Point(0, 0);
             this.labelImportAccounts.Margin = new System.Windows.Forms.Padding(0);
-            this.labelImportAccounts.Name = "labelImportAccounts";
             this.labelImportAccounts.Size = new System.Drawing.Size(41, 13);
-            this.labelImportAccounts.TabIndex = 0;
             this.labelImportAccounts.Text = "import";
             this.labelImportAccounts.Click += new System.EventHandler(this.labelImportAccounts_Click);
             // 
@@ -4341,9 +3830,7 @@ namespace Gw2Launcher.UI
             this.label207.ForeColor = System.Drawing.SystemColors.GrayText;
             this.label207.Location = new System.Drawing.Point(41, 0);
             this.label207.Margin = new System.Windows.Forms.Padding(0);
-            this.label207.Name = "label207";
             this.label207.Size = new System.Drawing.Size(10, 13);
-            this.label207.TabIndex = 1;
             this.label207.Text = "|";
             // 
             // labelExportAccounts
@@ -4352,27 +3839,23 @@ namespace Gw2Launcher.UI
             this.labelExportAccounts.Icon = null;
             this.labelExportAccounts.Location = new System.Drawing.Point(51, 0);
             this.labelExportAccounts.Margin = new System.Windows.Forms.Padding(0);
-            this.labelExportAccounts.Name = "labelExportAccounts";
             this.labelExportAccounts.Size = new System.Drawing.Size(40, 13);
-            this.labelExportAccounts.TabIndex = 2;
             this.labelExportAccounts.Text = "export";
             this.labelExportAccounts.Click += new System.EventHandler(this.labelExportAccounts_Click);
             // 
             // panelGw1
             // 
-            this.panelGw1.Anchor = ((System.Windows.Forms.AnchorStyles)((((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom)
-            | System.Windows.Forms.AnchorStyles.Left)
+            this.panelGw1.Anchor = ((System.Windows.Forms.AnchorStyles)((((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom) 
+            | System.Windows.Forms.AnchorStyles.Left) 
             | System.Windows.Forms.AnchorStyles.Right)));
             this.panelGw1.Controls.Add(this.stackPanel48);
             this.panelGw1.Location = new System.Drawing.Point(183, 12);
-            this.panelGw1.Name = "panelGw1";
             this.panelGw1.Size = new System.Drawing.Size(373, 439);
-            this.panelGw1.TabIndex = 27;
             this.panelGw1.Visible = false;
             // 
             // stackPanel48
             // 
-            this.stackPanel48.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left)
+            this.stackPanel48.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left) 
             | System.Windows.Forms.AnchorStyles.Right)));
             this.stackPanel48.AutoSize = true;
             this.stackPanel48.AutoSizeFill = Gw2Launcher.UI.Controls.StackPanel.AutoSizeFillMode.Width;
@@ -4389,10 +3872,8 @@ namespace Gw2Launcher.UI
             this.stackPanel48.Controls.Add(this.panelGw1ProcessAffinityAccounts);
             this.stackPanel48.Location = new System.Drawing.Point(0, 0);
             this.stackPanel48.Margin = new System.Windows.Forms.Padding(0, 0, 13, 0);
-            this.stackPanel48.Name = "stackPanel48";
             this.stackPanel48.Padding = new System.Windows.Forms.Padding(13, 10, 0, 10);
             this.stackPanel48.Size = new System.Drawing.Size(360, 293);
-            this.stackPanel48.TabIndex = 0;
             // 
             // label33
             // 
@@ -4400,9 +3881,7 @@ namespace Gw2Launcher.UI
             this.label33.Font = new System.Drawing.Font("Segoe UI Semibold", 9F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
             this.label33.Location = new System.Drawing.Point(13, 10);
             this.label33.Margin = new System.Windows.Forms.Padding(0);
-            this.label33.Name = "label33";
             this.label33.Size = new System.Drawing.Size(90, 15);
-            this.label33.TabIndex = 0;
             this.label33.Text = "Gw.exe location";
             // 
             // label54
@@ -4411,9 +3890,7 @@ namespace Gw2Launcher.UI
             this.label54.Font = new System.Drawing.Font("Segoe UI Semilight", 8.25F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
             this.label54.Location = new System.Drawing.Point(14, 26);
             this.label54.Margin = new System.Windows.Forms.Padding(1, 1, 0, 1);
-            this.label54.Name = "label54";
             this.label54.Size = new System.Drawing.Size(181, 13);
-            this.label54.TabIndex = 1;
             this.label54.Text = "The location of the Guild Wars 1 client";
             // 
             // label102
@@ -4423,9 +3900,7 @@ namespace Gw2Launcher.UI
             this.label102.ForeColor = System.Drawing.SystemColors.GrayText;
             this.label102.Location = new System.Drawing.Point(14, 41);
             this.label102.Margin = new System.Windows.Forms.Padding(1, 1, 0, 8);
-            this.label102.Name = "label102";
             this.label102.Size = new System.Drawing.Size(218, 13);
-            this.label102.TabIndex = 2;
             this.label102.Text = "Enables the creation of Guild Wars 1 accounts";
             // 
             // stackPanel45
@@ -4437,9 +3912,7 @@ namespace Gw2Launcher.UI
             this.stackPanel45.FlowDirection = System.Windows.Forms.FlowDirection.LeftToRight;
             this.stackPanel45.Location = new System.Drawing.Point(13, 62);
             this.stackPanel45.Margin = new System.Windows.Forms.Padding(0);
-            this.stackPanel45.Name = "stackPanel45";
             this.stackPanel45.Size = new System.Drawing.Size(347, 24);
-            this.stackPanel45.TabIndex = 3;
             // 
             // textGw1Path
             // 
@@ -4447,9 +3920,7 @@ namespace Gw2Launcher.UI
             this.textGw1Path.Font = new System.Drawing.Font("Segoe UI", 8.25F);
             this.textGw1Path.Location = new System.Drawing.Point(8, 1);
             this.textGw1Path.Margin = new System.Windows.Forms.Padding(8, 1, 0, 1);
-            this.textGw1Path.Name = "textGw1Path";
             this.textGw1Path.Size = new System.Drawing.Size(290, 22);
-            this.textGw1Path.TabIndex = 0;
             // 
             // buttonGw1Path
             // 
@@ -4458,10 +3929,8 @@ namespace Gw2Launcher.UI
             this.buttonGw1Path.Font = new System.Drawing.Font("Segoe UI", 8.25F);
             this.buttonGw1Path.Location = new System.Drawing.Point(304, 0);
             this.buttonGw1Path.Margin = new System.Windows.Forms.Padding(6, 0, 0, 0);
-            this.buttonGw1Path.Name = "buttonGw1Path";
             this.buttonGw1Path.Padding = new System.Windows.Forms.Padding(8, 0, 8, 0);
             this.buttonGw1Path.Size = new System.Drawing.Size(43, 24);
-            this.buttonGw1Path.TabIndex = 1;
             this.buttonGw1Path.Text = "...";
             this.buttonGw1Path.UseVisualStyleBackColor = true;
             this.buttonGw1Path.Click += new System.EventHandler(this.buttonGw1Path_Click);
@@ -4472,9 +3941,7 @@ namespace Gw2Launcher.UI
             this.label128.Font = new System.Drawing.Font("Segoe UI Semibold", 9F, System.Drawing.FontStyle.Bold);
             this.label128.Location = new System.Drawing.Point(13, 99);
             this.label128.Margin = new System.Windows.Forms.Padding(0, 13, 0, 8);
-            this.label128.Name = "label128";
             this.label128.Size = new System.Drawing.Size(88, 15);
-            this.label128.TabIndex = 4;
             this.label128.Text = "Process priority";
             // 
             // stackPanel49
@@ -4486,9 +3953,7 @@ namespace Gw2Launcher.UI
             this.stackPanel49.FlowDirection = System.Windows.Forms.FlowDirection.LeftToRight;
             this.stackPanel49.Location = new System.Drawing.Point(13, 122);
             this.stackPanel49.Margin = new System.Windows.Forms.Padding(0);
-            this.stackPanel49.Name = "stackPanel49";
             this.stackPanel49.Size = new System.Drawing.Size(187, 21);
-            this.stackPanel49.TabIndex = 5;
             // 
             // checkGw1ProcessPriority
             // 
@@ -4496,9 +3961,7 @@ namespace Gw2Launcher.UI
             this.checkGw1ProcessPriority.AutoSize = true;
             this.checkGw1ProcessPriority.Location = new System.Drawing.Point(8, 3);
             this.checkGw1ProcessPriority.Margin = new System.Windows.Forms.Padding(8, 0, 0, 0);
-            this.checkGw1ProcessPriority.Name = "checkGw1ProcessPriority";
             this.checkGw1ProcessPriority.Size = new System.Drawing.Size(15, 14);
-            this.checkGw1ProcessPriority.TabIndex = 0;
             this.checkGw1ProcessPriority.UseVisualStyleBackColor = true;
             this.checkGw1ProcessPriority.CheckedChanged += new System.EventHandler(this.checkGw1ProcessPriority_CheckedChanged);
             // 
@@ -4509,9 +3972,7 @@ namespace Gw2Launcher.UI
             this.comboGw1ProcessPriority.FormattingEnabled = true;
             this.comboGw1ProcessPriority.Location = new System.Drawing.Point(30, 0);
             this.comboGw1ProcessPriority.Margin = new System.Windows.Forms.Padding(7, 0, 0, 0);
-            this.comboGw1ProcessPriority.Name = "comboGw1ProcessPriority";
             this.comboGw1ProcessPriority.Size = new System.Drawing.Size(157, 21);
-            this.comboGw1ProcessPriority.TabIndex = 1;
             // 
             // label130
             // 
@@ -4519,9 +3980,7 @@ namespace Gw2Launcher.UI
             this.label130.Font = new System.Drawing.Font("Segoe UI Semibold", 9F, System.Drawing.FontStyle.Bold);
             this.label130.Location = new System.Drawing.Point(13, 156);
             this.label130.Margin = new System.Windows.Forms.Padding(0, 13, 0, 8);
-            this.label130.Name = "label130";
             this.label130.Size = new System.Drawing.Size(98, 15);
-            this.label130.TabIndex = 6;
             this.label130.Text = "Processor affinity";
             // 
             // checkGw1ProcessAffinityAll
@@ -4532,9 +3991,7 @@ namespace Gw2Launcher.UI
             this.checkGw1ProcessAffinityAll.Font = new System.Drawing.Font("Segoe UI", 8.25F);
             this.checkGw1ProcessAffinityAll.Location = new System.Drawing.Point(21, 179);
             this.checkGw1ProcessAffinityAll.Margin = new System.Windows.Forms.Padding(8, 0, 0, 0);
-            this.checkGw1ProcessAffinityAll.Name = "checkGw1ProcessAffinityAll";
             this.checkGw1ProcessAffinityAll.Size = new System.Drawing.Size(166, 17);
-            this.checkGw1ProcessAffinityAll.TabIndex = 7;
             this.checkGw1ProcessAffinityAll.Text = "Use all available processors";
             this.checkGw1ProcessAffinityAll.UseVisualStyleBackColor = true;
             this.checkGw1ProcessAffinityAll.CheckedChanged += new System.EventHandler(this.checkGw1ProcessAffinityAll_CheckedChanged);
@@ -4547,9 +4004,7 @@ namespace Gw2Launcher.UI
             this.panelGw1ProcessAffinity.Controls.Add(this.adGw1ProcessAffinity);
             this.panelGw1ProcessAffinity.Location = new System.Drawing.Point(17, 204);
             this.panelGw1ProcessAffinity.Margin = new System.Windows.Forms.Padding(4, 8, 0, 12);
-            this.panelGw1ProcessAffinity.Name = "panelGw1ProcessAffinity";
             this.panelGw1ProcessAffinity.Size = new System.Drawing.Size(343, 37);
-            this.panelGw1ProcessAffinity.TabIndex = 8;
             this.panelGw1ProcessAffinity.Visible = false;
             // 
             // label29
@@ -4558,9 +4013,7 @@ namespace Gw2Launcher.UI
             this.label29.Font = new System.Drawing.Font("Segoe UI Semilight", 8.25F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
             this.label29.Location = new System.Drawing.Point(1, 0);
             this.label29.Margin = new System.Windows.Forms.Padding(1, 0, 0, 8);
-            this.label29.Name = "label29";
             this.label29.Size = new System.Drawing.Size(148, 13);
-            this.label29.TabIndex = 0;
             this.label29.Text = "Select which processors to use";
             // 
             // adGw1ProcessAffinity
@@ -4569,9 +4022,7 @@ namespace Gw2Launcher.UI
             this.adGw1ProcessAffinity.AutoSize = true;
             this.adGw1ProcessAffinity.Location = new System.Drawing.Point(8, 21);
             this.adGw1ProcessAffinity.Margin = new System.Windows.Forms.Padding(8, 0, 0, 0);
-            this.adGw1ProcessAffinity.Name = "adGw1ProcessAffinity";
             this.adGw1ProcessAffinity.Size = new System.Drawing.Size(108, 16);
-            this.adGw1ProcessAffinity.TabIndex = 1;
             this.adGw1ProcessAffinity.MouseDown += new System.Windows.Forms.MouseEventHandler(this.adProcessAffinity_MouseDown);
             // 
             // checkGw1ProcessAffinityAccounts
@@ -4580,9 +4031,7 @@ namespace Gw2Launcher.UI
             this.checkGw1ProcessAffinityAccounts.Font = new System.Drawing.Font("Segoe UI", 8.25F);
             this.checkGw1ProcessAffinityAccounts.Location = new System.Drawing.Point(21, 256);
             this.checkGw1ProcessAffinityAccounts.Margin = new System.Windows.Forms.Padding(8, 3, 0, 0);
-            this.checkGw1ProcessAffinityAccounts.Name = "checkGw1ProcessAffinityAccounts";
             this.checkGw1ProcessAffinityAccounts.Size = new System.Drawing.Size(135, 17);
-            this.checkGw1ProcessAffinityAccounts.TabIndex = 9;
             this.checkGw1ProcessAffinityAccounts.Text = "Show other accounts";
             this.checkGw1ProcessAffinityAccounts.UseVisualStyleBackColor = true;
             this.checkGw1ProcessAffinityAccounts.CheckedChanged += new System.EventHandler(this.checkGw1ProcessAffinityAccounts_CheckedChanged);
@@ -4595,26 +4044,22 @@ namespace Gw2Launcher.UI
             this.panelGw1ProcessAffinityAccounts.Location = new System.Drawing.Point(17, 273);
             this.panelGw1ProcessAffinityAccounts.Margin = new System.Windows.Forms.Padding(4, 0, 0, 0);
             this.panelGw1ProcessAffinityAccounts.MinimumSize = new System.Drawing.Size(0, 10);
-            this.panelGw1ProcessAffinityAccounts.Name = "panelGw1ProcessAffinityAccounts";
             this.panelGw1ProcessAffinityAccounts.Size = new System.Drawing.Size(343, 10);
-            this.panelGw1ProcessAffinityAccounts.TabIndex = 10;
             this.panelGw1ProcessAffinityAccounts.Visible = false;
             // 
             // panelUpdates
             // 
-            this.panelUpdates.Anchor = ((System.Windows.Forms.AnchorStyles)((((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom)
-            | System.Windows.Forms.AnchorStyles.Left)
+            this.panelUpdates.Anchor = ((System.Windows.Forms.AnchorStyles)((((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom) 
+            | System.Windows.Forms.AnchorStyles.Left) 
             | System.Windows.Forms.AnchorStyles.Right)));
             this.panelUpdates.Controls.Add(this.stackPanel29);
             this.panelUpdates.Location = new System.Drawing.Point(183, 12);
-            this.panelUpdates.Name = "panelUpdates";
             this.panelUpdates.Size = new System.Drawing.Size(373, 439);
-            this.panelUpdates.TabIndex = 31;
             this.panelUpdates.Visible = false;
             // 
             // stackPanel29
             // 
-            this.stackPanel29.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left)
+            this.stackPanel29.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left) 
             | System.Windows.Forms.AnchorStyles.Right)));
             this.stackPanel29.AutoSize = true;
             this.stackPanel29.AutoSizeFill = Gw2Launcher.UI.Controls.StackPanel.AutoSizeFillMode.Width;
@@ -4635,10 +4080,8 @@ namespace Gw2Launcher.UI
             this.stackPanel29.Controls.Add(this.labelVersionChangelog);
             this.stackPanel29.Location = new System.Drawing.Point(0, 0);
             this.stackPanel29.Margin = new System.Windows.Forms.Padding(0, 0, 13, 0);
-            this.stackPanel29.Name = "stackPanel29";
             this.stackPanel29.Padding = new System.Windows.Forms.Padding(13, 10, 0, 10);
             this.stackPanel29.Size = new System.Drawing.Size(360, 385);
-            this.stackPanel29.TabIndex = 0;
             // 
             // label4
             // 
@@ -4646,9 +4089,7 @@ namespace Gw2Launcher.UI
             this.label4.Font = new System.Drawing.Font("Segoe UI Semibold", 9F, System.Drawing.FontStyle.Bold);
             this.label4.Location = new System.Drawing.Point(13, 10);
             this.label4.Margin = new System.Windows.Forms.Padding(0);
-            this.label4.Name = "label4";
             this.label4.Size = new System.Drawing.Size(229, 15);
-            this.label4.TabIndex = 0;
             this.label4.Text = "Check for Guild Wars 2 updates on launch";
             // 
             // label155
@@ -4657,9 +4098,7 @@ namespace Gw2Launcher.UI
             this.label155.Font = new System.Drawing.Font("Segoe UI Semilight", 8.25F);
             this.label155.Location = new System.Drawing.Point(14, 26);
             this.label155.Margin = new System.Windows.Forms.Padding(1, 1, 0, 8);
-            this.label155.Name = "label155";
             this.label155.Size = new System.Drawing.Size(163, 13);
-            this.label155.TabIndex = 1;
             this.label155.Text = "Normally handled after launching";
             // 
             // checkCheckBuildOnLaunch
@@ -4668,9 +4107,7 @@ namespace Gw2Launcher.UI
             this.checkCheckBuildOnLaunch.Font = new System.Drawing.Font("Segoe UI", 8.25F);
             this.checkCheckBuildOnLaunch.Location = new System.Drawing.Point(21, 47);
             this.checkCheckBuildOnLaunch.Margin = new System.Windows.Forms.Padding(8, 0, 0, 0);
-            this.checkCheckBuildOnLaunch.Name = "checkCheckBuildOnLaunch";
             this.checkCheckBuildOnLaunch.Size = new System.Drawing.Size(149, 17);
-            this.checkCheckBuildOnLaunch.TabIndex = 2;
             this.checkCheckBuildOnLaunch.Text = "Check before launching";
             this.checkCheckBuildOnLaunch.UseVisualStyleBackColor = true;
             // 
@@ -4680,9 +4117,7 @@ namespace Gw2Launcher.UI
             this.label1.Font = new System.Drawing.Font("Segoe UI Semibold", 9F, System.Drawing.FontStyle.Bold);
             this.label1.Location = new System.Drawing.Point(13, 77);
             this.label1.Margin = new System.Windows.Forms.Padding(0, 13, 0, 0);
-            this.label1.Name = "label1";
             this.label1.Size = new System.Drawing.Size(236, 15);
-            this.label1.TabIndex = 3;
             this.label1.Text = "Periodically check for Guild Wars 2 updates";
             // 
             // label24
@@ -4691,9 +4126,7 @@ namespace Gw2Launcher.UI
             this.label24.Font = new System.Drawing.Font("Segoe UI Semilight", 8.25F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
             this.label24.Location = new System.Drawing.Point(14, 93);
             this.label24.Margin = new System.Windows.Forms.Padding(1, 1, 0, 8);
-            this.label24.Name = "label24";
             this.label24.Size = new System.Drawing.Size(240, 13);
-            this.label24.TabIndex = 4;
             this.label24.Text = "Periodically check for updates at the given interval";
             // 
             // stackPanel31
@@ -4706,9 +4139,7 @@ namespace Gw2Launcher.UI
             this.stackPanel31.FlowDirection = System.Windows.Forms.FlowDirection.LeftToRight;
             this.stackPanel31.Location = new System.Drawing.Point(13, 114);
             this.stackPanel31.Margin = new System.Windows.Forms.Padding(0, 0, 0, 8);
-            this.stackPanel31.Name = "stackPanel31";
             this.stackPanel31.Size = new System.Drawing.Size(113, 22);
-            this.stackPanel31.TabIndex = 5;
             // 
             // numericUpdateInterval
             // 
@@ -4724,9 +4155,7 @@ namespace Gw2Launcher.UI
             0,
             0,
             0});
-            this.numericUpdateInterval.Name = "numericUpdateInterval";
             this.numericUpdateInterval.Size = new System.Drawing.Size(51, 22);
-            this.numericUpdateInterval.TabIndex = 0;
             this.numericUpdateInterval.Value = new decimal(new int[] {
             30,
             0,
@@ -4740,9 +4169,7 @@ namespace Gw2Launcher.UI
             this.label23.Font = new System.Drawing.Font("Segoe UI", 8.25F);
             this.label23.Location = new System.Drawing.Point(65, 4);
             this.label23.Margin = new System.Windows.Forms.Padding(6, 0, 0, 0);
-            this.label23.Name = "label23";
             this.label23.Size = new System.Drawing.Size(48, 13);
-            this.label23.TabIndex = 1;
             this.label23.Text = "minutes";
             // 
             // checkAutoUpdate
@@ -4751,9 +4178,7 @@ namespace Gw2Launcher.UI
             this.checkAutoUpdate.Font = new System.Drawing.Font("Segoe UI", 8.25F);
             this.checkAutoUpdate.Location = new System.Drawing.Point(21, 144);
             this.checkAutoUpdate.Margin = new System.Windows.Forms.Padding(8, 0, 0, 0);
-            this.checkAutoUpdate.Name = "checkAutoUpdate";
             this.checkAutoUpdate.Size = new System.Drawing.Size(283, 17);
-            this.checkAutoUpdate.TabIndex = 6;
             this.checkAutoUpdate.Text = "Automatically launch and update when not in use";
             this.checkAutoUpdate.UseVisualStyleBackColor = true;
             this.checkAutoUpdate.CheckedChanged += new System.EventHandler(this.checkAutoUpdate_CheckedChanged);
@@ -4767,9 +4192,7 @@ namespace Gw2Launcher.UI
             this.stackPanel32.FlowDirection = System.Windows.Forms.FlowDirection.LeftToRight;
             this.stackPanel32.Location = new System.Drawing.Point(13, 164);
             this.stackPanel32.Margin = new System.Windows.Forms.Padding(0, 3, 0, 0);
-            this.stackPanel32.Name = "stackPanel32";
             this.stackPanel32.Size = new System.Drawing.Size(259, 17);
-            this.stackPanel32.TabIndex = 7;
             // 
             // checkAutoUpdateDownload
             // 
@@ -4777,9 +4200,7 @@ namespace Gw2Launcher.UI
             this.checkAutoUpdateDownload.Font = new System.Drawing.Font("Segoe UI", 8.25F);
             this.checkAutoUpdateDownload.Location = new System.Drawing.Point(8, 0);
             this.checkAutoUpdateDownload.Margin = new System.Windows.Forms.Padding(8, 0, 0, 0);
-            this.checkAutoUpdateDownload.Name = "checkAutoUpdateDownload";
             this.checkAutoUpdateDownload.Size = new System.Drawing.Size(144, 17);
-            this.checkAutoUpdateDownload.TabIndex = 0;
             this.checkAutoUpdateDownload.Text = "Pre-download updates";
             this.checkAutoUpdateDownload.UseVisualStyleBackColor = true;
             this.checkAutoUpdateDownload.CheckedChanged += new System.EventHandler(this.checkAutoUpdateDownload_CheckedChanged);
@@ -4792,9 +4213,7 @@ namespace Gw2Launcher.UI
             this.label25.ForeColor = System.Drawing.SystemColors.GrayText;
             this.label25.Location = new System.Drawing.Point(153, 1);
             this.label25.Margin = new System.Windows.Forms.Padding(1, 0, 0, 1);
-            this.label25.Name = "label25";
             this.label25.Size = new System.Drawing.Size(106, 13);
-            this.label25.TabIndex = 1;
             this.label25.Text = "(requires asset proxy)";
             // 
             // stackPanel33
@@ -4807,18 +4226,14 @@ namespace Gw2Launcher.UI
             this.stackPanel33.FlowDirection = System.Windows.Forms.FlowDirection.LeftToRight;
             this.stackPanel33.Location = new System.Drawing.Point(13, 184);
             this.stackPanel33.Margin = new System.Windows.Forms.Padding(0, 3, 0, 0);
-            this.stackPanel33.Name = "stackPanel33";
             this.stackPanel33.Size = new System.Drawing.Size(189, 17);
-            this.stackPanel33.TabIndex = 8;
             // 
             // checkAutoUpdateDownloadNotifications
             // 
             this.checkAutoUpdateDownloadNotifications.AutoSize = true;
             this.checkAutoUpdateDownloadNotifications.Location = new System.Drawing.Point(8, 0);
             this.checkAutoUpdateDownloadNotifications.Margin = new System.Windows.Forms.Padding(8, 0, 0, 0);
-            this.checkAutoUpdateDownloadNotifications.Name = "checkAutoUpdateDownloadNotifications";
             this.checkAutoUpdateDownloadNotifications.Size = new System.Drawing.Size(123, 17);
-            this.checkAutoUpdateDownloadNotifications.TabIndex = 0;
             this.checkAutoUpdateDownloadNotifications.Text = "Show notifications";
             this.checkAutoUpdateDownloadNotifications.UseVisualStyleBackColor = true;
             // 
@@ -4829,9 +4244,7 @@ namespace Gw2Launcher.UI
             this.labelAutoUpdateDownloadNotificationsConfig.Icon = null;
             this.labelAutoUpdateDownloadNotificationsConfig.Location = new System.Drawing.Point(132, 1);
             this.labelAutoUpdateDownloadNotificationsConfig.Margin = new System.Windows.Forms.Padding(1, 0, 0, 1);
-            this.labelAutoUpdateDownloadNotificationsConfig.Name = "labelAutoUpdateDownloadNotificationsConfig";
             this.labelAutoUpdateDownloadNotificationsConfig.Size = new System.Drawing.Size(57, 13);
-            this.labelAutoUpdateDownloadNotificationsConfig.TabIndex = 1;
             this.labelAutoUpdateDownloadNotificationsConfig.Text = "configure";
             this.labelAutoUpdateDownloadNotificationsConfig.Click += new System.EventHandler(this.labelAutoUpdateDownloadNotificationsConfig_Click);
             // 
@@ -4845,18 +4258,14 @@ namespace Gw2Launcher.UI
             this.stackPanel34.FlowDirection = System.Windows.Forms.FlowDirection.LeftToRight;
             this.stackPanel34.Location = new System.Drawing.Point(13, 204);
             this.stackPanel34.Margin = new System.Windows.Forms.Padding(0, 3, 0, 0);
-            this.stackPanel34.Name = "stackPanel34";
             this.stackPanel34.Size = new System.Drawing.Size(169, 17);
-            this.stackPanel34.TabIndex = 9;
             // 
             // checkAutoUpdateDownloadProgress
             // 
             this.checkAutoUpdateDownloadProgress.AutoSize = true;
             this.checkAutoUpdateDownloadProgress.Location = new System.Drawing.Point(8, 0);
             this.checkAutoUpdateDownloadProgress.Margin = new System.Windows.Forms.Padding(8, 0, 0, 0);
-            this.checkAutoUpdateDownloadProgress.Name = "checkAutoUpdateDownloadProgress";
             this.checkAutoUpdateDownloadProgress.Size = new System.Drawing.Size(103, 17);
-            this.checkAutoUpdateDownloadProgress.TabIndex = 0;
             this.checkAutoUpdateDownloadProgress.Text = "Show progress";
             this.checkAutoUpdateDownloadProgress.UseVisualStyleBackColor = true;
             // 
@@ -4867,9 +4276,7 @@ namespace Gw2Launcher.UI
             this.labelAutoUpdateDownloadProgressConfig.Icon = null;
             this.labelAutoUpdateDownloadProgressConfig.Location = new System.Drawing.Point(112, 1);
             this.labelAutoUpdateDownloadProgressConfig.Margin = new System.Windows.Forms.Padding(1, 0, 0, 1);
-            this.labelAutoUpdateDownloadProgressConfig.Name = "labelAutoUpdateDownloadProgressConfig";
             this.labelAutoUpdateDownloadProgressConfig.Size = new System.Drawing.Size(57, 13);
-            this.labelAutoUpdateDownloadProgressConfig.TabIndex = 1;
             this.labelAutoUpdateDownloadProgressConfig.Text = "configure";
             this.labelAutoUpdateDownloadProgressConfig.Click += new System.EventHandler(this.labelAutoUpdateDownloadProgressConfig_Click);
             // 
@@ -4879,9 +4286,7 @@ namespace Gw2Launcher.UI
             this.label26.Font = new System.Drawing.Font("Segoe UI Semibold", 9F, System.Drawing.FontStyle.Bold);
             this.label26.Location = new System.Drawing.Point(13, 234);
             this.label26.Margin = new System.Windows.Forms.Padding(0, 13, 0, 8);
-            this.label26.Name = "label26";
             this.label26.Size = new System.Drawing.Size(241, 15);
-            this.label26.TabIndex = 10;
             this.label26.Text = "Periodically check for Gw2Launcher updates";
             // 
             // stackPanel36
@@ -4893,9 +4298,7 @@ namespace Gw2Launcher.UI
             this.stackPanel36.FlowDirection = System.Windows.Forms.FlowDirection.LeftToRight;
             this.stackPanel36.Location = new System.Drawing.Point(13, 257);
             this.stackPanel36.Margin = new System.Windows.Forms.Padding(0);
-            this.stackPanel36.Name = "stackPanel36";
             this.stackPanel36.Size = new System.Drawing.Size(206, 17);
-            this.stackPanel36.TabIndex = 11;
             // 
             // checkCheckVersionOnStart
             // 
@@ -4903,9 +4306,7 @@ namespace Gw2Launcher.UI
             this.checkCheckVersionOnStart.Font = new System.Drawing.Font("Segoe UI", 8.25F);
             this.checkCheckVersionOnStart.Location = new System.Drawing.Point(8, 0);
             this.checkCheckVersionOnStart.Margin = new System.Windows.Forms.Padding(8, 0, 0, 0);
-            this.checkCheckVersionOnStart.Name = "checkCheckVersionOnStart";
             this.checkCheckVersionOnStart.Size = new System.Drawing.Size(127, 17);
-            this.checkCheckVersionOnStart.TabIndex = 0;
             this.checkCheckVersionOnStart.Text = "Check every 30 days";
             this.checkCheckVersionOnStart.UseVisualStyleBackColor = true;
             // 
@@ -4916,9 +4317,7 @@ namespace Gw2Launcher.UI
             this.labelVersionUpdate.Icon = null;
             this.labelVersionUpdate.Location = new System.Drawing.Point(136, 1);
             this.labelVersionUpdate.Margin = new System.Windows.Forms.Padding(1, 0, 0, 1);
-            this.labelVersionUpdate.Name = "labelVersionUpdate";
             this.labelVersionUpdate.Size = new System.Drawing.Size(70, 13);
-            this.labelVersionUpdate.TabIndex = 1;
             this.labelVersionUpdate.Text = "update now";
             this.labelVersionUpdate.Visible = false;
             this.labelVersionUpdate.Click += new System.EventHandler(this.labelVersionUpdate_Click);
@@ -4929,9 +4328,7 @@ namespace Gw2Launcher.UI
             this.label129.Font = new System.Drawing.Font("Segoe UI Semibold", 9F, System.Drawing.FontStyle.Bold);
             this.label129.Location = new System.Drawing.Point(13, 287);
             this.label129.Margin = new System.Windows.Forms.Padding(0, 13, 0, 5);
-            this.label129.Name = "label129";
             this.label129.Size = new System.Drawing.Size(112, 15);
-            this.label129.TabIndex = 12;
             this.label129.Text = "Version information";
             // 
             // tableContainerPanel2
@@ -4949,13 +4346,11 @@ namespace Gw2Launcher.UI
             this.tableContainerPanel2.Controls.Add(this.labelVersionDate, 1, 2);
             this.tableContainerPanel2.Location = new System.Drawing.Point(13, 307);
             this.tableContainerPanel2.Margin = new System.Windows.Forms.Padding(0);
-            this.tableContainerPanel2.Name = "tableContainerPanel2";
             this.tableContainerPanel2.RowCount = 3;
             this.tableContainerPanel2.RowStyles.Add(new System.Windows.Forms.RowStyle());
             this.tableContainerPanel2.RowStyles.Add(new System.Windows.Forms.RowStyle());
             this.tableContainerPanel2.RowStyles.Add(new System.Windows.Forms.RowStyle());
             this.tableContainerPanel2.Size = new System.Drawing.Size(159, 51);
-            this.tableContainerPanel2.TabIndex = 13;
             // 
             // label131
             // 
@@ -4963,9 +4358,7 @@ namespace Gw2Launcher.UI
             this.label131.AutoSize = true;
             this.label131.Location = new System.Drawing.Point(1, 2);
             this.label131.Margin = new System.Windows.Forms.Padding(1, 2, 1, 2);
-            this.label131.Name = "label131";
             this.label131.Size = new System.Drawing.Size(33, 13);
-            this.label131.TabIndex = 0;
             this.label131.Text = "Build";
             // 
             // label146
@@ -4974,9 +4367,7 @@ namespace Gw2Launcher.UI
             this.label146.AutoSize = true;
             this.label146.Location = new System.Drawing.Point(1, 19);
             this.label146.Margin = new System.Windows.Forms.Padding(1, 2, 1, 2);
-            this.label146.Name = "label146";
             this.label146.Size = new System.Drawing.Size(46, 13);
-            this.label146.TabIndex = 1;
             this.label146.Text = "Release";
             // 
             // label145
@@ -4985,9 +4376,7 @@ namespace Gw2Launcher.UI
             this.label145.AutoSize = true;
             this.label145.Location = new System.Drawing.Point(1, 36);
             this.label145.Margin = new System.Windows.Forms.Padding(1, 2, 1, 2);
-            this.label145.Name = "label145";
             this.label145.Size = new System.Drawing.Size(31, 13);
-            this.label145.TabIndex = 2;
             this.label145.Text = "Date";
             // 
             // labelVersionBuild
@@ -4996,9 +4385,7 @@ namespace Gw2Launcher.UI
             this.labelVersionBuild.AutoSize = true;
             this.labelVersionBuild.Location = new System.Drawing.Point(54, 2);
             this.labelVersionBuild.Margin = new System.Windows.Forms.Padding(6, 0, 0, 0);
-            this.labelVersionBuild.Name = "labelVersionBuild";
             this.labelVersionBuild.Size = new System.Drawing.Size(19, 13);
-            this.labelVersionBuild.TabIndex = 3;
             this.labelVersionBuild.Text = "{0}";
             // 
             // labelVersionRelease
@@ -5007,9 +4394,7 @@ namespace Gw2Launcher.UI
             this.labelVersionRelease.AutoSize = true;
             this.labelVersionRelease.Location = new System.Drawing.Point(54, 19);
             this.labelVersionRelease.Margin = new System.Windows.Forms.Padding(6, 0, 0, 0);
-            this.labelVersionRelease.Name = "labelVersionRelease";
             this.labelVersionRelease.Size = new System.Drawing.Size(19, 13);
-            this.labelVersionRelease.TabIndex = 4;
             this.labelVersionRelease.Text = "{0}";
             // 
             // labelVersionDate
@@ -5018,9 +4403,7 @@ namespace Gw2Launcher.UI
             this.labelVersionDate.AutoSize = true;
             this.labelVersionDate.Location = new System.Drawing.Point(54, 36);
             this.labelVersionDate.Margin = new System.Windows.Forms.Padding(6, 0, 0, 0);
-            this.labelVersionDate.Name = "labelVersionDate";
             this.labelVersionDate.Size = new System.Drawing.Size(105, 13);
-            this.labelVersionDate.TabIndex = 5;
             this.labelVersionDate.Text = "{0:MMMM dd, yyyy}";
             // 
             // labelVersionChangelog
@@ -5029,28 +4412,24 @@ namespace Gw2Launcher.UI
             this.labelVersionChangelog.Icon = null;
             this.labelVersionChangelog.Location = new System.Drawing.Point(14, 362);
             this.labelVersionChangelog.Margin = new System.Windows.Forms.Padding(1, 4, 0, 0);
-            this.labelVersionChangelog.Name = "labelVersionChangelog";
             this.labelVersionChangelog.Size = new System.Drawing.Size(62, 13);
-            this.labelVersionChangelog.TabIndex = 14;
             this.labelVersionChangelog.Text = "changelog";
             this.labelVersionChangelog.Click += new System.EventHandler(this.labelVersionChangelog_Click);
             this.labelVersionChangelog.MouseEnter += new System.EventHandler(this.labelVersionChangelog_MouseEnter);
             // 
             // panelLaunchOptionsGw1
             // 
-            this.panelLaunchOptionsGw1.Anchor = ((System.Windows.Forms.AnchorStyles)((((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom)
-            | System.Windows.Forms.AnchorStyles.Left)
+            this.panelLaunchOptionsGw1.Anchor = ((System.Windows.Forms.AnchorStyles)((((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom) 
+            | System.Windows.Forms.AnchorStyles.Left) 
             | System.Windows.Forms.AnchorStyles.Right)));
             this.panelLaunchOptionsGw1.Controls.Add(this.stackPanel11);
             this.panelLaunchOptionsGw1.Location = new System.Drawing.Point(183, 12);
-            this.panelLaunchOptionsGw1.Name = "panelLaunchOptionsGw1";
             this.panelLaunchOptionsGw1.Size = new System.Drawing.Size(373, 439);
-            this.panelLaunchOptionsGw1.TabIndex = 28;
             this.panelLaunchOptionsGw1.Visible = false;
             // 
             // stackPanel11
             // 
-            this.stackPanel11.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left)
+            this.stackPanel11.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left) 
             | System.Windows.Forms.AnchorStyles.Right)));
             this.stackPanel11.AutoSize = true;
             this.stackPanel11.AutoSizeFill = Gw2Launcher.UI.Controls.StackPanel.AutoSizeFillMode.Width;
@@ -5075,10 +4454,8 @@ namespace Gw2Launcher.UI
             this.stackPanel11.Controls.Add(this.labelGw1RunAfterProgramsAdd);
             this.stackPanel11.Location = new System.Drawing.Point(0, 0);
             this.stackPanel11.Margin = new System.Windows.Forms.Padding(0, 0, 13, 0);
-            this.stackPanel11.Name = "stackPanel11";
             this.stackPanel11.Padding = new System.Windows.Forms.Padding(13, 10, 0, 10);
             this.stackPanel11.Size = new System.Drawing.Size(360, 422);
-            this.stackPanel11.TabIndex = 0;
             // 
             // label121
             // 
@@ -5086,9 +4463,7 @@ namespace Gw2Launcher.UI
             this.label121.Font = new System.Drawing.Font("Segoe UI Semibold", 9F, System.Drawing.FontStyle.Bold);
             this.label121.Location = new System.Drawing.Point(13, 10);
             this.label121.Margin = new System.Windows.Forms.Padding(0);
-            this.label121.Name = "label121";
             this.label121.Size = new System.Drawing.Size(66, 15);
-            this.label121.TabIndex = 0;
             this.label121.Text = "Arguments";
             // 
             // label122
@@ -5097,21 +4472,17 @@ namespace Gw2Launcher.UI
             this.label122.Font = new System.Drawing.Font("Segoe UI Semilight", 8.25F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
             this.label122.Location = new System.Drawing.Point(14, 26);
             this.label122.Margin = new System.Windows.Forms.Padding(1, 1, 0, 8);
-            this.label122.Name = "label122";
             this.label122.Size = new System.Drawing.Size(303, 13);
-            this.label122.TabIndex = 1;
             this.label122.Text = "Optional command line arguments that will apply to all accounts";
             // 
             // textGw1Arguments
             // 
-            this.textGw1Arguments.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left)
+            this.textGw1Arguments.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left) 
             | System.Windows.Forms.AnchorStyles.Right)));
             this.textGw1Arguments.Font = new System.Drawing.Font("Segoe UI", 8.25F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
             this.textGw1Arguments.Location = new System.Drawing.Point(21, 47);
             this.textGw1Arguments.Margin = new System.Windows.Forms.Padding(8, 0, 0, 0);
-            this.textGw1Arguments.Name = "textGw1Arguments";
             this.textGw1Arguments.Size = new System.Drawing.Size(339, 22);
-            this.textGw1Arguments.TabIndex = 2;
             // 
             // stackPanel17
             // 
@@ -5122,9 +4493,7 @@ namespace Gw2Launcher.UI
             this.stackPanel17.FlowDirection = System.Windows.Forms.FlowDirection.LeftToRight;
             this.stackPanel17.Location = new System.Drawing.Point(19, 72);
             this.stackPanel17.Margin = new System.Windows.Forms.Padding(6, 3, 0, 0);
-            this.stackPanel17.Name = "stackPanel17";
             this.stackPanel17.Size = new System.Drawing.Size(48, 13);
-            this.stackPanel17.TabIndex = 3;
             // 
             // labelGw1LaunchOptionsAdvanced
             // 
@@ -5135,10 +4504,8 @@ namespace Gw2Launcher.UI
             this.labelGw1LaunchOptionsAdvanced.ForeColor = System.Drawing.Color.FromArgb(((int)(((byte)(45)))), ((int)(((byte)(45)))), ((int)(((byte)(45)))));
             this.labelGw1LaunchOptionsAdvanced.Location = new System.Drawing.Point(0, 0);
             this.labelGw1LaunchOptionsAdvanced.Margin = new System.Windows.Forms.Padding(0);
-            this.labelGw1LaunchOptionsAdvanced.Name = "labelGw1LaunchOptionsAdvanced";
             this.labelGw1LaunchOptionsAdvanced.Padding = new System.Windows.Forms.Padding(0, 0, 3, 0);
             this.labelGw1LaunchOptionsAdvanced.Size = new System.Drawing.Size(43, 13);
-            this.labelGw1LaunchOptionsAdvanced.TabIndex = 0;
             this.labelGw1LaunchOptionsAdvanced.Text = "options";
             this.labelGw1LaunchOptionsAdvanced.Click += new System.EventHandler(this.labelGw1LaunchOptionsAdvanced_Click);
             // 
@@ -5151,9 +4518,7 @@ namespace Gw2Launcher.UI
             this.arrowButton1.ForeColorHighlight = System.Drawing.Color.FromArgb(((int)(((byte)(150)))), ((int)(((byte)(150)))), ((int)(((byte)(150)))));
             this.arrowButton1.Location = new System.Drawing.Point(43, 3);
             this.arrowButton1.Margin = new System.Windows.Forms.Padding(0, 1, 0, 0);
-            this.arrowButton1.Name = "arrowButton1";
             this.arrowButton1.Size = new System.Drawing.Size(5, 9);
-            this.arrowButton1.TabIndex = 1;
             this.arrowButton1.Click += new System.EventHandler(this.labelGw1LaunchOptionsAdvanced_Click);
             // 
             // label133
@@ -5162,9 +4527,7 @@ namespace Gw2Launcher.UI
             this.label133.Font = new System.Drawing.Font("Segoe UI Semibold", 9F, System.Drawing.FontStyle.Bold);
             this.label133.Location = new System.Drawing.Point(13, 98);
             this.label133.Margin = new System.Windows.Forms.Padding(0, 13, 0, 0);
-            this.label133.Name = "label133";
             this.label133.Size = new System.Drawing.Size(48, 15);
-            this.label133.TabIndex = 4;
             this.label133.Text = "Volume";
             // 
             // label134
@@ -5173,9 +4536,7 @@ namespace Gw2Launcher.UI
             this.label134.Font = new System.Drawing.Font("Segoe UI Semilight", 8.25F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
             this.label134.Location = new System.Drawing.Point(14, 114);
             this.label134.Margin = new System.Windows.Forms.Padding(1, 1, 0, 8);
-            this.label134.Name = "label134";
             this.label134.Size = new System.Drawing.Size(261, 13);
-            this.label134.TabIndex = 5;
             this.label134.Text = "Adjusts the volume level in Windows for the application";
             // 
             // stackPanel50
@@ -5189,9 +4550,7 @@ namespace Gw2Launcher.UI
             this.stackPanel50.FlowDirection = System.Windows.Forms.FlowDirection.LeftToRight;
             this.stackPanel50.Location = new System.Drawing.Point(13, 135);
             this.stackPanel50.Margin = new System.Windows.Forms.Padding(0);
-            this.stackPanel50.Name = "stackPanel50";
             this.stackPanel50.Size = new System.Drawing.Size(218, 20);
-            this.stackPanel50.TabIndex = 6;
             // 
             // checkGw1Volume
             // 
@@ -5200,9 +4559,7 @@ namespace Gw2Launcher.UI
             this.checkGw1Volume.Font = new System.Drawing.Font("Segoe UI", 8.25F);
             this.checkGw1Volume.Location = new System.Drawing.Point(8, 3);
             this.checkGw1Volume.Margin = new System.Windows.Forms.Padding(8, 0, 0, 0);
-            this.checkGw1Volume.Name = "checkGw1Volume";
             this.checkGw1Volume.Size = new System.Drawing.Size(15, 14);
-            this.checkGw1Volume.TabIndex = 0;
             this.checkGw1Volume.UseVisualStyleBackColor = true;
             this.checkGw1Volume.CheckedChanged += new System.EventHandler(this.checkGw1Volume_CheckedChanged);
             // 
@@ -5211,9 +4568,7 @@ namespace Gw2Launcher.UI
             this.sliderGw1Volume.Enabled = false;
             this.sliderGw1Volume.Location = new System.Drawing.Point(30, 0);
             this.sliderGw1Volume.Margin = new System.Windows.Forms.Padding(7, 0, 0, 0);
-            this.sliderGw1Volume.Name = "sliderGw1Volume";
             this.sliderGw1Volume.Size = new System.Drawing.Size(150, 20);
-            this.sliderGw1Volume.TabIndex = 1;
             this.sliderGw1Volume.TabStop = false;
             this.sliderGw1Volume.Value = 1F;
             this.sliderGw1Volume.ValueChanged += new System.EventHandler(this.sliderGw1Volume_ValueChanged);
@@ -5225,9 +4580,7 @@ namespace Gw2Launcher.UI
             this.labelGw1Volume.Font = new System.Drawing.Font("Segoe UI Semilight", 8.25F);
             this.labelGw1Volume.Location = new System.Drawing.Point(186, 3);
             this.labelGw1Volume.Margin = new System.Windows.Forms.Padding(6, 0, 0, 0);
-            this.labelGw1Volume.Name = "labelGw1Volume";
             this.labelGw1Volume.Size = new System.Drawing.Size(32, 13);
-            this.labelGw1Volume.TabIndex = 2;
             this.labelGw1Volume.Text = "100%";
             // 
             // label39
@@ -5236,9 +4589,7 @@ namespace Gw2Launcher.UI
             this.label39.Font = new System.Drawing.Font("Segoe UI Semibold", 9F, System.Drawing.FontStyle.Bold);
             this.label39.Location = new System.Drawing.Point(13, 168);
             this.label39.Margin = new System.Windows.Forms.Padding(0, 13, 0, 8);
-            this.label39.Name = "label39";
             this.label39.Size = new System.Drawing.Size(35, 15);
-            this.label39.TabIndex = 7;
             this.label39.Text = "Mute";
             // 
             // checkGw1MuteAll
@@ -5246,9 +4597,7 @@ namespace Gw2Launcher.UI
             this.checkGw1MuteAll.AutoSize = true;
             this.checkGw1MuteAll.Location = new System.Drawing.Point(21, 191);
             this.checkGw1MuteAll.Margin = new System.Windows.Forms.Padding(8, 0, 0, 0);
-            this.checkGw1MuteAll.Name = "checkGw1MuteAll";
             this.checkGw1MuteAll.Size = new System.Drawing.Size(39, 17);
-            this.checkGw1MuteAll.TabIndex = 8;
             this.checkGw1MuteAll.Text = "All";
             this.checkGw1MuteAll.UseVisualStyleBackColor = true;
             // 
@@ -5258,9 +4607,7 @@ namespace Gw2Launcher.UI
             this.label136.Font = new System.Drawing.Font("Segoe UI Semibold", 9F, System.Drawing.FontStyle.Bold);
             this.label136.Location = new System.Drawing.Point(13, 221);
             this.label136.Margin = new System.Windows.Forms.Padding(0, 13, 0, 0);
-            this.label136.Name = "label136";
             this.label136.Size = new System.Drawing.Size(71, 15);
-            this.label136.TabIndex = 9;
             this.label136.Text = "Screenshots";
             // 
             // label137
@@ -5269,9 +4616,7 @@ namespace Gw2Launcher.UI
             this.label137.Font = new System.Drawing.Font("Segoe UI Semilight", 8.25F);
             this.label137.Location = new System.Drawing.Point(14, 237);
             this.label137.Margin = new System.Windows.Forms.Padding(1, 1, 0, 8);
-            this.label137.Name = "label137";
             this.label137.Size = new System.Drawing.Size(242, 13);
-            this.label137.TabIndex = 10;
             this.label137.Text = "Save screenshots in a higher quality bitmap format";
             // 
             // checkGw1ScreenshotsBmp
@@ -5279,9 +4624,7 @@ namespace Gw2Launcher.UI
             this.checkGw1ScreenshotsBmp.AutoSize = true;
             this.checkGw1ScreenshotsBmp.Location = new System.Drawing.Point(21, 258);
             this.checkGw1ScreenshotsBmp.Margin = new System.Windows.Forms.Padding(8, 0, 0, 0);
-            this.checkGw1ScreenshotsBmp.Name = "checkGw1ScreenshotsBmp";
             this.checkGw1ScreenshotsBmp.Size = new System.Drawing.Size(161, 17);
-            this.checkGw1ScreenshotsBmp.TabIndex = 11;
             this.checkGw1ScreenshotsBmp.Text = "Save screenshots as *.bmp";
             this.checkGw1ScreenshotsBmp.UseVisualStyleBackColor = true;
             // 
@@ -5291,9 +4634,7 @@ namespace Gw2Launcher.UI
             this.label138.Font = new System.Drawing.Font("Segoe UI Semilight", 8.25F);
             this.label138.Location = new System.Drawing.Point(14, 283);
             this.label138.Margin = new System.Windows.Forms.Padding(1, 8, 0, 8);
-            this.label138.Name = "label138";
             this.label138.Size = new System.Drawing.Size(183, 13);
-            this.label138.TabIndex = 12;
             this.label138.Text = "Change where screenshots are saved";
             // 
             // stackPanel51
@@ -5306,9 +4647,7 @@ namespace Gw2Launcher.UI
             this.stackPanel51.FlowDirection = System.Windows.Forms.FlowDirection.LeftToRight;
             this.stackPanel51.Location = new System.Drawing.Point(13, 304);
             this.stackPanel51.Margin = new System.Windows.Forms.Padding(0);
-            this.stackPanel51.Name = "stackPanel51";
             this.stackPanel51.Size = new System.Drawing.Size(347, 24);
-            this.stackPanel51.TabIndex = 13;
             // 
             // checkGw1ScreenshotsLocation
             // 
@@ -5316,9 +4655,7 @@ namespace Gw2Launcher.UI
             this.checkGw1ScreenshotsLocation.AutoSize = true;
             this.checkGw1ScreenshotsLocation.Location = new System.Drawing.Point(8, 5);
             this.checkGw1ScreenshotsLocation.Margin = new System.Windows.Forms.Padding(8, 0, 0, 0);
-            this.checkGw1ScreenshotsLocation.Name = "checkGw1ScreenshotsLocation";
             this.checkGw1ScreenshotsLocation.Size = new System.Drawing.Size(15, 14);
-            this.checkGw1ScreenshotsLocation.TabIndex = 0;
             this.checkGw1ScreenshotsLocation.UseVisualStyleBackColor = true;
             this.checkGw1ScreenshotsLocation.CheckedChanged += new System.EventHandler(this.checkGw1ScreenshotsLocation_CheckedChanged);
             // 
@@ -5329,9 +4666,7 @@ namespace Gw2Launcher.UI
             this.textGw1ScreenshotsLocation.Font = new System.Drawing.Font("Segoe UI", 8.25F);
             this.textGw1ScreenshotsLocation.Location = new System.Drawing.Point(30, 1);
             this.textGw1ScreenshotsLocation.Margin = new System.Windows.Forms.Padding(7, 1, 0, 1);
-            this.textGw1ScreenshotsLocation.Name = "textGw1ScreenshotsLocation";
             this.textGw1ScreenshotsLocation.Size = new System.Drawing.Size(268, 22);
-            this.textGw1ScreenshotsLocation.TabIndex = 1;
             // 
             // buttonGw1ScreenshotsLocation
             // 
@@ -5341,10 +4676,8 @@ namespace Gw2Launcher.UI
             this.buttonGw1ScreenshotsLocation.Font = new System.Drawing.Font("Segoe UI", 8.25F);
             this.buttonGw1ScreenshotsLocation.Location = new System.Drawing.Point(304, 0);
             this.buttonGw1ScreenshotsLocation.Margin = new System.Windows.Forms.Padding(6, 0, 0, 0);
-            this.buttonGw1ScreenshotsLocation.Name = "buttonGw1ScreenshotsLocation";
             this.buttonGw1ScreenshotsLocation.Padding = new System.Windows.Forms.Padding(8, 0, 8, 0);
             this.buttonGw1ScreenshotsLocation.Size = new System.Drawing.Size(43, 24);
-            this.buttonGw1ScreenshotsLocation.TabIndex = 2;
             this.buttonGw1ScreenshotsLocation.Text = "...";
             this.buttonGw1ScreenshotsLocation.UseVisualStyleBackColor = true;
             this.buttonGw1ScreenshotsLocation.Click += new System.EventHandler(this.buttonGw1ScreenshotsLocation_Click);
@@ -5355,9 +4688,7 @@ namespace Gw2Launcher.UI
             this.label195.Font = new System.Drawing.Font("Segoe UI Semibold", 9F, System.Drawing.FontStyle.Bold);
             this.label195.Location = new System.Drawing.Point(13, 341);
             this.label195.Margin = new System.Windows.Forms.Padding(0, 13, 0, 0);
-            this.label195.Name = "label195";
             this.label195.Size = new System.Drawing.Size(111, 15);
-            this.label195.TabIndex = 14;
             this.label195.Text = "Run after launching";
             // 
             // label196
@@ -5366,9 +4697,7 @@ namespace Gw2Launcher.UI
             this.label196.Font = new System.Drawing.Font("Segoe UI Semilight", 8.25F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
             this.label196.Location = new System.Drawing.Point(14, 357);
             this.label196.Margin = new System.Windows.Forms.Padding(1, 1, 0, 5);
-            this.label196.Name = "label196";
             this.label196.Size = new System.Drawing.Size(178, 13);
-            this.label196.TabIndex = 15;
             this.label196.Text = "Start other programs after launching";
             // 
             // panelGw1RunAfterPrograms
@@ -5378,9 +4707,7 @@ namespace Gw2Launcher.UI
             this.panelGw1RunAfterPrograms.Location = new System.Drawing.Point(16, 375);
             this.panelGw1RunAfterPrograms.Margin = new System.Windows.Forms.Padding(3, 0, 0, 7);
             this.panelGw1RunAfterPrograms.MinimumSize = new System.Drawing.Size(10, 5);
-            this.panelGw1RunAfterPrograms.Name = "panelGw1RunAfterPrograms";
             this.panelGw1RunAfterPrograms.Size = new System.Drawing.Size(10, 5);
-            this.panelGw1RunAfterPrograms.TabIndex = 16;
             this.panelGw1RunAfterPrograms.Visible = false;
             // 
             // panelGw1RunAfterProgramsAddSeparator
@@ -5388,9 +4715,7 @@ namespace Gw2Launcher.UI
             this.panelGw1RunAfterProgramsAddSeparator.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(224)))), ((int)(((byte)(224)))), ((int)(((byte)(224)))));
             this.panelGw1RunAfterProgramsAddSeparator.Location = new System.Drawing.Point(18, 390);
             this.panelGw1RunAfterProgramsAddSeparator.Margin = new System.Windows.Forms.Padding(5, 3, 10, 5);
-            this.panelGw1RunAfterProgramsAddSeparator.Name = "panelGw1RunAfterProgramsAddSeparator";
             this.panelGw1RunAfterProgramsAddSeparator.Size = new System.Drawing.Size(100, 1);
-            this.panelGw1RunAfterProgramsAddSeparator.TabIndex = 17;
             this.panelGw1RunAfterProgramsAddSeparator.Visible = false;
             // 
             // labelGw1RunAfterProgramsAdd
@@ -5399,27 +4724,23 @@ namespace Gw2Launcher.UI
             this.labelGw1RunAfterProgramsAdd.Icon = null;
             this.labelGw1RunAfterProgramsAdd.Location = new System.Drawing.Point(16, 399);
             this.labelGw1RunAfterProgramsAdd.Margin = new System.Windows.Forms.Padding(3, 3, 0, 0);
-            this.labelGw1RunAfterProgramsAdd.Name = "labelGw1RunAfterProgramsAdd";
             this.labelGw1RunAfterProgramsAdd.Size = new System.Drawing.Size(74, 13);
-            this.labelGw1RunAfterProgramsAdd.TabIndex = 18;
             this.labelGw1RunAfterProgramsAdd.Text = "add program";
             this.labelGw1RunAfterProgramsAdd.Click += new System.EventHandler(this.labelGw1RunAfterProgramsAdd_Click);
             // 
             // panelGeneral
             // 
-            this.panelGeneral.Anchor = ((System.Windows.Forms.AnchorStyles)((((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom)
-            | System.Windows.Forms.AnchorStyles.Left)
+            this.panelGeneral.Anchor = ((System.Windows.Forms.AnchorStyles)((((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom) 
+            | System.Windows.Forms.AnchorStyles.Left) 
             | System.Windows.Forms.AnchorStyles.Right)));
             this.panelGeneral.Controls.Add(this.stackPanel3);
             this.panelGeneral.Location = new System.Drawing.Point(183, 12);
-            this.panelGeneral.Name = "panelGeneral";
             this.panelGeneral.Size = new System.Drawing.Size(373, 439);
-            this.panelGeneral.TabIndex = 29;
             this.panelGeneral.Visible = false;
             // 
             // stackPanel3
             // 
-            this.stackPanel3.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left)
+            this.stackPanel3.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left) 
             | System.Windows.Forms.AnchorStyles.Right)));
             this.stackPanel3.AutoSize = true;
             this.stackPanel3.AutoSizeFill = Gw2Launcher.UI.Controls.StackPanel.AutoSizeFillMode.Width;
@@ -5442,10 +4763,8 @@ namespace Gw2Launcher.UI
             this.stackPanel3.Controls.Add(this.buttonWindowReset);
             this.stackPanel3.Location = new System.Drawing.Point(0, 0);
             this.stackPanel3.Margin = new System.Windows.Forms.Padding(0, 0, 13, 0);
-            this.stackPanel3.Name = "stackPanel3";
             this.stackPanel3.Padding = new System.Windows.Forms.Padding(13, 10, 0, 10);
             this.stackPanel3.Size = new System.Drawing.Size(360, 423);
-            this.stackPanel3.TabIndex = 0;
             // 
             // label10
             // 
@@ -5453,9 +4772,7 @@ namespace Gw2Launcher.UI
             this.label10.Font = new System.Drawing.Font("Segoe UI Semibold", 9F, System.Drawing.FontStyle.Bold);
             this.label10.Location = new System.Drawing.Point(13, 10);
             this.label10.Margin = new System.Windows.Forms.Padding(0);
-            this.label10.Name = "label10";
             this.label10.Size = new System.Drawing.Size(95, 15);
-            this.label10.TabIndex = 0;
             this.label10.Text = "System tray icon";
             // 
             // label9
@@ -5464,9 +4781,7 @@ namespace Gw2Launcher.UI
             this.label9.Font = new System.Drawing.Font("Segoe UI Semilight", 8.25F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
             this.label9.Location = new System.Drawing.Point(14, 26);
             this.label9.Margin = new System.Windows.Forms.Padding(1, 1, 0, 8);
-            this.label9.Name = "label9";
             this.label9.Size = new System.Drawing.Size(237, 13);
-            this.label9.TabIndex = 1;
             this.label9.Text = "Show an icon in the area next to the system clock";
             // 
             // checkShowTrayIcon
@@ -5475,9 +4790,7 @@ namespace Gw2Launcher.UI
             this.checkShowTrayIcon.Font = new System.Drawing.Font("Segoe UI", 8.25F);
             this.checkShowTrayIcon.Location = new System.Drawing.Point(21, 47);
             this.checkShowTrayIcon.Margin = new System.Windows.Forms.Padding(8, 0, 0, 0);
-            this.checkShowTrayIcon.Name = "checkShowTrayIcon";
             this.checkShowTrayIcon.Size = new System.Drawing.Size(102, 17);
-            this.checkShowTrayIcon.TabIndex = 2;
             this.checkShowTrayIcon.Text = "Show tray icon";
             this.checkShowTrayIcon.UseVisualStyleBackColor = true;
             this.checkShowTrayIcon.CheckedChanged += new System.EventHandler(this.checkShowTrayIcon_CheckedChanged);
@@ -5488,9 +4801,7 @@ namespace Gw2Launcher.UI
             this.checkMinimizeToTray.Font = new System.Drawing.Font("Segoe UI", 8.25F);
             this.checkMinimizeToTray.Location = new System.Drawing.Point(21, 67);
             this.checkMinimizeToTray.Margin = new System.Windows.Forms.Padding(8, 3, 0, 0);
-            this.checkMinimizeToTray.Name = "checkMinimizeToTray";
             this.checkMinimizeToTray.Size = new System.Drawing.Size(108, 17);
-            this.checkMinimizeToTray.TabIndex = 3;
             this.checkMinimizeToTray.Text = "Minimize to tray";
             this.checkMinimizeToTray.UseVisualStyleBackColor = true;
             // 
@@ -5500,9 +4811,7 @@ namespace Gw2Launcher.UI
             this.checkCloseToTray.Font = new System.Drawing.Font("Segoe UI", 8.25F);
             this.checkCloseToTray.Location = new System.Drawing.Point(21, 87);
             this.checkCloseToTray.Margin = new System.Windows.Forms.Padding(8, 3, 0, 0);
-            this.checkCloseToTray.Name = "checkCloseToTray";
             this.checkCloseToTray.Size = new System.Drawing.Size(90, 17);
-            this.checkCloseToTray.TabIndex = 16;
             this.checkCloseToTray.Text = "Close to tray";
             this.checkCloseToTray.UseVisualStyleBackColor = true;
             // 
@@ -5512,9 +4821,7 @@ namespace Gw2Launcher.UI
             this.checkBringToFrontOnExit.Font = new System.Drawing.Font("Segoe UI", 8.25F);
             this.checkBringToFrontOnExit.Location = new System.Drawing.Point(21, 107);
             this.checkBringToFrontOnExit.Margin = new System.Windows.Forms.Padding(8, 3, 0, 0);
-            this.checkBringToFrontOnExit.Name = "checkBringToFrontOnExit";
             this.checkBringToFrontOnExit.Size = new System.Drawing.Size(234, 17);
-            this.checkBringToFrontOnExit.TabIndex = 4;
             this.checkBringToFrontOnExit.Text = "Bring to front when all clients are closed";
             this.checkBringToFrontOnExit.UseVisualStyleBackColor = true;
             // 
@@ -5524,9 +4831,7 @@ namespace Gw2Launcher.UI
             this.label126.Font = new System.Drawing.Font("Segoe UI Semibold", 9F, System.Drawing.FontStyle.Bold);
             this.label126.Location = new System.Drawing.Point(13, 137);
             this.label126.Margin = new System.Windows.Forms.Padding(0, 13, 0, 8);
-            this.label126.Name = "label126";
             this.label126.Size = new System.Drawing.Size(88, 15);
-            this.label126.TabIndex = 5;
             this.label126.Text = "Process priority";
             // 
             // stackPanel60
@@ -5538,9 +4843,7 @@ namespace Gw2Launcher.UI
             this.stackPanel60.FlowDirection = System.Windows.Forms.FlowDirection.LeftToRight;
             this.stackPanel60.Location = new System.Drawing.Point(13, 160);
             this.stackPanel60.Margin = new System.Windows.Forms.Padding(0);
-            this.stackPanel60.Name = "stackPanel60";
             this.stackPanel60.Size = new System.Drawing.Size(187, 21);
-            this.stackPanel60.TabIndex = 6;
             // 
             // checkProcessPriority
             // 
@@ -5548,9 +4851,7 @@ namespace Gw2Launcher.UI
             this.checkProcessPriority.AutoSize = true;
             this.checkProcessPriority.Location = new System.Drawing.Point(8, 3);
             this.checkProcessPriority.Margin = new System.Windows.Forms.Padding(8, 0, 0, 0);
-            this.checkProcessPriority.Name = "checkProcessPriority";
             this.checkProcessPriority.Size = new System.Drawing.Size(15, 14);
-            this.checkProcessPriority.TabIndex = 0;
             this.checkProcessPriority.UseVisualStyleBackColor = true;
             this.checkProcessPriority.CheckedChanged += new System.EventHandler(this.checkProcessPriority_CheckedChanged);
             // 
@@ -5561,9 +4862,7 @@ namespace Gw2Launcher.UI
             this.comboProcessPriority.FormattingEnabled = true;
             this.comboProcessPriority.Location = new System.Drawing.Point(30, 0);
             this.comboProcessPriority.Margin = new System.Windows.Forms.Padding(7, 0, 0, 0);
-            this.comboProcessPriority.Name = "comboProcessPriority";
             this.comboProcessPriority.Size = new System.Drawing.Size(157, 21);
-            this.comboProcessPriority.TabIndex = 1;
             // 
             // label180
             // 
@@ -5571,9 +4870,7 @@ namespace Gw2Launcher.UI
             this.label180.Font = new System.Drawing.Font("Segoe UI Semibold", 9F, System.Drawing.FontStyle.Bold);
             this.label180.Location = new System.Drawing.Point(13, 194);
             this.label180.Margin = new System.Windows.Forms.Padding(0, 13, 0, 8);
-            this.label180.Name = "label180";
             this.label180.Size = new System.Drawing.Size(68, 15);
-            this.label180.TabIndex = 7;
             this.label180.Text = "Minimizing";
             // 
             // checkPreventMinimizing
@@ -5582,9 +4879,7 @@ namespace Gw2Launcher.UI
             this.checkPreventMinimizing.Font = new System.Drawing.Font("Segoe UI", 8.25F);
             this.checkPreventMinimizing.Location = new System.Drawing.Point(21, 217);
             this.checkPreventMinimizing.Margin = new System.Windows.Forms.Padding(8, 0, 0, 0);
-            this.checkPreventMinimizing.Name = "checkPreventMinimizing";
             this.checkPreventMinimizing.Size = new System.Drawing.Size(258, 17);
-            this.checkPreventMinimizing.TabIndex = 8;
             this.checkPreventMinimizing.Text = "Prevent minimizing when clicking the taskbar";
             this.checkPreventMinimizing.UseVisualStyleBackColor = true;
             // 
@@ -5594,9 +4889,7 @@ namespace Gw2Launcher.UI
             this.label47.Font = new System.Drawing.Font("Segoe UI Semibold", 9F, System.Drawing.FontStyle.Bold);
             this.label47.Location = new System.Drawing.Point(13, 247);
             this.label47.Margin = new System.Windows.Forms.Padding(0, 13, 0, 8);
-            this.label47.Name = "label47";
             this.label47.Size = new System.Drawing.Size(75, 15);
-            this.label47.TabIndex = 9;
             this.label47.Text = "Show on top";
             // 
             // checkTopMost
@@ -5605,9 +4898,7 @@ namespace Gw2Launcher.UI
             this.checkTopMost.Font = new System.Drawing.Font("Segoe UI", 8.25F);
             this.checkTopMost.Location = new System.Drawing.Point(21, 270);
             this.checkTopMost.Margin = new System.Windows.Forms.Padding(8, 0, 0, 0);
-            this.checkTopMost.Name = "checkTopMost";
             this.checkTopMost.Size = new System.Drawing.Size(188, 17);
-            this.checkTopMost.TabIndex = 10;
             this.checkTopMost.Text = "Show on top of other windows";
             this.checkTopMost.UseVisualStyleBackColor = true;
             // 
@@ -5617,9 +4908,7 @@ namespace Gw2Launcher.UI
             this.label94.Font = new System.Drawing.Font("Segoe UI Semibold", 9F, System.Drawing.FontStyle.Bold);
             this.label94.Location = new System.Drawing.Point(13, 300);
             this.label94.Margin = new System.Windows.Forms.Padding(0, 13, 0, 8);
-            this.label94.Name = "label94";
             this.label94.Size = new System.Drawing.Size(58, 15);
-            this.label94.TabIndex = 11;
             this.label94.Text = "Shortcuts";
             // 
             // checkUseDefaultShortcutIcon
@@ -5628,9 +4917,7 @@ namespace Gw2Launcher.UI
             this.checkUseDefaultShortcutIcon.Font = new System.Drawing.Font("Segoe UI", 8.25F);
             this.checkUseDefaultShortcutIcon.Location = new System.Drawing.Point(21, 323);
             this.checkUseDefaultShortcutIcon.Margin = new System.Windows.Forms.Padding(8, 0, 0, 0);
-            this.checkUseDefaultShortcutIcon.Name = "checkUseDefaultShortcutIcon";
             this.checkUseDefaultShortcutIcon.Size = new System.Drawing.Size(257, 17);
-            this.checkUseDefaultShortcutIcon.TabIndex = 12;
             this.checkUseDefaultShortcutIcon.Text = "Use the game\'s icon when creating shortcuts";
             this.checkUseDefaultShortcutIcon.UseVisualStyleBackColor = true;
             // 
@@ -5640,9 +4927,7 @@ namespace Gw2Launcher.UI
             this.label14.Font = new System.Drawing.Font("Segoe UI Semibold", 9F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
             this.label14.Location = new System.Drawing.Point(13, 353);
             this.label14.Margin = new System.Windows.Forms.Padding(0, 13, 0, 0);
-            this.label14.Name = "label14";
             this.label14.Size = new System.Drawing.Size(129, 15);
-            this.label14.TabIndex = 13;
             this.label14.Text = "Reset launcher window";
             // 
             // label13
@@ -5651,9 +4936,7 @@ namespace Gw2Launcher.UI
             this.label13.Font = new System.Drawing.Font("Segoe UI Semilight", 8.25F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
             this.label13.Location = new System.Drawing.Point(14, 369);
             this.label13.Margin = new System.Windows.Forms.Padding(1, 1, 0, 8);
-            this.label13.Name = "label13";
             this.label13.Size = new System.Drawing.Size(258, 13);
-            this.label13.TabIndex = 14;
             this.label13.Text = "Resets the position and automatically sizes the window";
             // 
             // buttonWindowReset
@@ -5662,28 +4945,24 @@ namespace Gw2Launcher.UI
             this.buttonWindowReset.Font = new System.Drawing.Font("Segoe UI", 8.25F);
             this.buttonWindowReset.Location = new System.Drawing.Point(20, 390);
             this.buttonWindowReset.Margin = new System.Windows.Forms.Padding(7, 0, 0, 0);
-            this.buttonWindowReset.Name = "buttonWindowReset";
             this.buttonWindowReset.Size = new System.Drawing.Size(75, 23);
-            this.buttonWindowReset.TabIndex = 15;
             this.buttonWindowReset.Text = "Reset";
             this.buttonWindowReset.UseVisualStyleBackColor = true;
             this.buttonWindowReset.Click += new System.EventHandler(this.buttonWindowReset_Click);
             // 
             // panelSecurity
             // 
-            this.panelSecurity.Anchor = ((System.Windows.Forms.AnchorStyles)((((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom)
-            | System.Windows.Forms.AnchorStyles.Left)
+            this.panelSecurity.Anchor = ((System.Windows.Forms.AnchorStyles)((((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom) 
+            | System.Windows.Forms.AnchorStyles.Left) 
             | System.Windows.Forms.AnchorStyles.Right)));
             this.panelSecurity.Controls.Add(this.stackPanel4);
             this.panelSecurity.Location = new System.Drawing.Point(183, 12);
-            this.panelSecurity.Name = "panelSecurity";
             this.panelSecurity.Size = new System.Drawing.Size(373, 439);
-            this.panelSecurity.TabIndex = 7;
             this.panelSecurity.Visible = false;
             // 
             // stackPanel4
             // 
-            this.stackPanel4.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left)
+            this.stackPanel4.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left) 
             | System.Windows.Forms.AnchorStyles.Right)));
             this.stackPanel4.AutoSize = true;
             this.stackPanel4.AutoSizeFill = Gw2Launcher.UI.Controls.StackPanel.AutoSizeFillMode.Width;
@@ -5702,10 +4981,8 @@ namespace Gw2Launcher.UI
             this.stackPanel4.Controls.Add(this.stackPanel97);
             this.stackPanel4.Location = new System.Drawing.Point(0, 0);
             this.stackPanel4.Margin = new System.Windows.Forms.Padding(0, 0, 13, 0);
-            this.stackPanel4.Name = "stackPanel4";
             this.stackPanel4.Padding = new System.Windows.Forms.Padding(13, 10, 0, 10);
             this.stackPanel4.Size = new System.Drawing.Size(343, 610);
-            this.stackPanel4.TabIndex = 0;
             // 
             // label22
             // 
@@ -5713,9 +4990,7 @@ namespace Gw2Launcher.UI
             this.label22.Font = new System.Drawing.Font("Segoe UI Semibold", 9F, System.Drawing.FontStyle.Bold);
             this.label22.Location = new System.Drawing.Point(13, 10);
             this.label22.Margin = new System.Windows.Forms.Padding(0);
-            this.label22.Name = "label22";
             this.label22.Size = new System.Drawing.Size(64, 15);
-            this.label22.TabIndex = 0;
             this.label22.Text = "Encryption";
             // 
             // label32
@@ -5724,9 +4999,7 @@ namespace Gw2Launcher.UI
             this.label32.Font = new System.Drawing.Font("Segoe UI Semilight", 8.25F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
             this.label32.Location = new System.Drawing.Point(14, 26);
             this.label32.Margin = new System.Windows.Forms.Padding(1, 1, 0, 8);
-            this.label32.Name = "label32";
             this.label32.Size = new System.Drawing.Size(155, 13);
-            this.label32.TabIndex = 1;
             this.label32.Text = "Accessibility of stored passwords";
             // 
             // comboEncryptionScope
@@ -5736,9 +5009,7 @@ namespace Gw2Launcher.UI
             this.comboEncryptionScope.FormattingEnabled = true;
             this.comboEncryptionScope.Location = new System.Drawing.Point(21, 47);
             this.comboEncryptionScope.Margin = new System.Windows.Forms.Padding(8, 0, 0, 0);
-            this.comboEncryptionScope.Name = "comboEncryptionScope";
             this.comboEncryptionScope.Size = new System.Drawing.Size(172, 21);
-            this.comboEncryptionScope.TabIndex = 2;
             this.comboEncryptionScope.SelectedIndexChanged += new System.EventHandler(this.comboEncryptionScope_SelectedIndexChanged);
             // 
             // labelEncryptionScope
@@ -5748,9 +5019,7 @@ namespace Gw2Launcher.UI
             this.labelEncryptionScope.ForeColor = System.Drawing.SystemColors.GrayText;
             this.labelEncryptionScope.Location = new System.Drawing.Point(19, 73);
             this.labelEncryptionScope.Margin = new System.Windows.Forms.Padding(6, 5, 0, 0);
-            this.labelEncryptionScope.Name = "labelEncryptionScope";
             this.labelEncryptionScope.Size = new System.Drawing.Size(11, 13);
-            this.labelEncryptionScope.TabIndex = 3;
             this.labelEncryptionScope.Text = "-";
             this.labelEncryptionScope.Visible = false;
             // 
@@ -5760,9 +5029,7 @@ namespace Gw2Launcher.UI
             this.label234.Font = new System.Drawing.Font("Segoe UI Semibold", 9F, System.Drawing.FontStyle.Bold);
             this.label234.Location = new System.Drawing.Point(13, 99);
             this.label234.Margin = new System.Windows.Forms.Padding(0, 13, 0, 0);
-            this.label234.Name = "label234";
             this.label234.Size = new System.Drawing.Size(52, 15);
-            this.label234.TabIndex = 4;
             this.label234.Text = "Network";
             // 
             // label235
@@ -5771,9 +5038,7 @@ namespace Gw2Launcher.UI
             this.label235.Font = new System.Drawing.Font("Segoe UI Semilight", 8.25F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
             this.label235.Location = new System.Drawing.Point(14, 115);
             this.label235.Margin = new System.Windows.Forms.Padding(1, 1, 0, 1);
-            this.label235.Name = "label235";
             this.label235.Size = new System.Drawing.Size(115, 13);
-            this.label235.TabIndex = 5;
             this.label235.Text = "Track network changes";
             // 
             // label237
@@ -5783,9 +5048,7 @@ namespace Gw2Launcher.UI
             this.label237.ForeColor = System.Drawing.Color.MediumBlue;
             this.label237.Location = new System.Drawing.Point(14, 130);
             this.label237.Margin = new System.Windows.Forms.Padding(1, 1, 0, 8);
-            this.label237.Name = "label237";
             this.label237.Size = new System.Drawing.Size(187, 13);
-            this.label237.TabIndex = 6;
             this.label237.Text = "Based on the IP seen by Gw2Launcher";
             // 
             // checkNetworkEnable
@@ -5793,9 +5056,7 @@ namespace Gw2Launcher.UI
             this.checkNetworkEnable.AutoSize = true;
             this.checkNetworkEnable.Location = new System.Drawing.Point(21, 151);
             this.checkNetworkEnable.Margin = new System.Windows.Forms.Padding(8, 0, 0, 0);
-            this.checkNetworkEnable.Name = "checkNetworkEnable";
             this.checkNetworkEnable.Size = new System.Drawing.Size(152, 17);
-            this.checkNetworkEnable.TabIndex = 7;
             this.checkNetworkEnable.Text = "Enable network tracking";
             this.checkNetworkEnable.UseVisualStyleBackColor = true;
             this.checkNetworkEnable.CheckedChanged += new System.EventHandler(this.checkNetworkEnable_CheckedChanged);
@@ -5809,18 +5070,14 @@ namespace Gw2Launcher.UI
             this.stackPanel106.FlowDirection = System.Windows.Forms.FlowDirection.LeftToRight;
             this.stackPanel106.Location = new System.Drawing.Point(13, 171);
             this.stackPanel106.Margin = new System.Windows.Forms.Padding(0, 3, 0, 0);
-            this.stackPanel106.Name = "stackPanel106";
             this.stackPanel106.Size = new System.Drawing.Size(259, 17);
-            this.stackPanel106.TabIndex = 8;
             // 
             // checkNetworkExact
             // 
             this.checkNetworkExact.AutoSize = true;
             this.checkNetworkExact.Location = new System.Drawing.Point(8, 0);
             this.checkNetworkExact.Margin = new System.Windows.Forms.Padding(8, 0, 0, 0);
-            this.checkNetworkExact.Name = "checkNetworkExact";
             this.checkNetworkExact.Size = new System.Drawing.Size(163, 17);
-            this.checkNetworkExact.TabIndex = 0;
             this.checkNetworkExact.Text = "Remember exact addresses";
             this.checkNetworkExact.UseVisualStyleBackColor = true;
             // 
@@ -5832,9 +5089,7 @@ namespace Gw2Launcher.UI
             this.label241.ForeColor = System.Drawing.SystemColors.GrayText;
             this.label241.Location = new System.Drawing.Point(172, 1);
             this.label241.Margin = new System.Windows.Forms.Padding(1, 0, 0, 1);
-            this.label241.Name = "label241";
             this.label241.Size = new System.Drawing.Size(87, 13);
-            this.label241.TabIndex = 1;
             this.label241.Text = "instead of ranges";
             // 
             // checkNetworkWarnOnChange
@@ -5843,9 +5098,7 @@ namespace Gw2Launcher.UI
             this.checkNetworkWarnOnChange.Enabled = false;
             this.checkNetworkWarnOnChange.Location = new System.Drawing.Point(21, 191);
             this.checkNetworkWarnOnChange.Margin = new System.Windows.Forms.Padding(8, 3, 0, 0);
-            this.checkNetworkWarnOnChange.Name = "checkNetworkWarnOnChange";
             this.checkNetworkWarnOnChange.Size = new System.Drawing.Size(241, 17);
-            this.checkNetworkWarnOnChange.TabIndex = 9;
             this.checkNetworkWarnOnChange.Text = "Warn when the address isn\'t remembered";
             this.checkNetworkWarnOnChange.UseVisualStyleBackColor = true;
             // 
@@ -5855,9 +5108,7 @@ namespace Gw2Launcher.UI
             this.label238.Font = new System.Drawing.Font("Segoe UI Semilight", 8.25F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
             this.label238.Location = new System.Drawing.Point(14, 216);
             this.label238.Margin = new System.Windows.Forms.Padding(1, 8, 0, 8);
-            this.label238.Name = "label238";
             this.label238.Size = new System.Drawing.Size(120, 13);
-            this.label238.TabIndex = 10;
             this.label238.Text = "Remembered addresses";
             // 
             // textNetworkAddresses
@@ -5865,10 +5116,8 @@ namespace Gw2Launcher.UI
             this.textNetworkAddresses.Location = new System.Drawing.Point(21, 237);
             this.textNetworkAddresses.Margin = new System.Windows.Forms.Padding(8, 0, 0, 0);
             this.textNetworkAddresses.Multiline = true;
-            this.textNetworkAddresses.Name = "textNetworkAddresses";
             this.textNetworkAddresses.ScrollBars = System.Windows.Forms.ScrollBars.Vertical;
             this.textNetworkAddresses.Size = new System.Drawing.Size(290, 85);
-            this.textNetworkAddresses.TabIndex = 11;
             // 
             // stackPanel97
             // 
@@ -5889,9 +5138,7 @@ namespace Gw2Launcher.UI
             this.stackPanel97.Controls.Add(this.stackPanel82);
             this.stackPanel97.Location = new System.Drawing.Point(13, 332);
             this.stackPanel97.Margin = new System.Windows.Forms.Padding(0, 10, 13, 0);
-            this.stackPanel97.Name = "stackPanel97";
             this.stackPanel97.Size = new System.Drawing.Size(317, 268);
-            this.stackPanel97.TabIndex = 12;
             this.stackPanel97.Visible = false;
             // 
             // label59
@@ -5900,9 +5147,7 @@ namespace Gw2Launcher.UI
             this.label59.Font = new System.Drawing.Font("Segoe UI Semibold", 9F, System.Drawing.FontStyle.Bold);
             this.label59.Location = new System.Drawing.Point(0, 13);
             this.label59.Margin = new System.Windows.Forms.Padding(0, 13, 0, 0);
-            this.label59.Name = "label59";
             this.label59.Size = new System.Drawing.Size(126, 15);
-            this.label59.TabIndex = 0;
             this.label59.Text = "Network authorization";
             // 
             // label58
@@ -5911,9 +5156,7 @@ namespace Gw2Launcher.UI
             this.label58.Font = new System.Drawing.Font("Segoe UI Semilight", 8.25F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
             this.label58.Location = new System.Drawing.Point(1, 29);
             this.label58.Margin = new System.Windows.Forms.Padding(1, 1, 0, 1);
-            this.label58.Name = "label58";
             this.label58.Size = new System.Drawing.Size(314, 13);
-            this.label58.TabIndex = 1;
             this.label58.Text = "Allows for the current network to be authorized and remembered";
             // 
             // label186
@@ -5923,9 +5166,7 @@ namespace Gw2Launcher.UI
             this.label186.ForeColor = System.Drawing.Color.MediumBlue;
             this.label186.Location = new System.Drawing.Point(1, 44);
             this.label186.Margin = new System.Windows.Forms.Padding(1, 1, 0, 1);
-            this.label186.Name = "label186";
             this.label186.Size = new System.Drawing.Size(187, 13);
-            this.label186.TabIndex = 2;
             this.label186.Text = "Based on the IP used by Gw2Launcher";
             // 
             // label60
@@ -5935,9 +5176,7 @@ namespace Gw2Launcher.UI
             this.label60.ForeColor = System.Drawing.SystemColors.GrayText;
             this.label60.Location = new System.Drawing.Point(1, 59);
             this.label60.Margin = new System.Windows.Forms.Padding(1, 1, 0, 8);
-            this.label60.Name = "label60";
             this.label60.Size = new System.Drawing.Size(278, 13);
-            this.label60.TabIndex = 3;
             this.label60.Text = "Accounts must be configured to use network authorization";
             // 
             // label27
@@ -5947,9 +5186,7 @@ namespace Gw2Launcher.UI
             this.label27.ForeColor = System.Drawing.Color.Maroon;
             this.label27.Location = new System.Drawing.Point(1, 81);
             this.label27.Margin = new System.Windows.Forms.Padding(1, 1, 0, 8);
-            this.label27.Name = "label27";
             this.label27.Size = new System.Drawing.Size(212, 13);
-            this.label27.TabIndex = 4;
             this.label27.Text = "This feature has been disabled by ArenaNet";
             // 
             // checkEnableNetworkAuthorization
@@ -5958,9 +5195,7 @@ namespace Gw2Launcher.UI
             this.checkEnableNetworkAuthorization.Enabled = false;
             this.checkEnableNetworkAuthorization.Location = new System.Drawing.Point(8, 102);
             this.checkEnableNetworkAuthorization.Margin = new System.Windows.Forms.Padding(8, 0, 0, 0);
-            this.checkEnableNetworkAuthorization.Name = "checkEnableNetworkAuthorization";
             this.checkEnableNetworkAuthorization.Size = new System.Drawing.Size(180, 17);
-            this.checkEnableNetworkAuthorization.TabIndex = 5;
             this.checkEnableNetworkAuthorization.Text = "Enable network authorization";
             this.checkEnableNetworkAuthorization.UseVisualStyleBackColor = true;
             this.checkEnableNetworkAuthorization.CheckedChanged += new System.EventHandler(this.checkEnableNetworkAuthorization_CheckedChanged);
@@ -5973,9 +5208,7 @@ namespace Gw2Launcher.UI
             this.checkNetworkAbortOnCancel.Enabled = false;
             this.checkNetworkAbortOnCancel.Location = new System.Drawing.Point(8, 122);
             this.checkNetworkAbortOnCancel.Margin = new System.Windows.Forms.Padding(8, 3, 0, 0);
-            this.checkNetworkAbortOnCancel.Name = "checkNetworkAbortOnCancel";
             this.checkNetworkAbortOnCancel.Size = new System.Drawing.Size(307, 17);
-            this.checkNetworkAbortOnCancel.TabIndex = 6;
             this.checkNetworkAbortOnCancel.Text = "Cancel launching when authorization is not successful";
             this.checkNetworkAbortOnCancel.UseVisualStyleBackColor = true;
             this.checkNetworkAbortOnCancel.Visible = false;
@@ -5986,9 +5219,7 @@ namespace Gw2Launcher.UI
             this.checkRemovePreviousNetworks.Enabled = false;
             this.checkRemovePreviousNetworks.Location = new System.Drawing.Point(8, 142);
             this.checkRemovePreviousNetworks.Margin = new System.Windows.Forms.Padding(8, 3, 0, 0);
-            this.checkRemovePreviousNetworks.Name = "checkRemovePreviousNetworks";
             this.checkRemovePreviousNetworks.Size = new System.Drawing.Size(231, 17);
-            this.checkRemovePreviousNetworks.TabIndex = 7;
             this.checkRemovePreviousNetworks.Text = "Remove previously authorized networks";
             this.checkRemovePreviousNetworks.UseVisualStyleBackColor = true;
             this.checkRemovePreviousNetworks.Visible = false;
@@ -6003,9 +5234,7 @@ namespace Gw2Launcher.UI
             this.stackPanel62.FlowDirection = System.Windows.Forms.FlowDirection.LeftToRight;
             this.stackPanel62.Location = new System.Drawing.Point(0, 162);
             this.stackPanel62.Margin = new System.Windows.Forms.Padding(0, 3, 0, 0);
-            this.stackPanel62.Name = "stackPanel62";
             this.stackPanel62.Size = new System.Drawing.Size(288, 17);
-            this.stackPanel62.TabIndex = 8;
             this.stackPanel62.Visible = false;
             // 
             // checkRemoveAllNetworks
@@ -6013,9 +5242,7 @@ namespace Gw2Launcher.UI
             this.checkRemoveAllNetworks.AutoSize = true;
             this.checkRemoveAllNetworks.Location = new System.Drawing.Point(8, 0);
             this.checkRemoveAllNetworks.Margin = new System.Windows.Forms.Padding(8, 0, 0, 0);
-            this.checkRemoveAllNetworks.Name = "checkRemoveAllNetworks";
             this.checkRemoveAllNetworks.Size = new System.Drawing.Size(174, 17);
-            this.checkRemoveAllNetworks.TabIndex = 0;
             this.checkRemoveAllNetworks.Text = "Always require authorization";
             this.checkRemoveAllNetworks.UseVisualStyleBackColor = true;
             // 
@@ -6027,9 +5254,7 @@ namespace Gw2Launcher.UI
             this.label119.ForeColor = System.Drawing.SystemColors.GrayText;
             this.label119.Location = new System.Drawing.Point(183, 1);
             this.label119.Margin = new System.Windows.Forms.Padding(1, 0, 0, 1);
-            this.label119.Name = "label119";
             this.label119.Size = new System.Drawing.Size(105, 13);
-            this.label119.TabIndex = 1;
             this.label119.Text = "removes all networks";
             // 
             // label61
@@ -6038,9 +5263,7 @@ namespace Gw2Launcher.UI
             this.label61.Font = new System.Drawing.Font("Segoe UI Semilight", 8.25F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
             this.label61.Location = new System.Drawing.Point(1, 187);
             this.label61.Margin = new System.Windows.Forms.Padding(1, 8, 0, 8);
-            this.label61.Name = "label61";
             this.label61.Size = new System.Drawing.Size(178, 13);
-            this.label61.TabIndex = 9;
             this.label61.Text = "When should the network be tested?";
             // 
             // stackPanel5
@@ -6052,18 +5275,14 @@ namespace Gw2Launcher.UI
             this.stackPanel5.FlowDirection = System.Windows.Forms.FlowDirection.LeftToRight;
             this.stackPanel5.Location = new System.Drawing.Point(0, 208);
             this.stackPanel5.Margin = new System.Windows.Forms.Padding(0);
-            this.stackPanel5.Name = "stackPanel5";
             this.stackPanel5.Size = new System.Drawing.Size(165, 17);
-            this.stackPanel5.TabIndex = 10;
             // 
             // radioNetworkVerifyManual
             // 
             this.radioNetworkVerifyManual.AutoSize = true;
             this.radioNetworkVerifyManual.Location = new System.Drawing.Point(8, 0);
             this.radioNetworkVerifyManual.Margin = new System.Windows.Forms.Padding(8, 0, 0, 0);
-            this.radioNetworkVerifyManual.Name = "radioNetworkVerifyManual";
             this.radioNetworkVerifyManual.Size = new System.Drawing.Size(64, 17);
-            this.radioNetworkVerifyManual.TabIndex = 0;
             this.radioNetworkVerifyManual.TabStop = true;
             this.radioNetworkVerifyManual.Text = "Manual";
             this.radioNetworkVerifyManual.UseVisualStyleBackColor = true;
@@ -6076,9 +5295,7 @@ namespace Gw2Launcher.UI
             this.label62.ForeColor = System.Drawing.SystemColors.GrayText;
             this.label62.Location = new System.Drawing.Point(73, 2);
             this.label62.Margin = new System.Windows.Forms.Padding(1, 0, 0, 0);
-            this.label62.Name = "label62";
             this.label62.Size = new System.Drawing.Size(92, 13);
-            this.label62.TabIndex = 1;
             this.label62.Text = "via the tools menu";
             // 
             // radioNetworkVerifyAutomatic
@@ -6087,9 +5304,7 @@ namespace Gw2Launcher.UI
             this.radioNetworkVerifyAutomatic.Checked = true;
             this.radioNetworkVerifyAutomatic.Location = new System.Drawing.Point(8, 228);
             this.radioNetworkVerifyAutomatic.Margin = new System.Windows.Forms.Padding(8, 3, 0, 0);
-            this.radioNetworkVerifyAutomatic.Name = "radioNetworkVerifyAutomatic";
             this.radioNetworkVerifyAutomatic.Size = new System.Drawing.Size(77, 17);
-            this.radioNetworkVerifyAutomatic.TabIndex = 11;
             this.radioNetworkVerifyAutomatic.TabStop = true;
             this.radioNetworkVerifyAutomatic.Text = "Automatic";
             this.radioNetworkVerifyAutomatic.UseVisualStyleBackColor = true;
@@ -6104,18 +5319,14 @@ namespace Gw2Launcher.UI
             this.stackPanel82.FlowDirection = System.Windows.Forms.FlowDirection.LeftToRight;
             this.stackPanel82.Location = new System.Drawing.Point(0, 251);
             this.stackPanel82.Margin = new System.Windows.Forms.Padding(0, 6, 0, 0);
-            this.stackPanel82.Name = "stackPanel82";
             this.stackPanel82.Size = new System.Drawing.Size(300, 17);
-            this.stackPanel82.TabIndex = 12;
             // 
             // checkNetworkVerifyAutomaticIP
             // 
             this.checkNetworkVerifyAutomaticIP.AutoSize = true;
             this.checkNetworkVerifyAutomaticIP.Location = new System.Drawing.Point(8, 0);
             this.checkNetworkVerifyAutomaticIP.Margin = new System.Windows.Forms.Padding(8, 0, 0, 0);
-            this.checkNetworkVerifyAutomaticIP.Name = "checkNetworkVerifyAutomaticIP";
             this.checkNetworkVerifyAutomaticIP.Size = new System.Drawing.Size(222, 17);
-            this.checkNetworkVerifyAutomaticIP.TabIndex = 0;
             this.checkNetworkVerifyAutomaticIP.Text = "Verify network changes before testing";
             this.checkNetworkVerifyAutomaticIP.UseVisualStyleBackColor = true;
             // 
@@ -6127,26 +5338,22 @@ namespace Gw2Launcher.UI
             this.label191.ForeColor = System.Drawing.SystemColors.GrayText;
             this.label191.Location = new System.Drawing.Point(231, 1);
             this.label191.Margin = new System.Windows.Forms.Padding(1, 0, 0, 1);
-            this.label191.Name = "label191";
             this.label191.Size = new System.Drawing.Size(69, 13);
-            this.label191.TabIndex = 1;
             this.label191.Text = "uses Amazon";
             // 
             // panelLaunchOptionsGw2
             // 
-            this.panelLaunchOptionsGw2.Anchor = ((System.Windows.Forms.AnchorStyles)((((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom)
-            | System.Windows.Forms.AnchorStyles.Left)
+            this.panelLaunchOptionsGw2.Anchor = ((System.Windows.Forms.AnchorStyles)((((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom) 
+            | System.Windows.Forms.AnchorStyles.Left) 
             | System.Windows.Forms.AnchorStyles.Right)));
             this.panelLaunchOptionsGw2.Controls.Add(this.stackPanel12);
             this.panelLaunchOptionsGw2.Location = new System.Drawing.Point(183, 12);
-            this.panelLaunchOptionsGw2.Name = "panelLaunchOptionsGw2";
             this.panelLaunchOptionsGw2.Size = new System.Drawing.Size(373, 439);
-            this.panelLaunchOptionsGw2.TabIndex = 13;
             this.panelLaunchOptionsGw2.Visible = false;
             // 
             // stackPanel12
             // 
-            this.stackPanel12.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left)
+            this.stackPanel12.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left) 
             | System.Windows.Forms.AnchorStyles.Right)));
             this.stackPanel12.AutoSize = true;
             this.stackPanel12.AutoSizeFill = Gw2Launcher.UI.Controls.StackPanel.AutoSizeFillMode.Width;
@@ -6181,10 +5388,8 @@ namespace Gw2Launcher.UI
             this.stackPanel12.Controls.Add(this.labelGw2RunAfterProgramsAdd);
             this.stackPanel12.Location = new System.Drawing.Point(0, 0);
             this.stackPanel12.Margin = new System.Windows.Forms.Padding(0, 0, 13, 0);
-            this.stackPanel12.Name = "stackPanel12";
             this.stackPanel12.Padding = new System.Windows.Forms.Padding(13, 10, 0, 10);
             this.stackPanel12.Size = new System.Drawing.Size(343, 665);
-            this.stackPanel12.TabIndex = 0;
             // 
             // label3
             // 
@@ -6192,9 +5397,7 @@ namespace Gw2Launcher.UI
             this.label3.Font = new System.Drawing.Font("Segoe UI Semibold", 9F, System.Drawing.FontStyle.Bold);
             this.label3.Location = new System.Drawing.Point(13, 10);
             this.label3.Margin = new System.Windows.Forms.Padding(0);
-            this.label3.Name = "label3";
             this.label3.Size = new System.Drawing.Size(66, 15);
-            this.label3.TabIndex = 0;
             this.label3.Text = "Arguments";
             // 
             // label7
@@ -6203,21 +5406,17 @@ namespace Gw2Launcher.UI
             this.label7.Font = new System.Drawing.Font("Segoe UI Semilight", 8.25F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
             this.label7.Location = new System.Drawing.Point(14, 26);
             this.label7.Margin = new System.Windows.Forms.Padding(1, 1, 0, 8);
-            this.label7.Name = "label7";
             this.label7.Size = new System.Drawing.Size(303, 13);
-            this.label7.TabIndex = 1;
             this.label7.Text = "Optional command line arguments that will apply to all accounts";
             // 
             // textGw2Arguments
             // 
-            this.textGw2Arguments.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left)
+            this.textGw2Arguments.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left) 
             | System.Windows.Forms.AnchorStyles.Right)));
             this.textGw2Arguments.Font = new System.Drawing.Font("Segoe UI", 8.25F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
             this.textGw2Arguments.Location = new System.Drawing.Point(21, 47);
             this.textGw2Arguments.Margin = new System.Windows.Forms.Padding(8, 0, 0, 0);
-            this.textGw2Arguments.Name = "textGw2Arguments";
             this.textGw2Arguments.Size = new System.Drawing.Size(322, 22);
-            this.textGw2Arguments.TabIndex = 2;
             // 
             // stackPanel15
             // 
@@ -6228,9 +5427,7 @@ namespace Gw2Launcher.UI
             this.stackPanel15.FlowDirection = System.Windows.Forms.FlowDirection.LeftToRight;
             this.stackPanel15.Location = new System.Drawing.Point(19, 72);
             this.stackPanel15.Margin = new System.Windows.Forms.Padding(6, 3, 0, 0);
-            this.stackPanel15.Name = "stackPanel15";
             this.stackPanel15.Size = new System.Drawing.Size(48, 13);
-            this.stackPanel15.TabIndex = 3;
             // 
             // labelGw2LaunchOptionsAdvanced
             // 
@@ -6241,10 +5438,8 @@ namespace Gw2Launcher.UI
             this.labelGw2LaunchOptionsAdvanced.ForeColor = System.Drawing.Color.FromArgb(((int)(((byte)(45)))), ((int)(((byte)(45)))), ((int)(((byte)(45)))));
             this.labelGw2LaunchOptionsAdvanced.Location = new System.Drawing.Point(0, 0);
             this.labelGw2LaunchOptionsAdvanced.Margin = new System.Windows.Forms.Padding(0);
-            this.labelGw2LaunchOptionsAdvanced.Name = "labelGw2LaunchOptionsAdvanced";
             this.labelGw2LaunchOptionsAdvanced.Padding = new System.Windows.Forms.Padding(0, 0, 3, 0);
             this.labelGw2LaunchOptionsAdvanced.Size = new System.Drawing.Size(43, 13);
-            this.labelGw2LaunchOptionsAdvanced.TabIndex = 0;
             this.labelGw2LaunchOptionsAdvanced.Text = "options";
             this.labelGw2LaunchOptionsAdvanced.Click += new System.EventHandler(this.labelGw2LaunchOptionsAdvanced_Click);
             // 
@@ -6257,9 +5452,7 @@ namespace Gw2Launcher.UI
             this.arrowButton2.ForeColorHighlight = System.Drawing.Color.FromArgb(((int)(((byte)(150)))), ((int)(((byte)(150)))), ((int)(((byte)(150)))));
             this.arrowButton2.Location = new System.Drawing.Point(43, 3);
             this.arrowButton2.Margin = new System.Windows.Forms.Padding(0, 1, 0, 0);
-            this.arrowButton2.Name = "arrowButton2";
             this.arrowButton2.Size = new System.Drawing.Size(5, 9);
-            this.arrowButton2.TabIndex = 1;
             this.arrowButton2.Click += new System.EventHandler(this.labelGw2LaunchOptionsAdvanced_Click);
             // 
             // label41
@@ -6268,9 +5461,7 @@ namespace Gw2Launcher.UI
             this.label41.Font = new System.Drawing.Font("Segoe UI Semibold", 9F, System.Drawing.FontStyle.Bold);
             this.label41.Location = new System.Drawing.Point(13, 98);
             this.label41.Margin = new System.Windows.Forms.Padding(0, 13, 0, 0);
-            this.label41.Name = "label41";
             this.label41.Size = new System.Drawing.Size(197, 15);
-            this.label41.TabIndex = 4;
             this.label41.Text = "Automatically login on the launcher";
             // 
             // label40
@@ -6279,9 +5470,7 @@ namespace Gw2Launcher.UI
             this.label40.Font = new System.Drawing.Font("Segoe UI Semilight", 8.25F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
             this.label40.Location = new System.Drawing.Point(14, 114);
             this.label40.Margin = new System.Windows.Forms.Padding(1, 1, 0, 8);
-            this.label40.Name = "label40";
             this.label40.Size = new System.Drawing.Size(291, 13);
-            this.label40.TabIndex = 5;
             this.label40.Text = "Automatically login when the email/password is remembered";
             // 
             // checkGw2AutomaticLauncherLogin
@@ -6290,9 +5479,7 @@ namespace Gw2Launcher.UI
             this.checkGw2AutomaticLauncherLogin.Font = new System.Drawing.Font("Segoe UI", 8.25F);
             this.checkGw2AutomaticLauncherLogin.Location = new System.Drawing.Point(21, 135);
             this.checkGw2AutomaticLauncherLogin.Margin = new System.Windows.Forms.Padding(8, 0, 0, 0);
-            this.checkGw2AutomaticLauncherLogin.Name = "checkGw2AutomaticLauncherLogin";
             this.checkGw2AutomaticLauncherLogin.Size = new System.Drawing.Size(224, 17);
-            this.checkGw2AutomaticLauncherLogin.TabIndex = 6;
             this.checkGw2AutomaticLauncherLogin.Text = "Automatically login when remembered";
             this.checkGw2AutomaticLauncherLogin.UseVisualStyleBackColor = true;
             // 
@@ -6302,9 +5489,7 @@ namespace Gw2Launcher.UI
             this.label21.Font = new System.Drawing.Font("Segoe UI Semibold", 9F, System.Drawing.FontStyle.Bold);
             this.label21.Location = new System.Drawing.Point(13, 165);
             this.label21.Margin = new System.Windows.Forms.Padding(0, 13, 0, 0);
-            this.label21.Name = "label21";
             this.label21.Size = new System.Drawing.Size(48, 15);
-            this.label21.TabIndex = 7;
             this.label21.Text = "Volume";
             // 
             // label20
@@ -6313,9 +5498,7 @@ namespace Gw2Launcher.UI
             this.label20.Font = new System.Drawing.Font("Segoe UI Semilight", 8.25F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
             this.label20.Location = new System.Drawing.Point(14, 181);
             this.label20.Margin = new System.Windows.Forms.Padding(1, 1, 0, 8);
-            this.label20.Name = "label20";
             this.label20.Size = new System.Drawing.Size(261, 13);
-            this.label20.TabIndex = 8;
             this.label20.Text = "Adjusts the volume level in Windows for the application";
             // 
             // stackPanel16
@@ -6329,9 +5512,7 @@ namespace Gw2Launcher.UI
             this.stackPanel16.FlowDirection = System.Windows.Forms.FlowDirection.LeftToRight;
             this.stackPanel16.Location = new System.Drawing.Point(13, 202);
             this.stackPanel16.Margin = new System.Windows.Forms.Padding(0);
-            this.stackPanel16.Name = "stackPanel16";
             this.stackPanel16.Size = new System.Drawing.Size(218, 20);
-            this.stackPanel16.TabIndex = 9;
             // 
             // checkGw2Volume
             // 
@@ -6340,9 +5521,7 @@ namespace Gw2Launcher.UI
             this.checkGw2Volume.Font = new System.Drawing.Font("Segoe UI", 8.25F);
             this.checkGw2Volume.Location = new System.Drawing.Point(8, 3);
             this.checkGw2Volume.Margin = new System.Windows.Forms.Padding(8, 0, 0, 0);
-            this.checkGw2Volume.Name = "checkGw2Volume";
             this.checkGw2Volume.Size = new System.Drawing.Size(15, 14);
-            this.checkGw2Volume.TabIndex = 0;
             this.checkGw2Volume.UseVisualStyleBackColor = true;
             this.checkGw2Volume.CheckedChanged += new System.EventHandler(this.checkGw2Volume_CheckedChanged);
             // 
@@ -6351,9 +5530,7 @@ namespace Gw2Launcher.UI
             this.sliderGw2Volume.Enabled = false;
             this.sliderGw2Volume.Location = new System.Drawing.Point(30, 0);
             this.sliderGw2Volume.Margin = new System.Windows.Forms.Padding(7, 0, 0, 0);
-            this.sliderGw2Volume.Name = "sliderGw2Volume";
             this.sliderGw2Volume.Size = new System.Drawing.Size(150, 20);
-            this.sliderGw2Volume.TabIndex = 1;
             this.sliderGw2Volume.TabStop = false;
             this.sliderGw2Volume.Value = 1F;
             this.sliderGw2Volume.ValueChanged += new System.EventHandler(this.sliderGw2Volume_ValueChanged);
@@ -6365,9 +5542,7 @@ namespace Gw2Launcher.UI
             this.labelGw2Volume.Font = new System.Drawing.Font("Segoe UI Semilight", 8.25F);
             this.labelGw2Volume.Location = new System.Drawing.Point(186, 3);
             this.labelGw2Volume.Margin = new System.Windows.Forms.Padding(6, 0, 0, 0);
-            this.labelGw2Volume.Name = "labelGw2Volume";
             this.labelGw2Volume.Size = new System.Drawing.Size(32, 13);
-            this.labelGw2Volume.TabIndex = 2;
             this.labelGw2Volume.Text = "100%";
             // 
             // label120
@@ -6376,9 +5551,7 @@ namespace Gw2Launcher.UI
             this.label120.Font = new System.Drawing.Font("Segoe UI Semibold", 9F, System.Drawing.FontStyle.Bold);
             this.label120.Location = new System.Drawing.Point(13, 235);
             this.label120.Margin = new System.Windows.Forms.Padding(0, 13, 0, 8);
-            this.label120.Name = "label120";
             this.label120.Size = new System.Drawing.Size(35, 15);
-            this.label120.TabIndex = 10;
             this.label120.Text = "Mute";
             // 
             // stackPanel13
@@ -6391,18 +5564,14 @@ namespace Gw2Launcher.UI
             this.stackPanel13.FlowDirection = System.Windows.Forms.FlowDirection.LeftToRight;
             this.stackPanel13.Location = new System.Drawing.Point(13, 258);
             this.stackPanel13.Margin = new System.Windows.Forms.Padding(0);
-            this.stackPanel13.Name = "stackPanel13";
             this.stackPanel13.Size = new System.Drawing.Size(180, 17);
-            this.stackPanel13.TabIndex = 11;
             // 
             // checkGw2MuteAll
             // 
             this.checkGw2MuteAll.AutoSize = true;
             this.checkGw2MuteAll.Location = new System.Drawing.Point(8, 0);
             this.checkGw2MuteAll.Margin = new System.Windows.Forms.Padding(8, 0, 0, 0);
-            this.checkGw2MuteAll.Name = "checkGw2MuteAll";
             this.checkGw2MuteAll.Size = new System.Drawing.Size(39, 17);
-            this.checkGw2MuteAll.TabIndex = 0;
             this.checkGw2MuteAll.Text = "All";
             this.checkGw2MuteAll.UseVisualStyleBackColor = true;
             // 
@@ -6411,9 +5580,7 @@ namespace Gw2Launcher.UI
             this.checkGw2MuteMusic.AutoSize = true;
             this.checkGw2MuteMusic.Location = new System.Drawing.Point(55, 0);
             this.checkGw2MuteMusic.Margin = new System.Windows.Forms.Padding(8, 0, 0, 0);
-            this.checkGw2MuteMusic.Name = "checkGw2MuteMusic";
             this.checkGw2MuteMusic.Size = new System.Drawing.Size(56, 17);
-            this.checkGw2MuteMusic.TabIndex = 1;
             this.checkGw2MuteMusic.Text = "Music";
             this.checkGw2MuteMusic.UseVisualStyleBackColor = true;
             // 
@@ -6422,9 +5589,7 @@ namespace Gw2Launcher.UI
             this.checkGw2MuteVoices.AutoSize = true;
             this.checkGw2MuteVoices.Location = new System.Drawing.Point(122, 0);
             this.checkGw2MuteVoices.Margin = new System.Windows.Forms.Padding(11, 0, 0, 0);
-            this.checkGw2MuteVoices.Name = "checkGw2MuteVoices";
             this.checkGw2MuteVoices.Size = new System.Drawing.Size(58, 17);
-            this.checkGw2MuteVoices.TabIndex = 2;
             this.checkGw2MuteVoices.Text = "Voices";
             this.checkGw2MuteVoices.UseVisualStyleBackColor = true;
             // 
@@ -6434,9 +5599,7 @@ namespace Gw2Launcher.UI
             this.label31.Font = new System.Drawing.Font("Segoe UI Semibold", 9F, System.Drawing.FontStyle.Bold);
             this.label31.Location = new System.Drawing.Point(13, 288);
             this.label31.Margin = new System.Windows.Forms.Padding(0, 13, 0, 0);
-            this.label31.Name = "label31";
             this.label31.Size = new System.Drawing.Size(107, 15);
-            this.label31.TabIndex = 12;
             this.label31.Text = "Mumble link name";
             // 
             // label73
@@ -6445,9 +5608,7 @@ namespace Gw2Launcher.UI
             this.label73.Font = new System.Drawing.Font("Segoe UI Semilight", 8.25F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
             this.label73.Location = new System.Drawing.Point(14, 304);
             this.label73.Margin = new System.Windows.Forms.Padding(1, 1, 0, 1);
-            this.label73.Name = "label73";
             this.label73.Size = new System.Drawing.Size(306, 13);
-            this.label73.TabIndex = 13;
             this.label73.Text = "Changes the name used to access Guild Wars 2\'s public memory";
             // 
             // label76
@@ -6457,9 +5618,7 @@ namespace Gw2Launcher.UI
             this.label76.ForeColor = System.Drawing.SystemColors.GrayText;
             this.label76.Location = new System.Drawing.Point(14, 319);
             this.label76.Margin = new System.Windows.Forms.Padding(1, 1, 0, 8);
-            this.label76.Name = "label76";
             this.label76.Size = new System.Drawing.Size(241, 13);
-            this.label76.TabIndex = 14;
             this.label76.Text = "Programs using the default name will stop working";
             // 
             // tableContainerPanel1
@@ -6473,12 +5632,10 @@ namespace Gw2Launcher.UI
             this.tableContainerPanel1.Controls.Add(this.labelGw2MumbleNameVariables, 1, 1);
             this.tableContainerPanel1.Location = new System.Drawing.Point(13, 340);
             this.tableContainerPanel1.Margin = new System.Windows.Forms.Padding(0);
-            this.tableContainerPanel1.Name = "tableContainerPanel1";
             this.tableContainerPanel1.RowCount = 2;
             this.tableContainerPanel1.RowStyles.Add(new System.Windows.Forms.RowStyle());
             this.tableContainerPanel1.RowStyles.Add(new System.Windows.Forms.RowStyle());
             this.tableContainerPanel1.Size = new System.Drawing.Size(321, 44);
-            this.tableContainerPanel1.TabIndex = 15;
             // 
             // stackPanel56
             // 
@@ -6486,22 +5643,18 @@ namespace Gw2Launcher.UI
             this.stackPanel56.Controls.Add(this.textGw2MumbleName);
             this.stackPanel56.Location = new System.Drawing.Point(23, 0);
             this.stackPanel56.Margin = new System.Windows.Forms.Padding(0);
-            this.stackPanel56.Name = "stackPanel56";
             this.stackPanel56.Size = new System.Drawing.Size(297, 22);
-            this.stackPanel56.TabIndex = 0;
             // 
             // textGw2MumbleName
             // 
-            this.textGw2MumbleName.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left)
+            this.textGw2MumbleName.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left) 
             | System.Windows.Forms.AnchorStyles.Right)));
             this.textGw2MumbleName.Enabled = false;
             this.textGw2MumbleName.Font = new System.Drawing.Font("Segoe UI", 8.25F);
             this.textGw2MumbleName.Location = new System.Drawing.Point(7, 0);
             this.textGw2MumbleName.Margin = new System.Windows.Forms.Padding(7, 0, 0, 0);
             this.textGw2MumbleName.MinimumSize = new System.Drawing.Size(290, 4);
-            this.textGw2MumbleName.Name = "textGw2MumbleName";
             this.textGw2MumbleName.Size = new System.Drawing.Size(290, 22);
-            this.textGw2MumbleName.TabIndex = 0;
             this.textGw2MumbleName.Text = "MumbleLink_%accountid%";
             // 
             // checkGw2MumbleName
@@ -6510,9 +5663,7 @@ namespace Gw2Launcher.UI
             this.checkGw2MumbleName.AutoSize = true;
             this.checkGw2MumbleName.Location = new System.Drawing.Point(8, 4);
             this.checkGw2MumbleName.Margin = new System.Windows.Forms.Padding(8, 0, 0, 0);
-            this.checkGw2MumbleName.Name = "checkGw2MumbleName";
             this.checkGw2MumbleName.Size = new System.Drawing.Size(15, 14);
-            this.checkGw2MumbleName.TabIndex = 1;
             this.checkGw2MumbleName.UseVisualStyleBackColor = true;
             this.checkGw2MumbleName.CheckedChanged += new System.EventHandler(this.checkGw2MumbleName_CheckedChanged);
             // 
@@ -6525,10 +5676,8 @@ namespace Gw2Launcher.UI
             this.labelGw2MumbleNameVariables.Font = new System.Drawing.Font("Calibri", 8.25F);
             this.labelGw2MumbleNameVariables.Location = new System.Drawing.Point(30, 27);
             this.labelGw2MumbleNameVariables.Margin = new System.Windows.Forms.Padding(7, 5, 0, 0);
-            this.labelGw2MumbleNameVariables.Name = "labelGw2MumbleNameVariables";
             this.labelGw2MumbleNameVariables.Padding = new System.Windows.Forms.Padding(10, 2, 10, 2);
             this.labelGw2MumbleNameVariables.Size = new System.Drawing.Size(71, 17);
-            this.labelGw2MumbleNameVariables.TabIndex = 2;
             this.labelGw2MumbleNameVariables.Text = "variables";
             this.labelGw2MumbleNameVariables.Click += new System.EventHandler(this.labelGw2MumbleNameVariables_Click);
             // 
@@ -6538,9 +5687,7 @@ namespace Gw2Launcher.UI
             this.label44.Font = new System.Drawing.Font("Segoe UI Semibold", 9F, System.Drawing.FontStyle.Bold);
             this.label44.Location = new System.Drawing.Point(13, 397);
             this.label44.Margin = new System.Windows.Forms.Padding(0, 13, 0, 0);
-            this.label44.Name = "label44";
             this.label44.Size = new System.Drawing.Size(29, 15);
-            this.label44.TabIndex = 16;
             this.label44.Text = "Port";
             // 
             // label43
@@ -6549,9 +5696,7 @@ namespace Gw2Launcher.UI
             this.label43.Font = new System.Drawing.Font("Segoe UI Semilight", 8.25F);
             this.label43.Location = new System.Drawing.Point(14, 413);
             this.label43.Margin = new System.Windows.Forms.Padding(1, 1, 0, 8);
-            this.label43.Name = "label43";
             this.label43.Size = new System.Drawing.Size(189, 13);
-            this.label43.TabIndex = 17;
             this.label43.Text = "Changes the port used by Guild Wars 2";
             // 
             // stackPanel14
@@ -6563,18 +5708,14 @@ namespace Gw2Launcher.UI
             this.stackPanel14.FlowDirection = System.Windows.Forms.FlowDirection.LeftToRight;
             this.stackPanel14.Location = new System.Drawing.Point(13, 434);
             this.stackPanel14.Margin = new System.Windows.Forms.Padding(0);
-            this.stackPanel14.Name = "stackPanel14";
             this.stackPanel14.Size = new System.Drawing.Size(101, 17);
-            this.stackPanel14.TabIndex = 18;
             // 
             // checkGw2Port80
             // 
             this.checkGw2Port80.AutoSize = true;
             this.checkGw2Port80.Location = new System.Drawing.Point(8, 0);
             this.checkGw2Port80.Margin = new System.Windows.Forms.Padding(8, 0, 0, 0);
-            this.checkGw2Port80.Name = "checkGw2Port80";
             this.checkGw2Port80.Size = new System.Drawing.Size(38, 17);
-            this.checkGw2Port80.TabIndex = 0;
             this.checkGw2Port80.Text = "80";
             this.checkGw2Port80.UseVisualStyleBackColor = true;
             this.checkGw2Port80.CheckedChanged += new System.EventHandler(this.checkGw2Port80_CheckedChanged);
@@ -6584,9 +5725,7 @@ namespace Gw2Launcher.UI
             this.checkGw2Port443.AutoSize = true;
             this.checkGw2Port443.Location = new System.Drawing.Point(57, 0);
             this.checkGw2Port443.Margin = new System.Windows.Forms.Padding(11, 0, 0, 0);
-            this.checkGw2Port443.Name = "checkGw2Port443";
             this.checkGw2Port443.Size = new System.Drawing.Size(44, 17);
-            this.checkGw2Port443.TabIndex = 1;
             this.checkGw2Port443.Text = "443";
             this.checkGw2Port443.UseVisualStyleBackColor = true;
             this.checkGw2Port443.CheckedChanged += new System.EventHandler(this.checkGw2Port443_CheckedChanged);
@@ -6597,9 +5736,7 @@ namespace Gw2Launcher.UI
             this.label45.Font = new System.Drawing.Font("Segoe UI Semibold", 9F, System.Drawing.FontStyle.Bold);
             this.label45.Location = new System.Drawing.Point(13, 464);
             this.label45.Margin = new System.Windows.Forms.Padding(0, 13, 0, 0);
-            this.label45.Name = "label45";
             this.label45.Size = new System.Drawing.Size(71, 15);
-            this.label45.TabIndex = 19;
             this.label45.Text = "Screenshots";
             // 
             // label42
@@ -6608,9 +5745,7 @@ namespace Gw2Launcher.UI
             this.label42.Font = new System.Drawing.Font("Segoe UI Semilight", 8.25F);
             this.label42.Location = new System.Drawing.Point(14, 480);
             this.label42.Margin = new System.Windows.Forms.Padding(1, 1, 0, 8);
-            this.label42.Name = "label42";
             this.label42.Size = new System.Drawing.Size(242, 13);
-            this.label42.TabIndex = 20;
             this.label42.Text = "Save screenshots in a higher quality bitmap format";
             // 
             // checkGw2ScreenshotsBmp
@@ -6618,9 +5753,7 @@ namespace Gw2Launcher.UI
             this.checkGw2ScreenshotsBmp.AutoSize = true;
             this.checkGw2ScreenshotsBmp.Location = new System.Drawing.Point(21, 501);
             this.checkGw2ScreenshotsBmp.Margin = new System.Windows.Forms.Padding(8, 0, 0, 0);
-            this.checkGw2ScreenshotsBmp.Name = "checkGw2ScreenshotsBmp";
             this.checkGw2ScreenshotsBmp.Size = new System.Drawing.Size(161, 17);
-            this.checkGw2ScreenshotsBmp.TabIndex = 21;
             this.checkGw2ScreenshotsBmp.Text = "Save screenshots as *.bmp";
             this.checkGw2ScreenshotsBmp.UseVisualStyleBackColor = true;
             // 
@@ -6630,9 +5763,7 @@ namespace Gw2Launcher.UI
             this.label38.Font = new System.Drawing.Font("Segoe UI Semilight", 8.25F);
             this.label38.Location = new System.Drawing.Point(14, 526);
             this.label38.Margin = new System.Windows.Forms.Padding(1, 8, 0, 8);
-            this.label38.Name = "label38";
             this.label38.Size = new System.Drawing.Size(183, 13);
-            this.label38.TabIndex = 22;
             this.label38.Text = "Change where screenshots are saved";
             // 
             // stackPanel43
@@ -6645,9 +5776,7 @@ namespace Gw2Launcher.UI
             this.stackPanel43.FlowDirection = System.Windows.Forms.FlowDirection.LeftToRight;
             this.stackPanel43.Location = new System.Drawing.Point(13, 547);
             this.stackPanel43.Margin = new System.Windows.Forms.Padding(0);
-            this.stackPanel43.Name = "stackPanel43";
             this.stackPanel43.Size = new System.Drawing.Size(330, 24);
-            this.stackPanel43.TabIndex = 23;
             // 
             // checkGw2ScreenshotsLocation
             // 
@@ -6655,9 +5784,7 @@ namespace Gw2Launcher.UI
             this.checkGw2ScreenshotsLocation.AutoSize = true;
             this.checkGw2ScreenshotsLocation.Location = new System.Drawing.Point(8, 5);
             this.checkGw2ScreenshotsLocation.Margin = new System.Windows.Forms.Padding(8, 0, 0, 0);
-            this.checkGw2ScreenshotsLocation.Name = "checkGw2ScreenshotsLocation";
             this.checkGw2ScreenshotsLocation.Size = new System.Drawing.Size(15, 14);
-            this.checkGw2ScreenshotsLocation.TabIndex = 0;
             this.checkGw2ScreenshotsLocation.UseVisualStyleBackColor = true;
             this.checkGw2ScreenshotsLocation.CheckedChanged += new System.EventHandler(this.checkGw2ScreenshotsLocation_CheckedChanged);
             // 
@@ -6668,9 +5795,7 @@ namespace Gw2Launcher.UI
             this.textGw2ScreenshotsLocation.Font = new System.Drawing.Font("Segoe UI", 8.25F);
             this.textGw2ScreenshotsLocation.Location = new System.Drawing.Point(30, 1);
             this.textGw2ScreenshotsLocation.Margin = new System.Windows.Forms.Padding(7, 1, 0, 1);
-            this.textGw2ScreenshotsLocation.Name = "textGw2ScreenshotsLocation";
             this.textGw2ScreenshotsLocation.Size = new System.Drawing.Size(251, 22);
-            this.textGw2ScreenshotsLocation.TabIndex = 1;
             // 
             // buttonGw2ScreenshotsLocation
             // 
@@ -6680,10 +5805,8 @@ namespace Gw2Launcher.UI
             this.buttonGw2ScreenshotsLocation.Font = new System.Drawing.Font("Segoe UI", 8.25F);
             this.buttonGw2ScreenshotsLocation.Location = new System.Drawing.Point(287, 0);
             this.buttonGw2ScreenshotsLocation.Margin = new System.Windows.Forms.Padding(6, 0, 0, 0);
-            this.buttonGw2ScreenshotsLocation.Name = "buttonGw2ScreenshotsLocation";
             this.buttonGw2ScreenshotsLocation.Padding = new System.Windows.Forms.Padding(8, 0, 8, 0);
             this.buttonGw2ScreenshotsLocation.Size = new System.Drawing.Size(43, 24);
-            this.buttonGw2ScreenshotsLocation.TabIndex = 2;
             this.buttonGw2ScreenshotsLocation.Text = "...";
             this.buttonGw2ScreenshotsLocation.UseVisualStyleBackColor = true;
             this.buttonGw2ScreenshotsLocation.Click += new System.EventHandler(this.buttonGw2ScreenshotsLocation_Click);
@@ -6694,9 +5817,7 @@ namespace Gw2Launcher.UI
             this.label197.Font = new System.Drawing.Font("Segoe UI Semibold", 9F, System.Drawing.FontStyle.Bold);
             this.label197.Location = new System.Drawing.Point(13, 584);
             this.label197.Margin = new System.Windows.Forms.Padding(0, 13, 0, 0);
-            this.label197.Name = "label197";
             this.label197.Size = new System.Drawing.Size(111, 15);
-            this.label197.TabIndex = 24;
             this.label197.Text = "Run after launching";
             // 
             // label198
@@ -6705,9 +5826,7 @@ namespace Gw2Launcher.UI
             this.label198.Font = new System.Drawing.Font("Segoe UI Semilight", 8.25F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
             this.label198.Location = new System.Drawing.Point(14, 600);
             this.label198.Margin = new System.Windows.Forms.Padding(1, 1, 0, 5);
-            this.label198.Name = "label198";
             this.label198.Size = new System.Drawing.Size(178, 13);
-            this.label198.TabIndex = 25;
             this.label198.Text = "Start other programs after launching";
             // 
             // panelGw2RunAfterPrograms
@@ -6716,9 +5835,7 @@ namespace Gw2Launcher.UI
             this.panelGw2RunAfterPrograms.Location = new System.Drawing.Point(16, 618);
             this.panelGw2RunAfterPrograms.Margin = new System.Windows.Forms.Padding(3, 0, 0, 7);
             this.panelGw2RunAfterPrograms.MinimumSize = new System.Drawing.Size(10, 5);
-            this.panelGw2RunAfterPrograms.Name = "panelGw2RunAfterPrograms";
             this.panelGw2RunAfterPrograms.Size = new System.Drawing.Size(10, 5);
-            this.panelGw2RunAfterPrograms.TabIndex = 26;
             this.panelGw2RunAfterPrograms.Visible = false;
             // 
             // panelGw2RunAfterProgramsAddSeparator
@@ -6726,9 +5843,7 @@ namespace Gw2Launcher.UI
             this.panelGw2RunAfterProgramsAddSeparator.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(224)))), ((int)(((byte)(224)))), ((int)(((byte)(224)))));
             this.panelGw2RunAfterProgramsAddSeparator.Location = new System.Drawing.Point(18, 633);
             this.panelGw2RunAfterProgramsAddSeparator.Margin = new System.Windows.Forms.Padding(5, 3, 10, 5);
-            this.panelGw2RunAfterProgramsAddSeparator.Name = "panelGw2RunAfterProgramsAddSeparator";
             this.panelGw2RunAfterProgramsAddSeparator.Size = new System.Drawing.Size(100, 1);
-            this.panelGw2RunAfterProgramsAddSeparator.TabIndex = 27;
             this.panelGw2RunAfterProgramsAddSeparator.Visible = false;
             // 
             // labelGw2RunAfterProgramsAdd
@@ -6737,27 +5852,23 @@ namespace Gw2Launcher.UI
             this.labelGw2RunAfterProgramsAdd.Icon = null;
             this.labelGw2RunAfterProgramsAdd.Location = new System.Drawing.Point(16, 642);
             this.labelGw2RunAfterProgramsAdd.Margin = new System.Windows.Forms.Padding(3, 3, 0, 0);
-            this.labelGw2RunAfterProgramsAdd.Name = "labelGw2RunAfterProgramsAdd";
             this.labelGw2RunAfterProgramsAdd.Size = new System.Drawing.Size(74, 13);
-            this.labelGw2RunAfterProgramsAdd.TabIndex = 28;
             this.labelGw2RunAfterProgramsAdd.Text = "add program";
             this.labelGw2RunAfterProgramsAdd.Click += new System.EventHandler(this.labelGw2RunAfterProgramsAdd_Click);
             // 
             // panelWindows
             // 
-            this.panelWindows.Anchor = ((System.Windows.Forms.AnchorStyles)((((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom)
-            | System.Windows.Forms.AnchorStyles.Left)
+            this.panelWindows.Anchor = ((System.Windows.Forms.AnchorStyles)((((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom) 
+            | System.Windows.Forms.AnchorStyles.Left) 
             | System.Windows.Forms.AnchorStyles.Right)));
             this.panelWindows.Controls.Add(this.stackPanel20);
             this.panelWindows.Location = new System.Drawing.Point(183, 12);
-            this.panelWindows.Name = "panelWindows";
             this.panelWindows.Size = new System.Drawing.Size(373, 439);
-            this.panelWindows.TabIndex = 14;
             this.panelWindows.Visible = false;
             // 
             // stackPanel20
             // 
-            this.stackPanel20.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left)
+            this.stackPanel20.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left) 
             | System.Windows.Forms.AnchorStyles.Right)));
             this.stackPanel20.AutoSize = true;
             this.stackPanel20.AutoSizeFill = Gw2Launcher.UI.Controls.StackPanel.AutoSizeFillMode.Width;
@@ -6781,10 +5892,8 @@ namespace Gw2Launcher.UI
             this.stackPanel20.Controls.Add(this.panelJumpListOptions);
             this.stackPanel20.Location = new System.Drawing.Point(0, 0);
             this.stackPanel20.Margin = new System.Windows.Forms.Padding(0, 0, 13, 0);
-            this.stackPanel20.Name = "stackPanel20";
             this.stackPanel20.Padding = new System.Windows.Forms.Padding(13, 10, 0, 10);
             this.stackPanel20.Size = new System.Drawing.Size(343, 462);
-            this.stackPanel20.TabIndex = 0;
             // 
             // label35
             // 
@@ -6792,9 +5901,7 @@ namespace Gw2Launcher.UI
             this.label35.Font = new System.Drawing.Font("Segoe UI Semibold", 9F, System.Drawing.FontStyle.Bold);
             this.label35.Location = new System.Drawing.Point(13, 10);
             this.label35.Margin = new System.Windows.Forms.Padding(0);
-            this.label35.Name = "label35";
             this.label35.Size = new System.Drawing.Size(95, 15);
-            this.label35.TabIndex = 0;
             this.label35.Text = "Window caption";
             // 
             // label34
@@ -6803,9 +5910,7 @@ namespace Gw2Launcher.UI
             this.label34.Font = new System.Drawing.Font("Segoe UI Semilight", 8.25F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
             this.label34.Location = new System.Drawing.Point(14, 26);
             this.label34.Margin = new System.Windows.Forms.Padding(1, 1, 0, 8);
-            this.label34.Name = "label34";
             this.label34.Size = new System.Drawing.Size(255, 13);
-            this.label34.TabIndex = 1;
             this.label34.Text = "Changes the caption displayed in the title and taskbar";
             // 
             // tableContainerPanel5
@@ -6820,12 +5925,10 @@ namespace Gw2Launcher.UI
             this.tableContainerPanel5.Controls.Add(this.labelWindowCaptionVariables, 1, 1);
             this.tableContainerPanel5.Location = new System.Drawing.Point(13, 47);
             this.tableContainerPanel5.Margin = new System.Windows.Forms.Padding(0);
-            this.tableContainerPanel5.Name = "tableContainerPanel5";
             this.tableContainerPanel5.RowCount = 2;
             this.tableContainerPanel5.RowStyles.Add(new System.Windows.Forms.RowStyle());
             this.tableContainerPanel5.RowStyles.Add(new System.Windows.Forms.RowStyle());
             this.tableContainerPanel5.Size = new System.Drawing.Size(320, 44);
-            this.tableContainerPanel5.TabIndex = 2;
             // 
             // checkWindowCaption
             // 
@@ -6834,9 +5937,7 @@ namespace Gw2Launcher.UI
             this.checkWindowCaption.Font = new System.Drawing.Font("Segoe UI", 8.25F);
             this.checkWindowCaption.Location = new System.Drawing.Point(8, 4);
             this.checkWindowCaption.Margin = new System.Windows.Forms.Padding(8, 0, 0, 0);
-            this.checkWindowCaption.Name = "checkWindowCaption";
             this.checkWindowCaption.Size = new System.Drawing.Size(15, 14);
-            this.checkWindowCaption.TabIndex = 0;
             this.checkWindowCaption.UseVisualStyleBackColor = true;
             this.checkWindowCaption.CheckedChanged += new System.EventHandler(this.checkWindowCaption_CheckedChanged);
             // 
@@ -6847,9 +5948,7 @@ namespace Gw2Launcher.UI
             this.textWindowCaption.Location = new System.Drawing.Point(30, 0);
             this.textWindowCaption.Margin = new System.Windows.Forms.Padding(7, 0, 0, 0);
             this.textWindowCaption.MinimumSize = new System.Drawing.Size(290, 4);
-            this.textWindowCaption.Name = "textWindowCaption";
             this.textWindowCaption.Size = new System.Drawing.Size(290, 22);
-            this.textWindowCaption.TabIndex = 1;
             this.textWindowCaption.Text = "%accountname%";
             // 
             // labelWindowCaptionVariables
@@ -6861,10 +5960,8 @@ namespace Gw2Launcher.UI
             this.labelWindowCaptionVariables.Font = new System.Drawing.Font("Calibri", 8.25F);
             this.labelWindowCaptionVariables.Location = new System.Drawing.Point(30, 27);
             this.labelWindowCaptionVariables.Margin = new System.Windows.Forms.Padding(7, 5, 0, 0);
-            this.labelWindowCaptionVariables.Name = "labelWindowCaptionVariables";
             this.labelWindowCaptionVariables.Padding = new System.Windows.Forms.Padding(10, 2, 10, 2);
             this.labelWindowCaptionVariables.Size = new System.Drawing.Size(71, 17);
-            this.labelWindowCaptionVariables.TabIndex = 2;
             this.labelWindowCaptionVariables.Text = "variables";
             this.labelWindowCaptionVariables.Click += new System.EventHandler(this.labelWindowCaptionVariables_Click);
             // 
@@ -6874,9 +5971,7 @@ namespace Gw2Launcher.UI
             this.label89.Font = new System.Drawing.Font("Segoe UI Semibold", 9F, System.Drawing.FontStyle.Bold);
             this.label89.Location = new System.Drawing.Point(13, 104);
             this.label89.Margin = new System.Windows.Forms.Padding(0, 13, 0, 0);
-            this.label89.Name = "label89";
             this.label89.Size = new System.Drawing.Size(78, 15);
-            this.label89.TabIndex = 3;
             this.label89.Text = "Window icon";
             // 
             // label88
@@ -6885,9 +5980,7 @@ namespace Gw2Launcher.UI
             this.label88.Font = new System.Drawing.Font("Segoe UI Semilight", 8.25F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
             this.label88.Location = new System.Drawing.Point(14, 120);
             this.label88.Margin = new System.Windows.Forms.Padding(1, 1, 0, 8);
-            this.label88.Name = "label88";
             this.label88.Size = new System.Drawing.Size(240, 13);
-            this.label88.TabIndex = 4;
             this.label88.Text = "Changes the icon displayed in the title and taskbar";
             // 
             // checkWindowIcon
@@ -6896,9 +5989,7 @@ namespace Gw2Launcher.UI
             this.checkWindowIcon.Font = new System.Drawing.Font("Segoe UI", 8.25F);
             this.checkWindowIcon.Location = new System.Drawing.Point(21, 141);
             this.checkWindowIcon.Margin = new System.Windows.Forms.Padding(8, 0, 0, 0);
-            this.checkWindowIcon.Name = "checkWindowIcon";
             this.checkWindowIcon.Size = new System.Drawing.Size(152, 17);
-            this.checkWindowIcon.TabIndex = 5;
             this.checkWindowIcon.Text = "Show the account\'s icon";
             this.checkWindowIcon.UseVisualStyleBackColor = true;
             // 
@@ -6908,9 +5999,7 @@ namespace Gw2Launcher.UI
             this.label37.Font = new System.Drawing.Font("Segoe UI Semibold", 9F, System.Drawing.FontStyle.Bold);
             this.label37.Location = new System.Drawing.Point(13, 171);
             this.label37.Margin = new System.Windows.Forms.Padding(0, 13, 0, 0);
-            this.label37.Name = "label37";
             this.label37.Size = new System.Drawing.Size(99, 15);
-            this.label37.TabIndex = 6;
             this.label37.Text = "Taskbar grouping";
             // 
             // label36
@@ -6919,9 +6008,7 @@ namespace Gw2Launcher.UI
             this.label36.Font = new System.Drawing.Font("Segoe UI Semilight", 8.25F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
             this.label36.Location = new System.Drawing.Point(14, 187);
             this.label36.Margin = new System.Windows.Forms.Padding(1, 1, 0, 8);
-            this.label36.Name = "label36";
             this.label36.Size = new System.Drawing.Size(286, 13);
-            this.label36.TabIndex = 7;
             this.label36.Text = "Combines buttons on the taskbar when enabled in Windows";
             // 
             // checkPreventTaskbarGrouping
@@ -6930,9 +6017,7 @@ namespace Gw2Launcher.UI
             this.checkPreventTaskbarGrouping.Font = new System.Drawing.Font("Segoe UI", 8.25F);
             this.checkPreventTaskbarGrouping.Location = new System.Drawing.Point(21, 208);
             this.checkPreventTaskbarGrouping.Margin = new System.Windows.Forms.Padding(8, 0, 0, 0);
-            this.checkPreventTaskbarGrouping.Name = "checkPreventTaskbarGrouping";
             this.checkPreventTaskbarGrouping.Size = new System.Drawing.Size(201, 17);
-            this.checkPreventTaskbarGrouping.TabIndex = 8;
             this.checkPreventTaskbarGrouping.Text = "Prevent grouping taskbar buttons";
             this.checkPreventTaskbarGrouping.UseVisualStyleBackColor = true;
             this.checkPreventTaskbarGrouping.CheckedChanged += new System.EventHandler(this.checkPreventTaskbarGrouping_CheckedChanged);
@@ -6943,9 +6028,7 @@ namespace Gw2Launcher.UI
             this.checkForceTaskbarGrouping.Font = new System.Drawing.Font("Segoe UI", 8.25F);
             this.checkForceTaskbarGrouping.Location = new System.Drawing.Point(21, 228);
             this.checkForceTaskbarGrouping.Margin = new System.Windows.Forms.Padding(8, 3, 0, 0);
-            this.checkForceTaskbarGrouping.Name = "checkForceTaskbarGrouping";
             this.checkForceTaskbarGrouping.Size = new System.Drawing.Size(191, 17);
-            this.checkForceTaskbarGrouping.TabIndex = 9;
             this.checkForceTaskbarGrouping.Text = "Force grouping taskbar buttons";
             this.checkForceTaskbarGrouping.UseVisualStyleBackColor = true;
             this.checkForceTaskbarGrouping.CheckedChanged += new System.EventHandler(this.checkForceTaskbarGrouping_CheckedChanged);
@@ -6956,9 +6039,7 @@ namespace Gw2Launcher.UI
             this.label115.Font = new System.Drawing.Font("Segoe UI Semibold", 9F, System.Drawing.FontStyle.Bold);
             this.label115.Location = new System.Drawing.Point(13, 258);
             this.label115.Margin = new System.Windows.Forms.Padding(0, 13, 0, 0);
-            this.label115.Name = "label115";
             this.label115.Size = new System.Drawing.Size(236, 15);
-            this.label115.TabIndex = 10;
             this.label115.Text = "Prevent white screens while initially loading";
             // 
             // label108
@@ -6967,9 +6048,7 @@ namespace Gw2Launcher.UI
             this.label108.Font = new System.Drawing.Font("Segoe UI Semilight", 8.25F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
             this.label108.Location = new System.Drawing.Point(14, 274);
             this.label108.Margin = new System.Windows.Forms.Padding(1, 1, 0, 8);
-            this.label108.Name = "label108";
             this.label108.Size = new System.Drawing.Size(284, 13);
-            this.label108.TabIndex = 11;
             this.label108.Text = "The game may create a white window while initially loading";
             // 
             // checkRepaintInitialWindow
@@ -6978,9 +6057,7 @@ namespace Gw2Launcher.UI
             this.checkRepaintInitialWindow.Font = new System.Drawing.Font("Segoe UI", 8.25F);
             this.checkRepaintInitialWindow.Location = new System.Drawing.Point(21, 295);
             this.checkRepaintInitialWindow.Margin = new System.Windows.Forms.Padding(8, 0, 0, 0);
-            this.checkRepaintInitialWindow.Name = "checkRepaintInitialWindow";
             this.checkRepaintInitialWindow.Size = new System.Drawing.Size(160, 17);
-            this.checkRepaintInitialWindow.TabIndex = 12;
             this.checkRepaintInitialWindow.Text = "Darken the initial window";
             this.checkRepaintInitialWindow.UseVisualStyleBackColor = true;
             // 
@@ -6990,9 +6067,7 @@ namespace Gw2Launcher.UI
             this.checkHideInitialWindow.Font = new System.Drawing.Font("Segoe UI", 8.25F);
             this.checkHideInitialWindow.Location = new System.Drawing.Point(21, 315);
             this.checkHideInitialWindow.Margin = new System.Windows.Forms.Padding(8, 3, 0, 0);
-            this.checkHideInitialWindow.Name = "checkHideInitialWindow";
             this.checkHideInitialWindow.Size = new System.Drawing.Size(147, 17);
-            this.checkHideInitialWindow.TabIndex = 13;
             this.checkHideInitialWindow.Text = "Hide the initial window";
             this.checkHideInitialWindow.UseVisualStyleBackColor = true;
             // 
@@ -7002,9 +6077,7 @@ namespace Gw2Launcher.UI
             this.label167.Font = new System.Drawing.Font("Segoe UI Semibold", 9F, System.Drawing.FontStyle.Bold);
             this.label167.Location = new System.Drawing.Point(13, 345);
             this.label167.Margin = new System.Windows.Forms.Padding(0, 13, 0, 0);
-            this.label167.Name = "label167";
             this.label167.Size = new System.Drawing.Size(55, 15);
-            this.label167.TabIndex = 14;
             this.label167.Text = "Jump list";
             // 
             // label176
@@ -7013,9 +6086,7 @@ namespace Gw2Launcher.UI
             this.label176.Font = new System.Drawing.Font("Segoe UI Semilight", 8.25F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
             this.label176.Location = new System.Drawing.Point(14, 361);
             this.label176.Margin = new System.Windows.Forms.Padding(1, 1, 0, 8);
-            this.label176.Name = "label176";
             this.label176.Size = new System.Drawing.Size(302, 26);
-            this.label176.TabIndex = 15;
             this.label176.Text = "Use the jump list to launch accounts, which is shown when right clicking the task" +
     "bar button";
             // 
@@ -7025,9 +6096,7 @@ namespace Gw2Launcher.UI
             this.checkJumpList.Font = new System.Drawing.Font("Segoe UI", 8.25F);
             this.checkJumpList.Location = new System.Drawing.Point(21, 395);
             this.checkJumpList.Margin = new System.Windows.Forms.Padding(8, 0, 0, 0);
-            this.checkJumpList.Name = "checkJumpList";
             this.checkJumpList.Size = new System.Drawing.Size(188, 17);
-            this.checkJumpList.TabIndex = 16;
             this.checkJumpList.Text = "Show accounts on the jump list";
             this.checkJumpList.UseVisualStyleBackColor = true;
             this.checkJumpList.CheckedChanged += new System.EventHandler(this.checkJumpList_CheckedChanged);
@@ -7039,9 +6108,7 @@ namespace Gw2Launcher.UI
             this.panelJumpListOptions.Controls.Add(this.checkJumpListOnlyShowDaily);
             this.panelJumpListOptions.Location = new System.Drawing.Point(13, 412);
             this.panelJumpListOptions.Margin = new System.Windows.Forms.Padding(0);
-            this.panelJumpListOptions.Name = "panelJumpListOptions";
             this.panelJumpListOptions.Size = new System.Drawing.Size(292, 40);
-            this.panelJumpListOptions.TabIndex = 17;
             this.panelJumpListOptions.Visible = false;
             // 
             // checkJumpListHideActive
@@ -7050,9 +6117,7 @@ namespace Gw2Launcher.UI
             this.checkJumpListHideActive.Font = new System.Drawing.Font("Segoe UI", 8.25F);
             this.checkJumpListHideActive.Location = new System.Drawing.Point(8, 3);
             this.checkJumpListHideActive.Margin = new System.Windows.Forms.Padding(8, 3, 0, 0);
-            this.checkJumpListHideActive.Name = "checkJumpListHideActive";
             this.checkJumpListHideActive.Size = new System.Drawing.Size(131, 17);
-            this.checkJumpListHideActive.TabIndex = 0;
             this.checkJumpListHideActive.Text = "Hide active accounts";
             this.checkJumpListHideActive.UseVisualStyleBackColor = true;
             // 
@@ -7062,27 +6127,23 @@ namespace Gw2Launcher.UI
             this.checkJumpListOnlyShowDaily.Font = new System.Drawing.Font("Segoe UI", 8.25F);
             this.checkJumpListOnlyShowDaily.Location = new System.Drawing.Point(8, 23);
             this.checkJumpListOnlyShowDaily.Margin = new System.Windows.Forms.Padding(8, 3, 0, 0);
-            this.checkJumpListOnlyShowDaily.Name = "checkJumpListOnlyShowDaily";
             this.checkJumpListOnlyShowDaily.Size = new System.Drawing.Size(284, 17);
-            this.checkJumpListOnlyShowDaily.TabIndex = 1;
             this.checkJumpListOnlyShowDaily.Text = "Only show accounts that haven\'t been used today";
             this.checkJumpListOnlyShowDaily.UseVisualStyleBackColor = true;
             // 
             // panelGw2
             // 
-            this.panelGw2.Anchor = ((System.Windows.Forms.AnchorStyles)((((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom)
-            | System.Windows.Forms.AnchorStyles.Left)
+            this.panelGw2.Anchor = ((System.Windows.Forms.AnchorStyles)((((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom) 
+            | System.Windows.Forms.AnchorStyles.Left) 
             | System.Windows.Forms.AnchorStyles.Right)));
             this.panelGw2.Controls.Add(this.stackPanel47);
             this.panelGw2.Location = new System.Drawing.Point(183, 12);
-            this.panelGw2.Name = "panelGw2";
             this.panelGw2.Size = new System.Drawing.Size(373, 439);
-            this.panelGw2.TabIndex = 17;
             this.panelGw2.Visible = false;
             // 
             // stackPanel47
             // 
-            this.stackPanel47.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left)
+            this.stackPanel47.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left) 
             | System.Windows.Forms.AnchorStyles.Right)));
             this.stackPanel47.AutoSize = true;
             this.stackPanel47.AutoSizeFill = Gw2Launcher.UI.Controls.StackPanel.AutoSizeFillMode.Width;
@@ -7111,10 +6172,8 @@ namespace Gw2Launcher.UI
             this.stackPanel47.Controls.Add(this.checkPreventRelaunchingRelaunch);
             this.stackPanel47.Location = new System.Drawing.Point(0, 0);
             this.stackPanel47.Margin = new System.Windows.Forms.Padding(0, 0, 13, 0);
-            this.stackPanel47.Name = "stackPanel47";
             this.stackPanel47.Padding = new System.Windows.Forms.Padding(13, 10, 0, 10);
             this.stackPanel47.Size = new System.Drawing.Size(343, 565);
-            this.stackPanel47.TabIndex = 0;
             // 
             // label2
             // 
@@ -7122,9 +6181,7 @@ namespace Gw2Launcher.UI
             this.label2.Font = new System.Drawing.Font("Segoe UI Semibold", 9F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
             this.label2.Location = new System.Drawing.Point(13, 10);
             this.label2.Margin = new System.Windows.Forms.Padding(0);
-            this.label2.Name = "label2";
             this.label2.Size = new System.Drawing.Size(98, 15);
-            this.label2.TabIndex = 0;
             this.label2.Text = "Gw2.exe location";
             // 
             // label5
@@ -7133,9 +6190,7 @@ namespace Gw2Launcher.UI
             this.label5.Font = new System.Drawing.Font("Segoe UI Semilight", 8.25F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
             this.label5.Location = new System.Drawing.Point(14, 26);
             this.label5.Margin = new System.Windows.Forms.Padding(1, 1, 0, 8);
-            this.label5.Name = "label5";
             this.label5.Size = new System.Drawing.Size(183, 13);
-            this.label5.TabIndex = 1;
             this.label5.Text = "The location of the Guild Wars 2 client";
             // 
             // stackPanel46
@@ -7147,9 +6202,7 @@ namespace Gw2Launcher.UI
             this.stackPanel46.FlowDirection = System.Windows.Forms.FlowDirection.LeftToRight;
             this.stackPanel46.Location = new System.Drawing.Point(13, 47);
             this.stackPanel46.Margin = new System.Windows.Forms.Padding(0);
-            this.stackPanel46.Name = "stackPanel46";
             this.stackPanel46.Size = new System.Drawing.Size(330, 24);
-            this.stackPanel46.TabIndex = 2;
             // 
             // textGw2Path
             // 
@@ -7157,9 +6210,7 @@ namespace Gw2Launcher.UI
             this.textGw2Path.Font = new System.Drawing.Font("Segoe UI", 8.25F);
             this.textGw2Path.Location = new System.Drawing.Point(8, 1);
             this.textGw2Path.Margin = new System.Windows.Forms.Padding(8, 1, 0, 1);
-            this.textGw2Path.Name = "textGw2Path";
             this.textGw2Path.Size = new System.Drawing.Size(273, 22);
-            this.textGw2Path.TabIndex = 0;
             // 
             // buttonGw2Path
             // 
@@ -7168,10 +6219,8 @@ namespace Gw2Launcher.UI
             this.buttonGw2Path.Font = new System.Drawing.Font("Segoe UI", 8.25F);
             this.buttonGw2Path.Location = new System.Drawing.Point(287, 0);
             this.buttonGw2Path.Margin = new System.Windows.Forms.Padding(6, 0, 0, 0);
-            this.buttonGw2Path.Name = "buttonGw2Path";
             this.buttonGw2Path.Padding = new System.Windows.Forms.Padding(8, 0, 8, 0);
             this.buttonGw2Path.Size = new System.Drawing.Size(43, 24);
-            this.buttonGw2Path.TabIndex = 1;
             this.buttonGw2Path.Text = "...";
             this.buttonGw2Path.UseVisualStyleBackColor = true;
             this.buttonGw2Path.Click += new System.EventHandler(this.buttonGw2Path_Click);
@@ -7182,14 +6231,12 @@ namespace Gw2Launcher.UI
             this.label248.Font = new System.Drawing.Font("Segoe UI Semilight", 8.25F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
             this.label248.Location = new System.Drawing.Point(14, 79);
             this.label248.Margin = new System.Windows.Forms.Padding(1, 8, 0, 8);
-            this.label248.Name = "label248";
             this.label248.Size = new System.Drawing.Size(222, 13);
-            this.label248.TabIndex = 3;
             this.label248.Text = "If Steam uses a different path for Guild Wars 2";
             // 
             // stackPanel108
             // 
-            this.stackPanel108.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left)
+            this.stackPanel108.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left) 
             | System.Windows.Forms.AnchorStyles.Right)));
             this.stackPanel108.AutoSize = true;
             this.stackPanel108.Controls.Add(this.checkGw2PathSteam);
@@ -7198,9 +6245,7 @@ namespace Gw2Launcher.UI
             this.stackPanel108.FlowDirection = System.Windows.Forms.FlowDirection.LeftToRight;
             this.stackPanel108.Location = new System.Drawing.Point(13, 100);
             this.stackPanel108.Margin = new System.Windows.Forms.Padding(0);
-            this.stackPanel108.Name = "stackPanel108";
             this.stackPanel108.Size = new System.Drawing.Size(330, 24);
-            this.stackPanel108.TabIndex = 4;
             // 
             // checkGw2PathSteam
             // 
@@ -7209,9 +6254,7 @@ namespace Gw2Launcher.UI
             this.checkGw2PathSteam.Font = new System.Drawing.Font("Segoe UI", 8.25F);
             this.checkGw2PathSteam.Location = new System.Drawing.Point(8, 3);
             this.checkGw2PathSteam.Margin = new System.Windows.Forms.Padding(8, 0, 0, 0);
-            this.checkGw2PathSteam.Name = "checkGw2PathSteam";
             this.checkGw2PathSteam.Size = new System.Drawing.Size(167, 17);
-            this.checkGw2PathSteam.TabIndex = 0;
             this.checkGw2PathSteam.Text = "Steam uses a different path";
             this.checkGw2PathSteam.UseVisualStyleBackColor = true;
             this.checkGw2PathSteam.CheckedChanged += new System.EventHandler(this.checkGw2PathSteam_CheckedChanged);
@@ -7222,9 +6265,7 @@ namespace Gw2Launcher.UI
             this.textGw2PathSteam.Font = new System.Drawing.Font("Segoe UI", 8.25F);
             this.textGw2PathSteam.Location = new System.Drawing.Point(182, 1);
             this.textGw2PathSteam.Margin = new System.Windows.Forms.Padding(7, 1, 0, 1);
-            this.textGw2PathSteam.Name = "textGw2PathSteam";
             this.textGw2PathSteam.Size = new System.Drawing.Size(99, 22);
-            this.textGw2PathSteam.TabIndex = 1;
             this.textGw2PathSteam.Visible = false;
             // 
             // buttonGw2PathSteam
@@ -7234,10 +6275,8 @@ namespace Gw2Launcher.UI
             this.buttonGw2PathSteam.Font = new System.Drawing.Font("Segoe UI", 8.25F);
             this.buttonGw2PathSteam.Location = new System.Drawing.Point(287, 0);
             this.buttonGw2PathSteam.Margin = new System.Windows.Forms.Padding(6, 0, 0, 0);
-            this.buttonGw2PathSteam.Name = "buttonGw2PathSteam";
             this.buttonGw2PathSteam.Padding = new System.Windows.Forms.Padding(8, 0, 8, 0);
             this.buttonGw2PathSteam.Size = new System.Drawing.Size(43, 24);
-            this.buttonGw2PathSteam.TabIndex = 2;
             this.buttonGw2PathSteam.Text = "...";
             this.buttonGw2PathSteam.UseVisualStyleBackColor = true;
             this.buttonGw2PathSteam.Visible = false;
@@ -7249,9 +6288,7 @@ namespace Gw2Launcher.UI
             this.label74.Font = new System.Drawing.Font("Segoe UI Semibold", 9F, System.Drawing.FontStyle.Bold);
             this.label74.Location = new System.Drawing.Point(13, 137);
             this.label74.Margin = new System.Windows.Forms.Padding(0, 13, 0, 8);
-            this.label74.Name = "label74";
             this.label74.Size = new System.Drawing.Size(88, 15);
-            this.label74.TabIndex = 5;
             this.label74.Text = "Process priority";
             // 
             // stackPanel19
@@ -7263,9 +6300,7 @@ namespace Gw2Launcher.UI
             this.stackPanel19.FlowDirection = System.Windows.Forms.FlowDirection.LeftToRight;
             this.stackPanel19.Location = new System.Drawing.Point(13, 160);
             this.stackPanel19.Margin = new System.Windows.Forms.Padding(0);
-            this.stackPanel19.Name = "stackPanel19";
             this.stackPanel19.Size = new System.Drawing.Size(187, 21);
-            this.stackPanel19.TabIndex = 6;
             // 
             // checkGw2ProcessPriority
             // 
@@ -7273,9 +6308,7 @@ namespace Gw2Launcher.UI
             this.checkGw2ProcessPriority.AutoSize = true;
             this.checkGw2ProcessPriority.Location = new System.Drawing.Point(8, 3);
             this.checkGw2ProcessPriority.Margin = new System.Windows.Forms.Padding(8, 0, 0, 0);
-            this.checkGw2ProcessPriority.Name = "checkGw2ProcessPriority";
             this.checkGw2ProcessPriority.Size = new System.Drawing.Size(15, 14);
-            this.checkGw2ProcessPriority.TabIndex = 0;
             this.checkGw2ProcessPriority.UseVisualStyleBackColor = true;
             this.checkGw2ProcessPriority.CheckedChanged += new System.EventHandler(this.checkGw2ProcessPriority_CheckedChanged);
             // 
@@ -7286,9 +6319,7 @@ namespace Gw2Launcher.UI
             this.comboGw2ProcessPriority.FormattingEnabled = true;
             this.comboGw2ProcessPriority.Location = new System.Drawing.Point(30, 0);
             this.comboGw2ProcessPriority.Margin = new System.Windows.Forms.Padding(7, 0, 0, 0);
-            this.comboGw2ProcessPriority.Name = "comboGw2ProcessPriority";
             this.comboGw2ProcessPriority.Size = new System.Drawing.Size(157, 21);
-            this.comboGw2ProcessPriority.TabIndex = 1;
             this.comboGw2ProcessPriority.SelectedIndexChanged += new System.EventHandler(this.comboGw2ProcessPriority_SelectedIndexChanged);
             // 
             // label222
@@ -7297,9 +6328,7 @@ namespace Gw2Launcher.UI
             this.label222.Font = new System.Drawing.Font("Segoe UI Semilight", 8.25F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
             this.label222.Location = new System.Drawing.Point(14, 189);
             this.label222.Margin = new System.Windows.Forms.Padding(1, 8, 0, 8);
-            this.label222.Name = "label222";
             this.label222.Size = new System.Drawing.Size(128, 13);
-            this.label222.TabIndex = 7;
             this.label222.Text = "While initializing the game";
             // 
             // stackPanel96
@@ -7311,9 +6340,7 @@ namespace Gw2Launcher.UI
             this.stackPanel96.FlowDirection = System.Windows.Forms.FlowDirection.LeftToRight;
             this.stackPanel96.Location = new System.Drawing.Point(13, 210);
             this.stackPanel96.Margin = new System.Windows.Forms.Padding(0);
-            this.stackPanel96.Name = "stackPanel96";
             this.stackPanel96.Size = new System.Drawing.Size(187, 21);
-            this.stackPanel96.TabIndex = 8;
             // 
             // checkGw2ProcessPriorityDx
             // 
@@ -7321,9 +6348,7 @@ namespace Gw2Launcher.UI
             this.checkGw2ProcessPriorityDx.AutoSize = true;
             this.checkGw2ProcessPriorityDx.Location = new System.Drawing.Point(8, 3);
             this.checkGw2ProcessPriorityDx.Margin = new System.Windows.Forms.Padding(8, 0, 0, 0);
-            this.checkGw2ProcessPriorityDx.Name = "checkGw2ProcessPriorityDx";
             this.checkGw2ProcessPriorityDx.Size = new System.Drawing.Size(15, 14);
-            this.checkGw2ProcessPriorityDx.TabIndex = 0;
             this.checkGw2ProcessPriorityDx.UseVisualStyleBackColor = true;
             this.checkGw2ProcessPriorityDx.CheckedChanged += new System.EventHandler(this.checkGw2ProcessPriorityDx_CheckedChanged);
             // 
@@ -7334,9 +6359,7 @@ namespace Gw2Launcher.UI
             this.comboGw2ProcessPriorityDx.FormattingEnabled = true;
             this.comboGw2ProcessPriorityDx.Location = new System.Drawing.Point(30, 0);
             this.comboGw2ProcessPriorityDx.Margin = new System.Windows.Forms.Padding(7, 0, 0, 0);
-            this.comboGw2ProcessPriorityDx.Name = "comboGw2ProcessPriorityDx";
             this.comboGw2ProcessPriorityDx.Size = new System.Drawing.Size(157, 21);
-            this.comboGw2ProcessPriorityDx.TabIndex = 1;
             // 
             // label75
             // 
@@ -7344,9 +6367,7 @@ namespace Gw2Launcher.UI
             this.label75.Font = new System.Drawing.Font("Segoe UI Semibold", 9F, System.Drawing.FontStyle.Bold);
             this.label75.Location = new System.Drawing.Point(13, 244);
             this.label75.Margin = new System.Windows.Forms.Padding(0, 13, 0, 8);
-            this.label75.Name = "label75";
             this.label75.Size = new System.Drawing.Size(98, 15);
-            this.label75.TabIndex = 9;
             this.label75.Text = "Processor affinity";
             // 
             // checkGw2ProcessAffinityAll
@@ -7357,9 +6378,7 @@ namespace Gw2Launcher.UI
             this.checkGw2ProcessAffinityAll.Font = new System.Drawing.Font("Segoe UI", 8.25F);
             this.checkGw2ProcessAffinityAll.Location = new System.Drawing.Point(21, 267);
             this.checkGw2ProcessAffinityAll.Margin = new System.Windows.Forms.Padding(8, 0, 0, 0);
-            this.checkGw2ProcessAffinityAll.Name = "checkGw2ProcessAffinityAll";
             this.checkGw2ProcessAffinityAll.Size = new System.Drawing.Size(166, 17);
-            this.checkGw2ProcessAffinityAll.TabIndex = 10;
             this.checkGw2ProcessAffinityAll.Text = "Use all available processors";
             this.checkGw2ProcessAffinityAll.UseVisualStyleBackColor = true;
             this.checkGw2ProcessAffinityAll.CheckedChanged += new System.EventHandler(this.checkGw2ProcessAffinityAll_CheckedChanged);
@@ -7372,9 +6391,7 @@ namespace Gw2Launcher.UI
             this.panelGw2ProcessAffinity.Controls.Add(this.adGw2ProcessAffinity);
             this.panelGw2ProcessAffinity.Location = new System.Drawing.Point(17, 292);
             this.panelGw2ProcessAffinity.Margin = new System.Windows.Forms.Padding(4, 8, 0, 12);
-            this.panelGw2ProcessAffinity.Name = "panelGw2ProcessAffinity";
             this.panelGw2ProcessAffinity.Size = new System.Drawing.Size(326, 37);
-            this.panelGw2ProcessAffinity.TabIndex = 11;
             this.panelGw2ProcessAffinity.Visible = false;
             // 
             // label210
@@ -7383,9 +6400,7 @@ namespace Gw2Launcher.UI
             this.label210.Font = new System.Drawing.Font("Segoe UI Semilight", 8.25F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
             this.label210.Location = new System.Drawing.Point(1, 0);
             this.label210.Margin = new System.Windows.Forms.Padding(1, 0, 0, 8);
-            this.label210.Name = "label210";
             this.label210.Size = new System.Drawing.Size(148, 13);
-            this.label210.TabIndex = 0;
             this.label210.Text = "Select which processors to use";
             // 
             // adGw2ProcessAffinity
@@ -7394,9 +6409,7 @@ namespace Gw2Launcher.UI
             this.adGw2ProcessAffinity.AutoSize = true;
             this.adGw2ProcessAffinity.Location = new System.Drawing.Point(8, 21);
             this.adGw2ProcessAffinity.Margin = new System.Windows.Forms.Padding(8, 0, 0, 0);
-            this.adGw2ProcessAffinity.Name = "adGw2ProcessAffinity";
             this.adGw2ProcessAffinity.Size = new System.Drawing.Size(108, 16);
-            this.adGw2ProcessAffinity.TabIndex = 1;
             this.adGw2ProcessAffinity.MouseDown += new System.Windows.Forms.MouseEventHandler(this.adProcessAffinity_MouseDown);
             // 
             // checkGw2ProcessAffinityAccounts
@@ -7405,9 +6418,7 @@ namespace Gw2Launcher.UI
             this.checkGw2ProcessAffinityAccounts.Font = new System.Drawing.Font("Segoe UI", 8.25F);
             this.checkGw2ProcessAffinityAccounts.Location = new System.Drawing.Point(21, 344);
             this.checkGw2ProcessAffinityAccounts.Margin = new System.Windows.Forms.Padding(8, 3, 0, 0);
-            this.checkGw2ProcessAffinityAccounts.Name = "checkGw2ProcessAffinityAccounts";
             this.checkGw2ProcessAffinityAccounts.Size = new System.Drawing.Size(135, 17);
-            this.checkGw2ProcessAffinityAccounts.TabIndex = 12;
             this.checkGw2ProcessAffinityAccounts.Text = "Show other accounts";
             this.checkGw2ProcessAffinityAccounts.UseVisualStyleBackColor = true;
             this.checkGw2ProcessAffinityAccounts.CheckedChanged += new System.EventHandler(this.checkGw2ProcessAffinityAccounts_CheckedChanged);
@@ -7420,9 +6431,7 @@ namespace Gw2Launcher.UI
             this.panelGw2ProcessAffinityAccounts.Location = new System.Drawing.Point(17, 361);
             this.panelGw2ProcessAffinityAccounts.Margin = new System.Windows.Forms.Padding(4, 0, 0, 0);
             this.panelGw2ProcessAffinityAccounts.MinimumSize = new System.Drawing.Size(0, 10);
-            this.panelGw2ProcessAffinityAccounts.Name = "panelGw2ProcessAffinityAccounts";
             this.panelGw2ProcessAffinityAccounts.Size = new System.Drawing.Size(326, 10);
-            this.panelGw2ProcessAffinityAccounts.TabIndex = 13;
             this.panelGw2ProcessAffinityAccounts.Visible = false;
             // 
             // label77
@@ -7431,9 +6440,7 @@ namespace Gw2Launcher.UI
             this.label77.Font = new System.Drawing.Font("Segoe UI Semibold", 9F, System.Drawing.FontStyle.Bold);
             this.label77.Location = new System.Drawing.Point(13, 384);
             this.label77.Margin = new System.Windows.Forms.Padding(0, 13, 0, 0);
-            this.label77.Name = "label77";
             this.label77.Size = new System.Drawing.Size(167, 15);
-            this.label77.TabIndex = 14;
             this.label77.Text = "Prioritize the in-game browser";
             // 
             // label78
@@ -7442,9 +6449,7 @@ namespace Gw2Launcher.UI
             this.label78.Font = new System.Drawing.Font("Segoe UI Semilight", 8.25F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
             this.label78.Location = new System.Drawing.Point(14, 400);
             this.label78.Margin = new System.Windows.Forms.Padding(1, 1, 0, 1);
-            this.label78.Name = "label78";
             this.label78.Size = new System.Drawing.Size(258, 13);
-            this.label78.TabIndex = 15;
             this.label78.Text = "Improves the frame rate of the BLTC while under load";
             // 
             // label79
@@ -7454,9 +6459,7 @@ namespace Gw2Launcher.UI
             this.label79.ForeColor = System.Drawing.SystemColors.GrayText;
             this.label79.Location = new System.Drawing.Point(14, 415);
             this.label79.Margin = new System.Windows.Forms.Padding(1, 1, 0, 8);
-            this.label79.Name = "label79";
             this.label79.Size = new System.Drawing.Size(289, 13);
-            this.label79.TabIndex = 16;
             this.label79.Text = "No effect if the process priority is set to high or below normal";
             // 
             // checkGw2ProcessBoostBrowser
@@ -7465,9 +6468,7 @@ namespace Gw2Launcher.UI
             this.checkGw2ProcessBoostBrowser.Font = new System.Drawing.Font("Segoe UI", 8.25F);
             this.checkGw2ProcessBoostBrowser.Location = new System.Drawing.Point(21, 436);
             this.checkGw2ProcessBoostBrowser.Margin = new System.Windows.Forms.Padding(8, 0, 0, 0);
-            this.checkGw2ProcessBoostBrowser.Name = "checkGw2ProcessBoostBrowser";
             this.checkGw2ProcessBoostBrowser.Size = new System.Drawing.Size(239, 17);
-            this.checkGw2ProcessBoostBrowser.TabIndex = 17;
             this.checkGw2ProcessBoostBrowser.Text = "Boost the priority of the in-game browser";
             this.checkGw2ProcessBoostBrowser.UseVisualStyleBackColor = true;
             // 
@@ -7477,9 +6478,7 @@ namespace Gw2Launcher.UI
             this.label179.Font = new System.Drawing.Font("Segoe UI Semibold", 9F, System.Drawing.FontStyle.Bold);
             this.label179.Location = new System.Drawing.Point(13, 466);
             this.label179.Margin = new System.Windows.Forms.Padding(0, 13, 0, 0);
-            this.label179.Name = "label179";
             this.label179.Size = new System.Drawing.Size(81, 15);
-            this.label179.TabIndex = 18;
             this.label179.Text = "Exit on logout";
             // 
             // label181
@@ -7488,9 +6487,7 @@ namespace Gw2Launcher.UI
             this.label181.Font = new System.Drawing.Font("Segoe UI Semilight", 8.25F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
             this.label181.Location = new System.Drawing.Point(14, 482);
             this.label181.Margin = new System.Windows.Forms.Padding(1, 1, 0, 1);
-            this.label181.Name = "label181";
             this.label181.Size = new System.Drawing.Size(225, 13);
-            this.label181.TabIndex = 19;
             this.label181.Text = "Prevents the game from relaunching on logout";
             // 
             // label182
@@ -7500,9 +6497,7 @@ namespace Gw2Launcher.UI
             this.label182.ForeColor = System.Drawing.SystemColors.GrayText;
             this.label182.Location = new System.Drawing.Point(14, 497);
             this.label182.Margin = new System.Windows.Forms.Padding(1, 1, 0, 0);
-            this.label182.Name = "label182";
             this.label182.Size = new System.Drawing.Size(179, 13);
-            this.label182.TabIndex = 20;
             this.label182.Text = "Exiting will be required in some cases";
             // 
             // checkPreventRelaunchingExit
@@ -7510,9 +6505,7 @@ namespace Gw2Launcher.UI
             this.checkPreventRelaunchingExit.AutoSize = true;
             this.checkPreventRelaunchingExit.Location = new System.Drawing.Point(21, 518);
             this.checkPreventRelaunchingExit.Margin = new System.Windows.Forms.Padding(8, 8, 0, 0);
-            this.checkPreventRelaunchingExit.Name = "checkPreventRelaunchingExit";
             this.checkPreventRelaunchingExit.Size = new System.Drawing.Size(99, 17);
-            this.checkPreventRelaunchingExit.TabIndex = 21;
             this.checkPreventRelaunchingExit.Text = "Exit on logout";
             this.checkPreventRelaunchingExit.UseVisualStyleBackColor = true;
             // 
@@ -7521,27 +6514,23 @@ namespace Gw2Launcher.UI
             this.checkPreventRelaunchingRelaunch.AutoSize = true;
             this.checkPreventRelaunchingRelaunch.Location = new System.Drawing.Point(21, 538);
             this.checkPreventRelaunchingRelaunch.Margin = new System.Windows.Forms.Padding(8, 3, 0, 0);
-            this.checkPreventRelaunchingRelaunch.Name = "checkPreventRelaunchingRelaunch";
             this.checkPreventRelaunchingRelaunch.Size = new System.Drawing.Size(170, 17);
-            this.checkPreventRelaunchingRelaunch.TabIndex = 22;
             this.checkPreventRelaunchingRelaunch.Text = "Exit on logout and relaunch";
             this.checkPreventRelaunchingRelaunch.UseVisualStyleBackColor = true;
             // 
             // panelLaunchConfiguration
             // 
-            this.panelLaunchConfiguration.Anchor = ((System.Windows.Forms.AnchorStyles)((((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom)
-            | System.Windows.Forms.AnchorStyles.Left)
+            this.panelLaunchConfiguration.Anchor = ((System.Windows.Forms.AnchorStyles)((((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom) 
+            | System.Windows.Forms.AnchorStyles.Left) 
             | System.Windows.Forms.AnchorStyles.Right)));
             this.panelLaunchConfiguration.Controls.Add(this.stackPanel25);
             this.panelLaunchConfiguration.Location = new System.Drawing.Point(183, 12);
-            this.panelLaunchConfiguration.Name = "panelLaunchConfiguration";
             this.panelLaunchConfiguration.Size = new System.Drawing.Size(373, 439);
-            this.panelLaunchConfiguration.TabIndex = 18;
             this.panelLaunchConfiguration.Visible = false;
             // 
             // stackPanel25
             // 
-            this.stackPanel25.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left)
+            this.stackPanel25.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left) 
             | System.Windows.Forms.AnchorStyles.Right)));
             this.stackPanel25.AutoSize = true;
             this.stackPanel25.AutoSizeFill = Gw2Launcher.UI.Controls.StackPanel.AutoSizeFillMode.Width;
@@ -7570,10 +6559,8 @@ namespace Gw2Launcher.UI
             this.stackPanel25.Controls.Add(this.stackPanel95);
             this.stackPanel25.Location = new System.Drawing.Point(0, 0);
             this.stackPanel25.Margin = new System.Windows.Forms.Padding(0, 0, 13, 0);
-            this.stackPanel25.Name = "stackPanel25";
             this.stackPanel25.Padding = new System.Windows.Forms.Padding(13, 10, 0, 10);
             this.stackPanel25.Size = new System.Drawing.Size(343, 666);
-            this.stackPanel25.TabIndex = 0;
             // 
             // label98
             // 
@@ -7581,9 +6568,7 @@ namespace Gw2Launcher.UI
             this.label98.Font = new System.Drawing.Font("Segoe UI Semibold", 9F, System.Drawing.FontStyle.Bold);
             this.label98.Location = new System.Drawing.Point(13, 10);
             this.label98.Margin = new System.Windows.Forms.Padding(0);
-            this.label98.Name = "label98";
             this.label98.Size = new System.Drawing.Size(206, 15);
-            this.label98.TabIndex = 0;
             this.label98.Text = "Maximum number of active accounts";
             // 
             // label99
@@ -7592,9 +6577,7 @@ namespace Gw2Launcher.UI
             this.label99.Font = new System.Drawing.Font("Segoe UI Semilight", 8.25F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
             this.label99.Location = new System.Drawing.Point(14, 26);
             this.label99.Margin = new System.Windows.Forms.Padding(1, 1, 0, 8);
-            this.label99.Name = "label99";
             this.label99.Size = new System.Drawing.Size(311, 13);
-            this.label99.TabIndex = 1;
             this.label99.Text = "Limits the number of accounts that can be opened simultaneously";
             // 
             // stackPanel26
@@ -7606,9 +6589,7 @@ namespace Gw2Launcher.UI
             this.stackPanel26.FlowDirection = System.Windows.Forms.FlowDirection.LeftToRight;
             this.stackPanel26.Location = new System.Drawing.Point(13, 47);
             this.stackPanel26.Margin = new System.Windows.Forms.Padding(0);
-            this.stackPanel26.Name = "stackPanel26";
             this.stackPanel26.Size = new System.Drawing.Size(74, 22);
-            this.stackPanel26.TabIndex = 2;
             // 
             // checkLimitActiveAccount
             // 
@@ -7616,9 +6597,7 @@ namespace Gw2Launcher.UI
             this.checkLimitActiveAccount.AutoSize = true;
             this.checkLimitActiveAccount.Location = new System.Drawing.Point(8, 4);
             this.checkLimitActiveAccount.Margin = new System.Windows.Forms.Padding(8, 0, 0, 0);
-            this.checkLimitActiveAccount.Name = "checkLimitActiveAccount";
             this.checkLimitActiveAccount.Size = new System.Drawing.Size(15, 14);
-            this.checkLimitActiveAccount.TabIndex = 0;
             this.checkLimitActiveAccount.UseVisualStyleBackColor = true;
             this.checkLimitActiveAccount.CheckedChanged += new System.EventHandler(this.checkLimitActiveAccount_CheckedChanged);
             // 
@@ -7637,9 +6616,7 @@ namespace Gw2Launcher.UI
             0,
             0,
             0});
-            this.numericLimitActiveAccount.Name = "numericLimitActiveAccount";
             this.numericLimitActiveAccount.Size = new System.Drawing.Size(44, 22);
-            this.numericLimitActiveAccount.TabIndex = 1;
             this.numericLimitActiveAccount.Value = new decimal(new int[] {
             5,
             0,
@@ -7652,9 +6629,7 @@ namespace Gw2Launcher.UI
             this.label95.Font = new System.Drawing.Font("Segoe UI Semibold", 9F, System.Drawing.FontStyle.Bold);
             this.label95.Location = new System.Drawing.Point(13, 82);
             this.label95.Margin = new System.Windows.Forms.Padding(0, 13, 0, 0);
-            this.label95.Name = "label95";
             this.label95.Size = new System.Drawing.Size(223, 15);
-            this.label95.TabIndex = 3;
             this.label95.Text = "Delay when launching multiple accounts";
             // 
             // label97
@@ -7663,9 +6638,7 @@ namespace Gw2Launcher.UI
             this.label97.Font = new System.Drawing.Font("Segoe UI Semilight", 8.25F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
             this.label97.Location = new System.Drawing.Point(14, 98);
             this.label97.Margin = new System.Windows.Forms.Padding(1, 1, 0, 8);
-            this.label97.Name = "label97";
             this.label97.Size = new System.Drawing.Size(261, 13);
-            this.label97.TabIndex = 4;
             this.label97.Text = "Delays launches until the main game window is loaded";
             // 
             // checkDelayUntilLoaded
@@ -7673,9 +6646,7 @@ namespace Gw2Launcher.UI
             this.checkDelayUntilLoaded.AutoSize = true;
             this.checkDelayUntilLoaded.Location = new System.Drawing.Point(21, 119);
             this.checkDelayUntilLoaded.Margin = new System.Windows.Forms.Padding(8, 0, 0, 0);
-            this.checkDelayUntilLoaded.Name = "checkDelayUntilLoaded";
             this.checkDelayUntilLoaded.Size = new System.Drawing.Size(224, 17);
-            this.checkDelayUntilLoaded.TabIndex = 5;
             this.checkDelayUntilLoaded.Text = "Delay until the main window is loaded";
             this.checkDelayUntilLoaded.UseVisualStyleBackColor = true;
             // 
@@ -7685,9 +6656,7 @@ namespace Gw2Launcher.UI
             this.label96.Font = new System.Drawing.Font("Segoe UI Semilight", 8.25F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
             this.label96.Location = new System.Drawing.Point(14, 144);
             this.label96.Margin = new System.Windows.Forms.Padding(1, 8, 0, 8);
-            this.label96.Name = "label96";
             this.label96.Size = new System.Drawing.Size(185, 13);
-            this.label96.TabIndex = 6;
             this.label96.Text = "Delay for the specified amount of time";
             // 
             // stackPanel27
@@ -7700,9 +6669,7 @@ namespace Gw2Launcher.UI
             this.stackPanel27.FlowDirection = System.Windows.Forms.FlowDirection.LeftToRight;
             this.stackPanel27.Location = new System.Drawing.Point(13, 165);
             this.stackPanel27.Margin = new System.Windows.Forms.Padding(0);
-            this.stackPanel27.Name = "stackPanel27";
             this.stackPanel27.Size = new System.Drawing.Size(124, 22);
-            this.stackPanel27.TabIndex = 7;
             // 
             // checkDelaySeconds
             // 
@@ -7710,9 +6677,7 @@ namespace Gw2Launcher.UI
             this.checkDelaySeconds.AutoSize = true;
             this.checkDelaySeconds.Location = new System.Drawing.Point(8, 4);
             this.checkDelaySeconds.Margin = new System.Windows.Forms.Padding(8, 0, 0, 0);
-            this.checkDelaySeconds.Name = "checkDelaySeconds";
             this.checkDelaySeconds.Size = new System.Drawing.Size(15, 14);
-            this.checkDelaySeconds.TabIndex = 0;
             this.checkDelaySeconds.UseVisualStyleBackColor = true;
             this.checkDelaySeconds.CheckedChanged += new System.EventHandler(this.checkDelaySeconds_CheckedChanged);
             // 
@@ -7731,9 +6696,7 @@ namespace Gw2Launcher.UI
             0,
             0,
             0});
-            this.numericDelaySeconds.Name = "numericDelaySeconds";
             this.numericDelaySeconds.Size = new System.Drawing.Size(44, 22);
-            this.numericDelaySeconds.TabIndex = 1;
             this.numericDelaySeconds.Value = new decimal(new int[] {
             5,
             0,
@@ -7749,9 +6712,7 @@ namespace Gw2Launcher.UI
             this.labelDelaySeconds.Font = new System.Drawing.Font("Segoe UI Semilight", 8.25F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
             this.labelDelaySeconds.Location = new System.Drawing.Point(80, 4);
             this.labelDelaySeconds.Margin = new System.Windows.Forms.Padding(6, 0, 0, 0);
-            this.labelDelaySeconds.Name = "labelDelaySeconds";
             this.labelDelaySeconds.Size = new System.Drawing.Size(44, 13);
-            this.labelDelaySeconds.TabIndex = 2;
             this.labelDelaySeconds.Text = "seconds";
             // 
             // label169
@@ -7760,9 +6721,7 @@ namespace Gw2Launcher.UI
             this.label169.Font = new System.Drawing.Font("Segoe UI Semibold", 9F, System.Drawing.FontStyle.Bold);
             this.label169.Location = new System.Drawing.Point(13, 200);
             this.label169.Margin = new System.Windows.Forms.Padding(0, 13, 0, 0);
-            this.label169.Name = "label169";
             this.label169.Size = new System.Drawing.Size(44, 15);
-            this.label169.TabIndex = 8;
             this.label169.Text = "Limiter";
             // 
             // label174
@@ -7771,9 +6730,7 @@ namespace Gw2Launcher.UI
             this.label174.Font = new System.Drawing.Font("Segoe UI Semilight", 8.25F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
             this.label174.Location = new System.Drawing.Point(14, 216);
             this.label174.Margin = new System.Windows.Forms.Padding(1, 1, 0, 1);
-            this.label174.Name = "label174";
             this.label174.Size = new System.Drawing.Size(212, 13);
-            this.label174.TabIndex = 9;
             this.label174.Text = "Limits launching and authentication requests";
             // 
             // label183
@@ -7783,9 +6740,7 @@ namespace Gw2Launcher.UI
             this.label183.ForeColor = System.Drawing.SystemColors.GrayText;
             this.label183.Location = new System.Drawing.Point(14, 231);
             this.label183.Margin = new System.Windows.Forms.Padding(1, 1, 0, 8);
-            this.label183.Name = "label183";
             this.label183.Size = new System.Drawing.Size(329, 26);
-            this.label183.TabIndex = 10;
             this.label183.Text = "Logins are throttled by the server and will take longer to complete as more reque" +
     "sts are made within a short time";
             // 
@@ -7794,9 +6749,7 @@ namespace Gw2Launcher.UI
             this.checkLaunchLimiter.AutoSize = true;
             this.checkLaunchLimiter.Location = new System.Drawing.Point(21, 265);
             this.checkLaunchLimiter.Margin = new System.Windows.Forms.Padding(8, 0, 0, 0);
-            this.checkLaunchLimiter.Name = "checkLaunchLimiter";
             this.checkLaunchLimiter.Size = new System.Drawing.Size(248, 17);
-            this.checkLaunchLimiter.TabIndex = 11;
             this.checkLaunchLimiter.Text = "Limit launches and authentication requests";
             this.checkLaunchLimiter.UseVisualStyleBackColor = true;
             this.checkLaunchLimiter.CheckedChanged += new System.EventHandler(this.checkLaunchLimiter_CheckedChanged);
@@ -7809,9 +6762,7 @@ namespace Gw2Launcher.UI
             this.panelLimiter.Controls.Add(this.radioLimiterManual);
             this.panelLimiter.Location = new System.Drawing.Point(13, 282);
             this.panelLimiter.Margin = new System.Windows.Forms.Padding(0);
-            this.panelLimiter.Name = "panelLimiter";
             this.panelLimiter.Size = new System.Drawing.Size(330, 43);
-            this.panelLimiter.TabIndex = 12;
             this.panelLimiter.Visible = false;
             // 
             // radioLimiterAutomatic
@@ -7820,9 +6771,7 @@ namespace Gw2Launcher.UI
             this.radioLimiterAutomatic.Checked = true;
             this.radioLimiterAutomatic.Location = new System.Drawing.Point(8, 6);
             this.radioLimiterAutomatic.Margin = new System.Windows.Forms.Padding(8, 6, 0, 0);
-            this.radioLimiterAutomatic.Name = "radioLimiterAutomatic";
             this.radioLimiterAutomatic.Size = new System.Drawing.Size(77, 17);
-            this.radioLimiterAutomatic.TabIndex = 0;
             this.radioLimiterAutomatic.TabStop = true;
             this.radioLimiterAutomatic.Text = "Automatic";
             this.radioLimiterAutomatic.UseVisualStyleBackColor = true;
@@ -7832,9 +6781,7 @@ namespace Gw2Launcher.UI
             this.radioLimiterManual.AutoSize = true;
             this.radioLimiterManual.Location = new System.Drawing.Point(8, 26);
             this.radioLimiterManual.Margin = new System.Windows.Forms.Padding(8, 3, 0, 0);
-            this.radioLimiterManual.Name = "radioLimiterManual";
             this.radioLimiterManual.Size = new System.Drawing.Size(64, 17);
-            this.radioLimiterManual.TabIndex = 1;
             this.radioLimiterManual.Text = "Manual";
             this.radioLimiterManual.UseVisualStyleBackColor = true;
             this.radioLimiterManual.CheckedChanged += new System.EventHandler(this.radioLimiterManual_CheckedChanged);
@@ -7849,9 +6796,7 @@ namespace Gw2Launcher.UI
             this.panelLimiterManual.Controls.Add(this.stackPanel81);
             this.panelLimiterManual.Location = new System.Drawing.Point(13, 325);
             this.panelLimiterManual.Margin = new System.Windows.Forms.Padding(0);
-            this.panelLimiterManual.Name = "panelLimiterManual";
             this.panelLimiterManual.Size = new System.Drawing.Size(330, 100);
-            this.panelLimiterManual.TabIndex = 13;
             this.panelLimiterManual.Visible = false;
             // 
             // label184
@@ -7860,9 +6805,7 @@ namespace Gw2Launcher.UI
             this.label184.Font = new System.Drawing.Font("Segoe UI Semilight", 8.25F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
             this.label184.Location = new System.Drawing.Point(3, 6);
             this.label184.Margin = new System.Windows.Forms.Padding(3, 6, 0, 0);
-            this.label184.Name = "label184";
             this.label184.Size = new System.Drawing.Size(202, 13);
-            this.label184.TabIndex = 0;
             this.label184.Text = "Launches or requests before being limited";
             // 
             // stackPanel80
@@ -7874,9 +6817,7 @@ namespace Gw2Launcher.UI
             this.stackPanel80.FlowDirection = System.Windows.Forms.FlowDirection.LeftToRight;
             this.stackPanel80.Location = new System.Drawing.Point(0, 27);
             this.stackPanel80.Margin = new System.Windows.Forms.Padding(0, 8, 0, 0);
-            this.stackPanel80.Name = "stackPanel80";
             this.stackPanel80.Size = new System.Drawing.Size(110, 22);
-            this.stackPanel80.TabIndex = 1;
             // 
             // numericLaunchLimiterAmount
             // 
@@ -7892,9 +6833,7 @@ namespace Gw2Launcher.UI
             0,
             0,
             0});
-            this.numericLaunchLimiterAmount.Name = "numericLaunchLimiterAmount";
             this.numericLaunchLimiterAmount.Size = new System.Drawing.Size(44, 22);
-            this.numericLaunchLimiterAmount.TabIndex = 0;
             this.numericLaunchLimiterAmount.Value = new decimal(new int[] {
             4,
             0,
@@ -7908,9 +6847,7 @@ namespace Gw2Launcher.UI
             this.label185.Font = new System.Drawing.Font("Segoe UI Semilight", 8.25F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
             this.label185.Location = new System.Drawing.Point(57, 4);
             this.label185.Margin = new System.Windows.Forms.Padding(6, 0, 0, 0);
-            this.label185.Name = "label185";
             this.label185.Size = new System.Drawing.Size(53, 13);
-            this.label185.TabIndex = 1;
             this.label185.Text = "maximum";
             // 
             // label175
@@ -7919,9 +6856,7 @@ namespace Gw2Launcher.UI
             this.label175.Font = new System.Drawing.Font("Segoe UI Semilight", 8.25F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
             this.label175.Location = new System.Drawing.Point(3, 57);
             this.label175.Margin = new System.Windows.Forms.Padding(3, 8, 0, 8);
-            this.label175.Name = "label175";
             this.label175.Size = new System.Drawing.Size(52, 13);
-            this.label175.TabIndex = 2;
             this.label175.Text = "Recharge";
             // 
             // stackPanel81
@@ -7935,9 +6870,7 @@ namespace Gw2Launcher.UI
             this.stackPanel81.FlowDirection = System.Windows.Forms.FlowDirection.LeftToRight;
             this.stackPanel81.Location = new System.Drawing.Point(0, 78);
             this.stackPanel81.Margin = new System.Windows.Forms.Padding(0);
-            this.stackPanel81.Name = "stackPanel81";
             this.stackPanel81.Size = new System.Drawing.Size(191, 22);
-            this.stackPanel81.TabIndex = 3;
             // 
             // numericLaunchLimiterRechargeAmount
             // 
@@ -7953,9 +6886,7 @@ namespace Gw2Launcher.UI
             0,
             0,
             0});
-            this.numericLaunchLimiterRechargeAmount.Name = "numericLaunchLimiterRechargeAmount";
             this.numericLaunchLimiterRechargeAmount.Size = new System.Drawing.Size(44, 22);
-            this.numericLaunchLimiterRechargeAmount.TabIndex = 0;
             this.numericLaunchLimiterRechargeAmount.Value = new decimal(new int[] {
             1,
             0,
@@ -7969,9 +6900,7 @@ namespace Gw2Launcher.UI
             this.label173.Font = new System.Drawing.Font("Segoe UI Semilight", 8.25F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
             this.label173.Location = new System.Drawing.Point(57, 4);
             this.label173.Margin = new System.Windows.Forms.Padding(6, 0, 0, 0);
-            this.label173.Name = "label173";
             this.label173.Size = new System.Drawing.Size(33, 13);
-            this.label173.TabIndex = 1;
             this.label173.Text = "every";
             // 
             // numericLaunchLimiterRechargeTime
@@ -7988,9 +6917,7 @@ namespace Gw2Launcher.UI
             0,
             0,
             0});
-            this.numericLaunchLimiterRechargeTime.Name = "numericLaunchLimiterRechargeTime";
             this.numericLaunchLimiterRechargeTime.Size = new System.Drawing.Size(44, 22);
-            this.numericLaunchLimiterRechargeTime.TabIndex = 2;
             this.numericLaunchLimiterRechargeTime.Value = new decimal(new int[] {
             15,
             0,
@@ -8005,9 +6932,7 @@ namespace Gw2Launcher.UI
             this.labelLaunchLimiterRechargeTime.Font = new System.Drawing.Font("Segoe UI Semilight", 8.25F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
             this.labelLaunchLimiterRechargeTime.Location = new System.Drawing.Point(147, 4);
             this.labelLaunchLimiterRechargeTime.Margin = new System.Windows.Forms.Padding(6, 0, 0, 0);
-            this.labelLaunchLimiterRechargeTime.Name = "labelLaunchLimiterRechargeTime";
             this.labelLaunchLimiterRechargeTime.Size = new System.Drawing.Size(44, 13);
-            this.labelLaunchLimiterRechargeTime.TabIndex = 3;
             this.labelLaunchLimiterRechargeTime.Text = "seconds";
             // 
             // label159
@@ -8016,9 +6941,7 @@ namespace Gw2Launcher.UI
             this.label159.Font = new System.Drawing.Font("Segoe UI Semibold", 9F, System.Drawing.FontStyle.Bold);
             this.label159.Location = new System.Drawing.Point(13, 438);
             this.label159.Margin = new System.Windows.Forms.Padding(0, 13, 0, 0);
-            this.label159.Name = "label159";
             this.label159.Size = new System.Drawing.Size(168, 15);
-            this.label159.TabIndex = 14;
             this.label159.Text = "Launch behind other accounts";
             // 
             // label161
@@ -8027,9 +6950,7 @@ namespace Gw2Launcher.UI
             this.label161.Font = new System.Drawing.Font("Segoe UI Semilight", 8.25F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
             this.label161.Location = new System.Drawing.Point(14, 454);
             this.label161.Margin = new System.Windows.Forms.Padding(1, 1, 0, 8);
-            this.label161.Name = "label161";
             this.label161.Size = new System.Drawing.Size(275, 13);
-            this.label161.TabIndex = 15;
             this.label161.Text = "Places the window behind other accounts while launching";
             // 
             // checkLaunchBehindWindows
@@ -8037,9 +6958,7 @@ namespace Gw2Launcher.UI
             this.checkLaunchBehindWindows.AutoSize = true;
             this.checkLaunchBehindWindows.Location = new System.Drawing.Point(21, 475);
             this.checkLaunchBehindWindows.Margin = new System.Windows.Forms.Padding(8, 0, 0, 0);
-            this.checkLaunchBehindWindows.Name = "checkLaunchBehindWindows";
             this.checkLaunchBehindWindows.Size = new System.Drawing.Size(183, 17);
-            this.checkLaunchBehindWindows.TabIndex = 16;
             this.checkLaunchBehindWindows.Text = "Launch behind other accounts";
             this.checkLaunchBehindWindows.UseVisualStyleBackColor = true;
             // 
@@ -8049,9 +6968,7 @@ namespace Gw2Launcher.UI
             this.label162.Font = new System.Drawing.Font("Segoe UI Semibold", 9F, System.Drawing.FontStyle.Bold);
             this.label162.Location = new System.Drawing.Point(13, 505);
             this.label162.Margin = new System.Windows.Forms.Padding(0, 13, 0, 0);
-            this.label162.Name = "label162";
             this.label162.Size = new System.Drawing.Size(52, 15);
-            this.label162.TabIndex = 17;
             this.label162.Text = "Timeout";
             // 
             // label168
@@ -8060,9 +6977,7 @@ namespace Gw2Launcher.UI
             this.label168.Font = new System.Drawing.Font("Segoe UI Semilight", 8.25F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
             this.label168.Location = new System.Drawing.Point(14, 521);
             this.label168.Margin = new System.Windows.Forms.Padding(1, 1, 0, 1);
-            this.label168.Name = "label168";
             this.label168.Size = new System.Drawing.Size(324, 26);
-            this.label168.TabIndex = 18;
             this.label168.Text = "Relaunches an account if the game hasn\'t started after the specified amount of ti" +
     "me";
             // 
@@ -8073,9 +6988,7 @@ namespace Gw2Launcher.UI
             this.label170.ForeColor = System.Drawing.SystemColors.GrayText;
             this.label170.Location = new System.Drawing.Point(14, 549);
             this.label170.Margin = new System.Windows.Forms.Padding(1, 1, 0, 8);
-            this.label170.Name = "label170";
             this.label170.Size = new System.Drawing.Size(260, 13);
-            this.label170.TabIndex = 19;
             this.label170.Text = "Only applies to accounts with automatic logins enabled";
             // 
             // stackPanel79
@@ -8088,9 +7001,7 @@ namespace Gw2Launcher.UI
             this.stackPanel79.FlowDirection = System.Windows.Forms.FlowDirection.LeftToRight;
             this.stackPanel79.Location = new System.Drawing.Point(13, 570);
             this.stackPanel79.Margin = new System.Windows.Forms.Padding(0);
-            this.stackPanel79.Name = "stackPanel79";
             this.stackPanel79.Size = new System.Drawing.Size(124, 22);
-            this.stackPanel79.TabIndex = 20;
             // 
             // checkTimeoutRelaunch
             // 
@@ -8098,9 +7009,7 @@ namespace Gw2Launcher.UI
             this.checkTimeoutRelaunch.AutoSize = true;
             this.checkTimeoutRelaunch.Location = new System.Drawing.Point(8, 4);
             this.checkTimeoutRelaunch.Margin = new System.Windows.Forms.Padding(8, 0, 0, 0);
-            this.checkTimeoutRelaunch.Name = "checkTimeoutRelaunch";
             this.checkTimeoutRelaunch.Size = new System.Drawing.Size(15, 14);
-            this.checkTimeoutRelaunch.TabIndex = 0;
             this.checkTimeoutRelaunch.UseVisualStyleBackColor = true;
             this.checkTimeoutRelaunch.CheckedChanged += new System.EventHandler(this.checkTimeoutRelaunch_CheckedChanged);
             // 
@@ -8119,9 +7028,7 @@ namespace Gw2Launcher.UI
             0,
             0,
             0});
-            this.numericTimeoutRelaunch.Name = "numericTimeoutRelaunch";
             this.numericTimeoutRelaunch.Size = new System.Drawing.Size(44, 22);
-            this.numericTimeoutRelaunch.TabIndex = 1;
             this.numericTimeoutRelaunch.Value = new decimal(new int[] {
             60,
             0,
@@ -8136,9 +7043,7 @@ namespace Gw2Launcher.UI
             this.label171.Font = new System.Drawing.Font("Segoe UI Semilight", 8.25F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
             this.label171.Location = new System.Drawing.Point(80, 4);
             this.label171.Margin = new System.Windows.Forms.Padding(6, 0, 0, 0);
-            this.label171.Name = "label171";
             this.label171.Size = new System.Drawing.Size(44, 13);
-            this.label171.TabIndex = 2;
             this.label171.Text = "seconds";
             // 
             // label220
@@ -8147,9 +7052,7 @@ namespace Gw2Launcher.UI
             this.label220.Font = new System.Drawing.Font("Segoe UI Semilight", 8.25F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
             this.label220.Location = new System.Drawing.Point(14, 600);
             this.label220.Margin = new System.Windows.Forms.Padding(1, 8, 0, 8);
-            this.label220.Name = "label220";
             this.label220.Size = new System.Drawing.Size(315, 26);
-            this.label220.TabIndex = 21;
             this.label220.Text = "Relaunches an account if character select hasn\'t loaded within the specified amou" +
     "nt of time";
             // 
@@ -8163,9 +7066,7 @@ namespace Gw2Launcher.UI
             this.stackPanel95.FlowDirection = System.Windows.Forms.FlowDirection.LeftToRight;
             this.stackPanel95.Location = new System.Drawing.Point(13, 634);
             this.stackPanel95.Margin = new System.Windows.Forms.Padding(0);
-            this.stackPanel95.Name = "stackPanel95";
             this.stackPanel95.Size = new System.Drawing.Size(124, 22);
-            this.stackPanel95.TabIndex = 22;
             // 
             // checkDxTimeoutRelaunch
             // 
@@ -8173,9 +7074,7 @@ namespace Gw2Launcher.UI
             this.checkDxTimeoutRelaunch.AutoSize = true;
             this.checkDxTimeoutRelaunch.Location = new System.Drawing.Point(8, 4);
             this.checkDxTimeoutRelaunch.Margin = new System.Windows.Forms.Padding(8, 0, 0, 0);
-            this.checkDxTimeoutRelaunch.Name = "checkDxTimeoutRelaunch";
             this.checkDxTimeoutRelaunch.Size = new System.Drawing.Size(15, 14);
-            this.checkDxTimeoutRelaunch.TabIndex = 0;
             this.checkDxTimeoutRelaunch.UseVisualStyleBackColor = true;
             this.checkDxTimeoutRelaunch.CheckedChanged += new System.EventHandler(this.checkDxTimeoutRelaunch_CheckedChanged);
             // 
@@ -8194,9 +7093,7 @@ namespace Gw2Launcher.UI
             0,
             0,
             0});
-            this.numericDxTimeoutRelaunch.Name = "numericDxTimeoutRelaunch";
             this.numericDxTimeoutRelaunch.Size = new System.Drawing.Size(44, 22);
-            this.numericDxTimeoutRelaunch.TabIndex = 1;
             this.numericDxTimeoutRelaunch.Value = new decimal(new int[] {
             15,
             0,
@@ -8211,26 +7108,22 @@ namespace Gw2Launcher.UI
             this.label221.Font = new System.Drawing.Font("Segoe UI Semilight", 8.25F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
             this.label221.Location = new System.Drawing.Point(80, 4);
             this.label221.Margin = new System.Windows.Forms.Padding(6, 0, 0, 0);
-            this.label221.Name = "label221";
             this.label221.Size = new System.Drawing.Size(44, 13);
-            this.label221.TabIndex = 2;
             this.label221.Text = "seconds";
             // 
             // panelStyle
             // 
-            this.panelStyle.Anchor = ((System.Windows.Forms.AnchorStyles)((((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom)
-            | System.Windows.Forms.AnchorStyles.Left)
+            this.panelStyle.Anchor = ((System.Windows.Forms.AnchorStyles)((((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom) 
+            | System.Windows.Forms.AnchorStyles.Left) 
             | System.Windows.Forms.AnchorStyles.Right)));
             this.panelStyle.Controls.Add(this.stackPanel10);
             this.panelStyle.Location = new System.Drawing.Point(183, 12);
-            this.panelStyle.Name = "panelStyle";
             this.panelStyle.Size = new System.Drawing.Size(373, 439);
-            this.panelStyle.TabIndex = 9;
             this.panelStyle.Visible = false;
             // 
             // stackPanel10
             // 
-            this.stackPanel10.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left)
+            this.stackPanel10.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left) 
             | System.Windows.Forms.AnchorStyles.Right)));
             this.stackPanel10.AutoSize = true;
             this.stackPanel10.AutoSizeFill = Gw2Launcher.UI.Controls.StackPanel.AutoSizeFillMode.Width;
@@ -8267,10 +7160,8 @@ namespace Gw2Launcher.UI
             this.stackPanel10.Controls.Add(this.stackPanel66);
             this.stackPanel10.Location = new System.Drawing.Point(0, 0);
             this.stackPanel10.Margin = new System.Windows.Forms.Padding(0, 0, 13, 0);
-            this.stackPanel10.Name = "stackPanel10";
             this.stackPanel10.Padding = new System.Windows.Forms.Padding(13, 10, 0, 10);
             this.stackPanel10.Size = new System.Drawing.Size(343, 987);
-            this.stackPanel10.TabIndex = 0;
             // 
             // label18
             // 
@@ -8278,14 +7169,12 @@ namespace Gw2Launcher.UI
             this.label18.Font = new System.Drawing.Font("Segoe UI Semibold", 9F, System.Drawing.FontStyle.Bold);
             this.label18.Location = new System.Drawing.Point(13, 10);
             this.label18.Margin = new System.Windows.Forms.Padding(0, 0, 0, 4);
-            this.label18.Name = "label18";
             this.label18.Size = new System.Drawing.Size(31, 15);
-            this.label18.TabIndex = 0;
             this.label18.Text = "Font";
             // 
             // stackPanel67
             // 
-            this.stackPanel67.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left)
+            this.stackPanel67.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left) 
             | System.Windows.Forms.AnchorStyles.Right)));
             this.stackPanel67.Controls.Add(this.label135);
             this.stackPanel67.Controls.Add(this.buttonFontTitle);
@@ -8294,9 +7183,7 @@ namespace Gw2Launcher.UI
             this.stackPanel67.FlowDirection = System.Windows.Forms.FlowDirection.LeftToRight;
             this.stackPanel67.Location = new System.Drawing.Point(14, 30);
             this.stackPanel67.Margin = new System.Windows.Forms.Padding(1, 1, 0, 0);
-            this.stackPanel67.Name = "stackPanel67";
             this.stackPanel67.Size = new System.Drawing.Size(329, 20);
-            this.stackPanel67.TabIndex = 1;
             // 
             // label135
             // 
@@ -8306,9 +7193,7 @@ namespace Gw2Launcher.UI
             this.label135.Location = new System.Drawing.Point(0, 3);
             this.label135.Margin = new System.Windows.Forms.Padding(0);
             this.label135.MinimumSize = new System.Drawing.Size(40, 0);
-            this.label135.Name = "label135";
             this.label135.Size = new System.Drawing.Size(40, 13);
-            this.label135.TabIndex = 0;
             this.label135.Text = "Name";
             // 
             // buttonFontTitle
@@ -8319,9 +7204,7 @@ namespace Gw2Launcher.UI
             this.buttonFontTitle.Icon = null;
             this.buttonFontTitle.Location = new System.Drawing.Point(46, 3);
             this.buttonFontTitle.Margin = new System.Windows.Forms.Padding(6, 0, 0, 0);
-            this.buttonFontTitle.Name = "buttonFontTitle";
             this.buttonFontTitle.Size = new System.Drawing.Size(11, 13);
-            this.buttonFontTitle.TabIndex = 1;
             this.buttonFontTitle.Text = "-";
             this.buttonFontTitle.TextAlign = System.Drawing.ContentAlignment.MiddleLeft;
             this.buttonFontTitle.Click += new System.EventHandler(this.buttonFontTitle_Click);
@@ -8333,9 +7216,7 @@ namespace Gw2Launcher.UI
             this.labelFontTitleResetSep.ForeColor = System.Drawing.SystemColors.GrayText;
             this.labelFontTitleResetSep.Location = new System.Drawing.Point(57, 2);
             this.labelFontTitleResetSep.Margin = new System.Windows.Forms.Padding(0, 0, 0, 1);
-            this.labelFontTitleResetSep.Name = "labelFontTitleResetSep";
             this.labelFontTitleResetSep.Size = new System.Drawing.Size(10, 13);
-            this.labelFontTitleResetSep.TabIndex = 2;
             this.labelFontTitleResetSep.Text = "|";
             this.labelFontTitleResetSep.Visible = false;
             // 
@@ -8346,9 +7227,7 @@ namespace Gw2Launcher.UI
             this.labelFontTitleReset.Icon = null;
             this.labelFontTitleReset.Location = new System.Drawing.Point(67, 3);
             this.labelFontTitleReset.Margin = new System.Windows.Forms.Padding(0);
-            this.labelFontTitleReset.Name = "labelFontTitleReset";
             this.labelFontTitleReset.Size = new System.Drawing.Size(32, 13);
-            this.labelFontTitleReset.TabIndex = 3;
             this.labelFontTitleReset.Text = "reset";
             this.labelFontTitleReset.TextAlign = System.Drawing.ContentAlignment.MiddleLeft;
             this.labelFontTitleReset.Visible = false;
@@ -8356,7 +7235,7 @@ namespace Gw2Launcher.UI
             // 
             // stackPanel68
             // 
-            this.stackPanel68.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left)
+            this.stackPanel68.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left) 
             | System.Windows.Forms.AnchorStyles.Right)));
             this.stackPanel68.Controls.Add(this.label153);
             this.stackPanel68.Controls.Add(this.buttonFontStatus);
@@ -8365,9 +7244,7 @@ namespace Gw2Launcher.UI
             this.stackPanel68.FlowDirection = System.Windows.Forms.FlowDirection.LeftToRight;
             this.stackPanel68.Location = new System.Drawing.Point(14, 51);
             this.stackPanel68.Margin = new System.Windows.Forms.Padding(1, 1, 0, 0);
-            this.stackPanel68.Name = "stackPanel68";
             this.stackPanel68.Size = new System.Drawing.Size(329, 20);
-            this.stackPanel68.TabIndex = 2;
             // 
             // label153
             // 
@@ -8377,9 +7254,7 @@ namespace Gw2Launcher.UI
             this.label153.Location = new System.Drawing.Point(0, 3);
             this.label153.Margin = new System.Windows.Forms.Padding(0);
             this.label153.MinimumSize = new System.Drawing.Size(40, 0);
-            this.label153.Name = "label153";
             this.label153.Size = new System.Drawing.Size(40, 13);
-            this.label153.TabIndex = 0;
             this.label153.Text = "Status";
             // 
             // buttonFontStatus
@@ -8390,9 +7265,7 @@ namespace Gw2Launcher.UI
             this.buttonFontStatus.Icon = null;
             this.buttonFontStatus.Location = new System.Drawing.Point(46, 3);
             this.buttonFontStatus.Margin = new System.Windows.Forms.Padding(6, 0, 0, 0);
-            this.buttonFontStatus.Name = "buttonFontStatus";
             this.buttonFontStatus.Size = new System.Drawing.Size(11, 13);
-            this.buttonFontStatus.TabIndex = 1;
             this.buttonFontStatus.Text = "-";
             this.buttonFontStatus.TextAlign = System.Drawing.ContentAlignment.MiddleLeft;
             this.buttonFontStatus.Click += new System.EventHandler(this.buttonFontStatus_Click);
@@ -8404,9 +7277,7 @@ namespace Gw2Launcher.UI
             this.labelFontStatusResetSep.ForeColor = System.Drawing.SystemColors.GrayText;
             this.labelFontStatusResetSep.Location = new System.Drawing.Point(57, 2);
             this.labelFontStatusResetSep.Margin = new System.Windows.Forms.Padding(0, 0, 0, 1);
-            this.labelFontStatusResetSep.Name = "labelFontStatusResetSep";
             this.labelFontStatusResetSep.Size = new System.Drawing.Size(10, 13);
-            this.labelFontStatusResetSep.TabIndex = 2;
             this.labelFontStatusResetSep.Text = "|";
             this.labelFontStatusResetSep.Visible = false;
             // 
@@ -8417,9 +7288,7 @@ namespace Gw2Launcher.UI
             this.labelFontStatusReset.Icon = null;
             this.labelFontStatusReset.Location = new System.Drawing.Point(67, 3);
             this.labelFontStatusReset.Margin = new System.Windows.Forms.Padding(0);
-            this.labelFontStatusReset.Name = "labelFontStatusReset";
             this.labelFontStatusReset.Size = new System.Drawing.Size(32, 13);
-            this.labelFontStatusReset.TabIndex = 3;
             this.labelFontStatusReset.Text = "reset";
             this.labelFontStatusReset.TextAlign = System.Drawing.ContentAlignment.MiddleLeft;
             this.labelFontStatusReset.Visible = false;
@@ -8427,7 +7296,7 @@ namespace Gw2Launcher.UI
             // 
             // stackPanel69
             // 
-            this.stackPanel69.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left)
+            this.stackPanel69.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left) 
             | System.Windows.Forms.AnchorStyles.Right)));
             this.stackPanel69.Controls.Add(this.label154);
             this.stackPanel69.Controls.Add(this.buttonFontUser);
@@ -8436,9 +7305,7 @@ namespace Gw2Launcher.UI
             this.stackPanel69.FlowDirection = System.Windows.Forms.FlowDirection.LeftToRight;
             this.stackPanel69.Location = new System.Drawing.Point(14, 72);
             this.stackPanel69.Margin = new System.Windows.Forms.Padding(1, 1, 0, 0);
-            this.stackPanel69.Name = "stackPanel69";
             this.stackPanel69.Size = new System.Drawing.Size(329, 20);
-            this.stackPanel69.TabIndex = 3;
             // 
             // label154
             // 
@@ -8448,9 +7315,7 @@ namespace Gw2Launcher.UI
             this.label154.Location = new System.Drawing.Point(0, 3);
             this.label154.Margin = new System.Windows.Forms.Padding(0);
             this.label154.MinimumSize = new System.Drawing.Size(40, 0);
-            this.label154.Name = "label154";
             this.label154.Size = new System.Drawing.Size(40, 13);
-            this.label154.TabIndex = 0;
             this.label154.Text = "User";
             // 
             // buttonFontUser
@@ -8461,9 +7326,7 @@ namespace Gw2Launcher.UI
             this.buttonFontUser.Icon = null;
             this.buttonFontUser.Location = new System.Drawing.Point(46, 3);
             this.buttonFontUser.Margin = new System.Windows.Forms.Padding(6, 0, 0, 0);
-            this.buttonFontUser.Name = "buttonFontUser";
             this.buttonFontUser.Size = new System.Drawing.Size(11, 13);
-            this.buttonFontUser.TabIndex = 1;
             this.buttonFontUser.Text = "-";
             this.buttonFontUser.TextAlign = System.Drawing.ContentAlignment.MiddleLeft;
             this.buttonFontUser.Click += new System.EventHandler(this.buttonFontUser_Click);
@@ -8475,9 +7338,7 @@ namespace Gw2Launcher.UI
             this.labelFontUserResetSep.ForeColor = System.Drawing.SystemColors.GrayText;
             this.labelFontUserResetSep.Location = new System.Drawing.Point(57, 2);
             this.labelFontUserResetSep.Margin = new System.Windows.Forms.Padding(0, 0, 0, 1);
-            this.labelFontUserResetSep.Name = "labelFontUserResetSep";
             this.labelFontUserResetSep.Size = new System.Drawing.Size(10, 13);
-            this.labelFontUserResetSep.TabIndex = 2;
             this.labelFontUserResetSep.Text = "|";
             this.labelFontUserResetSep.Visible = false;
             // 
@@ -8488,9 +7349,7 @@ namespace Gw2Launcher.UI
             this.labelFontUserReset.Icon = null;
             this.labelFontUserReset.Location = new System.Drawing.Point(67, 3);
             this.labelFontUserReset.Margin = new System.Windows.Forms.Padding(0);
-            this.labelFontUserReset.Name = "labelFontUserReset";
             this.labelFontUserReset.Size = new System.Drawing.Size(32, 13);
-            this.labelFontUserReset.TabIndex = 3;
             this.labelFontUserReset.Text = "reset";
             this.labelFontUserReset.TextAlign = System.Drawing.ContentAlignment.MiddleLeft;
             this.labelFontUserReset.Visible = false;
@@ -8502,9 +7361,7 @@ namespace Gw2Launcher.UI
             this.label16.Font = new System.Drawing.Font("Segoe UI Semibold", 9F, System.Drawing.FontStyle.Bold);
             this.label16.Location = new System.Drawing.Point(13, 105);
             this.label16.Margin = new System.Windows.Forms.Padding(0, 13, 0, 8);
-            this.label16.Name = "label16";
             this.label16.Size = new System.Drawing.Size(49, 15);
-            this.label16.TabIndex = 4;
             this.label16.Text = "Options";
             // 
             // checkShowUser
@@ -8512,9 +7369,7 @@ namespace Gw2Launcher.UI
             this.checkShowUser.AutoSize = true;
             this.checkShowUser.Location = new System.Drawing.Point(21, 128);
             this.checkShowUser.Margin = new System.Windows.Forms.Padding(8, 0, 0, 0);
-            this.checkShowUser.Name = "checkShowUser";
             this.checkShowUser.Size = new System.Drawing.Size(176, 17);
-            this.checkShowUser.TabIndex = 5;
             this.checkShowUser.Text = "Show Windows user account";
             this.checkShowUser.UseVisualStyleBackColor = true;
             this.checkShowUser.CheckedChanged += new System.EventHandler(this.checkShowUser_CheckedChanged);
@@ -8524,9 +7379,7 @@ namespace Gw2Launcher.UI
             this.checkShowColor.AutoSize = true;
             this.checkShowColor.Location = new System.Drawing.Point(21, 148);
             this.checkShowColor.Margin = new System.Windows.Forms.Padding(8, 3, 0, 0);
-            this.checkShowColor.Name = "checkShowColor";
             this.checkShowColor.Size = new System.Drawing.Size(148, 17);
-            this.checkShowColor.TabIndex = 6;
             this.checkShowColor.Text = "Show account bar color";
             this.checkShowColor.UseVisualStyleBackColor = true;
             this.checkShowColor.CheckedChanged += new System.EventHandler(this.checkShowColor_CheckedChanged);
@@ -8536,9 +7389,7 @@ namespace Gw2Launcher.UI
             this.checkStyleShowIcon.AutoSize = true;
             this.checkStyleShowIcon.Location = new System.Drawing.Point(21, 168);
             this.checkStyleShowIcon.Margin = new System.Windows.Forms.Padding(8, 3, 0, 0);
-            this.checkStyleShowIcon.Name = "checkStyleShowIcon";
             this.checkStyleShowIcon.Size = new System.Drawing.Size(80, 17);
-            this.checkStyleShowIcon.TabIndex = 7;
             this.checkStyleShowIcon.Text = "Show icon";
             this.checkStyleShowIcon.UseVisualStyleBackColor = true;
             this.checkStyleShowIcon.CheckedChanged += new System.EventHandler(this.checkStyleShowIcon_CheckedChanged);
@@ -8549,9 +7400,7 @@ namespace Gw2Launcher.UI
             this.checkStyleBackgroundImage.AutoSize = true;
             this.checkStyleBackgroundImage.Location = new System.Drawing.Point(21, 188);
             this.checkStyleBackgroundImage.Margin = new System.Windows.Forms.Padding(8, 3, 0, 0);
-            this.checkStyleBackgroundImage.Name = "checkStyleBackgroundImage";
             this.checkStyleBackgroundImage.Size = new System.Drawing.Size(155, 17);
-            this.checkStyleBackgroundImage.TabIndex = 8;
             this.checkStyleBackgroundImage.Text = "Show background image";
             this.checkStyleBackgroundImage.UseVisualStyleBackColor = true;
             this.checkStyleBackgroundImage.Click += new System.EventHandler(this.checkStyleBackgroundImage_Click);
@@ -8561,9 +7410,7 @@ namespace Gw2Launcher.UI
             this.checkStyleMarkFocused.AutoSize = true;
             this.checkStyleMarkFocused.Location = new System.Drawing.Point(21, 208);
             this.checkStyleMarkFocused.Margin = new System.Windows.Forms.Padding(8, 3, 0, 0);
-            this.checkStyleMarkFocused.Name = "checkStyleMarkFocused";
             this.checkStyleMarkFocused.Size = new System.Drawing.Size(204, 17);
-            this.checkStyleMarkFocused.TabIndex = 9;
             this.checkStyleMarkFocused.Text = "Highlight the last focused account";
             this.checkStyleMarkFocused.UseVisualStyleBackColor = true;
             this.checkStyleMarkFocused.CheckedChanged += new System.EventHandler(this.checkStyleMarkFocused_CheckedChanged);
@@ -8573,9 +7420,7 @@ namespace Gw2Launcher.UI
             this.checkStyleMarkActive.AutoSize = true;
             this.checkStyleMarkActive.Location = new System.Drawing.Point(21, 228);
             this.checkStyleMarkActive.Margin = new System.Windows.Forms.Padding(8, 3, 0, 0);
-            this.checkStyleMarkActive.Name = "checkStyleMarkActive";
             this.checkStyleMarkActive.Size = new System.Drawing.Size(156, 17);
-            this.checkStyleMarkActive.TabIndex = 10;
             this.checkStyleMarkActive.Text = "Highlight active accounts";
             this.checkStyleMarkActive.UseVisualStyleBackColor = true;
             this.checkStyleMarkActive.CheckedChanged += new System.EventHandler(this.checkStyleMarkActive_CheckedChanged);
@@ -8585,16 +7430,14 @@ namespace Gw2Launcher.UI
             this.checkStyleCustomizeOffsets.AutoSize = true;
             this.checkStyleCustomizeOffsets.Location = new System.Drawing.Point(21, 248);
             this.checkStyleCustomizeOffsets.Margin = new System.Windows.Forms.Padding(8, 3, 0, 0);
-            this.checkStyleCustomizeOffsets.Name = "checkStyleCustomizeOffsets";
             this.checkStyleCustomizeOffsets.Size = new System.Drawing.Size(223, 17);
-            this.checkStyleCustomizeOffsets.TabIndex = 11;
             this.checkStyleCustomizeOffsets.Text = "Customize offsets, height and spacing";
             this.checkStyleCustomizeOffsets.UseVisualStyleBackColor = true;
             this.checkStyleCustomizeOffsets.CheckedChanged += new System.EventHandler(this.checkStyleCustomizeOffsets_CheckedChanged);
             // 
             // panelStyleCustomizeOffsets
             // 
-            this.panelStyleCustomizeOffsets.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left)
+            this.panelStyleCustomizeOffsets.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left) 
             | System.Windows.Forms.AnchorStyles.Right)));
             this.panelStyleCustomizeOffsets.AutoSize = true;
             this.panelStyleCustomizeOffsets.Controls.Add(this.label200);
@@ -8608,9 +7451,7 @@ namespace Gw2Launcher.UI
             this.panelStyleCustomizeOffsets.Controls.Add(this.stackPanel89);
             this.panelStyleCustomizeOffsets.Location = new System.Drawing.Point(14, 266);
             this.panelStyleCustomizeOffsets.Margin = new System.Windows.Forms.Padding(1, 1, 0, 0);
-            this.panelStyleCustomizeOffsets.Name = "panelStyleCustomizeOffsets";
             this.panelStyleCustomizeOffsets.Size = new System.Drawing.Size(329, 235);
-            this.panelStyleCustomizeOffsets.TabIndex = 12;
             this.panelStyleCustomizeOffsets.Visible = false;
             // 
             // label200
@@ -8619,9 +7460,7 @@ namespace Gw2Launcher.UI
             this.label200.Font = new System.Drawing.Font("Segoe UI Semibold", 9F, System.Drawing.FontStyle.Bold);
             this.label200.Location = new System.Drawing.Point(0, 13);
             this.label200.Margin = new System.Windows.Forms.Padding(0, 13, 0, 8);
-            this.label200.Name = "label200";
             this.label200.Size = new System.Drawing.Size(44, 15);
-            this.label200.TabIndex = 0;
             this.label200.Text = "Offsets";
             // 
             // stackPanel22
@@ -8633,9 +7472,7 @@ namespace Gw2Launcher.UI
             this.stackPanel22.FlowDirection = System.Windows.Forms.FlowDirection.LeftToRight;
             this.stackPanel22.Location = new System.Drawing.Point(1, 37);
             this.stackPanel22.Margin = new System.Windows.Forms.Padding(1, 1, 0, 0);
-            this.stackPanel22.Name = "stackPanel22";
             this.stackPanel22.Size = new System.Drawing.Size(142, 22);
-            this.stackPanel22.TabIndex = 1;
             // 
             // label199
             // 
@@ -8645,9 +7482,7 @@ namespace Gw2Launcher.UI
             this.label199.Location = new System.Drawing.Point(0, 4);
             this.label199.Margin = new System.Windows.Forms.Padding(0);
             this.label199.MinimumSize = new System.Drawing.Size(40, 0);
-            this.label199.Name = "label199";
             this.label199.Size = new System.Drawing.Size(40, 13);
-            this.label199.TabIndex = 0;
             this.label199.Text = "Name";
             // 
             // numericStyleOffsetNameX
@@ -8659,9 +7494,7 @@ namespace Gw2Launcher.UI
             0,
             0,
             -2147483648});
-            this.numericStyleOffsetNameX.Name = "numericStyleOffsetNameX";
             this.numericStyleOffsetNameX.Size = new System.Drawing.Size(44, 22);
-            this.numericStyleOffsetNameX.TabIndex = 1;
             this.numericStyleOffsetNameX.ValueChanged += new System.EventHandler(this.numericStyleOffset_ValueChanged);
             // 
             // numericStyleOffsetNameY
@@ -8673,9 +7506,7 @@ namespace Gw2Launcher.UI
             0,
             0,
             -2147483648});
-            this.numericStyleOffsetNameY.Name = "numericStyleOffsetNameY";
             this.numericStyleOffsetNameY.Size = new System.Drawing.Size(44, 22);
-            this.numericStyleOffsetNameY.TabIndex = 2;
             this.numericStyleOffsetNameY.ValueChanged += new System.EventHandler(this.numericStyleOffset_ValueChanged);
             // 
             // stackPanel86
@@ -8687,9 +7518,7 @@ namespace Gw2Launcher.UI
             this.stackPanel86.FlowDirection = System.Windows.Forms.FlowDirection.LeftToRight;
             this.stackPanel86.Location = new System.Drawing.Point(1, 60);
             this.stackPanel86.Margin = new System.Windows.Forms.Padding(1, 1, 0, 0);
-            this.stackPanel86.Name = "stackPanel86";
             this.stackPanel86.Size = new System.Drawing.Size(142, 22);
-            this.stackPanel86.TabIndex = 2;
             // 
             // label201
             // 
@@ -8699,9 +7528,7 @@ namespace Gw2Launcher.UI
             this.label201.Location = new System.Drawing.Point(0, 4);
             this.label201.Margin = new System.Windows.Forms.Padding(0);
             this.label201.MinimumSize = new System.Drawing.Size(40, 0);
-            this.label201.Name = "label201";
             this.label201.Size = new System.Drawing.Size(40, 13);
-            this.label201.TabIndex = 0;
             this.label201.Text = "Status";
             // 
             // numericStyleOffsetStatusX
@@ -8713,9 +7540,7 @@ namespace Gw2Launcher.UI
             0,
             0,
             -2147483648});
-            this.numericStyleOffsetStatusX.Name = "numericStyleOffsetStatusX";
             this.numericStyleOffsetStatusX.Size = new System.Drawing.Size(44, 22);
-            this.numericStyleOffsetStatusX.TabIndex = 1;
             this.numericStyleOffsetStatusX.ValueChanged += new System.EventHandler(this.numericStyleOffset_ValueChanged);
             // 
             // numericStyleOffsetStatusY
@@ -8727,9 +7552,7 @@ namespace Gw2Launcher.UI
             0,
             0,
             -2147483648});
-            this.numericStyleOffsetStatusY.Name = "numericStyleOffsetStatusY";
             this.numericStyleOffsetStatusY.Size = new System.Drawing.Size(44, 22);
-            this.numericStyleOffsetStatusY.TabIndex = 2;
             this.numericStyleOffsetStatusY.ValueChanged += new System.EventHandler(this.numericStyleOffset_ValueChanged);
             // 
             // stackPanel87
@@ -8741,9 +7564,7 @@ namespace Gw2Launcher.UI
             this.stackPanel87.FlowDirection = System.Windows.Forms.FlowDirection.LeftToRight;
             this.stackPanel87.Location = new System.Drawing.Point(1, 83);
             this.stackPanel87.Margin = new System.Windows.Forms.Padding(1, 1, 0, 0);
-            this.stackPanel87.Name = "stackPanel87";
             this.stackPanel87.Size = new System.Drawing.Size(142, 22);
-            this.stackPanel87.TabIndex = 3;
             // 
             // label203
             // 
@@ -8753,9 +7574,7 @@ namespace Gw2Launcher.UI
             this.label203.Location = new System.Drawing.Point(0, 4);
             this.label203.Margin = new System.Windows.Forms.Padding(0);
             this.label203.MinimumSize = new System.Drawing.Size(40, 0);
-            this.label203.Name = "label203";
             this.label203.Size = new System.Drawing.Size(40, 13);
-            this.label203.TabIndex = 0;
             this.label203.Text = "User";
             // 
             // numericStyleOffsetUserX
@@ -8767,9 +7586,7 @@ namespace Gw2Launcher.UI
             0,
             0,
             -2147483648});
-            this.numericStyleOffsetUserX.Name = "numericStyleOffsetUserX";
             this.numericStyleOffsetUserX.Size = new System.Drawing.Size(44, 22);
-            this.numericStyleOffsetUserX.TabIndex = 1;
             this.numericStyleOffsetUserX.ValueChanged += new System.EventHandler(this.numericStyleOffset_ValueChanged);
             // 
             // numericStyleOffsetUserY
@@ -8781,9 +7598,7 @@ namespace Gw2Launcher.UI
             0,
             0,
             -2147483648});
-            this.numericStyleOffsetUserY.Name = "numericStyleOffsetUserY";
             this.numericStyleOffsetUserY.Size = new System.Drawing.Size(44, 22);
-            this.numericStyleOffsetUserY.TabIndex = 2;
             this.numericStyleOffsetUserY.ValueChanged += new System.EventHandler(this.numericStyleOffset_ValueChanged);
             // 
             // label202
@@ -8792,9 +7607,7 @@ namespace Gw2Launcher.UI
             this.label202.Font = new System.Drawing.Font("Segoe UI Semibold", 9F, System.Drawing.FontStyle.Bold);
             this.label202.Location = new System.Drawing.Point(0, 118);
             this.label202.Margin = new System.Windows.Forms.Padding(0, 13, 0, 8);
-            this.label202.Name = "label202";
             this.label202.Size = new System.Drawing.Size(43, 15);
-            this.label202.TabIndex = 4;
             this.label202.Text = "Height";
             // 
             // stackPanel88
@@ -8807,9 +7620,7 @@ namespace Gw2Launcher.UI
             this.stackPanel88.FlowDirection = System.Windows.Forms.FlowDirection.LeftToRight;
             this.stackPanel88.Location = new System.Drawing.Point(0, 141);
             this.stackPanel88.Margin = new System.Windows.Forms.Padding(0);
-            this.stackPanel88.Name = "stackPanel88";
             this.stackPanel88.Size = new System.Drawing.Size(118, 22);
-            this.stackPanel88.TabIndex = 5;
             // 
             // checkStyleHeight
             // 
@@ -8817,9 +7628,7 @@ namespace Gw2Launcher.UI
             this.checkStyleHeight.AutoSize = true;
             this.checkStyleHeight.Location = new System.Drawing.Point(8, 4);
             this.checkStyleHeight.Margin = new System.Windows.Forms.Padding(8, 0, 0, 0);
-            this.checkStyleHeight.Name = "checkStyleHeight";
             this.checkStyleHeight.Size = new System.Drawing.Size(15, 14);
-            this.checkStyleHeight.TabIndex = 0;
             this.checkStyleHeight.UseVisualStyleBackColor = true;
             this.checkStyleHeight.CheckedChanged += new System.EventHandler(this.checkStyleHeight_CheckedChanged);
             // 
@@ -8838,9 +7647,7 @@ namespace Gw2Launcher.UI
             0,
             0,
             0});
-            this.numericStyleHeight.Name = "numericStyleHeight";
             this.numericStyleHeight.Size = new System.Drawing.Size(44, 22);
-            this.numericStyleHeight.TabIndex = 1;
             this.numericStyleHeight.Value = new decimal(new int[] {
             66,
             0,
@@ -8855,9 +7662,7 @@ namespace Gw2Launcher.UI
             this.labelStyleHeight.ForeColor = System.Drawing.SystemColors.GrayText;
             this.labelStyleHeight.Location = new System.Drawing.Point(81, 4);
             this.labelStyleHeight.Margin = new System.Windows.Forms.Padding(7, 0, 0, 0);
-            this.labelStyleHeight.Name = "labelStyleHeight";
             this.labelStyleHeight.Size = new System.Drawing.Size(37, 13);
-            this.labelStyleHeight.TabIndex = 2;
             this.labelStyleHeight.Text = "(auto)";
             // 
             // label205
@@ -8866,9 +7671,7 @@ namespace Gw2Launcher.UI
             this.label205.Font = new System.Drawing.Font("Segoe UI Semibold", 9F, System.Drawing.FontStyle.Bold);
             this.label205.Location = new System.Drawing.Point(0, 176);
             this.label205.Margin = new System.Windows.Forms.Padding(0, 13, 0, 0);
-            this.label205.Name = "label205";
             this.label205.Size = new System.Drawing.Size(50, 15);
-            this.label205.TabIndex = 6;
             this.label205.Text = "Spacing";
             // 
             // label206
@@ -8877,9 +7680,7 @@ namespace Gw2Launcher.UI
             this.label206.Font = new System.Drawing.Font("Segoe UI Semilight", 8.25F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
             this.label206.Location = new System.Drawing.Point(1, 192);
             this.label206.Margin = new System.Windows.Forms.Padding(1, 1, 0, 8);
-            this.label206.Name = "label206";
             this.label206.Size = new System.Drawing.Size(117, 13);
-            this.label206.TabIndex = 7;
             this.label206.Text = "Space between buttons";
             // 
             // stackPanel89
@@ -8891,9 +7692,7 @@ namespace Gw2Launcher.UI
             this.stackPanel89.FlowDirection = System.Windows.Forms.FlowDirection.LeftToRight;
             this.stackPanel89.Location = new System.Drawing.Point(0, 213);
             this.stackPanel89.Margin = new System.Windows.Forms.Padding(0);
-            this.stackPanel89.Name = "stackPanel89";
             this.stackPanel89.Size = new System.Drawing.Size(74, 22);
-            this.stackPanel89.TabIndex = 8;
             // 
             // checkStyleSpacing
             // 
@@ -8901,9 +7700,7 @@ namespace Gw2Launcher.UI
             this.checkStyleSpacing.AutoSize = true;
             this.checkStyleSpacing.Location = new System.Drawing.Point(8, 4);
             this.checkStyleSpacing.Margin = new System.Windows.Forms.Padding(8, 0, 0, 0);
-            this.checkStyleSpacing.Name = "checkStyleSpacing";
             this.checkStyleSpacing.Size = new System.Drawing.Size(15, 14);
-            this.checkStyleSpacing.TabIndex = 0;
             this.checkStyleSpacing.UseVisualStyleBackColor = true;
             this.checkStyleSpacing.CheckedChanged += new System.EventHandler(this.checkStyleSpacing_CheckedChanged);
             // 
@@ -8912,9 +7709,7 @@ namespace Gw2Launcher.UI
             this.numericStyleSpacing.Enabled = false;
             this.numericStyleSpacing.Location = new System.Drawing.Point(30, 0);
             this.numericStyleSpacing.Margin = new System.Windows.Forms.Padding(7, 0, 0, 0);
-            this.numericStyleSpacing.Name = "numericStyleSpacing";
             this.numericStyleSpacing.Size = new System.Drawing.Size(44, 22);
-            this.numericStyleSpacing.TabIndex = 1;
             this.numericStyleSpacing.Value = new decimal(new int[] {
             3,
             0,
@@ -8927,9 +7722,7 @@ namespace Gw2Launcher.UI
             this.label19.Font = new System.Drawing.Font("Segoe UI Semibold", 9F, System.Drawing.FontStyle.Bold);
             this.label19.Location = new System.Drawing.Point(13, 514);
             this.label19.Margin = new System.Windows.Forms.Padding(0, 13, 0, 8);
-            this.label19.Name = "label19";
             this.label19.Size = new System.Drawing.Size(47, 15);
-            this.label19.TabIndex = 13;
             this.label19.Text = "Sample";
             // 
             // panelStyleSample
@@ -8938,9 +7731,7 @@ namespace Gw2Launcher.UI
             this.panelStyleSample.Location = new System.Drawing.Point(24, 537);
             this.panelStyleSample.Margin = new System.Windows.Forms.Padding(11, 0, 0, 0);
             this.panelStyleSample.MinimumSize = new System.Drawing.Size(5, 5);
-            this.panelStyleSample.Name = "panelStyleSample";
             this.panelStyleSample.Size = new System.Drawing.Size(225, 62);
-            this.panelStyleSample.TabIndex = 14;
             // 
             // buttonSample
             // 
@@ -8972,7 +7763,6 @@ namespace Gw2Launcher.UI
             this.buttonSample.Location = new System.Drawing.Point(0, 0);
             this.buttonSample.Margin = new System.Windows.Forms.Padding(0);
             this.buttonSample.MinimumSize = new System.Drawing.Size(0, 62);
-            this.buttonSample.Name = "buttonSample";
             this.buttonSample.Paging = null;
             this.buttonSample.Pinned = false;
             this.buttonSample.Selected = false;
@@ -8986,7 +7776,6 @@ namespace Gw2Launcher.UI
             this.buttonSample.SortKey = ((ushort)(65535));
             this.buttonSample.Status = null;
             this.buttonSample.StatusColor = Gw2Launcher.UI.Controls.AccountGridButton.StatusColors.Default;
-            this.buttonSample.TabIndex = 0;
             this.buttonSample.SizeChanged += new System.EventHandler(this.buttonSample_SizeChanged);
             this.buttonSample.Click += new System.EventHandler(this.buttonSample_Click);
             // 
@@ -8996,9 +7785,7 @@ namespace Gw2Launcher.UI
             this.label110.Font = new System.Drawing.Font("Segoe UI Semibold", 9F, System.Drawing.FontStyle.Bold);
             this.label110.Location = new System.Drawing.Point(13, 612);
             this.label110.Margin = new System.Windows.Forms.Padding(0, 13, 0, 8);
-            this.label110.Name = "label110";
             this.label110.Size = new System.Drawing.Size(47, 15);
-            this.label110.TabIndex = 15;
             this.label110.Text = "General";
             // 
             // checkStyleShowCloseAll
@@ -9006,9 +7793,7 @@ namespace Gw2Launcher.UI
             this.checkStyleShowCloseAll.AutoSize = true;
             this.checkStyleShowCloseAll.Location = new System.Drawing.Point(21, 635);
             this.checkStyleShowCloseAll.Margin = new System.Windows.Forms.Padding(8, 0, 0, 0);
-            this.checkStyleShowCloseAll.Name = "checkStyleShowCloseAll";
             this.checkStyleShowCloseAll.Size = new System.Drawing.Size(270, 17);
-            this.checkStyleShowCloseAll.TabIndex = 16;
             this.checkStyleShowCloseAll.Text = "Show button to close all accounts (while active)";
             this.checkStyleShowCloseAll.UseVisualStyleBackColor = true;
             // 
@@ -9017,9 +7802,7 @@ namespace Gw2Launcher.UI
             this.checkStyleShowLaunchAll.AutoSize = true;
             this.checkStyleShowLaunchAll.Location = new System.Drawing.Point(21, 655);
             this.checkStyleShowLaunchAll.Margin = new System.Windows.Forms.Padding(8, 3, 0, 0);
-            this.checkStyleShowLaunchAll.Name = "checkStyleShowLaunchAll";
             this.checkStyleShowLaunchAll.Size = new System.Drawing.Size(210, 17);
-            this.checkStyleShowLaunchAll.TabIndex = 17;
             this.checkStyleShowLaunchAll.Text = "Show button to launch all accounts";
             this.checkStyleShowLaunchAll.UseVisualStyleBackColor = true;
             // 
@@ -9028,9 +7811,7 @@ namespace Gw2Launcher.UI
             this.checkStyleShowLaunchDaily.AutoSize = true;
             this.checkStyleShowLaunchDaily.Location = new System.Drawing.Point(21, 675);
             this.checkStyleShowLaunchDaily.Margin = new System.Windows.Forms.Padding(8, 3, 0, 0);
-            this.checkStyleShowLaunchDaily.Name = "checkStyleShowLaunchDaily";
             this.checkStyleShowLaunchDaily.Size = new System.Drawing.Size(300, 17);
-            this.checkStyleShowLaunchDaily.TabIndex = 41;
             this.checkStyleShowLaunchDaily.Text = "Show button to launch accounts showing daily login";
             this.checkStyleShowLaunchDaily.UseVisualStyleBackColor = true;
             // 
@@ -9039,9 +7820,7 @@ namespace Gw2Launcher.UI
             this.checkStyleShowMinimizeRestoreAll.AutoSize = true;
             this.checkStyleShowMinimizeRestoreAll.Location = new System.Drawing.Point(21, 695);
             this.checkStyleShowMinimizeRestoreAll.Margin = new System.Windows.Forms.Padding(8, 3, 0, 0);
-            this.checkStyleShowMinimizeRestoreAll.Name = "checkStyleShowMinimizeRestoreAll";
             this.checkStyleShowMinimizeRestoreAll.Size = new System.Drawing.Size(260, 17);
-            this.checkStyleShowMinimizeRestoreAll.TabIndex = 18;
             this.checkStyleShowMinimizeRestoreAll.Text = "Show button to minimize/restore all accounts";
             this.checkStyleShowMinimizeRestoreAll.UseVisualStyleBackColor = true;
             // 
@@ -9050,9 +7829,7 @@ namespace Gw2Launcher.UI
             this.checkStyleShowAccountBarToggle.AutoSize = true;
             this.checkStyleShowAccountBarToggle.Location = new System.Drawing.Point(21, 715);
             this.checkStyleShowAccountBarToggle.Margin = new System.Windows.Forms.Padding(8, 3, 0, 0);
-            this.checkStyleShowAccountBarToggle.Name = "checkStyleShowAccountBarToggle";
             this.checkStyleShowAccountBarToggle.Size = new System.Drawing.Size(229, 17);
-            this.checkStyleShowAccountBarToggle.TabIndex = 19;
             this.checkStyleShowAccountBarToggle.Text = "Show button to toggle the account bar";
             this.checkStyleShowAccountBarToggle.UseVisualStyleBackColor = true;
             // 
@@ -9061,9 +7838,7 @@ namespace Gw2Launcher.UI
             this.checkStyleShowTemplatesToggle.AutoSize = true;
             this.checkStyleShowTemplatesToggle.Location = new System.Drawing.Point(21, 735);
             this.checkStyleShowTemplatesToggle.Margin = new System.Windows.Forms.Padding(8, 3, 0, 0);
-            this.checkStyleShowTemplatesToggle.Name = "checkStyleShowTemplatesToggle";
             this.checkStyleShowTemplatesToggle.Size = new System.Drawing.Size(282, 17);
-            this.checkStyleShowTemplatesToggle.TabIndex = 20;
             this.checkStyleShowTemplatesToggle.Text = "Show button to toggle window templates display";
             this.checkStyleShowTemplatesToggle.UseVisualStyleBackColor = true;
             // 
@@ -9072,9 +7847,7 @@ namespace Gw2Launcher.UI
             this.checkStyleDisableShadows.AutoSize = true;
             this.checkStyleDisableShadows.Location = new System.Drawing.Point(21, 795);
             this.checkStyleDisableShadows.Margin = new System.Windows.Forms.Padding(8, 3, 0, 0);
-            this.checkStyleDisableShadows.Name = "checkStyleDisableShadows";
             this.checkStyleDisableShadows.Size = new System.Drawing.Size(158, 17);
-            this.checkStyleDisableShadows.TabIndex = 21;
             this.checkStyleDisableShadows.Text = "Disable window shadows";
             this.checkStyleDisableShadows.UseVisualStyleBackColor = true;
             // 
@@ -9084,9 +7857,7 @@ namespace Gw2Launcher.UI
             this.label208.Font = new System.Drawing.Font("Segoe UI Semibold", 9F, System.Drawing.FontStyle.Bold);
             this.label208.Location = new System.Drawing.Point(13, 825);
             this.label208.Margin = new System.Windows.Forms.Padding(0, 13, 0, 8);
-            this.label208.Name = "label208";
             this.label208.Size = new System.Drawing.Size(114, 15);
-            this.label208.TabIndex = 22;
             this.label208.Text = "Daily login indicator";
             // 
             // checkStyleShowLoginRewardIcon
@@ -9094,9 +7865,7 @@ namespace Gw2Launcher.UI
             this.checkStyleShowLoginRewardIcon.AutoSize = true;
             this.checkStyleShowLoginRewardIcon.Location = new System.Drawing.Point(21, 848);
             this.checkStyleShowLoginRewardIcon.Margin = new System.Windows.Forms.Padding(8, 0, 0, 0);
-            this.checkStyleShowLoginRewardIcon.Name = "checkStyleShowLoginRewardIcon";
             this.checkStyleShowLoginRewardIcon.Size = new System.Drawing.Size(149, 17);
-            this.checkStyleShowLoginRewardIcon.TabIndex = 23;
             this.checkStyleShowLoginRewardIcon.Text = "Show login reward icon";
             this.checkStyleShowLoginRewardIcon.UseVisualStyleBackColor = true;
             this.checkStyleShowLoginRewardIcon.CheckedChanged += new System.EventHandler(this.checkStyleShowLoginRewardIcon_CheckedChanged);
@@ -9109,9 +7878,7 @@ namespace Gw2Launcher.UI
             this.panelStyleLoginRewardIconsContainer.Controls.Add(this.panelStyleLoginRewardIcons);
             this.panelStyleLoginRewardIconsContainer.Location = new System.Drawing.Point(13, 868);
             this.panelStyleLoginRewardIconsContainer.Margin = new System.Windows.Forms.Padding(0, 3, 0, 0);
-            this.panelStyleLoginRewardIconsContainer.Name = "panelStyleLoginRewardIconsContainer";
             this.panelStyleLoginRewardIconsContainer.Size = new System.Drawing.Size(330, 37);
-            this.panelStyleLoginRewardIconsContainer.TabIndex = 24;
             this.panelStyleLoginRewardIconsContainer.Visible = false;
             // 
             // stackPanel92
@@ -9122,18 +7889,14 @@ namespace Gw2Launcher.UI
             this.stackPanel92.FlowDirection = System.Windows.Forms.FlowDirection.LeftToRight;
             this.stackPanel92.Location = new System.Drawing.Point(0, 0);
             this.stackPanel92.Margin = new System.Windows.Forms.Padding(0);
-            this.stackPanel92.Name = "stackPanel92";
             this.stackPanel92.Size = new System.Drawing.Size(232, 17);
-            this.stackPanel92.TabIndex = 0;
             // 
             // checkStyleLoginRewardIconsNumber
             // 
             this.checkStyleLoginRewardIconsNumber.AutoSize = true;
             this.checkStyleLoginRewardIconsNumber.Location = new System.Drawing.Point(8, 0);
             this.checkStyleLoginRewardIconsNumber.Margin = new System.Windows.Forms.Padding(8, 0, 0, 0);
-            this.checkStyleLoginRewardIconsNumber.Name = "checkStyleLoginRewardIconsNumber";
             this.checkStyleLoginRewardIconsNumber.Size = new System.Drawing.Size(98, 17);
-            this.checkStyleLoginRewardIconsNumber.TabIndex = 0;
             this.checkStyleLoginRewardIconsNumber.Text = "Show number";
             this.checkStyleLoginRewardIconsNumber.UseVisualStyleBackColor = true;
             // 
@@ -9145,22 +7908,18 @@ namespace Gw2Launcher.UI
             this.label209.ForeColor = System.Drawing.SystemColors.GrayText;
             this.label209.Location = new System.Drawing.Point(107, 1);
             this.label209.Margin = new System.Windows.Forms.Padding(1, 0, 0, 1);
-            this.label209.Name = "label209";
             this.label209.Size = new System.Drawing.Size(125, 13);
-            this.label209.TabIndex = 1;
             this.label209.Text = "when no icon is displayed";
             // 
             // panelStyleLoginRewardIcons
             // 
-            this.panelStyleLoginRewardIcons.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left)
+            this.panelStyleLoginRewardIcons.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left) 
             | System.Windows.Forms.AnchorStyles.Right)));
             this.panelStyleLoginRewardIcons.AutoSize = true;
             this.panelStyleLoginRewardIcons.Location = new System.Drawing.Point(0, 17);
             this.panelStyleLoginRewardIcons.Margin = new System.Windows.Forms.Padding(0);
             this.panelStyleLoginRewardIcons.MinimumSize = new System.Drawing.Size(0, 20);
-            this.panelStyleLoginRewardIcons.Name = "panelStyleLoginRewardIcons";
             this.panelStyleLoginRewardIcons.Size = new System.Drawing.Size(330, 20);
-            this.panelStyleLoginRewardIcons.TabIndex = 1;
             // 
             // label15
             // 
@@ -9168,9 +7927,7 @@ namespace Gw2Launcher.UI
             this.label15.Font = new System.Drawing.Font("Segoe UI Semibold", 9F, System.Drawing.FontStyle.Bold);
             this.label15.Location = new System.Drawing.Point(13, 918);
             this.label15.Margin = new System.Windows.Forms.Padding(0, 13, 0, 0);
-            this.label15.Name = "label15";
             this.label15.Size = new System.Drawing.Size(54, 15);
-            this.label15.TabIndex = 25;
             this.label15.Text = "Columns";
             // 
             // label17
@@ -9179,9 +7936,7 @@ namespace Gw2Launcher.UI
             this.label17.Font = new System.Drawing.Font("Segoe UI Semilight", 8.25F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
             this.label17.Location = new System.Drawing.Point(14, 934);
             this.label17.Margin = new System.Windows.Forms.Padding(1, 1, 0, 8);
-            this.label17.Name = "label17";
             this.label17.Size = new System.Drawing.Size(179, 13);
-            this.label17.TabIndex = 26;
             this.label17.Text = "Number of buttons displayed per line";
             // 
             // stackPanel66
@@ -9194,9 +7949,7 @@ namespace Gw2Launcher.UI
             this.stackPanel66.FlowDirection = System.Windows.Forms.FlowDirection.LeftToRight;
             this.stackPanel66.Location = new System.Drawing.Point(13, 955);
             this.stackPanel66.Margin = new System.Windows.Forms.Padding(0);
-            this.stackPanel66.Name = "stackPanel66";
             this.stackPanel66.Size = new System.Drawing.Size(118, 22);
-            this.stackPanel66.TabIndex = 27;
             // 
             // checkStyleColumns
             // 
@@ -9204,9 +7957,7 @@ namespace Gw2Launcher.UI
             this.checkStyleColumns.AutoSize = true;
             this.checkStyleColumns.Location = new System.Drawing.Point(8, 4);
             this.checkStyleColumns.Margin = new System.Windows.Forms.Padding(8, 0, 0, 0);
-            this.checkStyleColumns.Name = "checkStyleColumns";
             this.checkStyleColumns.Size = new System.Drawing.Size(15, 14);
-            this.checkStyleColumns.TabIndex = 0;
             this.checkStyleColumns.UseVisualStyleBackColor = true;
             this.checkStyleColumns.CheckedChanged += new System.EventHandler(this.checkStyleColumns_CheckedChanged);
             // 
@@ -9225,9 +7976,7 @@ namespace Gw2Launcher.UI
             0,
             0,
             0});
-            this.numericStyleColumns.Name = "numericStyleColumns";
             this.numericStyleColumns.Size = new System.Drawing.Size(44, 22);
-            this.numericStyleColumns.TabIndex = 1;
             this.numericStyleColumns.Value = new decimal(new int[] {
             1,
             0,
@@ -9241,15 +7990,13 @@ namespace Gw2Launcher.UI
             this.labelStyleColumns.ForeColor = System.Drawing.SystemColors.GrayText;
             this.labelStyleColumns.Location = new System.Drawing.Point(81, 4);
             this.labelStyleColumns.Margin = new System.Windows.Forms.Padding(7, 0, 0, 0);
-            this.labelStyleColumns.Name = "labelStyleColumns";
             this.labelStyleColumns.Size = new System.Drawing.Size(37, 13);
-            this.labelStyleColumns.TabIndex = 2;
             this.labelStyleColumns.Text = "(auto)";
             this.labelStyleColumns.Click += new System.EventHandler(this.labelStyleColumns_Click);
             // 
             // stackPanel72
             // 
-            this.stackPanel72.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left)
+            this.stackPanel72.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left) 
             | System.Windows.Forms.AnchorStyles.Right)));
             this.stackPanel72.AutoSize = true;
             this.stackPanel72.AutoSizeFill = Gw2Launcher.UI.Controls.StackPanel.AutoSizeFillMode.NoWrap;
@@ -9258,9 +8005,7 @@ namespace Gw2Launcher.UI
             this.stackPanel72.FlowDirection = System.Windows.Forms.FlowDirection.LeftToRight;
             this.stackPanel72.Location = new System.Drawing.Point(13, 10);
             this.stackPanel72.Margin = new System.Windows.Forms.Padding(0, 0, 0, 5);
-            this.stackPanel72.Name = "stackPanel72";
             this.stackPanel72.Size = new System.Drawing.Size(347, 15);
-            this.stackPanel72.TabIndex = 0;
             // 
             // label116
             // 
@@ -9268,9 +8013,7 @@ namespace Gw2Launcher.UI
             this.label116.Font = new System.Drawing.Font("Segoe UI Semibold", 9F, System.Drawing.FontStyle.Bold);
             this.label116.Location = new System.Drawing.Point(0, 0);
             this.label116.Margin = new System.Windows.Forms.Padding(0);
-            this.label116.Name = "label116";
             this.label116.Size = new System.Drawing.Size(40, 15);
-            this.label116.TabIndex = 0;
             this.label116.Text = "Colors";
             // 
             // labelColorsPreset
@@ -9280,28 +8023,24 @@ namespace Gw2Launcher.UI
             this.labelColorsPreset.Icon = null;
             this.labelColorsPreset.Location = new System.Drawing.Point(303, 1);
             this.labelColorsPreset.Margin = new System.Windows.Forms.Padding(6, 0, 0, 0);
-            this.labelColorsPreset.Name = "labelColorsPreset";
             this.labelColorsPreset.Size = new System.Drawing.Size(44, 13);
-            this.labelColorsPreset.TabIndex = 1;
             this.labelColorsPreset.Text = "presets";
             this.labelColorsPreset.TextAlign = System.Drawing.ContentAlignment.MiddleLeft;
             this.labelColorsPreset.Click += new System.EventHandler(this.labelColorsPreset_Click);
             // 
             // panelMarkers
             // 
-            this.panelMarkers.Anchor = ((System.Windows.Forms.AnchorStyles)((((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom)
-            | System.Windows.Forms.AnchorStyles.Left)
+            this.panelMarkers.Anchor = ((System.Windows.Forms.AnchorStyles)((((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom) 
+            | System.Windows.Forms.AnchorStyles.Left) 
             | System.Windows.Forms.AnchorStyles.Right)));
             this.panelMarkers.Controls.Add(this.stackPanel93);
             this.panelMarkers.Location = new System.Drawing.Point(183, 12);
-            this.panelMarkers.Name = "panelMarkers";
             this.panelMarkers.Size = new System.Drawing.Size(373, 439);
-            this.panelMarkers.TabIndex = 15;
             this.panelMarkers.Visible = false;
             // 
             // stackPanel93
             // 
-            this.stackPanel93.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left)
+            this.stackPanel93.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left) 
             | System.Windows.Forms.AnchorStyles.Right)));
             this.stackPanel93.AutoSize = true;
             this.stackPanel93.AutoSizeFill = Gw2Launcher.UI.Controls.StackPanel.AutoSizeFillMode.Width;
@@ -9312,10 +8051,8 @@ namespace Gw2Launcher.UI
             this.stackPanel93.Controls.Add(this.labelMarkersAdd);
             this.stackPanel93.Location = new System.Drawing.Point(0, 0);
             this.stackPanel93.Margin = new System.Windows.Forms.Padding(0, 0, 13, 0);
-            this.stackPanel93.Name = "stackPanel93";
             this.stackPanel93.Padding = new System.Windows.Forms.Padding(13, 10, 0, 10);
             this.stackPanel93.Size = new System.Drawing.Size(360, 94);
-            this.stackPanel93.TabIndex = 0;
             // 
             // label217
             // 
@@ -9323,9 +8060,7 @@ namespace Gw2Launcher.UI
             this.label217.Font = new System.Drawing.Font("Segoe UI Semibold", 9F, System.Drawing.FontStyle.Bold);
             this.label217.Location = new System.Drawing.Point(13, 10);
             this.label217.Margin = new System.Windows.Forms.Padding(0);
-            this.label217.Name = "label217";
             this.label217.Size = new System.Drawing.Size(49, 15);
-            this.label217.TabIndex = 0;
             this.label217.Text = "Markers";
             // 
             // label218
@@ -9334,9 +8069,7 @@ namespace Gw2Launcher.UI
             this.label218.Font = new System.Drawing.Font("Segoe UI Semilight", 8.25F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
             this.label218.Location = new System.Drawing.Point(14, 26);
             this.label218.Margin = new System.Windows.Forms.Padding(1, 1, 0, 8);
-            this.label218.Name = "label218";
             this.label218.Size = new System.Drawing.Size(192, 13);
-            this.label218.TabIndex = 1;
             this.label218.Text = "Icons that can be displayed on accounts";
             // 
             // panelMarkersContainer
@@ -9347,9 +8080,7 @@ namespace Gw2Launcher.UI
             this.panelMarkersContainer.Margin = new System.Windows.Forms.Padding(0, 0, 0, 7);
             this.panelMarkersContainer.MinimumSize = new System.Drawing.Size(10, 5);
             this.panelMarkersContainer.Modified = false;
-            this.panelMarkersContainer.Name = "panelMarkersContainer";
             this.panelMarkersContainer.Size = new System.Drawing.Size(10, 5);
-            this.panelMarkersContainer.TabIndex = 2;
             this.panelMarkersContainer.Visible = false;
             this.panelMarkersContainer.MarkerMouseClick += new System.EventHandler<Gw2Launcher.UI.Controls.ListPanel.ControlListPanel.ListItemMouseEventArgs>(this.panelMarkersContainer_MarkerMouseClick);
             this.panelMarkersContainer.LabelMouseClick += new System.EventHandler<Gw2Launcher.UI.Controls.ListPanel.ControlListPanel.ListItemMouseEventArgs>(this.panelMarkersContainer_LabelMouseClick);
@@ -9359,9 +8090,7 @@ namespace Gw2Launcher.UI
             this.panel5.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(224)))), ((int)(((byte)(224)))), ((int)(((byte)(224)))));
             this.panel5.Location = new System.Drawing.Point(18, 62);
             this.panel5.Margin = new System.Windows.Forms.Padding(5, 3, 10, 5);
-            this.panel5.Name = "panel5";
             this.panel5.Size = new System.Drawing.Size(100, 1);
-            this.panel5.TabIndex = 3;
             this.panel5.Visible = false;
             // 
             // labelMarkersAdd
@@ -9370,27 +8099,23 @@ namespace Gw2Launcher.UI
             this.labelMarkersAdd.Icon = null;
             this.labelMarkersAdd.Location = new System.Drawing.Point(16, 71);
             this.labelMarkersAdd.Margin = new System.Windows.Forms.Padding(3, 3, 0, 0);
-            this.labelMarkersAdd.Name = "labelMarkersAdd";
             this.labelMarkersAdd.Size = new System.Drawing.Size(65, 13);
-            this.labelMarkersAdd.TabIndex = 4;
             this.labelMarkersAdd.Text = "add marker";
             this.labelMarkersAdd.Click += new System.EventHandler(this.labelMarkersAdd_Click);
             // 
             // panelHotkeys
             // 
-            this.panelHotkeys.Anchor = ((System.Windows.Forms.AnchorStyles)((((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom)
-            | System.Windows.Forms.AnchorStyles.Left)
+            this.panelHotkeys.Anchor = ((System.Windows.Forms.AnchorStyles)((((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom) 
+            | System.Windows.Forms.AnchorStyles.Left) 
             | System.Windows.Forms.AnchorStyles.Right)));
             this.panelHotkeys.Controls.Add(this.stackPanel21);
             this.panelHotkeys.Location = new System.Drawing.Point(183, 12);
-            this.panelHotkeys.Name = "panelHotkeys";
             this.panelHotkeys.Size = new System.Drawing.Size(373, 439);
-            this.panelHotkeys.TabIndex = 16;
             this.panelHotkeys.Visible = false;
             // 
             // stackPanel21
             // 
-            this.stackPanel21.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left)
+            this.stackPanel21.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left) 
             | System.Windows.Forms.AnchorStyles.Right)));
             this.stackPanel21.AutoSize = true;
             this.stackPanel21.AutoSizeFill = Gw2Launcher.UI.Controls.StackPanel.AutoSizeFillMode.Width;
@@ -9403,10 +8128,8 @@ namespace Gw2Launcher.UI
             this.stackPanel21.Controls.Add(this.labelHotkeysAdd);
             this.stackPanel21.Location = new System.Drawing.Point(0, 0);
             this.stackPanel21.Margin = new System.Windows.Forms.Padding(0, 0, 13, 0);
-            this.stackPanel21.Name = "stackPanel21";
             this.stackPanel21.Padding = new System.Windows.Forms.Padding(13, 10, 0, 10);
             this.stackPanel21.Size = new System.Drawing.Size(360, 134);
-            this.stackPanel21.TabIndex = 0;
             // 
             // label28
             // 
@@ -9414,9 +8137,7 @@ namespace Gw2Launcher.UI
             this.label28.Font = new System.Drawing.Font("Segoe UI Semibold", 9F, System.Drawing.FontStyle.Bold);
             this.label28.Location = new System.Drawing.Point(13, 10);
             this.label28.Margin = new System.Windows.Forms.Padding(0);
-            this.label28.Name = "label28";
             this.label28.Size = new System.Drawing.Size(50, 15);
-            this.label28.TabIndex = 0;
             this.label28.Text = "Hotkeys";
             // 
             // label214
@@ -9425,9 +8146,7 @@ namespace Gw2Launcher.UI
             this.label214.Font = new System.Drawing.Font("Segoe UI Semilight", 8.25F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
             this.label214.Location = new System.Drawing.Point(14, 26);
             this.label214.Margin = new System.Windows.Forms.Padding(1, 1, 0, 1);
-            this.label214.Name = "label214";
             this.label214.Size = new System.Drawing.Size(313, 13);
-            this.label214.TabIndex = 1;
             this.label214.Text = "Allows the specified action to be taken when the hotkey is pressed";
             // 
             // label139
@@ -9437,9 +8156,7 @@ namespace Gw2Launcher.UI
             this.label139.ForeColor = System.Drawing.SystemColors.GrayText;
             this.label139.Location = new System.Drawing.Point(14, 41);
             this.label139.Margin = new System.Windows.Forms.Padding(1, 1, 0, 8);
-            this.label139.Name = "label139";
             this.label139.Size = new System.Drawing.Size(203, 13);
-            this.label139.TabIndex = 2;
             this.label139.Text = "Bound keys will lose their original behavior";
             // 
             // checkHotkeysEnable
@@ -9447,9 +8164,7 @@ namespace Gw2Launcher.UI
             this.checkHotkeysEnable.AutoSize = true;
             this.checkHotkeysEnable.Location = new System.Drawing.Point(21, 62);
             this.checkHotkeysEnable.Margin = new System.Windows.Forms.Padding(8, 0, 0, 8);
-            this.checkHotkeysEnable.Name = "checkHotkeysEnable";
             this.checkHotkeysEnable.Size = new System.Drawing.Size(104, 17);
-            this.checkHotkeysEnable.TabIndex = 3;
             this.checkHotkeysEnable.Text = "Enable hotkeys";
             this.checkHotkeysEnable.UseVisualStyleBackColor = true;
             // 
@@ -9461,9 +8176,7 @@ namespace Gw2Launcher.UI
             this.panelHotkeysHotkeys.Margin = new System.Windows.Forms.Padding(0, 0, 0, 7);
             this.panelHotkeysHotkeys.MinimumSize = new System.Drawing.Size(10, 5);
             this.panelHotkeysHotkeys.Modified = false;
-            this.panelHotkeysHotkeys.Name = "panelHotkeysHotkeys";
             this.panelHotkeysHotkeys.Size = new System.Drawing.Size(10, 5);
-            this.panelHotkeysHotkeys.TabIndex = 4;
             this.panelHotkeysHotkeys.TemplateHeader = null;
             this.panelHotkeysHotkeys.TemplateKey = null;
             this.panelHotkeysHotkeys.TemplateText = null;
@@ -9474,9 +8187,7 @@ namespace Gw2Launcher.UI
             this.panelHotkeysAddSeparator.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(224)))), ((int)(((byte)(224)))), ((int)(((byte)(224)))));
             this.panelHotkeysAddSeparator.Location = new System.Drawing.Point(18, 102);
             this.panelHotkeysAddSeparator.Margin = new System.Windows.Forms.Padding(5, 3, 10, 5);
-            this.panelHotkeysAddSeparator.Name = "panelHotkeysAddSeparator";
             this.panelHotkeysAddSeparator.Size = new System.Drawing.Size(100, 1);
-            this.panelHotkeysAddSeparator.TabIndex = 5;
             this.panelHotkeysAddSeparator.Visible = false;
             // 
             // labelHotkeysAdd
@@ -9485,27 +8196,23 @@ namespace Gw2Launcher.UI
             this.labelHotkeysAdd.Icon = null;
             this.labelHotkeysAdd.Location = new System.Drawing.Point(16, 111);
             this.labelHotkeysAdd.Margin = new System.Windows.Forms.Padding(3, 3, 0, 0);
-            this.labelHotkeysAdd.Name = "labelHotkeysAdd";
             this.labelHotkeysAdd.Size = new System.Drawing.Size(65, 13);
-            this.labelHotkeysAdd.TabIndex = 6;
             this.labelHotkeysAdd.Text = "add hotkey";
             this.labelHotkeysAdd.Click += new System.EventHandler(this.labelHotkeysAdd_Click);
             // 
             // panelTweaksGw2
             // 
-            this.panelTweaksGw2.Anchor = ((System.Windows.Forms.AnchorStyles)((((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom)
-            | System.Windows.Forms.AnchorStyles.Left)
+            this.panelTweaksGw2.Anchor = ((System.Windows.Forms.AnchorStyles)((((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom) 
+            | System.Windows.Forms.AnchorStyles.Left) 
             | System.Windows.Forms.AnchorStyles.Right)));
             this.panelTweaksGw2.Controls.Add(this.stackPanel101);
             this.panelTweaksGw2.Location = new System.Drawing.Point(183, 12);
-            this.panelTweaksGw2.Name = "panelTweaksGw2";
             this.panelTweaksGw2.Size = new System.Drawing.Size(373, 439);
-            this.panelTweaksGw2.TabIndex = 33;
             this.panelTweaksGw2.Visible = false;
             // 
             // stackPanel101
             // 
-            this.stackPanel101.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left)
+            this.stackPanel101.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left) 
             | System.Windows.Forms.AnchorStyles.Right)));
             this.stackPanel101.AutoSize = true;
             this.stackPanel101.AutoSizeFill = Gw2Launcher.UI.Controls.StackPanel.AutoSizeFillMode.Width;
@@ -9523,10 +8230,8 @@ namespace Gw2Launcher.UI
             this.stackPanel101.Controls.Add(this.checkTweakDailyLogin);
             this.stackPanel101.Location = new System.Drawing.Point(0, 0);
             this.stackPanel101.Margin = new System.Windows.Forms.Padding(0, 0, 13, 0);
-            this.stackPanel101.Name = "stackPanel101";
             this.stackPanel101.Padding = new System.Windows.Forms.Padding(13, 10, 0, 10);
             this.stackPanel101.Size = new System.Drawing.Size(343, 546);
-            this.stackPanel101.TabIndex = 0;
             // 
             // label229
             // 
@@ -9535,9 +8240,7 @@ namespace Gw2Launcher.UI
             this.label229.ForeColor = System.Drawing.Color.Maroon;
             this.label229.Location = new System.Drawing.Point(14, 10);
             this.label229.Margin = new System.Windows.Forms.Padding(1, 0, 0, 0);
-            this.label229.Name = "label229";
             this.label229.Size = new System.Drawing.Size(219, 13);
-            this.label229.TabIndex = 0;
             this.label229.Text = "These options generally shouldn\'t be changed";
             // 
             // label231
@@ -9546,9 +8249,7 @@ namespace Gw2Launcher.UI
             this.label231.Font = new System.Drawing.Font("Segoe UI Semibold", 9F, System.Drawing.FontStyle.Bold);
             this.label231.Location = new System.Drawing.Point(13, 36);
             this.label231.Margin = new System.Windows.Forms.Padding(0, 13, 0, 0);
-            this.label231.Name = "label231";
             this.label231.Size = new System.Drawing.Size(180, 15);
-            this.label231.TabIndex = 1;
             this.label231.Text = "Automatic email/password entry";
             // 
             // checkTweakLogin
@@ -9557,9 +8258,7 @@ namespace Gw2Launcher.UI
             this.checkTweakLogin.Font = new System.Drawing.Font("Segoe UI", 8.25F);
             this.checkTweakLogin.Location = new System.Drawing.Point(21, 59);
             this.checkTweakLogin.Margin = new System.Windows.Forms.Padding(8, 8, 0, 0);
-            this.checkTweakLogin.Name = "checkTweakLogin";
             this.checkTweakLogin.Size = new System.Drawing.Size(250, 17);
-            this.checkTweakLogin.TabIndex = 2;
             this.checkTweakLogin.Text = "Change how the email/password is entered";
             this.checkTweakLogin.UseVisualStyleBackColor = true;
             this.checkTweakLogin.CheckedChanged += new System.EventHandler(this.checkTweakLogin_CheckedChanged);
@@ -9576,9 +8275,7 @@ namespace Gw2Launcher.UI
             this.panelTweakLogin.Controls.Add(this.checkTweakLoginVerify);
             this.panelTweakLogin.Location = new System.Drawing.Point(17, 84);
             this.panelTweakLogin.Margin = new System.Windows.Forms.Padding(4, 8, 0, 0);
-            this.panelTweakLogin.Name = "panelTweakLogin";
             this.panelTweakLogin.Size = new System.Drawing.Size(228, 166);
-            this.panelTweakLogin.TabIndex = 3;
             this.panelTweakLogin.Visible = false;
             // 
             // label244
@@ -9587,9 +8284,7 @@ namespace Gw2Launcher.UI
             this.label244.Font = new System.Drawing.Font("Segoe UI Semilight", 8.25F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
             this.label244.Location = new System.Drawing.Point(1, 0);
             this.label244.Margin = new System.Windows.Forms.Padding(1, 0, 0, 8);
-            this.label244.Name = "label244";
             this.label244.Size = new System.Drawing.Size(119, 13);
-            this.label244.TabIndex = 0;
             this.label244.Text = "Delay entering the login";
             // 
             // stackPanel107
@@ -9601,9 +8296,7 @@ namespace Gw2Launcher.UI
             this.stackPanel107.FlowDirection = System.Windows.Forms.FlowDirection.LeftToRight;
             this.stackPanel107.Location = new System.Drawing.Point(0, 21);
             this.stackPanel107.Margin = new System.Windows.Forms.Padding(0);
-            this.stackPanel107.Name = "stackPanel107";
             this.stackPanel107.Size = new System.Drawing.Size(102, 22);
-            this.stackPanel107.TabIndex = 1;
             // 
             // numericTweakLoginDelay
             // 
@@ -9614,9 +8307,7 @@ namespace Gw2Launcher.UI
             0,
             0,
             0});
-            this.numericTweakLoginDelay.Name = "numericTweakLoginDelay";
             this.numericTweakLoginDelay.Size = new System.Drawing.Size(44, 22);
-            this.numericTweakLoginDelay.TabIndex = 0;
             this.numericTweakLoginDelay.ValueChanged += new System.EventHandler(this.numericTweakLoginDelay_ValueChanged);
             // 
             // labelTweakLoginDelay
@@ -9626,9 +8317,7 @@ namespace Gw2Launcher.UI
             this.labelTweakLoginDelay.Font = new System.Drawing.Font("Segoe UI Semilight", 8.25F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
             this.labelTweakLoginDelay.Location = new System.Drawing.Point(58, 4);
             this.labelTweakLoginDelay.Margin = new System.Windows.Forms.Padding(6, 0, 0, 0);
-            this.labelTweakLoginDelay.Name = "labelTweakLoginDelay";
             this.labelTweakLoginDelay.Size = new System.Drawing.Size(44, 13);
-            this.labelTweakLoginDelay.TabIndex = 1;
             this.labelTweakLoginDelay.Text = "seconds";
             // 
             // label245
@@ -9637,9 +8326,7 @@ namespace Gw2Launcher.UI
             this.label245.Font = new System.Drawing.Font("Segoe UI Semilight", 8.25F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
             this.label245.Location = new System.Drawing.Point(1, 51);
             this.label245.Margin = new System.Windows.Forms.Padding(1, 8, 0, 8);
-            this.label245.Name = "label245";
             this.label245.Size = new System.Drawing.Size(70, 13);
-            this.label245.TabIndex = 2;
             this.label245.Text = "Entry method";
             // 
             // stackPanel105
@@ -9651,9 +8338,7 @@ namespace Gw2Launcher.UI
             this.stackPanel105.FlowDirection = System.Windows.Forms.FlowDirection.LeftToRight;
             this.stackPanel105.Location = new System.Drawing.Point(0, 72);
             this.stackPanel105.Margin = new System.Windows.Forms.Padding(0);
-            this.stackPanel105.Name = "stackPanel105";
             this.stackPanel105.Size = new System.Drawing.Size(228, 21);
-            this.stackPanel105.TabIndex = 3;
             // 
             // label240
             // 
@@ -9663,9 +8348,7 @@ namespace Gw2Launcher.UI
             this.label240.Location = new System.Drawing.Point(4, 4);
             this.label240.Margin = new System.Windows.Forms.Padding(4, 0, 0, 0);
             this.label240.MinimumSize = new System.Drawing.Size(60, 0);
-            this.label240.Name = "label240";
             this.label240.Size = new System.Drawing.Size(60, 13);
-            this.label240.TabIndex = 0;
             this.label240.Text = "Email";
             // 
             // comboTweakEmailMethod
@@ -9674,9 +8357,7 @@ namespace Gw2Launcher.UI
             this.comboTweakEmailMethod.FormattingEnabled = true;
             this.comboTweakEmailMethod.Location = new System.Drawing.Point(71, 0);
             this.comboTweakEmailMethod.Margin = new System.Windows.Forms.Padding(7, 0, 0, 0);
-            this.comboTweakEmailMethod.Name = "comboTweakEmailMethod";
             this.comboTweakEmailMethod.Size = new System.Drawing.Size(157, 21);
-            this.comboTweakEmailMethod.TabIndex = 1;
             // 
             // stackPanel104
             // 
@@ -9687,9 +8368,7 @@ namespace Gw2Launcher.UI
             this.stackPanel104.FlowDirection = System.Windows.Forms.FlowDirection.LeftToRight;
             this.stackPanel104.Location = new System.Drawing.Point(0, 99);
             this.stackPanel104.Margin = new System.Windows.Forms.Padding(0, 6, 0, 0);
-            this.stackPanel104.Name = "stackPanel104";
             this.stackPanel104.Size = new System.Drawing.Size(228, 21);
-            this.stackPanel104.TabIndex = 4;
             // 
             // label239
             // 
@@ -9699,9 +8378,7 @@ namespace Gw2Launcher.UI
             this.label239.Location = new System.Drawing.Point(4, 4);
             this.label239.Margin = new System.Windows.Forms.Padding(4, 0, 0, 0);
             this.label239.MinimumSize = new System.Drawing.Size(60, 0);
-            this.label239.Name = "label239";
             this.label239.Size = new System.Drawing.Size(60, 13);
-            this.label239.TabIndex = 0;
             this.label239.Text = "Password";
             // 
             // comboTweakPasswordMethod
@@ -9710,9 +8387,7 @@ namespace Gw2Launcher.UI
             this.comboTweakPasswordMethod.FormattingEnabled = true;
             this.comboTweakPasswordMethod.Location = new System.Drawing.Point(71, 0);
             this.comboTweakPasswordMethod.Margin = new System.Windows.Forms.Padding(7, 0, 0, 0);
-            this.comboTweakPasswordMethod.Name = "comboTweakPasswordMethod";
             this.comboTweakPasswordMethod.Size = new System.Drawing.Size(157, 21);
-            this.comboTweakPasswordMethod.TabIndex = 1;
             // 
             // stackPanel102
             // 
@@ -9723,9 +8398,7 @@ namespace Gw2Launcher.UI
             this.stackPanel102.FlowDirection = System.Windows.Forms.FlowDirection.LeftToRight;
             this.stackPanel102.Location = new System.Drawing.Point(0, 128);
             this.stackPanel102.Margin = new System.Windows.Forms.Padding(0, 8, 0, 8);
-            this.stackPanel102.Name = "stackPanel102";
             this.stackPanel102.Size = new System.Drawing.Size(159, 13);
-            this.stackPanel102.TabIndex = 5;
             // 
             // label232
             // 
@@ -9734,9 +8407,7 @@ namespace Gw2Launcher.UI
             this.label232.Font = new System.Drawing.Font("Segoe UI Semilight", 8.25F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
             this.label232.Location = new System.Drawing.Point(1, 0);
             this.label232.Margin = new System.Windows.Forms.Padding(1, 0, 0, 0);
-            this.label232.Name = "label232";
             this.label232.Size = new System.Drawing.Size(33, 13);
-            this.label232.TabIndex = 0;
             this.label232.Text = "Verify";
             // 
             // label236
@@ -9747,9 +8418,7 @@ namespace Gw2Launcher.UI
             this.label236.ForeColor = System.Drawing.SystemColors.GrayText;
             this.label236.Location = new System.Drawing.Point(35, 0);
             this.label236.Margin = new System.Windows.Forms.Padding(1, 0, 0, 0);
-            this.label236.Name = "label236";
             this.label236.Size = new System.Drawing.Size(124, 13);
-            this.label236.TabIndex = 1;
             this.label236.Text = "requires clipboard access";
             // 
             // checkTweakLoginVerify
@@ -9760,9 +8429,7 @@ namespace Gw2Launcher.UI
             this.checkTweakLoginVerify.Font = new System.Drawing.Font("Segoe UI", 8.25F);
             this.checkTweakLoginVerify.Location = new System.Drawing.Point(8, 149);
             this.checkTweakLoginVerify.Margin = new System.Windows.Forms.Padding(8, 0, 0, 0);
-            this.checkTweakLoginVerify.Name = "checkTweakLoginVerify";
             this.checkTweakLoginVerify.Size = new System.Drawing.Size(197, 17);
-            this.checkTweakLoginVerify.TabIndex = 6;
             this.checkTweakLoginVerify.Text = "Verify the login has been entered";
             this.checkTweakLoginVerify.UseVisualStyleBackColor = true;
             // 
@@ -9772,9 +8439,7 @@ namespace Gw2Launcher.UI
             this.label230.Font = new System.Drawing.Font("Segoe UI Semibold", 9F, System.Drawing.FontStyle.Bold);
             this.label230.Location = new System.Drawing.Point(13, 263);
             this.label230.Margin = new System.Windows.Forms.Padding(0, 13, 0, 0);
-            this.label230.Name = "label230";
             this.label230.Size = new System.Drawing.Size(121, 15);
-            this.label230.TabIndex = 4;
             this.label230.Text = "Launcher coordinates";
             // 
             // label243
@@ -9783,9 +8448,7 @@ namespace Gw2Launcher.UI
             this.label243.Font = new System.Drawing.Font("Segoe UI Semilight", 8.25F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
             this.label243.Location = new System.Drawing.Point(14, 279);
             this.label243.Margin = new System.Windows.Forms.Padding(1, 1, 0, 8);
-            this.label243.Name = "label243";
             this.label243.Size = new System.Drawing.Size(249, 13);
-            this.label243.TabIndex = 5;
             this.label243.Text = "Configure where points on the launcher are located";
             // 
             // labelTweakLauncherCoords
@@ -9794,9 +8457,7 @@ namespace Gw2Launcher.UI
             this.labelTweakLauncherCoords.Icon = null;
             this.labelTweakLauncherCoords.Location = new System.Drawing.Point(21, 300);
             this.labelTweakLauncherCoords.Margin = new System.Windows.Forms.Padding(8, 0, 0, 0);
-            this.labelTweakLauncherCoords.Name = "labelTweakLauncherCoords";
             this.labelTweakLauncherCoords.Size = new System.Drawing.Size(57, 13);
-            this.labelTweakLauncherCoords.TabIndex = 6;
             this.labelTweakLauncherCoords.Text = "configure";
             this.labelTweakLauncherCoords.Click += new System.EventHandler(this.labelTweakLauncherCoords_Click);
             // 
@@ -9806,9 +8467,7 @@ namespace Gw2Launcher.UI
             this.label246.Font = new System.Drawing.Font("Segoe UI Semibold", 9F, System.Drawing.FontStyle.Bold);
             this.label246.Location = new System.Drawing.Point(13, 326);
             this.label246.Margin = new System.Windows.Forms.Padding(0, 13, 0, 0);
-            this.label246.Name = "label246";
             this.label246.Size = new System.Drawing.Size(108, 15);
-            this.label246.TabIndex = 7;
             this.label246.Text = "Launcher readiness";
             // 
             // checkTweakLauncher
@@ -9817,9 +8476,7 @@ namespace Gw2Launcher.UI
             this.checkTweakLauncher.Font = new System.Drawing.Font("Segoe UI", 8.25F);
             this.checkTweakLauncher.Location = new System.Drawing.Point(21, 349);
             this.checkTweakLauncher.Margin = new System.Windows.Forms.Padding(8, 8, 0, 0);
-            this.checkTweakLauncher.Name = "checkTweakLauncher";
             this.checkTweakLauncher.Size = new System.Drawing.Size(219, 17);
-            this.checkTweakLauncher.TabIndex = 8;
             this.checkTweakLauncher.Text = "Change how the launcher is detected";
             this.checkTweakLauncher.UseVisualStyleBackColor = true;
             this.checkTweakLauncher.CheckedChanged += new System.EventHandler(this.checkTweakLauncher_CheckedChanged);
@@ -9834,9 +8491,7 @@ namespace Gw2Launcher.UI
             this.panelTweakLauncher.Controls.Add(this.stackPanel109);
             this.panelTweakLauncher.Location = new System.Drawing.Point(17, 374);
             this.panelTweakLauncher.Margin = new System.Windows.Forms.Padding(4, 8, 0, 0);
-            this.panelTweakLauncher.Name = "panelTweakLauncher";
             this.panelTweakLauncher.Size = new System.Drawing.Size(238, 109);
-            this.panelTweakLauncher.TabIndex = 9;
             this.panelTweakLauncher.Visible = false;
             // 
             // label254
@@ -9845,9 +8500,7 @@ namespace Gw2Launcher.UI
             this.label254.Font = new System.Drawing.Font("Segoe UI Semilight", 8.25F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
             this.label254.Location = new System.Drawing.Point(1, 0);
             this.label254.Margin = new System.Windows.Forms.Padding(1, 0, 0, 8);
-            this.label254.Name = "label254";
             this.label254.Size = new System.Drawing.Size(61, 13);
-            this.label254.TabIndex = 0;
             this.label254.Text = "CoherentUI";
             // 
             // checkTweakLauncherCoherentLoad
@@ -9858,9 +8511,7 @@ namespace Gw2Launcher.UI
             this.checkTweakLauncherCoherentLoad.Font = new System.Drawing.Font("Segoe UI", 8.25F);
             this.checkTweakLauncherCoherentLoad.Location = new System.Drawing.Point(8, 21);
             this.checkTweakLauncherCoherentLoad.Margin = new System.Windows.Forms.Padding(8, 0, 0, 0);
-            this.checkTweakLauncherCoherentLoad.Name = "checkTweakLauncherCoherentLoad";
             this.checkTweakLauncherCoherentLoad.Size = new System.Drawing.Size(132, 17);
-            this.checkTweakLauncherCoherentLoad.TabIndex = 1;
             this.checkTweakLauncherCoherentLoad.Text = "Wait for files to load";
             this.checkTweakLauncherCoherentLoad.UseVisualStyleBackColor = true;
             // 
@@ -9873,9 +8524,7 @@ namespace Gw2Launcher.UI
             this.stackPanel103.FlowDirection = System.Windows.Forms.FlowDirection.LeftToRight;
             this.stackPanel103.Location = new System.Drawing.Point(0, 41);
             this.stackPanel103.Margin = new System.Windows.Forms.Padding(0, 3, 0, 0);
-            this.stackPanel103.Name = "stackPanel103";
             this.stackPanel103.Size = new System.Drawing.Size(238, 17);
-            this.stackPanel103.TabIndex = 2;
             // 
             // checkTweakLauncherCoherentMemory
             // 
@@ -9885,9 +8534,7 @@ namespace Gw2Launcher.UI
             this.checkTweakLauncherCoherentMemory.Font = new System.Drawing.Font("Segoe UI", 8.25F);
             this.checkTweakLauncherCoherentMemory.Location = new System.Drawing.Point(8, 0);
             this.checkTweakLauncherCoherentMemory.Margin = new System.Windows.Forms.Padding(8, 0, 0, 0);
-            this.checkTweakLauncherCoherentMemory.Name = "checkTweakLauncherCoherentMemory";
             this.checkTweakLauncherCoherentMemory.Size = new System.Drawing.Size(148, 17);
-            this.checkTweakLauncherCoherentMemory.TabIndex = 0;
             this.checkTweakLauncherCoherentMemory.Text = "Wait for loading to end";
             this.checkTweakLauncherCoherentMemory.UseVisualStyleBackColor = true;
             // 
@@ -9899,9 +8546,7 @@ namespace Gw2Launcher.UI
             this.label233.ForeColor = System.Drawing.SystemColors.GrayText;
             this.label233.Location = new System.Drawing.Point(157, 1);
             this.label233.Margin = new System.Windows.Forms.Padding(1, 0, 0, 1);
-            this.label233.Name = "label233";
             this.label233.Size = new System.Drawing.Size(81, 13);
-            this.label233.TabIndex = 1;
             this.label233.Text = "fallback method";
             // 
             // label247
@@ -9910,9 +8555,7 @@ namespace Gw2Launcher.UI
             this.label247.Font = new System.Drawing.Font("Segoe UI Semilight", 8.25F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
             this.label247.Location = new System.Drawing.Point(1, 66);
             this.label247.Margin = new System.Windows.Forms.Padding(1, 8, 0, 8);
-            this.label247.Name = "label247";
             this.label247.Size = new System.Drawing.Size(34, 13);
-            this.label247.TabIndex = 3;
             this.label247.Text = "Delay";
             // 
             // stackPanel109
@@ -9924,9 +8567,7 @@ namespace Gw2Launcher.UI
             this.stackPanel109.FlowDirection = System.Windows.Forms.FlowDirection.LeftToRight;
             this.stackPanel109.Location = new System.Drawing.Point(0, 87);
             this.stackPanel109.Margin = new System.Windows.Forms.Padding(0);
-            this.stackPanel109.Name = "stackPanel109";
             this.stackPanel109.Size = new System.Drawing.Size(102, 22);
-            this.stackPanel109.TabIndex = 4;
             // 
             // numericTweakLauncherDelay
             // 
@@ -9937,9 +8578,7 @@ namespace Gw2Launcher.UI
             0,
             0,
             0});
-            this.numericTweakLauncherDelay.Name = "numericTweakLauncherDelay";
             this.numericTweakLauncherDelay.Size = new System.Drawing.Size(44, 22);
-            this.numericTweakLauncherDelay.TabIndex = 0;
             this.numericTweakLauncherDelay.ValueChanged += new System.EventHandler(this.numericTweakLauncherDelay_ValueChanged);
             // 
             // labelTweakLauncherDelay
@@ -9949,9 +8588,7 @@ namespace Gw2Launcher.UI
             this.labelTweakLauncherDelay.Font = new System.Drawing.Font("Segoe UI Semilight", 8.25F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
             this.labelTweakLauncherDelay.Location = new System.Drawing.Point(58, 4);
             this.labelTweakLauncherDelay.Margin = new System.Windows.Forms.Padding(6, 0, 0, 0);
-            this.labelTweakLauncherDelay.Name = "labelTweakLauncherDelay";
             this.labelTweakLauncherDelay.Size = new System.Drawing.Size(44, 13);
-            this.labelTweakLauncherDelay.TabIndex = 1;
             this.labelTweakLauncherDelay.Text = "seconds";
             // 
             // label127
@@ -9960,9 +8597,7 @@ namespace Gw2Launcher.UI
             this.label127.Font = new System.Drawing.Font("Segoe UI Semibold", 9F, System.Drawing.FontStyle.Bold);
             this.label127.Location = new System.Drawing.Point(13, 496);
             this.label127.Margin = new System.Windows.Forms.Padding(0, 13, 0, 0);
-            this.label127.Name = "label127";
             this.label127.Size = new System.Drawing.Size(64, 15);
-            this.label127.TabIndex = 10;
             this.label127.Text = "Daily login";
             // 
             // checkTweakDailyLogin
@@ -9973,28 +8608,24 @@ namespace Gw2Launcher.UI
             this.checkTweakDailyLogin.Font = new System.Drawing.Font("Segoe UI", 8.25F);
             this.checkTweakDailyLogin.Location = new System.Drawing.Point(21, 519);
             this.checkTweakDailyLogin.Margin = new System.Windows.Forms.Padding(8, 8, 0, 0);
-            this.checkTweakDailyLogin.Name = "checkTweakDailyLogin";
             this.checkTweakDailyLogin.Size = new System.Drawing.Size(210, 17);
-            this.checkTweakDailyLogin.TabIndex = 11;
             this.checkTweakDailyLogin.Text = "Use MumbleLink to track daily login";
             this.checkTweakDailyLogin.UseVisualStyleBackColor = true;
             // 
             // panelSteamGw2
             // 
-            this.panelSteamGw2.Anchor = ((System.Windows.Forms.AnchorStyles)((((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom)
-            | System.Windows.Forms.AnchorStyles.Left)
+            this.panelSteamGw2.Anchor = ((System.Windows.Forms.AnchorStyles)((((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom) 
+            | System.Windows.Forms.AnchorStyles.Left) 
             | System.Windows.Forms.AnchorStyles.Right)));
             this.panelSteamGw2.Controls.Add(this.stackPanel110);
             this.panelSteamGw2.Location = new System.Drawing.Point(183, 12);
-            this.panelSteamGw2.Name = "panelSteamGw2";
             this.panelSteamGw2.Size = new System.Drawing.Size(373, 439);
-            this.panelSteamGw2.TabIndex = 30;
             this.panelSteamGw2.Visible = false;
             this.panelSteamGw2.PreVisiblePropertyChanged += new System.EventHandler<bool>(this.panelSteamGw2_PreVisiblePropertyChanged);
             // 
             // stackPanel110
             // 
-            this.stackPanel110.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left)
+            this.stackPanel110.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left) 
             | System.Windows.Forms.AnchorStyles.Right)));
             this.stackPanel110.AutoSize = true;
             this.stackPanel110.AutoSizeFill = Gw2Launcher.UI.Controls.StackPanel.AutoSizeFillMode.Width;
@@ -10010,10 +8641,8 @@ namespace Gw2Launcher.UI
             this.stackPanel110.Controls.Add(this.stackPanel112);
             this.stackPanel110.Location = new System.Drawing.Point(0, 0);
             this.stackPanel110.Margin = new System.Windows.Forms.Padding(0, 0, 13, 0);
-            this.stackPanel110.Name = "stackPanel110";
             this.stackPanel110.Padding = new System.Windows.Forms.Padding(13, 10, 0, 10);
             this.stackPanel110.Size = new System.Drawing.Size(360, 282);
-            this.stackPanel110.TabIndex = 0;
             // 
             // label242
             // 
@@ -10021,9 +8650,7 @@ namespace Gw2Launcher.UI
             this.label242.Font = new System.Drawing.Font("Segoe UI Semibold", 9F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
             this.label242.Location = new System.Drawing.Point(13, 10);
             this.label242.Margin = new System.Windows.Forms.Padding(0);
-            this.label242.Name = "label242";
             this.label242.Size = new System.Drawing.Size(87, 15);
-            this.label242.TabIndex = 0;
             this.label242.Text = "Steam location";
             // 
             // label249
@@ -10032,9 +8659,7 @@ namespace Gw2Launcher.UI
             this.label249.Font = new System.Drawing.Font("Segoe UI Semilight", 8.25F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
             this.label249.Location = new System.Drawing.Point(14, 26);
             this.label249.Margin = new System.Windows.Forms.Padding(1, 1, 0, 8);
-            this.label249.Name = "label249";
             this.label249.Size = new System.Drawing.Size(213, 13);
-            this.label249.TabIndex = 1;
             this.label249.Text = "Manually set the location of the Steam client";
             // 
             // stackPanel111
@@ -10047,9 +8672,7 @@ namespace Gw2Launcher.UI
             this.stackPanel111.FlowDirection = System.Windows.Forms.FlowDirection.LeftToRight;
             this.stackPanel111.Location = new System.Drawing.Point(13, 47);
             this.stackPanel111.Margin = new System.Windows.Forms.Padding(0);
-            this.stackPanel111.Name = "stackPanel111";
             this.stackPanel111.Size = new System.Drawing.Size(347, 24);
-            this.stackPanel111.TabIndex = 2;
             // 
             // checkSteamPath
             // 
@@ -10057,9 +8680,7 @@ namespace Gw2Launcher.UI
             this.checkSteamPath.AutoSize = true;
             this.checkSteamPath.Location = new System.Drawing.Point(8, 5);
             this.checkSteamPath.Margin = new System.Windows.Forms.Padding(8, 0, 0, 0);
-            this.checkSteamPath.Name = "checkSteamPath";
             this.checkSteamPath.Size = new System.Drawing.Size(15, 14);
-            this.checkSteamPath.TabIndex = 0;
             this.checkSteamPath.UseVisualStyleBackColor = true;
             this.checkSteamPath.CheckedChanged += new System.EventHandler(this.checkSteamPath_CheckedChanged);
             // 
@@ -10070,9 +8691,7 @@ namespace Gw2Launcher.UI
             this.textSteamPath.Font = new System.Drawing.Font("Segoe UI", 8.25F);
             this.textSteamPath.Location = new System.Drawing.Point(30, 1);
             this.textSteamPath.Margin = new System.Windows.Forms.Padding(7, 1, 0, 1);
-            this.textSteamPath.Name = "textSteamPath";
             this.textSteamPath.Size = new System.Drawing.Size(268, 22);
-            this.textSteamPath.TabIndex = 1;
             // 
             // buttonSteamPath
             // 
@@ -10082,10 +8701,8 @@ namespace Gw2Launcher.UI
             this.buttonSteamPath.Font = new System.Drawing.Font("Segoe UI", 8.25F);
             this.buttonSteamPath.Location = new System.Drawing.Point(304, 0);
             this.buttonSteamPath.Margin = new System.Windows.Forms.Padding(6, 0, 0, 0);
-            this.buttonSteamPath.Name = "buttonSteamPath";
             this.buttonSteamPath.Padding = new System.Windows.Forms.Padding(8, 0, 8, 0);
             this.buttonSteamPath.Size = new System.Drawing.Size(43, 24);
-            this.buttonSteamPath.TabIndex = 2;
             this.buttonSteamPath.Text = "...";
             this.buttonSteamPath.UseVisualStyleBackColor = true;
             // 
@@ -10095,9 +8712,7 @@ namespace Gw2Launcher.UI
             this.label251.Font = new System.Drawing.Font("Segoe UI Semibold", 9F, System.Drawing.FontStyle.Bold);
             this.label251.Location = new System.Drawing.Point(13, 84);
             this.label251.Margin = new System.Windows.Forms.Padding(0, 13, 0, 0);
-            this.label251.Name = "label251";
             this.label251.Size = new System.Drawing.Size(52, 15);
-            this.label251.TabIndex = 3;
             this.label251.Text = "Timeout";
             // 
             // label250
@@ -10106,9 +8721,7 @@ namespace Gw2Launcher.UI
             this.label250.Font = new System.Drawing.Font("Segoe UI Semilight", 8.25F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
             this.label250.Location = new System.Drawing.Point(14, 100);
             this.label250.Margin = new System.Windows.Forms.Padding(1, 1, 0, 8);
-            this.label250.Name = "label250";
             this.label250.Size = new System.Drawing.Size(206, 13);
-            this.label250.TabIndex = 4;
             this.label250.Text = "Maximum time to wait for Steam to launch";
             // 
             // stackPanel113
@@ -10120,9 +8733,7 @@ namespace Gw2Launcher.UI
             this.stackPanel113.FlowDirection = System.Windows.Forms.FlowDirection.LeftToRight;
             this.stackPanel113.Location = new System.Drawing.Point(13, 121);
             this.stackPanel113.Margin = new System.Windows.Forms.Padding(0);
-            this.stackPanel113.Name = "stackPanel113";
             this.stackPanel113.Size = new System.Drawing.Size(114, 22);
-            this.stackPanel113.TabIndex = 5;
             // 
             // numericSteamTimeout
             // 
@@ -10138,9 +8749,7 @@ namespace Gw2Launcher.UI
             0,
             0,
             0});
-            this.numericSteamTimeout.Name = "numericSteamTimeout";
             this.numericSteamTimeout.Size = new System.Drawing.Size(51, 22);
-            this.numericSteamTimeout.TabIndex = 0;
             this.numericSteamTimeout.Value = new decimal(new int[] {
             5,
             0,
@@ -10154,9 +8763,7 @@ namespace Gw2Launcher.UI
             this.label252.Font = new System.Drawing.Font("Segoe UI", 8.25F);
             this.label252.Location = new System.Drawing.Point(65, 4);
             this.label252.Margin = new System.Windows.Forms.Padding(6, 0, 0, 0);
-            this.label252.Name = "label252";
             this.label252.Size = new System.Drawing.Size(49, 13);
-            this.label252.TabIndex = 1;
             this.label252.Text = "seconds";
             // 
             // label253
@@ -10165,9 +8772,7 @@ namespace Gw2Launcher.UI
             this.label253.Font = new System.Drawing.Font("Segoe UI Semibold", 9F, System.Drawing.FontStyle.Bold);
             this.label253.Location = new System.Drawing.Point(13, 156);
             this.label253.Margin = new System.Windows.Forms.Padding(0, 13, 0, 0);
-            this.label253.Name = "label253";
             this.label253.Size = new System.Drawing.Size(61, 15);
-            this.label253.TabIndex = 6;
             this.label253.Text = "Limitation";
             // 
             // label255
@@ -10176,9 +8781,7 @@ namespace Gw2Launcher.UI
             this.label255.Font = new System.Drawing.Font("Segoe UI Semilight", 8.25F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
             this.label255.Location = new System.Drawing.Point(14, 172);
             this.label255.Margin = new System.Windows.Forms.Padding(1, 1, 0, 8);
-            this.label255.Name = "label255";
             this.label255.Size = new System.Drawing.Size(287, 13);
-            this.label255.TabIndex = 7;
             this.label255.Text = "Only one account can be launched through Steam at a time";
             // 
             // label256
@@ -10187,9 +8790,7 @@ namespace Gw2Launcher.UI
             this.label256.Font = new System.Drawing.Font("Segoe UI Semilight", 8.25F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
             this.label256.Location = new System.Drawing.Point(14, 194);
             this.label256.Margin = new System.Windows.Forms.Padding(1, 1, 0, 8);
-            this.label256.Name = "label256";
             this.label256.Size = new System.Drawing.Size(151, 13);
-            this.label256.TabIndex = 8;
             this.label256.Text = "When Steam is already in use...";
             // 
             // stackPanel112
@@ -10201,9 +8802,7 @@ namespace Gw2Launcher.UI
             this.stackPanel112.Controls.Add(this.radioSteamLimitLaunchWithout);
             this.stackPanel112.Location = new System.Drawing.Point(13, 215);
             this.stackPanel112.Margin = new System.Windows.Forms.Padding(0);
-            this.stackPanel112.Name = "stackPanel112";
             this.stackPanel112.Size = new System.Drawing.Size(244, 57);
-            this.stackPanel112.TabIndex = 9;
             // 
             // radioSteamLimitSteam
             // 
@@ -10211,9 +8810,7 @@ namespace Gw2Launcher.UI
             this.radioSteamLimitSteam.Checked = true;
             this.radioSteamLimitSteam.Location = new System.Drawing.Point(8, 0);
             this.radioSteamLimitSteam.Margin = new System.Windows.Forms.Padding(8, 0, 0, 0);
-            this.radioSteamLimitSteam.Name = "radioSteamLimitSteam";
             this.radioSteamLimitSteam.Size = new System.Drawing.Size(162, 17);
-            this.radioSteamLimitSteam.TabIndex = 0;
             this.radioSteamLimitSteam.TabStop = true;
             this.radioSteamLimitSteam.Text = "Only delay Steam launches";
             this.radioSteamLimitSteam.UseVisualStyleBackColor = true;
@@ -10223,9 +8820,7 @@ namespace Gw2Launcher.UI
             this.radioSteamLimitAll.AutoSize = true;
             this.radioSteamLimitAll.Location = new System.Drawing.Point(8, 20);
             this.radioSteamLimitAll.Margin = new System.Windows.Forms.Padding(8, 3, 0, 0);
-            this.radioSteamLimitAll.Name = "radioSteamLimitAll";
             this.radioSteamLimitAll.Size = new System.Drawing.Size(117, 17);
-            this.radioSteamLimitAll.TabIndex = 1;
             this.radioSteamLimitAll.Text = "Delay all launches";
             this.radioSteamLimitAll.UseVisualStyleBackColor = true;
             // 
@@ -10234,9 +8829,7 @@ namespace Gw2Launcher.UI
             this.radioSteamLimitLaunchWithout.AutoSize = true;
             this.radioSteamLimitLaunchWithout.Location = new System.Drawing.Point(8, 40);
             this.radioSteamLimitLaunchWithout.Margin = new System.Windows.Forms.Padding(8, 3, 0, 0);
-            this.radioSteamLimitLaunchWithout.Name = "radioSteamLimitLaunchWithout";
             this.radioSteamLimitLaunchWithout.Size = new System.Drawing.Size(236, 17);
-            this.radioSteamLimitLaunchWithout.TabIndex = 2;
             this.radioSteamLimitLaunchWithout.Text = "Launch the account without using Steam";
             this.radioSteamLimitLaunchWithout.UseVisualStyleBackColor = true;
             // 
@@ -10250,71 +8843,61 @@ namespace Gw2Launcher.UI
             this.toolStripMenuItem1,
             this.presetImportToolStripMenuItem,
             this.presetExportToolStripMenuItem});
-            this.contextColorsPreset.Name = "contextColorsPreset";
             this.contextColorsPreset.Size = new System.Drawing.Size(111, 126);
             // 
             // presetLightToolStripMenuItem
             // 
-            this.presetLightToolStripMenuItem.Name = "presetLightToolStripMenuItem";
             this.presetLightToolStripMenuItem.Size = new System.Drawing.Size(110, 22);
             this.presetLightToolStripMenuItem.Text = "Light";
             this.presetLightToolStripMenuItem.Click += new System.EventHandler(this.presetLightToolStripMenuItem_Click);
             // 
             // presetDarkToolStripMenuItem
             // 
-            this.presetDarkToolStripMenuItem.Name = "presetDarkToolStripMenuItem";
             this.presetDarkToolStripMenuItem.Size = new System.Drawing.Size(110, 22);
             this.presetDarkToolStripMenuItem.Text = "Dark";
             this.presetDarkToolStripMenuItem.Click += new System.EventHandler(this.presetDarkToolStripMenuItem_Click);
             // 
             // toolStripMenuItem3
             // 
-            this.toolStripMenuItem3.Name = "toolStripMenuItem3";
             this.toolStripMenuItem3.Size = new System.Drawing.Size(107, 6);
             // 
             // currentToolStripMenuItem
             // 
-            this.currentToolStripMenuItem.Name = "currentToolStripMenuItem";
             this.currentToolStripMenuItem.Size = new System.Drawing.Size(110, 22);
             this.currentToolStripMenuItem.Text = "Reset";
             this.currentToolStripMenuItem.Click += new System.EventHandler(this.currentToolStripMenuItem_Click);
             // 
             // toolStripMenuItem1
             // 
-            this.toolStripMenuItem1.Name = "toolStripMenuItem1";
             this.toolStripMenuItem1.Size = new System.Drawing.Size(107, 6);
             // 
             // presetImportToolStripMenuItem
             // 
-            this.presetImportToolStripMenuItem.Name = "presetImportToolStripMenuItem";
             this.presetImportToolStripMenuItem.Size = new System.Drawing.Size(110, 22);
             this.presetImportToolStripMenuItem.Text = "Import";
             this.presetImportToolStripMenuItem.Click += new System.EventHandler(this.presetImportToolStripMenuItem_Click);
             // 
             // presetExportToolStripMenuItem
             // 
-            this.presetExportToolStripMenuItem.Name = "presetExportToolStripMenuItem";
             this.presetExportToolStripMenuItem.Size = new System.Drawing.Size(110, 22);
             this.presetExportToolStripMenuItem.Text = "Export";
             this.presetExportToolStripMenuItem.Click += new System.EventHandler(this.presetExportToolStripMenuItem_Click);
             // 
             // panelColors
             // 
-            this.panelColors.Anchor = ((System.Windows.Forms.AnchorStyles)((((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom)
-            | System.Windows.Forms.AnchorStyles.Left)
+            this.panelColors.Anchor = ((System.Windows.Forms.AnchorStyles)((((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom) 
+            | System.Windows.Forms.AnchorStyles.Left) 
             | System.Windows.Forms.AnchorStyles.Right)));
             this.panelColors.Controls.Add(this.panelColorsContent);
             this.panelColors.Location = new System.Drawing.Point(183, 12);
-            this.panelColors.Name = "panelColors";
             this.panelColors.Size = new System.Drawing.Size(373, 439);
-            this.panelColors.TabIndex = 8;
             this.panelColors.Visible = false;
             this.panelColors.PreVisiblePropertyChanged += new System.EventHandler<bool>(this.panelColors_PreVisiblePropertyChanged);
             // 
             // panelColorsContent
             // 
-            this.panelColorsContent.Anchor = ((System.Windows.Forms.AnchorStyles)((((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom)
-            | System.Windows.Forms.AnchorStyles.Left)
+            this.panelColorsContent.Anchor = ((System.Windows.Forms.AnchorStyles)((((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom) 
+            | System.Windows.Forms.AnchorStyles.Left) 
             | System.Windows.Forms.AnchorStyles.Right)));
             this.panelColorsContent.AutoSize = true;
             this.panelColorsContent.AutoSizeFill = Gw2Launcher.UI.Controls.StackPanel.AutoSizeFillMode.Width;
@@ -10329,19 +8912,15 @@ namespace Gw2Launcher.UI
             this.panelColorsContent.Controls.Add(this.textColorsFilter);
             this.panelColorsContent.Location = new System.Drawing.Point(0, 0);
             this.panelColorsContent.Margin = new System.Windows.Forms.Padding(0, 0, 13, 0);
-            this.panelColorsContent.Name = "panelColorsContent";
             this.panelColorsContent.Padding = new System.Windows.Forms.Padding(13, 10, 0, 10);
             this.panelColorsContent.Size = new System.Drawing.Size(360, 439);
-            this.panelColorsContent.TabIndex = 0;
             // 
             // checkColorsShared
             // 
             this.checkColorsShared.AutoSize = true;
             this.checkColorsShared.Location = new System.Drawing.Point(21, 33);
             this.checkColorsShared.Margin = new System.Windows.Forms.Padding(8, 3, 0, 0);
-            this.checkColorsShared.Name = "checkColorsShared";
             this.checkColorsShared.Size = new System.Drawing.Size(235, 17);
-            this.checkColorsShared.TabIndex = 1;
             this.checkColorsShared.Text = "Change all colors sharing the same color";
             this.checkColorsShared.UseVisualStyleBackColor = true;
             // 
@@ -10354,18 +8933,14 @@ namespace Gw2Launcher.UI
             this.stackPanel30.FlowDirection = System.Windows.Forms.FlowDirection.LeftToRight;
             this.stackPanel30.Location = new System.Drawing.Point(21, 53);
             this.stackPanel30.Margin = new System.Windows.Forms.Padding(8, 3, 0, 8);
-            this.stackPanel30.Name = "stackPanel30";
             this.stackPanel30.Size = new System.Drawing.Size(220, 17);
-            this.stackPanel30.TabIndex = 2;
             // 
             // checkColorsPreview
             // 
             this.checkColorsPreview.AutoSize = true;
             this.checkColorsPreview.Location = new System.Drawing.Point(0, 0);
             this.checkColorsPreview.Margin = new System.Windows.Forms.Padding(0);
-            this.checkColorsPreview.Name = "checkColorsPreview";
             this.checkColorsPreview.Size = new System.Drawing.Size(111, 17);
-            this.checkColorsPreview.TabIndex = 0;
             this.checkColorsPreview.Text = "Preview changes";
             this.checkColorsPreview.UseVisualStyleBackColor = true;
             this.checkColorsPreview.CheckedChanged += new System.EventHandler(this.checkColorsPreview_CheckedChanged);
@@ -10378,9 +8953,7 @@ namespace Gw2Launcher.UI
             this.label257.ForeColor = System.Drawing.SystemColors.GrayText;
             this.label257.Location = new System.Drawing.Point(112, 2);
             this.label257.Margin = new System.Windows.Forms.Padding(1, 0, 0, 0);
-            this.label257.Name = "label257";
             this.label257.Size = new System.Drawing.Size(108, 13);
-            this.label257.TabIndex = 1;
             this.label257.Text = "applies to the main UI";
             // 
             // comboColors
@@ -10393,9 +8966,7 @@ namespace Gw2Launcher.UI
             "All"});
             this.comboColors.Location = new System.Drawing.Point(21, 83);
             this.comboColors.Margin = new System.Windows.Forms.Padding(8, 5, 0, 13);
-            this.comboColors.Name = "comboColors";
             this.comboColors.Size = new System.Drawing.Size(177, 21);
-            this.comboColors.TabIndex = 3;
             this.comboColors.SelectedIndexChanged += new System.EventHandler(this.comboColors_SelectedIndexChanged);
             // 
             // stackPanel70
@@ -10406,9 +8977,7 @@ namespace Gw2Launcher.UI
             this.stackPanel70.FlowDirection = System.Windows.Forms.FlowDirection.LeftToRight;
             this.stackPanel70.Location = new System.Drawing.Point(14, 120);
             this.stackPanel70.Margin = new System.Windows.Forms.Padding(1, 3, 0, 0);
-            this.stackPanel70.Name = "stackPanel70";
             this.stackPanel70.Size = new System.Drawing.Size(94, 18);
-            this.stackPanel70.TabIndex = 4;
             this.stackPanel70.Visible = false;
             // 
             // labelColorTemplate
@@ -10419,9 +8988,7 @@ namespace Gw2Launcher.UI
             this.labelColorTemplate.Location = new System.Drawing.Point(0, 2);
             this.labelColorTemplate.Margin = new System.Windows.Forms.Padding(0);
             this.labelColorTemplate.MinimumSize = new System.Drawing.Size(70, 0);
-            this.labelColorTemplate.Name = "labelColorTemplate";
             this.labelColorTemplate.Size = new System.Drawing.Size(70, 13);
-            this.labelColorTemplate.TabIndex = 0;
             this.labelColorTemplate.Text = "Template";
             this.labelColorTemplate.Visible = false;
             // 
@@ -10430,9 +8997,7 @@ namespace Gw2Launcher.UI
             this.panelColorTemplate.Anchor = System.Windows.Forms.AnchorStyles.Left;
             this.panelColorTemplate.Location = new System.Drawing.Point(76, 0);
             this.panelColorTemplate.Margin = new System.Windows.Forms.Padding(6, 0, 0, 0);
-            this.panelColorTemplate.Name = "panelColorTemplate";
             this.panelColorTemplate.Size = new System.Drawing.Size(18, 18);
-            this.panelColorTemplate.TabIndex = 1;
             this.panelColorTemplate.Visible = false;
             // 
             // panelColorsAccount
@@ -10442,9 +9007,7 @@ namespace Gw2Launcher.UI
             this.panelColorsAccount.Location = new System.Drawing.Point(18, 138);
             this.panelColorsAccount.Margin = new System.Windows.Forms.Padding(5, 0, 0, 0);
             this.panelColorsAccount.MinimumSize = new System.Drawing.Size(10, 10);
-            this.panelColorsAccount.Name = "panelColorsAccount";
             this.panelColorsAccount.Size = new System.Drawing.Size(225, 75);
-            this.panelColorsAccount.TabIndex = 5;
             this.panelColorsAccount.Visible = false;
             // 
             // panelColorsAccountSample
@@ -10452,9 +9015,7 @@ namespace Gw2Launcher.UI
             this.panelColorsAccountSample.Location = new System.Drawing.Point(0, 0);
             this.panelColorsAccountSample.Margin = new System.Windows.Forms.Padding(0, 0, 0, 13);
             this.panelColorsAccountSample.MinimumSize = new System.Drawing.Size(5, 5);
-            this.panelColorsAccountSample.Name = "panelColorsAccountSample";
             this.panelColorsAccountSample.Size = new System.Drawing.Size(225, 62);
-            this.panelColorsAccountSample.TabIndex = 0;
             // 
             // panelColorsUi
             // 
@@ -10462,9 +9023,7 @@ namespace Gw2Launcher.UI
             this.panelColorsUi.Location = new System.Drawing.Point(18, 213);
             this.panelColorsUi.Margin = new System.Windows.Forms.Padding(5, 0, 0, 0);
             this.panelColorsUi.MinimumSize = new System.Drawing.Size(10, 10);
-            this.panelColorsUi.Name = "panelColorsUi";
             this.panelColorsUi.Size = new System.Drawing.Size(10, 10);
-            this.panelColorsUi.TabIndex = 6;
             this.panelColorsUi.Visible = false;
             // 
             // gridColors
@@ -10473,8 +9032,8 @@ namespace Gw2Launcher.UI
             this.gridColors.AllowUserToDeleteRows = false;
             this.gridColors.AllowUserToResizeColumns = false;
             this.gridColors.AllowUserToResizeRows = false;
-            this.gridColors.Anchor = ((System.Windows.Forms.AnchorStyles)((((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom)
-            | System.Windows.Forms.AnchorStyles.Left)
+            this.gridColors.Anchor = ((System.Windows.Forms.AnchorStyles)((((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom) 
+            | System.Windows.Forms.AnchorStyles.Left) 
             | System.Windows.Forms.AnchorStyles.Right)));
             this.gridColors.BackgroundColor = System.Drawing.SystemColors.Window;
             this.gridColors.BorderStyle = System.Windows.Forms.BorderStyle.Fixed3D;
@@ -10496,13 +9055,11 @@ namespace Gw2Launcher.UI
             this.gridColors.Location = new System.Drawing.Point(21, 223);
             this.gridColors.Margin = new System.Windows.Forms.Padding(8, 0, 0, 0);
             this.gridColors.MultiSelect = false;
-            this.gridColors.Name = "gridColors";
             this.gridColors.ReadOnly = true;
             this.gridColors.RowHeadersVisible = false;
             this.gridColors.ScrollBars = System.Windows.Forms.ScrollBars.Vertical;
             this.gridColors.SelectionMode = System.Windows.Forms.DataGridViewSelectionMode.FullRowSelect;
             this.gridColors.Size = new System.Drawing.Size(339, 178);
-            this.gridColors.TabIndex = 7;
             this.gridColors.Visible = false;
             this.gridColors.CellClick += new System.Windows.Forms.DataGridViewCellEventHandler(this.gridColors_CellClick);
             this.gridColors.CellPainting += new System.Windows.Forms.DataGridViewCellPaintingEventHandler(this.gridColors_CellPainting);
@@ -10512,7 +9069,6 @@ namespace Gw2Launcher.UI
             dataGridViewCellStyle1.Padding = new System.Windows.Forms.Padding(5, 2, 0, 0);
             this.columnColor.DefaultCellStyle = dataGridViewCellStyle1;
             this.columnColor.HeaderText = "";
-            this.columnColor.Name = "columnColor";
             this.columnColor.ReadOnly = true;
             this.columnColor.Width = 30;
             // 
@@ -10520,18 +9076,15 @@ namespace Gw2Launcher.UI
             // 
             this.columnName.AutoSizeMode = System.Windows.Forms.DataGridViewAutoSizeColumnMode.Fill;
             this.columnName.HeaderText = "";
-            this.columnName.Name = "columnName";
             this.columnName.ReadOnly = true;
             // 
             // textColorsFilter
             // 
-            this.textColorsFilter.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left)
+            this.textColorsFilter.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left) 
             | System.Windows.Forms.AnchorStyles.Right)));
             this.textColorsFilter.Location = new System.Drawing.Point(21, 407);
             this.textColorsFilter.Margin = new System.Windows.Forms.Padding(8, 6, 0, 0);
-            this.textColorsFilter.Name = "textColorsFilter";
             this.textColorsFilter.Size = new System.Drawing.Size(339, 22);
-            this.textColorsFilter.TabIndex = 8;
             this.textColorsFilter.Visible = false;
             this.textColorsFilter.TextChanged += new System.EventHandler(this.textColorsFilter_TextChanged);
             // 
@@ -10540,19 +9093,16 @@ namespace Gw2Launcher.UI
             this.contextAffinity.Items.AddRange(new System.Windows.Forms.ToolStripItem[] {
             this.saveToolStripMenuItem,
             this.loadToolStripMenuItem});
-            this.contextAffinity.Name = "contextAffinity";
             this.contextAffinity.Size = new System.Drawing.Size(101, 48);
             // 
             // saveToolStripMenuItem
             // 
-            this.saveToolStripMenuItem.Name = "saveToolStripMenuItem";
             this.saveToolStripMenuItem.Size = new System.Drawing.Size(100, 22);
             this.saveToolStripMenuItem.Text = "Save";
             this.saveToolStripMenuItem.Click += new System.EventHandler(this.saveToolStripMenuItem_Click);
             // 
             // loadToolStripMenuItem
             // 
-            this.loadToolStripMenuItem.Name = "loadToolStripMenuItem";
             this.loadToolStripMenuItem.Size = new System.Drawing.Size(100, 22);
             this.loadToolStripMenuItem.Text = "Load";
             this.loadToolStripMenuItem.Click += new System.EventHandler(this.loadToolStripMenuItem_Click);
@@ -10562,9 +9112,7 @@ namespace Gw2Launcher.UI
             this.checkStyleHideExit.AutoSize = true;
             this.checkStyleHideExit.Location = new System.Drawing.Point(21, 755);
             this.checkStyleHideExit.Margin = new System.Windows.Forms.Padding(8, 3, 0, 0);
-            this.checkStyleHideExit.Name = "checkStyleHideExit";
             this.checkStyleHideExit.Size = new System.Drawing.Size(110, 17);
-            this.checkStyleHideExit.TabIndex = 42;
             this.checkStyleHideExit.Text = "Hide exit button";
             this.checkStyleHideExit.UseVisualStyleBackColor = true;
             // 
@@ -10573,9 +9121,7 @@ namespace Gw2Launcher.UI
             this.checkStyleHideMinimize.AutoSize = true;
             this.checkStyleHideMinimize.Location = new System.Drawing.Point(21, 775);
             this.checkStyleHideMinimize.Margin = new System.Windows.Forms.Padding(8, 3, 0, 0);
-            this.checkStyleHideMinimize.Name = "checkStyleHideMinimize";
             this.checkStyleHideMinimize.Size = new System.Drawing.Size(137, 17);
-            this.checkStyleHideMinimize.TabIndex = 43;
             this.checkStyleHideMinimize.Text = "Hide minimize button";
             this.checkStyleHideMinimize.UseVisualStyleBackColor = true;
             // 
@@ -10586,13 +9132,13 @@ namespace Gw2Launcher.UI
             this.ClientSize = new System.Drawing.Size(568, 507);
             this.Controls.Add(this.panelStyle);
             this.Controls.Add(this.panelGeneral);
-            this.Controls.Add(this.buttonCancel);
-            this.Controls.Add(this.buttonOK);
-            this.Controls.Add(this.sidebarPanel1);
             this.Controls.Add(this.panelTweaksGw2);
             this.Controls.Add(this.panelLaunchConfigurationGw2);
             this.Controls.Add(this.panelSecurity);
             this.Controls.Add(this.panelColors);
+            this.Controls.Add(this.buttonCancel);
+            this.Controls.Add(this.buttonOK);
+            this.Controls.Add(this.sidebarPanel1);
             this.Controls.Add(this.panelLaunchOptionsGw2);
             this.Controls.Add(this.panelWindows);
             this.Controls.Add(this.panelMarkers);
@@ -10618,7 +9164,6 @@ namespace Gw2Launcher.UI
             this.MaximizeBox = false;
             this.MinimizeBox = false;
             this.MinimumSize = new System.Drawing.Size(584, 485);
-            this.Name = "formSettings";
             this.ShowIcon = false;
             this.ShowInTaskbar = false;
             this.StartPosition = System.Windows.Forms.FormStartPosition.CenterParent;

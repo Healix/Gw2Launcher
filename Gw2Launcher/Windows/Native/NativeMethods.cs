@@ -550,5 +550,16 @@ namespace Gw2Launcher.Windows.Native
 
         [DllImport(USER32)]
         internal static extern IntPtr LoadCursor(IntPtr hInstance, int lpCursorName);
+
+        [DllImport(USER32, SetLastError = true)]
+        [return: MarshalAs(UnmanagedType.Bool)]
+        internal static extern bool AddClipboardFormatListener(IntPtr hwnd);
+
+        [DllImport(USER32, SetLastError = true)]
+        [return: MarshalAs(UnmanagedType.Bool)]
+        internal static extern bool RemoveClipboardFormatListener(IntPtr hwnd);
+
+        [DllImport(KERNEL32)]
+        internal static extern FileType GetFileType(IntPtr hFile);
     }
 }

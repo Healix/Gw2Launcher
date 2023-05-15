@@ -116,6 +116,7 @@ namespace Gw2Launcher.UI.Backup
                 });
 
             ShowPanel(panelMappingsScroll);
+
         }
 
         private MappedImportData GetMappedImportData(AccountExporter.ImportData data, Dictionary<AccountExporter.FieldData, AccountExporter.FieldData> mapping)

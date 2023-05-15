@@ -99,6 +99,7 @@ namespace Gw2Launcher.UI
                 var x = p.X - r.left;
                 var y = p.Y - r.top;
 
+
                 return x + ", " + y;
             }
 

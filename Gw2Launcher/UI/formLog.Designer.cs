@@ -1,4 +1,4 @@
-﻿namespace Gw2Launcher.UI
+namespace Gw2Launcher.UI
 {
     partial class formLog
     {
@@ -38,18 +38,15 @@
             | System.Windows.Forms.AnchorStyles.Right)));
             this.textLog.Location = new System.Drawing.Point(12, 12);
             this.textLog.Multiline = true;
-            this.textLog.Name = "textLog";
             this.textLog.ReadOnly = true;
             this.textLog.ScrollBars = System.Windows.Forms.ScrollBars.Vertical;
             this.textLog.Size = new System.Drawing.Size(556, 348);
-            this.textLog.TabIndex = 0;
             // 
             // formLog
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(96F, 96F);
             this.ClientSize = new System.Drawing.Size(580, 372);
             this.Controls.Add(this.textLog);
-            this.Name = "formLog";
             this.Text = "Log";
             this.ResumeLayout(false);
             this.PerformLayout();

@@ -529,6 +529,7 @@ namespace Gw2Launcher.UI
                     Array.Resize<RunAfterBarButton>(ref buttons, processes.Length);
 
                 AddButtons(panel, buttons, a, processes, ref count, ref visible);
+
             }
 
             if (buttons != null && count != buttons.Length)

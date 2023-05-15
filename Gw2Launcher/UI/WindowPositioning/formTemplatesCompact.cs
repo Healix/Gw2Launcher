@@ -1103,7 +1103,6 @@ namespace Gw2Launcher.UI.WindowPositioning
 
             panel.Controls.AddRange(new Control[] { slider, label });
             f.Controls.Add(panel);
-            
             f.Show(this);
         }
 

@@ -861,11 +861,6 @@ namespace Gw2Launcher.Tools.Backup
                             {
                                 if (!infoOnly && fi.Type == FileType.Data && fi.Output.Exists)
                                 {
-                                    //try
-                                    //{
-                                    //    File.Delete(fi.Output.Path);
-                                    //}
-                                    //catch { }
                                 }
 
                                 continue;

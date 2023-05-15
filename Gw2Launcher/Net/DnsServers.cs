@@ -117,5 +117,23 @@ namespace Gw2Launcher.Net
             }
             return ips;
         }
+
+        public static IEnumerable<IPAddress> EnumerateIPs(bool includeLocal = true, bool includeAlternates = true)
+        {
+            for (var i = includeLocal ? 0 : 1; i < servers.Length; i++)
+            {
+                if (includeAlternates)
+                {
+                    for (var j = 0; j < servers[i].IP.Length; j++)
+                    {
+                        yield return servers[i].IP[j];
+                    }
+                }
+                else
+                {
+                    yield return servers[i].IP[0];
+                }
+            }
+        }
     }
 }

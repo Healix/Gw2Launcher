@@ -790,6 +790,7 @@ namespace Gw2Launcher.UI
             {
                 e.Graphics.DrawRectangle(p, 0, 0, this.Width - 1, this.Height - 1);
             }
+
         }
 
         protected override void OnSizeChanged(EventArgs e)

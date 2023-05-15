@@ -530,7 +530,7 @@ namespace Gw2Launcher.Tools
 
                         Net.AssetDownloader.Asset asset;
                         if (existing == 0)
-                            asset = new Net.AssetDownloader.Asset(record.fileId, true, (int)(record.size * AVG_COMPRESSION + 0.5f));
+                            asset = new Net.AssetDownloader.Asset(record.fileId, record.compression != 1, (int)(record.size * AVG_COMPRESSION + 0.5f));
                         else
                             asset = new Net.AssetDownloader.Asset(existing, record.fileId, (int)(record.size * AVG_PATCH_COMPRESSION + 0.5f));
 

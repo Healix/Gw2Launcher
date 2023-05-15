@@ -6,7 +6,7 @@ namespace Gw2Launcher.Tools.Dat
     {
         public class ManifestRecord
         {
-            public int baseId, fileId, size;
+            public int baseId, fileId, size, compression;
         }
 
         private Manifest()
@@ -64,11 +64,10 @@ namespace Gw2Launcher.Tools.Dat
                 re.baseId = r.ReadInt32();
                 re.fileId = r.ReadInt32();
                 re.size = r.ReadInt32();
+                re.compression = r.ReadInt32(); //0 compressed, 1 uncompressed
 
                 if (re.baseId <= 0 || re.fileId <= 0 || re.size < 0)
                     throw new InvalidDataException();
-
-                r.BaseStream.Position += 4;
             }
 
             return m;

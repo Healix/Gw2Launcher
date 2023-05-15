@@ -142,16 +142,6 @@ namespace Gw2Launcher.UI.Backup
             Application.Exit();
         }
 
-        private async void Terminate(int delay)
-        {
-            await Task.Delay(5000);
-
-            using (var p = System.Diagnostics.Process.GetCurrentProcess())
-            {
-                p.Kill();
-            }
-        }
-
         private Image GetDefaultImage(Settings.AccountType type, Size sz)
         {
             var i = (int)type;

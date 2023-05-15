@@ -17,9 +17,9 @@ namespace Gw2Launcher
 {
     static class Program
     {
-        public const byte RELEASE_VERSION = 18;
-        public const uint BUILD = 7089;
-        public const long RELEASE_TIMESTAMP = 5249868386427387904;
+        public const byte RELEASE_VERSION = 19;
+        public const uint BUILD = 7195;
+        public const long RELEASE_TIMESTAMP = 5249883074427387904;
         private const string MUTEX_NAME = "Gw2Launcher_Mutex";
 
         [STAThread]
@@ -359,7 +359,7 @@ namespace Gw2Launcher
                         {
                             try
                             {
-                                Win32Handles.IObjectHandle handle = Win32Handles.GetHandle(pid, name, (Win32Handles.MatchMode)match);
+                                Win32Handles.IObjectHandle handle = Win32Handles.GetHandle(pid, Win32Handles.HandleType.Mutex, name, (Win32Handles.MatchMode)match);
                                 if (handle != null)
                                 {
                                     handle.Kill();

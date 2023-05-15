@@ -73,22 +73,22 @@ namespace Gw2Launcher.Windows
             var scan = NativeMethods.MapVirtualKeyEx((uint)key, VkMapType.MAPVK_VK_TO_VSC, IntPtr.Zero);
             var b = true;
 
-             scan = scan << 16 | 1;
+            scan = scan << 16 | 1;
 
-             for (var i = 0; i < count; i++)
-             {
-                 if ((state & KeyMessage.Down) != 0)
-                 {
-                     //scan = scan << 16 | (uint)1;
-                     b = SendMessage(window, WindowMessages.WM_KEYDOWN, (IntPtr)key, (IntPtr)scan, post);
-                 }
+            for (var i = 0; i < count; i++)
+            {
+                if ((state & KeyMessage.Down) != 0)
+                {
+                    //scan = scan << 16 | (uint)1;
+                    b = SendMessage(window, WindowMessages.WM_KEYDOWN, (IntPtr)key, (IntPtr)scan, post);
+                }
 
-                 if ((state & KeyMessage.Up) != 0)
-                 {
-                     //scan = scan << 16 | 1 << 31 | 1 << 30 | 1
-                     b = SendMessage(window, WindowMessages.WM_KEYUP, (IntPtr)key, (IntPtr)(scan | 0xC0000001), post);
-                 }
-             }
+                if ((state & KeyMessage.Up) != 0)
+                {
+                    //scan = scan << 16 | 1 << 31 | 1 << 30 | 1
+                    b = SendMessage(window, WindowMessages.WM_KEYUP, (IntPtr)key, (IntPtr)(scan | 0xC0000001), post);
+                }
+            }
 
             return b;
         }

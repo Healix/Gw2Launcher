@@ -17,6 +17,7 @@ namespace Gw2Launcher.Net.AssetProxy
         public event EventHandler<Client> ClientConnected;
         public event EventHandler<Exception> ClientError;
         public event EventHandler<Client> ClientClosed;
+        public event EventHandler<int> ClientsChanged;
         public event EventHandler ServerStarted;
         public event EventHandler ServerStopped;
         public event EventHandler ServerRestarted;
@@ -98,7 +99,15 @@ namespace Gw2Launcher.Net.AssetProxy
             }
             set
             {
-                this.remoteEP = value;
+                lock (this)
+                {
+                    if (this.remoteEP != value)
+                    {
+                        this.remoteEP = value;
+                        if (this.ipPool != null)
+                            this.ipPool.Refresh();
+                    }
+                }
             }
         }
 
@@ -159,6 +168,8 @@ namespace Gw2Launcher.Net.AssetProxy
             }
             else
                 retry = 0;
+
+            ipPool = CreateDefaultIPPool();
 
             do
             {
@@ -249,35 +260,7 @@ namespace Gw2Launcher.Net.AssetProxy
             {
                 accept = l.EndAcceptTcpClient(r);
 
-                lock (this)
-                {
-                    if ((remoteEP == null || remoteEP is DnsEndPoint) && (ipPool == null || !ipPool.IsAlive()))
-                    {
-                        IPAddress[] ips;
-                        try
-                        {
-                            string hostname;
-                            if (remoteEP is DnsEndPoint)
-                                hostname = ((DnsEndPoint)remoteEP).Host;
-                            else
-                                hostname = ProxyServer.PATCH_SERVER;
-                            ips = Dns.GetHostAddresses(hostname);
-                            if (ips.Length == 0)
-                                throw new IndexOutOfRangeException();
-                        }
-                        catch (Exception ex)
-                        {
-                            Util.Logging.Log(ex);
-
-                            throw new Exception("DNS lookup failed for " + PATCH_SERVER);
-                        }
-
-                        ipPool = new IPPool(ips);
-                    }
-                }
-
-                var client = new Client(accept, remoteEP, ipPool);
-
+                var client = new Client(accept, ipPool);
                 lock (this)
                 {
                     //clients++;
@@ -291,6 +274,9 @@ namespace Gw2Launcher.Net.AssetProxy
                             cancelToken = null;
                         }
                     }
+
+                    if (ClientsChanged != null)
+                        ClientsChanged(this, clients.Count);
                 }
 
                 if (ClientConnected != null)
@@ -395,7 +381,11 @@ namespace Gw2Launcher.Net.AssetProxy
             lock (this)
             {
                 //clients--;
-                clients.Remove(client);
+                if (clients.Remove(client))
+                {
+                    if (ClientsChanged != null)
+                        ClientsChanged(this, clients.Count);
+                }
 
                 //if (clients == 0 && cancelToken == null)
                 //{
@@ -439,6 +429,9 @@ namespace Gw2Launcher.Net.AssetProxy
                             cancelToken = null;
                         }
                     }
+
+                    ipPool = null;
+                    Client.Reset();
                 }
                 else
                     return;
@@ -446,6 +439,170 @@ namespace Gw2Launcher.Net.AssetProxy
 
             if (ServerStopped != null)
                 ServerStopped(this, EventArgs.Empty);
+        }
+
+        public static IPPool CreateDefaultIPPool()
+        {
+            var pool = new IPPool();
+
+            pool.Alternate = new IPPool()
+            {
+                Alternate = pool,
+            };
+
+            pool.RefreshAddresses += pool_RefreshAddresses;
+            pool.Alternate.RefreshAddresses += alternate_RefreshAddresses;
+
+            return pool;
+        }
+
+        private static void alternate_RefreshAddresses(object sender, IPPool.RefreshAddressesEventArgs e)
+        {
+            var ips = Dns.GetHostAddresses(Settings.ASSET_HOST, DnsServers.EnumerateIPs(false, true));
+            var alt = ((IPPool)sender).Alternate;
+            var index = 0;
+            byte[][] addresses = null;
+
+            if (ips.Count > 0)
+            {
+                Func<byte[], bool> contains = delegate(byte[] ip)
+                {
+                    for (var i = 0; i < addresses.Length; i++)
+                    {
+                        if (addresses[i] == null)
+                            break;
+
+                        if (addresses[i].Length == ip.Length)
+                        {
+                            var match = true;
+
+                            for (var j = ip.Length / 2 - 1; j >= 0; --j)
+                            {
+                                if (ip[j] != addresses[i][j])
+                                {
+                                    match = false;
+                                    break;
+                                }
+                            }
+
+                            if (match)
+                                return true;
+                        }
+                    }
+
+                    return false;
+                };
+
+                if (alt != null)
+                {
+                    var ips2 = alt.GetAddresses();
+
+                    if (ips2 != null)
+                    {
+                        addresses = new byte[ips.Count + ips2.Length][];
+
+                        for (var i = 0; i < ips2.Length; i++)
+                        {
+                            addresses[index++] = ips2[i].GetAddressBytes();
+                        }
+                    }
+                }
+
+                if (addresses == null)
+                {
+                    addresses = new byte[ips.Count][];
+                }
+
+                var count = 0;
+                var result = new IPEndPoint[ips.Count];
+
+                foreach (var ip in ips)
+                {
+                    var bytes = ip.GetAddressBytes();
+
+                    if (!contains(bytes))
+                    {
+                        addresses[index++] = bytes;
+                        result[count++] = new IPEndPoint(ip, 80);
+                    }
+                }
+
+                if (count > 0)
+                {
+                    Array.Resize(ref result, count);
+
+                    e.Addresses = result;
+                    e.Handled = true;
+                }
+                else if (ips.Count > 0)
+                {
+                    foreach (var ip in ips)
+                    {
+                        result[count++] = new IPEndPoint(ip, 80);
+                    }
+
+                    e.Addresses = result;
+                    e.Handled = true;
+                }
+            }
+        }
+
+        private static void pool_RefreshAddresses(object sender, IPPool.RefreshAddressesEventArgs e)
+        {
+            IPEndPoint[] addresses = null;
+            var assetsrv = Util.Args.GetValue(Settings.GuildWars2.Arguments.Value, "assetsrv");
+
+            if (!string.IsNullOrEmpty(assetsrv))
+            {
+                IPEndPoint ipEp;
+                if (Util.IPEndPoint.TryParse(assetsrv, 0, out ipEp))
+                {
+                    addresses = new IPEndPoint[] { ipEp };
+                }
+                else
+                {
+                    DnsEndPoint dnsEp;
+                    if (Util.DnsEndPoint.TryParse(assetsrv, 0, out dnsEp))
+                    {
+                        var ips = Dns.GetHostAddresses(dnsEp.Host);
+                        if (ips.Length == 0)
+                            return;
+                        addresses = new IPEndPoint[ips.Length];
+
+                        for (var i = 0; i < ips.Length; i++)
+                        {
+                            addresses[i] = new IPEndPoint(ips[i], dnsEp.Port);
+                        }
+                    }
+                }
+            }
+
+            if (addresses == null)
+            {
+                var ips = Dns.GetHostAddresses(Settings.ASSET_HOST);
+                if (ips.Length == 0)
+                    return;
+                addresses = new IPEndPoint[ips.Length];
+
+                for (var i = 0; i < ips.Length; i++)
+                {
+                    addresses[i] = new IPEndPoint(ips[i], 0);
+                }
+            }
+
+            e.Handled = true;
+            e.Addresses = addresses;
+        }
+
+        public int Clients
+        {
+            get
+            {
+                lock (this)
+                {
+                    return clients.Count;
+                }
+            }
         }
     }
 }

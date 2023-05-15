@@ -50,11 +50,14 @@ namespace Gw2Launcher.Net
         public event EventHandler Tick;
         private event EventHandler<Worker> WorkerAdded;
 
-        protected const byte CONNECTION_TIMEOUT_SECONDS = 5;
-        protected const byte CONNECTION_TRANSFER_TIMEOUT_SECONDS = 180;
-        protected const byte RETRY_TIMEOUT_SECONDS = 5;
+        protected const int CONNECTION_TIMEOUT_MS = 10 * 1000;
+        protected const int CONNECTION_TRANSFER_TIMEOUT_MS = 180 * 1000;
+        protected const int CONNECTION_REMOTE_KEEPALIVE_TIMEOUT_MS = 60 * 1000;
+        protected const int CONNECT_RETRY_COUNT = 5;
+        protected const int RETRY_TIMEOUT_MS = 1000;
         protected const string ASSET_HOST = Settings.ASSET_HOST;
         protected const string COOKIE = Settings.ASSET_COOKIE;
+        protected const byte CORRUPT_RETRY_UNTIL_ALTERNATE = 1; //number of times to retry downloading a file before using alternatives
 
         public class Asset
         {
@@ -205,7 +208,7 @@ namespace Gw2Launcher.Net
 
             public const int BUFFER_LENGTH = 16384;
 
-            private TcpClient client, clientSwap;
+            private TcpClientSocket client, clientSwap;
             private AssetProxy.HttpStream stream;
             private IPEndPoint remoteEP;
             private SharedWork work;
@@ -245,7 +248,7 @@ namespace Gw2Launcher.Net
             {
                 if (clientSwap != null)
                 {
-                    clientSwap.Close();
+                    clientSwap.Dispose();
                     clientSwap = null;
                 }
                 if (stream != null)
@@ -255,7 +258,7 @@ namespace Gw2Launcher.Net
                 }
                 if (client != null)
                 {
-                    client.Close();
+                    client.Dispose();
                     client = null;
                 }
             }
@@ -280,13 +283,9 @@ namespace Gw2Launcher.Net
                 var work = this.work;
 
                 byte[] buffer = new byte[BUFFER_LENGTH];
-                bool doSwap = false;
-                Task<IPAddress> taskSwap = null;
-                int connectionTimeout = CONNECTION_TIMEOUT_SECONDS * 1000;
-                int counter = 0;
-                var timeout = DateTime.UtcNow.AddMilliseconds(connectionTimeout);
                 Asset asset = null;
                 BpsLimiter.BpsShare bpsShare = null;
+                Net.AssetProxy.IPPool.IAddress address = null;
 
                 try
                 {
@@ -332,13 +331,13 @@ namespace Gw2Launcher.Net
                             continue;
                         }
 
-                        if (DateTime.UtcNow > timeout)
-                            Close();
-
                         Asset.CompleteEventArgs complete = null;
 
+                        byte alternate = 0;
                         long mismatchLength = -1;
                         byte retry = 10;
+                        HashSet<IPAddress> skipped = null;
+
                         do
                         {
                             string request = Asset.GetRequest(asset);
@@ -354,70 +353,77 @@ namespace Gw2Launcher.Net
                                 }
                                 else if (cache.CanWrite)
                                 {
-                                    int port = Settings.PatchingOptions.Value.HasFlag(Settings.PatchingFlags.UseHttps) ? 443 : 80;
-
                                     #region Remote connection
 
-                                    if (doSwap)
+                                    if (client == null || !client.Connected || Environment.TickCount - client.LastUsed > CONNECTION_REMOTE_KEEPALIVE_TIMEOUT_MS)
                                     {
-                                        if (taskSwap.IsCompleted)
-                                        {
-                                            if (taskSwap.Result != null)
-                                            {
-                                                work.owner.ipPool.AddSample(taskSwap.Result, double.MaxValue);
-                                            }
-                                            else if (clientSwap != null && clientSwap.Connected)
-                                            {
-                                                if (client != null)
-                                                    client.Close();
-                                                client = clientSwap;
-                                                clientSwap = null;
-                                                remoteEP = (IPEndPoint)client.Client.RemoteEndPoint;
-
-                                                if (port == 443)
-                                                    stream.SetBaseStream(client.GetStream(), true, ASSET_HOST, false);
-                                                else
-                                                    stream.SetBaseStream(client.GetStream(), true);
-                                            }
-
-                                            doSwap = false;
-                                            counter = 0;
-                                            taskSwap.Dispose();
-                                        }
-                                    }
-
-                                    if (client == null || !client.Connected)
-                                    {
-                                        client = new TcpClient()
-                                        {
-                                            ReceiveTimeout = connectionTimeout,
-                                            SendTimeout = connectionTimeout
-                                        };
-
                                         try
                                         {
-                                            remoteEP = new IPEndPoint(work.owner.ipPool.GetIP(), port);
-                                            for (byte attempt = 10; attempt > 0; attempt--)
+                                            for (var attempt = 0; ; ++attempt)
                                             {
-                                                if (!client.ConnectAsync(remoteEP.Address, remoteEP.Port).Wait(connectionTimeout))
+                                                using (client) { }
+
+                                                Func<IPAddress, bool> skip;
+
+                                                if (skipped != null)
+                                                {
+                                                    skip = delegate(IPAddress ip)
+                                                    {
+                                                        return skipped.Contains(ip);
+                                                    };
+                                                }
+                                                else
+                                                    skip = null;
+
+                                                if (alternate > CORRUPT_RETRY_UNTIL_ALTERNATE || (address = work.owner.ipPool.GetAddress(skip)) == null)
+                                                {
+                                                    address = work.owner.ipPool.Alternate.GetAddress(skip);
+                                                    if (address == null)
+                                                        throw new Exception("No addresses available");
+                                                    remoteEP = address.GetAddress(Settings.PatchingOptions.Value.HasFlag(Settings.PatchingFlags.UseHttps) ? 443 : 80);
+                                                    alternate = byte.MaxValue;
+                                                }
+                                                else
+                                                {
+                                                    remoteEP = address.GetAddress(Settings.PatchingOptions.Value.HasFlag(Settings.PatchingFlags.UseHttps) ? 443 : 80);
+                                                }
+
+                                                client = new TcpClientSocket(new TcpClient()
+                                                {
+                                                    ReceiveTimeout = CONNECTION_TIMEOUT_MS,
+                                                    SendTimeout = CONNECTION_TIMEOUT_MS,
+                                                    ReceiveBufferSize = BUFFER_LENGTH,
+                                                });
+
+                                                if (!client.Connect(remoteEP, CONNECTION_TIMEOUT_MS))
                                                 {
                                                     client.Close();
 
-                                                    if (work.abort || attempt == 1)
-                                                        throw new TimeoutException("Unable to connect to host");
+                                                    if (skipped == null)
+                                                        skipped = new HashSet<IPAddress>();
+                                                    skipped.Add(remoteEP.Address);
 
-                                                    work.owner.ipPool.AddSample(remoteEP.Address, double.MaxValue);
-                                                    Thread.Sleep(100);
+                                                    if (work.abort || attempt == CONNECT_RETRY_COUNT)
+                                                        throw new TimeoutException("Unable to connect to " + remoteEP.ToString());
+
+                                                    address.Error();
+                                                    address = null;
+
+                                                    Thread.Sleep(1000);
                                                 }
                                                 else
+                                                {
+                                                    client.Address = address;
                                                     break;
+                                                }
                                             }
                                         }
                                         catch (Exception ex)
                                         {
                                             Util.Logging.Log(ex);
 
-                                            work.owner.ipPool.AddSample(remoteEP.Address, double.MaxValue);
+                                            if (address != null)
+                                                address.Error();
 
                                             if (Error != null)
                                             {
@@ -430,53 +436,10 @@ namespace Gw2Launcher.Net
                                             return;
                                         }
 
-                                        if (port == 443)
-                                            stream = new AssetProxy.HttpStream(client.GetStream(), ASSET_HOST, false);
+                                        if (remoteEP.Port == 443)
+                                            stream = new AssetProxy.HttpStream(client.Client.GetStream(), ASSET_HOST, false);
                                         else
-                                            stream = new AssetProxy.HttpStream(client.GetStream());
-                                    }
-
-                                    #endregion
-
-                                    #region Swap
-
-                                    if (++counter == 10)
-                                    {
-                                        var ip = work.owner.ipPool.GetIP();
-
-                                        if (ip == remoteEP.Address)
-                                        {
-                                            counter = 0;
-                                        }
-                                        else
-                                        {
-                                            doSwap = true;
-
-                                            taskSwap = new Task<IPAddress>(
-                                                delegate
-                                                {
-                                                    var clientSwap = this.clientSwap = new TcpClient();
-                                                    clientSwap.ReceiveTimeout = clientSwap.SendTimeout = connectionTimeout;
-                                                    try
-                                                    {
-                                                        if (!clientSwap.ConnectAsync(ip, port).Wait(connectionTimeout))
-                                                        {
-                                                            throw new TimeoutException();
-                                                        }
-
-                                                        return null;
-                                                    }
-                                                    catch (Exception e)
-                                                    {
-                                                        Util.Logging.Log(e);
-
-                                                        clientSwap.Close();
-
-                                                        return ip;
-                                                    }
-                                                });
-                                            taskSwap.Start();
-                                        }
+                                            stream = new AssetProxy.HttpStream(client.Client.GetStream());
                                     }
 
                                     #endregion
@@ -489,27 +452,44 @@ namespace Gw2Launcher.Net
 
                                     try
                                     {
-                                        client.ReceiveTimeout = client.SendTimeout = connectionTimeout;
+                                        client.SendReceiveTimeout = CONNECTION_TIMEOUT_MS;
 
                                         WriteHeader(stream, ASSET_HOST, request);
 
                                         Net.AssetProxy.HttpStream.HttpHeader header;
-                                        int read;
+                                        int read, startTime;
+                                        long total;
 
-                                        var startTime = DateTime.UtcNow;
-                                        long total = read = stream.ReadHeader(buffer, 0, out header);
+                                        startTime = Environment.TickCount;
+                                        read = stream.ReadHeader(buffer, 0, out header);
 
                                         if (read <= 0)
                                             throw new EndOfStreamException();
 
+                                        total = read;
                                         //extending the timeout once data has already been received
-                                        client.ReceiveTimeout = client.SendTimeout = CONNECTION_TRANSFER_TIMEOUT_SECONDS * 1000;
+                                        client.SendReceiveTimeout = CONNECTION_TRANSFER_TIMEOUT_MS;
 
                                         var response = (Net.AssetProxy.HttpStream.HttpResponseHeader)header;
-                                        //uint bps = work.bps / work.threads;
-                                        //int bpsSample = 0;
-                                        //var bpsReset = DateTime.UtcNow.AddSeconds(1);
-                                        //int length = BUFFER_LENGTH;
+
+                                        if (response.StatusCode == HttpStatusCode.OK)
+                                        {
+                                            int size;
+                                            if (response.ContentLength > 0 && int.TryParse(response.Headers["X-Arena-Checksum-Length"], out size) && size > 0 && size != response.ContentLength)
+                                            {
+                                                //file is corrupted
+                                                if (Util.Logging.Enabled)
+                                                {
+                                                    Util.Logging.LogEvent(null, "Checksum length doesn't match header for [" + request + "] from [" + remoteEP.ToString() + "] (length: " + response.ContentLength + ", expected: " + size + ")");
+                                                }
+                                                if (skipped == null)
+                                                    skipped = new HashSet<IPAddress>();
+                                                skipped.Add(remoteEP.Address);
+                                                if (alternate <= CORRUPT_RETRY_UNTIL_ALTERNATE)
+                                                    ++alternate;
+                                                throw new Exception("Checksum doesn't match header");
+                                            }
+                                        }
 
                                         var progress = new Asset.ProgressEventArgs()
                                         {
@@ -593,31 +573,74 @@ namespace Gw2Launcher.Net
                                         else
                                             progress = null;
 
-                                        var elapsed = DateTime.UtcNow.Subtract(startTime).TotalMilliseconds;
-
                                         if (response.StatusCode == HttpStatusCode.OK || response.StatusCode == HttpStatusCode.NotFound)
                                         {
+                                            var elapsed = Environment.TickCount - startTime;
+
                                             if (elapsed > 0)
-                                                work.owner.ipPool.AddSample(remoteEP.Address, total / elapsed);
+                                            {
+                                                address.Sample((double)total / elapsed);
+                                            }
                                         }
                                         else
                                         {
-                                            if (elapsed <= 0)
-                                                elapsed = 1;
-                                            work.owner.ipPool.AddSample(remoteEP.Address, total / elapsed * 2);
+                                            address.Error();
                                             throw new Exception("Server returned a bad response");
                                         }
 
-                                        if (response.ContentLength > 0 && stream.ContentLengthProcessed != response.ContentLength)
+                                        if (!stream.EndOfContent)
                                         {
-                                            work.owner.ipPool.AddSample(remoteEP.Address, double.MaxValue);
-                                            if (mismatchLength == stream.ContentLengthProcessed)
-                                                retry = 1;
-                                            mismatchLength = stream.ContentLengthProcessed;
+                                            //connection was dropped
+                                            if (mismatchLength > 0 && mismatchLength == stream.ContentLengthProcessed)
+                                            {
+                                                if (alternate != byte.MaxValue)
+                                                {
+                                                    //dropped at the same length twice, retry using origin
+                                                    alternate = CORRUPT_RETRY_UNTIL_ALTERNATE + 1;
+                                                    mismatchLength = 0;
+                                                }
+                                                else
+                                                    retry = 0; //dropped at the same length twice using origin, aborting
+                                            }
+                                            else
+                                                mismatchLength = stream.ContentLengthProcessed;
                                             throw new Exception("Content length doesn't match header");
                                         }
 
-                                        if (response.StatusCode == HttpStatusCode.NotFound)
+                                        client.LastUsed = Environment.TickCount;
+
+                                        if (response.StatusCode == HttpStatusCode.OK)
+                                        {
+                                            int size;
+                                            if (int.TryParse(response.Headers["X-Arena-Checksum-Length"], out size) && size > 0 && size != stream.ContentLengthProcessed)
+                                            {
+                                                //file is corrupted
+
+                                                if (Util.Logging.Enabled)
+                                                {
+                                                    Util.Logging.LogEvent(null, "Checksum length doesn't match content for [" + request + "] from [" + remoteEP.ToString() + "] (length: " + response.ContentLength + ", expected: " + size + ")");
+                                                }
+
+                                                if (skipped == null)
+                                                    skipped = new HashSet<IPAddress>();
+                                                skipped.Add(remoteEP.Address);
+                                                if (alternate <= CORRUPT_RETRY_UNTIL_ALTERNATE)
+                                                    ++alternate;
+
+                                                throw new Exception("Checksum doesn't match");
+                                            }
+                                            else
+                                            {
+                                                if (alternate == byte.MaxValue)
+                                                {
+                                                    client.Close();
+                                                }
+                                                alternate = 0;
+
+                                                address.OK();
+                                            }
+                                        }
+                                        else if (response.StatusCode == HttpStatusCode.NotFound)
                                         {
                                             //some files will return a 404 response, which falls back from patches > compressed > uncompressed
                                             if (RetryNotFound(asset))
@@ -627,12 +650,12 @@ namespace Gw2Launcher.Net
                                             }
                                         }
 
-                                        timeout = DateTime.UtcNow.AddMilliseconds(connectionTimeout);
-
                                         if (!response.KeepAlive.keepAlive)
+                                        {
                                             client.Close();
+                                        }
 
-                                        retry = 1;
+                                        retry = 0;
                                         cache.Commit();
 
                                         if (RequestComplete != null)
@@ -657,7 +680,7 @@ namespace Gw2Launcher.Net
 
                                         client.Close();
 
-                                        if (work.abort || --retry == 0)
+                                        if (work.abort || retry == 0)
                                         {
                                             asset.OnCancelled();
                                             if (Error != null)
@@ -666,7 +689,8 @@ namespace Gw2Launcher.Net
                                         }
                                         else
                                         {
-                                            Thread.Sleep(RETRY_TIMEOUT_SECONDS * 1000);
+                                            --retry;
+                                            Thread.Sleep(RETRY_TIMEOUT_MS);
                                         }
                                     }
 
@@ -1183,48 +1207,7 @@ namespace Gw2Launcher.Net
         {
             if (ipPool == null)
             {
-                try
-                {
-                    var ips = Dns.GetHostAddresses(ASSET_HOST);
-                    if (ips.Length == 0)
-                        throw new IndexOutOfRangeException();
-
-                    var args = Settings.GuildWars2.Arguments.Value;
-                    if (!string.IsNullOrEmpty(args))
-                    {
-                        var existing = Util.Args.GetValue(args, "assetsrv");
-                        if (!string.IsNullOrEmpty(existing))
-                        {
-                            IPAddress assetsrv;
-                            if (IPAddress.TryParse(existing, out assetsrv))
-                            {
-                                foreach (var ip in ips)
-                                {
-                                    if (ip == assetsrv)
-                                    {
-                                        assetsrv = null;
-                                        break;
-                                    }
-                                }
-                                if (assetsrv != null)
-                                {
-                                    var _ips = new IPAddress[ips.Length + 1];
-                                    Array.Copy(ips, 0, _ips, 1, ips.Length);
-                                    _ips[0] = assetsrv;
-                                    ips = _ips;
-                                }
-                            }
-                        }
-                    }
-
-                    ipPool = new AssetProxy.IPPool(ips);
-                }
-                catch (Exception e)
-                {
-                    Util.Logging.Log(e);
-
-                    throw new Exception("Unable to query DNS for " + ASSET_HOST);
-                }
+                ipPool = AssetProxy.ProxyServer.CreateDefaultIPPool();
             }
 
             this.ipPool = ipPool;
@@ -1386,17 +1369,26 @@ namespace Gw2Launcher.Net
 
                     do
                     {
-                        IPAddress ip = null;
+                        AssetProxy.IPPool.IAddress address = null;
+                        IPEndPoint ip;
 
                         try
                         {
-                            ip = ipPool.GetIP();
+                            address = ipPool.GetAddress();
+                            ip = address.GetAddress(80);
 
-                            HttpWebRequest request = HttpWebRequest.CreateHttp(string.Format("http://{0}" + Asset.GetRequest(asset), ip));
+                            string url;
+
+                            if (ip.Port == 443)
+                                url = "https://" + ip.Address;
+                            else
+                                url = "http://" + (ip.Port != 80 ? ip.ToString() : ip.Address.ToString());
+
+                            var request = HttpWebRequest.CreateHttp(url + Asset.GetRequest(asset));
                             request.Host = ASSET_HOST;
                             request.AllowAutoRedirect = false;
                             request.Proxy = null;
-                            request.Timeout = CONNECTION_TIMEOUT_SECONDS * 1000;
+                            request.Timeout = CONNECTION_TIMEOUT_MS;
                             request.Headers.Add(HttpRequestHeader.Cookie, COOKIE);
 
                             using (var response = (HttpWebResponse)request.GetResponse())
@@ -1414,10 +1406,8 @@ namespace Gw2Launcher.Net
 
                             Util.Logging.Log(e);
 
-                            if (ip == null)
-                                return null;
-
-                            ipPool.AddSample(ip, double.MaxValue);
+                            if (address != null)
+                                address.Error();
                         }
                     }
                     while (--retry > 0);
