@@ -30,7 +30,7 @@ namespace Gw2Launcher.UI
             this.toolStripMenuItem3 = new System.Windows.Forms.ToolStripSeparator();
             this.allToolStripMenuItem = new Gw2Launcher.UI.Controls.ToolStripMenuItemStayOpenOnClick();
             this.launchAllToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
-            this.updateLocaldatToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.launchNormalToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.updateAllToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.toolStripMenuItem15 = new System.Windows.Forms.ToolStripSeparator();
             this.launchIfToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
@@ -45,7 +45,8 @@ namespace Gw2Launcher.UI
             this.createShortcutAllToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.selectedToolStripMenuItem = new Gw2Launcher.UI.Controls.ToolStripMenuItemStayOpenOnClick();
             this.launchSelectedToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
-            this.updateLocaldatSelectedToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.launchNormalSelectedToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.launchWithoutRunAfterToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.updateSelectedToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.toolStripMenuItem22 = new System.Windows.Forms.ToolStripSeparator();
             this.killProcessSelectedToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
@@ -139,6 +140,7 @@ namespace Gw2Launcher.UI
             this.buttonAccountBar = new Gw2Launcher.UI.Controls.FlatShapeButton();
             this.buttonTemplates = new Gw2Launcher.UI.Controls.FlatShapeButton();
             this.buttonLaunchAll = new Gw2Launcher.UI.Controls.FlatShapeButton();
+            this.buttonLaunchDaily = new Gw2Launcher.UI.Controls.FlatShapeButton();
             this.buttonKillAll = new Gw2Launcher.UI.Controls.FlatShapeButton();
             this.buttonMinimizeRestoreAll = new Gw2Launcher.UI.Controls.FlatShapeButton();
             this.labelTitle = new Gw2Launcher.UI.formMain.TitleLabel();
@@ -148,7 +150,7 @@ namespace Gw2Launcher.UI
             this.contextMinimizeRestore = new System.Windows.Forms.ContextMenuStrip(this.components);
             this.minimizeToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.restoreToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
-            this.buttonLaunchDaily = new Gw2Launcher.UI.Controls.FlatShapeButton();
+            this.launchAllWithoutRunAfterToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.contextMenu.SuspendLayout();
             this.contextNotify.SuspendLayout();
             this.panelBottom.SuspendLayout();
@@ -247,7 +249,8 @@ namespace Gw2Launcher.UI
             // 
             this.allToolStripMenuItem.DropDownItems.AddRange(new System.Windows.Forms.ToolStripItem[] {
             this.launchAllToolStripMenuItem,
-            this.updateLocaldatToolStripMenuItem,
+            this.launchNormalToolStripMenuItem,
+            this.launchAllWithoutRunAfterToolStripMenuItem,
             this.updateAllToolStripMenuItem,
             this.toolStripMenuItem15,
             this.launchIfToolStripMenuItem,
@@ -265,31 +268,31 @@ namespace Gw2Launcher.UI
             // 
             // launchAllToolStripMenuItem
             // 
-            this.launchAllToolStripMenuItem.Size = new System.Drawing.Size(206, 22);
+            this.launchAllToolStripMenuItem.Size = new System.Drawing.Size(213, 22);
             this.launchAllToolStripMenuItem.Text = "Launch";
             this.launchAllToolStripMenuItem.Click += new System.EventHandler(this.launchAllToolStripMenuItem_Click);
             // 
-            // updateLocaldatToolStripMenuItem
+            // launchNormalToolStripMenuItem
             // 
-            this.updateLocaldatToolStripMenuItem.Size = new System.Drawing.Size(206, 22);
-            this.updateLocaldatToolStripMenuItem.Text = "Launch (normal)";
-            this.updateLocaldatToolStripMenuItem.Click += new System.EventHandler(this.updateLocaldatToolStripMenuItem_Click);
+            this.launchNormalToolStripMenuItem.Size = new System.Drawing.Size(213, 22);
+            this.launchNormalToolStripMenuItem.Text = "Launch (normal)";
+            this.launchNormalToolStripMenuItem.Click += new System.EventHandler(this.launchNormalToolStripMenuItem_Click);
             // 
             // updateAllToolStripMenuItem
             // 
-            this.updateAllToolStripMenuItem.Size = new System.Drawing.Size(206, 22);
+            this.updateAllToolStripMenuItem.Size = new System.Drawing.Size(213, 22);
             this.updateAllToolStripMenuItem.Text = "Update";
             this.updateAllToolStripMenuItem.Click += new System.EventHandler(this.updateAllToolStripMenuItem_Click);
             // 
             // toolStripMenuItem15
             // 
-            this.toolStripMenuItem15.Size = new System.Drawing.Size(203, 6);
+            this.toolStripMenuItem15.Size = new System.Drawing.Size(210, 6);
             // 
             // launchIfToolStripMenuItem
             // 
             this.launchIfToolStripMenuItem.DropDownItems.AddRange(new System.Windows.Forms.ToolStripItem[] {
             this.launchIfDailyLoginToolStripMenuItem});
-            this.launchIfToolStripMenuItem.Size = new System.Drawing.Size(206, 22);
+            this.launchIfToolStripMenuItem.Size = new System.Drawing.Size(213, 22);
             this.launchIfToolStripMenuItem.Text = "Launch if...";
             // 
             // launchIfDailyLoginToolStripMenuItem
@@ -300,45 +303,45 @@ namespace Gw2Launcher.UI
             // 
             // toolStripMenuItem21
             // 
-            this.toolStripMenuItem21.Size = new System.Drawing.Size(203, 6);
+            this.toolStripMenuItem21.Size = new System.Drawing.Size(210, 6);
             // 
             // killProcessAllToolStripMenuItem
             // 
-            this.killProcessAllToolStripMenuItem.Size = new System.Drawing.Size(206, 22);
+            this.killProcessAllToolStripMenuItem.Size = new System.Drawing.Size(213, 22);
             this.killProcessAllToolStripMenuItem.Text = "Kill process";
             this.killProcessAllToolStripMenuItem.Click += new System.EventHandler(this.killProcessAllToolStripMenuItem_Click);
             // 
             // toolStripMenuItem6
             // 
-            this.toolStripMenuItem6.Size = new System.Drawing.Size(203, 6);
+            this.toolStripMenuItem6.Size = new System.Drawing.Size(210, 6);
             // 
             // disableAutomaticLoginsToolStripMenuItem1
             // 
-            this.disableAutomaticLoginsToolStripMenuItem1.Size = new System.Drawing.Size(206, 22);
+            this.disableAutomaticLoginsToolStripMenuItem1.Size = new System.Drawing.Size(213, 22);
             this.disableAutomaticLoginsToolStripMenuItem1.StayOpenOnClick = true;
             this.disableAutomaticLoginsToolStripMenuItem1.Text = "Disable automatic logins";
             this.disableAutomaticLoginsToolStripMenuItem1.Click += new System.EventHandler(this.disableAutomaticLoginsToolStripMenuItem_Click);
             // 
             // disableRunAfterToolStripMenuItem1
             // 
-            this.disableRunAfterToolStripMenuItem1.Size = new System.Drawing.Size(206, 22);
+            this.disableRunAfterToolStripMenuItem1.Size = new System.Drawing.Size(213, 22);
             this.disableRunAfterToolStripMenuItem1.StayOpenOnClick = true;
             this.disableRunAfterToolStripMenuItem1.Text = "Disable run after";
             this.disableRunAfterToolStripMenuItem1.Click += new System.EventHandler(this.disableRunAfterToolStripMenuItem_Click);
             // 
             // applyWindowedBoundsToolStripMenuItem1
             // 
-            this.applyWindowedBoundsToolStripMenuItem1.Size = new System.Drawing.Size(206, 22);
+            this.applyWindowedBoundsToolStripMenuItem1.Size = new System.Drawing.Size(213, 22);
             this.applyWindowedBoundsToolStripMenuItem1.Text = "Apply windowed bounds";
             this.applyWindowedBoundsToolStripMenuItem1.Click += new System.EventHandler(this.applyWindowedBoundsToolStripMenuItem1_Click);
             // 
             // toolStripMenuItem19
             // 
-            this.toolStripMenuItem19.Size = new System.Drawing.Size(203, 6);
+            this.toolStripMenuItem19.Size = new System.Drawing.Size(210, 6);
             // 
             // createShortcutAllToolStripMenuItem
             // 
-            this.createShortcutAllToolStripMenuItem.Size = new System.Drawing.Size(206, 22);
+            this.createShortcutAllToolStripMenuItem.Size = new System.Drawing.Size(213, 22);
             this.createShortcutAllToolStripMenuItem.Text = "Create desktop shortcut";
             this.createShortcutAllToolStripMenuItem.Click += new System.EventHandler(this.createShortcutAllToolStripMenuItem_Click);
             // 
@@ -346,7 +349,8 @@ namespace Gw2Launcher.UI
             // 
             this.selectedToolStripMenuItem.DropDownItems.AddRange(new System.Windows.Forms.ToolStripItem[] {
             this.launchSelectedToolStripMenuItem,
-            this.updateLocaldatSelectedToolStripMenuItem,
+            this.launchNormalSelectedToolStripMenuItem,
+            this.launchWithoutRunAfterToolStripMenuItem,
             this.updateSelectedToolStripMenuItem,
             this.toolStripMenuItem22,
             this.killProcessSelectedToolStripMenuItem,
@@ -368,97 +372,103 @@ namespace Gw2Launcher.UI
             // 
             // launchSelectedToolStripMenuItem
             // 
-            this.launchSelectedToolStripMenuItem.Size = new System.Drawing.Size(206, 22);
+            this.launchSelectedToolStripMenuItem.Size = new System.Drawing.Size(213, 22);
             this.launchSelectedToolStripMenuItem.Text = "Launch";
             this.launchSelectedToolStripMenuItem.Click += new System.EventHandler(this.launchSelectedToolStripMenuItem_Click);
             // 
-            // updateLocaldatSelectedToolStripMenuItem
+            // launchNormalSelectedToolStripMenuItem
             // 
-            this.updateLocaldatSelectedToolStripMenuItem.Size = new System.Drawing.Size(206, 22);
-            this.updateLocaldatSelectedToolStripMenuItem.Text = "Launch (normal)";
-            this.updateLocaldatSelectedToolStripMenuItem.Click += new System.EventHandler(this.updateLocaldatSelectedToolStripMenuItem_Click);
+            this.launchNormalSelectedToolStripMenuItem.Size = new System.Drawing.Size(213, 22);
+            this.launchNormalSelectedToolStripMenuItem.Text = "Launch (normal)";
+            this.launchNormalSelectedToolStripMenuItem.Click += new System.EventHandler(this.launchNormalSelectedToolStripMenuItem_Click);
+            // 
+            // launchWithoutRunAfterToolStripMenuItem
+            // 
+            this.launchWithoutRunAfterToolStripMenuItem.Size = new System.Drawing.Size(213, 22);
+            this.launchWithoutRunAfterToolStripMenuItem.Text = "Launch (without run after)";
+            this.launchWithoutRunAfterToolStripMenuItem.Click += new System.EventHandler(this.launchWithoutRunAfterToolStripMenuItem_Click);
             // 
             // updateSelectedToolStripMenuItem
             // 
-            this.updateSelectedToolStripMenuItem.Size = new System.Drawing.Size(206, 22);
+            this.updateSelectedToolStripMenuItem.Size = new System.Drawing.Size(213, 22);
             this.updateSelectedToolStripMenuItem.Text = "Update";
             this.updateSelectedToolStripMenuItem.Click += new System.EventHandler(this.updateSelectedToolStripMenuItem_Click);
             // 
             // toolStripMenuItem22
             // 
-            this.toolStripMenuItem22.Size = new System.Drawing.Size(203, 6);
+            this.toolStripMenuItem22.Size = new System.Drawing.Size(210, 6);
             // 
             // killProcessSelectedToolStripMenuItem
             // 
-            this.killProcessSelectedToolStripMenuItem.Size = new System.Drawing.Size(206, 22);
+            this.killProcessSelectedToolStripMenuItem.Size = new System.Drawing.Size(213, 22);
             this.killProcessSelectedToolStripMenuItem.Text = "Kill process";
             this.killProcessSelectedToolStripMenuItem.Click += new System.EventHandler(this.killProcessSelectedToolStripMenuItem_Click);
             // 
             // toolStripMenuItem11
             // 
-            this.toolStripMenuItem11.Size = new System.Drawing.Size(203, 6);
+            this.toolStripMenuItem11.Size = new System.Drawing.Size(210, 6);
             // 
             // runToolStripMenuItem
             // 
-            this.runToolStripMenuItem.Size = new System.Drawing.Size(206, 22);
+            this.runToolStripMenuItem.Size = new System.Drawing.Size(213, 22);
             this.runToolStripMenuItem.Text = "Run...";
             this.runToolStripMenuItem.Click += new System.EventHandler(this.runToolStripMenuItem_Click);
             // 
             // disableAutomaticLoginsToolStripMenuItem
             // 
-            this.disableAutomaticLoginsToolStripMenuItem.Size = new System.Drawing.Size(206, 22);
+            this.disableAutomaticLoginsToolStripMenuItem.Size = new System.Drawing.Size(213, 22);
             this.disableAutomaticLoginsToolStripMenuItem.StayOpenOnClick = true;
             this.disableAutomaticLoginsToolStripMenuItem.Text = "Disable automatic logins";
             this.disableAutomaticLoginsToolStripMenuItem.Click += new System.EventHandler(this.disableAutomaticLoginsToolStripMenuItem_Click);
             // 
             // disableRunAfterToolStripMenuItem
             // 
-            this.disableRunAfterToolStripMenuItem.Size = new System.Drawing.Size(206, 22);
+            this.disableRunAfterToolStripMenuItem.Size = new System.Drawing.Size(213, 22);
             this.disableRunAfterToolStripMenuItem.StayOpenOnClick = true;
             this.disableRunAfterToolStripMenuItem.Text = "Disable run after";
             this.disableRunAfterToolStripMenuItem.Click += new System.EventHandler(this.disableRunAfterToolStripMenuItem_Click);
             // 
             // applyWindowedBoundsToolStripMenuItem
             // 
-            this.applyWindowedBoundsToolStripMenuItem.Size = new System.Drawing.Size(206, 22);
+            this.applyWindowedBoundsToolStripMenuItem.Size = new System.Drawing.Size(213, 22);
             this.applyWindowedBoundsToolStripMenuItem.Text = "Apply windowed bounds";
             this.applyWindowedBoundsToolStripMenuItem.Click += new System.EventHandler(this.applyWindowedBoundsToolStripMenuItem_Click);
             // 
             // toolStripMenuItem27
             // 
-            this.toolStripMenuItem27.Size = new System.Drawing.Size(203, 6);
+            this.toolStripMenuItem27.Size = new System.Drawing.Size(210, 6);
             // 
             // createShortcutSelectedToolStripMenuItem
             // 
-            this.createShortcutSelectedToolStripMenuItem.Size = new System.Drawing.Size(206, 22);
+            this.createShortcutSelectedToolStripMenuItem.Size = new System.Drawing.Size(213, 22);
             this.createShortcutSelectedToolStripMenuItem.Text = "Create desktop shortcut";
             this.createShortcutSelectedToolStripMenuItem.Click += new System.EventHandler(this.createShortcutSelectedToolStripMenuItem_Click);
             // 
             // showOnPageToolStripMenuItem
             // 
-            this.showOnPageToolStripMenuItem.Size = new System.Drawing.Size(206, 22);
+            this.showOnPageToolStripMenuItem.Size = new System.Drawing.Size(213, 22);
             this.showOnPageToolStripMenuItem.Text = "Show on page...";
             this.showOnPageToolStripMenuItem.Click += new System.EventHandler(this.showOnPageToolStripMenuItem_Click);
             // 
             // pinToTopToolStripMenuItem
             // 
-            this.pinToTopToolStripMenuItem.Size = new System.Drawing.Size(206, 22);
+            this.pinToTopToolStripMenuItem.Size = new System.Drawing.Size(213, 22);
             this.pinToTopToolStripMenuItem.Text = "Pin to top";
             this.pinToTopToolStripMenuItem.Click += new System.EventHandler(this.pinToTopToolStripMenuItem_Click);
             // 
             // cloneToolStripMenuItem
             // 
-            this.cloneToolStripMenuItem.Size = new System.Drawing.Size(206, 22);
+            this.cloneToolStripMenuItem.Size = new System.Drawing.Size(213, 22);
             this.cloneToolStripMenuItem.Text = "Clone";
             this.cloneToolStripMenuItem.Click += new System.EventHandler(this.cloneToolStripMenuItem_Click);
             // 
             // toolStripMenuItem8
             // 
-            this.toolStripMenuItem8.Size = new System.Drawing.Size(203, 6);
+            this.toolStripMenuItem8.Size = new System.Drawing.Size(210, 6);
             // 
             // clearSelectionToolStripMenuItem
             // 
-            this.clearSelectionToolStripMenuItem.Size = new System.Drawing.Size(206, 22);
+            this.clearSelectionToolStripMenuItem.Size = new System.Drawing.Size(213, 22);
             this.clearSelectionToolStripMenuItem.Text = "Clear selection";
             this.clearSelectionToolStripMenuItem.Click += new System.EventHandler(this.clearSelectionToolStripMenuItem_Click);
             // 
@@ -1051,7 +1061,7 @@ namespace Gw2Launcher.UI
             this.buttonAccountBar.BorderStyle = ((System.Windows.Forms.AnchorStyles)((((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom) 
             | System.Windows.Forms.AnchorStyles.Left) 
             | System.Windows.Forms.AnchorStyles.Right)));
-            this.buttonAccountBar.Cursor = Windows.Cursors.Hand;
+            this.buttonAccountBar.Cursor = Gw2Launcher.Windows.Cursors.Hand;
             this.buttonAccountBar.ForeColorName = Gw2Launcher.UI.UiColors.Colors.BarAccountBarForeColor;
             this.buttonAccountBar.LineSize = 4;
             this.buttonAccountBar.Location = new System.Drawing.Point(32, 0);
@@ -1072,7 +1082,7 @@ namespace Gw2Launcher.UI
             this.buttonTemplates.BorderStyle = ((System.Windows.Forms.AnchorStyles)((((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom) 
             | System.Windows.Forms.AnchorStyles.Left) 
             | System.Windows.Forms.AnchorStyles.Right)));
-            this.buttonTemplates.Cursor = Windows.Cursors.Hand;
+            this.buttonTemplates.Cursor = Gw2Launcher.Windows.Cursors.Hand;
             this.buttonTemplates.ForeColorName = Gw2Launcher.UI.UiColors.Colors.BarTemplatesForeColor;
             this.buttonTemplates.LineSize = 4;
             this.buttonTemplates.Location = new System.Drawing.Point(54, 0);
@@ -1094,7 +1104,7 @@ namespace Gw2Launcher.UI
             this.buttonLaunchAll.BorderStyle = ((System.Windows.Forms.AnchorStyles)((((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom) 
             | System.Windows.Forms.AnchorStyles.Left) 
             | System.Windows.Forms.AnchorStyles.Right)));
-            this.buttonLaunchAll.Cursor = Windows.Cursors.Hand;
+            this.buttonLaunchAll.Cursor = Gw2Launcher.Windows.Cursors.Hand;
             this.buttonLaunchAll.ForeColorName = Gw2Launcher.UI.UiColors.Colors.BarLaunchAllForeColor;
             this.buttonLaunchAll.Location = new System.Drawing.Point(76, 0);
             this.buttonLaunchAll.Margin = new System.Windows.Forms.Padding(2, 0, 0, 0);
@@ -1103,6 +1113,26 @@ namespace Gw2Launcher.UI
             this.buttonLaunchAll.Size = new System.Drawing.Size(30, 37);
             this.buttonLaunchAll.Visible = false;
             this.buttonLaunchAll.Click += new System.EventHandler(this.launchAllToolStripMenuItem_Click);
+            // 
+            // buttonLaunchDaily
+            // 
+            this.buttonLaunchDaily.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom) 
+            | System.Windows.Forms.AnchorStyles.Left)));
+            this.buttonLaunchDaily.BackColorHoveredName = Gw2Launcher.UI.UiColors.Colors.BarLaunchDailyBackColorHovered;
+            this.buttonLaunchDaily.BackColorName = Gw2Launcher.UI.UiColors.Colors.BarLaunchDailyBackColor;
+            this.buttonLaunchDaily.BorderColorName = Gw2Launcher.UI.UiColors.Colors.BarLaunchDailyBorder;
+            this.buttonLaunchDaily.BorderStyle = ((System.Windows.Forms.AnchorStyles)((((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom) 
+            | System.Windows.Forms.AnchorStyles.Left) 
+            | System.Windows.Forms.AnchorStyles.Right)));
+            this.buttonLaunchDaily.Cursor = Gw2Launcher.Windows.Cursors.Hand;
+            this.buttonLaunchDaily.ForeColorName = Gw2Launcher.UI.UiColors.Colors.BarLaunchDailyForeColor;
+            this.buttonLaunchDaily.Location = new System.Drawing.Point(108, 0);
+            this.buttonLaunchDaily.Margin = new System.Windows.Forms.Padding(2, 0, 0, 0);
+            this.buttonLaunchDaily.ShapeDirection = System.Windows.Forms.ArrowDirection.Right;
+            this.buttonLaunchDaily.ShapeSize = new System.Drawing.Size(6, 8);
+            this.buttonLaunchDaily.Size = new System.Drawing.Size(30, 37);
+            this.buttonLaunchDaily.Visible = false;
+            this.buttonLaunchDaily.Click += new System.EventHandler(this.buttonLaunchDaily_Click);
             // 
             // buttonKillAll
             // 
@@ -1114,7 +1144,7 @@ namespace Gw2Launcher.UI
             this.buttonKillAll.BorderStyle = ((System.Windows.Forms.AnchorStyles)((((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom) 
             | System.Windows.Forms.AnchorStyles.Left) 
             | System.Windows.Forms.AnchorStyles.Right)));
-            this.buttonKillAll.Cursor = Windows.Cursors.Hand;
+            this.buttonKillAll.Cursor = Gw2Launcher.Windows.Cursors.Hand;
             this.buttonKillAll.ForeColorName = Gw2Launcher.UI.UiColors.Colors.BarCloseAllForeColor;
             this.buttonKillAll.Location = new System.Drawing.Point(140, 0);
             this.buttonKillAll.Margin = new System.Windows.Forms.Padding(2, 0, 0, 0);
@@ -1134,7 +1164,7 @@ namespace Gw2Launcher.UI
             this.buttonMinimizeRestoreAll.BorderStyle = ((System.Windows.Forms.AnchorStyles)((((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom) 
             | System.Windows.Forms.AnchorStyles.Left) 
             | System.Windows.Forms.AnchorStyles.Right)));
-            this.buttonMinimizeRestoreAll.Cursor = Windows.Cursors.Hand;
+            this.buttonMinimizeRestoreAll.Cursor = Gw2Launcher.Windows.Cursors.Hand;
             this.buttonMinimizeRestoreAll.ForeColorName = Gw2Launcher.UI.UiColors.Colors.BarMinimizeAllForeColor;
             this.buttonMinimizeRestoreAll.Location = new System.Drawing.Point(172, 0);
             this.buttonMinimizeRestoreAll.Margin = new System.Windows.Forms.Padding(2, 0, 0, 0);
@@ -1218,25 +1248,11 @@ namespace Gw2Launcher.UI
             this.restoreToolStripMenuItem.Text = "Restore";
             this.restoreToolStripMenuItem.Click += new System.EventHandler(this.minimizeRestoreToolStripMenuItem_Click);
             // 
-            // buttonLaunchDaily
+            // launchAllWithoutRunAfterToolStripMenuItem
             // 
-            this.buttonLaunchDaily.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom) 
-            | System.Windows.Forms.AnchorStyles.Left)));
-            this.buttonLaunchDaily.BackColorHoveredName = Gw2Launcher.UI.UiColors.Colors.BarLaunchDailyBackColorHovered;
-            this.buttonLaunchDaily.BackColorName = Gw2Launcher.UI.UiColors.Colors.BarLaunchDailyBackColor;
-            this.buttonLaunchDaily.BorderColorName = Gw2Launcher.UI.UiColors.Colors.BarLaunchDailyBorder;
-            this.buttonLaunchDaily.BorderStyle = ((System.Windows.Forms.AnchorStyles)((((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom) 
-            | System.Windows.Forms.AnchorStyles.Left) 
-            | System.Windows.Forms.AnchorStyles.Right)));
-            this.buttonLaunchDaily.Cursor = Windows.Cursors.Hand;
-            this.buttonLaunchDaily.ForeColorName = Gw2Launcher.UI.UiColors.Colors.BarLaunchDailyForeColor;
-            this.buttonLaunchDaily.Location = new System.Drawing.Point(108, 0);
-            this.buttonLaunchDaily.Margin = new System.Windows.Forms.Padding(2, 0, 0, 0);
-            this.buttonLaunchDaily.ShapeDirection = System.Windows.Forms.ArrowDirection.Right;
-            this.buttonLaunchDaily.ShapeSize = new System.Drawing.Size(6, 8);
-            this.buttonLaunchDaily.Size = new System.Drawing.Size(30, 37);
-            this.buttonLaunchDaily.Visible = false;
-            this.buttonLaunchDaily.Click += new System.EventHandler(this.buttonLaunchDaily_Click);
+            this.launchAllWithoutRunAfterToolStripMenuItem.Size = new System.Drawing.Size(213, 22);
+            this.launchAllWithoutRunAfterToolStripMenuItem.Text = "Launch (without run after)";
+            this.launchAllWithoutRunAfterToolStripMenuItem.Click += new System.EventHandler(this.launchAllWithoutRunAfterToolStripMenuItem_Click);
             // 
             // formMain
             // 
@@ -1297,8 +1313,8 @@ namespace Gw2Launcher.UI
         private System.Windows.Forms.ToolStripMenuItem clearSelectionToolStripMenuItem;
         private System.Windows.Forms.ToolStripMenuItem launchToolStripMenuItem;
         private System.Windows.Forms.ToolStripMenuItem updateToolStripMenuItem;
-        private System.Windows.Forms.ToolStripMenuItem updateLocaldatToolStripMenuItem;
-        private System.Windows.Forms.ToolStripMenuItem updateLocaldatSelectedToolStripMenuItem;
+        private System.Windows.Forms.ToolStripMenuItem launchNormalToolStripMenuItem;
+        private System.Windows.Forms.ToolStripMenuItem launchNormalSelectedToolStripMenuItem;
         private System.Windows.Forms.ToolStripMenuItem updateLocaldatToolStripMenuItem1;
         private System.Windows.Forms.ToolStripMenuItem showToolStripMenuItem;
         private System.Windows.Forms.ToolStripSeparator toolStripMenuItem9;
@@ -1401,5 +1417,7 @@ namespace Gw2Launcher.UI
         private System.Windows.Forms.ToolStripMenuItem colorsToolStripMenuItem;
         private System.Windows.Forms.ToolStripMenuItem logToolStripMenuItem;
         private Controls.FlatShapeButton buttonLaunchDaily;
+        private System.Windows.Forms.ToolStripMenuItem launchWithoutRunAfterToolStripMenuItem;
+        private System.Windows.Forms.ToolStripMenuItem launchAllWithoutRunAfterToolStripMenuItem;
     }
 }

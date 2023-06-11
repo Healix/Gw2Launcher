@@ -9,14 +9,154 @@ namespace Gw2Launcher.Tools
     {
         private class AccountProcessInfo : ProcessInfo
         {
-            public Settings.IAccount account;
+            [Flags]
+            public enum MonitoredState : byte
+            {
+                None = 0,
+                /// <summary>
+                /// Allows monitoring
+                /// </summary>
+                Enabled = 1,
+                /// <summary>
+                /// Processes will be monitored if enabled
+                /// </summary>
+                Monitored = 2,
+                /// <summary>
+                /// Enabled and Monitored
+                /// </summary>
+                Monitoring = 3,
+                /// <summary>
+                /// Flagged for removal
+                /// </summary>
+                Removing = 4,
+                /// <summary>
+                /// No longer valid for the account
+                /// </summary>
+                Replaced = 8,
+            }
+
+            public Settings.IGw2Account account;
+            public ProcessInfo[] processes;
+            public MonitoredState state;
+
+            public AccountProcessInfo()
+            {
+                processes = new ProcessInfo[5];
+            }
+
+            //public bool Enabled
+            //{
+            //    get
+            //    {
+            //        return (state & MonitoredState.Enabled) != 0;
+            //    }
+            //    set
+            //    {
+            //        if (value)
+            //            state |= MonitoredState.Enabled;
+            //        else
+            //            state &= ~MonitoredState.Enabled;
+            //    }
+            //}
+
+            //public bool Monitored
+            //{
+            //    get
+            //    {
+            //        return (state & MonitoredState.Monitored) != 0;
+            //    }
+            //    set
+            //    {
+            //        if (value)
+            //            state |= MonitoredState.Monitored;
+            //        else
+            //            state &= ~MonitoredState.Monitored;
+            //    }
+            //}
+
+            //public bool Removing
+            //{
+            //    get
+            //    {
+            //        return (state & MonitoredState.Removing) != 0;
+            //    }
+            //    set
+            //    {
+            //        if (value)
+            //            state |= MonitoredState.Removing;
+            //        else
+            //            state &= ~MonitoredState.Removing;
+            //    }
+            //}
+
+            public bool GetState(MonitoredState state)
+            {
+                return (this.state & state) == state;
+            }
+
+            public void SetState(MonitoredState state, bool value)
+            {
+                if (value)
+                    this.state |= state;
+                else
+                    this.state &= ~state;
+            }
+
+            public void Add(ProcessInfo p)
+            {
+                for (var i = 0; i < processes.Length; i++)
+                {
+                    if (processes[i] == null)
+                    {
+                        processes[i] = p;
+                        return;
+                    }
+                }
+
+                Array.Resize(ref processes, processes.Length + 1);
+
+                processes[processes.Length - 1] = p;
+            }
+
+            public void Remove(ProcessInfo p)
+            {
+                for (var i = 0; i < processes.Length; i++)
+                {
+                    if (processes[i] == null)
+                        return;
+
+                    if (object.ReferenceEquals(p, processes[i]))
+                    {
+                        for (var j = processes.Length - 1; j > i; --j)
+                        {
+                            if (processes[j] != null)
+                            {
+                                processes[i] = processes[j];
+                                processes[j] = null;
+
+                                return;
+                            }
+                        }
+
+                        processes[i] = null;
+
+                        return;
+                    }
+                }
+            }
         }
 
-        private class ProcessInfo
+        private class ProcessInfo : IDisposable
         {
             public int pid;
             public int parent;
             public Process process;
+
+            public void Dispose()
+            {
+                if (parent != -1)
+                    process.Dispose();
+            }
         }
 
         private class QueueItem
@@ -25,21 +165,42 @@ namespace Gw2Launcher.Tools
             {
                 Add,
                 Remove,
-                Exited
+                Removed,
+                Exited,
+                SettingsChanged,
+            }
+
+            public QueueItem()
+            {
+
+            }
+
+            public QueueItem(Process p)
+            {
+                this.process = p;
+
+                try
+                {
+                    pid = p.Id;
+                }
+                catch { }
             }
 
             public QueueType type;
             public Process process;
-            public Settings.IAccount account;
+            public int pid;
+            public Settings.IGw2Account account;
+            public bool monitored;
         }
 
         private Task task;
-
         private Queue<QueueItem> queue;
         private Dictionary<ushort, AccountProcessInfo> accounts;
         private Dictionary<int, ProcessInfo> processes;
         private HashSet<int> unwatchable;
         private Windows.ProcessInfo processInfo;
+        private bool refresh;
+        private ushort monitored;
 
         public CoherentMonitor()
         {
@@ -47,166 +208,382 @@ namespace Gw2Launcher.Tools
             accounts = new Dictionary<ushort, AccountProcessInfo>();
             processes = new Dictionary<int, ProcessInfo>();
             processInfo = new Windows.ProcessInfo();
+
+            Settings.GuildWars2.ChromiumPriority.ValueChanged += OnSettingsPriorityChanged;
+            Settings.GuildWars2.ChromiumAffinity.ValueChanged += OnSettingsChanged;
         }
 
-        public void Add(Settings.IAccount account, Process p)
+        void OnSettingsChanged(object sender, EventArgs e)
+        {
+            refresh = true;
+        }
+
+        void OnSettingsPriorityChanged(object sender, EventArgs e)
         {
             lock (queue)
             {
-                queue.Enqueue(new QueueItem()
-                {
-                    type = QueueItem.QueueType.Add,
-                    process = p,
-                    account = account,
-                });
+                refresh = true;
 
-                if (task == null || task.IsCompleted)
-                    task = DoProcesses();
+                if (accounts != null && accounts.Count > 0)
+                {
+                    StartQueue();
+                }
             }
         }
 
-        public void Remove(Settings.IAccount account)
+        private void StartQueue()
+        {
+            if (task == null || task.IsCompleted)
+                task = DoProcesses();
+        }
+
+        void OnAccountPriorityChanged(object sender, EventArgs e)
         {
             lock (queue)
             {
+                if (IsDisposed)
+                    return;
+
+                queue.Enqueue(new QueueItem()
+                {
+                    type = QueueItem.QueueType.SettingsChanged,
+                    account = (Settings.IGw2Account)sender,
+                });
+
+                StartQueue();
+            }
+        }
+
+        private bool IsDisposed
+        {
+            get
+            {
+                return accounts == null;
+            }
+        }
+
+        public void Add(Settings.IGw2Account account, Process p, bool monitored)
+        {
+            lock (queue)
+            {
+                if (IsDisposed)
+                    return;
+
+                queue.Enqueue(new QueueItem(p)
+                {
+                    type = QueueItem.QueueType.Add,
+                    account = account,
+                    monitored = monitored,
+                });
+
+                StartQueue();
+            }
+        }
+
+        public void Remove(Settings.IGw2Account account)
+        {
+            lock (queue)
+            {
+                if (IsDisposed)
+                    return;
+
                 queue.Enqueue(new QueueItem()
                 {
                     type = QueueItem.QueueType.Remove,
                     account = account,
                 });
 
-                if (task == null || task.IsCompleted)
-                    task = DoProcesses();
+                StartQueue();
             }
         }
 
         private async Task DoProcesses()
         {
             var scan = new Func<int>(DoScan);
+            var delay = 1000;
 
-            do
+            while (true)
             {
                 //WMI could alternatively be used to poll processes, but it may not be available and has a higher impact
                 //ManagementEventWatcher("SELECT * FROM __InstanceCreationEvent WITHIN 1 WHERE TargetInstance ISA 'Win32_Process' AND TargetInstance.Name = 'CoherentUI_Host.exe'")
                 //Win32_ProcessStartTrace could be used, but requires admin privileges
 
-                await Task.Delay(5000);
+                await Task.Delay(delay);
 
                 if (await Task.Run(scan) == 0)
                 {
                     lock (queue)
                     {
-                        if (queue.Count == 0)
+                        if (queue.Count > 0)
                         {
-                            if (this.processes.Count > 0)
-                            {
-                                foreach (var pi in this.processes.Values)
-                                {
-                                    if (pi.parent != -1)
-                                        pi.process.Dispose();
-                                }
-
-                                this.processes.Clear();
-                                this.unwatchable = null;
-                            }
-
+                            continue;
+                        }
+                        else if (this.processes.Count == 0)
+                        {
                             task = null;
-                            return;
+                            break;
+                        }
+                    }
+
+                    foreach (var pi in this.processes.Values)
+                    {
+                        pi.Dispose();
+                    }
+
+                    this.processes.Clear();
+                    this.unwatchable = null;
+                }
+
+                if (monitored > 0)
+                {
+                    delay = 5000;
+                }
+                else
+                {
+                    lock (queue)
+                    {
+                        if (monitored == 0 && queue.Count == 0)
+                        {
+                            task = null;
+                            break;
                         }
                     }
                 }
             }
-            while (true);
         }
 
-        private void DoQueue()
+        private int DoQueue()
         {
-            lock (queue)
+            int removing = 0;
+
+            while (true)
             {
-                while (queue.Count > 0)
+                QueueItem item;
+
+                lock (queue)
                 {
-                    var item = queue.Dequeue();
+                    if (queue.Count == 0)
+                        return removing;
+                    item = queue.Dequeue();
+                }
 
-                    AccountProcessInfo ap;
-                    int pid;
+                AccountProcessInfo ap;
+                ProcessInfo pi;
 
-                    switch (item.type)
-                    {
-                        case QueueItem.QueueType.Add:
+                switch (item.type)
+                {
+                    case QueueItem.QueueType.Add:
 
-                            try
-                            {
-                                pid = item.process.Id;
-                                if (item.process.HasExited)
-                                    break;
-                            }
-                            catch
-                            {
+                        int pid;
+
+                        try
+                        {
+                            pid = item.process.Id;
+                            if (item.process.HasExited)
                                 break;
+                        }
+                        catch
+                        {
+                            break;
+                        }
+
+                        if (accounts.TryGetValue(item.account.UID, out ap) && ap.pid == pid)
+                        {
+                            ap.SetState(AccountProcessInfo.MonitoredState.Removing, false);
+                        }
+                        else
+                        {
+                            if (ap != null)
+                            {
+                                ap.SetState(AccountProcessInfo.MonitoredState.Removing | AccountProcessInfo.MonitoredState.Replaced, true);
+                                ++removing;
                             }
 
-                            if (accounts.TryGetValue(item.account.UID, out ap))
+                            ap = new AccountProcessInfo()
                             {
-                                if (ap.pid != pid)
-                                {
-                                    processes.Remove(ap.pid);
+                                pid = pid,
+                                account = item.account,
+                                process = item.process,
+                                parent = -1,
+                            };
 
-                                    ap.process = item.process;
-                                    ap.pid = pid;
-                                    processes[pid] = ap;
+                            accounts[item.account.UID] = ap;
+                            processes[pid] = ap;
+
+                            item.account.ChromiumPriorityChanged += OnAccountPriorityChanged;
+                            item.account.ChromiumAffinityChanged += OnSettingsChanged;
+
+                            if (IsMonitored(item.account))
+                            {
+                                ap.SetState(AccountProcessInfo.MonitoredState.Monitored, true);
+
+                                lock (queue)
+                                {
+                                    ++monitored;
                                 }
                             }
-                            else
+                        }
+
+                        if (ap.GetState(AccountProcessInfo.MonitoredState.Enabled) != item.monitored)
+                        {
+                            ap.SetState(AccountProcessInfo.MonitoredState.Enabled, item.monitored);
+
+                            if (item.monitored && ap.GetState(AccountProcessInfo.MonitoredState.Monitored))
+                                SetProcessOptions(ap);
+                        }
+
+                        break;
+                    case QueueItem.QueueType.Remove:
+
+                        if (accounts.TryGetValue(item.account.UID, out ap))
+                        {
+                            ap.SetState(AccountProcessInfo.MonitoredState.Removing, true);
+                            ++removing;
+                        }
+
+                        break;
+                    case QueueItem.QueueType.Removed:
+
+                        if (processes.TryGetValue(item.pid, out pi))
+                        {
+                            if (pi is AccountProcessInfo)
                             {
-                                ap = new AccountProcessInfo()
+                                if (accounts.TryGetValue(((AccountProcessInfo)pi).account.UID, out ap) && ap.pid == pi.pid)
                                 {
-                                    pid = pid,
-                                    account = item.account,
-                                    process = item.process,
-                                    parent = -1,
-                                };
-                                accounts[item.account.UID] = ap;
-                                processes[pid] = ap;
-                            }
-
-                            break;
-                        case QueueItem.QueueType.Remove:
-
-                            if (accounts.TryGetValue(item.account.UID, out ap))
-                            {
-                                accounts.Remove(item.account.UID);
-                                processes.Remove(ap.pid);
-                            }
-
-                            break;
-                        case QueueItem.QueueType.Exited:
-
-                            try
-                            {
-                                pid = item.process.Id;
-                            }
-                            catch
-                            {
-                                pid = -1;
-                                foreach (var pi in processes.Values)
+                                    accounts.Remove(ap.account.UID);
+                                }
+                                else
                                 {
-                                    if (pi.process == item.process)
+                                    ap = (AccountProcessInfo)pi;
+                                }
+
+                                ap.account.ChromiumPriorityChanged -= OnAccountPriorityChanged;
+                                ap.account.ChromiumAffinityChanged -= OnSettingsChanged;
+
+                                if (ap.GetState(AccountProcessInfo.MonitoredState.Monitored))
+                                {
+                                    lock (queue)
                                     {
-                                        pid = pi.pid;
-                                        break;
+                                        --monitored;
                                     }
                                 }
-                                if (pid == -1)
-                                    break;
+
+                                var exited = true;
+
+                                try
+                                {
+                                    exited = ap.process.HasExited;
+                                }
+                                catch { }
+
+                                //check for any remaining processes that were under this account (CefHost can fail to close on exit)
+
+                                for (var i = 0; i < ap.processes.Length; i++)
+                                {
+                                    if (ap.processes[i] == null)
+                                        break;
+
+                                    if (exited)
+                                    {
+                                        try
+                                        {
+                                            if (!ap.processes[i].process.HasExited)
+                                                ap.processes[i].process.Kill();
+                                        }
+                                        catch { }
+                                    }
+
+                                    processes.Remove(ap.processes[i].pid);
+                                    ap.processes[i].Dispose();
+                                }
                             }
 
-                            processes.Remove(pid);
-                            if (unwatchable != null && unwatchable.Remove(pid) && unwatchable.Count == 0)
-                                unwatchable = null;
+                            processes.Remove(item.pid);
+                        }
 
-                            break;
-                    }
+                        break;
+                    case QueueItem.QueueType.Exited:
+
+                        if (processes.TryGetValue(item.pid, out pi))
+                        {
+                            var owner = FindOwner(pi);
+
+                            if (owner != null)
+                            {
+                                owner.Remove(pi);
+                            }
+
+                            processes.Remove(item.pid);
+                            pi.Dispose();
+                        }
+
+                        if (unwatchable != null && unwatchable.Remove(item.pid) && unwatchable.Count == 0)
+                            unwatchable = null;
+
+                        break;
+                    case QueueItem.QueueType.SettingsChanged:
+
+                        if (accounts.TryGetValue(item.account.UID, out ap))
+                        {
+                            var b = IsMonitored(ap.account);
+
+                            if (ap.GetState(AccountProcessInfo.MonitoredState.Monitored) != b)
+                            {
+                                ap.SetState(AccountProcessInfo.MonitoredState.Monitored, b);
+
+                                lock (queue)
+                                {
+                                    if (b)
+                                        ++monitored;
+                                    else
+                                        --monitored;
+                                }
+
+                                if (ap.GetState(AccountProcessInfo.MonitoredState.Enabled))
+                                    SetProcessOptions(ap);
+                            }
+                            else if (b && ap.GetState(AccountProcessInfo.MonitoredState.Enabled))
+                            {
+                                SetProcessOptions(ap);
+                            }
+                        }
+
+                        break;
                 }
+            }
+        }
+
+        private bool IsMonitored(Settings.IGw2Account a)
+        {
+            switch (a.ChromiumPriority)
+            {
+                case Settings.ProcessPriorityClass.None:
+                    break;
+                case Settings.ProcessPriorityClass.Normal:
+                    return false;
+                default:
+                    return true;
+            }
+
+            switch (Settings.GuildWars2.ChromiumPriority.Value)
+            {
+                case Settings.ProcessPriorityClass.Normal:
+                case Settings.ProcessPriorityClass.None:
+                    break;
+                default:
+                    return true;
+            }
+
+            return false;
+        }
+
+        private void SetProcessOptions(AccountProcessInfo ap)
+        {
+            for (var i = 0; i < ap.processes.Length; i++)
+            {
+                if (ap.processes[i] == null)
+                    break;
+                SetProcessOptions(ap.processes[i].process, ap.account);
             }
         }
 
@@ -248,13 +625,72 @@ namespace Gw2Launcher.Tools
             }
         }
 
+        private AccountProcessInfo FindOwner(ProcessInfo p)
+        {
+            while (p.parent != -1 && processes.TryGetValue(p.parent, out p)) 
+            { 
+            
+            }
+
+            if (p is AccountProcessInfo)
+            {
+                return (AccountProcessInfo)p;
+            }
+
+            return null;
+        }
+
         private int DoScan()
         {
-            DoQueue();
+            var removed = DoQueue();
             DoExitWatch();
 
-            var count = accounts.Count;
-            if (count == 0)
+            int count;
+
+            if (accounts != null)
+            {
+                count = accounts.Count;
+
+                if (count == 0)
+                    return count;
+            }
+            else
+            {
+                return 0;
+            }
+
+            if (refresh)
+            {
+                refresh = false;
+
+                foreach (var ap in accounts.Values)
+                {
+                    var b = IsMonitored(ap.account);
+
+                    if (ap.GetState(AccountProcessInfo.MonitoredState.Monitored) != b)
+                    {
+                        ap.SetState(AccountProcessInfo.MonitoredState.Monitored, b);
+
+                        lock (queue)
+                        {
+                            if (b)
+                                ++monitored;
+                            else
+                                --monitored;
+                        }
+
+                        if (ap.GetState(AccountProcessInfo.MonitoredState.Enabled))
+                            SetProcessOptions(ap);
+                    }
+                    else if (b && ap.GetState(AccountProcessInfo.MonitoredState.Enabled))
+                    {
+                        SetProcessOptions(ap);
+                    }
+                }
+
+            }
+
+            if (monitored == 0 && removed == 0)
                 return count;
 
             List<ProcessInfo> added = null;
@@ -272,7 +708,7 @@ namespace Gw2Launcher.Tools
 
                     //CefHost
                     //CoherentUI_Host
-                    if (n.Length > 3 && n[0] == 'C' && (n[2] == 'h' || n[2] == 'e'))
+                    if (n.Length > 3 && n[0] == 'C' && (n[2] == 'h' || n[2] == 'f'))
                     {
                         if (processInfo.Open(p.Id))
                         {
@@ -315,23 +751,33 @@ namespace Gw2Launcher.Tools
 
             if (added != null)
             {
+                var handled = new HashSet<int>();
+
                 foreach (var pi in added)
                 {
-                    var pid = pi.parent;
-                    ProcessInfo owner = null;
+                    Settings.IGw2Account account;
+                    var owner = FindOwner(pi);
 
-                    while (processes.TryGetValue(pid, out owner))
+                    if (owner != null)
                     {
-                        if (owner.parent == -1)
-                            break;
-                        pid = owner.parent;
-                    }
+                        account = owner.account;
 
-                    Settings.IAccount account;
+                        if (handled.Add(owner.pid))
+                        {
+                            //priority will be reset on the main CEF processes when starting up another renderer
 
-                    if (owner != null && owner is AccountProcessInfo)
-                    {
-                        account = ((AccountProcessInfo)owner).account;
+                            if (owner.GetState(AccountProcessInfo.MonitoredState.Monitoring))
+                            {
+                                for (var i = 0; i < owner.processes.Length; i++)
+                                {
+                                    if (owner.processes[i] == null)
+                                        break;
+                                    SetProcessOptions(owner.processes[i].process, owner.account);
+                                }
+                            }
+                        }
+
+                        owner.Add(pi);
                     }
                     else
                     {
@@ -364,17 +810,12 @@ namespace Gw2Launcher.Tools
                         {
                             try
                             {
-                                var impersonation = Security.Impersonation.Impersonate(username, Security.Credentials.GetPassword(username));
-                                try
+                                using (var impersonation = Security.Impersonation.Impersonate(username, Security.Credentials.GetPassword(username)))
                                 {
                                     pi.process.EnableRaisingEvents = true;
                                     pi.process.Exited += p_Exited;
 
                                     supportsEvents = true;
-                                }
-                                finally
-                                {
-                                    impersonation.Dispose();
                                 }
                             }
                             catch { }
@@ -389,7 +830,12 @@ namespace Gw2Launcher.Tools
                     }
 
                     if (account != null)
-                        OnLinkedProcessAdded(account, pi);
+                    {
+                        if (owner.GetState(AccountProcessInfo.MonitoredState.Monitoring))
+                        {
+                            SetProcessOptions(pi.process, account);
+                        }
+                    }
 
                     try
                     {
@@ -397,10 +843,9 @@ namespace Gw2Launcher.Tools
                         {
                             lock (queue)
                             {
-                                queue.Enqueue(new QueueItem()
+                                queue.Enqueue(new QueueItem(pi.process)
                                 {
                                     type = QueueItem.QueueType.Exited,
-                                    process = pi.process,
                                 });
                             }
                         }
@@ -411,39 +856,206 @@ namespace Gw2Launcher.Tools
                 processInfo.Close();
             }
 
+            if (removed > 0)
+            {
+                var removing = new List<AccountProcessInfo>(removed);
+
+                foreach (var pi in processes.Values)
+                {
+                    if (pi is AccountProcessInfo)
+                    {
+                        var ap = (AccountProcessInfo)pi;
+                        if (ap.GetState(AccountProcessInfo.MonitoredState.Removing))
+                        {
+                            removing.Add(ap);
+                            if (--removed == 0)
+                                break;
+                        }
+                    }
+                }
+
+                foreach (var ap in removing)
+                {
+                    if (!ap.GetState(AccountProcessInfo.MonitoredState.Replaced))
+                        accounts.Remove(ap.account.UID);
+
+                    processes.Remove(ap.pid);
+
+                    ap.account.ChromiumPriorityChanged -= OnAccountPriorityChanged;
+                    ap.account.ChromiumAffinityChanged -= OnSettingsChanged;
+
+                    if (ap.GetState(AccountProcessInfo.MonitoredState.Monitored))
+                    {
+                        lock (queue)
+                        {
+                            --monitored;
+                        }
+                    }
+
+                    var exited = true;
+
+                    try
+                    {
+                        exited = ap.process.HasExited;
+                    }
+                    catch { }
+
+                    //check for any remaining processes that were under this account (CefHost can fail to close on exit)
+
+                    for (var i = 0; i < ap.processes.Length; i++)
+                    {
+                        if (ap.processes[i] == null)
+                            break;
+
+                        if (exited)
+                        {
+                            try
+                            {
+                                if (!ap.processes[i].process.HasExited)
+                                {
+                                    if (Util.Logging.Enabled)
+                                    {
+                                        var args = "";
+                                        var name = "";
+
+                                        try
+                                        {
+                                            name = ap.processes[i].process.ProcessName;
+
+                                            if (processInfo.Open(ap.processes[i].pid))
+                                            {
+                                                args = processInfo.GetCommandLineArgs();
+                                            }
+                                        }
+                                        catch { }
+
+                                        processInfo.Close();
+
+                                        Util.Logging.LogEvent(ap.account, "Process " + ap.processes[i].pid + " is still active after exit [" + name + "] [" + args + "]");
+                                    }
+
+                                    ap.processes[i].process.Kill();
+                                }
+                            }
+                            catch { }
+                        }
+
+                        processes.Remove(ap.processes[i].pid);
+                        ap.processes[i].Dispose();
+                    }
+
+                    ap.Dispose();
+                }
+
+
+                //lock (queue)
+                //{
+                //    foreach (var pi in processes.Values)
+                //    {
+                //        if (pi is AccountProcessInfo)
+                //        {
+                //            if (((AccountProcessInfo)pi).removing)
+                //            {
+                //                queue.Enqueue(new QueueItem()
+                //                {
+                //                    type = QueueItem.QueueType.Removed,
+                //                    pid = pi.pid,
+                //                });
+                //            }
+                //        }
+                //    }
+                //}
+            }
+
             return count;
         }
 
         void p_Exited(object sender, EventArgs e)
         {
+            var p = (Process)sender;
+            int pid;
+
+            try
+            {
+                pid = p.Id;
+            }
+            catch 
+            {
+                pid = 0;
+            }
+
             lock (queue)
             {
-                queue.Enqueue(new QueueItem()
+                queue.Enqueue(new QueueItem(p)
                 {
                     type = QueueItem.QueueType.Exited,
-                    process = (Process)sender,
                 });
+
+                StartQueue();
             }
         }
 
-        private void OnLinkedProcessAdded(Settings.IAccount account, ProcessInfo pi)
+        private void SetProcessOptions(Process p, Settings.IGw2Account account)
         {
+            var gw2 = (Settings.IGw2Account)account;
+            var priority = gw2.ChromiumPriority;
+            var affinity = gw2.ChromiumAffinity;
+
+            if (priority == Settings.ProcessPriorityClass.None)
+            {
+                if (Settings.GuildWars2.ChromiumPriority.HasValue)
+                    priority = Settings.GuildWars2.ChromiumPriority.Value;
+                else
+                    priority = Settings.ProcessPriorityClass.Normal;
+            }
+
+            if (affinity == 0)
+            {
+                affinity = Settings.GuildWars2.ChromiumAffinity.Value;
+            }
+
             try
             {
-                pi.process.PriorityClass = ProcessPriorityClass.High;
+                p.PriorityClass = priority.ToProcessPriorityClass();
             }
             catch (Exception e)
             {
                 Util.Logging.Log(e);
             }
+
+            if (affinity > 0)
+            {
+                try
+                {
+                    var processors = Environment.ProcessorCount;
+                    p.ProcessorAffinity = (IntPtr)(affinity & (long)(processors >= 64 ? ulong.MaxValue : ((ulong)1 << processors) - 1));
+                }
+                catch (Exception ex)
+                {
+                    Util.Logging.Log(ex);
+                }
+            }
         }
 
         public void Dispose()
         {
+            Settings.GuildWars2.ChromiumPriority.ValueChanged -= OnSettingsChanged;
+            Settings.GuildWars2.ChromiumAffinity.ValueChanged -= OnSettingsChanged;
+
             lock (queue)
             {
-                this.accounts = null;
-                this.queue = null;
+                if (this.accounts != null)
+                {
+                    foreach (var ap in this.accounts.Values)
+                    {
+                        ap.account.ChromiumPriorityChanged -= OnSettingsChanged;
+                        ap.account.ChromiumAffinityChanged -= OnSettingsChanged;
+                    }
+
+                    this.accounts = null;
+                }
+
+                this.queue.Clear();
             }
 
             var processes = this.processes;
@@ -460,8 +1072,7 @@ namespace Gw2Launcher.Tools
 
             foreach (var pi in processes.Values)
             {
-                if (pi.pid != -1)
-                    pi.process.Dispose();
+                pi.Dispose();
             }
 
             unwatchable = null;

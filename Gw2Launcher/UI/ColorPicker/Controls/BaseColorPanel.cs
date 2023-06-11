@@ -12,7 +12,7 @@ namespace Gw2Launcher.UI.ColorPicker.Controls
         protected Bitmap background;
         protected Point cursor;
         protected int cursorSize;
-        private bool selecting;
+        protected bool selecting;
 
         public BaseColorPanel()
         {

@@ -17,6 +17,7 @@ namespace Gw2Launcher.Messaging
 
         public List<ushort> accounts;
         public string args;
+        public bool disableRunAfter;
 
         public MappedMessage ToMap()
         {
@@ -36,7 +37,7 @@ namespace Gw2Launcher.Messaging
             else
                 count = (byte)accounts.Count;
 
-            MemoryMappedFile mmf = MemoryMappedFile.CreateNew(MappedMessage.BASE_ID + "L:" + id, 3 + count * 2 + _args.Length);
+            MemoryMappedFile mmf = MemoryMappedFile.CreateNew(MappedMessage.BASE_ID + "L:" + id, 3 + count * 2 + _args.Length + 1);
             using (var stream = new BinaryWriter(mmf.CreateViewStream()))
             {
                 stream.Write(count);
@@ -46,6 +47,7 @@ namespace Gw2Launcher.Messaging
 
                 stream.Write((ushort)_args.Length);
                 stream.Write(_args);
+                stream.Write(disableRunAfter);
             }
 
             return new MappedMessage(id, mmf);
@@ -65,6 +67,8 @@ namespace Gw2Launcher.Messaging
 
                     var length = stream.ReadUInt16();
                     m.args = Encoding.UTF8.GetString(stream.ReadBytes(length));
+
+                    m.disableRunAfter = stream.ReadBoolean();
 
                     return m;
                 }

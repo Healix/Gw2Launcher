@@ -205,8 +205,11 @@ namespace Gw2Launcher.UI.Controls
 
             public bool SetCurrent(byte page)
             {
-                _Current = Find(page);
-                Page = page;
+                if (_Page != page)
+                {
+                    _Current = Find(page);
+                    Page = page;
+                }
 
                 return _Current != null;
             }
@@ -1072,6 +1075,47 @@ namespace Gw2Launcher.UI.Controls
             }
         }
 
+        protected Color GetLoginRewardRarity(byte day)
+        {
+            switch (day)
+            {
+                case 8:
+                case 9:
+                case 10:
+                case 12:
+                case 13:
+                    return _Colors[ColorNames.AccountLoginRewardRarityMasterwork];
+                case 15:
+                case 16:
+                case 17:
+                case 19:
+                case 20:
+                    return _Colors[ColorNames.AccountLoginRewardRarityRare];
+                case 4:
+                case 7:
+                case 11:
+                case 14:
+                case 18:
+                case 21:
+                case 22:
+                case 23:
+                case 24:
+                case 25:
+                case 26:
+                case 27:
+                    return _Colors[ColorNames.AccountLoginRewardRarityExotic];
+                case 28:
+                    return _Colors[ColorNames.AccountLoginRewardRarityAscended];
+                case 1:
+                case 2:
+                case 3:
+                case 5:
+                case 6:
+                default:
+                    return _Colors[ColorNames.AccountLoginRewardRarityFine];
+            }
+        }
+
         protected Image GetLoginRewardIcon(byte day, Settings.DailyLoginDayIconFlags flags)
         {
             switch (day)
@@ -1168,24 +1212,50 @@ namespace Gw2Launcher.UI.Controls
             }
             else
             {
-                using (var brush = new SolidBrush(Color.FromArgb(196, Color.White)))
+                using (var brush = new SolidBrush(_Colors[ColorNames.AccountLoginRewardBackColor]))
                 {
                     g.FillEllipse(brush, x, y, sz, sz);
                 }
 
-                DrawOutlinedText(g, day.ToString(), FONT_LOGIN_REWARD_DAY, Color.White, Color.Black, 1, StringAlignment.Center, StringAlignment.Center, new Rectangle(x, y, sz, sz));
+                DrawOutlinedText(g, day.ToString(), FONT_LOGIN_REWARD_DAY, _Colors[ColorNames.AccountLoginRewardText], _Colors[ColorNames.AccountLoginRewardTextOutline], (int)(3 * scale + 0.5f), StringAlignment.Center, StringAlignment.Center, new Rectangle(x, y, sz, sz));
             }
 
-            g.SmoothingMode = SmoothingMode.AntiAlias;
-            g.DrawEllipse(Pens.Black, x, y, sz, sz);
-            g.SmoothingMode = SmoothingMode.None;
+            var crarity = (flags & Settings.DailyLoginDayIconFlags.ShowRarity) == 0 ? Color.Empty : GetLoginRewardRarity(day);
+            var coutline = _Colors[ColorNames.AccountLoginRewardBorder];
+
+            if (coutline.A > 0 || crarity.A > 0)
+            {
+                g.SmoothingMode = SmoothingMode.AntiAlias;
+                using (var pen = new Pen(_Colors[ColorNames.AccountLoginRewardBorder]))
+                {
+                    if (crarity.A > 0)
+                    {
+                        if (coutline.A > 0)
+                        {
+                            pen.Width = (int)(3 * scale + 0.5f);
+                            g.DrawEllipse(pen, x, y, sz, sz);
+                        }
+
+                        pen.Color = crarity;
+                        pen.Width = (int)(2 * scale + 0.5f);
+                        g.DrawEllipse(pen, x, y, sz, sz);
+                    }
+                    else if (coutline.A > 0)
+                    {
+                        pen.Width = (int)(1 * scale + 0.5f);
+                        g.DrawEllipse(pen, x, y, sz, sz);
+                    }
+
+                }
+                g.SmoothingMode = SmoothingMode.None;
+            }
         }
 
         protected void DrawOutlinedText(Graphics g, string text, Font font, Color color, Color outline, int outlineSize, StringAlignment alignmentHorizontal, StringAlignment alignmentVertical, Rectangle bounds)
         {
             using (var path = new GraphicsPath())
             {
-                using (var format = new StringFormat(StringFormatFlags.NoClip | StringFormatFlags.NoWrap))
+                using (var format = new StringFormat(StringFormatFlags.NoClip | StringFormatFlags.NoWrap | StringFormatFlags.FitBlackBox))
                 {
                     g.SmoothingMode = SmoothingMode.AntiAlias;
                     g.TextRenderingHint = System.Drawing.Text.TextRenderingHint.ClearTypeGridFit;

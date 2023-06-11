@@ -771,7 +771,7 @@ namespace Gw2Launcher.UI
                    {
                        try
                        {
-                           Tools.Temp.Purge(7);
+                           Tools.Temp.Purge(3);
                        }
                        catch (Exception ex)
                        {
@@ -1259,7 +1259,7 @@ namespace Gw2Launcher.UI
                 jumplist.RefreshAsync();
             }
 
-            if (gridContainer.FilterDailyLogin)
+            if (gridContainer.FilterDailyLogin || gridContainer.HasNumberFilter)
             {
                 gridContainer.RefreshFilter();
             }
@@ -1919,6 +1919,9 @@ namespace Gw2Launcher.UI
             if (buttons.TryGetValue(account.UID, out b))
             {
                 SetLastUsed(b, DateTime.UtcNow, true);
+
+                if (gridContainer.HasNumberFilter)
+                    gridContainer.RefreshFilter(b, true);
             }
         }
 
@@ -2405,7 +2408,7 @@ namespace Gw2Launcher.UI
                         SetLastUsed(button, d);
 
                         var sort = Settings.Sorting.Value.Sorting.Mode == Settings.SortMode.LastUsed || Settings.Sorting.Value.Grouping.HasFlag(Settings.GroupMode.Active);
-                        if (gridContainer.FilterDailyLogin)
+                        if (gridContainer.FilterDailyLogin || gridContainer.HasNumberFilter)
                             gridContainer.RefreshFilter(button, !sort);
                         if (sort)
                             gridContainer.Sort(Settings.Sorting.Value);
@@ -2498,7 +2501,7 @@ namespace Gw2Launcher.UI
                         //button.LastUsedUtc = d;
                         SetLastUsed(button, DateTime.UtcNow);
                         var sort = Settings.Sorting.Value.Sorting.Mode == Settings.SortMode.LastUsed || Settings.Sorting.Value.Grouping.HasFlag(Settings.GroupMode.Active);
-                        if (gridContainer.FilterDailyLogin)
+                        if (gridContainer.FilterDailyLogin || gridContainer.HasNumberFilter)
                             gridContainer.RefreshFilter(button, !sort);
                         if (sort)
                             gridContainer.Sort(Settings.Sorting.Value);
@@ -3118,6 +3121,9 @@ namespace Gw2Launcher.UI
             disableRunAfterToolStripMenuItem.Checked = Settings.DisableRunAfter.Value;
             disableRunAfterToolStripMenuItem1.Checked = Settings.DisableRunAfter.Value;
             disableRunAfterToolStripMenuItem2.Checked = Settings.DisableRunAfter.Value;
+
+            if (Settings.SearchFilter.HasValue)
+                textFilter.Text = Settings.SearchFilter.Value;
         }
 
         private void LoadAccounts()
@@ -3684,46 +3690,55 @@ namespace Gw2Launcher.UI
 
             if (e.Button == MouseButtons.Right)
             {
+                IList<AccountGridButton> selected;
+
                 if (!button.Selected)
                 {
+                    selected = new AccountGridButton[] { button };
                     gridContainer.ClearSelected();
                     button.Selected = true;
 
                     clearSelectionToolStripMenuItem.Enabled = false;
                     selectedToolStripMenuItem.Tag = null;
                     editmultipleToolStripMenuItem.Visible = false;
-
-                    applyWindowedBoundsToolStripMenuItem.Enabled = false;
-                    var a = button.AccountData;
-                    if (a != null && a.Windowed && !a.WindowBounds.IsEmpty)
-                    {
-                        var state = Client.Launcher.GetState(a);
-                        if (state == Client.Launcher.AccountState.Active || state == Client.Launcher.AccountState.ActiveGame)
-                            applyWindowedBoundsToolStripMenuItem.Enabled = true;
-                    }
                 }
                 else
                 {
-                    var selected = gridContainer.GetSelected();
+                    selected = gridContainer.GetSelected();
                     clearSelectionToolStripMenuItem.Enabled = true;
                     selectedToolStripMenuItem.Tag = selected;
                     editmultipleToolStripMenuItem.Visible = selected.Count > 1;
+                }
 
-                    applyWindowedBoundsToolStripMenuItem.Enabled = false;
-                    foreach (var b in selected)
+                var enabled = new bool[]
+                {
+                    false, //windowed
+                    //false, //run after
+                };
+                var remaining = enabled.Length;
+
+                foreach (var b in selected)
+                {
+                    var a = b.AccountData;
+
+                    if (a != null)
                     {
-                        var a = b.AccountData;
-                        if (a != null && a.Windowed && !a.WindowBounds.IsEmpty)
+                        if (!enabled[0] && a.Windowed && !a.WindowBounds.IsEmpty)
                         {
                             var state = Client.Launcher.GetState(a);
                             if (state == Client.Launcher.AccountState.Active || state == Client.Launcher.AccountState.ActiveGame)
                             {
-                                applyWindowedBoundsToolStripMenuItem.Enabled = true;
-                                break;
+                                enabled[0] = true;
+                                if (--remaining == 0)
+                                    break;
                             }
                         }
+
                     }
                 }
+
+                applyWindowedBoundsToolStripMenuItem.Enabled = enabled[0];
+                //launchWithoutRunAfterToolStripMenuItem.Visible = enabled[1];
 
                 int pending = Client.Launcher.GetPendingLaunchCount();
 
@@ -5063,7 +5078,7 @@ namespace Gw2Launcher.UI
             }
         }
 
-        private void updateLocaldatToolStripMenuItem_Click(object sender, EventArgs e)
+        private void launchNormalToolStripMenuItem_Click(object sender, EventArgs e)
         {
             foreach (var button in GetVisible())
             {
@@ -5075,7 +5090,7 @@ namespace Gw2Launcher.UI
             }
         }
 
-        private void updateLocaldatSelectedToolStripMenuItem_Click(object sender, EventArgs e)
+        private void launchNormalSelectedToolStripMenuItem_Click(object sender, EventArgs e)
         {
             foreach (var button in GetSelected())
             {
@@ -5089,18 +5104,12 @@ namespace Gw2Launcher.UI
 
         private void launchAllToolStripMenuItem_Click(object sender, EventArgs e)
         {
-            Client.Launcher.LaunchMode mode;
-            if (Settings.ActionInactiveLClick.Value == Settings.ButtonAction.LaunchSingle)
-                mode = Client.Launcher.LaunchMode.LaunchSingle;
-            else
-                mode = Client.Launcher.LaunchMode.Launch;
-
             foreach (var button in GetVisible())
             {
                 var account = button.AccountData;
                 if (account != null)
                 {
-                    Client.Launcher.Launch(account, mode);
+                    Client.Launcher.Launch(account, Client.Launcher.LaunchMode.Launch);
                 }
             }
         }
@@ -5117,7 +5126,7 @@ namespace Gw2Launcher.UI
 
         private void updateLocaldatToolStripMenuItem1_Click(object sender, EventArgs e)
         {
-            updateLocaldatToolStripMenuItem_Click(sender, e);
+            launchNormalToolStripMenuItem_Click(sender, e);
         }
 
         private void showToolStripMenuItem_Click(object sender, EventArgs e)
@@ -5462,11 +5471,15 @@ namespace Gw2Launcher.UI
                                         mode = Client.Launcher.LaunchMode.LaunchSingle;
                                     else
                                         mode = Client.Launcher.LaunchMode.Launch;
+                                    var options = new Client.Launcher.LaunchOptions(launch.args)
+                                    {
+                                        DisableRunAfter = launch.disableRunAfter,
+                                    };
                                     foreach (var uid in launch.accounts)
                                     {
                                         var v = Settings.Accounts[uid];
                                         if (v.HasValue)
-                                            Client.Launcher.Launch(v.Value, mode, launch.args);
+                                            Client.Launcher.Launch(v.Value, mode, options);
                                     }
                                 }));
                         }
@@ -6265,6 +6278,11 @@ namespace Gw2Launcher.UI
             {
                 pendingFilter = false;
             }
+
+            if (textFilter.TextLength > 0)
+                Settings.SearchFilter.Value = textFilter.Text;
+            else
+                Settings.SearchFilter.Clear();
 
             if (!textFilter.Visible)
                 return;
@@ -7296,6 +7314,40 @@ namespace Gw2Launcher.UI
                 if (a != null && b.ShowDailyLogin && b.LastDailyLoginUtc.Date != d)
                 {
                     Client.Launcher.Launch(a, mode);
+                }
+            }
+        }
+
+        private void launchWithoutRunAfterToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            var options = new Client.Launcher.LaunchOptions()
+            {
+                DisableRunAfter = true,
+            };
+
+            foreach (var button in GetSelected())
+            {
+                var account = button.AccountData;
+                if (account != null)
+                {
+                    Client.Launcher.Launch(account, Client.Launcher.LaunchMode.Launch, options);
+                }
+            }
+        }
+
+        private void launchAllWithoutRunAfterToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            var options = new Client.Launcher.LaunchOptions()
+            {
+                DisableRunAfter = true,
+            };
+
+            foreach (var button in GetVisible())
+            {
+                var account = button.AccountData;
+                if (account != null)
+                {
+                    Client.Launcher.Launch(account, Client.Launcher.LaunchMode.Launch, options);
                 }
             }
         }

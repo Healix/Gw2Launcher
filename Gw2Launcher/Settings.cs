@@ -11,14 +11,14 @@ namespace Gw2Launcher
 {
     public static class Settings
     {
-        private const ushort VERSION = 14;
+        private const ushort VERSION = 15;
 
         public const string ASSET_HOST = "assetcdn.101.arenanetworks.com";
         public const string ASSET_HOST_ORIGIN = "origincdn.101.arenanetworks.com";
         public const string ASSET_COOKIE = "authCookie=access=/latest/*!/manifest/program/*!/program/*~md5=4e51ad868f87201ad93e428ff30c6691";
 
         public const bool TEMP_SETTINGS_ENABLED = false;
-        private const int EXPAND_MIN_COUNT = 189;
+        private const int EXPAND_MIN_COUNT = 200;
 
         private const ushort WRITE_DELAY = 10000;
         private const string FILE_NAME = "settings.dat";
@@ -26,6 +26,15 @@ namespace Gw2Launcher
         private static readonly Type[] FORMS;
 
         #region Enums
+
+        [Flags]
+        public enum DeleteCacheOptions : byte
+        {
+            None = 0,
+            Web = 1,
+            Binaries = 2,
+            All = 3,
+        }
 
         public enum SteamLimitation : byte
         {
@@ -108,6 +117,18 @@ namespace Gw2Launcher
             CelebrationBooster = 256,
             TransmutationCharge = 512,
             ChestOfLoyalty = 1024,
+            ShowRarity = 2048,
+        }
+
+        [Flags]
+        public enum DailyLoginDayRarityFlags : byte
+        {
+            None = 0,
+            Common = 1,
+            Uncommon = 2,
+            Rare = 4,
+            Exotic = 8,
+            Ascended = 16,
         }
 
         [Flags]
@@ -2193,7 +2214,9 @@ namespace Gw2Launcher
 
         public interface IGw2Account : IAccount
         {
-            event EventHandler DailyLoginDayChanged;
+            event EventHandler DailyLoginDayChanged,
+                               ChromiumPriorityChanged,
+                               ChromiumAffinityChanged;
 
             /// <summary>
             /// The name of the owned Local.dat file or null if this account
@@ -2320,6 +2343,18 @@ namespace Gw2Launcher
             }
 
             bool DisableMumbleLinkDailyLogin
+            {
+                get;
+                set;
+            }
+
+            ProcessPriorityClass ChromiumPriority
+            {
+                get;
+                set;
+            }
+
+            long ChromiumAffinity
             {
                 get;
                 set;
@@ -4119,7 +4154,9 @@ namespace Gw2Launcher
 
         private class Gw2Account : Account, IGw2Account
         {
-            public event EventHandler DailyLoginDayChanged;
+            public event EventHandler DailyLoginDayChanged,
+                                      ChromiumPriorityChanged,
+                                      ChromiumAffinityChanged;
 
             public Gw2Account()
                 : this(0)
@@ -4446,6 +4483,46 @@ namespace Gw2Launcher
                 }
             }
 
+            public ProcessPriorityClass _ChromiumPriority;
+            public ProcessPriorityClass ChromiumPriority
+            {
+                get
+                {
+                    return _ChromiumPriority;
+                }
+                set
+                {
+                    if (_ChromiumPriority != value)
+                    {
+                        _ChromiumPriority = value;
+                        OnValueChanged();
+
+                        if (ChromiumPriorityChanged != null)
+                            ChromiumPriorityChanged(this, EventArgs.Empty);
+                    }
+                }
+            }
+
+            public long _ChromiumAffinity;
+            public long ChromiumAffinity
+            {
+                get
+                {
+                    return _ChromiumAffinity;
+                }
+                set
+                {
+                    if (_ChromiumAffinity != value)
+                    {
+                        _ChromiumAffinity = value;
+                        OnValueChanged();
+
+                        if (ChromiumAffinityChanged != null)
+                            ChromiumAffinityChanged(this, EventArgs.Empty);
+                    }
+                }
+            }
+
             public override Account Clone()
             {
                 var a = new Gw2Account();
@@ -4464,6 +4541,8 @@ namespace Gw2Launcher
                 a._Provider = _Provider;
                 a._LastDailyLoginUtc = _LastDailyLoginUtc;
                 a._DisableMumbleLinkDailyLogin = _DisableMumbleLinkDailyLogin;
+                a._ChromiumPriority = _ChromiumPriority;
+                a._ChromiumAffinity = _ChromiumAffinity;
 
                 a.GfxFile = _GfxFile;
                 a.DatFile = _DatFile;
@@ -5255,11 +5334,6 @@ namespace Gw2Launcher
                 get;
             }
 
-            ISettingValue<bool> PrioritizeCoherentUI
-            {
-                get;
-            }
-
             ISettingValue<string> MumbleLinkName
             {
                 get;
@@ -5326,6 +5400,21 @@ namespace Gw2Launcher
             }
 
             ISettingValue<string> PathSteam
+            {
+                get;
+            }
+
+            ISettingValue<bool> RenameCefHost
+            {
+                get;
+            }
+
+            ISettingValue<ProcessPriorityClass> ChromiumPriority
+            {
+                get;
+            }
+
+            ISettingValue<long> ChromiumAffinity
             {
                 get;
             }
@@ -5440,7 +5529,6 @@ namespace Gw2Launcher
             {
                 _AutomaticRememberedLogin = new SettingValue<bool>();
                 _ClientPort = new SettingValue<ushort>();
-                _PrioritizeCoherentUI = new SettingValue<bool>();
                 _MumbleLinkName = new SettingValue<string>();
                 _VirtualUserPath = new PendingSettingValue<string>();
                 _ProfileMode = new SettingValue<ProfileMode>();
@@ -5455,6 +5543,9 @@ namespace Gw2Launcher
                 _LocalizeAccountExecutionSelection = new SettingValue<LocalizeAccountExecutionSelectionOptions>();
                 _LastModified = new SettingValue<uint>();
                 _PathSteam = new SettingValue<string>();
+                _RenameCefHost = new SettingValue<bool>();
+                _ChromiumPriority = new SettingValue<ProcessPriorityClass>();
+                _ChromiumAffinity = new SettingValue<long>();
             }
 
             public SettingValue<bool> _AutomaticRememberedLogin;
@@ -5472,15 +5563,6 @@ namespace Gw2Launcher
                 get
                 {
                     return _ClientPort;
-                }
-            }
-
-            public SettingValue<bool> _PrioritizeCoherentUI;
-            public ISettingValue<bool> PrioritizeCoherentUI
-            {
-                get
-                {
-                    return _PrioritizeCoherentUI;
                 }
             }
 
@@ -5607,6 +5689,33 @@ namespace Gw2Launcher
                 get
                 {
                     return _PathSteam;
+                }
+            }
+
+            public SettingValue<bool> _RenameCefHost;
+            public ISettingValue<bool> RenameCefHost
+            {
+                get
+                {
+                    return _RenameCefHost;
+                }
+            }
+
+            public SettingValue<ProcessPriorityClass> _ChromiumPriority;
+            public ISettingValue<ProcessPriorityClass> ChromiumPriority
+            {
+                get
+                {
+                    return _ChromiumPriority;
+                }
+            }
+
+            public SettingValue<long> _ChromiumAffinity;
+            public ISettingValue<long> ChromiumAffinity
+            {
+                get
+                {
+                    return _ChromiumAffinity;
                 }
             }
         }
@@ -7111,7 +7220,8 @@ namespace Gw2Launcher
             _ShowLaunchDailyAccounts = new SettingValue<bool>();
             _HideExit = new SettingValue<bool>();
             _HideMinimize = new SettingValue<bool>();
-
+            _DeleteCacheOnExit = new SettingValue<DeleteCacheOptions>();
+            _SearchFilter = new SettingValue<string>();
 
             //_Markers = new ListProperty<IMarker>();
         }
@@ -7211,6 +7321,7 @@ namespace Gw2Launcher
         {
             _StoreCredentials.SetValue(true);
             _ShowTray.SetValue(true);
+            _GuildWars2._ChromiumPriority.SetValue(ProcessPriorityClass.Normal);
         }
 
         private static void OnValueChanged()
@@ -7609,14 +7720,14 @@ namespace Gw2Launcher
                     //56
                     _GuildWars2._ProcessPriority.HasValue,
                     _GuildWars2._ProcessAffinity.HasValue,
-                    _GuildWars2._PrioritizeCoherentUI.HasValue,
+                    _GuildWars2._ChromiumPriority.HasValue, //_GuildWars2._PrioritizeCoherentUI.HasValue,
                     _NotesNotifications.HasValue,
                     _MaxPatchConnections.HasValue,
                     _GuildWars2._AutomaticRememberedLogin.Value,
                     _TopMost.Value,
                     _DeleteCrashLogsOnLaunch.Value,
                     //64
-                    _GuildWars2._PrioritizeCoherentUI.Value,
+                    _GuildWars2._ChromiumAffinity.HasValue, //_GuildWars2._PrioritizeCoherentUI.Value,
                     _ActionInactiveLClick.HasValue,
                     _StyleShowColor.HasValue,
                     _StyleHighlightFocused.HasValue,
@@ -7756,10 +7867,19 @@ namespace Gw2Launcher
                     _HideExit.Value,
                     _HideMinimize.HasValue,
                     _HideMinimize.Value,
-                    //
-                    //
-                    //
+                    _DeleteCacheOnExit.HasValue,
+                    _GuildWars2._RenameCefHost.HasValue,
+                    _GuildWars2._RenameCefHost.Value,
                     //192
+                    _SearchFilter.HasValue, 
+                    //
+                    //
+                    //
+                    //
+                    //
+                    //
+                    //
+                    //200
                     //EXPAND_MIN_COUNT
                 };
 
@@ -8253,6 +8373,18 @@ namespace Gw2Launcher
                 if (booleans[178])
                     Write(writer, _GuildWars2._PathSteam.Value);
 
+                if (booleans[58])
+                    writer.Write((byte)_GuildWars2._ChromiumPriority.Value);
+
+                if (booleans[64])
+                    writer.Write(_GuildWars2._ChromiumAffinity.Value);
+
+                if (booleans[189])
+                    writer.Write((byte)_DeleteCacheOnExit.Value);
+
+                if (booleans[192])
+                    writer.Write(_SearchFilter.Value);
+
 
 
 
@@ -8697,6 +8829,11 @@ namespace Gw2Launcher
                                     a._LocalizedExecution,
                                     a._Provider == AccountProvider.Steam,
                                     a._DisableMumbleLinkDailyLogin,
+                                    a._ChromiumPriority != ProcessPriorityClass.None,
+                                    a._ChromiumAffinity != 0,
+                                    //
+                                    //
+                                    //16
                                 };
 
                                 b = CompressBooleans(booleans);
@@ -8756,6 +8893,12 @@ namespace Gw2Launcher
                                     writer.Write(a._DailyLoginDay);
 
                                 writer.Write(a._LastDailyLoginUtc.ToBinary());
+
+                                if (booleans[12])
+                                    writer.Write((byte)a._ChromiumPriority);
+
+                                if (booleans[13])
+                                    writer.Write(a._ChromiumAffinity);
                             }
                         }
                     }
@@ -9202,10 +9345,22 @@ namespace Gw2Launcher
                     else
                         _GuildWars2._ProcessAffinity.Clear();
 
-                    if (booleans[58])
-                        _GuildWars2._PrioritizeCoherentUI.SetValue(booleans[64]);
-                    else
-                        _GuildWars2._PrioritizeCoherentUI.Clear();
+                    if (version <= 14)
+                    {
+                        if (booleans[58] && booleans[64])
+                        {
+                            _GuildWars2._ChromiumPriority.SetValue(ProcessPriorityClass.High);
+                        }
+                        else
+                        {
+                            _GuildWars2._ChromiumPriority.SetValue(ProcessPriorityClass.Normal);
+                        }
+
+                        //if (booleans[58])
+                        //    _GuildWars2._PrioritizeCoherentUI.SetValue(booleans[64]);
+                        //else
+                        //    _GuildWars2._PrioritizeCoherentUI.Clear();
+                    }
 
                     if (booleans[59])
                         _NotesNotifications.SetValue(new NotificationScreenAttachment(reader.ReadByte(), (ScreenAnchor)reader.ReadByte(), reader.ReadBoolean()));
@@ -9983,6 +10138,34 @@ namespace Gw2Launcher
                         _HideMinimize.Clear();
                 }
 
+                if (version >= 15)
+                {
+                    if (booleans[58])
+                        _GuildWars2._ChromiumPriority.SetValue((ProcessPriorityClass)reader.ReadByte());
+                    else
+                        _GuildWars2._ChromiumPriority.Clear();
+
+                    if (booleans[64])
+                        _GuildWars2._ChromiumAffinity.SetValue(reader.ReadInt64());
+                    else
+                        _GuildWars2._ChromiumAffinity.Clear();
+
+                    if (booleans[189])
+                        _DeleteCacheOnExit.SetValue((DeleteCacheOptions)reader.ReadByte());
+                    else
+                        _DeleteCacheOnExit.Clear();
+
+                    if (booleans[190])
+                        _GuildWars2._RenameCefHost.SetValue(booleans[191]);
+                    else
+                        _GuildWars2._RenameCefHost.Clear();
+
+                    if (booleans[192])
+                        _SearchFilter.SetValue(reader.ReadString());
+                    else
+                        _SearchFilter.Clear();
+                }
+
                 _datUID = 0;
 
                 lock (_DatFiles)
@@ -10547,6 +10730,15 @@ namespace Gw2Launcher
                                         a._DisableMumbleLinkDailyLogin = booleans[11];
 
                                         a._LastDailyLoginUtc = DateTime.FromBinary(reader.ReadInt64());
+                                    }
+
+                                    if (version >= 15)
+                                    {
+                                        if (booleans[12])
+                                            a._ChromiumPriority = (ProcessPriorityClass)reader.ReadByte();
+
+                                        if (booleans[13])
+                                            a._ChromiumAffinity = reader.ReadInt64();
                                     }
                                 }
                             }
@@ -12472,6 +12664,24 @@ namespace Gw2Launcher
             get
             {
                 return _HideMinimize;
+            }
+        }
+
+        private static SettingValue<DeleteCacheOptions> _DeleteCacheOnExit;
+        public static ISettingValue<DeleteCacheOptions> DeleteCacheOnExit
+        {
+            get
+            {
+                return _DeleteCacheOnExit;
+            }
+        }
+
+        private static SettingValue<string> _SearchFilter;
+        public static ISettingValue<string> SearchFilter
+        {
+            get
+            {
+                return _SearchFilter;
             }
         }
 

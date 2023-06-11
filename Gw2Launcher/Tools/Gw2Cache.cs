@@ -14,27 +14,75 @@ namespace Gw2Launcher.Tools
         private const string GW2CACHE = "gw2cache*";
 
         /// <summary>
+        /// Deletes cache folders for the account and any other accounts sharing the same dat file
+        /// </summary>
+        /// <param name="all">True to delete all folders, otherwise folders will be checked to ensure they're not needed</param>
+        /// <param name="options">Type of cache files to delete</param>
+        public static void DeleteByDat(Settings.IGw2Account account, bool all, Settings.DeleteCacheOptions options = Settings.DeleteCacheOptions.All)
+        {
+            if (options == Settings.DeleteCacheOptions.None)
+                return;
+
+            var dat = account.DatFile;
+
+            if (dat == null || dat.References <= 1)
+            {
+                Delete(account.UID, all, options);
+            }
+            else
+            {
+                var count = dat.References;
+
+                foreach (var a in Util.Accounts.GetGw2Accounts())
+                {
+                    if (a.DatFile == dat)
+                    {
+                        try
+                        {
+                            Delete(a.UID, all, options);
+                        }
+                        catch { }
+
+                        if (--count == 0)
+                            break;
+                    }
+                }
+            }
+        }
+
+        /// <summary>
         /// Deletes cache folders for the specified account
         /// </summary>
         /// <param name="uid">Account's UID</param>
         /// <param name="all">True to delete all folders, otherwise folders will be checked to ensure they're not needed</param>
-        public static void Delete(ushort uid, bool all)
+        /// <param name="options">Type of cache files to delete</param>
+        public static bool Delete(ushort uid, bool all, Settings.DeleteCacheOptions options = Settings.DeleteCacheOptions.All)
         {
+            if (options == Settings.DeleteCacheOptions.None)
+                return true;
+
+            var b = true;
+            DateTime t;
+
             if (all)
+                t = DateTime.MinValue;
+            else
+                t = DateTime.UtcNow.AddMinutes(-5);
+
+            foreach (var d in Directory.GetDirectories(Path.Combine(DataPath.AppDataAccountDataTemp, uid.ToString()), GW2CACHE, SearchOption.TopDirectoryOnly))
             {
-                foreach (var d in Directory.GetDirectories(Path.Combine(DataPath.AppDataAccountDataTemp, uid.ToString()), GW2CACHE, SearchOption.TopDirectoryOnly))
+                try
                 {
-                    try
-                    {
-                        DeleteCacheFolder(d, DateTime.MinValue);
-                    }
-                    catch { }
+                    if (!DeleteCacheFolder(d, t, options))
+                        b = false;
+                }
+                catch 
+                {
+                    b = false;
                 }
             }
-            else
-            {
-                Delete(uid);
-            }
+
+            return b;
         }
 
         public static void Delete(ushort uid)
@@ -191,17 +239,25 @@ namespace Gw2Launcher.Tools
         /// Deletes the cache folder if it was last used past the specified date
         /// </summary>
         /// <param name="date">Any folders written to past this date will be ignored; use DateTime.MinValue to not check</param>
-        public static bool DeleteCacheFolder(string path, DateTime date)
+        public static bool DeleteCacheFolder(string path, DateTime date, Settings.DeleteCacheOptions options = Settings.DeleteCacheOptions.All)
         {
+            if (options == Settings.DeleteCacheOptions.None || File.GetAttributes(path).HasFlag(FileAttributes.ReparsePoint))
+                return true;
+
             try
             {
                 var user = Path.Combine(path, "user");
+                var hasUser = Directory.Exists(user);
 
-                for (var i = 0; i < 2; i++)
+                //note the path may be the gw2cache folder or the user folder as gw2cache-user
+                if (!hasUser)
+                    user = path;
+
+                string index;
+
+                if (File.Exists(index = Path.Combine(user, "Cache", "index"))) //CoherentUI
                 {
-                    var index = Path.Combine(user, "Cache", "index");
-
-                    if (File.Exists(index))
+                    if ((options & Settings.DeleteCacheOptions.Web) != 0)
                     {
                         if (date.Ticks == 0 || File.GetLastWriteTimeUtc(Path.Combine(user, "Cache", "data_1")) < date)
                         {
@@ -211,20 +267,54 @@ namespace Gw2Launcher.Tools
                         {
                             return false;
                         }
-
-                        break;
-                    }
-                    else if (!object.ReferenceEquals(user, path))
-                    {
-                        user = path;
-                    }
-                    else
-                    {
-                        break;
                     }
                 }
+                else if (File.Exists(index = Path.Combine(user, "Cache", "LOCK"))) //CEF
+                {
+                    if ((options & Settings.DeleteCacheOptions.Web) != 0)
+                    {
+                        if (date.Ticks == 0 || File.GetLastWriteTimeUtc(Path.Combine(user, "Cache", "Cache", "Cache_Data", "data_1")) < date)
+                        {
+                            File.Delete(index);
+                        }
+                        else
+                        {
+                            return false;
+                        }
+                    }
+                }
+                else
+                {
+                    user = null;
+                }
 
-                Util.FileUtil.DeleteDirectory(path, true);
+                switch (options)
+                {
+                    case Settings.DeleteCacheOptions.All:
+
+                        Util.FileUtil.DeleteDirectory(path, true);
+
+                        break;
+                    case Settings.DeleteCacheOptions.Web:
+
+                        if (user != null)
+                        {
+                            Util.FileUtil.DeleteDirectory(user, true);
+                        }
+
+                        break;
+                    case Settings.DeleteCacheOptions.Binaries:
+
+                        if (hasUser || user == null)
+                        {
+                            foreach (var f in Directory.GetFiles(path))
+                            {
+                                File.Delete(f);
+                            }
+                        }
+
+                        break;
+                }
 
                 return true;
             }
@@ -255,12 +345,28 @@ namespace Gw2Launcher.Tools
         {
             foreach (var root in Directory.GetDirectories(Path.Combine(DataPath.AppDataAccountDataTemp, uid.ToString()), GW2CACHE, SearchOption.TopDirectoryOnly))
             {
-                var path = Path.Combine(root, "user", "Cache", "index");
-
                 try
                 {
-                    using (File.Open(path, FileMode.Open, FileAccess.Read, FileShare.None))
+                    string path;
+
+                    //CEF
+                    path = Path.Combine(root, "user", "Cache", "LOCK");
+
+                    if (File.Exists(path))
                     {
+                        using (File.Open(path, FileMode.Open, FileAccess.Read, FileShare.None))
+                        {
+                        }
+                    }
+
+                    //CoherentUI
+                    path = Path.Combine(root, "user", "Cache", "index");
+
+                    if (File.Exists(path))
+                    {
+                        using (File.Open(path, FileMode.Open, FileAccess.Read, FileShare.None))
+                        {
+                        }
                     }
                 }
                 catch (IOException e)

@@ -93,6 +93,12 @@ namespace Gw2Launcher.Util
             return GetTemporaryFileName(folder, "{0}.tmp");
         }
 
+        /// <summary>
+        /// Returns a file name that doesn't exist
+        /// </summary>
+        /// <param name="folder">Folder where the file should be</param>
+        /// <param name="format">Name format (example-{0}.tmp)</param>
+        /// <returns>Path or null if all names were taken</returns>
         public static string GetTemporaryFileName(string folder, string format)
         {
             int i = 0;

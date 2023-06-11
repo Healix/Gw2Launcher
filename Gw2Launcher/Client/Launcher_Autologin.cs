@@ -1016,6 +1016,11 @@ namespace Gw2Launcher.Client
 
                             if (mm.Pressed)
                             {
+                                if (!IsHandleOkay(q))
+                                {
+                                    return false;
+                                }
+
                                 if (Util.Logging.Enabled)
                                 {
                                     Util.Logging.LogEvent(q.Account.Settings, "Interrupted by modifier key, retrying");
@@ -1170,6 +1175,14 @@ namespace Gw2Launcher.Client
                             {
                                 if (++verify > 1)
                                 {
+                                    if (!IsHandleOkay(q))
+                                    {
+                                        if (clipboard.HasText)
+                                            await Windows.Clipboard.SetClipboardText(clipboard.Text);
+
+                                        return false;
+                                    }
+
                                     if (Util.Logging.Enabled)
                                     {
                                         Util.Logging.LogEvent(q.Account.Settings, "Retrying login verification");
@@ -1498,12 +1511,28 @@ namespace Gw2Launcher.Client
                                 Windows.Keyboard.SetKeyState(System.Windows.Forms.Keys.ControlKey, false);
                             }
 
-                            try
+                            var t = Environment.TickCount;
+                            var abort = false;
+
+                            do
                             {
-                                //gw2 could potentially take more than 5s to use the clipboard
-                                await Task.Delay(5000, cancel.Token);
+                                try
+                                {
+                                    //gw2 could potentially take more than 5s to use the clipboard
+                                    await Task.Delay(500, cancel.Token);
+
+                                    if (!IsHandleOkay(q))
+                                    {
+                                        abort = true;
+                                        break;
+                                    }
+                                }
+                                catch 
+                                {
+                                    break;
+                                }
                             }
-                            catch { }
+                            while (!completed && Environment.TickCount - t < 5000);
 
                             isWaiting = false;
 
@@ -1517,7 +1546,7 @@ namespace Gw2Launcher.Client
                             {
                                 //something else set the clipboard
 
-                                if (attempt < 3)
+                                if (attempt < 3 && !abort)
                                 {
                                     await Task.Delay(100);
 

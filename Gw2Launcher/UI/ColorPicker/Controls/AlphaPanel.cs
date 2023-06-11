@@ -111,7 +111,10 @@ namespace Gw2Launcher.UI.ColorPicker.Controls
 
         protected override void OnCursorChanged()
         {
-            this.Alpha = 1 - (float)cursor.Y / this.ClientSize.Height;
+            if (selecting)
+            {
+                this.Alpha = 1 - (float)cursor.Y / this.ClientSize.Height;
+            }
         }
 
         protected override void OnBackColorChanged(EventArgs e)
@@ -142,7 +145,7 @@ namespace Gw2Launcher.UI.ColorPicker.Controls
                     _Alpha = value;
 
                     var h = this.ClientSize.Height;
-                    var y = h - (int)(h * value);
+                    var y = h - (int)(h * value + 0.5f);
 
                     if (cursor.Y != y)
                         OnCursorMoving(cursor.X, y);

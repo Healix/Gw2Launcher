@@ -620,6 +620,7 @@ namespace Gw2Launcher.UI
             comboGw2ProcessPriorityDx.Items.AddRange(priorityValues);
             comboGw1ProcessPriority.Items.AddRange(priorityValues);
             comboProcessPriority.Items.AddRange(priorityValues);
+            comboGw2BrowserPriority.Items.AddRange(priorityValues);
 
             if (Settings.GuildWars2.ProcessPriority.HasValue && Settings.GuildWars2.ProcessPriority.Value != Settings.ProcessPriorityClass.None)
             {
@@ -663,8 +664,6 @@ namespace Gw2Launcher.UI
                 adGw1ProcessAffinity.Affinity = Settings.GuildWars1.ProcessAffinity.Value;
                 checkGw1ProcessAffinityAll.Checked = false;
             }
-
-            checkGw2ProcessBoostBrowser.Checked = Settings.GuildWars2.PrioritizeCoherentUI.Value;
 
             if (Settings.NotesNotifications.HasValue)
             {
@@ -1043,9 +1042,28 @@ namespace Gw2Launcher.UI
             checkStyleHideExit.Checked = Settings.HideExit.Value;
             checkStyleHideMinimize.Checked = Settings.HideMinimize.Value;
 
+            checkRenameCefHost.Checked = Settings.GuildWars2.RenameCefHost.Value;
 
+            if (Settings.DeleteCacheOnExit.HasValue)
+            {
+                var v = Settings.DeleteCacheOnExit.Value;
+                checkDeleteCacheBin.Checked = (v & Settings.DeleteCacheOptions.Binaries) != 0;
+                checkDeleteCacheWeb.Checked = (v & Settings.DeleteCacheOptions.Web) != 0;
+            }
 
+            if (Settings.GuildWars2.ChromiumPriority.HasValue && Settings.GuildWars2.ChromiumPriority.Value != Settings.ProcessPriorityClass.None)
+            {
+                Util.ComboItem<Settings.ProcessPriorityClass>.Select(comboGw2BrowserPriority, Settings.GuildWars2.ChromiumPriority.Value);
+                checkGw2BrowserPriority.Checked = true;
+            }
+            else
+                Util.ComboItem<Settings.ProcessPriorityClass>.Select(comboGw2BrowserPriority, Settings.ProcessPriorityClass.Normal);
 
+            if (Settings.GuildWars2.ChromiumAffinity.HasValue)
+            {
+                adGw2BrowserAffinity.Affinity = Settings.GuildWars2.ChromiumAffinity.Value;
+                checkGw2BrowserAffinityAll.Checked = false;
+            }
 
 
 
@@ -1123,6 +1141,7 @@ namespace Gw2Launcher.UI
                 v = ~Settings.DailyLoginDayIconFlags.None;
 
             checkStyleLoginRewardIconsNumber.Checked = (v & Settings.DailyLoginDayIconFlags.ShowDay) != 0;
+            checkStyleLoginRewardIconsRarity.Checked = (v & Settings.DailyLoginDayIconFlags.ShowRarity) != 0;
 
             var sz = Scale(icons[0].Width);
 
@@ -1949,8 +1968,6 @@ namespace Gw2Launcher.UI
             else
                 Settings.GuildWars1.ProcessAffinity.Clear();
 
-            Settings.GuildWars2.PrioritizeCoherentUI.Value = checkGw2ProcessBoostBrowser.Checked;
-
             if (checkNoteNotifications.Checked)
             {
                 var v = (Settings.NotificationScreenAttachment)checkNoteNotifications.Tag;
@@ -2213,6 +2230,8 @@ namespace Gw2Launcher.UI
                 {
                     if (checkStyleLoginRewardIconsNumber.Checked)
                         v |= Settings.DailyLoginDayIconFlags.ShowDay;
+                    if (checkStyleLoginRewardIconsRarity.Checked)
+                        v |= Settings.DailyLoginDayIconFlags.ShowRarity;
                     foreach (Control c in panelStyleLoginRewardIcons.Controls)
                     {
                         var check = (CheckBox)c.Tag;
@@ -2361,6 +2380,40 @@ namespace Gw2Launcher.UI
             Settings.ShowLaunchDailyAccounts.Value = checkStyleShowLaunchDaily.Checked;
             Settings.HideExit.Value = checkStyleHideExit.Checked;
             Settings.HideMinimize.Value = checkStyleHideMinimize.Checked;
+
+            Settings.GuildWars2.RenameCefHost.Value = checkRenameCefHost.Checked;
+
+            if (checkDeleteCacheBin.Checked || checkDeleteCacheWeb.Checked)
+            {
+                var dco = Settings.DeleteCacheOptions.None;
+                if (checkDeleteCacheBin.Checked)
+                    dco |= Settings.DeleteCacheOptions.Binaries;
+                if (checkDeleteCacheWeb.Checked)
+                    dco |= Settings.DeleteCacheOptions.Web;
+                Settings.DeleteCacheOnExit.Value = dco;
+            }
+            else
+                Settings.DeleteCacheOnExit.Clear();
+
+            if (checkGw2BrowserPriority.Checked && comboGw2BrowserPriority.SelectedIndex >= 0)
+                Settings.GuildWars2.ChromiumPriority.Value = Util.ComboItem<Settings.ProcessPriorityClass>.SelectedValue(comboGw2BrowserPriority);
+            else
+                Settings.GuildWars2.ChromiumPriority.Clear();
+
+            if (!checkGw2BrowserAffinityAll.Checked)
+            {
+                var bits = adGw2BrowserAffinity.Affinity;
+                if (bits == 0)
+                    Settings.GuildWars2.ChromiumAffinity.Clear();
+                else
+                    Settings.GuildWars2.ChromiumAffinity.Value = bits;
+            }
+            else
+                Settings.GuildWars2.ChromiumAffinity.Clear();
+
+
+
+
 
 
 
@@ -2868,7 +2921,6 @@ namespace Gw2Launcher.UI
         private void checkGw2ProcessPriority_CheckedChanged(object sender, EventArgs e)
         {
             comboGw2ProcessPriority.Enabled = checkGw2ProcessPriority.Checked;
-            OnGw2ProcessPriorityChanged();
         }
 
         private void checkGw2ProcessAffinityAll_CheckedChanged(object sender, EventArgs e)
@@ -3167,35 +3219,6 @@ namespace Gw2Launcher.UI
         private void checkGw1ProcessAffinityAll_CheckedChanged(object sender, EventArgs e)
         {
             panelGw1ProcessAffinity.Visible = !checkGw1ProcessAffinityAll.Checked;
-        }
-
-        private void OnGw2ProcessPriorityChanged()
-        {
-            var enabled = !checkGw2ProcessPriority.Checked;
-
-            if (!enabled)
-            {
-                var selected = (Util.ComboItem<Settings.ProcessPriorityClass>)comboGw2ProcessPriority.SelectedItem;
-                if (selected == null)
-                    return;
-
-                switch (selected.Value)
-                {
-                    case Settings.ProcessPriorityClass.AboveNormal:
-                    case Settings.ProcessPriorityClass.Normal:
-
-                        enabled = true;
-
-                        break;
-                }
-            }
-
-            checkGw2ProcessBoostBrowser.Enabled = enabled;
-        }
-
-        private void comboGw2ProcessPriority_SelectedIndexChanged(object sender, EventArgs e)
-        {
-            OnGw2ProcessPriorityChanged();
         }
 
         private void labelGw1LaunchOptionsAdvanced_Click(object sender, EventArgs e)
@@ -5262,6 +5285,25 @@ namespace Gw2Launcher.UI
                     ad.Affinity = f.SelectedAffinity.Affinity;
                 }
             }
+        }
+
+        private void adGw2BrowserAffinity_MouseDown(object sender, MouseEventArgs e)
+        {
+            if (e.Button == System.Windows.Forms.MouseButtons.Right)
+            {
+                contextAffinity.Tag = sender;
+                contextAffinity.Show(Cursor.Position);
+            }
+        }
+
+        private void checkGw2BrowserPriority_CheckedChanged(object sender, EventArgs e)
+        {
+            comboGw2BrowserPriority.Enabled = checkGw2BrowserPriority.Checked;
+        }
+
+        private void checkGw2BrowserAffinityAll_CheckedChanged(object sender, EventArgs e)
+        {
+            panelGw2BrowserAffinity.Visible = !checkGw2BrowserAffinityAll.Checked;
         }
     }
 }

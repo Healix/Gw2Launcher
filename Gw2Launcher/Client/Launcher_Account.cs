@@ -12,11 +12,12 @@ namespace Gw2Launcher.Client
         {
             public class LaunchSession : IDisposable
             {
-                public LaunchSession(Account a, LaunchMode mode, string args = null)
+                public LaunchSession(Account a, string path, LaunchMode mode, LaunchOptions options = null)
                 {
                     this.Account = a;
                     this.Mode = mode;
-                    this.Args = args;
+                    this.Options = options;
+                    this.Path = path;
                 }
 
                 ~LaunchSession()
@@ -36,10 +37,22 @@ namespace Gw2Launcher.Client
                     private set;
                 }
 
-                public string Args
+                public LaunchOptions Options
                 {
                     get;
                     private set;
+                }
+
+                public string Path
+                {
+                    get;
+                    set;
+                }
+
+                public CefPaths.ICefPath CefPath
+                {
+                    get;
+                    set;
                 }
 
                 private Tools.Icons _Icons;

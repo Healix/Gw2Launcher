@@ -777,7 +777,8 @@ namespace Gw2Launcher.UI.Controls
         private class SearchFilter
         {
             private bool[] types;
-            private string[] items;
+            private string[] text;
+            private int[] numbers;
 
             public SearchFilter()
                 : this(0, null)
@@ -808,7 +809,8 @@ namespace Gw2Launcher.UI.Controls
                     if (value == null)
                     {
                         this.types = null;
-                        this.items = null;
+                        this.text = null;
+                        this.numbers = null;
                     }
                     else
                     {
@@ -817,6 +819,7 @@ namespace Gw2Launcher.UI.Controls
                         int i = 0,
                             l = filter.Length;
                         var items = new List<string>();
+                        List<int> numbers = null;
                         bool[] types = null;
 
                         while (i < l)
@@ -890,6 +893,17 @@ namespace Gw2Launcher.UI.Controls
 
                                     items.Add(f);
 
+                                    if (!quoted && char.IsDigit(f[0]))
+                                    {
+                                        int n;
+                                        if (int.TryParse(f, out n))
+                                        {
+                                            if (numbers == null)
+                                                numbers = new List<int>();
+                                            numbers.Add(n);
+                                        }
+                                    }
+
                                     break;
                             }
 
@@ -897,9 +911,15 @@ namespace Gw2Launcher.UI.Controls
                         }
 
                         if (items.Count > 0)
-                            this.items = items.ToArray();
+                            this.text = items.ToArray();
                         else
-                            this.items = null;
+                            this.text = null;
+
+                        if (numbers != null)
+                            this.numbers = numbers.ToArray();
+                        else
+                            this.numbers = null;
+
                         this.types = types;
                     }
                 }
@@ -928,6 +948,22 @@ namespace Gw2Launcher.UI.Controls
                 set
                 {
                     _DailyLogin = value;
+                }
+            }
+
+            public bool HasTextFilter
+            {
+                get
+                {
+                    return text != null;
+                }
+            }
+
+            public bool HasNumberFilter
+            {
+                get
+                {
+                    return numbers != null;
                 }
             }
 
@@ -967,12 +1003,29 @@ namespace Gw2Launcher.UI.Controls
                 if (types != null && !types[(byte)button.AccountType])
                     return false;
 
-                return MatchText(button) && MatchDailyLogin(button);
+                return (numbers != null && MatchNumbers(button) || MatchText(button)) && MatchDailyLogin(button);
+            }
+
+            public bool MatchNumbers(AccountGridButton button)
+            {
+                if (numbers == null)
+                    return true;
+
+                foreach (var i in numbers)
+                {
+                    if (i == button.DailyLoginDay)
+                    {
+                        if (i > 0 && button.ShowDailyLogin && button.LastDailyLoginUtc.Date != DateTime.UtcNow.Date)
+                            return true;
+                    }
+                }
+
+                return false;
             }
 
             public bool MatchText(AccountGridButton button)
             {
-                if (items == null)
+                if (text == null)
                     return true;
 
                 var name = button.DisplayName;
@@ -983,9 +1036,10 @@ namespace Gw2Launcher.UI.Controls
                 if (account != null)
                     account = account.ToLower();
 
-                foreach (var t in items)
+                foreach (var t in text)
                 {
-                    if (name != null && name.IndexOf(t, StringComparison.Ordinal) != -1 || account != null && account.Equals(t, StringComparison.Ordinal))
+                    if (name != null && name.IndexOf(t, StringComparison.Ordinal) != -1 
+                        || account != null && account.Equals(t, StringComparison.Ordinal))
                     {
                         return true;
                     }
@@ -2868,6 +2922,16 @@ namespace Gw2Launcher.UI.Controls
                         OnFilterChanged(false);
                     }
                 }
+            }
+        }
+
+        public bool HasNumberFilter
+        {
+            get
+            {
+                if (_Filter == null)
+                    return false;
+                return _Filter.HasNumberFilter;
             }
         }
 

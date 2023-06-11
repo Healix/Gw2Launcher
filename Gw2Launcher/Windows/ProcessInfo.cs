@@ -97,6 +97,35 @@ namespace Gw2Launcher.Windows
         }
 
         /// <summary>
+        /// Returns the arguments from the command line for the currently opened process
+        /// </summary>
+        /// <returns></returns>
+        public string GetCommandLineArgs()
+        {
+            var args = GetCommandLine();
+
+            if (string.IsNullOrEmpty(args))
+            {
+                args = "";
+            }
+            else if (args[0] == '"')
+            {
+                args = args.Substring(args.IndexOf('"', 1) + 1).Trim();
+            }
+            else
+            {
+                var i = args.IndexOf(args[0] == '"' ? '"' : ' ', 1) + 1;
+
+                if (i > 0)
+                {
+                    args = args.Substring(i).Trim();
+                }
+            }
+
+            return args;
+        }
+
+        /// <summary>
         /// Returns the command line for the currently opened process
         /// </summary>
         /// <returns></returns>

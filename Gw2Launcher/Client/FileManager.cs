@@ -449,6 +449,30 @@ namespace Gw2Launcher.Client
             Gw2China = 128,
         }
 
+        [Flags]
+        private enum BinFileType : byte
+        {
+            /// <summary>
+            /// Unknown file
+            /// </summary>
+            Unknown = 1,
+            /// <summary>
+            /// File is used by CoherentUI
+            /// </summary>
+            CoherentUI = 2,
+            /// <summary>
+            /// File is used by CEF
+            /// </summary>
+            CEF = 4,
+
+            TypeFlags = 7,
+
+            /// <summary>
+            /// File require write-access
+            /// </summary>
+            Exclusive = 8,
+        }
+
         public interface IProfileInformation : IDisposable
         {
             /// <summary>
@@ -2759,11 +2783,35 @@ namespace Gw2Launcher.Client
                             Util.FileUtil.DeleteDirectory(gw2appdata);
                     }
 
-                    Windows.Symlink.CreateJunction(gw2appdata, profileappdata);
+                    try
+                    {
+                        Windows.Symlink.CreateJunction(gw2appdata, profileappdata);
+                    }
+                    catch (Exception ex)
+                    {
+                        if (Util.Logging.Enabled)
+                        {
+                            Util.Logging.LogEvent(account, "Unable to create junction between [" + Util.Logging.GetDisplayPath(gw2appdata, 1) + "] and [" + Util.Logging.GetDisplayPath(profileappdata, 1) + "]");
+                            Util.Logging.LogEvent(account, ex.Message);
+                        }
+
+                        throw;
+                    }
 
                     if (setpermissions)
                     {
-                        Util.FileUtil.AllowFolderAccess(gw2appdata, System.Security.AccessControl.FileSystemRights.Modify);
+                        try
+                        {
+                            Util.FileUtil.AllowFolderAccess(gw2appdata, System.Security.AccessControl.FileSystemRights.Modify);
+                        }
+                        catch (Exception ex)
+                        {
+                            if (Util.Logging.Enabled)
+                            {
+                                Util.Logging.LogEvent(account, "Unable to set permissions on [" + Util.Logging.GetDisplayPath(gw2appdata, 1) + "]");
+                                Util.Logging.LogEvent(account, ex.Message);
+                            }
+                        }
                     }
 
                     break;
@@ -4042,6 +4090,41 @@ namespace Gw2Launcher.Client
         }
 
         /// <summary>
+        /// Attempts to delete the folder, or moves it if it fails
+        /// </summary>
+        /// <param name="target">Path to delete</param>
+        /// <param name="temp">Optional temp folder to move the files to if it can't be deleted</param>
+        private static void DeleteOrMoveFolder(string target, string temp = null)
+        {
+            if ((File.GetAttributes(target) & FileAttributes.ReparsePoint) == 0)
+            {
+                foreach (var f in Directory.GetFiles(target))
+                {
+                    DeleteOrMove(f, temp);
+                }
+
+                foreach (var d in Directory.GetDirectories(target))
+                {
+                    DeleteOrMoveFolder(d, temp);
+                }
+            }
+
+            try
+            {
+                Directory.Delete(target);
+            }
+            catch
+            {
+                if (temp == null)
+                    throw;
+
+                Directory.CreateDirectory(temp);
+                var n = Util.FileUtil.GetTemporaryFolderName(temp);
+                Directory.Move(target, Path.Combine(temp, n));
+            }
+        }
+
+        /// <summary>
         /// Makes a hard link
         /// </summary>
         /// <param name="link">The directory where the link will be created</param>
@@ -4397,7 +4480,215 @@ namespace Gw2Launcher.Client
             }
         }
 
+        private static BinFileType GetBinFileType(string name)
+        {
+            switch (name)
+            {
+                case "chrome_100_percent.pak":
+                case "chrome_200_percent.pak":
+                case "chrome_elf.dll":
+                case "d3dcompiler_47.dll":
+                case "en-US.pak":
+                //case "icudtl.dat":
+                case "libcef.dll":
+                case "libcef.zip":
+                //case "libEGL.dll":
+                //case "libGLESv2.dll":
+                case "resources.pak":
+                case "snapshot_blob.bin":
+                case "v8_context_snapshot.bin":
+                case "vk_swiftshader.dll":
+                case "vk_swiftshader_icd.json":
+                case "vulkan-1.dll":
+
+                    return BinFileType.CEF;
+
+                case "CefHost.exe":
+
+                    return BinFileType.CEF | BinFileType.Exclusive;
+
+                case "icudtl.dat":
+                case "libEGL.dll":
+                case "libGLESv2.dll":
+
+                    //these files used to require exclusive access for CoherentUI
+                    return BinFileType.CEF | BinFileType.CoherentUI;
+
+                case "CoherentUI64.dll":
+                case "CoherentUI_Host.exe":
+                case "pdf.dll":
+                case "theme_resources_standard.pak":
+
+                    return BinFileType.CoherentUI;
+
+                case "blink_resources.pak":
+                case "content_resources_100_percent.pak":
+                case "d3dcompiler_43.dll":
+                case "d3dcompiler_46.dll":
+                case "ffmpegsumo.dll":
+                case "icudt.dll":
+                case "ui_resources_100_percent.pak":
+
+                    //these files used to require exclusive access
+                    return BinFileType.CoherentUI;
+
+            }
+
+            return BinFileType.Unknown;
+        }
+
         private static void CopyBinFolder(string from, string to, bool excludeUnknown, bool onlyBin, bool deleteUnknowns, bool autosync, string temp)
+        {
+            if (onlyBin)
+            {
+                try
+                {
+                    CopyCefFolder(Path.Combine(from, "cef"), to, excludeUnknown, onlyBin, deleteUnknowns, autosync, temp);
+
+                    return;
+                }
+                catch { }
+            }
+
+            var existing = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+
+            if (Directory.Exists(to))
+            {
+                foreach (var path in Directory.GetFiles(to))
+                {
+                    existing.Add(Path.GetFileName(path));
+                }
+            }
+            else
+            {
+                Directory.CreateDirectory(to);
+            }
+
+            if (!excludeUnknown)
+            {
+                foreach (var path in Directory.GetDirectories(from))
+                {
+                    try
+                    {
+                        var name = Path.GetFileName(path);
+
+                        if (name == "cef")
+                        {
+                            CopyCefFolder(path, onlyBin ? to : Path.Combine(to, name), excludeUnknown, onlyBin, deleteUnknowns, autosync, temp);
+                        }
+                        else
+                        {
+                            MakeJunction(to, from, name);
+                        }
+                    }
+                    catch (Exception ex)
+                    {
+                        Util.Logging.Log(ex);
+                    }
+                }
+            }
+            else
+            {
+                try
+                {
+                    CopyCefFolder(Path.Combine(from, "cef"), onlyBin ? to : Path.Combine(to, "cef"), excludeUnknown, onlyBin, deleteUnknowns, autosync, temp);
+                }
+                catch { }
+            }
+
+            foreach (var path in Directory.GetFiles(from))
+            {
+                var name = Path.GetFileName(path);
+                var output = Path.Combine(to, name);
+                var exists = existing.Remove(name);
+                var t = GetBinFileType(name);
+
+                if ((t & BinFileType.CoherentUI) != 0)
+                {
+                    if ((t & BinFileType.Exclusive) == 0)
+                    {
+                        //these files can be linked
+
+                        if (exists)
+                        {
+                            try
+                            {
+                                if (File.GetLastWriteTimeUtc(output) == File.GetLastWriteTimeUtc(path))
+                                    continue;
+                                DeleteOrMove(output, temp);
+                            }
+                            catch (UnauthorizedAccessException)
+                            {
+                                continue;
+                            }
+                        }
+
+                        Windows.Symlink.CreateHardLink(output, path);
+                    }
+                    else
+                    {
+                        //these files require exclusive access
+                        //note these files don't need to be copied; they will be created on launch regardless of their current state
+                    }
+                }
+                else
+                {
+                    //these files are unknown
+
+                    if (!excludeUnknown || exists && autosync)
+                    {
+                        if (exists)
+                        {
+                            try
+                            {
+                                if (File.GetLastWriteTimeUtc(output) == File.GetLastWriteTimeUtc(path))
+                                    continue;
+                                DeleteOrMove(output, temp);
+                            }
+                            catch
+                            {
+                                continue;
+                            }
+                        }
+
+                        if (onlyBin)
+                        {
+                            //plugins for arcdps will cause it to crash when in binaries mode
+
+                            if (name.EndsWith(".dll", StringComparison.OrdinalIgnoreCase))
+                            {
+                                if (name.IndexOf("arcdps", StringComparison.OrdinalIgnoreCase) != -1)
+                                {
+                                    continue;
+                                }
+                                else if (name == "d3d9_uploader.dll")
+                                {
+                                    continue;
+                                }
+                            }
+                        }
+
+                        Windows.Symlink.CreateHardLink(output, path);
+                    }
+                }
+            }
+
+            foreach (var name in existing)
+            {
+                var t = GetBinFileType(name);
+
+                if ((t & BinFileType.TypeFlags) == BinFileType.CEF || deleteUnknowns && t == BinFileType.Unknown)
+                {
+                    try
+                    {
+                        DeleteOrMove(Path.Combine(to, name), temp);
+                    }
+                    catch { }
+                }
+            }
+        }
+
+        private static void CopyCefFolder(string from, string to, bool excludeUnknown, bool onlyBin, bool deleteUnknowns, bool autosync, string temp)
         {
             var existing = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
 
@@ -4406,6 +4697,17 @@ namespace Gw2Launcher.Client
                 foreach (var path in Directory.GetFiles(to))
                 {
                     existing.Add(Path.GetFileName(path));
+                }
+
+                if (onlyBin)
+                {
+                    try
+                    {
+                        var path = Path.Combine(to, "cef");
+                        if (Directory.Exists(path))
+                            DeleteOrMoveFolder(path, temp);
+                    }
+                    catch { }
                 }
             }
             else
@@ -4434,15 +4736,14 @@ namespace Gw2Launcher.Client
                 var name = Path.GetFileName(path);
                 var output = Path.Combine(to, name);
                 var exists = existing.Remove(name);
+                
+                var t = GetBinFileType(name);
 
-                switch (name)
+                if ((t & BinFileType.CEF) != 0)
                 {
-                    //these files can be linked
-                    case "CoherentUI64.dll":
-                    case "CoherentUI.dll":
-                    case "CoherentUI_Host.exe":
-                    case "pdf.dll":
-                    case "theme_resources_standard.pak":
+                    if ((t & BinFileType.Exclusive) == 0)
+                    {
+                        //these files can be linked
 
                         if (exists)
                         {
@@ -4459,69 +4760,43 @@ namespace Gw2Launcher.Client
                         }
 
                         Windows.Symlink.CreateHardLink(output, path);
-
-                        break;
-                    //these files require exclusive access
-                    case "d3dcompiler_43.dll":
-                    case "ffmpegsumo.dll":
-                    case "icudt.dll":
-                    case "libEGL.dll":
-                    case "libGLESv2.dll":
-                    case "icudtl.dat":
-                    case "d3dcompiler_46.dll":
-                    case "blink_resources.pak":
-                    case "content_resources_100_percent.pak":
-                    case "ui_resources_100_percent.pak":
-
+                    }
+                    else
+                    {
+                        //these files require exclusive access
                         //note these files don't need to be copied; they will be created on launch regardless of their current state
-
-                        break;
+                    }
+                }
+                else
+                {
                     //these files are unknown
-                    default:
 
-                        if (!excludeUnknown || exists && autosync)
+                    if (!excludeUnknown || exists && autosync)
+                    {
+                        if (exists)
                         {
-                            if (exists)
+                            try
                             {
-                                try
-                                {
-                                    if (File.GetLastWriteTimeUtc(output) == File.GetLastWriteTimeUtc(path))
-                                        continue;
-                                    DeleteOrMove(output, temp);
-                                }
-                                catch
-                                {
+                                if (File.GetLastWriteTimeUtc(output) == File.GetLastWriteTimeUtc(path))
                                     continue;
-                                }
+                                DeleteOrMove(output, temp);
                             }
-
-                            if (onlyBin)
+                            catch
                             {
-                                //plugins for arcdps will cause it to crash when in binaries mode
-
-                                if (name.EndsWith(".dll", StringComparison.OrdinalIgnoreCase))
-                                {
-                                    if (name.IndexOf("arcdps", StringComparison.OrdinalIgnoreCase) != -1)
-                                    {
-                                        continue;
-                                    }
-                                    else if (name == "d3d9_uploader.dll")
-                                    {
-                                        continue;
-                                    }
-                                }
+                                continue;
                             }
-
-                            Windows.Symlink.CreateHardLink(output, path);
                         }
 
-                        break;
+                        Windows.Symlink.CreateHardLink(output, path);
+                    }
                 }
             }
 
-            if (deleteUnknowns)
+            foreach (var name in existing)
             {
-                foreach (var name in existing)
+                var t = GetBinFileType(name);
+
+                if ((t & BinFileType.TypeFlags) == BinFileType.CoherentUI || deleteUnknowns && t == BinFileType.Unknown)
                 {
                     try
                     {

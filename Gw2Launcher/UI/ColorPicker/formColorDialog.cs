@@ -147,7 +147,7 @@ namespace Gw2Launcher.UI.ColorPicker
         {
             if (_AllowAlphaTransparency)
             {
-                var a = (int)(255 * panelAlpha.Alpha);
+                var a = (int)(255 * panelAlpha.Alpha + 0.5f);
 
                 panelPreview.Color1 = a != 255 ? Color.FromArgb(a, e) : e;
                 panelAlpha.BackColor = Color.FromArgb(255, e);
@@ -180,7 +180,7 @@ namespace Gw2Launcher.UI.ColorPicker
         {
             if (_AllowAlphaTransparency)
             {
-                panelPreview.Color1 = Color.FromArgb((int)(255 * e), panelShade.SelectedColor);
+                panelPreview.Color1 = Color.FromArgb((int)(255 * e + 0.5f), panelShade.SelectedColor);
             }
             else
             {

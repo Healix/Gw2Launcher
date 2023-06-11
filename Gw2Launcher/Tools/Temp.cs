@@ -101,101 +101,99 @@ namespace Gw2Launcher.Tools
                 catch { }
             }
         }
-
-        private static void DeleteFileSystemEntries(string path, int days, bool includeSubfolders, bool deleteSelf)
+        
+        private static int DeleteFileSystemEntries(string path, int days, bool includeSubfolders, bool deleteSelf)
         {
-            var date = DateTime.UtcNow.AddDays(-days);
-            var q = new Stack<QueuedPath>();
-            var skipped = 0;
+            DateTime d;
+            if (days == 0)
+                d = DateTime.MinValue;
+            else
+                d = DateTime.UtcNow.AddDays(-days);
+            return DeleteFileSystemEntries(path, d, includeSubfolders, deleteSelf);
+        }
 
-            q.Push(new QueuedPath()
-                {
-                    path = path,
-                });
+        /// <summary>
+        /// Deletes files/folders that are older than the given date
+        /// </summary>
+        /// <param name="path">Path to search for files/folders</param>
+        /// <param name="date">Anything before this date will be deleted, or DateTime.MinValue to not check</param>
+        /// <param name="includeSubfolders">True to search through subfolders</param>
+        /// <param name="deleteSelf">True to delete the initial path if the folder is empty</param>
+        /// <returns>Number of files/folders remaining, including self</returns>
+        private static int DeleteFileSystemEntries(string path, DateTime date, bool includeSubfolders, bool deleteSelf)
+        {
+            var count = 0;
 
-            do
+            if (includeSubfolders)
             {
-                var f = q.Pop();
-                var count = 0;
-
-                foreach (var p in Directory.EnumerateFileSystemEntries(f.path))
+                foreach (var p in Directory.EnumerateFileSystemEntries(path))
                 {
-                    ++count;
-
-                    var a = File.GetAttributes(p);
-
-                    if (days == 0 || File.GetLastWriteTimeUtc(p) < date)
+                    try
                     {
+                        var a = File.GetAttributes(p);
+                        var delete = date == DateTime.MinValue || File.GetLastWriteTimeUtc(p) < date;
+
                         if ((a & FileAttributes.Directory) == FileAttributes.Directory)
                         {
-                            if ((a & FileAttributes.ReparsePoint) == FileAttributes.ReparsePoint)
+                            if ((a & FileAttributes.ReparsePoint) == FileAttributes.ReparsePoint || !includeSubfolders)
                             {
-                                try
-                                {
+                                if (delete)
                                     Directory.Delete(p);
-                                    --count;
-                                }
-                                catch 
-                                {
-                                    ++skipped;
-                                }
+                                else
+                                    ++count;
                             }
                             else
                             {
-                                q.Push(new QueuedPath()
-                                    {
-                                        path = p,
-                                        attributes = a,
-                                        delete = true,
-                                    });
+                                count += DeleteFileSystemEntries(p, date, includeSubfolders, delete);
                             }
                         }
                         else
                         {
-                            try
-                            {
+                            if (delete)
                                 File.Delete(p);
-                                --count;
-                            }
-                            catch
-                            {
-                                ++skipped;
-                            }
+                            else
+                                ++count;
                         }
                     }
-                    else if (includeSubfolders && (a & (FileAttributes.Directory | FileAttributes.ReparsePoint)) == FileAttributes.Directory)
+                    catch
                     {
-                        q.Push(new QueuedPath()
-                        {
-                            path = p,
-                            attributes = a,
-                        });
-                    }
-                    else
-                    {
-                        ++skipped;
+                        ++count;
                     }
                 }
-
-                if (f.delete && count == 0)
+            }
+            else
+            {
+                foreach (var p in Directory.EnumerateFiles(path))
                 {
                     try
                     {
-                        Directory.Delete(f.path);
+                        if (date == DateTime.MinValue || File.GetLastWriteTimeUtc(p) < date)
+                            File.Delete(p);
+                        else
+                            ++count;
                     }
-                    catch { }
+                    catch
+                    {
+                        ++count;
+                    }
                 }
             }
-            while (q.Count > 0);
 
-            if (deleteSelf && skipped == 0)
+            if (deleteSelf && count == 0)
             {
                 try
                 {
                     Directory.Delete(path);
                 }
-                catch { }
+                catch
+                {
+                    ++count;
+                }
             }
+            else
+                ++count;
+
+            return count;
         }
 
         public static void Purge(int days = 0)
@@ -204,15 +202,19 @@ namespace Gw2Launcher.Tools
 
             foreach (var path in Directory.EnumerateDirectories(DataPath.AppDataAccountDataTemp))
             {
-                ushort uid;
-                if (ushort.TryParse(Path.GetFileName(path), out uid))
+                try
                 {
-                    Purge(uid);
+                    ushort uid;
+                    if (ushort.TryParse(Path.GetFileName(path), out uid))
+                    {
+                        Purge(uid);
+                    }
+                    else
+                    {
+                        DeleteFileSystemEntries(path, days, true, true);
+                    }
                 }
-                else
-                {
-                    DeleteFileSystemEntries(path, days, true, true);
-                }
+                catch { }
             }
 
             if (Settings.TEMP_SETTINGS_ENABLED)
@@ -224,7 +226,11 @@ namespace Gw2Launcher.Tools
                 catch { }
             }
 
-            DeleteFileSystemEntries(DataPath.AppDataAccountDataTemp, days, false, false);
+            try
+            {
+                DeleteFileSystemEntries(DataPath.AppDataAccountDataTemp, days, false, false);
+            }
+            catch { }
 
             if ((Settings.GuildWars2.LocalizeAccountExecution.Value & Settings.LocalizeAccountExecutionOptions.Enabled) == Settings.LocalizeAccountExecutionOptions.Enabled)
             {

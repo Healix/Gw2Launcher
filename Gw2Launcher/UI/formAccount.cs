@@ -319,6 +319,7 @@ namespace Gw2Launcher.UI
                 labelAutologinConfigure.Visible = false;
                 panelTrackLoginRewardsDay.Visible = false;
                 panelLaunchSteamGw2.Visible = false;
+                panelLaunchOptionsProcessBrowser.Visible = false;
 
                 panelAutoLoginGw1.Visible = true;
                 labelAutoLoginCharacter.Visible = true;
@@ -402,16 +403,20 @@ namespace Gw2Launcher.UI
 
             argsState = ArgsState.Changed;
 
-            comboProcessPriority.Items.AddRange(new object[]
+            var priorityValues = new object[]
                 {
                     new Util.ComboItem<Settings.ProcessPriorityClass>(Settings.ProcessPriorityClass.High, "High"),
                     new Util.ComboItem<Settings.ProcessPriorityClass>(Settings.ProcessPriorityClass.AboveNormal, "Above normal"),
                     new Util.ComboItem<Settings.ProcessPriorityClass>(Settings.ProcessPriorityClass.Normal, "Normal"),
                     new Util.ComboItem<Settings.ProcessPriorityClass>(Settings.ProcessPriorityClass.BelowNormal, "Below normal"),
                     new Util.ComboItem<Settings.ProcessPriorityClass>(Settings.ProcessPriorityClass.Low, "Low"),
-                });
+                };
+
+            comboProcessPriority.Items.AddRange(priorityValues);
+            comboBrowserPriority.Items.AddRange(priorityValues);
 
             Util.ComboItem<Settings.ProcessPriorityClass>.Select(comboProcessPriority, Settings.ProcessPriorityClass.Normal);
+            Util.ComboItem<Settings.ProcessPriorityClass>.Select(comboBrowserPriority, Settings.ProcessPriorityClass.Normal);
 
             if (!hasData)
             {
@@ -620,6 +625,18 @@ namespace Gw2Launcher.UI
                     checkDailyLoginMumbleLink.CheckState = Settings.Tweaks.DisableMumbleLinkDailyLogin.Value ? CheckState.Indeterminate : CheckState.Checked;
                 else
                     checkDailyLoginMumbleLink.Checked = false;
+
+                if (gw2.ChromiumPriority != Settings.ProcessPriorityClass.None)
+                {
+                    Util.ComboItem<Settings.ProcessPriorityClass>.Select(comboBrowserPriority, gw2.ChromiumPriority);
+                    checkBrowserPriority.Checked = true;
+                }
+
+                if (gw2.ChromiumAffinity != 0)
+                {
+                    adBrowserAffinity.Affinity = gw2.ChromiumAffinity;
+                    checkBrowserAffinityAll.Checked = false;
+                }
             }
             else
             {
@@ -2769,6 +2786,23 @@ namespace Gw2Launcher.UI
                                 gw2.DisableMumbleLinkDailyLogin = !checkDailyLoginMumbleLink.Checked;
                             }
 
+                            if (isMaster || aaBrowserPriority.Checked)
+                            {
+                                if (checkBrowserPriority.Checked && comboBrowserPriority.SelectedIndex >= 0)
+                                    gw2.ChromiumPriority = Util.ComboItem<Settings.ProcessPriorityClass>.SelectedValue(comboBrowserPriority);
+                                else
+                                    gw2.ChromiumPriority = Settings.ProcessPriorityClass.None;
+                            }
+
+                            if (isMaster)
+                            {
+                                gw2.ChromiumAffinity = checkBrowserAffinityAll.Checked ? 0 : adBrowserAffinity.Affinity;
+                            }
+                            else if (aaBrowserAffinity.Checked)
+                            {
+                                gw2.ChromiumAffinity = ((Settings.IGw2Account)master).ChromiumAffinity;
+                            }
+
                             break;
                         case Settings.AccountType.GuildWars1:
 
@@ -4764,7 +4798,7 @@ namespace Gw2Launcher.UI
 
         private void saveToolStripMenuItem_Click(object sender, EventArgs e)
         {
-            using (var f = new UI.Affinity.formAffinitySelectDialog(adProcessAffinity.Affinity))
+            using (var f = new UI.Affinity.formAffinitySelectDialog(((AffinityDisplay)contextAffinity.Tag).Affinity))
             {
                 f.ShowDialog(this);
             }
@@ -4776,7 +4810,7 @@ namespace Gw2Launcher.UI
             {
                 if (f.ShowDialog(this) == System.Windows.Forms.DialogResult.OK)
                 {
-                    adProcessAffinity.Affinity = f.SelectedAffinity.Affinity;
+                    ((AffinityDisplay)contextAffinity.Tag).Affinity = f.SelectedAffinity.Affinity;
                 }
             }
         }
@@ -4785,6 +4819,7 @@ namespace Gw2Launcher.UI
         {
             if (e.Button == System.Windows.Forms.MouseButtons.Right)
             {
+                contextAffinity.Tag = sender;
                 contextAffinity.Show(Cursor.Position);
             }
         }
@@ -4802,6 +4837,25 @@ namespace Gw2Launcher.UI
                     checkDailyLoginMumbleLink.CheckState = CheckState.Indeterminate;
                 }
             }
+        }
+
+        private void adBrowserAffinity_MouseDown(object sender, MouseEventArgs e)
+        {
+            if (e.Button == System.Windows.Forms.MouseButtons.Right)
+            {
+                contextAffinity.Tag = sender;
+                contextAffinity.Show(Cursor.Position);
+            }
+        }
+
+        private void checkBrowserPriority_CheckedChanged(object sender, EventArgs e)
+        {
+            comboBrowserPriority.Enabled = checkBrowserPriority.Checked;
+        }
+
+        private void checkBrowserAffinityAll_CheckedChanged(object sender, EventArgs e)
+        {
+            panelBrowserAffinityContainer.Visible = !checkBrowserAffinityAll.Checked;
         }
     }
 }

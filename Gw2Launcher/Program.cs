@@ -17,9 +17,9 @@ namespace Gw2Launcher
 {
     static class Program
     {
-        public const byte RELEASE_VERSION = 19;
-        public const uint BUILD = 7195;
-        public const long RELEASE_TIMESTAMP = 5249883074427387904;
+        public const byte RELEASE_VERSION = 20;
+        public const uint BUILD = 7254;
+        public const long RELEASE_TIMESTAMP = 5249906402427387904;
         private const string MUTEX_NAME = "Gw2Launcher_Mutex";
 
         [STAThread]
@@ -838,12 +838,15 @@ namespace Gw2Launcher
                 if (args.Length > 0)
                 {
                     Messaging.LaunchMessage launch = null;
-                    bool hasArgs = false;
+                    bool hasArgs = false,
+                         disableRunAfter = false;
 
                     foreach (var arg in args)
                     {
                         if (arg == "-l:silent")
                             Settings.Silent = true;
+                        else if (arg == "-l:disablera")
+                            disableRunAfter = true;
                         else if (arg.StartsWith("-l:uid:"))
                         {
                             var i = 7;
@@ -878,6 +881,8 @@ namespace Gw2Launcher
 
                     if (launch != null)
                     {
+                        launch.disableRunAfter = disableRunAfter;
+
                         if (hasArgs)
                         {
                             var _args = Environment.CommandLine;
