@@ -1,5 +1,5 @@
-**Last release:** June 11, 2023
-<br>**Download:** [Gw2Launcher.exe](/Gw2Launcher/bin64/Release/Gw2Launcher.exe?raw=true) (build 7254)
+**Last release:** August 20, 2024
+<br>**Download:** [Gw2Launcher.exe](/Gw2Launcher/bin64/Release/Gw2Launcher.exe?raw=true) (build 7255)
 
 See the [**wiki**](https://github.com/Healix/Gw2Launcher/wiki) for more information and recent [**changes**](https://github.com/Healix/Gw2Launcher/wiki/Changes). Simply [**download**](/Gw2Launcher/bin64/Release/Gw2Launcher.exe?raw=true) (64-bit) and place the executable wherever you'd like it.
 

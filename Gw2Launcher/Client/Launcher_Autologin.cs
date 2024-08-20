@@ -993,7 +993,7 @@ namespace Gw2Launcher.Client
                     if (GetLauncherType() == LauncherType.CN)
                         tabs = 6;
                     else if (q.Account.hostType == WindowWatcher.HostType.CEF)
-                        tabs = 15;
+                        tabs = 14;
                     else
                         tabs = 1;
 
