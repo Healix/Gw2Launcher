@@ -63,7 +63,8 @@ namespace Gw2Launcher.UI.Base
             if (!DesignMode)
             {
                 this.Opacity = 0;
-                Windows.WindowShadow.Enable(this.Handle);
+                if (!Settings.StyleDisableWindowShadows.Value)
+                    Windows.WindowShadow.Enable(this.Handle);
             }
         }
 

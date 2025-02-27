@@ -129,6 +129,7 @@ namespace Gw2Launcher.Client
                     {
                         GC.SuppressFinalize(this);
 
+                        ProcessesChanged = null;
                         m.ProcessesChanged -= m_ProcessesChanged;
 
                         lock (m)
@@ -820,7 +821,7 @@ namespace Gw2Launcher.Client
                 {
                     var processes = GetProcessesInternal();
                     if (processes == null)
-                        return null;
+                        return new IRunAfterProcess[0];
 
                     var _processes = new IRunAfterProcess[processes.Length];
 

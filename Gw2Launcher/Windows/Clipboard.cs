@@ -501,15 +501,16 @@ namespace Gw2Launcher.Windows
 
         public static async void SetText(string text)
         {
-            await SetClipboardText(text);
+            await SetClipboardText(text, true);
         }
 
         /// <summary>
         /// Sets text on the clipboard
         /// </summary>
+        /// <param name="empty">Empties the clipboard (the clipboard should always be emptied first)</param>
         /// <param name="timeout">Timeout in milliseconds</param>
         /// <returns>True if successful</returns>
-        public static async Task<bool> SetClipboardText(string text, int timeout = 1000)
+        public static async Task<bool> SetClipboardText(string text, bool empty = false, int timeout = 1000)
         {
             var start = Environment.TickCount;
 
@@ -532,12 +533,21 @@ namespace Gw2Launcher.Windows
                                 {
                                     return true;
                                 }
+                                else if (empty && NativeMethods.EmptyClipboard())
+                                {
+                                    return true;
+                                }
                             }
 
                             var ptr = Marshal.StringToHGlobalUni(text);
 
                             try
                             {
+                                if (empty)
+                                {
+                                    NativeMethods.EmptyClipboard();
+                                }
+
                                 if (NativeMethods.SetClipboardData(CF_UNICODE, ptr) != IntPtr.Zero)
                                 {
                                     //system owns it
@@ -643,21 +653,6 @@ namespace Gw2Launcher.Windows
             var _owner = NativeMethods.GetClipboardOwner();
             if (_owner != IntPtr.Zero)
                 owner = _owner;
-
-            //could check if the current owner is tied to an account to confirm
-            //if (_owner != IntPtr.Zero)
-            //{
-            //    uint pid;
-            //    NativeMethods.GetWindowThreadProcessId(_owner, out pid);
-            //    if (pid != 0)
-            //    {
-            //        var a = Client.Launcher.GetAccountFromProcessId((int)pid);
-            //        if (a != null)
-            //        {
-            //            //...
-            //        }
-            //    }
-            //}
 
             blocked = Environment.TickCount;
         }

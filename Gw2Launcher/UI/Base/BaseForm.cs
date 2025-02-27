@@ -225,7 +225,10 @@ namespace Gw2Launcher.UI.Base
                 if (_BackColorName != value)
                 {
                     _BackColorName = value;
-                    RefreshColors();
+                    if (this.IsHandleCreated)
+                    {
+                        RefreshColors();
+                    }
                 }
             }
         }
@@ -246,9 +249,19 @@ namespace Gw2Launcher.UI.Base
                 if (_ForeColorName != value)
                 {
                     _ForeColorName = value;
-                    RefreshColors();
+                    if (this.IsHandleCreated)
+                    {
+                        RefreshColors();
+                    }
                 }
             }
+        }
+
+        protected override void OnHandleCreated(EventArgs e)
+        {
+            base.OnHandleCreated(e);
+
+            RefreshColors();
         }
 
         public virtual void RefreshColors()
@@ -272,6 +285,13 @@ namespace Gw2Launcher.UI.Base
             }
 
             base.Dispose(disposing);
+        }
+
+        protected override void OnSystemColorsChanged(EventArgs e)
+        {
+            base.OnSystemColorsChanged(e);
+
+            this.Invalidate();
         }
     }
 }

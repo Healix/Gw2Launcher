@@ -30,7 +30,7 @@ namespace Gw2Launcher.UI
         {
             base.OnShown(e);
 
-            AddMessage("Build " + Program.BUILD + " on " + Environment.OSVersion.Version.ToString());
+            AddMessage("Build " + Program.BUILD + " on " + Environment.OSVersion.Version.ToString() + (Settings.IsRunningWine ? " (W) " : ""));
             AddMessage("PID " + System.Diagnostics.Process.GetCurrentProcess().Id);
             AddMessage(Client.Launcher.GetActiveProcessCount() + " active");
             AddMessage("Logging enabled");

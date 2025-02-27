@@ -574,6 +574,14 @@ namespace Gw2Launcher.UI.Controls
                     pen.Width = value;
                 }
             }
+
+            public Rectangle SelectionBounds
+            {
+                get
+                {
+                    return selection;
+                }
+            }
         }
 
         private class DragHotspots
@@ -1077,6 +1085,7 @@ namespace Gw2Launcher.UI.Controls
             public UiColors.ColorValues Colors;
             public Settings.AccountGridButtonOffsets Offsets;
             public Settings.DailyLoginDayIconFlags ShowDailyLoginDay;
+            public AccountGridButton.Icons.DisplayOrder IconDisplayOrder;
 
             public void Apply(AccountGridButton b)
             {
@@ -1089,6 +1098,7 @@ namespace Gw2Launcher.UI.Controls
                 b.Offsets = Offsets;
                 b.IsActiveHighlight = ShowActiveHighlight;
                 b.ShowDailyLoginDay = b.AccountType == Settings.AccountType.GuildWars2 ? ShowDailyLoginDay : Settings.DailyLoginDayIconFlags.None;
+                b.SetOrder(IconDisplayOrder);
             }
 
             public bool Equals(Style s)
@@ -1104,7 +1114,8 @@ namespace Gw2Launcher.UI.Controls
 
                     && s.Colors == Colors
                     && s.Offsets == Offsets 
-                    && s.ShowDailyLoginDay == ShowDailyLoginDay;
+                    && s.ShowDailyLoginDay == ShowDailyLoginDay
+                    && s.IconDisplayOrder == IconDisplayOrder;
             }
         }
 
@@ -1116,7 +1127,7 @@ namespace Gw2Launcher.UI.Controls
         public event EventHandler<MousePressedEventArgs> AccountBeginMousePressed;
         public event EventHandler AccountMousePressed;
         public event MouseEventHandler AccountSelection;
-        public event EventHandler AccountNoteClicked;
+        public event EventHandler<AccountGridButton.IconClickedEventArgs> AccountIconClicked;
 
         public class MousePressedEventArgs : MouseEventArgs
         {
@@ -1259,7 +1270,9 @@ namespace Gw2Launcher.UI.Controls
                 selection.Dispose();
 
             Cursor.Current = Cursors.Default;
-            ClearSelected();
+
+            if (!ModifierKeys.HasFlag(Keys.Control))
+                ClearSelected();
 
             Size size;
             if (scrollV.Visible)
@@ -1721,7 +1734,7 @@ namespace Gw2Launcher.UI.Controls
             button.MouseClick += button_MouseClick;
             button.MouseDown += button_MouseDown;
             button.MouseUp += button_MouseUp;
-            button.NoteClicked += button_NoteClicked;
+            button.IconClicked += button_IconClicked;
 
             button.Visible = button.GridVisibility = _Filter == null || _Filter.MatchAll(button);
 
@@ -1942,7 +1955,11 @@ namespace Gw2Launcher.UI.Controls
 
                         if (b.Bounds.Contains(p))
                         {
-                            if (AccountMouseClick != null)
+                            if (b.Selected && selection != null && selection.SelectionBounds.Width > 5)
+                            {
+                                selected = true;
+                            }
+                            else if (AccountMouseClick != null)
                             {
                                 try
                                 {
@@ -2517,7 +2534,7 @@ namespace Gw2Launcher.UI.Controls
                             }
                         }
 
-                        Settings.AccountSorting.Update();
+                        Settings.AccountSorting.Update(Page);
                     }
 
                     dragspots.Hide();
@@ -2577,13 +2594,13 @@ namespace Gw2Launcher.UI.Controls
             selection = null;
         }
 
-        void button_NoteClicked(object sender, EventArgs e)
+        void button_IconClicked(object sender, AccountGridButton.IconClickedEventArgs e)
         {
-            if (AccountNoteClicked != null)
+            if (AccountIconClicked != null)
             {
                 try
                 {
-                    AccountNoteClicked(sender, e);
+                    AccountIconClicked(sender, e);
                 }
                 catch (Exception ex)
                 {

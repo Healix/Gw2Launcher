@@ -221,12 +221,6 @@ namespace Gw2Launcher.Tools
             if (!BitConverter.IsLittleEndian)
                 throw new NotSupportedException();
 
-            var hs = new HashSet<ushort>();
-            var queue = new Queue<Settings.IDatFile>();
-
-            s.queue = queue;
-            s.queued = hs;
-
             var modifyGw2Cache = Settings.GuildWars2.UseCustomGw2Cache.Value;
 
             using (var r = new BinaryReader(new BufferedStream(File.Open(s.master.Path, FileMode.Open, modifyGw2Cache ? FileAccess.ReadWrite : FileAccess.Read, FileShare.Read))))
@@ -443,11 +437,11 @@ namespace Gw2Launcher.Tools
                 }
                 else
                 {
-                    if (build == 0)
+                    if (build <= 0)
                         build = Tools.Gw2Build.Build;
                     var buffer = CreateNew(build);
                     bs.Write(buffer, 0, buffer.Length);
-                    applied = build != 0;
+                    applied = build > 0;
                 }
 
                 return applied;
@@ -816,8 +810,12 @@ namespace Gw2Launcher.Tools
 
                 return true;
             }
-            catch
+            catch (Exception e)
             {
+                if (Util.Logging.Enabled)
+                {
+                    Util.Logging.LogEvent("[DatUpdater][" + dat.UID + "] Failed to update", e);
+                }
                 return false;
             }
         }
@@ -907,26 +905,24 @@ namespace Gw2Launcher.Tools
 
         private void Update(Session s)
         {
-            var ids = Settings.DatFiles.GetKeys();
-            var dats = new Settings.IDatFile[ids.Length];
+            var dats = Settings.DatFiles.GetValues();
             var i = 0;
 
             if (!BitConverter.IsLittleEndian)
                 throw new NotSupportedException();
 
-            var hs = new HashSet<ushort>();
-            var queue = new Queue<Settings.IDatFile>(ids.Length);
+            var hs = s.queued = new HashSet<ushort>();
+            var queue = s.queue = new Queue<Settings.IDatFile>(dats.Length);
 
-            foreach (var uid in ids)
+            foreach (var v in dats)
             {
-                if (s.master.UID == uid)
+                var dat = v.Value;
+
+                if (dat == null || s.master == dat)
                     continue;
 
-                var dat = Settings.DatFiles[uid].Value;
-                if (dat != null && dat.References > 0 && dat.IsPending)
+                if (dat.References > 0 && dat.IsPending)
                 {
-                    dats[i++] = dat;
-
                     hs.Add(dat.UID);
                     queue.Enqueue(dat);
                 }

@@ -10,7 +10,7 @@ namespace Gw2Launcher.Util
     /// <summary>
     /// A queue where each TValue is unique and sorted by TKey
     /// </summary>
-    class SortedQueue<TKey, TValue> : IEnumerable<TValue>, ICollection<TValue>
+    public class SortedQueue<TKey, TValue> : IEnumerable<TValue>, ICollection<TValue>
         where TKey : IComparable<TKey>
     {
         private class Node

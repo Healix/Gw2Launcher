@@ -125,9 +125,8 @@ namespace Gw2Launcher.Tools.Hotkeys
 
             lock (this)
             {
-                foreach (var uid in Settings.Accounts.GetKeys())
+                foreach (var a in Settings.Accounts.GetValues())
                 {
-                    var a = Settings.Accounts[uid];
                     if (a.HasValue)
                     {
                         OnAccountAdded(a, a.Value);

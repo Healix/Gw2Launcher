@@ -393,10 +393,12 @@ namespace Gw2Launcher.UI.Controls
         public override Size GetPreferredSize(Size proposed)
         {
             var sz = (_BoxSize + _BoxMargin);
+            int w, h;
 
             if (proposed.Width > ushort.MaxValue || proposed.Width == 0)
             {
-                return new Size(processors * sz, sz);
+                w = processors * sz;
+                h = sz;
             }
             else
             {
@@ -408,8 +410,29 @@ namespace Gw2Launcher.UI.Controls
                 if (rows > 1)
                     cols = (processors - 1) / rows + 1;
 
-                return new Size(cols * sz, rows * sz - _BoxMargin);
+                w = cols * sz;
+                h = rows * sz - _BoxMargin;
             }
+
+            if (this.MinimumSize.Width > w)
+            {
+                w = this.MinimumSize.Width;
+            }
+            else if (this.MaximumSize.Width > 0 && this.MaximumSize.Width < w)
+            {
+                w = this.MaximumSize.Width;
+            }
+
+            if (this.MinimumSize.Height > h)
+            {
+                h = this.MinimumSize.Height;
+            }
+            else if (this.MaximumSize.Height > 0 && this.MaximumSize.Height < h)
+            {
+                h = this.MaximumSize.Height;
+            }
+
+            return new Size(w, h);
         }
     }
 }

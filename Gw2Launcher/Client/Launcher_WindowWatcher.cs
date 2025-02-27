@@ -116,8 +116,8 @@ namespace Gw2Launcher.Client
 
                         if (events != null)
                         {
-                            events.MoveSizeBegin += onEvent;
-                            events.MinimizeStart += onEvent;
+                            events.MoveSizeBegin += OnMoveSizeBegin;
+                            events.MinimizeStart += OnMinimizeStart;
                         }
                     }
 
@@ -136,9 +136,30 @@ namespace Gw2Launcher.Client
                     public bool changed;
                     public int attempts;
 
-                    void onEvent(object sender, WindowEvents.WindowEventsEventArgs e)
+                    private void OnMoveSizeBegin(object sender, WindowEvents.WindowEventsEventArgs e)
                     {
-                        abort = true;
+                        if (!abort)
+                        {
+                            abort = true;
+
+                            if (Util.Logging.Enabled)
+                            {
+                                Util.Logging.LogEvent(account, "Window was manually resized, aborting window bounds");
+                            }
+                        }
+                    }
+
+                    private void OnMinimizeStart(object sender, WindowEvents.WindowEventsEventArgs e)
+                    {
+                        if (!abort)
+                        {
+                            abort = true;
+
+                            if (Util.Logging.Enabled)
+                            {
+                                Util.Logging.LogEvent(account, "Window was minimized, aborting window bounds");
+                            }
+                        }
                     }
 
                     public void Dispose()
@@ -147,8 +168,8 @@ namespace Gw2Launcher.Client
 
                         if (events != null)
                         {
-                            events.MoveSizeBegin -= onEvent;
-                            events.MinimizeStart -= onEvent;
+                            events.MoveSizeBegin -= OnMoveSizeBegin;
+                            events.MinimizeStart -= OnMinimizeStart;
                             events = null;
                         }
 
@@ -616,6 +637,8 @@ namespace Gw2Launcher.Client
 
             public class HiddenWindow : IDisposable
             {
+                public event EventHandler Disposed;
+
                 private bool wasLayered;
                 private Windows.DebugEvents.IDebugEventsToken dt;
 
@@ -678,10 +701,17 @@ namespace Gw2Launcher.Client
                     {
                         this.Handle = IntPtr.Zero;
 
+                        //force reset
+                        Windows.WindowLong.Remove(h, GWL.GWL_EXSTYLE, WindowStyle.WS_EX_LAYERED);
                         if (wasLayered)
-                            NativeMethods.SetLayeredWindowAttributes(h, 0, 0, (LayeredWindowFlags)0);
-                        else
-                            Windows.WindowLong.Remove(h, GWL.GWL_EXSTYLE, WindowStyle.WS_EX_LAYERED);
+                            Windows.WindowLong.Add(h, GWL.GWL_EXSTYLE, WindowStyle.WS_EX_LAYERED);
+
+                    }
+
+                    if (Disposed != null)
+                    {
+                        Disposed(this, EventArgs.Empty);
+                        Disposed = null;
                     }
                 }
             }
@@ -721,6 +751,12 @@ namespace Gw2Launcher.Client
                 }
             }
 
+            struct ModuleInfo
+            {
+                public int Index;
+                public int Timestamp;
+            }
+
             struct WaitForFontsResult
             {
                 public int PID;
@@ -730,6 +766,7 @@ namespace Gw2Launcher.Client
             public event EventHandler<CrashReason> WindowCrashed;
             public event EventHandler<int> LoginComplete;
             public event EventHandler<TimeoutEventArgs> Timeout;
+            public event EventHandler<Process> DxHostProcess;
             private const string DX_WINDOW_CLASSNAME = "ArenaNet_Dx_Window_Class"; //gw2 and gw1 main game window
             private const string DX_WINDOW_CLASSNAME_DX11BETA = "ArenaNet_Gr_Window_Class"; //gw2 dx11 main game window
             private const int DX_WINDOW_CLASSNAME_LENGTH = 24;
@@ -1078,7 +1115,7 @@ namespace Gw2Launcher.Client
                 {
                     if (Util.Logging.Enabled)
                     {
-                        Util.Logging.LogEvent(this.Account.Settings, "Error while watching window: " + e.Message);
+                        Util.Logging.LogEvent(this.Account.Settings, "Error while watching window", e);
                     }
 
                     Util.Logging.Log(e);
@@ -1090,6 +1127,84 @@ namespace Gw2Launcher.Client
                         {
                             Type = WindowChangedEventArgs.EventType.WatcherExited
                         });
+                }
+            }
+
+            private void WatchUpdate()
+            {
+                var exited = false;
+                var changed = false;
+                var process = this.process;
+                var path = ((Settings.IGw2Account)this.Account.Settings).DatFile.Path;
+
+                EventHandler<Process> onChanged = delegate(object o, Process p)
+                {
+                    changed = true;
+                };
+
+                this.Account.Process.Changed += onChanged;
+                //this.Account.Exited
+
+                try
+                {
+                    var t = Environment.TickCount;
+                    var since = t;
+                    var counter = 0;
+
+                    while (true)
+                    {
+                        if (exited)
+                        {
+                            if (changed)
+                            {
+                                changed = false;
+                                process = this.Account.Process.Process;
+                                exited = process != null;
+                                counter = 0;
+                            }
+
+                            Thread.Sleep(500);
+                        }
+                        else
+                        {
+                            try
+                            {
+                                if (process.WaitForExit(500))
+                                {
+                                    exited = true;
+                                    continue;
+                                }
+                            }
+                            catch { }
+
+                            if (Environment.TickCount - t > 3000)
+                            {
+                                if (Util.FileUtil.IsFileLocked(path))
+                                {
+                                    counter = 0;
+                                }
+                                else
+                                {
+                                    if (counter == 0)
+                                    {
+                                        since = Environment.TickCount;
+                                    }
+                                    else if (Environment.TickCount - since > 10000)
+                                    {
+                                        //Local.dat has been unlocked for over 10s, GW2 is probably stuck
+                                    }
+
+                                    ++counter;
+                                }
+
+                                t = Environment.TickCount;
+                            }
+                        }
+                    }
+                }
+                finally
+                {
+                    this.Account.Process.Changed -= onChanged;
                 }
             }
 
@@ -1400,6 +1515,11 @@ namespace Gw2Launcher.Client
 
                                     using (var volumeControl = new Windows.Volume.VolumeControl(process.Id))
                                     {
+                                        if (Util.Logging.Enabled && !volumeControl.IsSupported)
+                                        {
+                                            Util.Logging.LogEvent(null, "Volumne control is not supported");
+                                        }
+
                                         if (wasAlreadyStarted && ((hasVolume = volumeControl.Query()) || isGw2 && (host = GetHostProcess(process)) != null))
                                         {
                                             //window is already loaded
@@ -1616,7 +1736,20 @@ namespace Gw2Launcher.Client
                                             {
                                                 this.Account.hostType = hostType;
 
+                                                if (DxHostProcess != null && host != null)
+                                                {
+                                                    DxHostProcess(this, host);
+                                                }
+
                                                 limit = DateTime.UtcNow.AddSeconds(Settings.DxTimeout.Value > 0 ? Settings.DxTimeout.Value : 30);
+
+                                                Dictionary<string, ModuleInfo> moduleInfo = null;
+                                                var mts = Environment.TickCount;
+
+                                                if (Util.Logging.Enabled)
+                                                {
+                                                    moduleInfo = new Dictionary<string, ModuleInfo>();
+                                                }
 
                                                 WaitForHostProcesses(process, _handle, hostType, hostType == HostType.CoherentUI ? host : process, false, 1,
                                                     delegate
@@ -1646,78 +1779,20 @@ namespace Gw2Launcher.Client
 
                                                         var sb = new StringBuilder(1000);
 
-                                                        try
+                                                        if (moduleInfo != null)
                                                         {
-                                                            if (pi != null)
+                                                            foreach (var m in moduleInfo.Keys)
                                                             {
-                                                                foreach (var m in pi.GetModules())
-                                                                {
-                                                                    sb.Append(Path.GetFileName(m));
-                                                                    sb.Append(", ");
-                                                                }
-                                                            }
-                                                            else
-                                                            {
-                                                                process.Refresh();
-                                                                foreach (ProcessModule m in process.Modules)
-                                                                {
-                                                                    sb.Append(m.ModuleName);
-                                                                    sb.Append(", ");
-                                                                }
-                                                            }
-
-                                                            if (sb.Length > 0)
-                                                            {
-                                                                sb.Length -= 2;
+                                                                sb.Append(moduleInfo[m].Index);
+                                                                sb.Append(":");
+                                                                sb.Append(m);
+                                                                sb.Append("(");
+                                                                sb.Append(moduleInfo[m].Timestamp - mts);
+                                                                sb.Append("), ");
                                                             }
                                                         }
-                                                        catch (Exception e)
+                                                        else
                                                         {
-                                                            sb.Append(e.Message);
-                                                        }
-
-                                                        Util.Logging.LogEvent(Account.Settings, "Modules: " + sb.ToString());
-                                                    }
-
-                                                    if (Settings.DxTimeout.Value > 0 && Timeout != null)
-                                                    {
-                                                        var te = new TimeoutEventArgs(TimeoutEventArgs.TimeoutReason.DxWindow);
-                                                        Timeout(this, te);
-                                                        if (te.Handled)
-                                                            return;
-                                                    }
-                                                }
-                                            }
-
-                                            if (!foundModules && (DateTime.UtcNow < limit || Settings.DxTimeout.Value == 0))
-                                            {
-                                                if (Util.Logging.Enabled)
-                                                {
-                                                    Util.Logging.LogEvent(Account.Settings, "Waiting for modules to load...");
-                                                }
-
-                                                //limit = DateTime.UtcNow.AddSeconds(Settings.DxTimeout.Value > 0 ? Settings.DxTimeout.Value : 30);
-
-                                                do
-                                                {
-                                                    if (FindModules(process, canRead ? pi : null, modules, false))
-                                                    {
-                                                        if (Util.Logging.Enabled)
-                                                        {
-                                                            Util.Logging.LogEvent(Account.Settings, "Waiting for modules to load... OK");
-                                                        }
-                                                        foundModules = true;
-                                                        break;
-                                                    }
-
-                                                    if (DateTime.UtcNow > limit)
-                                                    {
-                                                        if (Util.Logging.Enabled)
-                                                        {
-                                                            Util.Logging.LogEvent(Account.Settings, "Waiting for modules to load... FAILED");
-
-                                                            var sb = new StringBuilder(1000);
-
                                                             try
                                                             {
                                                                 if (pi != null)
@@ -1737,15 +1812,111 @@ namespace Gw2Launcher.Client
                                                                         sb.Append(", ");
                                                                     }
                                                                 }
-
-                                                                if (sb.Length > 0)
-                                                                {
-                                                                    sb.Length -= 2;
-                                                                }
                                                             }
                                                             catch (Exception e)
                                                             {
                                                                 sb.Append(e.Message);
+                                                            }
+                                                        }
+
+                                                        if (sb.Length > 0)
+                                                        {
+                                                            sb.Length -= 2;
+                                                        }
+
+                                                        Util.Logging.LogEvent(Account.Settings, "Modules: " + sb.ToString());
+                                                    }
+
+                                                    if (Settings.DxTimeout.Value > 0 && Timeout != null)
+                                                    {
+                                                        var te = new TimeoutEventArgs(TimeoutEventArgs.TimeoutReason.DxWindow);
+                                                        Timeout(this, te);
+                                                        if (te.Handled)
+                                                            return;
+                                                    }
+                                                }
+                                            }
+
+                                            if (!foundModules && !Settings.IsRunningWine && (DateTime.UtcNow < limit || Settings.DxTimeout.Value == 0))
+                                            {
+                                                if (Util.Logging.Enabled)
+                                                {
+                                                    Util.Logging.LogEvent(Account.Settings, "Waiting for modules to load...");
+                                                }
+
+                                                //limit = DateTime.UtcNow.AddSeconds(Settings.DxTimeout.Value > 0 ? Settings.DxTimeout.Value : 30);
+
+                                                Dictionary<string, ModuleInfo> moduleInfo = null;
+                                                var mts = Environment.TickCount;
+
+                                                if (Util.Logging.Enabled)
+                                                {
+                                                    moduleInfo = new Dictionary<string, ModuleInfo>();
+                                                }
+
+                                                do
+                                                {
+                                                    if (FindModules(process, canRead ? pi : null, modules, false, 0, moduleInfo))
+                                                    {
+                                                        if (Util.Logging.Enabled)
+                                                        {
+                                                            Util.Logging.LogEvent(Account.Settings, "Waiting for modules to load... OK");
+                                                        }
+                                                        foundModules = true;
+                                                        break;
+                                                    }
+
+                                                    if (DateTime.UtcNow > limit)
+                                                    {
+                                                        if (Util.Logging.Enabled)
+                                                        {
+                                                            Util.Logging.LogEvent(Account.Settings, "Waiting for modules to load... FAILED");
+
+                                                            var sb = new StringBuilder(1000);
+
+                                                            if (moduleInfo != null)
+                                                            {
+                                                                foreach (var m in moduleInfo.Keys)
+                                                                {
+                                                                    sb.Append(moduleInfo[m].Index);
+                                                                    sb.Append(":");
+                                                                    sb.Append(m);
+                                                                    sb.Append("(");
+                                                                    sb.Append(moduleInfo[m].Timestamp - mts);
+                                                                    sb.Append("), ");
+                                                                }
+                                                            }
+                                                            else
+                                                            {
+                                                                try
+                                                                {
+                                                                    if (pi != null)
+                                                                    {
+                                                                        foreach (var m in pi.GetModules())
+                                                                        {
+                                                                            sb.Append(Path.GetFileName(m));
+                                                                            sb.Append(", ");
+                                                                        }
+                                                                    }
+                                                                    else
+                                                                    {
+                                                                        process.Refresh();
+                                                                        foreach (ProcessModule m in process.Modules)
+                                                                        {
+                                                                            sb.Append(m.ModuleName);
+                                                                            sb.Append(", ");
+                                                                        }
+                                                                    }
+                                                                }
+                                                                catch (Exception e)
+                                                                {
+                                                                    sb.Append(e.Message);
+                                                                }
+                                                            }
+
+                                                            if (sb.Length > 0)
+                                                            {
+                                                                sb.Length -= 2;
                                                             }
 
                                                             Util.Logging.LogEvent(Account.Settings, "Modules: " + sb.ToString());
@@ -2456,7 +2627,7 @@ namespace Gw2Launcher.Client
             /// <param name="all">True to find all of the specified modules, otherwise only 1</param>
             /// <param name="limit">Timeout in milliseconds; 0 to run once, -1 to run until found</param>
             /// <returns>True if found</returns>
-            private bool FindModules(Process process, string[] modules, bool all, int limit = 0)
+            private bool FindModules(Process process, string[] modules, bool all, int limit = 0, Dictionary<string, ModuleInfo> info = null)
             {
                 var start = limit > 0 ? Environment.TickCount : 0;
 
@@ -2470,6 +2641,19 @@ namespace Gw2Launcher.Client
                         for (var i = pm.Count - 1; i >= 0; --i)
                         {
                             var n = pm[i].ModuleName;
+
+                            if (info != null)
+                            {
+                                if (!info.ContainsKey(n))
+                                {
+                                    info[n] = new ModuleInfo()
+                                    {
+                                        Index = info.Count,
+                                        Timestamp = Environment.TickCount,
+                                    };
+                                }
+                            }
+
                             for (var j = modules.Length - 1; j >= 0; --j)
                             {
                                 if (modules[j].Equals(n, StringComparison.OrdinalIgnoreCase))
@@ -2516,11 +2700,11 @@ namespace Gw2Launcher.Client
             /// <param name="all">True to find all of the specified modules, otherwise only 1</param>
             /// <param name="limit">Timeout in milliseconds; 0 to run once, -1 to run until found</param>
             /// <returns>True if found</returns>
-            private bool FindModules(Process process, Windows.ProcessInfo pi, string[] modules, bool all, int limit = 0)
+            private bool FindModules(Process process, Windows.ProcessInfo pi, string[] modules, bool all, int limit = 0, Dictionary<string,ModuleInfo> info = null)
             {
                 if (pi == null)
                 {
-                    return FindModules(process, modules, all, limit);
+                    return FindModules(process, modules, all, limit, info);
                 }
 
                 var start = limit > 0 ? Environment.TickCount : 0;
@@ -2539,6 +2723,19 @@ namespace Gw2Launcher.Client
                         for (var i = pm.Length - 1; i >= 0; --i)
                         {
                             var n = Path.GetFileName(pm[i]);
+
+                            if (info != null)
+                            {
+                                if (!info.ContainsKey(n))
+                                {
+                                    info[n] = new ModuleInfo()
+                                    {
+                                        Index = info.Count,
+                                        Timestamp = Environment.TickCount,
+                                    };
+                                }
+                            }
+
                             for (var j = modules.Length - 1; j >= 0; --j)
                             {
                                 if (modules[j].Equals(n, StringComparison.OrdinalIgnoreCase))
@@ -2568,7 +2765,7 @@ namespace Gw2Launcher.Client
                     }
                     catch { }
 
-                    if (!hasRead && FindModules(process, modules, all, 0))
+                    if (!hasRead && FindModules(process, modules, all, 0, info))
                         return true;
 
                     if (limit == 0 || limit > 0 && Environment.TickCount - start > limit || process.WaitForExit(500))
@@ -2832,7 +3029,7 @@ namespace Gw2Launcher.Client
                 //CefHost
                 //CoherentUI_Host
 
-                if (n.Length > 3 && n[0] == 'C')
+                if (n != null && n.Length > 3 && n[0] == 'C')
                 {
                     switch (n[2])
                     {

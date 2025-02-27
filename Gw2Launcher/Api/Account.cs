@@ -6,7 +6,7 @@ using System.Threading.Tasks;
 
 namespace Gw2Launcher.Api
 {
-    class Account
+    public class Account
     {
         public const ushort MAX_AP = 15000;
 
@@ -58,6 +58,12 @@ namespace Gw2Launcher.Api
         }
 
         public DateTime LastModified
+        {
+            get;
+            set;
+        }
+
+        public DateTime LastModifiedServer
         {
             get;
             set;
@@ -121,6 +127,7 @@ namespace Gw2Launcher.Api
                 MonthlyAP = map,
                 Access = access,
                 LastModified = response.LastModifiedAdjusted,
+                LastModifiedServer = response.LastModified,
             };
 
             return a;

@@ -16,7 +16,30 @@ namespace Gw2Launcher.Api
         private const char KEY_VALUE_SEPARATOR = ':';
         private const char SPECIAL_CHAR = '\\';
         private const char STRING = '"';
+        private const char STRING_ALT = '\'';
         private const char BOOL_NOT = '!';
+
+        /// <summary>
+        /// Returns the value as a non-null HTML decoded string
+        /// </summary>
+        public static string GetString(Dictionary<string, object> json, string key)
+        {
+            object o;
+
+            if (json.TryGetValue(key, out o) && o != null)
+            {
+                try
+                {
+                    return System.Net.WebUtility.HtmlDecode(o.ToString()).Replace("  ", " ");
+                }
+                catch
+                {
+                    return o.ToString();
+                }
+            }
+
+            return string.Empty;
+        }
 
         public static T GetValue<T>(Dictionary<string, object> json, string key)
         {
@@ -96,7 +119,7 @@ namespace Gw2Launcher.Api
 
             objectEnd = index;
 
-            string objT = json.Substring(objectStart, objectEnd - objectStart);
+            //string objT = json.Substring(objectStart, objectEnd - objectStart);
 
             //ParsedObject obj = new ParsedObject();
             //obj.start = objectStart;
@@ -141,7 +164,7 @@ namespace Gw2Launcher.Api
                 index++;
                 return ParseObject(ref json, ref index);
             }
-            else if (o == STRING)
+            else if (o == STRING || o == STRING_ALT)
             {
                 index++;
                 startIndex = index;
@@ -153,16 +176,16 @@ namespace Gw2Launcher.Api
                 {
                     char c = json[index++];
 
-                    switch (c)
+                    if (c == o)
                     {
-                        case STRING:
-                            sb.Append(json.Substring(startIndex, index - startIndex - 1));
-                            return sb.ToString();
-                        case SPECIAL_CHAR:
-                            sb.Append(json.Substring(startIndex, index - startIndex - 1));
-                            sb.Append(ParseSpecialChar(ref json, ref index));
-                            startIndex = index;
-                            break;
+                        sb.Append(json.Substring(startIndex, index - startIndex - 1));
+                        return sb.ToString();
+                    }
+                    else if (c == SPECIAL_CHAR)
+                    {
+                        sb.Append(json.Substring(startIndex, index - startIndex - 1));
+                        sb.Append(ParseSpecialChar(ref json, ref index));
+                        startIndex = index;
                     }
                 }
             }
@@ -251,7 +274,7 @@ namespace Gw2Launcher.Api
                     {
                         string value = json.Substring(startIndex, index - startIndex);
                         if (isDecimal)
-                            return Double.Parse(value);
+                            return Double.Parse(value, System.Globalization.NumberStyles.Float, System.Globalization.CultureInfo.InvariantCulture);
                         else
                             return Int32.Parse(value);
                     }
@@ -314,9 +337,9 @@ namespace Gw2Launcher.Api
                     return "\\";
                 case '"':
                     return "\"";
-                case '\t':
+                case 't':
                     return "\t";
-                case '\n':
+                case 'n':
                     return "\n";
                 case '/':
                     return "/";

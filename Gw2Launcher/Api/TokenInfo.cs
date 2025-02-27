@@ -6,24 +6,27 @@ using System.Threading.Tasks;
 
 namespace Gw2Launcher.Api
 {
-    static class TokenInfo
+    public static class TokenInfo
     {
-        public enum Permissions
+        [Flags]
+        public enum Permissions : ushort
         {
-            Unknown,
-            Account,
-            Inventories,
-            Characters,
-            Tradingpost,
-            Wallet,
-            Unlocks,
-            Pvp,
-            Builds,
-            Progression,
-            Guilds
+            None = 0,
+            Unknown = 1,
+            Account = 2,
+            Inventories = 4,
+            Characters = 8,
+            Tradingpost = 16,
+            Wallet = 32,
+            Unlocks = 64,
+            Pvp = 128,
+            Builds = 256,
+            Progression = 512,
+            Guilds = 1024,
+            Wvw = 2048,
         }
 
-        public static async Task<Permissions[]> GetPermissionsAsync(string key)
+        public static async Task<Permissions> GetPermissionsAsync(string key)
         {
             Dictionary<string, object> data;
             try
@@ -35,51 +38,54 @@ namespace Gw2Launcher.Api
                 Api.Exceptions.Throw(e);
                 throw;
             }
+
             var permissions = (List<object>)data["permissions"];
+            var p = Permissions.None;
 
-            var result = new Permissions[permissions.Count];
-
-            for (var i = result.Length - 1; i >= 0; i--)
+            for (var i = permissions.Count - 1; i >= 0; i--)
             {
                 switch ((string)permissions[i])
                 {
                     case "account":
-                        result[i] = Permissions.Account;
+                        p |= Permissions.Account;
                         break;
                     case "inventories":
-                        result[i] = Permissions.Inventories;
+                        p |= Permissions.Inventories;
                         break;
                     case "characters":
-                        result[i] = Permissions.Characters;
+                        p |= Permissions.Characters;
                         break;
                     case "tradingpost":
-                        result[i] = Permissions.Tradingpost;
+                        p |= Permissions.Tradingpost;
                         break;
                     case "wallet":
-                        result[i] = Permissions.Wallet;
+                        p |= Permissions.Wallet;
                         break;
                     case "unlocks":
-                        result[i] = Permissions.Unlocks;
+                        p |= Permissions.Unlocks;
                         break;
                     case "pvp":
-                        result[i] = Permissions.Pvp;
+                        p |= Permissions.Pvp;
                         break;
                     case "builds":
-                        result[i] = Permissions.Builds;
+                        p |= Permissions.Builds;
                         break;
                     case "progression":
-                        result[i] = Permissions.Progression;
+                        p |= Permissions.Progression;
                         break;
                     case "guilds":
-                        result[i] = Permissions.Guilds;
+                        p |= Permissions.Guilds;
+                        break;
+                    case "wvw":
+                        p |= Permissions.Wvw;
                         break;
                     default:
-                        result[i] = Permissions.Unknown;
+                        p |= Permissions.Unknown;
                         break;
                 }
             }
 
-            return result;
+            return p;
         }
     }
 }

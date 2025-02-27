@@ -45,5 +45,16 @@ namespace Gw2Launcher.Util
             v = (v + (v >> 4)) & 0x0F0F0F0F0F0F0F0F;
             return (byte)((v * 0x0101010101010101) >> 56);
         }
+
+        /// <summary>
+        /// Returns number of bits set to 1
+        /// </summary>
+        public static byte GetBitCount(uint v)
+        {
+            v -= (v >> 1) & 0x55555555;
+            v = (v & 0x33333333) + ((v >> 2) & 0x33333333);
+            v = (v + (v >> 4)) & 0x0F0F0F0F;
+            return (byte)((v * 0x01010101) >> 24);
+        }
     }
 }

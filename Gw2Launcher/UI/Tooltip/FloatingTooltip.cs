@@ -44,7 +44,7 @@ namespace Gw2Launcher.UI.Tooltip
             {
                 var cp = base.CreateParams;
 
-                cp.ExStyle |= (int)(WindowStyle.WS_EX_NOACTIVATE | WindowStyle.WS_EX_TOOLWINDOW | WindowStyle.WS_EX_TRANSPARENT);
+                cp.ExStyle |= (int)(WindowStyle.WS_EX_NOACTIVATE | WindowStyle.WS_EX_TOOLWINDOW | WindowStyle.WS_EX_TRANSPARENT | WindowStyle.WS_EX_TOPMOST);
 
                 return cp;
             }
@@ -81,7 +81,9 @@ namespace Gw2Launcher.UI.Tooltip
             MoveToCursor();
 
             if (!this.Visible)
+            {
                 this.Show(control);
+            }
         }
 
         private Control AttachedTo
@@ -92,17 +94,20 @@ namespace Gw2Launcher.UI.Tooltip
             }
             set
             {
-                if (control != null)
+                if (control != value)
                 {
-                    control.MouseMove -= control_MouseMove;
-                    control.MouseLeave -= control_MouseLeave;
+                    if (control != null)
+                    {
+                        control.MouseMove -= control_MouseMove;
+                        control.MouseLeave -= control_MouseLeave;
+                    }
+                    if (value != null)
+                    {
+                        value.MouseMove += control_MouseMove;
+                        value.MouseLeave += control_MouseLeave;
+                    }
+                    control = value;
                 }
-                if (value != null)
-                {
-                    value.MouseMove += control_MouseMove;
-                    value.MouseLeave += control_MouseLeave;
-                }
-                control = value;
             }
         }
 
@@ -112,6 +117,8 @@ namespace Gw2Launcher.UI.Tooltip
 
             if (!this.Visible)
                 AttachedTo = null;
+            else
+                NativeMethods.SetWindowPos(this.Handle, (IntPtr)WindowZOrder.HWND_TOPMOST, 0, 0, 0, 0, SetWindowPosFlags.SWP_NOMOVE | SetWindowPosFlags.SWP_NOSIZE | SetWindowPosFlags.SWP_NOACTIVATE);
         }
 
         void control_MouseLeave(object sender, EventArgs e)
@@ -160,6 +167,21 @@ namespace Gw2Launcher.UI.Tooltip
             {
                 TextRenderer.DrawText(e.Graphics, text, this.Font, bounds, this.ForeColor, this.BackColor, TextFormatFlags.Left);
             }
+        }
+
+        private void InitializeComponent()
+        {
+            this.SuspendLayout();
+            // 
+            // FloatingTooltip
+            // 
+            this.AutoScaleDimensions = new System.Drawing.SizeF(96F, 96F);
+            this.BackColorName = Gw2Launcher.UI.UiColors.Colors.Custom;
+            this.ClientSize = new System.Drawing.Size(284, 261);
+            this.ForeColorName = Gw2Launcher.UI.UiColors.Colors.Custom;
+            this.Name = "FloatingTooltip";
+            this.ResumeLayout(false);
+
         }
     }
 }

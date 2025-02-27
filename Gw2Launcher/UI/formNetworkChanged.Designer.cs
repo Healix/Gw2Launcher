@@ -31,6 +31,7 @@ namespace Gw2Launcher.UI
             this.buttonIgnore = new Gw2Launcher.UI.Controls.FlatButton();
             this.labelMessage = new System.Windows.Forms.Label();
             this.stackPanel1 = new Gw2Launcher.UI.Controls.StackPanel();
+            this.waitingBounce = new Gw2Launcher.UI.Controls.WaitingBounce();
             this.panelButtons = new Gw2Launcher.UI.Controls.StackPanel();
             this.buttonAbort = new Gw2Launcher.UI.Controls.FlatButton();
             this.buttonRetry = new Gw2Launcher.UI.Controls.FlatButton();
@@ -72,11 +73,20 @@ namespace Gw2Launcher.UI
             | System.Windows.Forms.AnchorStyles.Right)));
             this.stackPanel1.AutoSize = true;
             this.stackPanel1.Controls.Add(this.labelMessage);
+            this.stackPanel1.Controls.Add(this.waitingBounce);
             this.stackPanel1.Controls.Add(this.panelButtons);
             this.stackPanel1.Location = new System.Drawing.Point(15, 60);
             this.stackPanel1.Margin = new System.Windows.Forms.Padding(15, 60, 15, 15);
             this.stackPanel1.MinimumSize = new System.Drawing.Size(237, 0);
-            this.stackPanel1.Size = new System.Drawing.Size(332, 79);
+            this.stackPanel1.Size = new System.Drawing.Size(332, 95);
+            // 
+            // waitingBounce
+            // 
+            this.waitingBounce.Anchor = System.Windows.Forms.AnchorStyles.None;
+            this.waitingBounce.Location = new System.Drawing.Point(134, 23);
+            this.waitingBounce.Margin = new System.Windows.Forms.Padding(0);
+            this.waitingBounce.Size = new System.Drawing.Size(100, 16);
+            this.waitingBounce.Visible = false;
             // 
             // panelButtons
             // 
@@ -88,7 +98,7 @@ namespace Gw2Launcher.UI
             this.panelButtons.Controls.Add(this.buttonRemember);
             this.panelButtons.Enabled = false;
             this.panelButtons.FlowDirection = System.Windows.Forms.FlowDirection.LeftToRight;
-            this.panelButtons.Location = new System.Drawing.Point(0, 38);
+            this.panelButtons.Location = new System.Drawing.Point(0, 54);
             this.panelButtons.Margin = new System.Windows.Forms.Padding(0, 15, 0, 0);
             this.panelButtons.Size = new System.Drawing.Size(368, 41);
             // 
@@ -183,5 +193,6 @@ namespace Gw2Launcher.UI
         private Controls.FlatButton buttonAbort;
         private Controls.FlatButton buttonRetry;
         private Controls.FlatButton buttonRemember;
+        private Controls.WaitingBounce waitingBounce;
     }
 }

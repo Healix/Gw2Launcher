@@ -16,10 +16,14 @@ namespace Gw2Launcher.UI.Controls
 {
     public class AccountGridButton : Control, UiColors.IColors
     {
+        protected const float ASTRAL_LIMIT = 1300f;
+
         protected const string
             TEXT_ACCOUNT = "Account",
             TEXT_LAST_USED = "Last used",
             TEXT_STATUS_NEVER = "never";
+
+        protected const int SMALL_ICON_SIZE = 24;
 
         protected static Image[] DefaultImage;
 
@@ -45,7 +49,7 @@ namespace Gw2Launcher.UI.Controls
         public event EventHandler<bool> EndPressed;
         public event EventHandler Pressed;
         public event EventHandler<float> PressedProgress;
-        public event EventHandler NoteClicked;
+        public event EventHandler<IconClickedEventArgs> IconClicked;
 
         public enum StatusColors
         {
@@ -61,70 +65,519 @@ namespace Gw2Launcher.UI.Controls
             Pressed = 1,
         }
 
-        protected class DisplayedIcon
+        public class IconClickedEventArgs : EventArgs
+        {
+            public IconClickedEventArgs(IconData.IconType type, MouseEventArgs e)
+            {
+                this.Type = type;
+                this.Event = e;
+            }
+
+            public IconData.IconType Type
+            {
+                get;
+                private set;
+            }
+
+            public MouseEventArgs Event
+            {
+                get;
+                private set;
+            }
+        }
+
+        public class DisplayedIconData
+        {
+            [Flags]
+            public enum IconState : byte
+            {
+                None = 0,
+                Enabled = 1,
+                /// <summary>
+                /// Icon is eligible for display
+                /// </summary>
+                Displayed = 2,
+                /// <summary>
+                /// Icon is hovered
+                /// </summary>
+                Hovered = 4,
+                /// <summary>
+                /// Icon is being clicked
+                /// </summary>
+                Activated = 8,
+            }
+
+            private IconState state;
+            private Rectangle bounds;
+            private IconData icon;
+            private DisplayedIcons group;
+
+            public DisplayedIconData(IconData icon, DisplayedIcons group)
+            {
+                this.icon = icon;
+                this.group = group;
+            }
+
+            protected void OnEnabledChanged()
+            {
+                group.Refresh(DisplayedIcons.PendingRefresh.Data);
+            }
+
+            protected void OnExpiresChanged()
+            {
+                if (Enabled)
+                {
+                    group.Refresh(DisplayedIcons.PendingRefresh.Display);
+                }
+            }
+
+            /// <summary>
+            /// Icon is enabled
+            /// </summary>
+            public bool Enabled
+            {
+                get
+                {
+                    return (state & IconState.Enabled) == IconState.Enabled;
+                }
+                set
+                {
+                    if (Enabled != value)
+                    {
+                        SetState(IconState.Enabled, value);
+                        OnEnabledChanged();
+                    }
+                }
+            }
+
+            /// <summary>
+            /// Icon is eligible for display
+            /// </summary>
+            public bool Displayed
+            {
+                get
+                {
+                    return (state & IconState.Displayed) == IconState.Displayed;
+                }
+                set
+                {
+                    SetState(IconState.Displayed, value);
+                }
+            }
+
+            /// <summary>
+            /// Icon is visible
+            /// </summary>
+            public bool Visible
+            {
+                get
+                {
+                    return DisplayIndex != 0;
+                }
+            }
+
+            /// <summary>
+            /// Icon is hovered
+            /// </summary>
+            public bool Hovered
+            {
+                get
+                {
+                    return (state & IconState.Hovered) == IconState.Hovered;
+                }
+                set
+                {
+                    SetState(IconState.Hovered, value);
+                }
+            }
+
+            /// <summary>
+            /// Icon is being clicked
+            /// </summary>
+            public bool Activated
+            {
+                get
+                {
+                    return (state & IconState.Activated) == IconState.Activated;
+                }
+                set
+                {
+                    SetState(IconState.Activated, value);
+                }
+            }
+
+            public IconData Icon
+            {
+                get
+                {
+                    return icon;
+                }
+            }
+
+            public IconData.IconType Type
+            {
+                get
+                {
+                    return icon.Type;
+                }
+            }
+
+            /// <summary>
+            /// Display order starting from 1; 0 is not displaed
+            /// </summary>
+            public byte DisplayIndex
+            {
+                get;
+                set;
+            }
+
+            public Rectangle[] Bounds
+            {
+                get;
+                set;
+            }
+
+            public Rectangle DisplayBounds
+            {
+                get
+                {
+                    if (Bounds != null)
+                    {
+                        return Bounds[0];
+                    }
+                    else
+                    {
+                        return Rectangle.Empty;
+                    }
+                }
+            }
+
+            public DisplayedIcons Group
+            {
+                get
+                {
+                    return group;
+                }
+            }
+
+            public void SetState(IconState state, bool value)
+            {
+                if (value)
+                    this.state |= state;
+                else
+                    this.state &= ~state;
+            }
+
+            public void ClearState()
+            {
+                SetState(IconState.Activated | IconState.Hovered, false);
+            }
+
+            private DateTime _Expires;
+            /// <summary>
+            /// When the icon changes/resets
+            /// </summary>
+            public DateTime Expires
+            {
+                get
+                {
+                    return _Expires;
+                }
+                set
+                {
+                    if (_Expires != value)
+                    {
+                        _Expires = value;
+
+                        if (value < group.nextRefresh && value != DateTime.MinValue)
+                        {
+                            group.nextRefresh = value;
+                        }
+
+                        OnExpiresChanged();
+                    }
+                }
+            }
+
+            private DateTime _Date;
+            public DateTime Date
+            {
+                get
+                {
+                    return _Date;
+                }
+                set
+                {
+                    _Date = value;
+                }
+            }
+        }
+
+        public class DisplayedIcons
+        {
+            [Flags]
+            public enum PendingRefresh : byte
+            {
+                None = 0,
+                /// <summary>
+                /// Icon display/order/positioning needs to be updated
+                /// </summary>
+                Display = 1,
+                /// <summary>
+                /// Icon data/order needs to be updated
+                /// </summary>
+                Data = 2,
+                /// <summary>
+                /// Dispay bounds has changed
+                /// </summary>
+                Bounds = 4,
+                /// <summary>
+                /// Order of display/data has changed
+                /// </summary>
+                Order = Display | Data,
+                All = Display | Data | Bounds,
+            }
+
+            public event EventHandler RefreshPending;
+
+            private Icons.IconGroup type;
+            public byte[] order;
+            public byte first;
+            public DisplayedIconData[] icons;
+            public DateTime nextRefresh;
+            public PendingRefresh pending;
+            public Rectangle boundary; //next position to add icon (vertical centered)
+
+            public DisplayedIcons(Icons.IconGroup type)
+            {
+                this.type = type;
+                this.order = Icons.DisplayOrder.GetDefault(type);
+                this.pending = PendingRefresh.All;
+            }
+
+            public Icons.IconGroup Type
+            {
+                get
+                {
+                    return type;
+                }
+            }
+
+            public bool Pending
+            {
+                get
+                {
+                    return pending != PendingRefresh.None || DateTime.UtcNow >= nextRefresh;
+                }
+            }
+
+            public DateTime NextRefresh
+            {
+                get
+                {
+                    return nextRefresh;
+                }
+            }
+
+            public void Refresh(PendingRefresh type)
+            {
+                if ((pending & type) != type)
+                {
+                    pending |= type;
+
+                    if (RefreshPending != null)
+                        RefreshPending(this, EventArgs.Empty);
+                }
+            }
+
+            /// <summary>
+            /// Creates a sorted array of icons for display
+            /// </summary>
+            public DisplayedIconData[] Create(Icons icons)
+            {
+                int length = order.Length;
+
+                while (order[length - 1] == 0)
+                {
+                    if (--length == 0)
+                        break;
+                }
+
+                var _icons = new DisplayedIconData[order.Length];
+                var index = 0;
+
+                for (var i = 0; i < _icons.Length; i++)
+                {
+                    if (order[i] == 0)
+                        break;
+
+                    var icon = icons.GetIcon(order[i] - 1);
+
+                    if (icon.Enabled)
+                    {
+                        _icons[index++] = icon;
+                    }
+                }
+
+                if (index != _icons.Length)
+                {
+                    Array.Resize<DisplayedIconData>(ref _icons, index);
+                }
+
+                return _icons;
+            }
+
+            public DisplayedIconData FromPoint(Point p)
+            {
+                if (boundary.Contains(p))
+                {
+                    var icons = this.icons;
+
+                    if (icons != null)
+                    {
+                        for (var i = icons.Length - 1; i >= 0; --i)
+                        {
+                            if (icons[i].Visible && icons[i].Bounds[0].Contains(p))
+                                return icons[i];
+                        }
+                    }
+                }
+
+                return null;
+            }
+        }
+
+        public class IconData
         {
             public enum IconType : byte
             {
-                None,
-                Login,
-                Daily,
-                Note,
+                Login = 0,
+                LoginReward = 1,
+                Daily = 2,
+                Weekly = 3,
+                Astral = 4,
+                Note = 5,
+                Run = 6,
+
+                LENGTH = 7,
+                Custom = 255,
             }
 
             [Flags]
             public enum IconOptions : byte
             {
                 None = 0,
-                Hovered = 1,
-                Activated = 2,
-                StateFlags = 3,
+
+                /// <summary>
+                /// Icon supports clicking and hovering
+                /// </summary>
+                Clickable = 1,
+
+                /// <summary>
+                /// Icon can be displayed as a large icon
+                /// </summary>
+                Large = 2,
+                /// <summary>
+                /// Icon is offset and overlapped when displayed as a large icon
+                /// </summary>
+                LargeOverlap = 4 | 2,
+                /// <summary>
+                /// Height of the icon will fill the available area
+                /// </summary>
+                Fill = 8,
+
+                /// <summary>
+                /// Icon is see through
+                /// </summary>
+                Transparent = 16,
             };
 
-            public DisplayedIcon(IconType type)
+            private IconOptions options;
+
+            public IconData(IconType type, IconOptions options)
             {
-                this.type = type;
+                this.Type = type;
+                this.options = options;
             }
 
-            public Rectangle bounds;
-            public IconType type;
-            public IconOptions options;
+            public IconType Type
+            {
+                get;
+                private set;
+            }
 
-            public bool Hovered
+            /// <summary>
+            /// Icon supports clicking and hovering
+            /// </summary>
+            public bool Clickable
             {
                 get
                 {
-                    return options.HasFlag(IconOptions.Hovered);
+                    return (options & IconOptions.Clickable) == IconOptions.Clickable;
                 }
                 set
                 {
-                    SetOption(IconOptions.Hovered, value);
+                    SetOption(IconOptions.Clickable, value);
                 }
             }
 
-            public bool Activated
+            /// <summary>
+            /// Icon can be displayed as a large icon
+            /// </summary>
+            public bool Large
             {
                 get
                 {
-                    return options.HasFlag(IconOptions.Activated);
+                    return (options & IconOptions.Large) == IconOptions.Large;
                 }
                 set
                 {
-                    SetOption(IconOptions.Activated, value);
+                    SetOption(IconOptions.Large, value);
                 }
             }
 
-            public bool CanClick
+            /// <summary>
+            /// Icon is offset and overlapped when displayed as a large icon
+            /// </summary>
+            public bool LargeOverlap
             {
                 get
                 {
-                    switch (type)
-                    {
-                        case IconType.Daily:
-                        case IconType.Note:
-                            return true;
-                    }
+                    return (options & IconOptions.LargeOverlap) == IconOptions.LargeOverlap;
+                }
+                set
+                {
+                    SetOption(IconOptions.LargeOverlap, value);
+                }
+            }
 
-                    return false;
+            /// <summary>
+            /// Height of the icon will fill the available area
+            /// </summary>
+            public bool Fill
+            {
+                get
+                {
+                    return (options & IconOptions.Fill) == IconOptions.Fill;
+                }
+                set
+                {
+                    SetOption(IconOptions.Fill, value);
+                }
+            }
+
+            /// <summary>
+            /// Icon is see through
+            /// </summary>
+            public bool Transparent
+            {
+                get
+                {
+                    return (options & IconOptions.Transparent) == IconOptions.Transparent;
+                }
+                set
+                {
+                    SetOption(IconOptions.Transparent, value);
                 }
             }
 
@@ -136,12 +589,565 @@ namespace Gw2Launcher.UI.Controls
                     this.options &= ~state;
             }
 
-            public void ClearState()
+            #region Static
+
+            private static IconData[] icons;
+
+            static IconData()
             {
-                options &= ~IconOptions.StateFlags;
+                icons = new IconData[]
+                {
+                    new IconData(IconData.IconType.Login, IconOptions.LargeOverlap | IconOptions.Fill),
+                    new IconData(IconData.IconType.LoginReward, IconData.IconOptions.Fill),
+                    new IconData(IconData.IconType.Daily, IconOptions.LargeOverlap | IconData.IconOptions.Clickable | IconOptions.Fill),
+                    new IconData(IconData.IconType.Weekly, IconOptions.LargeOverlap | IconData.IconOptions.Clickable | IconOptions.Fill),
+                    new IconData(IconData.IconType.Astral, IconData.IconOptions.LargeOverlap | IconOptions.Fill),
+                    new IconData(IconData.IconType.Note, IconData.IconOptions.Clickable | IconOptions.Transparent),
+                    new IconData(IconData.IconType.Run, IconData.IconOptions.Clickable | IconOptions.Transparent),
+                };
+            }
+
+            public static IconData GetIcon(int index)
+            {
+                return icons[index];
+            }
+
+            public static IconData GetIcon(IconData.IconType type)
+            {
+                if (type == IconData.IconType.Custom)
+                {
+                    return null;
+                }
+
+                return icons[(int)type];
+            }
+
+            #endregion
+        }
+
+        public class Icons
+        {
+            public class DisplayOrder : IEquatable<DisplayOrder>
+            {
+                private byte[] order;
+                private byte[] keys;
+                private byte index;
+                
+                private static readonly byte[][] DEFAULTS;
+
+                static DisplayOrder()
+                {
+                    DEFAULTS = new byte[][]
+                    {
+                        //IconGroup.Main
+                        new byte[]
+                        {
+                            (byte)IconData.IconType.Login + 1,
+                            (byte)IconData.IconType.LoginReward + 1,
+                            (byte)IconData.IconType.Daily + 1,
+                            (byte)IconData.IconType.Weekly + 1,
+                            (byte)IconData.IconType.Astral + 1,
+                        },
+
+                        //IconGroup.Top
+                        new byte[]
+                        {
+                            (byte)IconData.IconType.Run + 1,
+                            (byte)IconData.IconType.Note + 1,
+                        },
+                    };
+                }
+
+                public DisplayOrder(IconGroup group)
+                {
+                    Group = group;
+
+                    order = new byte[GetDefault(group).Length];
+                    keys = new byte[order.Length];
+                }
+
+                public DisplayOrder(IconGroup group, Settings.DisplayIcons[] icons)
+                    : this(group)
+                {
+                    if (icons != null)
+                    {
+                        Add(icons);
+                    }
+                }
+
+                public static byte[] GetDefault(IconGroup group)
+                {
+                    return DEFAULTS[(byte)group];
+                }
+
+                public IconGroup Group
+                {
+                    get;
+                    private set;
+                }
+
+                public void Add(IconData.IconType t)
+                {
+                    var k = (byte)t;
+
+                    if (keys[k] != 0)
+                    {
+                        //was already added
+                        return;
+                    }
+
+                    var i = (byte)(t + 1);
+
+                    order[index] = (byte)(t + 1);
+                    keys[k] = ++index;
+                }
+
+                public void Add(Settings.DisplayIcons icon)
+                {
+                    switch (icon)
+                    {
+                        case Settings.DisplayIcons.Login:
+
+                            Add(IconData.IconType.Login);
+                            Add(IconData.IconType.LoginReward);
+                            Add(IconData.IconType.Daily);
+
+                            break;
+                        case Settings.DisplayIcons.Weekly:
+
+                            Add(IconData.IconType.Weekly);
+
+                            break;
+                        case Settings.DisplayIcons.Astral:
+
+                            Add(IconData.IconType.Astral);
+
+                            break;
+                    }
+                }
+
+                public void Add(Settings.DisplayIcons[] icons)
+                {
+                    foreach (var i in icons)
+                    {
+                        Add(i);
+                    }
+                }
+
+                public byte[] ToArray()
+                {
+                    if (index != order.Length)
+                    {
+                        if (index == 0)
+                        {
+                            return GetDefault(Group);
+                        }
+                        else
+                        {
+                            //fill in any missing items
+                            var j = index;
+                            var defaults = GetDefault(Group);
+
+                            for (var i = 0; i < defaults.Length; i++)
+                            {
+                                var k = defaults[i] - 1;
+
+                                if (keys[k] == 0)
+                                {
+                                    order[j++] = defaults[i];
+                                }
+                            }
+                        }
+                    }
+
+                    return order;
+                }
+
+                public bool Equals(DisplayOrder d)
+                {
+                    if (d.Group == this.Group && d.order.Length == order.Length)
+                    {
+                        for (var i =0; i < order.Length; i++)
+                        {
+                            if (d.order[i] != order[i])
+                                return false;
+                        }
+                        return true;
+                    }
+                    return false;
+                }
+            }
+
+            public enum IconGroup : byte
+            {
+                Main = 0,
+                Top = 1,
+            }
+
+            public event EventHandler RefreshPending;
+
+            private DisplayedIconData[] icons;
+            private DisplayedIcons[] groups;
+            private DisplayedIconData active;
+
+            public Icons()
+            {
+                groups = new DisplayedIcons[]
+                {
+                    new DisplayedIcons(IconGroup.Main)
+                    {
+                        //order = DisplayOrder.GetDefault(IconGroup.Main),
+                    },
+                    new DisplayedIcons(IconGroup.Top)
+                    {
+                        //order = DisplayOrder.GetDefault(IconGroup.Top),
+                    },
+                };
+
+                for (var i = 0; i < groups.Length; i++)
+                {
+                    groups[i].RefreshPending += Icons_RefreshPending;
+                }
+
+                var types = new IconData.IconType[]
+                {
+                    IconData.IconType.Login,
+                    IconData.IconType.LoginReward,
+                    IconData.IconType.Daily,
+                    IconData.IconType.Weekly,
+                    IconData.IconType.Astral,
+                    IconData.IconType.Note,
+                    IconData.IconType.Run,
+                };
+
+                icons = new DisplayedIconData[types.Length];
+
+                for (var i = 0; i < types.Length; i++)
+                {
+                    icons[i] = new DisplayedIconData(IconData.GetIcon(types[i]), GetGroup(types[i]));
+                }
+
+            }
+
+            void Icons_RefreshPending(object sender, EventArgs e)
+            {
+                if (RefreshPending != null)
+                    RefreshPending(sender, e);
+            }
+
+            public DisplayedIconData GetIcon(int index)
+            {
+                return icons[index];
+            }
+
+            public DisplayedIconData GetIcon(IconData.IconType type)
+            {
+                if (type == IconData.IconType.Custom)
+                {
+                    return null;
+                }
+
+                return icons[(int)type];
+            }
+            public DisplayedIcons GetGroup(IconGroup group)
+            {
+                return groups[(byte)group];
+            }
+
+            public DisplayedIcons GetGroup(IconData.IconType type)
+            {
+                switch (type)
+                {
+                    case IconData.IconType.Note:
+                    case IconData.IconType.Run:
+
+                        return GetGroup(IconGroup.Top);
+                }
+
+                return GetGroup(IconGroup.Main);
+            }
+
+            public void Refresh(DisplayedIcons.PendingRefresh refresh)
+            {
+                for (var i = 0; i < groups.Length; i++)
+                {
+                    groups[i].Refresh(refresh);
+                }
+            }
+
+            public void Refresh(IconData.IconType type, DisplayedIcons.PendingRefresh refresh)
+            {
+                GetGroup(type).Refresh(refresh);
+            }
+
+            /// <summary>
+            /// Returns the icon at the specified point, or null if nothing is there
+            /// </summary>
+            public DisplayedIconData FromPoint(Point p)
+            {
+                if (active != null && active.DisplayBounds.Contains(p))
+                {
+                    if (active.DisplayIndex != 1 || active.Group.Type != IconGroup.Main) //main icon is low priority
+                        return active;
+                }
+
+                for (var i = groups.Length - 1; i >= 0; --i)
+                {
+                    var icon = groups[i].FromPoint(p);
+
+                    if (icon != null)
+                    {
+                        return icon;
+                    }
+
+                    //if (groups[i].boundary.Contains(p))
+                    //{
+                    //    var displayed = groups[i].icons;
+
+                    //    for (var j = 0; j < displayed.Length; j++)
+                    //    {
+                    //        if (displayed[j] == null)
+                    //            break;
+
+                    //        if (displayed[j].Bounds[0].Contains(p))
+                    //        {
+                    //            return displayed[j];
+                    //        }
+                    //    }
+                    //}
+                }
+
+                return null;
+            }
+
+            public DisplayedIconData Active
+            {
+                get
+                {
+                    return active;
+                }
+                private set
+                {
+                    if (active != value)
+                    {
+                        if (active != null)
+                            active.ClearState();
+                        active = value;
+                        if (value != null)
+                            value.Hovered = true;
+                    }
+                }
+            }
+
+            /// <summary>
+            /// Sets the icon that is active
+            /// </summary>
+            /// <param name="icon">The icon to set as active, or null to reset the active icon</param>
+            /// <returns>Returns true if the display state has changed</returns>
+            public bool SetActive(DisplayedIconData icon)
+            {
+                if (active != icon)
+                {
+                    if (active == null)
+                    {
+                        active = icon;
+                        icon.Hovered = true;
+                        return icon.Icon.Clickable;
+                    }
+                    else
+                    {
+                        var b = active.Icon.Clickable;
+
+                        active.ClearState();
+                        active = icon;
+                        if (icon != null)
+                        {
+                            if (!b)
+                                b = icon.Icon.Clickable;
+                            icon.Hovered = true;
+                        }
+
+                        return b;
+                    }
+                }
+
+                return false;
+            }
+
+            public void ClearActive()
+            {
+                if (active != null)
+                {
+                    active.ClearState();
+                    active = null;
+                }
+            }
+
+            public void SetOrder(IconGroup group, byte[] order)
+            {
+                var g = GetGroup(group);
+
+                g.order = order;
+                g.Refresh(DisplayedIcons.PendingRefresh.Order);
+            }
+
+            public void SetOrder(DisplayOrder order)
+            {
+                SetOrder(order.Group, order.ToArray());
             }
         }
 
+        //protected class IconGroup
+        //{
+        //    public DisplayedIcon[] icons;
+        //    private byte[] indexes;
+        //    public bool refresh;
+        //    public byte first;
+
+        //    public int GetIndex(DisplayedIcon.IconType type)
+        //    {
+        //        return indexes[(int)type - 1] - 1;
+        //    }
+
+        //    public DisplayedIcon GetIcon(DisplayedIcon.IconType type)
+        //    {
+        //        var i = GetIndex(type);
+
+        //        if (i == -1)
+        //        {
+        //            return null;
+        //        }
+
+        //        return icons[i];
+        //    }
+
+        //    public void SetIcons(DisplayedIcon[] icons)
+        //    {
+        //        this.icons = icons;
+
+        //        if (indexes == null)
+        //        {
+        //            indexes = new byte[Enum.GetValues(typeof(DisplayedIcon.IconType)).Length];
+        //        }
+
+        //        for (var i = 0; i < icons.Length; i++)
+        //        {
+        //            indexes[i] = (byte)(icons[i].type + 1);
+        //        }
+        //    }
+        //}
+
+        //protected class DisplayedIcon
+        //{
+        //    [Flags]
+        //    public enum IconSize: byte
+        //    {
+        //        None = 0,
+
+        //        Large = 1,
+        //        Small = 2,
+
+        //        Any = 3,
+        //    }
+
+        //    public enum IconType : byte
+        //    {
+        //        None,
+        //        Login,
+        //        LoginReward,
+        //        Daily,
+        //        Note,
+        //        Weekly,
+        //        Astral,
+        //    }
+
+        //    [Flags]
+        //    public enum IconOptions : byte
+        //    {
+        //        None = 0,
+
+        //        /// <summary>
+        //        /// Icon is hovered
+        //        /// </summary>
+        //        Hovered = 1,
+        //        /// <summary>
+        //        /// Icon is being clicked
+        //        /// </summary>
+        //        Activated = 2,
+        //        /// <summary>
+        //        /// States (Hovered | Activated)
+        //        /// </summary>
+        //        StateFlags = 3,
+
+        //        /// <summary>
+        //        /// Icon can be large
+        //        /// </summary>
+        //        Large = 4,
+        //        /// <summary>
+        //        /// Icon can be small
+        //        /// </summary>
+        //        Small = 8,
+        //        /// <summary>
+        //        /// Icon can be shown
+        //        /// </summary>
+        //        Enabled = 16,
+        //        /// <summary>
+        //        /// Icon is visible
+        //        /// </summary>
+        //        Visible = 32,
+        //    };
+
+        //    public DisplayedIcon(IconType type)
+        //    {
+        //        this.type = type;
+        //        this.options = IconOptions.Enabled;
+        //    }
+
+        //    public Rectangle bounds;
+        //    public IconType type;
+        //    public IconOptions options;
+        //    public byte spacing;
+
+        //    public bool Hovered
+        //    {
+        //        get
+        //        {
+        //            return (options & IconOptions.Hovered) == IconOptions.Hovered;
+        //        }
+        //        set
+        //        {
+        //            SetOption(IconOptions.Hovered, value);
+        //        }
+        //    }
+
+        //    public bool Activated
+        //    {
+        //        get
+        //        {
+        //            return (options & IconOptions.Activated) == IconOptions.Activated;
+        //        }
+        //        set
+        //        {
+        //            SetOption(IconOptions.Activated, value);
+        //        }
+        //    }
+
+        //    public bool Enabled
+        //    {
+        //        get
+        //        {
+        //            return (options & IconOptions.Enabled) == IconOptions.Enabled;
+        //        }
+        //        set
+        //        {
+        //            SetOption(IconOptions.Enabled, value);
+        //        }
+        //    }
+
+        //    public bool Visible
+        //    {
+        //        get
+        //        {
         public class PagingData
         {
             public event EventHandler PageChanged;
@@ -261,9 +1267,12 @@ namespace Gw2Launcher.UI.Controls
         protected float pressedProgress;
         protected PressedState pressedState;
         private Color pressedColor;
-        protected DisplayedIcon[] icons;
-        protected DisplayedIcon activeIcon;
+        //protected DisplayedIcon[] icons;
+        //protected DisplayedIcon activeIcon;
         protected DisplayedTotp totp;
+        protected Controls.ApiTimer apiTimer;
+        protected Icons iconstore;
+        protected Point cursor;
 
         protected ushort fontNameHeight, fontStatusHeight, fontUserHeight;
         protected Font fontName, fontStatus, fontUser;
@@ -284,11 +1293,19 @@ namespace Gw2Launcher.UI.Controls
 
             this.Cursor = Windows.Cursors.Hand;
 
-            icons = new DisplayedIcon[]
-            {
-                new DisplayedIcon(DisplayedIcon.IconType.None),
-                new DisplayedIcon(DisplayedIcon.IconType.None),
-            };
+            //icons = new DisplayedIcon[]
+            //{
+            //    new DisplayedIcon(DisplayedIcon.IconType.None),
+            //    new DisplayedIcon(DisplayedIcon.IconType.None),
+                
+            //    new DisplayedIcon(DisplayedIcon.IconType.None),
+            //    new DisplayedIcon(DisplayedIcon.IconType.None),
+            //    new DisplayedIcon(DisplayedIcon.IconType.None),
+            //};
+
+            iconstore = new Icons();
+            iconstore.GetIcon(IconData.IconType.Note).Enabled = true;
+            iconstore.RefreshPending += iconstore_RefreshPending;
 
             fontName = FONT_NAME;
             fontStatus = FONT_STATUS;
@@ -701,11 +1718,9 @@ namespace Gw2Launcher.UI.Controls
             rectStatus = new Rectangle(rectStatus.X, rectStatus.Y, rw, rectStatus.Height);
             rectUser = new Rectangle(rectUser.X, rectUser.Y, rw, rectUser.Height);
 
-            if (icons != null)
-            {
-                foreach (var icon in icons)
-                    icon.type = DisplayedIcon.IconType.None;
-            }
+            iconstore.Refresh(DisplayedIcons.PendingRefresh.Bounds);
+            if (apiTimer != null)
+                apiTimer.Resize = true;
 
             redraw = true;
             if (!resize)
@@ -717,31 +1732,31 @@ namespace Gw2Launcher.UI.Controls
             OnRedrawRequired();
         }
 
-        private int OnDelayedRefresh()
+        private Util.ScheduledEvents.Ticks OnDelayedRefresh()
         {
             if (this.IsDisposed)
-                return -1;
+                return Util.ScheduledEvents.Ticks.None;
 
             OnRedrawRequired();
 
             return GetNextRefresh();
         }
 
-        private int GetNextRefresh()
+        private Util.ScheduledEvents.Ticks GetNextRefresh()
         {
-            var ms = (int)DateTime.UtcNow.Subtract(_LastUsed).TotalMilliseconds;
+            var ticks = DateTime.UtcNow.Ticks;
+            var ms = (ticks - _LastUsed.Ticks) / 10000;
 
             if (ms < 0)
             {
-
             }
             else if (ms < 3600000) //<60m
             {
-                return 60000 - ms % 60000;
+                return new Util.ScheduledEvents.Ticks(Util.ScheduledEvents.TickType.MillisecondTicks, ticks / 10000 + 60001 - ms % 60000);
             }
             else if (ms < 172800000) //<48h
             {
-                return 3600000 - ms % 3600000;
+                return new Util.ScheduledEvents.Ticks(Util.ScheduledEvents.TickType.MillisecondTicks, ticks / 10000 + 3600001 - ms % 3600000);
             }
             else
             {
@@ -765,13 +1780,13 @@ namespace Gw2Launcher.UI.Controls
             //    return 86400000 - ms;
             //}
 
-            return -1;
+            return Util.ScheduledEvents.Ticks.None;
         }
 
         private void DelayedRefresh()
         {
             var refresh = GetNextRefresh();
-            if (refresh != -1)
+            if (refresh.Value != -1)
                 Util.ScheduledEvents.Register(OnDelayedRefresh, refresh);
         }
 
@@ -787,11 +1802,8 @@ namespace Gw2Launcher.UI.Controls
         {
             base.OnMouseLeave(e);
 
-            if (activeIcon != null)
-            {
-                activeIcon.ClearState();
-                activeIcon = null;
-            }
+            cursor = Point.Empty;
+            iconstore.ClearActive();
             isHovered = false;
             OnRedrawRequired();
         }
@@ -800,50 +1812,21 @@ namespace Gw2Launcher.UI.Controls
         {
             base.OnMouseMove(e);
 
-            for (var i = icons.Length - 1; i >= 0; i--)
+            if (cursor != e.Location)
             {
-                var icon = icons[i];
+                cursor = e.Location;
 
-                if (icon.type != DisplayedIcon.IconType.None && icon.bounds.Contains(e.Location))
+                var icon = iconstore.FromPoint(e.Location);
+
+                if (iconstore.Active != icon)
                 {
-                    bool redraw;
-
-                    if (activeIcon != null)
-                    {
-                        if (activeIcon == icon)
-                            return;
-                        else
-                        {
-                            redraw = activeIcon.CanClick || icon.CanClick;
-                            activeIcon.ClearState();
-                        }
-                    }
-                    else
-                        redraw = icon.CanClick;
-
-                    activeIcon = icon;
-                    icon.Hovered = true;
-
-                    if (redraw)
+                    if (iconstore.SetActive(icon))
                     {
                         OnRedrawRequired();
                     }
-
-                    return;
                 }
             }
 
-            if (activeIcon != null)
-            {
-                activeIcon.ClearState();
-
-                if (activeIcon.CanClick)
-                {
-                    OnRedrawRequired();
-                }
-
-                activeIcon = null;
-            }
         }
 
         protected override void OnMouseDown(MouseEventArgs e)
@@ -871,15 +1854,22 @@ namespace Gw2Launcher.UI.Controls
 
             #endregion
 
-            if (totp != null && e.Button == System.Windows.Forms.MouseButtons.Left)
+            if (e.Button == System.Windows.Forms.MouseButtons.Left)
             {
-                return;
-            }
+                if (totp != null)
+                {
+                    //totp code is being clicked
+                    return;
+                }
 
-            if (activeIcon != null && activeIcon.CanClick && activeIcon.Hovered && e.Button == System.Windows.Forms.MouseButtons.Left)
-            {
-                activeIcon.Activated = true;
-                return;
+                var icon = iconstore.Active;
+
+                if (icon != null && icon.Icon.Clickable)
+                {
+                    //icon is being clicked
+                    icon.Activated = true;
+                    return;
+                }
             }
 
             base.OnMouseDown(e);
@@ -887,15 +1877,20 @@ namespace Gw2Launcher.UI.Controls
 
         protected override void OnMouseUp(MouseEventArgs e)
         {
-            if (totp != null && e.Button == System.Windows.Forms.MouseButtons.Left)
+            if (e.Button == System.Windows.Forms.MouseButtons.Left)
             {
-                return;
-            }
+                if (totp != null)
+                {
+                    return;
+                }
 
-            if (activeIcon != null && activeIcon.CanClick && activeIcon.Activated)
-            {
-                activeIcon.Activated = false;
-                return;
+                var icon = iconstore.Active;
+
+                if (icon != null && icon.Activated)
+                {
+                    icon.Activated = false;
+                    return;
+                }
             }
 
             base.OnMouseUp(e);
@@ -903,40 +1898,56 @@ namespace Gw2Launcher.UI.Controls
 
         protected override void OnMouseClick(MouseEventArgs e)
         {
-            if (totp != null && e.Button == System.Windows.Forms.MouseButtons.Left)
+            if (e.Button == System.Windows.Forms.MouseButtons.Left)
             {
-                totp = null;
-                OnRedrawRequired();
-                return;
-            }
-
-            if (activeIcon != null && activeIcon.Activated)
-            {
-                if (activeIcon.Hovered)
+                if (totp != null)
                 {
-                    switch (activeIcon.type)
-                    {
-                        case DisplayedIcon.IconType.Daily:
-
-                            var a = this._AccountData;
-                            if (a != null)
-                            {
-                                this._LastDailyCompletion = DateTime.UtcNow;
-                                if (a.Type == Settings.AccountType.GuildWars2)
-                                    ((Settings.IGw2Account)a).LastDailyCompletionUtc = this._LastDailyCompletion;
-                            }
-                            OnRedrawRequired();
-
-                            break;
-                        case DisplayedIcon.IconType.Note:
-
-                            if (NoteClicked != null)
-                                NoteClicked(this, e);
-
-                            break;
-                    }
+                    totp = null;
+                    OnRedrawRequired();
+                    return;
                 }
-                return;
+
+                var icon = iconstore.Active;
+
+                if (icon != null && icon.Activated)
+                {
+                    if (icon.Hovered)
+                    {
+                        switch (icon.Type)
+                        {
+                            case IconData.IconType.Daily:
+
+                                if (_AccountData != null)
+                                {
+                                    this.LastDailyCompletionUtc = DateTime.UtcNow;
+                                    if (_AccountData.Type == Settings.AccountType.GuildWars2)
+                                        ((Settings.IGw2Account)_AccountData).LastDailyCompletionUtc = this.LastDailyCompletionUtc;
+                                    OnRedrawRequired();
+                                }
+
+                                break;
+                            case IconData.IconType.Weekly:
+
+                                if (_AccountData != null)
+                                {
+                                    this.LastWeeklyCompletionUtc = DateTime.UtcNow;
+                                    if (_AccountData.Type == Settings.AccountType.GuildWars2)
+                                        ((Settings.IGw2Account)_AccountData).LastWeeklyCompletionUtc = this.LastWeeklyCompletionUtc;
+                                    OnRedrawRequired();
+                                }
+
+                                break;
+                            case IconData.IconType.Note:
+                            case IconData.IconType.Run:
+
+                                if (IconClicked != null)
+                                    IconClicked(this, new IconClickedEventArgs(icon.Type, e));
+
+                                break;
+                        }
+                    }
+                    return;
+                }
             }
 
             base.OnMouseClick(e);
@@ -978,101 +1989,6 @@ namespace Gw2Launcher.UI.Controls
 
             }
 
-        }
-
-        protected void OnPaintIcon(Graphics g, DisplayedIcon.IconType type, Image image, int offsetX, int offsetY, bool grayscale, byte opacity)
-        {
-            DisplayedIcon icon;
-
-            var scale = g.DpiX / 96f;
-            int iw = image.Width;
-            int ih = image.Height;
-            int w = (int)(iw * scale + 0.5f);
-            int h = (int)(ih * scale + 0.5f);
-            offsetX = (int)(offsetX * scale + 0.5f);
-            offsetY = (int)(offsetY * scale + 0.5f);
-
-            if (type == DisplayedIcon.IconType.Note)
-            {
-                icon = icons[INDEX_ICON_NOTE];
-
-                if (icon.type != type)
-                {
-                    icon.type = type;
-                    icon.bounds = new Rectangle(this.Width - w - (int)(15 * scale + 0.5f), (this.Height - h) / 2, w, h);
-
-                    var iconMain = icons[INDEX_ICON_MAIN];
-                    if (iconMain != null && iconMain.type != DisplayedIcon.IconType.None)
-                    {
-                        var x = iconMain.bounds.X - w / 3;
-                        var y = this.Height - h - (int)(10 * scale + 0.5f);
-                        if (x < icon.bounds.X)
-                            icon.bounds.X = x;
-                        if (y > iconMain.bounds.Y)
-                            icon.bounds.Y = y;
-                    }
-
-                    icon.bounds = new Rectangle(this.Width - w - (int)(7 * scale + 0.5f), (int)(7 * scale + 0.5f), w, h);
-                }
-            }
-            else
-            {
-                icon = icons[INDEX_ICON_MAIN];
-
-                if (icon.type != type)
-                {
-                    icon.type = type;
-                    icons[INDEX_ICON_NOTE].type = DisplayedIcon.IconType.None;
-
-                    int rh = (int)(this.Height * 0.8f);
-
-                    if (h > rh)
-                    {
-                        int rw = rh * w / h;
-
-                        icon.bounds = new Rectangle(this.Width - rw / 2 + offsetX, (this.Height - rh) / 2 + offsetY, rw / 2 - offsetX, rh);
-                    }
-                    else
-                    {
-                        icon.bounds = new Rectangle(this.Width - w / 2 + offsetX, (this.Height - h) / 2 + offsetY, w / 2 - offsetX, h);
-                    }
-                }
-
-                iw = iw / 2 - offsetX;
-            }
-
-            if (grayscale)
-            {
-                using (var ia = new ImageAttributes())
-                {
-                    ia.SetColorMatrix(new ColorMatrix(new float[][] 
-                        {
-                            new float[] {.3f, .3f, .3f, 0, 0},
-                            new float[] {.6f, .6f, .6f, 0, 0},
-                            new float[] {.1f, .1f, .1f, 0, 0},
-                            new float[] {0, 0, 0, opacity / 255f, 0},
-                            new float[] {0, 0, 0, 0, 1}
-                        }));
-
-                    g.DrawImage(image, icon.bounds, 0, 0, iw, ih, GraphicsUnit.Pixel, ia);
-                }
-            }
-            else if (opacity != 255)
-            {
-                using (var ia = new ImageAttributes())
-                {
-                    ia.SetColorMatrix(new ColorMatrix()
-                    {
-                        Matrix33 = opacity / 255f,
-                    });
-
-                    g.DrawImage(image, icon.bounds, 0, 0, iw, ih, GraphicsUnit.Pixel, ia);
-                }
-            }
-            else
-            {
-                g.DrawImage(image, icon.bounds, 0, 0, iw, ih, GraphicsUnit.Pixel);
-            }
         }
 
         protected Color GetLoginRewardRarity(byte day)
@@ -1183,30 +2099,19 @@ namespace Gw2Launcher.UI.Controls
             return null;
         }
 
-        protected void DrawLoginReward(Graphics g, byte day, Settings.DailyLoginDayIconFlags flags)
+        protected int DrawLoginReward(Graphics g, Rectangle bounds, byte day, Settings.DailyLoginDayIconFlags flags)
         {
-            var m = icons[INDEX_ICON_MAIN];
-            if (m.type != DisplayedIcon.IconType.Login || day == 0)
-                return;
             var image = GetLoginRewardIcon(day, flags);
             if (image == null && (flags & Settings.DailyLoginDayIconFlags.ShowDay) == 0)
-                return;
-
-            var scale = g.DpiX / 96f;
-            int sz = (int)(24 * scale + 0.5f);
-
-            var x = m.bounds.X + (int)(m.bounds.Width * 0.1f) - sz / 2;
-            var y = m.bounds.Y + (int)(m.bounds.Height * 0.77f) - sz / 2;
-            if (y + sz > this.Height)
-                y = this.Height - sz;
+                return 0;
 
             if (image != null)
             {
                 using (var path = new GraphicsPath())
                 {
-                    path.AddEllipse(x, y, sz, sz);
+                    path.AddEllipse(bounds);
                     g.SetClip(path);
-                    g.DrawImage(image, new Rectangle(x, y, sz, sz), 0, 0, image.Width, image.Height, GraphicsUnit.Pixel);
+                    g.DrawImage(image, bounds, 0, 0, image.Width, image.Height, GraphicsUnit.Pixel);
                     g.ResetClip();
                 }
             }
@@ -1214,10 +2119,10 @@ namespace Gw2Launcher.UI.Controls
             {
                 using (var brush = new SolidBrush(_Colors[ColorNames.AccountLoginRewardBackColor]))
                 {
-                    g.FillEllipse(brush, x, y, sz, sz);
+                    g.FillEllipse(brush, bounds);
                 }
 
-                DrawOutlinedText(g, day.ToString(), FONT_LOGIN_REWARD_DAY, _Colors[ColorNames.AccountLoginRewardText], _Colors[ColorNames.AccountLoginRewardTextOutline], (int)(3 * scale + 0.5f), StringAlignment.Center, StringAlignment.Center, new Rectangle(x, y, sz, sz));
+                DrawOutlinedText(g, day.ToString(), FONT_LOGIN_REWARD_DAY, _Colors[ColorNames.AccountLoginRewardText], _Colors[ColorNames.AccountLoginRewardTextOutline], (int)(3 * g.DpiX / 96f + 0.5f), StringAlignment.Center, StringAlignment.Center, bounds);
             }
 
             var crarity = (flags & Settings.DailyLoginDayIconFlags.ShowRarity) == 0 ? Color.Empty : GetLoginRewardRarity(day);
@@ -1230,91 +2135,978 @@ namespace Gw2Launcher.UI.Controls
                 {
                     if (crarity.A > 0)
                     {
+                        var scale = g.DpiX / 96f;
+
                         if (coutline.A > 0)
                         {
                             pen.Width = (int)(3 * scale + 0.5f);
-                            g.DrawEllipse(pen, x, y, sz, sz);
+                            g.DrawEllipse(pen, bounds);
                         }
 
                         pen.Color = crarity;
                         pen.Width = (int)(2 * scale + 0.5f);
-                        g.DrawEllipse(pen, x, y, sz, sz);
+                        g.DrawEllipse(pen, bounds);
                     }
                     else if (coutline.A > 0)
                     {
-                        pen.Width = (int)(1 * scale + 0.5f);
-                        g.DrawEllipse(pen, x, y, sz, sz);
+                        pen.Width = (int)(1 * g.DpiX / 96f + 0.5f);
+                        g.DrawEllipse(pen, bounds);
                     }
 
                 }
                 g.SmoothingMode = SmoothingMode.None;
             }
+
+            return 0;
+        }
+
+        //protected int DrawLoginReward(Graphics g, DisplayedIcon m, byte day, Settings.DailyLoginDayIconFlags flags)
+        //{
+        //    //var m = icons[INDEX_ICON_MAIN];
+        //    //if (m.type != DisplayedIcon.IconType.Login || day == 0)
+        //    //    return 0;
+        //    var image = GetLoginRewardIcon(day, flags);
+        //    if (image == null && (flags & Settings.DailyLoginDayIconFlags.ShowDay) == 0)
+        //        return 0;
+
+        //    var scale = g.DpiX / 96f;
+        //    int sz = (int)(24 * scale + 0.5f);
+
+        //    var x = m.bounds.X + (int)(m.bounds.Width * 0.1f) - sz / 2;
+        //    var y = m.bounds.Y + (int)(m.bounds.Height * 0.77f) - sz / 2;
+        //    if (y + sz > this.Height)
+        //        y = this.Height - sz;
+
+        //    if (image != null)
+        //    {
+        //        using (var path = new GraphicsPath())
+        //        {
+        //            path.AddEllipse(x, y, sz, sz);
+        //            g.SetClip(path);
+        //            g.DrawImage(image, new Rectangle(x, y, sz, sz), 0, 0, image.Width, image.Height, GraphicsUnit.Pixel);
+        //            g.ResetClip();
+        //        }
+        //    }
+        //    else
+        //    {
+        //        using (var brush = new SolidBrush(_Colors[ColorNames.AccountLoginRewardBackColor]))
+        //        {
+        //            g.FillEllipse(brush, x, y, sz, sz);
+        //        }
+
+        //        DrawOutlinedText(g, day.ToString(), FONT_LOGIN_REWARD_DAY, _Colors[ColorNames.AccountLoginRewardText], _Colors[ColorNames.AccountLoginRewardTextOutline], (int)(3 * scale + 0.5f), StringAlignment.Center, StringAlignment.Center, new Rectangle(x, y, sz, sz));
+        //    }
+
+        //    var crarity = (flags & Settings.DailyLoginDayIconFlags.ShowRarity) == 0 ? Color.Empty : GetLoginRewardRarity(day);
+        //    var coutline = _Colors[ColorNames.AccountLoginRewardBorder];
+
+        //    if (coutline.A > 0 || crarity.A > 0)
+        //    {
+        //        g.SmoothingMode = SmoothingMode.AntiAlias;
+        //        using (var pen = new Pen(_Colors[ColorNames.AccountLoginRewardBorder]))
+        //        {
+        //            if (crarity.A > 0)
+        //            {
+        //                if (coutline.A > 0)
+        //                {
+        //                    pen.Width = (int)(3 * scale + 0.5f);
+        //                    g.DrawEllipse(pen, x, y, sz, sz);
+        //                }
+
+        //                pen.Color = crarity;
+        //                pen.Width = (int)(2 * scale + 0.5f);
+        //                g.DrawEllipse(pen, x, y, sz, sz);
+        //            }
+        //            else if (coutline.A > 0)
+        //            {
+        //                pen.Width = (int)(1 * scale + 0.5f);
+        //                g.DrawEllipse(pen, x, y, sz, sz);
+        //            }
+
+        //        }
+        //        g.SmoothingMode = SmoothingMode.None;
+        //    }
+
+        //    return x;
+        //}
+
+        protected void AddTextToGraphicsPath(Graphics g, GraphicsPath path, string text, Font font, StringAlignment alignmentHorizontal, StringAlignment alignmentVertical, Rectangle bounds)
+        {
+            using (var format = new StringFormat(StringFormatFlags.NoClip | StringFormatFlags.NoWrap | StringFormatFlags.FitBlackBox))
+            {
+                format.Alignment = alignmentHorizontal;
+                format.LineAlignment = alignmentVertical;
+
+                path.AddString(text, font.FontFamily, (int)font.Style, g.DpiX * font.SizeInPoints / 72f, bounds, format);
+            }
+        }
+
+        protected void DrawOutlinedText(Graphics g, GraphicsPath path, Color color, Color outline, int outlineSize)
+        {
+            g.SmoothingMode = SmoothingMode.AntiAlias;
+            g.TextRenderingHint = System.Drawing.Text.TextRenderingHint.ClearTypeGridFit;
+            g.CompositingQuality = CompositingQuality.HighQuality;
+
+            using (var pen = new Pen(outline, outlineSize))
+            {
+                pen.LineJoin = LineJoin.Round;
+                g.DrawPath(pen, path);
+            }
+            using (var brush = new SolidBrush(color))
+            {
+                g.FillPath(brush, path);
+            }
+
+            g.SmoothingMode = SmoothingMode.None;
+            g.CompositingQuality = CompositingQuality.Default;
         }
 
         protected void DrawOutlinedText(Graphics g, string text, Font font, Color color, Color outline, int outlineSize, StringAlignment alignmentHorizontal, StringAlignment alignmentVertical, Rectangle bounds)
         {
             using (var path = new GraphicsPath())
             {
-                using (var format = new StringFormat(StringFormatFlags.NoClip | StringFormatFlags.NoWrap | StringFormatFlags.FitBlackBox))
-                {
-                    g.SmoothingMode = SmoothingMode.AntiAlias;
-                    g.TextRenderingHint = System.Drawing.Text.TextRenderingHint.ClearTypeGridFit;
-                    g.CompositingQuality = CompositingQuality.HighQuality;
+                AddTextToGraphicsPath(g, path, text, font, alignmentHorizontal, alignmentVertical, bounds);
 
-                    format.Alignment = alignmentHorizontal;
-                    format.LineAlignment = alignmentVertical;
+                DrawOutlinedText(g, path, color, outline, outlineSize);
 
-                    path.AddString(text, font.FontFamily, (int)font.Style, g.DpiX * font.SizeInPoints / 72f, bounds, format);
+                //using (var format = new StringFormat(StringFormatFlags.NoClip | StringFormatFlags.NoWrap | StringFormatFlags.FitBlackBox))
+                //{
+                //    g.SmoothingMode = SmoothingMode.AntiAlias;
+                //    g.TextRenderingHint = System.Drawing.Text.TextRenderingHint.ClearTypeGridFit;
+                //    g.CompositingQuality = CompositingQuality.HighQuality;
 
-                    using (var pen = new Pen(outline, outlineSize))
-                    {
-                        g.DrawPath(pen, path);
-                    }
-                    using (var brush = new SolidBrush(color))
-                    {
-                        g.FillPath(brush, path);
-                    }
+                //    format.Alignment = alignmentHorizontal;
+                //    format.LineAlignment = alignmentVertical;
 
-                    g.SmoothingMode = SmoothingMode.None;
-                    g.CompositingQuality = CompositingQuality.Default;
-                }
+                //    path.AddString(text, font.FontFamily, (int)font.Style, g.DpiX * font.SizeInPoints / 72f, bounds, format);
+
+                //    using (var pen = new Pen(outline, outlineSize))
+                //    {
+                //        pen.LineJoin = LineJoin.Round;
+                //        g.DrawPath(pen, path);
+                //    }
+                //    using (var brush = new SolidBrush(color))
+                //    {
+                //        g.FillPath(brush, path);
+                //    }
+
+                //    g.SmoothingMode = SmoothingMode.None;
+                //    g.CompositingQuality = CompositingQuality.Default;
+                //}
             }
         }
 
-        protected void DrawIcon(Graphics g)
+        protected Image GetImage(IconData icon, bool large)
         {
-
-            if (this._ShowDailyLogin || this._ShowDailyCompletion)
+            switch (icon.Type)
             {
-                var date = DateTime.UtcNow.Date;
+                case IconData.IconType.Login:
 
-                if (this._ShowDailyLogin && this._LastDailyLogin < date)
+                    return Properties.Resources.login;
+
+                case IconData.IconType.Daily:
+
+                    return Properties.Resources.daily;
+
+                case IconData.IconType.Weekly:
+
+                    return Properties.Resources.weekly;
+
+                case IconData.IconType.Astral:
+
+                    if (large)
+                        return Properties.Resources.astrallarge;
+                    else
+                        return Properties.Resources.astral;
+
+                case IconData.IconType.Note:
+
+                    return Properties.Resources.mailfull;
+
+                case IconData.IconType.Run:
+
+                    return Properties.Resources.run;
+            }
+
+            return null;
+        }
+
+        protected struct IconOffset
+        {
+            public IconOffset(sbyte x, sbyte y, byte width)
+                : this()
+            {
+                this.X = x;
+                this.Y = y;
+                this.Width = width;
+            }
+
+            public IconOffset(sbyte x, sbyte y, float width)
+                : this(x, y, (byte)(255 * width + 0.5f))
+            { }
+
+            /// <summary>
+            /// Icon X offset
+            /// </summary>
+            public sbyte X;
+
+            /// <summary>
+            /// Icon Y offset
+            /// </summary>
+            public sbyte Y;
+
+            /// <summary>
+            /// Percentage of the width of the icon to be displayed
+            /// </summary>
+            public byte Width;
+        }
+
+        protected struct IconPadding
+        {
+            public IconPadding(sbyte height, sbyte top, sbyte left, sbyte right)
+                : this()
+            {
+                this.Height = height;
+                this.Top = top;
+                this.Left = left;
+                this.Right = right;
+            }
+
+            /// <summary>
+            /// Adjusts icon height
+            /// </summary>
+            public sbyte Height;
+
+            /// <summary>
+            /// Offsets icon Y position
+            /// </summary>
+            public sbyte Top;
+
+            /// <summary>
+            /// Left margin
+            /// </summary>
+            public sbyte Left;
+
+            /// <summary>
+            /// Right margin
+            /// </summary>
+            public sbyte Right;
+        }
+
+        protected void DrawIcons(Graphics g, DisplayedIcons group, Rectangle clip)
+        {
+            #region Refresh
+
+            var scale = g.DpiX / 96f;
+            var icons = group.icons;
+
+            //iconstore.GetIcon(IconData.IconType.Daily).Expires = DateTime.MinValue;
+
+            if (group.Pending)
+            {
+                var refresh = group.pending;
+
+                group.pending = DisplayedIcons.PendingRefresh.None;
+
+                byte displayIndex = 1;
+                var nextRefresh = DateTime.MaxValue;
+                var rh = (int)(this.Height * 0.8f);
+                int anchorX, anchorY;
+                var previous = 0;
+                int boundaryL = int.MaxValue,
+                    boundaryT = int.MaxValue,
+                    boundaryR = int.MinValue,
+                    boundaryB = int.MinValue;
+                var changed = false;
+
+
+                switch (group.Type)
                 {
-                    OnPaintIcon(g, DisplayedIcon.IconType.Login, Properties.Resources.login, -1, 2, false, 255);
+                    case Icons.IconGroup.Top:
 
-                    if (this._AccountType == Settings.AccountType.GuildWars2 && this._ShowDailyLoginDay != Settings.DailyLoginDayIconFlags.None)
+                        anchorX = this.Width - (int)(8 * scale + 0.5f);
+                        anchorY = (int)(2 * scale + 0.5f);
+
+                        break;
+                    case Icons.IconGroup.Main:
+                    default:
+
+                        anchorX = this.Width - (int)(SMALL_ICON_SIZE * scale + 0.5f) / 2;
+                        anchorY = this.Height - (int)((SMALL_ICON_SIZE + 6) * scale + 0.5f);
+
+                        break;
+                }
+
+                var resize = (refresh & DisplayedIcons.PendingRefresh.Bounds) != 0;
+
+                if (icons == null || (refresh & DisplayedIcons.PendingRefresh.Data) != 0)
+                {
+                    if (icons != null)
                     {
-                        DrawLoginReward(g, this._DailyLoginDay, this._ShowDailyLoginDay);
+                        for (var i = 0; i < icons.Length; i++)
+                        {
+                            if (icons[i].Visible && !icons[i].Enabled)
+                            {
+                                icons[i].DisplayIndex = 0;
+                                icons[i].Displayed = false;
+                            }
+                        }
                     }
 
-                    return;
+                    group.icons = icons = group.Create(iconstore);
+                    //resize = false; //??? displayindex won't change if same icons are used, but control size could have changed
                 }
 
-                if (this._ShowDailyCompletion && this._LastDailyCompletion < date)
-                {
-                    var hovered = activeIcon != null && activeIcon.type == DisplayedIcon.IconType.Daily && activeIcon.Hovered;
+                //group.order = new byte[]
+                //        {
+                //            (byte)IconData.IconType.Astral + 1,
+                //            (byte)IconData.IconType.Login + 1,
+                //            (byte)IconData.IconType.LoginReward + 1,
+                //            (byte)IconData.IconType.Daily + 1,
+                //            (byte)IconData.IconType.Weekly + 1,
+                //        };
 
-                    OnPaintIcon(g, DisplayedIcon.IconType.Daily, Properties.Resources.daily, -2, 0, hovered, 255);
-                    return;
+                group.first = 0;
+
+                for (var i = 0; i < icons.Length; i++)
+                {
+                    //if (group.indexes[i] == 0)
+                    //    break;
+
+                    var icon = icons[i];// iconstore.GetIcon(group.indexes[i] - 1);
+                    bool v, displayed;
+
+                    //if (d == null)
+                    //{
+                    //    icon.Display = d = new DisplayedIconData(group.indexes[i]);
+                    //}
+
+                    switch (icon.Type)
+                    {
+                        case IconData.IconType.Login:
+
+                            //displayed = v = this._LastDailyLogin < DateTime.UtcNow.Date;
+                            displayed = v = DateTime.UtcNow >= icon.Expires;
+
+                            if (!v && icon.Expires < nextRefresh)
+                                nextRefresh = icon.Expires;
+
+                            //reward icon replaces login icon if the login icon is not being displayed as the main icon
+                            if (v && displayIndex != 1)
+                            {
+                                var reward = iconstore.GetIcon(IconData.IconType.LoginReward);
+
+                                if (reward.Enabled && this._DailyLoginDay > 0)
+                                {
+                                    if (GetLoginRewardIcon(this._DailyLoginDay, this._ShowDailyLoginDay) != null || (this._ShowDailyLoginDay & Settings.DailyLoginDayIconFlags.ShowDay) != 0)
+                                        v = false;
+                                }
+                            }
+
+                            break;
+                        case IconData.IconType.LoginReward:
+
+                            displayed = v = this._DailyLoginDay > 0 && iconstore.GetIcon(IconData.IconType.Login).Displayed;
+
+                            if (v)
+                            {
+                                if (GetLoginRewardIcon(this._DailyLoginDay, this._ShowDailyLoginDay) == null && (this._ShowDailyLoginDay & Settings.DailyLoginDayIconFlags.ShowDay) == 0)
+                                    v = false;
+                            }
+
+                            //if (v)
+                            //{
+                            //    var login = iconstore.GetIcon(IconData.IconType.Login).Display;
+
+                            //    if (login.DisplayIndex != 1)
+                            //    {
+                            //        //reward icon replaces login icon if the login icon is not being displayed as the main icon
+                            //        if (d == null)
+                            //        {
+                            //            icon.Display = d = new DisplayedIconData(group.indexes[i]);
+                            //        }
+                            //        d.Displayed = true;
+                            //        d.DisplayIndex = login.DisplayIndex;
+                            //        login.DisplayIndex = 0;
+
+                            //        continue;
+                            //    }
+                            //}
+
+                            break;
+                        case IconData.IconType.Daily:
+
+                            //displayed = v = this._LastDailyCompletion < DateTime.UtcNow.Date;
+                            displayed = v = DateTime.UtcNow >= icon.Expires;
+
+                            if (!v && icon.Expires < nextRefresh)
+                                nextRefresh = icon.Expires;
+
+                            if (v && iconstore.GetIcon(IconData.IconType.Login).Displayed)
+                            {
+                                //daily icon is overriden by login icon
+                                v = false;
+                            }
+
+                            break;
+                        case IconData.IconType.Weekly:
+
+                            //displayed = v = this._NextWeeklyCompletion <= DateTime.UtcNow;
+                            displayed = v = DateTime.UtcNow >= icon.Expires;
+
+                            if (!v && icon.Expires < nextRefresh)
+                                nextRefresh = icon.Expires;
+
+                            break;
+                        case IconData.IconType.Note:
+
+                            //the note icon is hidden when it expires (whereas other icons are shown when expired)
+                            displayed = v = DateTime.UtcNow < icon.Expires;
+
+                            if (v && icon.Expires < nextRefresh)
+                                nextRefresh = icon.Expires;
+
+                            break;
+                        default:
+
+                            displayed = v = true;
+
+                            break;
+                    }
+
+                    if (icon.Displayed != displayed)
+                    {
+                        icon.Displayed = displayed;
+                    }
+
+                    //if (displayed)
+                    //{
+                    //    if (d == null)
+                    //    {
+                    //        icon.Display = d = new DisplayedIconData(group.indexes[i]);
+                    //    }
+
+                    //    d.Displayed = displayed;
+                    //}
+                    //else if (d != null)
+                    //{
+                    //    //clear active
+                    //    icon.Display = null;
+                    //}
+
+                    if (v)
+                    {
+                        if (icon.DisplayIndex != displayIndex || resize)
+                        {
+                            changed = true;
+                            icon.DisplayIndex = displayIndex;
+                            //bounds may change even if displayindex doesnt - could be daily icon showing first, then daily reset causes login icon to show
+
+                            var image = GetImage(icon.Icon, displayIndex == 1);
+                            int iw, ih, w, h;
+
+                            if (icon.Bounds == null)
+                            {
+                                icon.Bounds = new Rectangle[2];
+                            }
+
+                            if (image == null)
+                            {
+                                switch (icon.Type)
+                                {
+                                    case IconData.IconType.LoginReward:
+
+                                        iw = ih = SMALL_ICON_SIZE;
+
+                                        break;
+                                    default:
+
+                                        iw = ih = 0;
+
+                                        break;
+                                }
+                            }
+                            else
+                            {
+                                iw = image.Width;
+                                ih = image.Height;
+                            }
+
+                            if (displayIndex == 1 && icon.Icon.Large)
+                            {
+                                group.first = group.order[i];
+
+                                w = (int)(iw * scale + 0.5f);
+                                h = (int)(ih * scale + 0.5f);
+
+                                if (icon.Icon.LargeOverlap)
+                                {
+                                    var o = GetLargeOffset(icon.Type);
+
+                                    if (h > rh)
+                                    {
+                                        int rw = rh * w / h;
+
+                                        icon.Bounds[0] = new Rectangle(this.Width - rw * o.Width / 255 - BORDER_SIZE + o.X, (this.Height - rh) / 2 + o.Y, rw, rh);
+
+                                        //rw /= 2;
+                                        //icon.Bounds[0] = new Rectangle(this.Width - rw + offsetX - BORDER_SIZE, (this.Height - rh) / 2 + offsetY, rw - offsetX, rh);
+                                    }
+                                    else
+                                    {
+                                        //w /= 2;
+                                        icon.Bounds[0] = new Rectangle(this.Width - w * o.Width / 255 - BORDER_SIZE + o.X, (this.Height - h) / 2 + o.Y, w, h);
+                                    }
+
+                                    icon.Bounds[1] = new Rectangle(0, 0, iw, ih);
+                                    //icon.Bounds[1] = new Rectangle(0, 0, (int)(iw * overlap), ih);
+                                    anchorX = this.Width - (int)(SMALL_ICON_SIZE * scale / 2f * (1 + (o.Width - 128) / 255f) + 0.5f);// *o.Width / 255 * 3 / 4; 
+                                }
+                                else
+                                {
+                                    if (h > rh)
+                                    {
+                                        int rw = rh * w / h;
+                                        icon.Bounds[0] = new Rectangle(this.Width - rw - (int)(5 * scale + 0.5f), (this.Height - rh) / 2, rw, rh);
+                                    }
+                                    else
+                                    {
+                                        icon.Bounds[0] = new Rectangle(this.Width - w - (int)(5 * scale + 0.5f), (this.Height - h) / 2, w, h);
+                                    }
+
+                                    icon.Bounds[1] = new Rectangle(0, 0, iw, ih); 
+                                    anchorX = icon.Bounds[0].X;
+                                }
+                            }
+                            else
+                            {
+                                var padding = GetPadding(icon.Type);
+
+                                if (icon.Icon.Fill || ih > SMALL_ICON_SIZE + padding.Height)
+                                {
+                                    h = (int)((SMALL_ICON_SIZE + padding.Height) * scale + 0.5f);
+                                    if (iw == ih)
+                                        w = h;
+                                    else
+                                        w = h * iw / ih;
+                                }
+                                else
+                                {
+                                    h = (int)(ih * scale + 0.5f);
+                                    w = (int)(iw * scale + 0.5f);
+                                }
+
+                                var sH = (int)(SMALL_ICON_SIZE * scale + 0.5f);
+                                int y;
+
+                                if (h == sH)
+                                    y = anchorY;
+                                else
+                                    y = anchorY + (sH - h) / 2;
+
+                                anchorX -= w + padding.Right;
+
+                                icon.Bounds[0] = new Rectangle(anchorX, y + padding.Top, w, h);
+                                icon.Bounds[1] = new Rectangle(0, 0, iw, ih);
+
+                                anchorX -= padding.Left;
+                            }
+                            
+                            //if (icon.Hovered && iconstore.Active == icon)
+                            //{
+                        }
+                        else if (displayIndex == 1 && icon.Icon.Large)
+                        {
+                            if (icon.Icon.LargeOverlap)
+                            {
+                                anchorX = this.Width - (int)(SMALL_ICON_SIZE * scale / 2f * (1 + (GetLargeOffset(icon.Type).Width - 128) / 255f) + 0.5f);
+                            }
+                            else
+                            {
+                                anchorX = icon.Bounds[0].X;
+                            }
+                        }
+                        else
+                        {
+                            var padding = GetPadding(icon.Type);
+
+                            anchorX -= icon.Bounds[0].Width + padding.Right;
+
+                            if (icon.Bounds[0].X != anchorX)
+                            {
+                                icon.Bounds[0].X = anchorX;
+                                changed = true;
+                            }
+
+                            anchorX -= padding.Left;
+                        }
+
+                        if (icon.Icon.Clickable)
+                        {
+                            var r = icon.Bounds[0];
+
+                            if (r.X < boundaryL)
+                                boundaryL = r.X;
+                            if (r.Y < boundaryT)
+                                boundaryT = r.Y;
+                            if (r.Right > boundaryR)
+                                boundaryR = r.Right;
+                            if (r.Bottom > boundaryB)
+                                boundaryB = r.Bottom;
+                        }
+
+                        //if (displayIndex == 1 && !icon.HasLargeIcon)
+                        //{
+                        //    anchorX = d.Bounds[0].X;
+                        //}
+
+                        //if (displayIndex == 1)
+                        //{
+                        //    //cache main bounds
+
+                        //    //anchorX = d.Bounds[0].X + (int)(d.Bounds[0].Width * 0.1f) - szw / 2;
+                        //    //anchorY = d.Bounds[0].Y + (int)(d.Bounds[0].Height * 0.77f) - szh / 2;
+
+                        //    //int szh = (int)((24 + paddingH) * scale + 0.5f);
+                        //    //int szw = szh * w / h;
+                        //}
+
+                        previous = i;
+                        ++displayIndex;
+                    }
+                    else if (icon.DisplayIndex != 0)
+                    {
+                        icon.DisplayIndex = 0;
+
+                        if (iconstore.Active == icon)
+                        {
+                            iconstore.SetActive(null);
+                        }
+                        icon.ClearState();
+                    }
+                }
+
+                group.nextRefresh = nextRefresh;
+                group.boundary = Rectangle.FromLTRB(boundaryL, boundaryT, boundaryR, boundaryB);
+
+                if (changed && !cursor.IsEmpty)
+                {
+                    var active = iconstore.FromPoint(cursor);
+
+                    if (iconstore.Active != active)
+                    {
+                        iconstore.SetActive(active);
+                    }
                 }
             }
 
-            if (icons[INDEX_ICON_MAIN].type != DisplayedIcon.IconType.None)
+            #endregion
+
+            //for (var i = 0; i < group.order.Length;i++)
+            //{
+            //    if (group.order[i] == 0)
+            //        break;
+
+            //    var icon = iconstore.GetIcon(group.order[i] - 1);
+            for (var i = 0; i < icons.Length;i++)
             {
-                icons[INDEX_ICON_MAIN].type = DisplayedIcon.IconType.None;
-                icons[INDEX_ICON_NOTE].type = DisplayedIcon.IconType.None;
+                var icon = icons[i];
+
+                if (icon.Visible)
+                {
+                    var image = GetImage(icon.Icon, icon.DisplayIndex == 1);
+
+                    if (image == null)
+                    {
+                        switch (icon.Type)
+                        {
+                            case IconData.IconType.LoginReward:
+
+                                DrawLoginReward(g, icon.Bounds[0], _DailyLoginDay, _ShowDailyLoginDay);
+
+                                break;
+                        }
+                    }
+                    else
+                    {
+                        var hovered = icon.Hovered && icon.Icon.Clickable;
+                        var main = icon.DisplayIndex == 1 && icon.Group.Type == Icons.IconGroup.Main;
+
+                        if (main)
+                        {
+                            g.SetClip(clip);
+                        }
+
+                        switch (icon.Type)
+                        {
+                            case IconData.IconType.Astral:
+                                {
+                                    var percent = _Astral / ASTRAL_LIMIT;
+
+                                    var b0 = icon.Bounds[0];
+                                    var b1 = icon.Bounds[1];
+
+                                    int h1, h2;
+
+                                    var cw = clip.Right - b0.X;
+
+                                    if (main)
+                                    {
+                                        //large icon has blank space above/below where it'll visually fill in, so it needs to be offset
+                                        //var percentAdjusted = percent * (38 / 50f) + 7 / 50f;
+
+                                        h1 = (int)(38f / 50 * b0.Height + 0.5f);
+                                        h2 = (int)(percent * h1 + 0.5f);
+
+                                        if (h2 >= h1)
+                                        {
+                                            h2 = b0.Height;
+                                            h1 = 0;
+                                        }
+                                        else if (h2 > 0)
+                                        {
+                                            h2 += (int)(7 / 50f * b0.Height + 0.5f);
+                                            h1 = b0.Height - h2;
+                                        }
+                                        else
+                                        {
+                                            h1 = b0.Height;
+                                        }
+                                    }
+                                    else
+                                    {
+                                        h2 = (int)(b0.Height * percent + 0.5f);
+
+                                        if (h2 > b0.Height)
+                                        {
+                                            h2 = b0.Height;
+                                            h1 = 0;
+                                        }
+                                        else
+                                        {
+                                            h1 = b0.Height - h2;
+                                        }
+                                    }
+                                    
+                                    if (cw > b0.Width)
+                                        cw = b0.Width;
+
+                                    if (h1 > 0)
+                                    {
+                                        //g.SetClip(Rectangle.Intersect(clip, new Rectangle(b0.X, b0.Y, b0.Width, h1)));
+                                        g.SetClip(new Rectangle(b0.X, b0.Y, cw, h1));
+
+                                        DrawImage(g, image, b0, b1, main ? (byte)102 : (byte)255, !main);
+                                    }
+
+                                    if (h2 > 0)
+                                    {
+                                        //g.SetClip(Rectangle.Intersect(clip, new Rectangle(b0.X, b0.Y + h1, b0.Width, h2)));
+                                        g.SetClip(new Rectangle(b0.X, b0.Y + h1, cw, h2));
+
+                                        if (main)
+                                        {
+                                            using (var ia = new ImageAttributes())
+                                            {
+                                                ia.SetColorMatrix(new ColorMatrix(new float[][] 
+                                                {
+                                                    new float[] {0.1f, 0.9f, 1.14f, 0, 0},
+                                                    new float[] {0, 0, 0, 0, 0},
+                                                    new float[] {0, 0, 0, 0, 0},
+                                                    new float[] {0, 0, 0, 0.6f, 0},
+                                                    new float[] {0, 0, 0, 0, 1}
+                                                }));
+
+                                                g.DrawImage(image, b0, b1.X, b1.Y, b1.Width, b1.Height, GraphicsUnit.Pixel, ia);
+                                            }
+                                        }
+                                        else
+                                        {
+                                            DrawImage(g, image, b0, b1, 255, false);
+                                        }
+                                    }
+
+                                    g.SetClip(clip);
+
+                                    //if (h1 > 0)
+                                    //    DrawImage(g, image, new Rectangle(b0.X, b0.Y, b0.Width, h1), new Rectangle(0, 0, b1.Width, ih1), 255, true);
+                                    //if (h2 > 0)
+                                    //{
+                                    //    DrawImage(g, image, new Rectangle(b0.X, b0.Y + h1, b0.Width, h2), new Rectangle(0, ih1, b1.Width, ih2), 255, false);
+                                    //    if (false && h1 > 0)
+                                    //    {
+                                    //        var bmp = (Bitmap)image;
+                                    //        var bxx = 0;
+
+                                    //        for (var bx = 0; bx < b1.Width; bx++)
+                                    //        {
+                                    //            var px = bmp.GetPixel(bx, ih1);
+                                    //            if (px.A != 0)
+                                    //            {
+                                    //                bxx = (int)(((float)bx / b1.Width) * b0.Width);
+                                    //                break;
+                                    //            }
+                                    //        }
+
+                                    //        using (var pen = new Pen(Color.FromArgb(127, 0, 0, 0), 1)) //
+                                    //        {
+                                    //            g.DrawLine(pen, b0.X + bxx, b0.Y + h1, b0.X+b0.Width - bxx, b0.Y + h1);
+                                    //        }
+                                    //    }
+                                    //}
+
+                                    if (main)
+                                    {
+                                        using (var path = new GraphicsPath())
+                                        {
+                                            AddTextToGraphicsPath(g, path, _Astral.ToString(), FONT_USER, StringAlignment.Center, StringAlignment.Center, icon.Bounds[0]);
+
+                                            var outlineSize = (int)(4 * scale + 0.5f);
+                                            var overflowR = clip.Right - path.GetBounds().Right - outlineSize / 2f;
+
+                                            if (overflowR < -0.5)
+                                            {
+                                                g.TranslateTransform(overflowR, 0);
+                                                DrawOutlinedText(g, path, Color.White, Color.Black, outlineSize);
+                                                g.ResetTransform();
+                                            }
+                                            else
+                                            {
+                                                DrawOutlinedText(g, path, Color.White, Color.Black, outlineSize);
+                                            }
+                                        }
+                                        //DrawOutlinedText(g, _Astral.ToString(), FONT_USER, Color.White, Color.Black, outlineSize, StringAlignment.Center, StringAlignment.Center, icon.Bounds[0]);
+                                    }
+
+                                    g.ResetClip();
+                                }
+                                break;
+                            default:
+
+                                if (main)
+                                {
+                                    g.SetClip(clip);
+
+                                    DrawImage(g, image, icon.Bounds[0], icon.Bounds[1], main ? (byte)102 : (byte)255, hovered);
+
+                                    g.ResetClip();
+                                }
+                                else
+                                {
+                                    DrawImage(g, image, icon.Bounds[0], icon.Bounds[1], !hovered && icon.Icon.Transparent ? (byte)204 : (byte)255, hovered);
+                                }
+
+                                break;
+                        }
+                    }
+
+                    //if (icon.Type == IconData.IconType.LoginReward)
+                    //{
+                    //    g.FillRectangle(Brushes.White, d.Bounds[0]);
+                    //}
+                }
             }
         }
+
+        protected IconOffset GetLargeOffset(IconData.IconType type)
+        {
+            switch (type)
+            {
+                case IconData.IconType.Astral:
+
+                    return new IconOffset(0, 0, 204);
+
+                default:
+
+                    return new IconOffset(0, 0, 128);
+            }
+        }
+
+        protected IconPadding GetPadding(IconData.IconType type)
+        {
+            switch (type)
+            {
+                case IconData.IconType.Astral:
+
+                    return new IconPadding(0, 0, 0, 0); //0, 0, -1, -1
+
+                case IconData.IconType.Daily:
+                case IconData.IconType.Weekly:
+
+                    return new IconPadding(0, 0, 0, 0); //2, 0, 1, 1
+
+                case IconData.IconType.LoginReward:
+
+                    return new IconPadding(0, -1, 2, 2);
+
+                case IconData.IconType.Login:
+
+                    return new IconPadding(-2, 0, 1, 1);
+
+                case IconData.IconType.Note:
+                case IconData.IconType.Run:
+
+                    return new IconPadding(0, 0, 1, 0);
+            }
+
+            return new IconPadding();
+        }
+
+        /// <summary>
+        /// Draws the image
+        /// </summary>
+        /// <param name="image">Image to draw</param>
+        /// <param name="dest">Destination andbounds</param>
+        /// <param name="src">Source bounds</param>
+        /// <param name="opacity">Opacity</param>
+        /// <param name="grayscale">Grayscale</param>
+        protected void DrawImage(Graphics g, Image image, Rectangle dest, Rectangle src, byte opacity = 255, bool grayscale = false)
+        {
+            if (grayscale)
+            {
+                using (var ia = new ImageAttributes())
+                {
+                    ia.SetColorMatrix(new ColorMatrix(new float[][] 
+                            {
+                                new float[] {.3f, .3f, .3f, 0, 0},
+                                new float[] {.6f, .6f, .6f, 0, 0},
+                                new float[] {.1f, .1f, .1f, 0, 0},
+                                new float[] {0, 0, 0, opacity / 255f, 0},
+                                new float[] {0, 0, 0, 0, 1}
+                            }));
+
+                    g.DrawImage(image, dest, src.X, src.Y, src.Width, src.Height, GraphicsUnit.Pixel, ia);
+                }
+            }
+            else if (opacity != 255)
+            {
+                using (var ia = new ImageAttributes())
+                {
+                    ia.SetColorMatrix(new ColorMatrix()
+                    {
+                        Matrix33 = opacity / 255f,
+                    });
+
+                    g.DrawImage(image, dest, src.X, src.Y, src.Width, src.Height, GraphicsUnit.Pixel, ia);
+                }
+            }
+            else
+            {
+                g.DrawImage(image, dest, src, GraphicsUnit.Pixel);
+            }
+        }
+
+        //protected void DrawIcon(Graphics g)
+        //{
+        //    byte displayIndex = 1;
+        //    var ofs = 0;
+        //    var previous = 0;
+
+        //    if (iconsMain != null)
+        //    {
+        //        if (iconsMain.refresh)
+        //        {
+        //            var count = 0;
 
         protected override void OnPaintBackground(PaintEventArgs e)
         {
@@ -1438,18 +3230,7 @@ namespace Gw2Launcher.UI.Controls
                         }
                     }
 
-                    DrawIcon(g);
-
-                    if (DateTime.UtcNow < _LastNote)
-                    {
-                        var hovered = activeIcon != null && activeIcon.type == DisplayedIcon.IconType.Note && activeIcon.Hovered;
-
-                        OnPaintIcon(g, DisplayedIcon.IconType.Note, Properties.Resources.mailfull, 0, 0, hovered, 255);
-                    }
-                    else
-                    {
-                        icons[INDEX_ICON_NOTE].type = DisplayedIcon.IconType.None;
-                    }
+                    bool hasBorderR = false;
 
                     if (borderLight.A != 0)
                     {
@@ -1458,7 +3239,7 @@ namespace Gw2Launcher.UI.Controls
                         g.FillRectangle(brush, 0, BORDER_SIZE, BORDER_SIZE, height-BORDER_VERTICAL); //left
                     }
 
-                    if (borderDark.A != 0)
+                    if (hasBorderR = borderDark.A != 0)
                     {
                         brush.Color = borderDark;
                         g.FillRectangle(brush, 0, height - BORDER_SIZE, width, BORDER_SIZE); //bottom
@@ -1469,6 +3250,9 @@ namespace Gw2Launcher.UI.Controls
                     {
                         var hasBorder = _Colors[isFocused ? ColorNames.AccountFocusedBorder : ColorNames.AccountActiveBorder].A != 0;
                         var hasFill = _Colors[isFocused ? ColorNames.AccountFocusedHighlight : ColorNames.AccountActiveHighlight].A != 0;
+
+                        if (!hasBorderR)
+                            hasBorderR = hasBorder;
 
                         if (hasBorder || hasFill)
                         {
@@ -1539,6 +3323,39 @@ namespace Gw2Launcher.UI.Controls
 
                         g.SmoothingMode = SmoothingMode.None;
                     }
+
+                    if (apiTimer != null && apiTimer.Pending)
+                    {
+                        if (apiTimer.Resize)
+                        {
+                            apiTimer.Resize = false;
+
+                            var scale = g.DpiX / 96f;
+                            var sz = (int)(9 * scale + 0.5f);
+
+                            apiTimer.Bounds = new Rectangle(
+                                this.Width - sz - BORDER_SIZE - 1,
+                                this.Height - sz - BORDER_SIZE - 1, //- (int)((SMALL_ICON_SIZE + 6) * scale + 0.5f) + ((int)(SMALL_ICON_SIZE * scale + 0.5f) - sz / 2) / 2 - 1, 
+                                sz,
+                                sz);
+                        }
+
+                        apiTimer.Draw(g);
+                    }
+
+                    Rectangle clip;
+
+                    if (hasBorderR)
+                        clip = new Rectangle(BORDER_SIZE, BORDER_SIZE, width - BORDER_HORIZONTAL, height - BORDER_VERTICAL);
+                    else
+                        clip = new Rectangle(0, 0, width, height);
+
+                    g.InterpolationMode = InterpolationMode.High;
+
+                    DrawIcons(g, iconstore.GetGroup(Icons.IconGroup.Main), clip);
+                    DrawIcons(g, iconstore.GetGroup(Icons.IconGroup.Top), clip);
+
+                    g.InterpolationMode = InterpolationMode.Default;
                 }
             }
         }
@@ -1655,10 +3472,18 @@ namespace Gw2Launcher.UI.Controls
             base.OnPaint(e);
         }
 
+        void iconstore_RefreshPending(object sender, EventArgs e)
+        {
+            OnRedrawRequired();
+        }
+
         protected void OnRedrawRequired()
         {
-            redraw = true;
-            this.Invalidate();
+            if (!redraw)
+            {
+                redraw = true;
+                this.Invalidate();
+            }
         }
 
         public void SetStatus(string status, StatusColors color)
@@ -1979,6 +3804,17 @@ namespace Gw2Launcher.UI.Controls
                 _AccountData = value;
                 totp = null;
 
+                if (apiTimer != null)
+                {
+                    if (changed || value.Type != Settings.AccountType.GuildWars2 || !object.ReferenceEquals(apiTimer.Api, ((Settings.IGw2Account)value).Api))
+                    {
+                        if (apiTimer.Pending)
+                            OnRedrawRequired();
+                        apiTimer.Dispose();
+                        apiTimer = null;
+                    }
+                }
+
                 if (value != null)
                 {
                     this.DisplayName = value.Name;
@@ -2062,6 +3898,18 @@ namespace Gw2Launcher.UI.Controls
                         this.LastDailyLoginUtc = gw2.LastDailyLoginUtc;
                         this.ShowDailyLoginDay = Settings.StyleShowDailyLoginDay.Value;
                         this.DailyLoginDay = gw2.DailyLoginDay;
+                        if (gw2.Api != null && (gw2.ApiTracking & Settings.ApiTracking.Astral) != 0)
+                        {
+                            this.ShowAstral = true;
+                            this.Astral = gw2.Api.Data.Wallet == null ? (ushort)0 : gw2.Api.Data.Wallet.Value.Astral;
+                        }
+                        else
+                        {
+                            this.ShowAstral = false;
+                            this.Astral = 0;
+                        }
+                        this.ShowWeeklyCompletion = gw2.ShowWeeklyCompletion;
+                        this.LastWeeklyCompletionUtc = gw2.LastWeeklyCompletionUtc;
                     }
                     else if (value.Type == Settings.AccountType.GuildWars1)
                     {
@@ -2070,16 +3918,31 @@ namespace Gw2Launcher.UI.Controls
                         this.LastDailyCompletionUtc = DateTime.MinValue;
                         this.LastDailyLoginUtc = value.LastUsedUtc;
                         this.ShowDailyLoginDay = Settings.DailyLoginDayIconFlags.None;
+                        this.ShowAstral = false;
+                        this.ShowWeeklyCompletion = false;
+                        this.LastWeeklyCompletionUtc = DateTime.MinValue;
                     }
+
+                    this.ShowRun = Settings.StyleShowRun.Value && (HasRunAfter(value.RunAfter) || HasRunAfter(Settings.GetSettings(value.Type).RunAfter.Value));
 
                     if (value.Notes != null)
                         this.LastNoteUtc = value.Notes.ExpiresLast;
-                    if (value.ColorKey.IsEmpty)
-                        this.ColorKey = Util.Color.FromUID(value.UID);
-                    else
-                        this.ColorKey = value.ColorKey;
+                    this.ColorKey = value.ColorKey;
                 }
             }
+        }
+
+        private bool HasRunAfter(Settings.RunAfter[] ra)
+        {
+            if (ra != null)
+            {
+                for (var i = 0; i < ra.Length; i++)
+                {
+                    if (ra[i].Enabled)
+                        return true;
+                }
+            }
+            return false;
         }
 
         private string _AccountName;
@@ -2151,20 +4014,15 @@ namespace Gw2Launcher.UI.Controls
             }
         }
 
-        private bool _ShowDailyLogin;
         public bool ShowDailyLogin
         {
             get
             {
-                return _ShowDailyLogin;
+                return iconstore.GetIcon(IconData.IconType.Login).Enabled;
             }
             set
             {
-                if (_ShowDailyLogin != value)
-                {
-                    _ShowDailyLogin = value;
-                    OnRedrawRequired();
-                }
+                iconstore.GetIcon(IconData.IconType.Login).Enabled = value;
             }
         }
 
@@ -2180,8 +4038,7 @@ namespace Gw2Launcher.UI.Controls
                 if (_ShowDailyLoginDay != value)
                 {
                     _ShowDailyLoginDay = value;
-                    if (_DailyLoginDay != 0)
-                        OnRedrawRequired();
+                    iconstore.GetIcon(IconData.IconType.LoginReward).Enabled = value != Settings.DailyLoginDayIconFlags.None && _DailyLoginDay != 0;
                 }
             }
         }
@@ -2198,76 +4055,219 @@ namespace Gw2Launcher.UI.Controls
                 if (_DailyLoginDay != value)
                 {
                     _DailyLoginDay = value;
-                    if (_ShowDailyLoginDay != Settings.DailyLoginDayIconFlags.None)
+                    iconstore.GetIcon(IconData.IconType.LoginReward).Enabled = _ShowDailyLoginDay != Settings.DailyLoginDayIconFlags.None && value != 0;
+                }
+            }
+        }
+
+        public bool ShowDailyCompletion
+        {
+            get
+            {
+                return iconstore.GetIcon(IconData.IconType.Daily).Enabled;
+            }
+            set
+            {
+                iconstore.GetIcon(IconData.IconType.Daily).Enabled = value;
+            }
+        }
+
+        public bool ShowWeeklyCompletion
+        {
+            get
+            {
+                return iconstore.GetIcon(IconData.IconType.Weekly).Enabled;
+            }
+            set
+            {
+                iconstore.GetIcon(IconData.IconType.Weekly).Enabled = value;
+            }
+        }
+
+        public bool ShowAstral
+        {
+            get
+            {
+                return iconstore.GetIcon(IconData.IconType.Astral).Enabled;
+            }
+            set
+            {
+                iconstore.GetIcon(IconData.IconType.Astral).Enabled = value;
+            }
+        }
+
+        private ushort _Astral;
+        public ushort Astral
+        {
+            get
+            {
+                return _Astral;
+            }
+            set
+            {
+                if (_Astral != value)
+                {
+                    _Astral = value;
+                    if (iconstore.GetIcon(IconData.IconType.Astral).Visible)
                         OnRedrawRequired();
                 }
             }
         }
 
-        private bool _ShowDailyCompletion;
-        public bool ShowDailyCompletion
+        public bool ShowRun
         {
             get
             {
-                return _ShowDailyCompletion;
+                return iconstore.GetIcon(IconData.IconType.Run).Enabled;
             }
             set
             {
-                if (_ShowDailyCompletion != value)
-                {
-                    _ShowDailyCompletion = value;
-                    OnRedrawRequired();
-                }
+                iconstore.GetIcon(IconData.IconType.Run).Enabled = value;
             }
         }
 
-        private DateTime _LastNote;
         public DateTime LastNoteUtc
         {
             get
             {
-                return _LastNote;
+                return iconstore.GetIcon(IconData.IconType.Note).Expires;
             }
             set
             {
-                if (_LastNote != value)
-                {
-                    _LastNote = value;
-                    OnRedrawRequired();
-                }
+                iconstore.GetIcon(IconData.IconType.Note).Expires = value;
             }
         }
 
-        private DateTime _LastDailyCompletion;
         public DateTime LastDailyCompletionUtc
         {
             get
             {
-                return _LastDailyCompletion;
+                return iconstore.GetIcon(IconData.IconType.Daily).Date;
             }
             set
             {
-                if (_LastDailyCompletion != value)
+                var i = iconstore.GetIcon(IconData.IconType.Daily);
+
+                if (i.Date != value)
                 {
-                    _LastDailyCompletion = value;
-                    OnRedrawRequired();
+                    i.Date = value;
+                    i.Expires = value.Date.AddDays(1);
                 }
             }
         }
 
-        private DateTime _LastDailyLogin;
+        public DateTime LastWeeklyCompletionUtc
+        {
+            get
+            {
+                return iconstore.GetIcon(IconData.IconType.Weekly).Date;
+            }
+            set
+            {
+                var i = iconstore.GetIcon(IconData.IconType.Weekly);
+
+                if (i.Date != value)
+                {
+                    i.Date = value;
+                    i.Expires = Util.Date.GetNextWeek(value, DayOfWeek.Monday, 7, 30);
+                }
+            }
+        }
+
         public DateTime LastDailyLoginUtc
         {
             get
             {
-                return _LastDailyLogin;
+                return iconstore.GetIcon(IconData.IconType.Login).Date;
             }
             set
             {
-                if (_LastDailyLogin != value)
+                var i = iconstore.GetIcon(IconData.IconType.Login);
+
+                if (i.Date != value)
                 {
-                    _LastDailyLogin = value;
+                    i.Date = value;
+                    i.Expires = value.Date.AddDays(1);
+                }
+            }
+        }
+
+        public void SetOrder(Icons.DisplayOrder order)
+        {
+            if (order == null)
+                iconstore.SetOrder(Icons.IconGroup.Main, Icons.DisplayOrder.GetDefault(Icons.IconGroup.Main));
+            else
+                iconstore.SetOrder(order);
+        }
+
+        private ApiTimer GetApiTimer()
+        {
+            if (apiTimer == null)
+            {
+                apiTimer = new ApiTimer(_AccountData);
+                apiTimer.Tick += apiTimer_Tick;
+            }
+            return apiTimer;
+        }
+
+        void apiTimer_Tick(object sender, EventArgs e)
+        {
+            if (apiTimer != null)
+            {
+                if (apiTimer.Pending)
+                {
                     OnRedrawRequired();
+                }
+                //else if (!apiTimer.Active)
+                //{
+                //    apiTimer.Dispose();
+                //    apiTimer = null;
+                //}
+            }
+
+        }
+
+        public void SetApiRequestDelay(ApiTimer.DelayType t, DateTime d)
+        {
+            if (DateTime.UtcNow < d)
+            {
+                GetApiTimer().SetTimer(t, d);
+            }
+            else if (apiTimer != null)
+            {
+                apiTimer.SetTimer(t, d);
+            }
+
+        }
+
+        public bool ApiPending
+        {
+            get
+            {
+                return apiTimer != null && apiTimer.Pending;
+            }
+            set
+            {
+                if (value || apiTimer != null)
+                {
+                    var t = GetApiTimer();
+
+                    if (t.Pending != value)
+                    {
+                        t.Pending = value;
+
+                        if (value)
+                        {
+                            t.Restart();
+                        }
+                        else if (!t.Ticking)
+                        {
+                            apiTimer.Dispose();
+                            apiTimer = null;
+                        }
+
+                        OnRedrawRequired();
+                    }
                 }
             }
         }
@@ -2401,6 +4401,18 @@ namespace Gw2Launcher.UI.Controls
                         OnRedrawRequired();
                 }
             }
+        }
+
+        public Rectangle GetIconBounds(AccountGridButton.IconData.IconType type)
+        {
+            var i = iconstore.GetIcon(type);
+
+            if (i != null && i.Visible)
+            {
+                return i.DisplayBounds;
+            }
+
+            return Rectangle.Empty;
         }
 
         public virtual void RefreshColors()

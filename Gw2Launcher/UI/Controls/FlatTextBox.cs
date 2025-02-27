@@ -61,7 +61,28 @@ namespace Gw2Launcher.UI.Controls
 
         public override Size GetPreferredSize(Size proposedSize)
         {
-            return new Size(this.TextBox.Width + this.TextBox.Margin.Horizontal, this.TextBox.Height + this.TextBox.Margin.Vertical);
+            var w = this.TextBox.Width + this.TextBox.Margin.Horizontal;
+            var h = this.TextBox.Height + this.TextBox.Margin.Vertical;
+
+            if (this.MinimumSize.Width > w)
+            {
+                w = this.MinimumSize.Width;
+            }
+            else if (this.MaximumSize.Width > 0 && this.MaximumSize.Width < w)
+            {
+                w = this.MaximumSize.Width;
+            }
+
+            if (this.MinimumSize.Height > h)
+            {
+                h = this.MinimumSize.Height;
+            }
+            else if (this.MaximumSize.Height > 0 && this.MaximumSize.Height < h)
+            {
+                h = this.MaximumSize.Height;
+            }
+
+            return new Size(w, h);
         }
 
         protected override void OnBackColorChanged(EventArgs e)

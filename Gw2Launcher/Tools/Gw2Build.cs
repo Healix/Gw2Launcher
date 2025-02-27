@@ -124,16 +124,17 @@ namespace Gw2Launcher.Tools
                 {
                     var b = GetBuildFromLatest(false);
 
-                    if (b == -1)
-                    {
-                        b = GetBuildFromLatest(true);
+                    //origin not available
+                    //if (b == -1)
+                    //{
+                    //    b = GetBuildFromLatest(true);
 
-                        if (b == -1)
-                        {
-                            //build api is dead
-                            //b = GetBuildFromApi();
-                        }
-                    }
+                    //    if (b == -1)
+                    //    {
+                    //        //build api is dead
+                    //        //b = GetBuildFromApi();
+                    //    }
+                    //}
 
                     if (b != -1)
                     {
@@ -146,9 +147,11 @@ namespace Gw2Launcher.Tools
                 {
                     Util.Logging.Log(e);
                 }
+
+                nextCheck = DateTime.UtcNow.AddSeconds(5);
             }
 
-            return -1;
+            return build;
         }
 
         public static int Build

@@ -18,13 +18,33 @@ namespace Gw2Launcher.Util
             return GetValue(args, key, out from, out to);
         }
 
-        private static string GetValue(string args, string key, out int from, out int to)
+        public static IEnumerable<string> EnumerateValue(string args, string key)
+        {
+            var i = -1;
+
+            while (true)
+            {
+                int from, to;
+                var v = GetValue(args, key, out from, out to, i);
+                if (v != null)
+                {
+                    i = to;
+                }
+                else
+                {
+                    break;
+                }
+                yield return v;
+            }
+        }
+
+        private static string GetValue(string args, string key, out int from, out int to, int startAt = -1)
         {
             from = to = -1;
             if (args == null)
                 return null;
 
-            int i = -1;
+            int i = startAt;
             int l = args.Length;
             int kl = key.Length;
 

@@ -31,6 +31,7 @@ namespace Gw2Launcher.UI
             this.allToolStripMenuItem = new Gw2Launcher.UI.Controls.ToolStripMenuItemStayOpenOnClick();
             this.launchAllToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.launchNormalToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.launchAllWithoutRunAfterToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.updateAllToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.toolStripMenuItem15 = new System.Windows.Forms.ToolStripSeparator();
             this.launchIfToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
@@ -53,8 +54,9 @@ namespace Gw2Launcher.UI
             this.toolStripMenuItem11 = new System.Windows.Forms.ToolStripSeparator();
             this.runToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.disableAutomaticLoginsToolStripMenuItem = new Gw2Launcher.UI.Controls.ToolStripMenuItemStayOpenOnClick();
-            this.disableRunAfterToolStripMenuItem = new Gw2Launcher.UI.Controls.ToolStripMenuItemStayOpenOnClick();
+            this.disableRunAfterSelectedToolStripMenuItem = new Gw2Launcher.UI.Controls.ToolStripMenuItemStayOpenOnClick();
             this.applyWindowedBoundsToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.openLocalizedExecutionFolderToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.toolStripMenuItem27 = new System.Windows.Forms.ToolStripSeparator();
             this.createShortcutSelectedToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.showOnPageToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
@@ -139,6 +141,7 @@ namespace Gw2Launcher.UI
             this.buttonMenu = new Gw2Launcher.UI.formMain.MenuButton();
             this.buttonAccountBar = new Gw2Launcher.UI.Controls.FlatShapeButton();
             this.buttonTemplates = new Gw2Launcher.UI.Controls.FlatShapeButton();
+            this.buttonLimit1 = new Gw2Launcher.UI.Controls.FlatShapeButton();
             this.buttonLaunchAll = new Gw2Launcher.UI.Controls.FlatShapeButton();
             this.buttonLaunchDaily = new Gw2Launcher.UI.Controls.FlatShapeButton();
             this.buttonKillAll = new Gw2Launcher.UI.Controls.FlatShapeButton();
@@ -150,7 +153,6 @@ namespace Gw2Launcher.UI
             this.contextMinimizeRestore = new System.Windows.Forms.ContextMenuStrip(this.components);
             this.minimizeToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.restoreToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
-            this.launchAllWithoutRunAfterToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.contextMenu.SuspendLayout();
             this.contextNotify.SuspendLayout();
             this.panelBottom.SuspendLayout();
@@ -182,7 +184,7 @@ namespace Gw2Launcher.UI
             this.newToolStripMenuItem,
             this.settingsToolStripMenuItem,
             this.toolsToolStripMenuItem1});
-            this.contextMenu.Size = new System.Drawing.Size(208, 348);
+            this.contextMenu.Size = new System.Drawing.Size(208, 370);
             // 
             // cancelPendingLaunchesToolStripMenuItem
             // 
@@ -278,6 +280,12 @@ namespace Gw2Launcher.UI
             this.launchNormalToolStripMenuItem.Text = "Launch (normal)";
             this.launchNormalToolStripMenuItem.Click += new System.EventHandler(this.launchNormalToolStripMenuItem_Click);
             // 
+            // launchAllWithoutRunAfterToolStripMenuItem
+            // 
+            this.launchAllWithoutRunAfterToolStripMenuItem.Size = new System.Drawing.Size(213, 22);
+            this.launchAllWithoutRunAfterToolStripMenuItem.Text = "Launch (without run after)";
+            this.launchAllWithoutRunAfterToolStripMenuItem.Click += new System.EventHandler(this.launchAllWithoutRunAfterToolStripMenuItem_Click);
+            // 
             // updateAllToolStripMenuItem
             // 
             this.updateAllToolStripMenuItem.Size = new System.Drawing.Size(213, 22);
@@ -357,8 +365,9 @@ namespace Gw2Launcher.UI
             this.toolStripMenuItem11,
             this.runToolStripMenuItem,
             this.disableAutomaticLoginsToolStripMenuItem,
-            this.disableRunAfterToolStripMenuItem,
+            this.disableRunAfterSelectedToolStripMenuItem,
             this.applyWindowedBoundsToolStripMenuItem,
+            this.openLocalizedExecutionFolderToolStripMenuItem,
             this.toolStripMenuItem27,
             this.createShortcutSelectedToolStripMenuItem,
             this.showOnPageToolStripMenuItem,
@@ -372,103 +381,109 @@ namespace Gw2Launcher.UI
             // 
             // launchSelectedToolStripMenuItem
             // 
-            this.launchSelectedToolStripMenuItem.Size = new System.Drawing.Size(213, 22);
+            this.launchSelectedToolStripMenuItem.Size = new System.Drawing.Size(241, 22);
             this.launchSelectedToolStripMenuItem.Text = "Launch";
             this.launchSelectedToolStripMenuItem.Click += new System.EventHandler(this.launchSelectedToolStripMenuItem_Click);
             // 
             // launchNormalSelectedToolStripMenuItem
             // 
-            this.launchNormalSelectedToolStripMenuItem.Size = new System.Drawing.Size(213, 22);
+            this.launchNormalSelectedToolStripMenuItem.Size = new System.Drawing.Size(241, 22);
             this.launchNormalSelectedToolStripMenuItem.Text = "Launch (normal)";
             this.launchNormalSelectedToolStripMenuItem.Click += new System.EventHandler(this.launchNormalSelectedToolStripMenuItem_Click);
             // 
             // launchWithoutRunAfterToolStripMenuItem
             // 
-            this.launchWithoutRunAfterToolStripMenuItem.Size = new System.Drawing.Size(213, 22);
+            this.launchWithoutRunAfterToolStripMenuItem.Size = new System.Drawing.Size(241, 22);
             this.launchWithoutRunAfterToolStripMenuItem.Text = "Launch (without run after)";
             this.launchWithoutRunAfterToolStripMenuItem.Click += new System.EventHandler(this.launchWithoutRunAfterToolStripMenuItem_Click);
             // 
             // updateSelectedToolStripMenuItem
             // 
-            this.updateSelectedToolStripMenuItem.Size = new System.Drawing.Size(213, 22);
+            this.updateSelectedToolStripMenuItem.Size = new System.Drawing.Size(241, 22);
             this.updateSelectedToolStripMenuItem.Text = "Update";
             this.updateSelectedToolStripMenuItem.Click += new System.EventHandler(this.updateSelectedToolStripMenuItem_Click);
             // 
             // toolStripMenuItem22
             // 
-            this.toolStripMenuItem22.Size = new System.Drawing.Size(210, 6);
+            this.toolStripMenuItem22.Size = new System.Drawing.Size(238, 6);
             // 
             // killProcessSelectedToolStripMenuItem
             // 
-            this.killProcessSelectedToolStripMenuItem.Size = new System.Drawing.Size(213, 22);
+            this.killProcessSelectedToolStripMenuItem.Size = new System.Drawing.Size(241, 22);
             this.killProcessSelectedToolStripMenuItem.Text = "Kill process";
             this.killProcessSelectedToolStripMenuItem.Click += new System.EventHandler(this.killProcessSelectedToolStripMenuItem_Click);
             // 
             // toolStripMenuItem11
             // 
-            this.toolStripMenuItem11.Size = new System.Drawing.Size(210, 6);
+            this.toolStripMenuItem11.Size = new System.Drawing.Size(238, 6);
             // 
             // runToolStripMenuItem
             // 
-            this.runToolStripMenuItem.Size = new System.Drawing.Size(213, 22);
+            this.runToolStripMenuItem.Size = new System.Drawing.Size(241, 22);
             this.runToolStripMenuItem.Text = "Run...";
             this.runToolStripMenuItem.Click += new System.EventHandler(this.runToolStripMenuItem_Click);
             // 
             // disableAutomaticLoginsToolStripMenuItem
             // 
-            this.disableAutomaticLoginsToolStripMenuItem.Size = new System.Drawing.Size(213, 22);
+            this.disableAutomaticLoginsToolStripMenuItem.Size = new System.Drawing.Size(241, 22);
             this.disableAutomaticLoginsToolStripMenuItem.StayOpenOnClick = true;
             this.disableAutomaticLoginsToolStripMenuItem.Text = "Disable automatic logins";
             this.disableAutomaticLoginsToolStripMenuItem.Click += new System.EventHandler(this.disableAutomaticLoginsToolStripMenuItem_Click);
             // 
-            // disableRunAfterToolStripMenuItem
+            // disableRunAfterSelectedToolStripMenuItem
             // 
-            this.disableRunAfterToolStripMenuItem.Size = new System.Drawing.Size(213, 22);
-            this.disableRunAfterToolStripMenuItem.StayOpenOnClick = true;
-            this.disableRunAfterToolStripMenuItem.Text = "Disable run after";
-            this.disableRunAfterToolStripMenuItem.Click += new System.EventHandler(this.disableRunAfterToolStripMenuItem_Click);
+            this.disableRunAfterSelectedToolStripMenuItem.Size = new System.Drawing.Size(241, 22);
+            this.disableRunAfterSelectedToolStripMenuItem.StayOpenOnClick = true;
+            this.disableRunAfterSelectedToolStripMenuItem.Text = "Disable run after";
+            this.disableRunAfterSelectedToolStripMenuItem.Click += new System.EventHandler(this.disableRunAfterSelectedToolStripMenuItem_Click);
             // 
             // applyWindowedBoundsToolStripMenuItem
             // 
-            this.applyWindowedBoundsToolStripMenuItem.Size = new System.Drawing.Size(213, 22);
+            this.applyWindowedBoundsToolStripMenuItem.Size = new System.Drawing.Size(241, 22);
             this.applyWindowedBoundsToolStripMenuItem.Text = "Apply windowed bounds";
             this.applyWindowedBoundsToolStripMenuItem.Click += new System.EventHandler(this.applyWindowedBoundsToolStripMenuItem_Click);
             // 
+            // openLocalizedExecutionFolderToolStripMenuItem
+            // 
+            this.openLocalizedExecutionFolderToolStripMenuItem.Size = new System.Drawing.Size(241, 22);
+            this.openLocalizedExecutionFolderToolStripMenuItem.Text = "Open localized execution folder";
+            this.openLocalizedExecutionFolderToolStripMenuItem.Click += new System.EventHandler(this.openLocalizedExecutionFolderToolStripMenuItem_Click);
+            // 
             // toolStripMenuItem27
             // 
-            this.toolStripMenuItem27.Size = new System.Drawing.Size(210, 6);
+            this.toolStripMenuItem27.Size = new System.Drawing.Size(238, 6);
             // 
             // createShortcutSelectedToolStripMenuItem
             // 
-            this.createShortcutSelectedToolStripMenuItem.Size = new System.Drawing.Size(213, 22);
+            this.createShortcutSelectedToolStripMenuItem.Size = new System.Drawing.Size(241, 22);
             this.createShortcutSelectedToolStripMenuItem.Text = "Create desktop shortcut";
             this.createShortcutSelectedToolStripMenuItem.Click += new System.EventHandler(this.createShortcutSelectedToolStripMenuItem_Click);
             // 
             // showOnPageToolStripMenuItem
             // 
-            this.showOnPageToolStripMenuItem.Size = new System.Drawing.Size(213, 22);
+            this.showOnPageToolStripMenuItem.Size = new System.Drawing.Size(241, 22);
             this.showOnPageToolStripMenuItem.Text = "Show on page...";
             this.showOnPageToolStripMenuItem.Click += new System.EventHandler(this.showOnPageToolStripMenuItem_Click);
             // 
             // pinToTopToolStripMenuItem
             // 
-            this.pinToTopToolStripMenuItem.Size = new System.Drawing.Size(213, 22);
+            this.pinToTopToolStripMenuItem.Size = new System.Drawing.Size(241, 22);
             this.pinToTopToolStripMenuItem.Text = "Pin to top";
             this.pinToTopToolStripMenuItem.Click += new System.EventHandler(this.pinToTopToolStripMenuItem_Click);
             // 
             // cloneToolStripMenuItem
             // 
-            this.cloneToolStripMenuItem.Size = new System.Drawing.Size(213, 22);
+            this.cloneToolStripMenuItem.Size = new System.Drawing.Size(241, 22);
             this.cloneToolStripMenuItem.Text = "Clone";
             this.cloneToolStripMenuItem.Click += new System.EventHandler(this.cloneToolStripMenuItem_Click);
             // 
             // toolStripMenuItem8
             // 
-            this.toolStripMenuItem8.Size = new System.Drawing.Size(210, 6);
+            this.toolStripMenuItem8.Size = new System.Drawing.Size(238, 6);
             // 
             // clearSelectionToolStripMenuItem
             // 
-            this.clearSelectionToolStripMenuItem.Size = new System.Drawing.Size(213, 22);
+            this.clearSelectionToolStripMenuItem.Size = new System.Drawing.Size(241, 22);
             this.clearSelectionToolStripMenuItem.Text = "Clear selection";
             this.clearSelectionToolStripMenuItem.Click += new System.EventHandler(this.clearSelectionToolStripMenuItem_Click);
             // 
@@ -1017,6 +1032,7 @@ namespace Gw2Launcher.UI
             this.panelTop.Controls.Add(this.buttonMenu);
             this.panelTop.Controls.Add(this.buttonAccountBar);
             this.panelTop.Controls.Add(this.buttonTemplates);
+            this.panelTop.Controls.Add(this.buttonLimit1);
             this.panelTop.Controls.Add(this.buttonLaunchAll);
             this.panelTop.Controls.Add(this.buttonLaunchDaily);
             this.panelTop.Controls.Add(this.buttonKillAll);
@@ -1094,6 +1110,31 @@ namespace Gw2Launcher.UI
             this.buttonTemplates.Visible = false;
             this.buttonTemplates.Click += new System.EventHandler(this.buttonTemplates_Click);
             // 
+            // buttonLimit1
+            // 
+            this.buttonLimit1.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom) 
+            | System.Windows.Forms.AnchorStyles.Left)));
+            this.buttonLimit1.BackColorHoveredName = Gw2Launcher.UI.UiColors.Colors.BarLimit1BackColorHovered;
+            this.buttonLimit1.BackColorName = Gw2Launcher.UI.UiColors.Colors.BarLimit1BackColor;
+            this.buttonLimit1.BackColorSelectedHoveredName = Gw2Launcher.UI.UiColors.Colors.BarLimit1EnabledBackColorHovered;
+            this.buttonLimit1.BackColorSelectedName = Gw2Launcher.UI.UiColors.Colors.BarLimit1EnabledBackColor;
+            this.buttonLimit1.BorderColorName = Gw2Launcher.UI.UiColors.Colors.BarLimit1Border;
+            this.buttonLimit1.BorderColorSelectedName = Gw2Launcher.UI.UiColors.Colors.BarLimit1EnabledBorder;
+            this.buttonLimit1.BorderStyle = ((System.Windows.Forms.AnchorStyles)((((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom) 
+            | System.Windows.Forms.AnchorStyles.Left) 
+            | System.Windows.Forms.AnchorStyles.Right)));
+            this.buttonLimit1.Cursor = Gw2Launcher.Windows.Cursors.Hand;
+            this.buttonLimit1.ForeColorName = Gw2Launcher.UI.UiColors.Colors.BarLimit1ForeColor;
+            this.buttonLimit1.ForeColorSelectedName = Gw2Launcher.UI.UiColors.Colors.BarLimit1EnabledForeColor;
+            this.buttonLimit1.LineSize = 4;
+            this.buttonLimit1.Location = new System.Drawing.Point(76, 0);
+            this.buttonLimit1.Margin = new System.Windows.Forms.Padding(2, 0, 0, 0);
+            this.buttonLimit1.Shape = Gw2Launcher.UI.Controls.FlatShapeButton.IconShape.Limit1;
+            this.buttonLimit1.ShapeSize = new System.Drawing.Size(2, 16);
+            this.buttonLimit1.Size = new System.Drawing.Size(20, 37);
+            this.buttonLimit1.Visible = false;
+            this.buttonLimit1.Click += new System.EventHandler(this.buttonLimit1_Click);
+            // 
             // buttonLaunchAll
             // 
             this.buttonLaunchAll.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom) 
@@ -1106,13 +1147,13 @@ namespace Gw2Launcher.UI
             | System.Windows.Forms.AnchorStyles.Right)));
             this.buttonLaunchAll.Cursor = Gw2Launcher.Windows.Cursors.Hand;
             this.buttonLaunchAll.ForeColorName = Gw2Launcher.UI.UiColors.Colors.BarLaunchAllForeColor;
-            this.buttonLaunchAll.Location = new System.Drawing.Point(76, 0);
+            this.buttonLaunchAll.Location = new System.Drawing.Point(98, 0);
             this.buttonLaunchAll.Margin = new System.Windows.Forms.Padding(2, 0, 0, 0);
             this.buttonLaunchAll.ShapeDirection = System.Windows.Forms.ArrowDirection.Right;
             this.buttonLaunchAll.ShapeSize = new System.Drawing.Size(6, 8);
             this.buttonLaunchAll.Size = new System.Drawing.Size(30, 37);
             this.buttonLaunchAll.Visible = false;
-            this.buttonLaunchAll.Click += new System.EventHandler(this.launchAllToolStripMenuItem_Click);
+            this.buttonLaunchAll.MouseClick += new System.Windows.Forms.MouseEventHandler(this.buttonLaunchAll_MouseClick);
             // 
             // buttonLaunchDaily
             // 
@@ -1126,13 +1167,13 @@ namespace Gw2Launcher.UI
             | System.Windows.Forms.AnchorStyles.Right)));
             this.buttonLaunchDaily.Cursor = Gw2Launcher.Windows.Cursors.Hand;
             this.buttonLaunchDaily.ForeColorName = Gw2Launcher.UI.UiColors.Colors.BarLaunchDailyForeColor;
-            this.buttonLaunchDaily.Location = new System.Drawing.Point(108, 0);
+            this.buttonLaunchDaily.Location = new System.Drawing.Point(130, 0);
             this.buttonLaunchDaily.Margin = new System.Windows.Forms.Padding(2, 0, 0, 0);
             this.buttonLaunchDaily.ShapeDirection = System.Windows.Forms.ArrowDirection.Right;
             this.buttonLaunchDaily.ShapeSize = new System.Drawing.Size(6, 8);
             this.buttonLaunchDaily.Size = new System.Drawing.Size(30, 37);
             this.buttonLaunchDaily.Visible = false;
-            this.buttonLaunchDaily.Click += new System.EventHandler(this.buttonLaunchDaily_Click);
+            this.buttonLaunchDaily.MouseClick += new System.Windows.Forms.MouseEventHandler(this.buttonLaunchDaily_MouseClick);
             // 
             // buttonKillAll
             // 
@@ -1146,7 +1187,7 @@ namespace Gw2Launcher.UI
             | System.Windows.Forms.AnchorStyles.Right)));
             this.buttonKillAll.Cursor = Gw2Launcher.Windows.Cursors.Hand;
             this.buttonKillAll.ForeColorName = Gw2Launcher.UI.UiColors.Colors.BarCloseAllForeColor;
-            this.buttonKillAll.Location = new System.Drawing.Point(140, 0);
+            this.buttonKillAll.Location = new System.Drawing.Point(162, 0);
             this.buttonKillAll.Margin = new System.Windows.Forms.Padding(2, 0, 0, 0);
             this.buttonKillAll.Shape = Gw2Launcher.UI.Controls.FlatShapeButton.IconShape.X;
             this.buttonKillAll.ShapeSize = new System.Drawing.Size(7, 7);
@@ -1166,7 +1207,7 @@ namespace Gw2Launcher.UI
             | System.Windows.Forms.AnchorStyles.Right)));
             this.buttonMinimizeRestoreAll.Cursor = Gw2Launcher.Windows.Cursors.Hand;
             this.buttonMinimizeRestoreAll.ForeColorName = Gw2Launcher.UI.UiColors.Colors.BarMinimizeAllForeColor;
-            this.buttonMinimizeRestoreAll.Location = new System.Drawing.Point(172, 0);
+            this.buttonMinimizeRestoreAll.Location = new System.Drawing.Point(194, 0);
             this.buttonMinimizeRestoreAll.Margin = new System.Windows.Forms.Padding(2, 0, 0, 0);
             this.buttonMinimizeRestoreAll.Shape = Gw2Launcher.UI.Controls.FlatShapeButton.IconShape.SquareAndLine;
             this.buttonMinimizeRestoreAll.ShapeDirection = System.Windows.Forms.ArrowDirection.Down;
@@ -1184,9 +1225,9 @@ namespace Gw2Launcher.UI
             this.labelTitle.BackColorName = Gw2Launcher.UI.UiColors.Colors.BarBackColor;
             this.labelTitle.Font = new System.Drawing.Font("Segoe UI", 8.25F);
             this.labelTitle.ForeColorName = Gw2Launcher.UI.UiColors.Colors.BarTitle;
-            this.labelTitle.Location = new System.Drawing.Point(202, 1);
+            this.labelTitle.Location = new System.Drawing.Point(224, 1);
             this.labelTitle.Margin = new System.Windows.Forms.Padding(0, 1, 0, 1);
-            this.labelTitle.Size = new System.Drawing.Size(215, 35);
+            this.labelTitle.Size = new System.Drawing.Size(193, 35);
             this.labelTitle.Text = "Launcher";
             // 
             // buttonMinimize
@@ -1247,12 +1288,6 @@ namespace Gw2Launcher.UI
             this.restoreToolStripMenuItem.Size = new System.Drawing.Size(123, 22);
             this.restoreToolStripMenuItem.Text = "Restore";
             this.restoreToolStripMenuItem.Click += new System.EventHandler(this.minimizeRestoreToolStripMenuItem_Click);
-            // 
-            // launchAllWithoutRunAfterToolStripMenuItem
-            // 
-            this.launchAllWithoutRunAfterToolStripMenuItem.Size = new System.Drawing.Size(213, 22);
-            this.launchAllWithoutRunAfterToolStripMenuItem.Text = "Launch (without run after)";
-            this.launchAllWithoutRunAfterToolStripMenuItem.Click += new System.EventHandler(this.launchAllWithoutRunAfterToolStripMenuItem_Click);
             // 
             // formMain
             // 
@@ -1407,7 +1442,7 @@ namespace Gw2Launcher.UI
         private Controls.FlatShapeButton buttonAccountBar;
         private Controls.FlatShapeButton buttonMinimizeRestoreAll;
         private System.Windows.Forms.ToolStripMenuItem runToolStripMenuItem;
-        private Controls.ToolStripMenuItemStayOpenOnClick disableRunAfterToolStripMenuItem;
+        private Controls.ToolStripMenuItemStayOpenOnClick disableRunAfterSelectedToolStripMenuItem;
         private Controls.ToolStripMenuItemStayOpenOnClick disableRunAfterToolStripMenuItem1;
         private Controls.ToolStripMenuItemStayOpenOnClick disableRunAfterToolStripMenuItem2;
         private Controls.FlatShapeButton buttonTemplates;
@@ -1419,5 +1454,7 @@ namespace Gw2Launcher.UI
         private Controls.FlatShapeButton buttonLaunchDaily;
         private System.Windows.Forms.ToolStripMenuItem launchWithoutRunAfterToolStripMenuItem;
         private System.Windows.Forms.ToolStripMenuItem launchAllWithoutRunAfterToolStripMenuItem;
+        private Controls.FlatShapeButton buttonLimit1;
+        private System.Windows.Forms.ToolStripMenuItem openLocalizedExecutionFolderToolStripMenuItem;
     }
 }

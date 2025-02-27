@@ -14,7 +14,80 @@ namespace Gw2Launcher.Util
         /// Called when the scheduled event is ready
         /// </summary>
         /// <returns>The number of milliseconds until the next call or -1 to cancel</returns>
-        public delegate int ScheduledEventCallbackEventHandler();
+        public delegate Ticks ScheduledEventCallbackEventHandler();
+
+        private const RegisterOptions DEFAULT_OPTIONS = RegisterOptions.Default;
+
+        [Flags]
+        public enum RegisterOptions : byte
+        {
+            None = 0,
+            /// <summary>
+            /// If the event is already registered, it will be replaced; if not set, the current registration will be ignored
+            /// </summary>
+            Overwrite = 1,
+            /// <summary>
+            /// Registrations from a different thread will be added asynchronously
+            /// </summary>
+            Async = 2,
+
+            Default = Overwrite | Async,
+        }
+
+        public enum TickType : byte
+        {
+            None,
+            /// <summary>
+            /// Number of ticks until the event occurs
+            /// </summary>
+            Ticks,
+            /// <summary>
+            /// Number of milliseconds until the event occurs
+            /// </summary>
+            Milliseconds,
+            /// <summary>
+            /// Number of ticks in milliseconds until the event occurs
+            /// </summary>
+            MillisecondTicks,
+        }
+
+        public struct Ticks
+        {
+            public Ticks(TickType type, long ticks)
+            {
+                this.Value = ticks;
+                this.Type = type;
+            }
+
+            public Ticks(int ms)
+            {
+                this.Value = ms;
+                this.Type = TickType.Milliseconds;
+            }
+
+            public Ticks(long ticks)
+            {
+                this.Value = ticks;
+                this.Type = TickType.Ticks;
+            }
+
+            public Ticks(DateTime d)
+            {
+                this.Value = d.Ticks;
+                this.Type = TickType.Ticks;
+            }
+
+            public long Value;
+            public TickType Type;
+
+            public static Ticks None
+            {
+                get
+                {
+                    return new Ticks(TickType.None, -1);
+                }
+            }
+        }
 
         private class Node
         {
@@ -91,19 +164,59 @@ namespace Gw2Launcher.Util
             context = SynchronizationContext.Current;
             contextId = Thread.CurrentThread.ManagedThreadId;
         }
+        
+        /// <summary>
+        /// The event will be called at the specified date
+        /// </summary>
+        public static void Register(ScheduledEventCallbackEventHandler e, DateTime d, RegisterOptions options = DEFAULT_OPTIONS)
+        {
+            Register(e, d.Ticks / 10000 + 1, options);
+        }
+
+        public static void Register(ScheduledEventCallbackEventHandler e, Ticks r, RegisterOptions options = DEFAULT_OPTIONS)
+        {
+            switch (r.Type)
+            {
+                case TickType.Milliseconds:
+
+                    Register(e, (int)r.Value, options);
+
+                    break;
+                case TickType.MillisecondTicks:
+
+                    Register(e, r.Value, options);
+
+                    break;
+                case TickType.Ticks:
+
+                    Register(e, r.Value / 10000, options);
+
+                    break;
+            }
+        }
 
         /// <summary>
         /// The event will be called at the specified time in milliseconds (ticks / 10000)
         /// </summary>
-        public static void Register(ScheduledEventCallbackEventHandler e, long millis)
+        public static void Register(ScheduledEventCallbackEventHandler e, long millis, RegisterOptions options = DEFAULT_OPTIONS)
         {
             if (contextId != Thread.CurrentThread.ManagedThreadId)
             {
-                context.Send(
+                SendOrPostCallback c = 
                     delegate
                     {
-                        Register(e, millis);
-                    }, null);
+                        Register(e, millis, options);
+                    };
+
+                if ((options & RegisterOptions.Async) != 0)
+                {
+                    context.Post(c, null);
+                }
+                else
+                {
+                    context.Send(c, null);
+                }
+
                 return;
             }
 
@@ -114,7 +227,7 @@ namespace Gw2Launcher.Util
                 events[e] = n;
                 count++;
             }
-            else
+            else if ((options & RegisterOptions.Overwrite) != 0)
             {
                 if (first == n)
                 {
@@ -129,6 +242,10 @@ namespace Gw2Launcher.Util
                 }
 
                 n.Detach();
+            }
+            else
+            {
+                return;
             }
 
             n.ticks = millis + 1;
@@ -139,30 +256,36 @@ namespace Gw2Launcher.Util
                 if (t < 0)
                     t = 0;
 
-                context.Send(
-                    delegate
-                    {
-                        if (t >= int.MaxValue)
-                            timer.Interval = int.MaxValue;
-                        else
-                            timer.Interval = t + 1;
-                        timer.Enabled = true;
-                    }, null);
+                if (t >= int.MaxValue)
+                    timer.Interval = int.MaxValue;
+                else
+                    timer.Interval = t + 1;
+                timer.Enabled = true;
             }
         }
 
         /// <summary>
         /// The event will be called after the specified amount of milliseconds
         /// </summary>
-        public static void Register(ScheduledEventCallbackEventHandler e, int millisToNext)
+        public static void Register(ScheduledEventCallbackEventHandler e, int millisToNext, RegisterOptions options = DEFAULT_OPTIONS)
         {
             if (contextId != Thread.CurrentThread.ManagedThreadId)
             {
-                context.Send(
+                SendOrPostCallback c =
                     delegate
                     {
                         Register(e, millisToNext);
-                    }, null);
+                    };
+
+                if ((options & RegisterOptions.Async) != 0)
+                {
+                    context.Post(c, null);
+                }
+                else
+                {
+                    context.Send(c, null);
+                }
+
                 return;
             }
 
@@ -173,7 +296,7 @@ namespace Gw2Launcher.Util
                 events[e] = n;
                 count++;
             }
-            else
+            else if ((options & RegisterOptions.Overwrite) != 0)
             {
                 if (first == n)
                 {
@@ -188,6 +311,10 @@ namespace Gw2Launcher.Util
                 }
 
                 n.Detach();
+            }
+            else
+            {
+                return;
             }
 
             n.ticks = DateTime.UtcNow.Ticks / 10000 + millisToNext + 1;
@@ -308,6 +435,22 @@ namespace Gw2Launcher.Util
             return _first;
         }
 
+        public static bool IsRegistered(ScheduledEventCallbackEventHandler e)
+        {
+            if (contextId != Thread.CurrentThread.ManagedThreadId)
+            {
+                var b = false;
+                context.Send(
+                    delegate
+                    {
+                        b = IsRegistered(e);
+                    }, null);
+                return b;
+            }
+
+            return events.ContainsKey(e);
+        }
+
         public static DateTime GetDate(ScheduledEventCallbackEventHandler e)
         {
             if (contextId != Thread.CurrentThread.ManagedThreadId)
@@ -328,6 +471,34 @@ namespace Gw2Launcher.Util
             return new DateTime((n.ticks - 1) * 10000, DateTimeKind.Utc);
         }
 
+        /// <summary>
+        /// Executes the action on the scheduled events thread
+        /// </summary>
+        public static void Invoke(Action a, bool async)
+        {
+            if (contextId != Thread.CurrentThread.ManagedThreadId)
+            {
+                SendOrPostCallback c =
+                    delegate
+                    {
+                        a();
+                    };
+
+                if (async)
+                {
+                    context.Post(c, null);
+                }
+                else
+                {
+                    context.Send(c, null);
+                }
+            }
+            else
+            {
+                a();
+            }
+        }
+
         static void timer_Tick(object sender, EventArgs e)
         {
             var ticks = DateTime.UtcNow.Ticks / 10000;
@@ -335,14 +506,46 @@ namespace Gw2Launcher.Util
             while (first != null && ticks >= first.ticks)
             {
                 var n = RemoveFirst();
-                var ms = n.callback();
+                Ticks r;
 
-                if (ms != -1)
+                try
+                {
+                    r = n.callback();
+                }
+                catch (Exception ex)
+                {
+                    if (Util.Logging.Enabled)
+                    {
+                        Util.Logging.LogEvent(ex);
+                    }
+                    r = new Ticks();
+                }
+
+                if (r.Type != TickType.None)
                 {
                     if (!events.ContainsKey(n.callback))
                     {
                         n.previous = n.next = null;
-                        n.ticks = ticks + ms;
+
+                        switch (r.Type)
+                        {
+                            case TickType.Milliseconds:
+
+                                n.ticks = ticks + r.Value + 1;
+
+                                break;
+                            case TickType.MillisecondTicks:
+
+                                n.ticks = r.Value + 1;
+
+                                break;
+                            case TickType.Ticks:
+                            default:
+
+                                n.ticks = r.Value / 10000 + 1;
+
+                                break;
+                        }
 
                         events[n.callback] = n;
                         count++;
@@ -367,28 +570,28 @@ namespace Gw2Launcher.Util
             }
         }
 
-        static void OnSystemWakeup()
-        {
-            if (contextId != Thread.CurrentThread.ManagedThreadId)
-            {
-                context.Send(
-                    delegate
-                    {
-                        OnSystemWakeup();
-                    }, null);
-                return;
-            }
+        //static void OnSystemWakeup()
+        //{
+        //    if (contextId != Thread.CurrentThread.ManagedThreadId)
+        //    {
+        //        context.Send(
+        //            delegate
+        //            {
+        //                OnSystemWakeup();
+        //            }, null);
+        //        return;
+        //    }
 
-            if (first != null)
-            {
-                var ticks = DateTime.UtcNow.Ticks / 10000;
-                ticks = first.ticks - ticks;
-                if (ticks < 1)
-                    ticks = 1;
-                else if (ticks > int.MaxValue)
-                    ticks = int.MaxValue;
-                timer.Interval = (int)ticks;
-            }
-        }
+        //    if (first != null)
+        //    {
+        //        var ticks = DateTime.UtcNow.Ticks / 10000;
+        //        ticks = first.ticks - ticks;
+        //        if (ticks < 1)
+        //            ticks = 1;
+        //        else if (ticks > int.MaxValue)
+        //            ticks = int.MaxValue;
+        //        timer.Interval = (int)ticks;
+        //    }
+        //}
     }
 }

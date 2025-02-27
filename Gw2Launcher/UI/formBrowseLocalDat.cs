@@ -338,7 +338,7 @@ namespace Gw2Launcher.UI
                         break;
                     case Client.FileManager.FileType.Gfx:
 
-                        var gfxs = Settings.GfxFiles.GetKeys();
+                        var gfxs = Settings.GfxFiles.GetValues();
 
                         for (var i = -1; i < gfxs.Length; i++)
                         {
@@ -347,7 +347,7 @@ namespace Gw2Launcher.UI
                                 gfx = Client.FileManager.GetDefaultPath(Client.FileManager.FileType.Gfx);
                             else
                             {
-                                var _gfx = Settings.GfxFiles[gfxs[i]];
+                                var _gfx = gfxs[i];
                                 if (_gfx.HasValue && !string.IsNullOrEmpty(_gfx.Value.Path))
                                     gfx = _gfx.Value.Path;
                                 else

@@ -151,7 +151,7 @@ namespace Gw2Launcher.Windows
                 try
                 {
                     Initialize();
-                    isSupported = true;
+                    isSupported = mgr != null;
                 }
                 catch
                 {
@@ -180,29 +180,54 @@ namespace Gw2Launcher.Windows
             {
                 if (!isSupported)
                     return false;
+                if (volume != null)
+                    return true;
 
                 IAudioSessionEnumerator sessionEnumerator = null;
 
                 try
                 {
                     mgr.GetSessionEnumerator(out sessionEnumerator);
-                    int count;
-                    sessionEnumerator.GetCount(out count);
 
-                    for (int i = 0; i < count; i++)
+                    if (sessionEnumerator != null)
                     {
-                        IAudioSessionControl2 ctl;
-                        sessionEnumerator.GetSession(i, out ctl);
-                        int cpid;
-                        ctl.GetProcessId(out cpid);
+                        int count;
+                        sessionEnumerator.GetCount(out count);
 
-                        if (cpid == processId)
+                        for (int i = 0; i < count; i++)
                         {
-                            volume = ctl as ISimpleAudioVolume;
-                            return true;
-                        }
+                            IAudioSessionControl2 ctl;
+                            sessionEnumerator.GetSession(i, out ctl);
 
-                        Marshal.ReleaseComObject(ctl);
+                            if (ctl != null)
+                            {
+                                try
+                                {
+                                    int cpid;
+                                    ctl.GetProcessId(out cpid);
+
+                                    if (cpid == processId && ctl is ISimpleAudioVolume)
+                                    {
+                                        volume = (ISimpleAudioVolume)ctl;
+                                        ctl = null;
+
+                                        return true;
+                                    }
+                                }
+                                finally
+                                {
+                                    if (ctl != null)
+                                        Marshal.ReleaseComObject(ctl);
+                                }
+                            }
+                        }
+                    }
+                }
+                catch (Exception e)
+                {
+                    if (Util.Logging.Enabled)
+                    {
+                        Util.Logging.LogEvent("Error querying volume", e);
                     }
                 }
                 finally
@@ -227,19 +252,23 @@ namespace Gw2Launcher.Windows
                 try
                 {
                     mgr.GetSessionEnumerator(out sessionEnumerator);
-                    int count;
-                    sessionEnumerator.GetCount(out count);
 
-                    for (int i = 0; i < count; i++)
+                    if (sessionEnumerator != null)
                     {
-                        IAudioSessionControl2 ctl;
-                        sessionEnumerator.GetSession(i, out ctl);
-                        int cpid;
-                        ctl.GetProcessId(out cpid);
+                        int count;
+                        sessionEnumerator.GetCount(out count);
 
-                        Marshal.ReleaseComObject(ctl);
+                        for (int i = 0; i < count; i++)
+                        {
+                            IAudioSessionControl2 ctl;
+                            sessionEnumerator.GetSession(i, out ctl);
+                            int cpid;
+                            ctl.GetProcessId(out cpid);
 
-                        yield return cpid;
+                            Marshal.ReleaseComObject(ctl);
+
+                            yield return cpid;
+                        }
                     }
                 }
                 finally
@@ -382,26 +411,46 @@ namespace Gw2Launcher.Windows
                 mgr = (IAudioSessionManager2)o;
 
                 mgr.GetSessionEnumerator(out sessionEnumerator);
-                int count;
-                sessionEnumerator.GetCount(out count);
 
-                ISimpleAudioVolume volumeControl = null;
-                for (int i = 0; i < count; i++)
+                if (sessionEnumerator != null)
                 {
-                    IAudioSessionControl2 ctl;
-                    sessionEnumerator.GetSession(i, out ctl);
-                    int cpid;
-                    ctl.GetProcessId(out cpid);
+                    int count;
+                    sessionEnumerator.GetCount(out count);
 
-                    if (cpid == pid)
+                    ISimpleAudioVolume volumeControl = null;
+                    for (int i = 0; i < count; i++)
                     {
-                        volumeControl = ctl as ISimpleAudioVolume;
-                        break;
+                        IAudioSessionControl2 ctl;
+                        sessionEnumerator.GetSession(i, out ctl);
+                        if (ctl != null)
+                        {
+                            try
+                            {
+                                int cpid;
+                                ctl.GetProcessId(out cpid);
+
+                                if (cpid == pid)
+                                {
+                                    volumeControl = ctl as ISimpleAudioVolume;
+                                    if (volumeControl != null)
+                                    {
+                                        ctl = null;
+                                        break;
+                                    }
+                                }
+                            }
+                            finally
+                            {
+                                if (ctl != null)
+                                    Marshal.ReleaseComObject(ctl);
+                            }
+                        }
                     }
-                    Marshal.ReleaseComObject(ctl);
+
+                    return volumeControl;
                 }
 
-                return volumeControl;
+                return null;
             }
             finally
             {

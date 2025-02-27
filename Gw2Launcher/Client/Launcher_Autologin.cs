@@ -255,6 +255,11 @@ namespace Gw2Launcher.Client
                             return false;
                         }
 
+                        if (Util.Logging.Enabled)
+                        {
+                            Util.Logging.LogEvent(q.Account.Settings, "TOTP code entered");
+                        }
+
                         if (clipboard.HasText)
                             await Windows.Clipboard.SetClipboardText(clipboard.Text);
                     }
@@ -993,7 +998,13 @@ namespace Gw2Launcher.Client
                     if (GetLauncherType() == LauncherType.CN)
                         tabs = 6;
                     else if (q.Account.hostType == WindowWatcher.HostType.CEF)
-                        tabs = 14;
+                    {
+                        var s = q.Account.Session;
+                        if (s != null && s.Provider != Account.Provider.None)
+                            tabs = 15;
+                        else
+                            tabs = 14;
+                    }
                     else
                         tabs = 1;
 
@@ -1084,7 +1095,16 @@ namespace Gw2Launcher.Client
                     }
 
                     //paste
-                    var c = Security.Credentials.ToCharArray(q.Account.Settings.Password.ToSecureString());
+                    char[] c;
+
+                    try
+                    {
+                        c = Security.Credentials.ToCharArray(q.Account.Settings.Password.ToSecureString());
+                    }
+                    catch
+                    {
+                        throw new Exception("Unable to decrypt password");
+                    }
 
                     try
                     {
@@ -1189,6 +1209,9 @@ namespace Gw2Launcher.Client
                                     }
                                 }
 
+                                var pressed = true;
+                                string clipboard2;
+
                                 //copy to clipboard and verify
                                 try
                                 {
@@ -1199,35 +1222,60 @@ namespace Gw2Launcher.Client
                                     }
                                     listener.Reset();
                                     Windows.Keyboard.SendKey(handle, System.Windows.Forms.Keys.C, Windows.Keyboard.KeyMessage.Press, false);
-                                }
-                                finally
-                                {
-                                    Windows.Keyboard.SetKeyState(System.Windows.Forms.Keys.ControlKey, false);
-                                }
 
-                                wait();
+                                    wait();
 
-                                if (q.Account.hostType == WindowWatcher.HostType.CEF)
-                                {
-                                    Windows.Clipboard.SetBlocked();
-                                }
-
-                                string clipboard2;
-
-                                if (listener.Enabled)
-                                {
-                                    if (await listener.Wait(verify * 1500, false))
+                                    if (q.Account.hostType == WindowWatcher.HostType.CEF)
                                     {
-                                        clipboard2 = await Windows.Clipboard.GetClipboardText(500);
+                                        Windows.Clipboard.SetBlocked();
+                                    }
+
+                                    var wt = 1500; //verify * 1500
+                                    if (verify > 1)
+                                        wt = 5000;
+
+                                    if (listener.Enabled)
+                                    {
+                                        var b = await listener.Wait(500, false);
+
+                                        pressed = false;
+                                        Windows.Keyboard.SetKeyState(System.Windows.Forms.Keys.ControlKey, false);
+
+                                        if (b)
+                                        {
+                                            clipboard2 = await Windows.Clipboard.GetClipboardText(500);
+                                        }
+                                        else
+                                        {
+                                            if (await listener.Wait(wt - 500, false))
+                                            {
+                                                clipboard2 = await Windows.Clipboard.GetClipboardText(500);
+                                            }
+                                            else
+                                            {
+                                                clipboard2 = null;
+                                            }
+                                        }
                                     }
                                     else
                                     {
-                                        clipboard2 = null;
+                                        clipboard2 = await Windows.Clipboard.GetClipboardText(500);
+
+                                        pressed = false;
+                                        Windows.Keyboard.SetKeyState(System.Windows.Forms.Keys.ControlKey, false);
+
+                                        if (clipboard2 == null)
+                                        {
+                                            clipboard2 = await Windows.Clipboard.GetClipboardText(wt - 500);
+                                        }
                                     }
                                 }
-                                else
+                                finally
                                 {
-                                    clipboard2 = await Windows.Clipboard.GetClipboardText(verify * 1500);
+                                    if (pressed)
+                                    {
+                                        Windows.Keyboard.SetKeyState(System.Windows.Forms.Keys.ControlKey, false);
+                                    }
                                 }
 
                                 if (clipboard2 == null)
@@ -1285,7 +1333,7 @@ namespace Gw2Launcher.Client
                     }
 
                     if (clipboard.HasText)
-                        await Windows.Clipboard.SetClipboardText(clipboard.Text, 1000);
+                        await Windows.Clipboard.SetClipboardText(clipboard.Text);
 
                     if (Util.Logging.Enabled)
                     {
@@ -1436,6 +1484,13 @@ namespace Gw2Launcher.Client
 
                                     e.Action = Windows.Clipboard.DataRequestedEventArgs.ResponseAction.Skip;
                                 }
+                                else
+                                {
+                                    if (Util.Logging.Enabled)
+                                    {
+                                        Util.Logging.LogEvent(q.Account.Settings, "Clipboard requested by PID " + rpid);
+                                    }
+                                }
                             };
 
                             data.Complete += delegate(object o, bool success)
@@ -1466,14 +1521,24 @@ namespace Gw2Launcher.Client
 
                             //there may be a slight delay until the clipboard is set
 
-                            if (listener.Enabled && !await listener.Wait(5000, false))
+                            if (listener.Enabled)
                             {
-                                //clipboard wasn't set
-                                //using the clipboard is probably not support
+                                if (!await listener.Wait(5000, false))
+                                {
+                                    //clipboard wasn't set
+                                    //using the clipboard is probably not supported
 
+                                    if (Util.Logging.Enabled)
+                                    {
+                                        Util.Logging.LogEvent(q.Account.Settings, "Warning: use of the clipboard may not be supported");
+                                    }
+                                }
+                            }
+                            else
+                            {
                                 if (Util.Logging.Enabled)
                                 {
-                                    Util.Logging.LogEvent(q.Account.Settings, "Warning: use of the clipboard may not be supported");
+                                    Util.Logging.LogEvent(q.Account.Settings, "Warning: clipboard listener was not available");
                                 }
                             }
 
@@ -1497,6 +1562,9 @@ namespace Gw2Launcher.Client
                             listener.Reset();
                             listener.Changed += onChanged;
 
+                            var abort = false;
+                            var pressed = true;
+
                             try
                             {
                                 Windows.Keyboard.SetKeyState(System.Windows.Forms.Keys.ControlKey, true);
@@ -1505,34 +1573,42 @@ namespace Gw2Launcher.Client
                                     Windows.Keyboard.SendKey(handle, System.Windows.Forms.Keys.A, Windows.Keyboard.KeyMessage.Down, false);
                                 }
                                 Windows.Keyboard.SendKey(handle, System.Windows.Forms.Keys.V, Windows.Keyboard.KeyMessage.Press, false);
-                            }
-                            finally
-                            {
-                                Windows.Keyboard.SetKeyState(System.Windows.Forms.Keys.ControlKey, false);
-                            }
 
-                            var t = Environment.TickCount;
-                            var abort = false;
+                                var t = Environment.TickCount;
 
-                            do
-                            {
-                                try
+                                do
                                 {
-                                    //gw2 could potentially take more than 5s to use the clipboard
-                                    await Task.Delay(500, cancel.Token);
-
-                                    if (!IsHandleOkay(q))
+                                    try
                                     {
-                                        abort = true;
+                                        //gw2 could potentially take more than 5s to use the clipboard
+                                        await Task.Delay(500, cancel.Token);
+
+                                        if (!IsHandleOkay(q))
+                                        {
+                                            abort = true;
+                                            break;
+                                        }
+
+                                        if (pressed)
+                                        {
+                                            pressed = false;
+                                            Windows.Keyboard.SetKeyState(System.Windows.Forms.Keys.ControlKey, false);
+                                        }
+                                    }
+                                    catch
+                                    {
                                         break;
                                     }
                                 }
-                                catch 
+                                while (!completed && Environment.TickCount - t < 5000);
+                            }
+                            finally
+                            {
+                                if (pressed)
                                 {
-                                    break;
+                                    Windows.Keyboard.SetKeyState(System.Windows.Forms.Keys.ControlKey, false);
                                 }
                             }
-                            while (!completed && Environment.TickCount - t < 5000);
 
                             isWaiting = false;
 

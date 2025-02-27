@@ -36,19 +36,26 @@ namespace Gw2Launcher.Util
             return IndexOf<T>(array, value, 0, array.Length);
         }
 
-        public static int IndexOf<T>(T[] array, T[] value, int startIndex, int count)
+        /// <summary>
+        /// Returns the index of the value within the array, or -1 if not found
+        /// </summary>
+        /// <param name="array">Array to search</param>
+        /// <param name="value">Value to find</param>
+        /// <param name="offset">Offset to start searching within the array</param>
+        /// <param name="count">Number of spaces to search</param>
+        public static int IndexOf<T>(T[] array, T[] value, int offset, int count)
         {
-            var limit = count - startIndex - value.Length;
+            var limit = offset + count - value.Length;
 
-            while (startIndex <= limit)
+            while (offset <= limit)
             {
-                if (array[startIndex].Equals(value[0]))
+                if (array[offset].Equals(value[0]))
                 {
                     int i;
 
                     for (i = 1; i < value.Length; i++)
                     {
-                        if (!array[startIndex + i].Equals(value[i]))
+                        if (!array[offset + i].Equals(value[i]))
                         {
                             break;
                         }
@@ -56,11 +63,11 @@ namespace Gw2Launcher.Util
 
                     if (i == value.Length)
                     {
-                        return startIndex;
+                        return offset;
                     }
                 }
 
-                ++startIndex;
+                ++offset;
             }
 
             return -1;

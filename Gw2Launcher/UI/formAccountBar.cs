@@ -41,18 +41,38 @@ namespace Gw2Launcher.UI
             }
         }
 
-        private class AccountButton
+        private class AccountButton : IDisposable
         {
+            public event EventHandler PagingChanged;
+
             public AccountBarButton button;
             public short index;
             public Settings.IAccount account;
             public bool visible;
             public DateTime activated;
-            
+            public bool paged;
+            public Settings.PageData paging;
+
             public AccountButton(Settings.IAccount account)
             {
                 this.account = account;
                 this.index = -1;
+            }
+
+            public void SetPaging(bool paged, Settings.PageData paging = null)
+            {
+                if (this.paging != null)
+                {
+                    this.paging.PinnedChanged -= paging_PinnedChanged;
+                }
+
+                if (paging != null)
+                {
+                    paging.PinnedChanged += paging_PinnedChanged;
+                }
+
+                this.paging = paging;
+                this.paged = paged;
             }
 
             private IconValue icon;
@@ -183,6 +203,17 @@ namespace Gw2Launcher.UI
                     button.Anchor = AnchorStyles.Top | AnchorStyles.Right | AnchorStyles.Left;
                 }
             }
+
+            void paging_PinnedChanged(object sender, EventArgs e)
+            {
+                if (PagingChanged != null)
+                    PagingChanged(this, e);
+            }
+
+            public void Dispose()
+            {
+                SetPaging(false);
+            }
         }
 
         private class Snap
@@ -236,9 +267,12 @@ namespace Gw2Launcher.UI
             {
                 int result;
 
-                if (a.account.Pinned != b.account.Pinned)
+                var apin = a.paging != null ? a.paging.Pinned : a.account.Pinned;
+                var bpin = b.paging != null ? b.paging.Pinned : b.account.Pinned;
+
+                if (apin != bpin)
                 {
-                    if (a.account.Pinned)
+                    if (apin)
                         return -1;
                     else
                         return 1;
@@ -281,7 +315,25 @@ namespace Gw2Launcher.UI
                     case Settings.SortMode.CustomGrid:
                     case Settings.SortMode.CustomList:
 
-                        result = a.account.SortKey.CompareTo(b.account.SortKey);
+                        if (a.paging != null)
+                        {
+                            if (b.paging != null)
+                            {
+                                result = a.paging.SortKey.CompareTo(b.paging.SortKey);
+                            }
+                            else
+                            {
+                                result = -1;
+                            }
+                        }
+                        else if (b.paging != null)
+                        {
+                            result = 1;
+                        }
+                        else
+                        {
+                            result = a.account.SortKey.CompareTo(b.account.SortKey);
+                        }
 
                         break;
                     case Settings.SortMode.None:
@@ -336,11 +388,11 @@ namespace Gw2Launcher.UI
         private ContextMenuStrip contextMenu;
         private ToolStripMenuItem menuSortBy, menuSortByActive, menuSortByName, menuSortByCustom, menuSortByAscending, menuSortByDescending, menuGroupByActive, menuOnlyShowActive,
             menuOptions, menuStyleName, menuStyleIcon, menuStyleColor, menuStyleClose, menuStyleHighlightLastFocused, menuStyleHorizontal, menuStyleVertical, menuAutoHide,
-            menuHide, menuTopMost, menuDisable, menuGroupByType, menuOnlyShowInactive, menuHideGw1, menuHideGw2;
+            menuHide, menuTopMost, menuDisable, menuLock, menuGroupByType, menuOnlyShowInactive, menuHideGw1, menuHideGw2, menuDisplaySize, menuPage, menuPageAuto;
 
         private Settings.IAccount dockedTo;
         private bool canDockResize, canShow, canLaunch;
-        private bool isLocked;
+        private bool isLocked, isLaunchingDisabled;
         private AccountBarMode mode;
 
         public formAccountBar()
@@ -380,6 +432,7 @@ namespace Gw2Launcher.UI
             buttons = new List<AccountButton>();
 
             sorting = Settings.AccountBar.Sorting.Value;
+            _DisplaySize = Settings.AccountBar.DisplaySize.Value;
 
             boundsBarType = docked;
 
@@ -398,6 +451,13 @@ namespace Gw2Launcher.UI
 
                 if (!Settings.AccountBar.Enabled.Value)
                     Settings.AccountBar.Enabled.Value = true;
+
+                _Page = Settings.AccountBar.Page.Value;
+                if (_Page == 255)
+                {
+                    _Page = Settings.SelectedPage.Value;
+                    AutoPage = true;
+                }
 
                 AccountBarOptions_ValueChanged(Settings.AccountBar.Options, EventArgs.Empty);
                 AccountBarStyle_ValueChanged(Settings.AccountBar.Style, EventArgs.Empty);
@@ -519,12 +579,9 @@ namespace Gw2Launcher.UI
                 AccountButton b;
 
                 accounts[account.UID] = b = Create(account);
-                bool visible;
-                if (b.IsActive = active.Contains(account.UID))
-                    visible = !OnlyShowInactive;
-                else
-                    visible = !OnlyShowActive;
-                if (visible && !IsHidden(b.account.Type))
+                b.IsActive = active.Contains(account.UID);
+
+                if (MatchFilter(b))
                 {
                     if (b.IsActive && b.visible)
                         _ActiveCount++;
@@ -546,6 +603,36 @@ namespace Gw2Launcher.UI
             }
         }
 
+        void account_PagesChanged(object sender, EventArgs e)
+        {
+            if (_Page == 0 || Util.Invoke.IfRequired(this,
+                delegate
+                {
+                    account_PagesChanged(sender, e);
+                }))
+                return;
+
+            var account = (Settings.IAccount)sender;
+            AccountButton b;
+
+            if (accounts.TryGetValue(account.UID, out b))
+            {
+                b.SetPaging(false);
+
+                if (b.visible)
+                {
+                    if (MatchPage(b))
+                        return;
+                }
+                else if (!MatchFilter(b))
+                {
+                    return;
+                }
+
+                OnIndexResetRequired();
+            }
+        }
+
         void WindowBounds_ValueCleared(object sender, Rectangle e)
         {
             if (Util.Invoke.IfRequired(this,
@@ -558,8 +645,17 @@ namespace Gw2Launcher.UI
             int w, h;
             if (HorizontalLayout)
             {
+                var fh = this.FontHeight - 1;
+
+                if (_DisplaySize != 0)
+                {
+                    var scale = (_DisplaySize * 5) / 100f;
+
+                    fh = (int)(fh * scale + 0.5f);
+                }
+
                 w = Screen.FromPoint(boundsBar.Location).WorkingArea.Width / 2;
-                h = (this.FontHeight - 1) * 2;
+                h = fh * 2;
             }
             else
             {
@@ -578,6 +674,33 @@ namespace Gw2Launcher.UI
             OnLayoutChanged();
 
             OnButtonsChanged();
+        }
+
+        private bool _AutoPage;
+        private bool AutoPage
+        {
+            get
+            {
+                return _AutoPage;
+            }
+            set
+            {
+                if (_AutoPage != value)
+                {
+                    _AutoPage = value;
+
+                    if (value)
+                    {
+                        Settings.SelectedPage.ValueChanged += SelectedPage_ValueChanged;
+                    }
+                    else
+                    {
+                        Settings.SelectedPage.ValueChanged -= SelectedPage_ValueChanged;
+                    }
+
+                    menuPageAuto.Checked = value;
+                }
+            }
         }
 
         private bool _ShowTopMost;
@@ -885,6 +1008,85 @@ namespace Gw2Launcher.UI
             }
         }
 
+        public bool Locked
+        {
+            get
+            {
+                return isLocked;
+            }
+            set
+            {
+                if (isLocked != value)
+                {
+                    isLocked = value;
+                    if (menuLock != null)
+                        menuLock.Checked = value;
+                }
+            }
+        }
+
+        public bool DisableLaunching
+        {
+            get
+            {
+                return isLaunchingDisabled;
+            }
+            set
+            {
+                if (isLaunchingDisabled != value)
+                {
+                    isLaunchingDisabled = value;
+                    if (menuDisable != null)
+                        menuDisable.Checked = value;
+                }
+            }
+        }
+
+        private byte _DisplaySize;
+        private byte DisplaySize
+        {
+            get
+            {
+                return _DisplaySize;
+            }
+            set
+            {
+                if (value == 20) //both 0 and 20 = 100% (% = value * 5 / 100f)
+                    value = 0;
+
+                if (_DisplaySize != value)
+                {
+                    Settings.AccountBar.DisplaySize.Value = value;
+                    _DisplaySize = value;
+                    OnButtonsChanged();
+                }
+            }
+        }
+
+        private byte _Page;
+        private byte Page
+        {
+            get
+            {
+                return _Page;
+            }
+            set
+            {
+                if (_Page != value)
+                {
+                    if (_Page != 0)
+                    {
+                        foreach (var b in accounts.Values)
+                        {
+                            b.SetPaging(false);
+                        }
+                    }
+                    _Page = value;
+                    OnIndexResetRequired();
+                }
+            }
+        }
+
         private async void AutoHideOnMouseLeave()
         {
             do
@@ -915,7 +1117,7 @@ namespace Gw2Launcher.UI
         {
             get
             {
-                if (isLocked)
+                if (isLaunchingDisabled)
                     return false;
                 return canLaunch;
             }
@@ -926,8 +1128,11 @@ namespace Gw2Launcher.UI
             }
         }
 
-        void AccountSorting_SortingChanged(object sender, EventArgs e)
+        void AccountSorting_SortingChanged(object sender, Settings.AccountSorting.SortingChangedEventArgs e)
         {
+            if (e.Page != _Page)
+                return;
+
             if (Util.Invoke.IfRequired(this,
                 delegate
                 {
@@ -1006,6 +1211,8 @@ namespace Gw2Launcher.UI
                 ShowTopMost = options.HasFlag(Settings.AccountBarOptions.TopMost);
                 HideGw1 = options.HasFlag(Settings.AccountBarOptions.HideGw1);
                 HideGw2 = options.HasFlag(Settings.AccountBarOptions.HideGw2);
+                Locked = options.HasFlag(Settings.AccountBarOptions.Locked);
+                DisableLaunching = options.HasFlag(Settings.AccountBarOptions.DisableLaunching);
             }
         }
 
@@ -1128,6 +1335,9 @@ namespace Gw2Launcher.UI
                     menuHideGw2 = new ToolStripMenuItemStayOpenOnClick("Guild Wars 2 accounts",null,OnMenuOptionClicked,true),
                 });
 
+            menuPage = new ToolStripMenuItem("Page...", null, OnMenuPageClicked);
+            menuPageAuto = new ToolStripMenuItemStayOpenOnClick("Show same page as main window", null, OnMenuPageClicked, true);
+
             menuSortBy.DropDownItems.AddRange(new ToolStripItem[]
                 {
                     menuGroupByActive = new ToolStripMenuItemStayOpenOnClick("Active",null,OnMenuGroupByClicked,true),
@@ -1141,7 +1351,10 @@ namespace Gw2Launcher.UI
                     menuSortByDescending = new ToolStripMenuItemStayOpenOnClick("Descending",null,OnMenuSortByOrderClicked,true),
                     new ToolStripSeparator(),
                     menuSortByOnlyShow,
-                    menuSortByHide
+                    menuSortByHide,
+                    new ToolStripSeparator(),
+                    menuPage,
+                    menuPageAuto,
                 });
 
             menuSortByAscending.Checked = true;
@@ -1167,8 +1380,12 @@ namespace Gw2Launcher.UI
                     menuStyleHighlightLastFocused = new ToolStripMenuItemStayOpenOnClick("Highlight last focused window",null, OnMenuStyleClicked,true),
                     menuTopMost = new ToolStripMenuItemStayOpenOnClick("Show on top of other windows",null,OnMenuOptionClicked,true),
                     new ToolStripSeparator(),
-                    menuDisable = new ToolStripMenuItemStayOpenOnClick("Lock",null,OnMenuOptionClicked,true),
+                    menuDisable = new ToolStripMenuItemStayOpenOnClick("Disable launching",null,OnMenuOptionClicked,true),
+                    new ToolStripSeparator(),
+                    menuLock = new ToolStripMenuItemStayOpenOnClick("Lock",null,OnMenuOptionClicked,true),
                 });
+
+            menuDisplaySize = new ToolStripMenuItem("Display size", null, OnMenuDisplaySizeClicked);
 
             menuStyleVertical.Checked = true;
 
@@ -1179,6 +1396,7 @@ namespace Gw2Launcher.UI
                 {
                     menuSortBy,
                     menuOptions,
+                    menuDisplaySize,
                     new ToolStripSeparator(),
                     menuHide,
                 });
@@ -1260,7 +1478,11 @@ namespace Gw2Launcher.UI
             }
             else if (item == menuDisable)
             {
-                menuDisable.Checked = isLocked = !isLocked;
+                SetOption(Settings.AccountBarOptions.DisableLaunching, !DisableLaunching);
+            }
+            else if (item == menuLock)
+            {
+                SetOption(Settings.AccountBarOptions.Locked, !Locked);
             }
             else if (item == menuOnlyShowInactive)
             {
@@ -1332,6 +1554,123 @@ namespace Gw2Launcher.UI
             {
                 SetStyle(Settings.AccountBarStyles.HighlightFocused, !ShowFocusedHighlight);
             }
+        }
+
+        private void OnMenuPageClicked(object sender, EventArgs e)
+        {
+            if (sender == menuPageAuto)
+            {
+                AutoPage = !menuPageAuto.Checked;
+
+                if (AutoPage)
+                {
+                    Settings.AccountBar.Page.Value = 255;
+                    Page = Settings.SelectedPage.Value;
+                }
+                else
+                {
+                    Settings.AccountBar.Page.Value = Page;
+                }
+            }
+            else
+            {
+                var pages = 0;
+
+                foreach (var a in Util.Accounts.GetAccounts())
+                {
+                    if (a.Pages != null)
+                    {
+                        var pg = a.Pages[a.Pages.Length - 1].Page;
+                        if (pg > pages)
+                            pages = pg;
+                    }
+                }
+
+                using (var f = new formMoveToPage(Page, (byte)pages, false))
+                {
+                    f.StartPosition = FormStartPosition.Manual;
+                    f.HandleCreated += delegate
+                    {
+                        var l = Cursor.Position;
+                        f.Location = Util.RectangleConstraint.ConstrainToScreen(new Rectangle(new Point(l.X - f.Width / 2, l.Y - f.Height / 3), f.Size)).Location;
+                    };
+
+                    if (f.ShowDialog(this) == System.Windows.Forms.DialogResult.OK)
+                    {
+                        AutoPage = false;
+                        Page = f.Page;
+                        Settings.AccountBar.Page.Value = f.Page;
+                    }
+                }
+            }
+        }
+
+        private void OnMenuDisplaySizeClicked(object sender, EventArgs e)
+        {
+            var f = new Base.StackFormBase()
+            {
+                StartPosition = FormStartPosition.Manual,
+                ShowInTaskbar = false,
+                FormBorderStyle = System.Windows.Forms.FormBorderStyle.None,
+                AutoSize = true,
+                AutoSizeMode = System.Windows.Forms.AutoSizeMode.GrowAndShrink,
+                BackColor = this.BackColor,
+                Opacity = 0,
+            };
+
+            var panel = new Controls.StackPanel()
+            {
+                FlowDirection = FlowDirection.LeftToRight,
+                Margin = new Padding(5),
+                AutoSize = true,
+                AutoSizeMode = System.Windows.Forms.AutoSizeMode.GrowOnly,
+                AutoSizeFill = UI.Controls.StackPanel.AutoSizeFillMode.NoWrap,
+                Bounds = Rectangle.Empty,
+            };
+
+            var slider = new Controls.FlatSlider()
+            {
+                Width = 150,
+                Margin = Padding.Empty,
+                Anchor = AnchorStyles.Left,
+                Value = ((_DisplaySize == 0 ? 100 : _DisplaySize * 5) / 100f - 0.25f) / 1.75f,
+            };
+
+            var label = new Label()
+            {
+                AutoSize = true,
+                ForeColor = Color.White,
+                Margin = new Padding(5, 0, 0, 0),
+                Anchor = AnchorStyles.Left,
+                Text = (_DisplaySize == 0 ? 100 : _DisplaySize * 5) + "%",
+            };
+
+            slider.ValueChanged += delegate
+            {
+                var v = (byte)((0.25f + slider.Value * 1.75f) * 100 / 5);
+
+                if (_DisplaySize != v)
+                {
+                    DisplaySize = v;
+                    label.Text = (_DisplaySize == 0 ? 100 : _DisplaySize * 5) + "%";
+                }
+            };
+
+            f.Deactivate += delegate
+            {
+                f.Dispose();
+            };
+
+            f.Shown += delegate
+            {
+                f.Location = new Point(Cursor.Position.X, Cursor.Position.Y - f.Height / 2);
+                f.Opacity = this.Opacity;
+            };
+
+            panel.Controls.AddRange(new Control[] { slider, label });
+            f.Controls.Add(panel);
+
+            f.Show(this);
         }
 
         private void OnMenuHideClicked(object sender, EventArgs e)
@@ -1411,14 +1750,7 @@ namespace Gw2Launcher.UI
 
             foreach (var b in accounts.Values)
             {
-                bool visible;
-
-                if (b.IsActive)
-                    visible = !OnlyShowInactive;
-                else
-                    visible = !OnlyShowActive;
-
-                if (visible && !IsHidden(b.account.Type))
+                if (MatchFilter(b))
                 {
                     if (b.button == null)
                         CreateButton(b);
@@ -1445,14 +1777,6 @@ namespace Gw2Launcher.UI
             this._ActiveCount = active;
         }
 
-        private Color GetColor(Settings.IAccount account)
-        {
-            if (account.ColorKey.IsEmpty)
-                return Util.Color.FromUID(account.UID);
-            else
-                return account.ColorKey;
-        }
-
         private IconValue GetIcon(Settings.IAccount account)
         {
             try
@@ -1463,7 +1787,7 @@ namespace Gw2Launcher.UI
                         return new IconValue(Image.FromFile(account.Icon), true);
                     case Settings.IconType.ColorKey:
                     case Settings.IconType.Gw2LauncherColorKey:
-                        using (var icons = Tools.Icons.From(GetColor(account), account.IconType == Settings.IconType.Gw2LauncherColorKey))
+                        using (var icons = Tools.Icons.From(account.ColorKey, account.IconType == Settings.IconType.Gw2LauncherColorKey))
                         {
                             return new IconValue(icons.Small.ToBitmap(), true);
                         }
@@ -1488,7 +1812,7 @@ namespace Gw2Launcher.UI
             b.button.ColorKeyVisible = ShowColorKey;
             b.button.CloseVisible = ShowCloseButton && b.IsActive;
 
-            b.button.ColorKey = GetColor(b.account);
+            b.button.ColorKey = b.account.ColorKey;
             b.Icon = GetIcon(b.account);
 
             b.button.CloseClicked += button_CloseClicked;
@@ -1664,6 +1988,61 @@ namespace Gw2Launcher.UI
                 focused = null;
         }
 
+        private bool MatchPage(AccountButton b)
+        {
+            if (_Page != 0)
+            {
+                if (!b.paged)
+                {
+                    var pages = b.account.Pages;
+                    Settings.PageData paging = null;
+
+                    if (pages != null)
+                    {
+                        for (var i = 0; i < pages.Length; i++)
+                        {
+                            if (pages[i].Page == _Page)
+                            {
+                                paging = pages[i];
+                                break;
+                            }
+                        }
+                    }
+
+                    b.SetPaging(true, paging);
+                }
+
+                return b.paging != null;
+            }
+
+            return true;
+        }
+
+        private bool MatchFilter(AccountButton b)
+        {
+            if (IsHidden(b.account.Type))
+            {
+                return false;
+            }
+            
+            if (b.IsActive)
+            {
+                if (_OnlyShowInactive)
+                    return false;
+            }
+            else if (_OnlyShowActive)
+            {
+                return false;
+            }
+            
+            if (!MatchPage(b))
+            {
+                return false;
+            }
+
+            return true;
+        }
+
         private bool IsHidden(Settings.AccountType type)
         {
             switch (type)
@@ -1800,7 +2179,7 @@ namespace Gw2Launcher.UI
 
                 if (!OnlyShowActive)
                 {
-                    SetVisible(b, !IsHidden(account.Type));
+                    SetVisible(b, MatchFilter(b));
                 }
 
                 e.Value.ValueCleared += Account_ValueCleared;
@@ -1865,7 +2244,7 @@ namespace Gw2Launcher.UI
 
             if (accounts.TryGetValue(account.UID, out b) && b.button != null)
             {
-                b.button.ColorKey = GetColor(account);
+                b.button.ColorKey = account.ColorKey;
             }
         }
 
@@ -1913,7 +2292,30 @@ namespace Gw2Launcher.UI
 
         void account_PinnedChanged(object sender, EventArgs e)
         {
+            if (_Page == 0)
+            {
+                SortButtonsDelayed();
+            }
+        }
+
+        void b_PagingChanged(object sender, EventArgs e)
+        {
             SortButtonsDelayed();
+        }
+
+        void SelectedPage_ValueChanged(object sender, EventArgs e)
+        {
+            if (Util.Invoke.IfRequired(this,
+                delegate
+                {
+                    SelectedPage_ValueChanged(sender, e);
+                }))
+                return;
+
+            if (AutoPage)
+            {
+                Page = Settings.SelectedPage.Value;
+            }
         }
 
         private Orientation LayoutOrientation
@@ -2046,6 +2448,18 @@ namespace Gw2Launcher.UI
                         if (docked != Settings.ScreenAnchor.None)
                         {
                             CheckWindowBounds(account, e.Handle);
+                        }
+
+                        if (ShowTopMost && this.Visible)
+                        {
+                            try
+                            {
+                                if (Windows.FindWindow.IsWindowOverlapped(this.Handle))
+                                {
+                                    NativeMethods.SetWindowPos(this.Handle, (IntPtr)WindowZOrder.HWND_TOPMOST, 0, 0, 0, 0, SetWindowPosFlags.SWP_NOMOVE | SetWindowPosFlags.SWP_NOSIZE | SetWindowPosFlags.SWP_NOACTIVATE);
+                                }
+                            }
+                            catch { }
                         }
 
                         break;
@@ -2208,7 +2622,7 @@ namespace Gw2Launcher.UI
             if (b.button != null)
                 b.button.CloseVisible = _ShowClose;
 
-            var changed = SetVisible(b, !OnlyShowInactive && !IsHidden(b.account.Type));
+            var changed = SetVisible(b, MatchFilter(b));
 
             if (b.visible)
             {
@@ -2234,7 +2648,7 @@ namespace Gw2Launcher.UI
             if (focused == b)
                 SetFocused(null);
 
-            var changed = SetVisible(b, !OnlyShowActive && !IsHidden(b.account.Type));
+            var changed = SetVisible(b, MatchFilter(b));
 
             if (b.visible)
             {
@@ -2254,6 +2668,9 @@ namespace Gw2Launcher.UI
             account.IconChanged += account_IconChanged;
             account.IconTypeChanged += account_IconTypeChanged;
             account.PinnedChanged += account_PinnedChanged;
+            account.PagesChanged += account_PagesChanged;
+
+            b.PagingChanged += b_PagingChanged;
 
             return b;
         }
@@ -2261,6 +2678,14 @@ namespace Gw2Launcher.UI
         private Rectangle GetDockedBounds(Rectangle screen)
         {
             var fh = this.FontHeight - 1;
+
+            if (_DisplaySize != 0)
+            {
+                var scale = (_DisplaySize * 5) / 100f;
+
+                fh = (int)(fh * scale + 0.5f);
+            }
+
             var size = fh * 2;
 
             int x, y, w, h;
@@ -2329,8 +2754,17 @@ namespace Gw2Launcher.UI
                 int w, h;
                 if (HorizontalLayout)
                 {
+                    var fh = this.FontHeight - 1;
+
+                    if (_DisplaySize != 0)
+                    {
+                        var scale = (_DisplaySize * 5) / 100f;
+
+                        fh = (int)(fh * scale + 0.5f);
+                    }
+
                     w = Screen.FromPoint(boundsBar.Location).WorkingArea.Width / 2;
-                    h = (this.FontHeight - 1) * 2;
+                    h = fh * 2;
 
                     switch (boundsBarType)
                     {
@@ -2485,13 +2919,23 @@ namespace Gw2Launcher.UI
 
         private void ArrangeButtons()
         {
+            this.SuspendLayout();
+
             if (pendingIndexes)
             {
                 ResetIndexes();
             }
 
-            int fh = (this.FontHeight - 1),
-                x = 0,
+            var fh = this.FontHeight - 1;
+
+            if (_DisplaySize != 0)
+            {
+                var scale = (_DisplaySize * 5) / 100f;
+
+                fh = (int)(fh * scale + 0.5f);
+            }
+            
+            int x = 0,
                 y = 0,
                 w,
                 h = fh * 2,
@@ -2507,7 +2951,6 @@ namespace Gw2Launcher.UI
                         w = fh * 15;
                     else if (w < fh * 5)
                         w = fh * 5;
-
                 }
                 else
                     w = 0;
@@ -2559,6 +3002,8 @@ namespace Gw2Launcher.UI
                         panelContent.Top = 0;
                 }
             }
+
+            this.ResumeLayout();
         }
 
         protected override void SetVisibleCore(bool value)
@@ -2683,6 +3128,8 @@ namespace Gw2Launcher.UI
         {
             if (disposing)
             {
+                AutoPage = false;
+
                 Settings.Accounts.ValueChanged -= Accounts_ValueChanged;
                 Settings.Accounts.ValueAdded -= Accounts_ValueAdded;
                 Settings.Accounts.ValueRemoved -= Accounts_ValueRemoved;
@@ -2703,24 +3150,21 @@ namespace Gw2Launcher.UI
                 Client.Launcher.AccountTopMostWindowEvent -= Launcher_AccountTopMostWindowEvent;
                 Client.Launcher.AccountProcessExited -= Launcher_AccountProcessExited;
 
-                foreach (var uid in Settings.Accounts.GetKeys())
-                {
-                    var a = Settings.Accounts[uid];
-                    a.ValueCleared -= Account_ValueCleared;
-
-                    var account = a.Value;
-                    if (account != null)
-                    {
-                        account.NameChanged -= account_NameChanged;
-                        account.ColorKeyChanged -= account_ColorKeyChanged;
-                        account.IconChanged -= account_IconChanged;
-                        account.IconTypeChanged -= account_IconTypeChanged;
-                        account.PinnedChanged -= account_PinnedChanged;
-                    }
-                }
-
                 foreach (var b in accounts.Values)
                 {
+                    b.Dispose();
+
+                    var account = b.account;
+
+                    account.NameChanged -= account_NameChanged;
+                    account.ColorKeyChanged -= account_ColorKeyChanged;
+                    account.IconChanged -= account_IconChanged;
+                    account.IconTypeChanged -= account_IconTypeChanged;
+                    account.PinnedChanged -= account_PinnedChanged;
+                    account.PagesChanged -= account_PagesChanged;
+
+                    Settings.Accounts[account.UID].ValueCleared -= Account_ValueCleared;
+
                     using (b.Icon) { }
                 }
 
@@ -2888,8 +3332,17 @@ namespace Gw2Launcher.UI
                         {
                             if (HorizontalLayout)
                             {
+                                var fh = this.FontHeight - 1;
+
+                                if (_DisplaySize != 0)
+                                {
+                                    var scale = (_DisplaySize * 5) / 100f;
+
+                                    fh = (int)(fh * scale + 0.5f);
+                                }
+
                                 w = Screen.FromPoint(boundsBar.Location).WorkingArea.Width / 2;
-                                h = (this.FontHeight - 1) * 2;
+                                h = fh * 2;
 
                                 switch (boundsBarType)
                                 {

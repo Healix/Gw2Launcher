@@ -106,15 +106,15 @@ namespace Gw2Launcher.Tools
         {
             foreach (var root in Directory.GetDirectories(path, GW2CACHE, SearchOption.TopDirectoryOnly))
             {
-                //CoherentUI
-                path = Path.Combine(root, "user", "Local Storage", "coui_web_0.localstorage");
+                ////CoherentUI
+                //path = Path.Combine(root, "user", "Local Storage", "coui_web_0.localstorage");
 
-                try
-                {
-                    if (File.Exists(path))
-                        File.Delete(path);
-                }
-                catch { }
+                //try
+                //{
+                //    if (File.Exists(path))
+                //        File.Delete(path);
+                //}
+                //catch { }
 
                 //CEF
                 path = Path.Combine(root, "user", "Cache", "Local Storage", "leveldb", "MANIFEST-000001");
@@ -255,21 +255,22 @@ namespace Gw2Launcher.Tools
 
                 string index;
 
-                if (File.Exists(index = Path.Combine(user, "Cache", "index"))) //CoherentUI
-                {
-                    if ((options & Settings.DeleteCacheOptions.Web) != 0)
-                    {
-                        if (date.Ticks == 0 || File.GetLastWriteTimeUtc(Path.Combine(user, "Cache", "data_1")) < date)
-                        {
-                            File.Delete(index);
-                        }
-                        else
-                        {
-                            return false;
-                        }
-                    }
-                }
-                else if (File.Exists(index = Path.Combine(user, "Cache", "LOCK"))) //CEF
+                //if (File.Exists(index = Path.Combine(user, "Cache", "index"))) //CoherentUI
+                //{
+                //    if ((options & Settings.DeleteCacheOptions.Web) != 0)
+                //    {
+                //        if (date.Ticks == 0 || File.GetLastWriteTimeUtc(Path.Combine(user, "Cache", "data_1")) < date)
+                //        {
+                //            File.Delete(index);
+                //        }
+                //        else
+                //        {
+                //            return false;
+                //        }
+                //    }
+                //}
+                //else
+                if (File.Exists(index = Path.Combine(user, "Cache", "LOCK"))) //CEF
                 {
                     if ((options & Settings.DeleteCacheOptions.Web) != 0)
                     {
@@ -359,15 +360,15 @@ namespace Gw2Launcher.Tools
                         }
                     }
 
-                    //CoherentUI
-                    path = Path.Combine(root, "user", "Cache", "index");
+                    ////CoherentUI
+                    //path = Path.Combine(root, "user", "Cache", "index");
 
-                    if (File.Exists(path))
-                    {
-                        using (File.Open(path, FileMode.Open, FileAccess.Read, FileShare.None))
-                        {
-                        }
-                    }
+                    //if (File.Exists(path))
+                    //{
+                    //    using (File.Open(path, FileMode.Open, FileAccess.Read, FileShare.None))
+                    //    {
+                    //    }
+                    //}
                 }
                 catch (IOException e)
                 {

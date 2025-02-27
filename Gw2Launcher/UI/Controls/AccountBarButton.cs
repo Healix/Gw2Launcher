@@ -29,6 +29,7 @@ namespace Gw2Launcher.UI.Controls
         protected bool hoveredClose;
         protected byte opacityIcon;
         protected bool showClose, showText, showIcon, showColor;
+        protected int minimumIconWidth;
 
         public AccountBarButton()
         {
@@ -77,45 +78,12 @@ namespace Gw2Launcher.UI.Controls
             {
                 if (alignmentColorKey != value)
                 {
-                    int l = 2,
-                        r = 2,
-                        t = 0,
-                        b = 0;
-
-                    if (showColor)
-                    {
-                        switch (value)
-                        {
-                            case EdgeAlignment.Bottom:
-                                b = 4;
-                                break;
-                            case EdgeAlignment.Left:
-                                l = 4;
-                                break;
-                            case EdgeAlignment.Right:
-                                r = 4;
-                                break;
-                            case EdgeAlignment.Top:
-                                t = 4;
-                                break;
-                        }
-                    }
-
-                    Padding = new Padding(l, t, r, b);
                     alignmentColorKey = value;
-                    
+
+                    SetColorKeyPadding();
                     OnRedrawRequired();
                 }
             }
-        }
-
-        protected override void OnPaddingChanged(EventArgs e)
-        {
-            boundsClose = Rectangle.Empty;
-            boundsText = Rectangle.Empty;
-            boundsIcon = Rectangle.Empty;
-
-            base.OnPaddingChanged(e);
         }
 
         public bool ColorKeyVisible
@@ -128,36 +96,50 @@ namespace Gw2Launcher.UI.Controls
             {
                 if (showColor != value)
                 {
-                    int l = 2,
-                        r = 2,
-                        t = 0,
-                        b = 0;
-
-                    if (value)
-                    {
-                        switch (alignmentColorKey)
-                        {
-                            case EdgeAlignment.Bottom:
-                                b = 4;
-                                break;
-                            case EdgeAlignment.Left:
-                                l = 4;
-                                break;
-                            case EdgeAlignment.Right:
-                                r = 4;
-                                break;
-                            case EdgeAlignment.Top:
-                                t = 4;
-                                break;
-                        }
-                    }
-
-                    Padding = new Padding(l, t, r, b);
-
                     showColor = value;
+
+                    SetColorKeyPadding();
                     OnRedrawRequired();
                 }
             }
+        }
+
+        protected void SetColorKeyPadding()
+        {
+            int l = 2,
+                r = 2,
+                t = 0,
+                b = 0;
+
+            if (showColor)
+            {
+                switch (alignmentColorKey)
+                {
+                    case EdgeAlignment.Bottom:
+                        b = 4;
+                        break;
+                    case EdgeAlignment.Left:
+                        l = 4;
+                        break;
+                    case EdgeAlignment.Right:
+                        r = 4;
+                        break;
+                    case EdgeAlignment.Top:
+                        t = 4;
+                        break;
+                }
+            }
+
+            Padding = new Padding(l, t, r, b);
+        }
+
+        protected override void OnPaddingChanged(EventArgs e)
+        {
+            boundsClose = Rectangle.Empty;
+            boundsText = Rectangle.Empty;
+            boundsIcon = Rectangle.Empty;
+
+            base.OnPaddingChanged(e);
         }
 
         public bool IconVisible
@@ -174,6 +156,23 @@ namespace Gw2Launcher.UI.Controls
                     boundsIcon = Rectangle.Empty;
                     boundsText = Rectangle.Empty;
                     if (this.BackgroundImage != null)
+                        OnRedrawRequired();
+                }
+            }
+        }
+
+        public int IconDefaultSize
+        {
+            get
+            {
+                return minimumIconWidth;
+            }
+            set
+            {
+                if (minimumIconWidth != value)
+                {
+                    minimumIconWidth = value;
+                    if (showIcon && value > boundsIcon.Width)
                         OnRedrawRequired();
                 }
             }
@@ -348,8 +347,10 @@ namespace Gw2Launcher.UI.Controls
             int w = this.Width,
                 h = this.Height;
 
+            var scale = g.DpiX / 96f;
+
             Image image;
-            if (showIcon && (image = this.BackgroundImage) != null)
+            if (showIcon && ((image = this.BackgroundImage) != null || minimumIconWidth > 0))
             {
                 try
                 {
@@ -357,17 +358,27 @@ namespace Gw2Launcher.UI.Controls
                     {
                         if (boundsIcon.IsEmpty)
                         {
-                            var sz = GetScaledDimensions(image, w - this.Padding.Horizontal - 5, h - this.Padding.Vertical);
-                            boundsIcon = new Rectangle(this.Padding.Left + 5, (h - sz.Height) / 2, sz.Width, sz.Height);
+                            Size sz;
+                            if (image == null)
+                                sz = new System.Drawing.Size(minimumIconWidth, minimumIconWidth);
+                            else
+                                sz = image.Size;
+                            var pad = (int)(5 * scale + 0.5f);
+                            sz = GetScaledDimensions(sz, w - this.Padding.Horizontal - pad, h - this.Padding.Vertical);
+                            boundsIcon = new Rectangle(this.Padding.Left + pad, (h - sz.Height) / 2, sz.Width, sz.Height);
                         }
-
+                        
                         if (boundsText.IsEmpty)
                         {
-                            var szText = TextRenderer.MeasureText(g, this.Text, this.Font, new Size(this.Width - this.Padding.Horizontal - 10 - boundsIcon.Width, this.Height - this.Padding.Vertical), TextFormatFlags.VerticalCenter);
-                            boundsText = new Rectangle(this.Padding.Left + 10 + boundsIcon.Width, 0, szText.Width, szText.Height);
+                            var pad = (int)(10 * scale + 0.5f);
+                            var szText = TextRenderer.MeasureText(g, this.Text, this.Font, new Size(this.Width - this.Padding.Horizontal - pad - boundsIcon.Width, this.Height - this.Padding.Vertical), TextFormatFlags.VerticalCenter);
+                            boundsText = new Rectangle(this.Padding.Left + pad + boundsIcon.Width, 0, szText.Width, szText.Height);
                         }
 
-                        DrawImage(g, image, boundsIcon, opacityIcon);
+                        if (image != null)
+                        {
+                            DrawImage(g, image, boundsIcon, opacityIcon);
+                        }
                         DrawText(g, this.Text, boundsText.Left, boundsText.Top, w - boundsText.Left - Padding.Right, h); //boundsText.Top, boundsText.Width, boundsText.Height);// w - this.Padding.Horizontal - 10 - boundsIcon.Width, h - this.Padding.Vertical);
                     }
                     else
@@ -394,7 +405,7 @@ namespace Gw2Launcher.UI.Controls
                                 }
                             }
 
-                            sz = GetScaledDimensions(image, mw, mh);
+                            sz = GetScaledDimensions(image.Size, mw, mh);
 
                             x = w - sz.Width;
                             y = h - sz.Height;
@@ -456,12 +467,14 @@ namespace Gw2Launcher.UI.Controls
                 DrawText(g, this.Text, boundsText.Left, boundsText.Top, w - boundsText.Left - this.Padding.Right, h);
             }
 
+            var fadeWidth = (int)(30 * scale + 0.5f);
+
             if (entered && showClose)
             {
                 if (boundsClose.IsEmpty)
                 {
                     var fh = this.Font.Height / 2;
-                    int x = w - this.Padding.Right - fh - 6,
+                    int x = w - this.Padding.Right - fh - (int)(6 * scale + 0.5f),
                         y = (h - fh) / 2;
                     boundsClose = new Rectangle(x, y, fh, fh);
                 }
@@ -472,15 +485,17 @@ namespace Gw2Launcher.UI.Controls
                 else
                     br = boundsIcon.Right;
 
-                if (br > boundsClose.Left - 15)
+                if (br > boundsClose.Left - fadeWidth / 2)
                 {
-                    using (var gradient = new System.Drawing.Drawing2D.LinearGradientBrush(new Point(boundsClose.Left - 35, 0), new Point(boundsClose.Left - 5, 0), Color.Transparent, this.BackColorCurrent))
+                    var fadePad = (int)(5 * scale + 0.5f);
+
+                    using (var gradient = new System.Drawing.Drawing2D.LinearGradientBrush(new Point(boundsClose.Left - fadeWidth - fadePad, 0), new Point(boundsClose.Left - fadePad, 0), Color.Transparent, this.BackColorCurrent))
                     {
-                        g.FillRectangle(gradient, boundsClose.Left - 35, this.Padding.Top, 30, h - this.Padding.Vertical);
+                        g.FillRectangle(gradient, boundsClose.Left - fadePad - fadePad, this.Padding.Top, fadeWidth, h - this.Padding.Vertical);
                     }
 
                     brush.Color = this.BackColorCurrent;
-                    g.FillRectangle(brush, boundsClose.Left - 5, this.Padding.Top, w - boundsClose.Left - Padding.Right + 5, h - this.Padding.Vertical);
+                    g.FillRectangle(brush, boundsClose.Left - fadePad, this.Padding.Top, w - boundsClose.Left - Padding.Right + fadePad, h - this.Padding.Vertical);
                 }
 
                 var colorClose = hoveredClose ? Color.White : Color.FromArgb(170, 170, 170);
@@ -497,9 +512,9 @@ namespace Gw2Launcher.UI.Controls
 
                 if (boundsText.Right > x)
                 {
-                    using (var gradient = new System.Drawing.Drawing2D.LinearGradientBrush(new Point(x - 30, 0), new Point(x, 0), Color.Transparent, this.BackColorCurrent))
+                    using (var gradient = new System.Drawing.Drawing2D.LinearGradientBrush(new Point(x - fadeWidth, 0), new Point(x, 0), Color.Transparent, this.BackColorCurrent))
                     {
-                        g.FillRectangle(gradient, x - 30, this.Padding.Top, 30, h - this.Padding.Vertical);
+                        g.FillRectangle(gradient, x - fadeWidth, this.Padding.Top, fadeWidth, h - this.Padding.Vertical);
                     }
                 }
             }
@@ -515,14 +530,14 @@ namespace Gw2Launcher.UI.Controls
                     case EdgeAlignment.Right:
 
                         p = 0.85f;
-                        w1 = 2;
+                        w1 = (int)(2 * scale + 0.5f);
                         h1 = (int)(h * p);
                         y = (h - h1) / 2;
 
                         if (alignmentColorKey == EdgeAlignment.Right)
-                            x = w - 3;
+                            x = w - (int)(3 * scale + 0.5f);
                         else
-                            x = 1;
+                            x = (int)(1 * scale + 0.5f);
 
                         g.FillRectangle(brushKey, x, y, w1, h1);
 
@@ -532,13 +547,13 @@ namespace Gw2Launcher.UI.Controls
 
                         p = 0.95f;
                         w1 = (int)(w * p);
-                        h1 = 2;
+                        h1 = (int)(2 * scale + 0.5f);
                         x = (w - w1) / 2;
 
                         if (alignmentColorKey == EdgeAlignment.Top)
-                            y = 1;
+                            y = (int)(1 * scale + 0.5f);
                         else
-                            y = h - 3;
+                            y = h - (int)(3 * scale + 0.5f);
 
                         g.FillRectangle(brushKey, x, y, w1, h1);
 
@@ -573,7 +588,28 @@ namespace Gw2Launcher.UI.Controls
             using (var g = this.CreateGraphics())
             {
                 var sz = TextRenderer.MeasureText(g, this.Text, this.Font, new Size(proposedSize.Width, proposedSize.Height));
-                return new Size(sz.Width + this.Padding.Horizontal, sz.Height + this.Padding.Vertical);
+                var w = sz.Width + this.Padding.Horizontal;
+                var h = sz.Height + this.Padding.Vertical;
+
+                if (this.MinimumSize.Width > w)
+                {
+                    w = this.MinimumSize.Width;
+                }
+                else if (this.MaximumSize.Width > 0 && this.MaximumSize.Width < w)
+                {
+                    w = this.MaximumSize.Width;
+                }
+
+                if (this.MinimumSize.Height > h)
+                {
+                    h = this.MinimumSize.Height;
+                }
+                else if (this.MaximumSize.Height > 0 && this.MaximumSize.Height < h)
+                {
+                    h = this.MaximumSize.Height;
+                }
+
+                return new Size(w, h);
             }
         }
     }

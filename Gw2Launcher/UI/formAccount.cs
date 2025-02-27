@@ -33,7 +33,7 @@ namespace Gw2Launcher.UI
                 NotEligible
             }
 
-            public ApiRequirements(Label l, Api.TokenInfo.Permissions[] required, Func<ApiKeyData, ApiState> onVerify)
+            public ApiRequirements(Label l, Api.TokenInfo.Permissions required, Func<ApiKeyData, ApiState> onVerify)
             {
                 //var x = parent.Right + 2;
 
@@ -57,7 +57,7 @@ namespace Gw2Launcher.UI
                 this.State = ApiState.OK;
             }
 
-            public Api.TokenInfo.Permissions[] required;
+            public Api.TokenInfo.Permissions required;
             public Label label;
             public Func<ApiKeyData, ApiState> onVerify;
 
@@ -73,20 +73,9 @@ namespace Gw2Launcher.UI
 
                 if (!data.useAccountData)
                 {
-                    if (required == null)
+                    if (required == Api.TokenInfo.Permissions.None || (data.permissions & required) != required)
                     {
                         result = ApiState.NoPermission;
-                    }
-                    else
-                    {
-                        foreach (var p in required)
-                        {
-                            if (!data.permissions.Contains(p))
-                            {
-                                result = ApiState.NoPermission;
-                                break;
-                            }
-                        }
                     }
                 }
 
@@ -119,7 +108,7 @@ namespace Gw2Launcher.UI
                                 break;
                             case ApiState.NoPermission:
 
-                                label.Text = "(no permission)";
+                                label.Text = GetDefaultText();//"(no permission)";
                                 label.ForeColor = Color.Maroon;
 
                                 break;
@@ -141,17 +130,28 @@ namespace Gw2Launcher.UI
 
             public string GetDefaultText()
             {
-                if (required.Length > 0)
+                if (required != Api.TokenInfo.Permissions.None)
                 {
-                    var sb = new StringBuilder(required.Length * 10);
+                    var sb = new StringBuilder(Util.Bits.GetBitCount((uint)required) * 10 + 5);
+                    var c = 0;
+
                     sb.Append("api: ");
-                    foreach (var p in required)
+
+                    foreach (Api.TokenInfo.Permissions p in Enum.GetValues(typeof(Api.TokenInfo.Permissions)))
                     {
-                        sb.Append(p.ToString().ToLower());
-                        sb.Append(", ");
+                        if ((required & p) == p && p != 0 && p != Api.TokenInfo.Permissions.Account)
+                        {
+                            sb.Append(p.ToString().ToLower());
+                            sb.Append(", ");
+                            ++c;
+                        }
                     }
-                    sb.Length -= 2;
-                    return sb.ToString();
+
+                    if (c > 0)
+                    {
+                        sb.Length -= 2;
+                        return sb.ToString();
+                    }
                 }
 
                 return string.Empty;
@@ -167,8 +167,7 @@ namespace Gw2Launcher.UI
             public bool useAccountData;
 
             public Api.Account account;
-            public Api.TokenInfo.Permissions[] permissionsArray;
-            public HashSet<Api.TokenInfo.Permissions> permissions;
+            public Api.TokenInfo.Permissions permissions;
         }
 
         private class IconValue
@@ -260,6 +259,7 @@ namespace Gw2Launcher.UI
         private TextBox[] textAccountNames;
         private Dictionary<string, object> iconsRunAfter;
         private Tools.Shared.Images imagesLoginRewards;
+        private bool hasTempSettings;
 
         public formAccount(Settings.AccountType type)
             : this(type, false)
@@ -307,8 +307,10 @@ namespace Gw2Launcher.UI
             if (type == Settings.AccountType.GuildWars1)
             {
                 labelShowDailyLoginApi.Visible = false;
+                label96.Visible = false;
                 label59.Visible = false;
                 checkShowDailyCompletion.Parent.Visible = false;
+                checkResetDailyCompletion.Parent.Visible = false;
                 panelAutoLoginGw2.Visible = false;
                 panelAccountTypeGw2.Visible = false;
                 checkMuteMusic.Visible = false;
@@ -320,6 +322,10 @@ namespace Gw2Launcher.UI
                 panelTrackLoginRewardsDay.Visible = false;
                 panelLaunchSteamGw2.Visible = false;
                 panelLaunchOptionsProcessBrowser.Visible = false;
+                label93.Visible = false;
+                label92.Visible = false;
+                checkShowWeeklyCompletion.Parent.Visible = false;
+                checkResetWeeklyCompletion.Parent.Visible = false;
 
                 panelAutoLoginGw1.Visible = true;
                 labelAutoLoginCharacter.Visible = true;
@@ -329,37 +335,26 @@ namespace Gw2Launcher.UI
             {
                 apiRequirements = new ApiRequirements[]
                 {
-                    new ApiRequirements(labelTrackDailyCompletionApi,
-                        new Api.TokenInfo.Permissions[]
-                        {
-                            Api.TokenInfo.Permissions.Account,
-                            Api.TokenInfo.Permissions.Progression
-                        }, 
+                    new ApiRequirements(labelTrackDailyCompletionApi, 
+                        Api.TokenInfo.Permissions.Account | Api.TokenInfo.Permissions.Progression,
                         delegate(ApiKeyData kd)
                         {
-                            int totalAp = -1;
-                            if (kd.useAccountData)
-                            {
-                                var gw2 = (Settings.IGw2Account)account;
-                                if (gw2.ApiData != null && gw2.ApiData.DailyPoints != null)
-                                    totalAp = gw2.ApiData.DailyPoints.Value;
-                            }
-                            else if (kd.account != null)
-                                totalAp = kd.account.DailyAP + kd.account.MonthlyAP;
-                            if (totalAp >= Api.Account.MAX_AP)
-                                return ApiRequirements.ApiState.NotEligible;
                             return ApiRequirements.ApiState.OK;
                         }),
                     new ApiRequirements(labelTrackPlayedApi,
-                        new Api.TokenInfo.Permissions[]
-                        {
-                            Api.TokenInfo.Permissions.Account,
-                        }, 
+                        Api.TokenInfo.Permissions.Account, 
+                        null),
+                    new ApiRequirements(labelTrackWeeklyCompletionApi,
+                        Api.TokenInfo.Permissions.Account | Api.TokenInfo.Permissions.Progression,
+                        null),
+                    new ApiRequirements(labelTrackAstralApi,
+                        Api.TokenInfo.Permissions.Account | Api.TokenInfo.Permissions.Wallet, 
                         null),
                 };
 
                 LinkCheckBox(checkShowDailyCompletion, checkTrackDailyCompletionApi);
                 LinkCheckBox(checkShowDailyLogin, checkTrackPlayedApi);
+                LinkCheckBox(checkShowWeeklyCompletion, checkTrackWeeklyCompletionApi);
 
                 panelGraphics.PreVisiblePropertyChanged += panelGraphics_PreVisiblePropertyChanged;
             }
@@ -458,6 +453,9 @@ namespace Gw2Launcher.UI
             buttonSample.ShowAccount = !Settings.StyleShowAccount.HasValue || Settings.StyleShowAccount.Value;
             buttonSample.ShowColorKey = Settings.StyleShowColor.Value;
             buttonSample.AccountType = type;
+
+            labelDisableRunAfterGlobal.Visible = Settings.DisableRunAfter.Value;
+            Settings.DisableRunAfter.ValueChanged += DisableRunAfter_ValueChanged;
         }
 
         public formAccount(Settings.IAccount account)
@@ -571,6 +569,7 @@ namespace Gw2Launcher.UI
                 {
                     textGfxSettings.Text = gw2.GfxFile.Path;
                     textGfxSettings.Select(textGfxSettings.TextLength, 0);
+                    checkGfxSettingsReadOnly.Checked = gw2.GfxFile.IsLocked;
                 }
 
                 checkAutomaticLauncherLogin.Checked = gw2.AutomaticRememberedLogin;
@@ -578,29 +577,27 @@ namespace Gw2Launcher.UI
                 checkPort443.Checked = gw2.ClientPort == 443;
 
                 checkShowDailyCompletion.Checked = gw2.ShowDailyCompletion;
-                textApiKey.Text = gw2.ApiKey;
+                checkShowWeeklyCompletion.Checked = gw2.ShowWeeklyCompletion;
 
-                if (gw2.ApiData != null)
+                if (gw2.Api != null)
                 {
-                    if (!string.IsNullOrEmpty(gw2.ApiKey))
+                    textApiKey.Text = gw2.Api.Key;
+
+                    checkTrackPlayedApi.Checked = (gw2.ApiTracking & Settings.ApiTracking.Login) != 0;
+                    checkTrackDailyCompletionApi.Checked = (gw2.ApiTracking & Settings.ApiTracking.Daily) != 0;
+                    checkTrackWeeklyCompletionApi.Checked = (gw2.ApiTracking & Settings.ApiTracking.Weekly) != 0;
+                    checkTrackAstralApi.Checked = (gw2.ApiTracking & Settings.ApiTracking.Astral) != 0;
+
+                    var kd = new ApiKeyData();
+                    kd.useAccountData = true;
+
+                    kdCurrent = kd;
+                    foreach (var ar in apiRequirements)
                     {
-                        var kd = new ApiKeyData();
-                        kd.useAccountData = true;
-
-                        kdCurrent = kd;
-                        foreach (var ar in apiRequirements)
-                        {
-                            ar.Verify(kd);
-                        }
-
-                        apikeys[gw2.ApiKey] = kd;
+                        ar.Verify(kd);
                     }
 
-                    if (gw2.ApiData.DailyPoints != null)
-                        checkTrackDailyCompletionApi.Checked = true;
-
-                    if (gw2.ApiData.Played != null)
-                        checkTrackPlayedApi.Checked = true;
+                    apikeys[gw2.Api.Key] = kd;
                 }
 
                 if (gw2.MumbleLinkName != null)
@@ -686,13 +683,13 @@ namespace Gw2Launcher.UI
                 checkProcessAffinityAll.Checked = false;
             }
 
-            if (account.ColorKey != Color.Empty)
+            if (!account.ColorKeyIsDefault)
             {
                 SetColor(account.ColorKey);
                 menuColorUseDefaultToolStripMenuItem.Checked = false;
             }
             else
-                panelIdentifierColor.BackColor = Util.Color.FromUID(account.UID);
+                panelIdentifierColor.BackColor = account.ColorKey;
 
             IconValue icon = null;
             switch (account.IconType)
@@ -796,14 +793,13 @@ namespace Gw2Launcher.UI
 
             checkLaunchSteam.Checked = account.Proxy == Settings.LaunchProxy.Steam;
 
+            checkDisableRunAfter.Checked = account.DisableRunAfter;
 
 
 
 
 
 
-
-            //basic mode warnings
             if (accountType == Settings.AccountType.GuildWars2 && Settings.GuildWars2.ProfileMode.HasValue && Settings.GuildWars2.ProfileMode.Value == Settings.ProfileMode.Basic)
             {
                 labelScreenshotsLocationBasicWarning.Visible = true;
@@ -896,11 +892,49 @@ namespace Gw2Launcher.UI
             base.OnInitializeComponents();
 
             InitializeComponent();
+            MarkTemporarySettings();
+
+            sidebarPanel1.BackColor = Util.Color.Lighten(this.BackColor, Util.Color.Luminance(this.ForeColor) <= 127 ? 0.9f : 0.1f);
 
             if (Settings.IsRunningWine)
             {
                 ctimerTotpTime.Visible = false;
             }
+        }
+
+        protected void MarkTemporarySettings()
+        {
+            if (!Settings.HAS_TEMP_SETTINGS)
+                return;
+
+            var controls = new Control[]
+            {
+                checkShowWeeklyCompletion,
+                checkTrackAstralApi,
+                checkTrackWeeklyCompletionApi,
+            };
+
+            foreach (var c in controls)
+            {
+                MarkTemporary(c);
+            }
+        }
+
+        protected void MarkTemporary(Control c)
+        {
+            if (!hasTempSettings)
+            {
+                hasTempSettings = true;
+                if (!Settings.NotifiedTemporarySettings)
+                    this.Shown += hasTempSettings_Shown;
+            }
+            c.ForeColor = Color.Purple;
+        }
+
+        void hasTempSettings_Shown(object sender, EventArgs e)
+        {
+            MessageBox.Show(this, "This version contains purple marked settings are temporary and may reset in future versions.\n\nThis will reappear after a reset.", "Temporary settings", MessageBoxButtons.OK, MessageBoxIcon.Exclamation);
+            Settings.NotifiedTemporarySettings = true;
         }
 
         private void OnAutoApplyValueChanged(ApplyAllCheckBox c)
@@ -1804,7 +1838,7 @@ namespace Gw2Launcher.UI
                         var sliderText = texts.GetNext();
 
                         sliderText.Size = textSliderGfxTemplate.Size;
-                        sliderText.Text = string.Format("{0:0.##}", ofloat.Value);
+                        sliderText.Text = ofloat.Value.ToString("0.##");
                         sliderText.Location = new Point(textSliderGfxTemplate.Left, y + textSliderGfxTemplate.Top - sliderGfxTemplate.Top);
 
                         var slider = sliders.GetNext();
@@ -2522,25 +2556,18 @@ namespace Gw2Launcher.UI
                     a.RecordLaunches = checkRecordLaunch.Checked;
                 }
 
-                if (isMaster || aaAuthorization.Checked)
+                if (isMaster || aaEmail.Checked)
                 {
-                    if (textEmail.TextBox.TextLength > 0)
-                    {
-                        a.Email = textEmail.TextBox.Text;
+                    a.Email = textEmail.TextBox.TextLength > 0 ? textEmail.TextBox.Text : null;
+                }
 
-                        if (textPassword.TextVisible)
-                        {
-                            if (a.Password != null)
-                                a.Password.Dispose();
-                            a.Password = textPassword.PasswordBox.TextLength > 0 ? Settings.PasswordString.Create(textPassword.PasswordBox.Password) : null;
-                        }
-                    }
-                    else
+                if (isMaster || aaPassword.Checked)
+                {
+                    if (textPassword.TextVisible)
                     {
                         if (a.Password != null)
                             a.Password.Dispose();
-                        a.Email = null;
-                        a.Password = null;
+                        a.Password = textPassword.PasswordBox.TextLength > 0 ? Settings.PasswordString.Create(textPassword.PasswordBox.Password) : null;
                     }
                 }
 
@@ -2619,6 +2646,11 @@ namespace Gw2Launcher.UI
                             if (isMaster || aaGfxSettings.Checked)
                             {
                                 gw2.GfxFile = gfxFile;
+
+                                if (isMaster && gfxFile != null)
+                                {
+                                    gfxFile.IsLocked = checkGfxSettingsReadOnly.Checked;
+                                }
                             }
 
                             if (isMaster || aaAutoLoginGw2.Checked)
@@ -2643,116 +2675,164 @@ namespace Gw2Launcher.UI
                                     gw2.ClientPort = 0;
                             }
 
-                            if (isMaster || aaShowDailyCompletion.Checked || aaShowDailyLogin.Checked || aaApiKey.Checked || aaTrackDailyCompletionApi.Checked)
+                            #region API
+
+                            var apiTracking = Settings.ApiTracking.None;
+                            var apiTrackingPrevious = gw2.ApiTracking;
+
+                            if (isMaster || aaShowDailyLogin.Checked)
                             {
-                                if (isMaster || aaShowDailyCompletion.Checked)
-                                {
-                                    gw2.ShowDailyCompletion = checkShowDailyCompletion.Checked;
+                                gw2.ShowDailyLogin = checkShowDailyLogin.Checked;
+                            }
 
-                                    if (gw2.ApiData != null && !gw2.ShowDailyCompletion && gw2.ApiData.DailyPoints != null)
+                            if (gw2.ShowDailyLogin)
+                            {
+                                if (isMaster || aaTrackPlayedApi.Checked)
+                                {
+                                    if (checkTrackPlayedApi.Checked)
                                     {
-                                        gw2.ApiData.DailyPoints = null;
+                                        apiTracking |= Settings.ApiTracking.Login;
                                     }
-                                }
-
-                                if (isMaster || aaShowDailyLogin.Checked)
-                                {
-                                    gw2.ShowDailyLogin = checkShowDailyLogin.Checked;
-
-                                    if (gw2.ApiData != null && !gw2.ShowDailyLogin && gw2.ApiData.Played != null)
-                                    {
-                                        gw2.ApiData.Played = null;
-                                    }
-                                }
-
-                                bool keyChanged;
-                                string apiKey;
-
-                                if (isMaster || aaApiKey.Checked)
-                                {
-                                    apiKey = textApiKey.Text;
-                                    keyChanged = !textApiKey.Text.Equals(gw2.ApiKey, StringComparison.OrdinalIgnoreCase);
-
-                                    gw2.ApiKey = apiKey;
                                 }
                                 else
                                 {
-                                    apiKey = gw2.ApiKey;
-                                    keyChanged = false;
+                                    apiTracking |= (apiTrackingPrevious & Settings.ApiTracking.Login);
                                 }
+                            }
 
+                            if (isMaster || aaShowDailyCompletion.Checked)
+                            {
+                                gw2.ShowDailyCompletion = checkShowDailyCompletion.Checked;
+                            }
+
+                            if (gw2.ShowDailyCompletion)
+                            {
                                 if (isMaster || aaTrackDailyCompletionApi.Checked)
                                 {
-                                    if (gw2.ShowDailyCompletion && checkTrackDailyCompletionApi.Checked && !string.IsNullOrEmpty(apiKey))
+                                    if (checkTrackDailyCompletionApi.Checked)
                                     {
-                                        if (gw2.ApiData == null)
-                                            gw2.ApiData = gw2.CreateApiData();
-
-                                        if (gw2.ApiData.DailyPoints == null)
-                                        {
-                                            var points = gw2.ApiData.DailyPoints = gw2.ApiData.CreateValue<ushort>();
-                                            points.State = Settings.ApiCacheState.None;
-                                        }
-                                        else if (keyChanged)
-                                            gw2.ApiData.DailyPoints.State = Settings.ApiCacheState.None;
-
-                                        if (gw2.ApiData.DailyPoints.State == Settings.ApiCacheState.None && textApiKey.Tag != null && (isMaster || aaApiKey.Checked))
-                                        {
-                                            var kd = (ApiKeyData)textApiKey.Tag;
-                                            if (kd.account != null)
-                                            {
-                                                var total = kd.account.DailyAP + kd.account.MonthlyAP;
-                                                if (total < 0)
-                                                    total = ushort.MaxValue;
-                                                var points = gw2.ApiData.DailyPoints;
-                                                points.Value = (ushort)total;
-                                                points.State = Settings.ApiCacheState.OK;
-                                                points.LastChange = account.LastUsedUtc;
-                                                gw2.LastDailyCompletionUtc = account.LastUsedUtc;
-                                            }
-                                        }
+                                        apiTracking |= Settings.ApiTracking.Daily;
                                     }
-                                    else if (gw2.ApiData != null && gw2.ApiData.DailyPoints != null)
-                                        gw2.ApiData.DailyPoints = null;
                                 }
-
-                                if (isMaster || aaTrackPlayedApi.Checked)
+                                else
                                 {
-                                    if (gw2.ShowDailyLogin && checkTrackPlayedApi.Checked && !string.IsNullOrEmpty(apiKey))
-                                    {
-                                        if (gw2.ApiData == null)
-                                            gw2.ApiData = gw2.CreateApiData();
-
-                                        if (gw2.ApiData.Played == null)
-                                        {
-                                            var played = gw2.ApiData.Played = gw2.ApiData.CreateValue<int>();
-                                            played.State = Settings.ApiCacheState.None;
-                                        }
-                                        else if (keyChanged)
-                                            gw2.ApiData.Played.State = Settings.ApiCacheState.None;
-
-                                        if (gw2.ApiData.Played.State == Settings.ApiCacheState.None && textApiKey.Tag != null && (isMaster || aaApiKey.Checked))
-                                        {
-                                            var kd = (ApiKeyData)textApiKey.Tag;
-                                            if (kd.account != null)
-                                            {
-                                                var played = gw2.ApiData.Played;
-                                                played.Value = kd.account.Age;
-                                                played.State = Settings.ApiCacheState.Pending;
-                                                played.LastChange = gw2.LastUsedUtc;
-                                            }
-                                        }
-                                    }
-                                    else if (gw2.ApiData != null && gw2.ApiData.Played != null)
-                                        gw2.ApiData.Played = null;
+                                    apiTracking |= (apiTrackingPrevious & Settings.ApiTracking.Daily);
                                 }
                             }
 
-                            if (gw2.ApiData != null)
+                            if (isMaster || aaShowWeeklyCompletion.Checked)
                             {
-                                if (gw2.ApiData.Played == null && gw2.ApiData.DailyPoints == null)
-                                    gw2.ApiData = null;
+                                gw2.ShowWeeklyCompletion = checkShowWeeklyCompletion.Checked;
                             }
+
+                            if (gw2.ShowWeeklyCompletion)
+                            {
+                                if (isMaster || aaTrackWeeklyCompletionApi.Checked)
+                                {
+                                    if (checkTrackWeeklyCompletionApi.Checked)
+                                    {
+                                        apiTracking |= Settings.ApiTracking.Weekly;
+                                    }
+                                }
+                                else
+                                {
+                                    apiTracking |= (apiTrackingPrevious & Settings.ApiTracking.Weekly);
+                                }
+                            }
+
+                            if (isMaster || aaTrackAstralApi.Checked)
+                            {
+                                if (checkTrackAstralApi.Checked)
+                                {
+                                    apiTracking |= Settings.ApiTracking.Astral;
+                                }
+                            }
+                            else
+                            {
+                                apiTracking |= (apiTrackingPrevious & Settings.ApiTracking.Astral);
+                            }
+
+                            bool keyChanged;
+
+                            if (isMaster || aaApiKey.Checked)
+                            {
+                                var apiKey = textApiKey.Text;
+
+                                if (string.IsNullOrWhiteSpace(apiKey))
+                                {
+                                    if (keyChanged = gw2.Api != null)
+                                    {
+                                        gw2.Api = null;
+                                    }
+                                }
+                                else if (keyChanged = gw2.Api == null || !gw2.Api.Equals(apiKey))
+                                {
+                                    var p = Api.TokenInfo.Permissions.Unknown;
+
+                                    if (textApiKey.Tag != null)
+                                    {
+                                        var kd = (ApiKeyData)textApiKey.Tag;
+
+                                        p = kd.permissions;
+                                    }
+
+                                    gw2.Api = Settings.ApiDataKey.Create(apiKey, p);
+                                }
+                                else if (gw2.Api.Permissions == Api.TokenInfo.Permissions.None)
+                                {
+                                    if (textApiKey.Tag != null)
+                                    {
+                                        var kd = (ApiKeyData)textApiKey.Tag;
+
+                                        gw2.Api.Permissions = kd.permissions;
+                                    }
+                                }
+                            }
+                            else
+                            {
+                                keyChanged = false;
+                            }
+
+                            gw2.ApiTracking = apiTracking;
+
+                            if (gw2.Api != null)
+                            {
+                                var p = gw2.Api.Permissions;
+                                var d = gw2.Api.Data;
+                                var t = gw2.Api.Tracking;
+
+                                if (t != 0)
+                                {
+                                    if (d.Account == null)
+                                    {
+                                        d.Account = d.CreateValue<Settings.ApiData.AccountValues>();
+                                    }
+
+                                    if (d.Wallet == null && (p & (Api.TokenInfo.Permissions.Wallet | Api.TokenInfo.Permissions.Unknown)) != 0 && (t & (Settings.ApiTracking.Astral | Settings.ApiTracking.Weekly | Settings.ApiTracking.Daily)) != 0)
+                                    {
+                                        d.Wallet = d.CreateValue<Settings.ApiData.WalletValues>();
+                                    }
+
+                                    if (textApiKey.Tag != null && (isMaster || aaApiKey.Checked))
+                                    {
+                                        var kd = (ApiKeyData)textApiKey.Tag;
+
+                                        if (kd.account != null)
+                                        {
+                                            if (d.Account != null && d.Account.State == Settings.ApiCacheState.None)
+                                            {
+                                                d.Account.Value = new Settings.ApiData.AccountValues(kd.account);
+                                                d.Account.State = Settings.ApiCacheState.OK;
+                                                d.Account.LastChange = kd.account.LastModifiedServer;
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+
+                            #endregion
+
+
 
                             if (isMaster)
                             {
@@ -2803,6 +2883,16 @@ namespace Gw2Launcher.UI
                                 gw2.ChromiumAffinity = ((Settings.IGw2Account)master).ChromiumAffinity;
                             }
 
+                            if (checkResetDailyCompletion.Checked && (isMaster || aaResetDailyCompletion.Checked) && gw2.ShowDailyCompletion)
+                            {
+                                gw2.LastDailyCompletionUtc = DateTime.MinValue;
+                            }
+
+                            if (checkResetWeeklyCompletion.Checked && (isMaster || aaResetWeeklyCompletion.Checked) && gw2.ShowWeeklyCompletion)
+                            {
+                                gw2.LastWeeklyCompletionUtc = DateTime.MinValue;
+                            }
+
                             break;
                         case Settings.AccountType.GuildWars1:
 
@@ -2813,7 +2903,7 @@ namespace Gw2Launcher.UI
                                 gw1.DatFile = gwdatFile;
                             }
 
-                            if (isMaster || aaAuthorization.Checked)
+                            if (isMaster || aaEmail.Checked)
                             {
                                 gw1.CharacterName = textAutoLoginCharacter.TextBox.Text;
                             }
@@ -2960,7 +3050,10 @@ namespace Gw2Launcher.UI
                     }
                 }
 
-
+                if (isMaster || aaDisableRunAfter.Checked)
+                {
+                    a.DisableRunAfter = checkDisableRunAfter.Checked;
+                }
 
 
 
@@ -3242,11 +3335,17 @@ namespace Gw2Launcher.UI
             if (textApiKey.TextLength == 0)
                 return;
 
+            var container = buttonApiVerify.Parent;
+
+            container.SuspendLayout();
+
             labelApiPermissions.Text = "...";
 
             buttonApiVerify.Enabled = false;
             labelApiPermissions.Visible = true;
             buttonApiVerify.Visible = false;
+
+            container.ResumeLayout();
 
             bool keyChanged;
             EventHandler onChanged = delegate
@@ -3264,18 +3363,17 @@ namespace Gw2Launcher.UI
 
                 try
                 {
-                    kd.permissionsArray = await Api.TokenInfo.GetPermissionsAsync(key);
-                    kd.permissions = new HashSet<Api.TokenInfo.Permissions>(kd.permissionsArray);
+                    kd.permissions = await Api.TokenInfo.GetPermissionsAsync(key);
                 }
                 catch (Exception ex)
                 {
                     Util.Logging.Log(ex);
-                    kd.permissions = null;
+                    kd.permissions = Api.TokenInfo.Permissions.None;
                 }
 
                 int totalAp;
 
-                if (kd.permissions == null)
+                if (kd.permissions == Api.TokenInfo.Permissions.None)
                 {
                     if (!keyChanged)
                     {
@@ -3332,30 +3430,38 @@ namespace Gw2Launcher.UI
                 if (textApiKey.Tag == kd)
                     return;
 
-                showVerify = kd.permissions == null;
+                showVerify = kd.permissions == Api.TokenInfo.Permissions.None;
             }
 
             textApiKey.Tag = kd;
 
+            var container = buttonApiVerify.Parent;
+
+            container.SuspendLayout();
+
             if (!showVerify)
             {
-                var sb = new StringBuilder(kd.permissionsArray.Length * 5 + 50);
+                var sb = new StringBuilder(Util.Bits.GetBitCount((uint)kd.permissions) * 10 + 50);
 
                 if (kd.account != null)
                     sb.AppendLine(kd.account.Name);
 
                 sb.Append("Permissions: ");
-                if (kd.permissionsArray.Length == 0)
+                if (kd.permissions == Api.TokenInfo.Permissions.None)
                 {
                     sb.Append("none");
                 }
                 else
                 {
-                    foreach (var p in kd.permissions)
+                    foreach (Api.TokenInfo.Permissions p in Enum.GetValues(typeof(Api.TokenInfo.Permissions)))
                     {
-                        sb.Append(p.ToString().ToLower());
-                        sb.Append(", ");
+                        if ((kd.permissions & p) == p && p != 0)
+                        {
+                            sb.Append(p.ToString().ToLower());
+                            sb.Append(", ");
+                        }
                     }
+
                     sb.Length -= 2;
                 }
 
@@ -3373,16 +3479,18 @@ namespace Gw2Launcher.UI
                     ar.Verify(kd);
                 }
             }
+
+            container.ResumeLayout();
         }
 
-        private int OnApiKeyTextChangedCallback()
+        private Util.ScheduledEvents.Ticks OnApiKeyTextChangedCallback()
         {
             ApiKeyData kd;
             apikeys.TryGetValue(textApiKey.Text, out kd);
 
             OnApiKeyDataChanged(kd);
 
-            return -1;
+            return Util.ScheduledEvents.Ticks.None;
         }
 
         private void textApiKey_TextChanged(object sender, EventArgs e)
@@ -3456,7 +3564,7 @@ namespace Gw2Launcher.UI
             panelSecurity.VisibleChanged -= onEvent;
         }
 
-        private int OnAuthenticatorKeyTextChanged()
+        private Util.ScheduledEvents.Ticks OnAuthenticatorKeyTextChanged()
         {
             if (Tools.Totp.IsValid(textAuthenticatorKey.TextBox.Text))
             {
@@ -3475,7 +3583,7 @@ namespace Gw2Launcher.UI
                 textTotpCurrent.Text = textTotpNext.Text = "invalid";
             }
 
-            return -1;
+            return Util.ScheduledEvents.Ticks.None;
         }
 
         /// <summary>
@@ -3488,6 +3596,8 @@ namespace Gw2Launcher.UI
             {
                 Util.ScheduledEvents.Unregister(OnApiKeyTextChangedCallback);
                 Util.ScheduledEvents.Unregister(OnAuthenticatorKeyTextChanged);
+
+                Settings.DisableRunAfter.ValueChanged -= DisableRunAfter_ValueChanged;
 
                 ReleaseFiles();
 
@@ -3513,6 +3623,14 @@ namespace Gw2Launcher.UI
                     }
                 }
             }
+        }
+
+        void DisableRunAfter_ValueChanged(object sender, EventArgs e)
+        {
+            Util.Invoke.Required(this, delegate
+            {
+                labelDisableRunAfterGlobal.Visible = Settings.DisableRunAfter.Value;
+            });
         }
 
         private void labelShowDailyCompletionApi_Click(object sender, EventArgs e)
@@ -4856,6 +4974,19 @@ namespace Gw2Launcher.UI
         private void checkBrowserAffinityAll_CheckedChanged(object sender, EventArgs e)
         {
             panelBrowserAffinityContainer.Visible = !checkBrowserAffinityAll.Checked;
+        }
+
+        private void labelShowWeeklyCompletionApi_Click(object sender, EventArgs e)
+        {
+            buttonGeneral.SelectPanel(panelApi);
+            checkTrackWeeklyCompletionApi.Focus();
+        }
+
+        protected override void OnSystemColorsChanged(EventArgs e)
+        {
+            base.OnSystemColorsChanged(e);
+
+            sidebarPanel1.BackColor = Util.Color.Lighten(this.BackColor, Util.Color.Luminance(this.ForeColor) <= 127 ? 0.9f : 0.1f);
         }
     }
 }

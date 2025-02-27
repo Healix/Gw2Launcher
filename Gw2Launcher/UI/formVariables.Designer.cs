@@ -38,8 +38,8 @@ namespace Gw2Launcher.UI
             // 
             // panelVariablesContainer
             // 
-            this.panelVariablesContainer.Anchor = ((System.Windows.Forms.AnchorStyles)((((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom)
-            | System.Windows.Forms.AnchorStyles.Left)
+            this.panelVariablesContainer.Anchor = ((System.Windows.Forms.AnchorStyles)((((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom) 
+            | System.Windows.Forms.AnchorStyles.Left) 
             | System.Windows.Forms.AnchorStyles.Right)));
             this.panelVariablesContainer.Controls.Add(this.panelVariables);
             this.panelVariablesContainer.Controls.Add(this.scrollV);
@@ -58,10 +58,10 @@ namespace Gw2Launcher.UI
             // 
             // labelTemplate
             // 
-            this.labelTemplate.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left)
+            this.labelTemplate.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left) 
             | System.Windows.Forms.AnchorStyles.Right)));
             this.labelTemplate.AutoSize = true;
-            this.labelTemplate.Cursor = Windows.Cursors.Hand;
+            this.labelTemplate.Cursor = Gw2Launcher.Windows.Cursors.Hand;
             this.labelTemplate.Font = new System.Drawing.Font("Segoe UI Semibold", 8.25F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
             this.labelTemplate.Location = new System.Drawing.Point(0, 0);
             this.labelTemplate.Margin = new System.Windows.Forms.Padding(0);
@@ -70,13 +70,14 @@ namespace Gw2Launcher.UI
             this.labelTemplate.Text = "%template%";
             this.labelTemplate.Visible = false;
             // 
-            // flatVScrollBar1
+            // scrollV
             // 
-            this.scrollV.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom)
+            this.scrollV.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom) 
             | System.Windows.Forms.AnchorStyles.Right)));
             this.scrollV.Location = new System.Drawing.Point(113, 0);
             this.scrollV.Margin = new System.Windows.Forms.Padding(1, 0, 0, 0);
             this.scrollV.Maximum = 100;
+            this.scrollV.ScrollChange = 0;
             this.scrollV.Size = new System.Drawing.Size(8, 90);
             this.scrollV.Value = 0;
             this.scrollV.Visible = false;
@@ -87,6 +88,7 @@ namespace Gw2Launcher.UI
             this.AutoSizeMode = System.Windows.Forms.AutoSizeMode.GrowAndShrink;
             this.ClientSize = new System.Drawing.Size(131, 100);
             this.Controls.Add(this.panelVariablesContainer);
+            this.ForeColor = System.Drawing.Color.Black;
             this.StartPosition = System.Windows.Forms.FormStartPosition.Manual;
             this.panelVariablesContainer.ResumeLayout(false);
             this.panelVariablesContainer.PerformLayout();

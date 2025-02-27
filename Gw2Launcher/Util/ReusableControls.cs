@@ -13,6 +13,7 @@ namespace Gw2Launcher.Util
         {
             void ReleaseAll();
             void Initialize(int capacity);
+            void HideRemaining();
         }
 
         public interface IResult : IDisposable, IEnumerable<Control>
@@ -25,17 +26,27 @@ namespace Gw2Launcher.Util
             {
                 get;
             }
+            /// <summary>
+            /// Controls that were created
+            /// </summary>
             Control[] New
             {
                 get;
             }
+            /// <summary>
+            /// Enumerates all remaining controls, making them invisible
+            /// </summary>
+            void HideRemaining();
+            /// <summary>
+            /// Adds new controls to the parent control
+            /// </summary>
+            void AddNew(Control parent);
         }
 
         public interface IResult<T> : IResult
             where T : Control
         {
             T GetNext();
-            void HideRemaining();
         }
 
         private class Result<T> : IResult<T>
@@ -69,6 +80,14 @@ namespace Gw2Launcher.Util
                 while (index < count)
                 {
                     GetNext().Visible = false;
+                }
+            }
+
+            public void AddNew(Control parent)
+            {
+                if (controlsNew != null)
+                {
+                    parent.Controls.AddRange(controlsNew);
                 }
             }
 
@@ -140,14 +159,27 @@ namespace Gw2Launcher.Util
             }
 
             /// <summary>
+            /// Hides any controls that aren't being used
+            /// </summary>
+            public void HideRemaining()
+            {
+                for (var i = index; i < count; i++)
+                {
+                    this.controls[i].Visible = false;
+                }
+            }
+
+            /// <summary>
             /// Returns all of the available controls and creates new one if necessary
             /// </summary>
             public IResult<T> CreateOrAll(int count, Func<T> createNew)
             {
-                int available = count - index;
-                if (available > this.count)
-                    return Create(available, createNew);
-                return Create(this.count, createNew);
+                int available = this.count - index;
+                if (available > count)
+                {
+                    count = available;
+                }
+                return Create(count, createNew);
             }
 
             /// <summary>
@@ -291,6 +323,26 @@ namespace Gw2Launcher.Util
                 controls = (Controls<T>)o;
 
             return controls.CreateOrAll(count, createNew);
+        }
+
+        public void HideRemaining<T>()
+            where T : Control
+        {
+            IControls o;
+
+            if (cache.TryGetValue(typeof(T), out o))
+            {
+                o.HideRemaining();
+            }
+        }
+
+        /// <summary>
+        /// Hides any controls that weren't claimed
+        /// </summary>
+        public void HideRemaining()
+        {
+            foreach (var o in cache.Values)
+                o.HideRemaining();
         }
 
         public void Release<T>(ICollection<T> controls)

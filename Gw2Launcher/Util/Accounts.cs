@@ -10,9 +10,8 @@ namespace Gw2Launcher.Util
     {
         public static IEnumerable<Settings.IAccount> GetAccounts()
         {
-            foreach (var uid in Settings.Accounts.GetKeys())
+            foreach (var a in Settings.Accounts.GetValues())
             {
-                var a = Settings.Accounts[uid];
                 var account = a.Value;
 
                 if (a.HasValue && account != null)
@@ -24,9 +23,8 @@ namespace Gw2Launcher.Util
 
         public static IEnumerable<Settings.IAccount> GetAccounts(Settings.AccountType type)
         {
-            foreach (var uid in Settings.Accounts.GetKeys())
+            foreach (var a in Settings.Accounts.GetValues())
             {
-                var a = Settings.Accounts[uid];
                 var account = a.Value;
 
                 if (a.HasValue && account != null && a.Value.Type == type)

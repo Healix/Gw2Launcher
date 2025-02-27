@@ -15,9 +15,8 @@ namespace Gw2Launcher.Util
         /// <returns></returns>
         public static Settings.IDatFile Get(string path)
         {
-            foreach (ushort fid in Settings.DatFiles.GetKeys())
+            foreach (var dat in Settings.DatFiles.GetValues())
             {
-                var dat = Settings.DatFiles[fid];
                 if (dat.HasValue && path.Equals(dat.Value.Path, StringComparison.OrdinalIgnoreCase))
                 {
                     return dat.Value;

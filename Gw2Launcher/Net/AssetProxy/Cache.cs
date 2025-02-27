@@ -78,7 +78,7 @@ namespace Gw2Launcher.Net.AssetProxy
             }
         }
 
-        static int DoPurge()
+        static Util.ScheduledEvents.Ticks DoPurge()
         {
             if (threadDelete == null)
             {
@@ -97,7 +97,7 @@ namespace Gw2Launcher.Net.AssetProxy
                 t.Start();
             }
 
-            return 86400000;
+            return new Util.ScheduledEvents.Ticks(86400000);
         }
 
         public static CacheStream GetCache(string request, bool readOnly = false)

@@ -190,10 +190,10 @@ namespace Gw2Launcher.UI.Base
                     break;
                 case WindowMessages.WM_ACTIVATE:
 
-                    if (m.WParam != IntPtr.Zero)
-                    {
-                        OnDeactivating();
-                    }
+                    //if (m.WParam != IntPtr.Zero)
+                    //{
+                    //    OnDeactivating();
+                    //}
 
                     break;
             }

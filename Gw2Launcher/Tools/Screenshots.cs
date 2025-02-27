@@ -440,6 +440,11 @@ namespace Gw2Launcher.Tools
 
             void watcher_Error(object sender, ErrorEventArgs e)
             {
+                if (Util.Logging.Enabled)
+                {
+                    Util.Logging.LogEvent("Error while monitoring screenshots", e.GetException());
+                }
+
                 try
                 {
                     watcher.EnableRaisingEvents = false;
@@ -449,7 +454,7 @@ namespace Gw2Launcher.Tools
                 {
                     if (Util.Logging.Enabled)
                     {
-                        Util.Logging.LogEvent(null, "Error while monitoring screenshots: " + ex.Message + " (" + ex.HResult.ToString("x") + ")");
+                        Util.Logging.LogEvent("Unable to continue monitoring screenshots", ex);
                     }
 
                     using (watcher)
@@ -467,6 +472,11 @@ namespace Gw2Launcher.Tools
                 if (e.ChangeType.HasFlag(WatcherChangeTypes.Created))
                 {
                     bool doQueue;
+
+                    if (Util.Logging.Enabled)
+                    {
+                        Util.Logging.LogEvent(null, "Queued " + e.Name + " for processing");
+                    }
 
                     lock (this)
                     {
@@ -588,26 +598,52 @@ namespace Gw2Launcher.Tools
                         try
                         {
                             if (first.value.Length != 9) //standard screenshots should only be in the format gw000.ext
+                            {
+                                if (Util.Logging.Enabled)
+                                {
+                                    Util.Logging.LogEvent(null, "Skipping " + first.value);
+                                }
                                 break;
+                            }
                             if (!(canConvert = first.value.EndsWith(".bmp", StringComparison.OrdinalIgnoreCase)) &&
                                 !first.value.EndsWith(".jpg", StringComparison.OrdinalIgnoreCase) &&
                                 !first.value.EndsWith(".png", StringComparison.OrdinalIgnoreCase))
+                            {
+                                if (Util.Logging.Enabled)
+                                {
+                                    Util.Logging.LogEvent(null, "Skipping " + first.value);
+                                }
                                 break;
+                            }
 
                             using (var stream = File.Open(path, FileMode.Open, FileAccess.Read, FileShare.None))
                             {
                                 if (convert && canConvert)
                                 {
-                                    Stream output;
-                                    try
+                                    Stream output = null;
+
+                                    for (var attempt = 0; ; ++attempt)
                                     {
-                                        output = File.Open(tmp = Path.Combine(this.path, "tmp_" + first.value.Substring(0, first.value.Length - 4)), FileMode.Create, FileAccess.Write, FileShare.None);
-                                    }
-                                    catch (Exception e)
-                                    {
-                                        Util.Logging.Log(e);
-                                        output = null;
-                                        tmp = null;
+                                        try
+                                        {
+                                            output = File.Open(tmp = Path.Combine(this.path, "tmp_" + first.value.Substring(0, first.value.Length - 4)) + "_" + attempt, FileMode.Create, FileAccess.Write, FileShare.None);
+
+                                            break;
+                                        }
+                                        catch (Exception e)
+                                        {
+                                            Util.Logging.Log(e);
+
+                                            if (attempt > 3)
+                                            {
+                                                output = null;
+                                                tmp = null;
+
+                                                Util.Logging.LogEvent("Failed to create temp screenshot", e);
+
+                                                break;
+                                            }
+                                        }
                                     }
 
                                     if (tmp != null)
@@ -641,6 +677,10 @@ namespace Gw2Launcher.Tools
                                             catch { }
                                             tmp = null;
                                             Util.Logging.Log(ex);
+                                            if (Util.Logging.Enabled)
+                                            {
+                                                Util.Logging.LogEvent("Failed to convert screenshot", ex);
+                                            }
                                         }
                                     }
                                 }
@@ -673,7 +713,7 @@ namespace Gw2Launcher.Tools
                             {
                                 if (Util.Logging.Enabled)
                                 {
-                                    Util.Logging.LogEvent(null, "Error while converting screenshot (" + first.value + "): " + e.Message + " (" + e.HResult.ToString("x") + ")");
+                                    Util.Logging.LogEvent("Error while accessing screenshot (" + first.value + ")", e);
                                 }
 
                                 break;
@@ -683,7 +723,7 @@ namespace Gw2Launcher.Tools
                         {
                             if (Util.Logging.Enabled)
                             {
-                                Util.Logging.LogEvent(null, "Error while converting screenshot (" + first.value + "): " + e.Message + " (" + e.HResult.ToString("x") + ")");
+                                Util.Logging.LogEvent("Error while accessing screenshot (" + first.value + ")", e);
                             }
 
                             Util.Logging.Log(e);
@@ -767,6 +807,14 @@ namespace Gw2Launcher.Tools
                                 {
                                     File.Move(from, to);
 
+                                    if (Util.Logging.Enabled)
+                                    {
+                                        if (tmp != null)
+                                            Util.Logging.LogEvent(null, first.value + " converted to " + name + ext);
+                                        else
+                                            Util.Logging.LogEvent(null, first.value + " renamed to " + name + ext);
+                                    }
+
                                     finalpath = to;
 
                                     if (tmp != null && converter.DeleteOriginal)
@@ -801,7 +849,7 @@ namespace Gw2Launcher.Tools
                                     {
                                         if (Util.Logging.Enabled)
                                         {
-                                            Util.Logging.LogEvent(null, "Unable to move screenshot (" + first.value + "): " + ex.Message + " (" + ex.HResult.ToString("x") + ")");
+                                            Util.Logging.LogEvent("Unable to move screenshot (" + first.value + ")", ex);
                                         }
                                         index--;
                                         break;
@@ -811,7 +859,7 @@ namespace Gw2Launcher.Tools
                                 {
                                     if (Util.Logging.Enabled)
                                     {
-                                        Util.Logging.LogEvent(null, "Unable to move screenshot (" + first.value + "): " + ex.Message + " (" + ex.HResult.ToString("x") + ")");
+                                        Util.Logging.LogEvent("Unable to move screenshot (" + first.value + ")", ex);
                                     }
                                     Util.Logging.Log(ex);
                                     index--;
@@ -823,7 +871,7 @@ namespace Gw2Launcher.Tools
                         {
                             if (Util.Logging.Enabled)
                             {
-                                Util.Logging.LogEvent(null, "Error while handling screenshot (" + first.value + "): " + e.Message + " (" + e.HResult.ToString("x") + ")");
+                                Util.Logging.LogEvent("Error while handling screenshot (" + first.value + ")", e);
                             }
                             Util.Logging.Log(e);
                         }
@@ -831,7 +879,10 @@ namespace Gw2Launcher.Tools
 
                     #endregion
 
-                    parent.OnScreenshotProcessed(finalpath);
+                    if (finalpath != null)
+                    {
+                        parent.OnScreenshotProcessed(finalpath);
+                    }
 
                     lock (this)
                     {
@@ -982,6 +1033,10 @@ namespace Gw2Launcher.Tools
             lock (watchers)
             {
                 var path = GetPath(account);
+                if (Util.Logging.Enabled)
+                {
+                    Util.Logging.LogEvent(account, "Using \"" + path + "\" for screenshots");
+                }
                 Watcher watcher;
                 if (accounts.TryGetValue(account.UID, out watcher))
                 {
@@ -1001,7 +1056,7 @@ namespace Gw2Launcher.Tools
                     {
                         if (Util.Logging.Enabled)
                         {
-                            Util.Logging.LogEvent(account, "Unable to monitor screenshots: " + ex.Message + " (" + ex.HResult.ToString("x") + ")");
+                            Util.Logging.LogEvent(account, "Unable to monitor screenshots", ex);
                         }
                         return;
                     }
@@ -1141,16 +1196,31 @@ namespace Gw2Launcher.Tools
                 catch (Exception e)
                 {
                     Util.Logging.Log(e);
+
+                    if (Util.Logging.Enabled)
+                    {
+                        Util.Logging.LogEvent("Unable to initialize screenshot formatter using \"" + Settings.ScreenshotNaming.Value + "\"", e);
+                    }
                 }
             }
 
-            if (Settings.GuildWars2.ScreenshotsFormat.HasValue || Settings.GuildWars1.ScreenshotsFormat.HasValue)
+            if (Settings.ScreenshotConversion.HasValue)
             {
                 var options = Settings.ScreenshotConversion.Value;
                 if (options.Format != Settings.ScreenshotConversionOptions.ImageFormat.None)
                 {
-                    converter = new ImageConverter(options);
-                    convert = converter.CanConvert;
+                    try
+                    {
+                        converter = new ImageConverter(options);
+                        convert = converter.CanConvert;
+                    }
+                    catch (Exception e)
+                    {
+                        if (Util.Logging.Enabled)
+                        {
+                            Util.Logging.LogEvent("Unable to initialize screenshot converter", e);
+                        }
+                    }
                 }
             }
 
@@ -1158,7 +1228,17 @@ namespace Gw2Launcher.Tools
             {
                 var first = this.first;
 
-                first.value.DoQueue(convert, rename, formatter, converter);
+                try
+                {
+                    first.value.DoQueue(convert, rename, formatter, converter);
+                }
+                catch (Exception e)
+                {
+                    if (Util.Logging.Enabled)
+                    {
+                        Util.Logging.LogEvent("Error while handling screenshot", e);
+                    }
+                }
 
                 lock(this)
                 {

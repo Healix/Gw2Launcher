@@ -246,7 +246,7 @@ namespace Gw2Launcher.Tools.Gfx
                     if (v != null)
                     {
                         float f;
-                        float.TryParse(v, out f);
+                        float.TryParse(v, System.Globalization.NumberStyles.Float, System.Globalization.CultureInfo.InvariantCulture, out f);
                         return f;
                     }
                     return 0;
@@ -284,7 +284,7 @@ namespace Gw2Launcher.Tools.Gfx
                     }
                     set
                     {
-                        base.ValueString = string.Format("{0:0.##}", value);
+                        base.ValueString = value.ToString("0.##", System.Globalization.CultureInfo.InvariantCulture);
                     }
                 }
             }

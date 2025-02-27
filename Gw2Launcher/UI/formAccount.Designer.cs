@@ -173,6 +173,10 @@ namespace Gw2Launcher.UI
             this.buttonScreenshotsLocation = new System.Windows.Forms.Button();
             this.label195 = new System.Windows.Forms.Label();
             this.label196 = new System.Windows.Forms.Label();
+            this.labelDisableRunAfterGlobal = new System.Windows.Forms.Label();
+            this.stackPanel63 = new Gw2Launcher.UI.Controls.StackPanel();
+            this.aaDisableRunAfter = new Gw2Launcher.UI.Controls.ApplyAllCheckBox();
+            this.checkDisableRunAfter = new System.Windows.Forms.CheckBox();
             this.stackPanel47 = new Gw2Launcher.UI.Controls.StackPanel();
             this.aaRunAfterPrograms = new Gw2Launcher.UI.Controls.ApplyAllCheckBox();
             this.stackPanel48 = new Gw2Launcher.UI.Controls.StackPanel();
@@ -228,11 +232,24 @@ namespace Gw2Launcher.UI
             this.checkTrackLoginRewardsDay = new System.Windows.Forms.CheckBox();
             this.textTrackLoginRewardsDay = new Gw2Launcher.UI.Controls.IntegerTextBox();
             this.imageTrackLoginRewardsDay = new System.Windows.Forms.PictureBox();
+            this.label96 = new System.Windows.Forms.Label();
             this.label59 = new System.Windows.Forms.Label();
             this.stackPanel24 = new Gw2Launcher.UI.Controls.StackPanel();
             this.aaShowDailyCompletion = new Gw2Launcher.UI.Controls.ApplyAllCheckBox();
             this.checkShowDailyCompletion = new System.Windows.Forms.CheckBox();
             this.labelShowDailyCompletionApi = new Gw2Launcher.UI.Controls.LinkLabel();
+            this.stackPanel75 = new Gw2Launcher.UI.Controls.StackPanel();
+            this.aaResetDailyCompletion = new Gw2Launcher.UI.Controls.ApplyAllCheckBox();
+            this.checkResetDailyCompletion = new System.Windows.Forms.CheckBox();
+            this.label93 = new System.Windows.Forms.Label();
+            this.label92 = new System.Windows.Forms.Label();
+            this.stackPanel74 = new Gw2Launcher.UI.Controls.StackPanel();
+            this.aaShowWeeklyCompletion = new Gw2Launcher.UI.Controls.ApplyAllCheckBox();
+            this.checkShowWeeklyCompletion = new System.Windows.Forms.CheckBox();
+            this.labelShowWeeklyCompletionApi = new Gw2Launcher.UI.Controls.LinkLabel();
+            this.stackPanel76 = new Gw2Launcher.UI.Controls.StackPanel();
+            this.aaResetWeeklyCompletion = new Gw2Launcher.UI.Controls.ApplyAllCheckBox();
+            this.checkResetWeeklyCompletion = new System.Windows.Forms.CheckBox();
             this.label67 = new System.Windows.Forms.Label();
             this.label9 = new System.Windows.Forms.Label();
             this.label21 = new System.Windows.Forms.Label();
@@ -243,9 +260,9 @@ namespace Gw2Launcher.UI
             this.stackPanel32 = new Gw2Launcher.UI.Controls.StackPanel();
             this.label50 = new System.Windows.Forms.Label();
             this.label49 = new System.Windows.Forms.Label();
-            this.stackPanel44 = new Gw2Launcher.UI.Controls.StackPanel();
-            this.aaAuthorization = new Gw2Launcher.UI.Controls.ApplyAllCheckBox();
             this.tableContainerPanel31 = new Gw2Launcher.UI.Controls.TableContainerPanel();
+            this.aaPassword = new Gw2Launcher.UI.Controls.ApplyAllCheckBox();
+            this.aaEmail = new Gw2Launcher.UI.Controls.ApplyAllCheckBox();
             this.label68 = new System.Windows.Forms.Label();
             this.label69 = new System.Windows.Forms.Label();
             this.textEmail = new Gw2Launcher.UI.Controls.BoxedLabelTextBox();
@@ -290,6 +307,7 @@ namespace Gw2Launcher.UI
             this.aaGfxSettings = new Gw2Launcher.UI.Controls.ApplyAllCheckBox();
             this.textGfxSettings = new System.Windows.Forms.TextBox();
             this.buttonGfxSettings = new System.Windows.Forms.Button();
+            this.checkGfxSettingsReadOnly = new System.Windows.Forms.CheckBox();
             this.labelGfxSettingsTitle = new System.Windows.Forms.Label();
             this.labelGfxSettingsTitleSub = new System.Windows.Forms.Label();
             this.labelGfxFileInfo = new System.Windows.Forms.Label();
@@ -341,6 +359,20 @@ namespace Gw2Launcher.UI
             this.panelProcessAffinityContainer = new Gw2Launcher.UI.Controls.StackPanel();
             this.label36 = new System.Windows.Forms.Label();
             this.adProcessAffinity = new Gw2Launcher.UI.Controls.AffinityDisplay();
+            this.panelLaunchOptionsProcessBrowser = new Gw2Launcher.UI.Controls.StackPanel();
+            this.label88 = new System.Windows.Forms.Label();
+            this.label259 = new System.Windows.Forms.Label();
+            this.stackPanel65 = new Gw2Launcher.UI.Controls.StackPanel();
+            this.aaBrowserPriority = new Gw2Launcher.UI.Controls.ApplyAllCheckBox();
+            this.checkBrowserPriority = new System.Windows.Forms.CheckBox();
+            this.comboBrowserPriority = new System.Windows.Forms.ComboBox();
+            this.label89 = new System.Windows.Forms.Label();
+            this.stackPanel67 = new Gw2Launcher.UI.Controls.StackPanel();
+            this.aaBrowserAffinity = new Gw2Launcher.UI.Controls.ApplyAllCheckBox();
+            this.checkBrowserAffinityAll = new System.Windows.Forms.CheckBox();
+            this.panelBrowserAffinityContainer = new Gw2Launcher.UI.Controls.StackPanel();
+            this.label81 = new System.Windows.Forms.Label();
+            this.adBrowserAffinity = new Gw2Launcher.UI.Controls.AffinityDisplay();
             this.panelStatistics = new Gw2Launcher.UI.Controls.AutoScrollContainerPanel();
             this.stackPanel25 = new Gw2Launcher.UI.Controls.StackPanel();
             this.stackPanel26 = new Gw2Launcher.UI.Controls.StackPanel();
@@ -374,18 +406,28 @@ namespace Gw2Launcher.UI
             this.label64 = new System.Windows.Forms.Label();
             this.label58 = new System.Windows.Forms.Label();
             this.label61 = new System.Windows.Forms.Label();
-            this.label62 = new System.Windows.Forms.Label();
             this.stackPanel16 = new Gw2Launcher.UI.Controls.StackPanel();
             this.aaTrackPlayedApi = new Gw2Launcher.UI.Controls.ApplyAllCheckBox();
             this.checkTrackPlayedApi = new System.Windows.Forms.CheckBox();
             this.labelTrackPlayedApi = new System.Windows.Forms.Label();
             this.label44 = new System.Windows.Forms.Label();
             this.label37 = new System.Windows.Forms.Label();
-            this.label46 = new System.Windows.Forms.Label();
             this.stackPanel17 = new Gw2Launcher.UI.Controls.StackPanel();
             this.aaTrackDailyCompletionApi = new Gw2Launcher.UI.Controls.ApplyAllCheckBox();
             this.checkTrackDailyCompletionApi = new System.Windows.Forms.CheckBox();
             this.labelTrackDailyCompletionApi = new System.Windows.Forms.Label();
+            this.label62 = new System.Windows.Forms.Label();
+            this.label90 = new System.Windows.Forms.Label();
+            this.stackPanel70 = new Gw2Launcher.UI.Controls.StackPanel();
+            this.aaTrackWeeklyCompletionApi = new Gw2Launcher.UI.Controls.ApplyAllCheckBox();
+            this.checkTrackWeeklyCompletionApi = new System.Windows.Forms.CheckBox();
+            this.labelTrackWeeklyCompletionApi = new System.Windows.Forms.Label();
+            this.label94 = new System.Windows.Forms.Label();
+            this.label95 = new System.Windows.Forms.Label();
+            this.stackPanel77 = new Gw2Launcher.UI.Controls.StackPanel();
+            this.aaTrackAstralApi = new Gw2Launcher.UI.Controls.ApplyAllCheckBox();
+            this.checkTrackAstralApi = new System.Windows.Forms.CheckBox();
+            this.labelTrackAstralApi = new System.Windows.Forms.Label();
             this.panelLaunchOptionsAdvanced = new Gw2Launcher.UI.Controls.AutoScrollContainerPanel();
             this.stackPanel31 = new Gw2Launcher.UI.Controls.StackPanel();
             this.stackPanel53 = new Gw2Launcher.UI.Controls.StackPanel();
@@ -413,20 +455,6 @@ namespace Gw2Launcher.UI
             this.contextAffinity = new System.Windows.Forms.ContextMenuStrip(this.components);
             this.saveToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.loadToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
-            this.panelLaunchOptionsProcessBrowser = new Gw2Launcher.UI.Controls.StackPanel();
-            this.label88 = new System.Windows.Forms.Label();
-            this.stackPanel65 = new Gw2Launcher.UI.Controls.StackPanel();
-            this.aaBrowserPriority = new Gw2Launcher.UI.Controls.ApplyAllCheckBox();
-            this.checkBrowserPriority = new System.Windows.Forms.CheckBox();
-            this.comboBrowserPriority = new System.Windows.Forms.ComboBox();
-            this.label89 = new System.Windows.Forms.Label();
-            this.stackPanel67 = new Gw2Launcher.UI.Controls.StackPanel();
-            this.aaBrowserAffinity = new Gw2Launcher.UI.Controls.ApplyAllCheckBox();
-            this.checkBrowserAffinityAll = new System.Windows.Forms.CheckBox();
-            this.panelBrowserAffinityContainer = new Gw2Launcher.UI.Controls.StackPanel();
-            this.label81 = new System.Windows.Forms.Label();
-            this.adBrowserAffinity = new Gw2Launcher.UI.Controls.AffinityDisplay();
-            this.label259 = new System.Windows.Forms.Label();
             this.contextIcon.SuspendLayout();
             this.contextImage.SuspendLayout();
             this.contextColor.SuspendLayout();
@@ -465,6 +493,7 @@ namespace Gw2Launcher.UI
             this.stackPanel8.SuspendLayout();
             this.stackPanel64.SuspendLayout();
             this.stackPanel9.SuspendLayout();
+            this.stackPanel63.SuspendLayout();
             this.stackPanel47.SuspendLayout();
             this.stackPanel48.SuspendLayout();
             this.panelGeneral.SuspendLayout();
@@ -484,10 +513,12 @@ namespace Gw2Launcher.UI
             this.stackPanel49.SuspendLayout();
             ((System.ComponentModel.ISupportInitialize)(this.imageTrackLoginRewardsDay)).BeginInit();
             this.stackPanel24.SuspendLayout();
+            this.stackPanel75.SuspendLayout();
+            this.stackPanel74.SuspendLayout();
+            this.stackPanel76.SuspendLayout();
             this.stackPanel55.SuspendLayout();
             this.panelSecurity.SuspendLayout();
             this.stackPanel32.SuspendLayout();
-            this.stackPanel44.SuspendLayout();
             this.tableContainerPanel31.SuspendLayout();
             this.stackPanel40.SuspendLayout();
             this.stackPanel42.SuspendLayout();
@@ -514,6 +545,10 @@ namespace Gw2Launcher.UI
             this.stackPanel14.SuspendLayout();
             this.stackPanel45.SuspendLayout();
             this.panelProcessAffinityContainer.SuspendLayout();
+            this.panelLaunchOptionsProcessBrowser.SuspendLayout();
+            this.stackPanel65.SuspendLayout();
+            this.stackPanel67.SuspendLayout();
+            this.panelBrowserAffinityContainer.SuspendLayout();
             this.panelStatistics.SuspendLayout();
             this.stackPanel25.SuspendLayout();
             this.stackPanel26.SuspendLayout();
@@ -526,16 +561,14 @@ namespace Gw2Launcher.UI
             this.stackPanel46.SuspendLayout();
             this.stackPanel16.SuspendLayout();
             this.stackPanel17.SuspendLayout();
+            this.stackPanel70.SuspendLayout();
+            this.stackPanel77.SuspendLayout();
             this.panelLaunchOptionsAdvanced.SuspendLayout();
             this.stackPanel31.SuspendLayout();
             this.stackPanel53.SuspendLayout();
             this.panel2.SuspendLayout();
             this.contextApplyAll.SuspendLayout();
             this.contextAffinity.SuspendLayout();
-            this.panelLaunchOptionsProcessBrowser.SuspendLayout();
-            this.stackPanel65.SuspendLayout();
-            this.stackPanel67.SuspendLayout();
-            this.panelBrowserAffinityContainer.SuspendLayout();
             this.SuspendLayout();
             // 
             // contextIcon
@@ -960,11 +993,13 @@ namespace Gw2Launcher.UI
             this.stackPanel2.Controls.Add(this.stackPanel9);
             this.stackPanel2.Controls.Add(this.label195);
             this.stackPanel2.Controls.Add(this.label196);
+            this.stackPanel2.Controls.Add(this.labelDisableRunAfterGlobal);
+            this.stackPanel2.Controls.Add(this.stackPanel63);
             this.stackPanel2.Controls.Add(this.stackPanel47);
             this.stackPanel2.Location = new System.Drawing.Point(0, 0);
             this.stackPanel2.Margin = new System.Windows.Forms.Padding(0, 0, 13, 0);
             this.stackPanel2.Padding = new System.Windows.Forms.Padding(13, 10, 0, 10);
-            this.stackPanel2.Size = new System.Drawing.Size(349, 1297);
+            this.stackPanel2.Size = new System.Drawing.Size(349, 1337);
             // 
             // label3
             // 
@@ -2228,9 +2263,52 @@ namespace Gw2Launcher.UI
             this.label196.AutoSize = true;
             this.label196.Font = new System.Drawing.Font("Segoe UI Semilight", 8.25F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
             this.label196.Location = new System.Drawing.Point(14, 1232);
-            this.label196.Margin = new System.Windows.Forms.Padding(1, 1, 0, 8);
+            this.label196.Margin = new System.Windows.Forms.Padding(1, 1, 0, 1);
             this.label196.Size = new System.Drawing.Size(178, 13);
             this.label196.Text = "Start other programs after launching";
+            // 
+            // labelDisableRunAfterGlobal
+            // 
+            this.labelDisableRunAfterGlobal.AutoSize = true;
+            this.labelDisableRunAfterGlobal.Font = new System.Drawing.Font("Segoe UI Semilight", 8.25F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+            this.labelDisableRunAfterGlobal.ForeColor = System.Drawing.Color.MediumBlue;
+            this.labelDisableRunAfterGlobal.Location = new System.Drawing.Point(14, 1247);
+            this.labelDisableRunAfterGlobal.Margin = new System.Windows.Forms.Padding(1, 1, 0, 1);
+            this.labelDisableRunAfterGlobal.Size = new System.Drawing.Size(223, 13);
+            this.labelDisableRunAfterGlobal.Text = "Automatic starts are currently disabled globally";
+            this.labelDisableRunAfterGlobal.Visible = false;
+            // 
+            // stackPanel63
+            // 
+            this.stackPanel63.AutoSize = true;
+            this.stackPanel63.AutoSizeFill = Gw2Launcher.UI.Controls.StackPanel.AutoSizeFillMode.NoWrap;
+            this.stackPanel63.Controls.Add(this.aaDisableRunAfter);
+            this.stackPanel63.Controls.Add(this.checkDisableRunAfter);
+            this.stackPanel63.FlowDirection = System.Windows.Forms.FlowDirection.LeftToRight;
+            this.stackPanel63.Location = new System.Drawing.Point(21, 1268);
+            this.stackPanel63.Margin = new System.Windows.Forms.Padding(8, 7, 0, 8);
+            this.stackPanel63.Size = new System.Drawing.Size(181, 17);
+            // 
+            // aaDisableRunAfter
+            // 
+            this.aaDisableRunAfter.Anchor = System.Windows.Forms.AnchorStyles.Left;
+            this.aaDisableRunAfter.Checked = false;
+            this.aaDisableRunAfter.Cursor = Gw2Launcher.Windows.Cursors.Hand;
+            this.aaDisableRunAfter.Enabled = false;
+            this.aaDisableRunAfter.Location = new System.Drawing.Point(0, 1);
+            this.aaDisableRunAfter.Margin = new System.Windows.Forms.Padding(0);
+            this.aaDisableRunAfter.Padding = new System.Windows.Forms.Padding(0, 1, 0, 1);
+            this.aaDisableRunAfter.Size = new System.Drawing.Size(20, 15);
+            this.aaDisableRunAfter.Visible = false;
+            // 
+            // checkDisableRunAfter
+            // 
+            this.checkDisableRunAfter.AutoSize = true;
+            this.checkDisableRunAfter.Location = new System.Drawing.Point(20, 0);
+            this.checkDisableRunAfter.Margin = new System.Windows.Forms.Padding(0);
+            this.checkDisableRunAfter.Size = new System.Drawing.Size(161, 17);
+            this.checkDisableRunAfter.Text = "Disable automatic starting";
+            this.checkDisableRunAfter.UseVisualStyleBackColor = true;
             // 
             // stackPanel47
             // 
@@ -2239,7 +2317,7 @@ namespace Gw2Launcher.UI
             this.stackPanel47.Controls.Add(this.aaRunAfterPrograms);
             this.stackPanel47.Controls.Add(this.stackPanel48);
             this.stackPanel47.FlowDirection = System.Windows.Forms.FlowDirection.LeftToRight;
-            this.stackPanel47.Location = new System.Drawing.Point(16, 1253);
+            this.stackPanel47.Location = new System.Drawing.Point(16, 1293);
             this.stackPanel47.Margin = new System.Windows.Forms.Padding(3, 0, 0, 0);
             this.stackPanel47.Size = new System.Drawing.Size(333, 34);
             // 
@@ -2359,8 +2437,14 @@ namespace Gw2Launcher.UI
             this.stackPanel18.Controls.Add(this.label12);
             this.stackPanel18.Controls.Add(this.stackPanel23);
             this.stackPanel18.Controls.Add(this.panelTrackLoginRewardsDay);
+            this.stackPanel18.Controls.Add(this.label96);
             this.stackPanel18.Controls.Add(this.label59);
             this.stackPanel18.Controls.Add(this.stackPanel24);
+            this.stackPanel18.Controls.Add(this.stackPanel75);
+            this.stackPanel18.Controls.Add(this.label93);
+            this.stackPanel18.Controls.Add(this.label92);
+            this.stackPanel18.Controls.Add(this.stackPanel74);
+            this.stackPanel18.Controls.Add(this.stackPanel76);
             this.stackPanel18.Controls.Add(this.label67);
             this.stackPanel18.Controls.Add(this.label9);
             this.stackPanel18.Controls.Add(this.label21);
@@ -2368,7 +2452,7 @@ namespace Gw2Launcher.UI
             this.stackPanel18.Location = new System.Drawing.Point(0, 0);
             this.stackPanel18.Margin = new System.Windows.Forms.Padding(0, 0, 13, 0);
             this.stackPanel18.Padding = new System.Windows.Forms.Padding(13, 10, 0, 10);
-            this.stackPanel18.Size = new System.Drawing.Size(349, 643);
+            this.stackPanel18.Size = new System.Drawing.Size(349, 771);
             // 
             // label1
             // 
@@ -2588,6 +2672,8 @@ namespace Gw2Launcher.UI
             this.buttonSample.AccountData = null;
             this.buttonSample.AccountName = "Example";
             this.buttonSample.AccountType = Gw2Launcher.Settings.AccountType.GuildWars2;
+            this.buttonSample.ApiPending = false;
+            this.buttonSample.Astral = ((ushort)(0));
             this.buttonSample.BackColor = System.Drawing.Color.White;
             this.buttonSample.ColorKey = System.Drawing.Color.Empty;
             this.buttonSample.Cursor = Gw2Launcher.Windows.Cursors.Hand;
@@ -2610,6 +2696,7 @@ namespace Gw2Launcher.UI
             this.buttonSample.LastDailyLoginUtc = new System.DateTime(((long)(0)));
             this.buttonSample.LastNoteUtc = new System.DateTime(((long)(0)));
             this.buttonSample.LastUsedUtc = new System.DateTime(((long)(0)));
+            this.buttonSample.LastWeeklyCompletionUtc = new System.DateTime(((long)(0)));
             this.buttonSample.Location = new System.Drawing.Point(20, 0);
             this.buttonSample.Margin = new System.Windows.Forms.Padding(0);
             this.buttonSample.MinimumSize = new System.Drawing.Size(0, 66);
@@ -2617,11 +2704,13 @@ namespace Gw2Launcher.UI
             this.buttonSample.Pinned = false;
             this.buttonSample.Selected = false;
             this.buttonSample.ShowAccount = true;
+            this.buttonSample.ShowAstral = false;
             this.buttonSample.ShowColorKey = false;
             this.buttonSample.ShowDailyCompletion = false;
             this.buttonSample.ShowDailyLogin = false;
             this.buttonSample.ShowDailyLoginDay = Gw2Launcher.Settings.DailyLoginDayIconFlags.None;
             this.buttonSample.ShowImage = true;
+            this.buttonSample.ShowWeeklyCompletion = false;
             this.buttonSample.Size = new System.Drawing.Size(225, 66);
             this.buttonSample.SortKey = ((ushort)(65535));
             this.buttonSample.Status = "sample";
@@ -2700,8 +2789,8 @@ namespace Gw2Launcher.UI
             this.label11.Font = new System.Drawing.Font("Segoe UI Semibold", 9F, System.Drawing.FontStyle.Bold);
             this.label11.Location = new System.Drawing.Point(13, 365);
             this.label11.Margin = new System.Windows.Forms.Padding(0, 13, 0, 0);
-            this.label11.Size = new System.Drawing.Size(62, 15);
-            this.label11.Text = "Daily reset";
+            this.label11.Size = new System.Drawing.Size(87, 15);
+            this.label11.Text = "Login indicator";
             // 
             // label12
             // 
@@ -2876,12 +2965,21 @@ namespace Gw2Launcher.UI
             this.imageTrackLoginRewardsDay.Visible = false;
             this.imageTrackLoginRewardsDay.VisibleChanged += new System.EventHandler(this.imageTrackLoginRewardsDay_VisibleChanged);
             // 
+            // label96
+            // 
+            this.label96.AutoSize = true;
+            this.label96.Font = new System.Drawing.Font("Segoe UI Semibold", 9F, System.Drawing.FontStyle.Bold);
+            this.label96.Location = new System.Drawing.Point(13, 505);
+            this.label96.Margin = new System.Windows.Forms.Padding(0, 13, 0, 0);
+            this.label96.Size = new System.Drawing.Size(98, 15);
+            this.label96.Text = "Daily completion";
+            // 
             // label59
             // 
             this.label59.AutoSize = true;
             this.label59.Font = new System.Drawing.Font("Segoe UI Semilight", 8.25F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            this.label59.Location = new System.Drawing.Point(14, 500);
-            this.label59.Margin = new System.Windows.Forms.Padding(1, 8, 0, 8);
+            this.label59.Location = new System.Drawing.Point(14, 521);
+            this.label59.Margin = new System.Windows.Forms.Padding(1, 1, 0, 8);
             this.label59.Size = new System.Drawing.Size(320, 26);
             this.label59.Text = "Show when the daily hasn\'t been completed, which can be tracked using the API, or" +
     " manually toggled by clicking the icon";
@@ -2894,7 +2992,7 @@ namespace Gw2Launcher.UI
             this.stackPanel24.Controls.Add(this.checkShowDailyCompletion);
             this.stackPanel24.Controls.Add(this.labelShowDailyCompletionApi);
             this.stackPanel24.FlowDirection = System.Windows.Forms.FlowDirection.LeftToRight;
-            this.stackPanel24.Location = new System.Drawing.Point(21, 534);
+            this.stackPanel24.Location = new System.Drawing.Point(21, 555);
             this.stackPanel24.Margin = new System.Windows.Forms.Padding(8, 0, 0, 0);
             this.stackPanel24.Size = new System.Drawing.Size(242, 17);
             // 
@@ -2932,11 +3030,145 @@ namespace Gw2Launcher.UI
             this.labelShowDailyCompletionApi.Text = "api";
             this.labelShowDailyCompletionApi.Click += new System.EventHandler(this.labelShowDailyCompletionApi_Click);
             // 
+            // stackPanel75
+            // 
+            this.stackPanel75.AutoSize = true;
+            this.stackPanel75.AutoSizeFill = Gw2Launcher.UI.Controls.StackPanel.AutoSizeFillMode.NoWrap;
+            this.stackPanel75.Controls.Add(this.aaResetDailyCompletion);
+            this.stackPanel75.Controls.Add(this.checkResetDailyCompletion);
+            this.stackPanel75.FlowDirection = System.Windows.Forms.FlowDirection.LeftToRight;
+            this.stackPanel75.Location = new System.Drawing.Point(21, 575);
+            this.stackPanel75.Margin = new System.Windows.Forms.Padding(8, 3, 0, 0);
+            this.stackPanel75.Size = new System.Drawing.Size(163, 17);
+            // 
+            // aaResetDailyCompletion
+            // 
+            this.aaResetDailyCompletion.Anchor = System.Windows.Forms.AnchorStyles.Left;
+            this.aaResetDailyCompletion.Checked = false;
+            this.aaResetDailyCompletion.Cursor = Gw2Launcher.Windows.Cursors.Hand;
+            this.aaResetDailyCompletion.Enabled = false;
+            this.aaResetDailyCompletion.Location = new System.Drawing.Point(0, 1);
+            this.aaResetDailyCompletion.Margin = new System.Windows.Forms.Padding(0);
+            this.aaResetDailyCompletion.Padding = new System.Windows.Forms.Padding(0, 1, 0, 1);
+            this.aaResetDailyCompletion.Size = new System.Drawing.Size(20, 15);
+            this.aaResetDailyCompletion.Visible = false;
+            // 
+            // checkResetDailyCompletion
+            // 
+            this.checkResetDailyCompletion.Anchor = System.Windows.Forms.AnchorStyles.None;
+            this.checkResetDailyCompletion.AutoSize = true;
+            this.checkResetDailyCompletion.Font = new System.Drawing.Font("Segoe UI", 8.25F);
+            this.checkResetDailyCompletion.Location = new System.Drawing.Point(20, 0);
+            this.checkResetDailyCompletion.Margin = new System.Windows.Forms.Padding(0);
+            this.checkResetDailyCompletion.Size = new System.Drawing.Size(143, 17);
+            this.checkResetDailyCompletion.Text = "Reset completion state";
+            this.checkResetDailyCompletion.UseVisualStyleBackColor = true;
+            // 
+            // label93
+            // 
+            this.label93.AutoSize = true;
+            this.label93.Font = new System.Drawing.Font("Segoe UI Semibold", 9F, System.Drawing.FontStyle.Bold);
+            this.label93.Location = new System.Drawing.Point(13, 605);
+            this.label93.Margin = new System.Windows.Forms.Padding(0, 13, 0, 0);
+            this.label93.Size = new System.Drawing.Size(110, 15);
+            this.label93.Text = "Weekly completion";
+            // 
+            // label92
+            // 
+            this.label92.AutoSize = true;
+            this.label92.Font = new System.Drawing.Font("Segoe UI Semilight", 8.25F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+            this.label92.Location = new System.Drawing.Point(14, 621);
+            this.label92.Margin = new System.Windows.Forms.Padding(1, 1, 0, 8);
+            this.label92.Size = new System.Drawing.Size(223, 13);
+            this.label92.Text = "Show when the weekly hasn\'t been completed";
+            // 
+            // stackPanel74
+            // 
+            this.stackPanel74.AutoSize = true;
+            this.stackPanel74.AutoSizeFill = Gw2Launcher.UI.Controls.StackPanel.AutoSizeFillMode.NoWrap;
+            this.stackPanel74.Controls.Add(this.aaShowWeeklyCompletion);
+            this.stackPanel74.Controls.Add(this.checkShowWeeklyCompletion);
+            this.stackPanel74.Controls.Add(this.labelShowWeeklyCompletionApi);
+            this.stackPanel74.FlowDirection = System.Windows.Forms.FlowDirection.LeftToRight;
+            this.stackPanel74.Location = new System.Drawing.Point(21, 642);
+            this.stackPanel74.Margin = new System.Windows.Forms.Padding(8, 0, 0, 0);
+            this.stackPanel74.Size = new System.Drawing.Size(186, 17);
+            // 
+            // aaShowWeeklyCompletion
+            // 
+            this.aaShowWeeklyCompletion.Anchor = System.Windows.Forms.AnchorStyles.Left;
+            this.aaShowWeeklyCompletion.Checked = false;
+            this.aaShowWeeklyCompletion.Cursor = Gw2Launcher.Windows.Cursors.Hand;
+            this.aaShowWeeklyCompletion.Enabled = false;
+            this.aaShowWeeklyCompletion.Location = new System.Drawing.Point(0, 1);
+            this.aaShowWeeklyCompletion.Margin = new System.Windows.Forms.Padding(0);
+            this.aaShowWeeklyCompletion.Padding = new System.Windows.Forms.Padding(0, 1, 0, 1);
+            this.aaShowWeeklyCompletion.Size = new System.Drawing.Size(20, 15);
+            this.aaShowWeeklyCompletion.Visible = false;
+            // 
+            // checkShowWeeklyCompletion
+            // 
+            this.checkShowWeeklyCompletion.Anchor = System.Windows.Forms.AnchorStyles.None;
+            this.checkShowWeeklyCompletion.AutoSize = true;
+            this.checkShowWeeklyCompletion.Checked = true;
+            this.checkShowWeeklyCompletion.CheckState = System.Windows.Forms.CheckState.Checked;
+            this.checkShowWeeklyCompletion.Font = new System.Drawing.Font("Segoe UI", 8.25F);
+            this.checkShowWeeklyCompletion.Location = new System.Drawing.Point(20, 0);
+            this.checkShowWeeklyCompletion.Margin = new System.Windows.Forms.Padding(0);
+            this.checkShowWeeklyCompletion.Size = new System.Drawing.Size(142, 17);
+            this.checkShowWeeklyCompletion.Text = "Show weekly indicator";
+            this.checkShowWeeklyCompletion.UseVisualStyleBackColor = true;
+            // 
+            // labelShowWeeklyCompletionApi
+            // 
+            this.labelShowWeeklyCompletionApi.Anchor = System.Windows.Forms.AnchorStyles.None;
+            this.labelShowWeeklyCompletionApi.AutoSize = true;
+            this.labelShowWeeklyCompletionApi.Icon = null;
+            this.labelShowWeeklyCompletionApi.Location = new System.Drawing.Point(163, 1);
+            this.labelShowWeeklyCompletionApi.Margin = new System.Windows.Forms.Padding(1, 0, 0, 1);
+            this.labelShowWeeklyCompletionApi.Size = new System.Drawing.Size(23, 13);
+            this.labelShowWeeklyCompletionApi.Text = "api";
+            this.labelShowWeeklyCompletionApi.Click += new System.EventHandler(this.labelShowWeeklyCompletionApi_Click);
+            // 
+            // stackPanel76
+            // 
+            this.stackPanel76.AutoSize = true;
+            this.stackPanel76.AutoSizeFill = Gw2Launcher.UI.Controls.StackPanel.AutoSizeFillMode.NoWrap;
+            this.stackPanel76.Controls.Add(this.aaResetWeeklyCompletion);
+            this.stackPanel76.Controls.Add(this.checkResetWeeklyCompletion);
+            this.stackPanel76.FlowDirection = System.Windows.Forms.FlowDirection.LeftToRight;
+            this.stackPanel76.Location = new System.Drawing.Point(21, 662);
+            this.stackPanel76.Margin = new System.Windows.Forms.Padding(8, 3, 0, 0);
+            this.stackPanel76.Size = new System.Drawing.Size(163, 17);
+            // 
+            // aaResetWeeklyCompletion
+            // 
+            this.aaResetWeeklyCompletion.Anchor = System.Windows.Forms.AnchorStyles.Left;
+            this.aaResetWeeklyCompletion.Checked = false;
+            this.aaResetWeeklyCompletion.Cursor = Gw2Launcher.Windows.Cursors.Hand;
+            this.aaResetWeeklyCompletion.Enabled = false;
+            this.aaResetWeeklyCompletion.Location = new System.Drawing.Point(0, 1);
+            this.aaResetWeeklyCompletion.Margin = new System.Windows.Forms.Padding(0);
+            this.aaResetWeeklyCompletion.Padding = new System.Windows.Forms.Padding(0, 1, 0, 1);
+            this.aaResetWeeklyCompletion.Size = new System.Drawing.Size(20, 15);
+            this.aaResetWeeklyCompletion.Visible = false;
+            // 
+            // checkResetWeeklyCompletion
+            // 
+            this.checkResetWeeklyCompletion.Anchor = System.Windows.Forms.AnchorStyles.None;
+            this.checkResetWeeklyCompletion.AutoSize = true;
+            this.checkResetWeeklyCompletion.Font = new System.Drawing.Font("Segoe UI", 8.25F);
+            this.checkResetWeeklyCompletion.Location = new System.Drawing.Point(20, 0);
+            this.checkResetWeeklyCompletion.Margin = new System.Windows.Forms.Padding(0);
+            this.checkResetWeeklyCompletion.Size = new System.Drawing.Size(143, 17);
+            this.checkResetWeeklyCompletion.Text = "Reset completion state";
+            this.checkResetWeeklyCompletion.UseVisualStyleBackColor = true;
+            // 
             // label67
             // 
             this.label67.AutoSize = true;
             this.label67.Font = new System.Drawing.Font("Segoe UI Semibold", 9F, System.Drawing.FontStyle.Bold);
-            this.label67.Location = new System.Drawing.Point(13, 564);
+            this.label67.Location = new System.Drawing.Point(13, 692);
             this.label67.Margin = new System.Windows.Forms.Padding(0, 13, 0, 0);
             this.label67.Size = new System.Drawing.Size(55, 15);
             this.label67.Text = "Jump list";
@@ -2945,7 +3177,7 @@ namespace Gw2Launcher.UI
             // 
             this.label9.AutoSize = true;
             this.label9.Font = new System.Drawing.Font("Segoe UI Semilight", 8.25F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            this.label9.Location = new System.Drawing.Point(14, 580);
+            this.label9.Location = new System.Drawing.Point(14, 708);
             this.label9.Margin = new System.Windows.Forms.Padding(1, 1, 0, 1);
             this.label9.Size = new System.Drawing.Size(284, 13);
             this.label9.Text = "The jump list is shown when right clicking the taskbar button";
@@ -2955,7 +3187,7 @@ namespace Gw2Launcher.UI
             this.label21.AutoSize = true;
             this.label21.Font = new System.Drawing.Font("Segoe UI Semilight", 8.25F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
             this.label21.ForeColor = System.Drawing.SystemColors.GrayText;
-            this.label21.Location = new System.Drawing.Point(14, 595);
+            this.label21.Location = new System.Drawing.Point(14, 723);
             this.label21.Margin = new System.Windows.Forms.Padding(1, 1, 0, 8);
             this.label21.Size = new System.Drawing.Size(256, 13);
             this.label21.Text = "Use of the jump list can be enabled under the settings";
@@ -2967,7 +3199,7 @@ namespace Gw2Launcher.UI
             this.stackPanel55.Controls.Add(this.aaDisableJumpList);
             this.stackPanel55.Controls.Add(this.checkDisableJumpList);
             this.stackPanel55.FlowDirection = System.Windows.Forms.FlowDirection.LeftToRight;
-            this.stackPanel55.Location = new System.Drawing.Point(21, 616);
+            this.stackPanel55.Location = new System.Drawing.Point(21, 744);
             this.stackPanel55.Margin = new System.Windows.Forms.Padding(8, 0, 0, 0);
             this.stackPanel55.Size = new System.Drawing.Size(246, 17);
             // 
@@ -3011,7 +3243,7 @@ namespace Gw2Launcher.UI
             this.stackPanel32.AutoSizeFill = Gw2Launcher.UI.Controls.StackPanel.AutoSizeFillMode.Width;
             this.stackPanel32.Controls.Add(this.label50);
             this.stackPanel32.Controls.Add(this.label49);
-            this.stackPanel32.Controls.Add(this.stackPanel44);
+            this.stackPanel32.Controls.Add(this.tableContainerPanel31);
             this.stackPanel32.Controls.Add(this.label54);
             this.stackPanel32.Controls.Add(this.label53);
             this.stackPanel32.Controls.Add(this.stackPanel42);
@@ -3041,56 +3273,60 @@ namespace Gw2Launcher.UI
             this.label49.Size = new System.Drawing.Size(130, 13);
             this.label49.Text = "Allows for automatic logins";
             // 
-            // stackPanel44
-            // 
-            this.stackPanel44.AutoSize = true;
-            this.stackPanel44.AutoSizeFill = Gw2Launcher.UI.Controls.StackPanel.AutoSizeFillMode.NoWrap;
-            this.stackPanel44.Controls.Add(this.aaAuthorization);
-            this.stackPanel44.Controls.Add(this.tableContainerPanel31);
-            this.stackPanel44.FlowDirection = System.Windows.Forms.FlowDirection.LeftToRight;
-            this.stackPanel44.Location = new System.Drawing.Point(17, 47);
-            this.stackPanel44.Margin = new System.Windows.Forms.Padding(4, 0, 0, 0);
-            this.stackPanel44.Size = new System.Drawing.Size(322, 50);
-            // 
-            // aaAuthorization
-            // 
-            this.aaAuthorization.Anchor = System.Windows.Forms.AnchorStyles.Left;
-            this.aaAuthorization.Checked = false;
-            this.aaAuthorization.Cursor = Gw2Launcher.Windows.Cursors.Hand;
-            this.aaAuthorization.DefaultState = false;
-            this.aaAuthorization.Enabled = false;
-            this.aaAuthorization.Location = new System.Drawing.Point(4, 17);
-            this.aaAuthorization.Margin = new System.Windows.Forms.Padding(4, 0, 0, 0);
-            this.aaAuthorization.Padding = new System.Windows.Forms.Padding(0, 1, 0, 1);
-            this.aaAuthorization.Size = new System.Drawing.Size(20, 15);
-            this.aaAuthorization.Visible = false;
-            // 
             // tableContainerPanel31
             // 
             this.tableContainerPanel31.AutoSize = true;
             this.tableContainerPanel31.AutoSizeMode = System.Windows.Forms.AutoSizeMode.GrowAndShrink;
-            this.tableContainerPanel31.ColumnCount = 2;
+            this.tableContainerPanel31.ColumnCount = 3;
             this.tableContainerPanel31.ColumnStyles.Add(new System.Windows.Forms.ColumnStyle());
             this.tableContainerPanel31.ColumnStyles.Add(new System.Windows.Forms.ColumnStyle());
-            this.tableContainerPanel31.ColumnStyles.Add(new System.Windows.Forms.ColumnStyle(System.Windows.Forms.SizeType.Absolute, 20F));
-            this.tableContainerPanel31.Controls.Add(this.label68, 0, 0);
-            this.tableContainerPanel31.Controls.Add(this.label69, 0, 2);
-            this.tableContainerPanel31.Controls.Add(this.textEmail, 1, 0);
-            this.tableContainerPanel31.Controls.Add(this.stackPanel40, 1, 2);
-            this.tableContainerPanel31.Location = new System.Drawing.Point(24, 0);
-            this.tableContainerPanel31.Margin = new System.Windows.Forms.Padding(0);
+            this.tableContainerPanel31.ColumnStyles.Add(new System.Windows.Forms.ColumnStyle());
+            this.tableContainerPanel31.Controls.Add(this.aaPassword, 0, 2);
+            this.tableContainerPanel31.Controls.Add(this.aaEmail, 0, 0);
+            this.tableContainerPanel31.Controls.Add(this.label68, 1, 0);
+            this.tableContainerPanel31.Controls.Add(this.label69, 1, 2);
+            this.tableContainerPanel31.Controls.Add(this.textEmail, 2, 0);
+            this.tableContainerPanel31.Controls.Add(this.stackPanel40, 2, 2);
+            this.tableContainerPanel31.Location = new System.Drawing.Point(17, 47);
+            this.tableContainerPanel31.Margin = new System.Windows.Forms.Padding(4, 0, 0, 0);
             this.tableContainerPanel31.RowCount = 3;
             this.tableContainerPanel31.RowStyles.Add(new System.Windows.Forms.RowStyle());
             this.tableContainerPanel31.RowStyles.Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.Absolute, 6F));
             this.tableContainerPanel31.RowStyles.Add(new System.Windows.Forms.RowStyle());
-            this.tableContainerPanel31.Size = new System.Drawing.Size(298, 50);
+            this.tableContainerPanel31.Size = new System.Drawing.Size(322, 50);
+            // 
+            // aaPassword
+            // 
+            this.aaPassword.Anchor = System.Windows.Forms.AnchorStyles.Left;
+            this.aaPassword.Checked = false;
+            this.aaPassword.Cursor = Gw2Launcher.Windows.Cursors.Hand;
+            this.aaPassword.DefaultState = false;
+            this.aaPassword.Enabled = false;
+            this.aaPassword.Location = new System.Drawing.Point(4, 31);
+            this.aaPassword.Margin = new System.Windows.Forms.Padding(4, 0, 0, 0);
+            this.aaPassword.Padding = new System.Windows.Forms.Padding(0, 1, 0, 1);
+            this.aaPassword.Size = new System.Drawing.Size(20, 15);
+            this.aaPassword.Visible = false;
+            // 
+            // aaEmail
+            // 
+            this.aaEmail.Anchor = System.Windows.Forms.AnchorStyles.Left;
+            this.aaEmail.Checked = false;
+            this.aaEmail.Cursor = Gw2Launcher.Windows.Cursors.Hand;
+            this.aaEmail.DefaultState = false;
+            this.aaEmail.Enabled = false;
+            this.aaEmail.Location = new System.Drawing.Point(4, 3);
+            this.aaEmail.Margin = new System.Windows.Forms.Padding(4, 0, 0, 0);
+            this.aaEmail.Padding = new System.Windows.Forms.Padding(0, 1, 0, 1);
+            this.aaEmail.Size = new System.Drawing.Size(20, 15);
+            this.aaEmail.Visible = false;
             // 
             // label68
             // 
             this.label68.Anchor = System.Windows.Forms.AnchorStyles.Left;
             this.label68.AutoSize = true;
             this.label68.Font = new System.Drawing.Font("Segoe UI Semilight", 8.25F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            this.label68.Location = new System.Drawing.Point(0, 4);
+            this.label68.Location = new System.Drawing.Point(24, 4);
             this.label68.Margin = new System.Windows.Forms.Padding(0);
             this.label68.Size = new System.Drawing.Size(32, 13);
             this.label68.Text = "Email";
@@ -3100,7 +3336,7 @@ namespace Gw2Launcher.UI
             this.label69.Anchor = System.Windows.Forms.AnchorStyles.Left;
             this.label69.AutoSize = true;
             this.label69.Font = new System.Drawing.Font("Segoe UI Semilight", 8.25F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            this.label69.Location = new System.Drawing.Point(0, 32);
+            this.label69.Location = new System.Drawing.Point(24, 32);
             this.label69.Margin = new System.Windows.Forms.Padding(0);
             this.label69.Size = new System.Drawing.Size(51, 13);
             this.label69.Text = "Password";
@@ -3113,7 +3349,7 @@ namespace Gw2Launcher.UI
             this.textEmail.FontText = new System.Drawing.Font("Segoe UI", 8.25F);
             this.textEmail.ForeColor = System.Drawing.SystemColors.GrayText;
             this.textEmail.ForeColorText = System.Drawing.SystemColors.WindowText;
-            this.textEmail.Location = new System.Drawing.Point(62, 0);
+            this.textEmail.Location = new System.Drawing.Point(86, 0);
             this.textEmail.Margin = new System.Windows.Forms.Padding(11, 0, 0, 0);
             this.textEmail.Padding = new System.Windows.Forms.Padding(5, 0, 0, 1);
             this.textEmail.Size = new System.Drawing.Size(195, 22);
@@ -3127,7 +3363,7 @@ namespace Gw2Launcher.UI
             this.stackPanel40.Controls.Add(this.textPassword);
             this.stackPanel40.Controls.Add(this.labelPasswordRevert);
             this.stackPanel40.FlowDirection = System.Windows.Forms.FlowDirection.LeftToRight;
-            this.stackPanel40.Location = new System.Drawing.Point(62, 28);
+            this.stackPanel40.Location = new System.Drawing.Point(86, 28);
             this.stackPanel40.Margin = new System.Windows.Forms.Padding(11, 0, 0, 0);
             this.stackPanel40.Size = new System.Drawing.Size(236, 22);
             // 
@@ -3503,6 +3739,7 @@ namespace Gw2Launcher.UI
             this.stackPanel34.Controls.Add(this.label43);
             this.stackPanel34.Controls.Add(this.label42);
             this.stackPanel34.Controls.Add(this.stackPanel35);
+            this.stackPanel34.Controls.Add(this.checkGfxSettingsReadOnly);
             this.stackPanel34.Controls.Add(this.labelGfxSettingsTitle);
             this.stackPanel34.Controls.Add(this.labelGfxSettingsTitleSub);
             this.stackPanel34.Controls.Add(this.labelGfxFileInfo);
@@ -3515,7 +3752,7 @@ namespace Gw2Launcher.UI
             this.stackPanel34.Location = new System.Drawing.Point(0, 0);
             this.stackPanel34.Margin = new System.Windows.Forms.Padding(0, 0, 13, 0);
             this.stackPanel34.Padding = new System.Windows.Forms.Padding(13, 10, 0, 10);
-            this.stackPanel34.Size = new System.Drawing.Size(366, 401);
+            this.stackPanel34.Size = new System.Drawing.Size(366, 426);
             // 
             // label43
             // 
@@ -3583,11 +3820,20 @@ namespace Gw2Launcher.UI
             this.buttonGfxSettings.UseVisualStyleBackColor = true;
             this.buttonGfxSettings.Click += new System.EventHandler(this.buttonGfxSettings_Click);
             // 
+            // checkGfxSettingsReadOnly
+            // 
+            this.checkGfxSettingsReadOnly.AutoSize = true;
+            this.checkGfxSettingsReadOnly.Location = new System.Drawing.Point(21, 92);
+            this.checkGfxSettingsReadOnly.Margin = new System.Windows.Forms.Padding(8, 8, 0, 0);
+            this.checkGfxSettingsReadOnly.Size = new System.Drawing.Size(137, 17);
+            this.checkGfxSettingsReadOnly.Text = "Prevent modifications";
+            this.checkGfxSettingsReadOnly.UseVisualStyleBackColor = true;
+            // 
             // labelGfxSettingsTitle
             // 
             this.labelGfxSettingsTitle.AutoSize = true;
             this.labelGfxSettingsTitle.Font = new System.Drawing.Font("Segoe UI Semibold", 9F, System.Drawing.FontStyle.Bold);
-            this.labelGfxSettingsTitle.Location = new System.Drawing.Point(13, 97);
+            this.labelGfxSettingsTitle.Location = new System.Drawing.Point(13, 122);
             this.labelGfxSettingsTitle.Margin = new System.Windows.Forms.Padding(0, 13, 0, 0);
             this.labelGfxSettingsTitle.Size = new System.Drawing.Size(50, 15);
             this.labelGfxSettingsTitle.Text = "Settings";
@@ -3596,7 +3842,7 @@ namespace Gw2Launcher.UI
             // 
             this.labelGfxSettingsTitleSub.AutoSize = true;
             this.labelGfxSettingsTitleSub.Font = new System.Drawing.Font("Segoe UI Semilight", 8.25F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            this.labelGfxSettingsTitleSub.Location = new System.Drawing.Point(14, 113);
+            this.labelGfxSettingsTitleSub.Location = new System.Drawing.Point(14, 138);
             this.labelGfxSettingsTitleSub.Margin = new System.Windows.Forms.Padding(1, 1, 0, 8);
             this.labelGfxSettingsTitleSub.Size = new System.Drawing.Size(335, 26);
             this.labelGfxSettingsTitleSub.Text = "Modifying these settings will affect the graphics option in-game for this account" +
@@ -3606,7 +3852,7 @@ namespace Gw2Launcher.UI
             // 
             this.labelGfxFileInfo.AutoSize = true;
             this.labelGfxFileInfo.Font = new System.Drawing.Font("Segoe UI Semilight", 8.25F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            this.labelGfxFileInfo.Location = new System.Drawing.Point(14, 147);
+            this.labelGfxFileInfo.Location = new System.Drawing.Point(14, 172);
             this.labelGfxFileInfo.Margin = new System.Windows.Forms.Padding(1, 0, 0, 0);
             this.labelGfxFileInfo.Size = new System.Drawing.Size(25, 13);
             this.labelGfxFileInfo.Text = "Info";
@@ -3616,7 +3862,7 @@ namespace Gw2Launcher.UI
             // 
             this.labelGfxSettingsNotAvailable.AutoSize = true;
             this.labelGfxSettingsNotAvailable.Font = new System.Drawing.Font("Segoe UI Semilight", 8.25F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            this.labelGfxSettingsNotAvailable.Location = new System.Drawing.Point(14, 172);
+            this.labelGfxSettingsNotAvailable.Location = new System.Drawing.Point(14, 197);
             this.labelGfxSettingsNotAvailable.Margin = new System.Windows.Forms.Padding(1, 12, 0, 0);
             this.labelGfxSettingsNotAvailable.Size = new System.Drawing.Size(68, 13);
             this.labelGfxSettingsNotAvailable.Text = "Not available";
@@ -3626,7 +3872,7 @@ namespace Gw2Launcher.UI
             // 
             this.panelGraphicsXml.Controls.Add(this.labelGfxPreset);
             this.panelGraphicsXml.Controls.Add(this.panel1);
-            this.panelGraphicsXml.Location = new System.Drawing.Point(13, 188);
+            this.panelGraphicsXml.Location = new System.Drawing.Point(13, 213);
             this.panelGraphicsXml.Margin = new System.Windows.Forms.Padding(0, 3, 0, 7);
             this.panelGraphicsXml.Size = new System.Drawing.Size(323, 106);
             this.panelGraphicsXml.Visible = false;
@@ -3709,7 +3955,7 @@ namespace Gw2Launcher.UI
             // 
             this.label28.AutoSize = true;
             this.label28.Font = new System.Drawing.Font("Segoe UI Semibold", 9F, System.Drawing.FontStyle.Bold);
-            this.label28.Location = new System.Drawing.Point(13, 309);
+            this.label28.Location = new System.Drawing.Point(13, 334);
             this.label28.Margin = new System.Windows.Forms.Padding(0, 8, 0, 0);
             this.label28.Size = new System.Drawing.Size(33, 15);
             this.label28.Text = "DX11";
@@ -3719,7 +3965,7 @@ namespace Gw2Launcher.UI
             // 
             this.label73.AutoSize = true;
             this.label73.Font = new System.Drawing.Font("Segoe UI Semilight", 8.25F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            this.label73.Location = new System.Drawing.Point(14, 325);
+            this.label73.Location = new System.Drawing.Point(14, 350);
             this.label73.Margin = new System.Windows.Forms.Padding(1, 1, 0, 1);
             this.label73.Size = new System.Drawing.Size(320, 26);
             this.label73.Text = "Forces the use of DX11 regardless of whether the option is checked in-game";
@@ -3730,7 +3976,7 @@ namespace Gw2Launcher.UI
             this.label76.AutoSize = true;
             this.label76.Font = new System.Drawing.Font("Segoe UI Semilight", 8.25F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
             this.label76.ForeColor = System.Drawing.SystemColors.GrayText;
-            this.label76.Location = new System.Drawing.Point(14, 353);
+            this.label76.Location = new System.Drawing.Point(14, 378);
             this.label76.Margin = new System.Windows.Forms.Padding(1, 1, 0, 8);
             this.label76.Size = new System.Drawing.Size(102, 13);
             this.label76.Text = "Sets the -dx11 option";
@@ -3739,7 +3985,7 @@ namespace Gw2Launcher.UI
             // checkDX11
             // 
             this.checkDX11.AutoSize = true;
-            this.checkDX11.Location = new System.Drawing.Point(21, 374);
+            this.checkDX11.Location = new System.Drawing.Point(21, 399);
             this.checkDX11.Margin = new System.Windows.Forms.Padding(8, 0, 0, 0);
             this.checkDX11.Size = new System.Drawing.Size(90, 17);
             this.checkDX11.Text = "Enable DX11";
@@ -4129,6 +4375,158 @@ namespace Gw2Launcher.UI
             this.adProcessAffinity.Size = new System.Drawing.Size(108, 16);
             this.adProcessAffinity.MouseDown += new System.Windows.Forms.MouseEventHandler(this.adProcessAffinity_MouseDown);
             // 
+            // panelLaunchOptionsProcessBrowser
+            // 
+            this.panelLaunchOptionsProcessBrowser.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left) 
+            | System.Windows.Forms.AnchorStyles.Right)));
+            this.panelLaunchOptionsProcessBrowser.AutoSize = true;
+            this.panelLaunchOptionsProcessBrowser.AutoSizeFill = Gw2Launcher.UI.Controls.StackPanel.AutoSizeFillMode.Width;
+            this.panelLaunchOptionsProcessBrowser.Controls.Add(this.label88);
+            this.panelLaunchOptionsProcessBrowser.Controls.Add(this.label259);
+            this.panelLaunchOptionsProcessBrowser.Controls.Add(this.stackPanel65);
+            this.panelLaunchOptionsProcessBrowser.Controls.Add(this.label89);
+            this.panelLaunchOptionsProcessBrowser.Controls.Add(this.stackPanel67);
+            this.panelLaunchOptionsProcessBrowser.Location = new System.Drawing.Point(13, 165);
+            this.panelLaunchOptionsProcessBrowser.Margin = new System.Windows.Forms.Padding(0, 13, 0, 0);
+            this.panelLaunchOptionsProcessBrowser.Size = new System.Drawing.Size(353, 111);
+            // 
+            // label88
+            // 
+            this.label88.AutoSize = true;
+            this.label88.Font = new System.Drawing.Font("Segoe UI Semibold", 9F, System.Drawing.FontStyle.Bold);
+            this.label88.Location = new System.Drawing.Point(0, 0);
+            this.label88.Margin = new System.Windows.Forms.Padding(0);
+            this.label88.Size = new System.Drawing.Size(90, 15);
+            this.label88.Text = "Browser priority";
+            // 
+            // label259
+            // 
+            this.label259.AutoSize = true;
+            this.label259.Font = new System.Drawing.Font("Segoe UI Semilight", 8.25F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+            this.label259.Location = new System.Drawing.Point(1, 16);
+            this.label259.Margin = new System.Windows.Forms.Padding(1, 1, 0, 8);
+            this.label259.Size = new System.Drawing.Size(147, 13);
+            this.label259.Text = "Used to display web interfaces";
+            // 
+            // stackPanel65
+            // 
+            this.stackPanel65.AutoSize = true;
+            this.stackPanel65.AutoSizeFill = Gw2Launcher.UI.Controls.StackPanel.AutoSizeFillMode.NoWrap;
+            this.stackPanel65.Controls.Add(this.aaBrowserPriority);
+            this.stackPanel65.Controls.Add(this.checkBrowserPriority);
+            this.stackPanel65.Controls.Add(this.comboBrowserPriority);
+            this.stackPanel65.FlowDirection = System.Windows.Forms.FlowDirection.LeftToRight;
+            this.stackPanel65.Location = new System.Drawing.Point(8, 37);
+            this.stackPanel65.Margin = new System.Windows.Forms.Padding(8, 0, 0, 0);
+            this.stackPanel65.Size = new System.Drawing.Size(199, 21);
+            // 
+            // aaBrowserPriority
+            // 
+            this.aaBrowserPriority.Anchor = System.Windows.Forms.AnchorStyles.Left;
+            this.aaBrowserPriority.Checked = false;
+            this.aaBrowserPriority.Cursor = Gw2Launcher.Windows.Cursors.Hand;
+            this.aaBrowserPriority.Enabled = false;
+            this.aaBrowserPriority.Location = new System.Drawing.Point(0, 3);
+            this.aaBrowserPriority.Margin = new System.Windows.Forms.Padding(0);
+            this.aaBrowserPriority.Padding = new System.Windows.Forms.Padding(0, 1, 0, 1);
+            this.aaBrowserPriority.Size = new System.Drawing.Size(20, 15);
+            this.aaBrowserPriority.Visible = false;
+            // 
+            // checkBrowserPriority
+            // 
+            this.checkBrowserPriority.Anchor = System.Windows.Forms.AnchorStyles.None;
+            this.checkBrowserPriority.AutoSize = true;
+            this.checkBrowserPriority.Location = new System.Drawing.Point(20, 3);
+            this.checkBrowserPriority.Margin = new System.Windows.Forms.Padding(0);
+            this.checkBrowserPriority.Size = new System.Drawing.Size(15, 14);
+            this.checkBrowserPriority.UseVisualStyleBackColor = true;
+            this.checkBrowserPriority.CheckedChanged += new System.EventHandler(this.checkBrowserPriority_CheckedChanged);
+            // 
+            // comboBrowserPriority
+            // 
+            this.comboBrowserPriority.DropDownStyle = System.Windows.Forms.ComboBoxStyle.DropDownList;
+            this.comboBrowserPriority.Enabled = false;
+            this.comboBrowserPriority.FormattingEnabled = true;
+            this.comboBrowserPriority.Location = new System.Drawing.Point(42, 0);
+            this.comboBrowserPriority.Margin = new System.Windows.Forms.Padding(7, 0, 0, 0);
+            this.comboBrowserPriority.Size = new System.Drawing.Size(157, 21);
+            // 
+            // label89
+            // 
+            this.label89.AutoSize = true;
+            this.label89.Font = new System.Drawing.Font("Segoe UI Semibold", 9F, System.Drawing.FontStyle.Bold);
+            this.label89.Location = new System.Drawing.Point(0, 71);
+            this.label89.Margin = new System.Windows.Forms.Padding(0, 13, 0, 8);
+            this.label89.Size = new System.Drawing.Size(89, 15);
+            this.label89.Text = "Browser affinity";
+            // 
+            // stackPanel67
+            // 
+            this.stackPanel67.AutoSize = true;
+            this.stackPanel67.AutoSizeFill = Gw2Launcher.UI.Controls.StackPanel.AutoSizeFillMode.NoWrap;
+            this.stackPanel67.Controls.Add(this.aaBrowserAffinity);
+            this.stackPanel67.Controls.Add(this.checkBrowserAffinityAll);
+            this.stackPanel67.FlowDirection = System.Windows.Forms.FlowDirection.LeftToRight;
+            this.stackPanel67.Location = new System.Drawing.Point(8, 94);
+            this.stackPanel67.Margin = new System.Windows.Forms.Padding(8, 0, 0, 0);
+            this.stackPanel67.Size = new System.Drawing.Size(186, 17);
+            // 
+            // aaBrowserAffinity
+            // 
+            this.aaBrowserAffinity.Anchor = System.Windows.Forms.AnchorStyles.Left;
+            this.aaBrowserAffinity.Checked = false;
+            this.aaBrowserAffinity.Cursor = Gw2Launcher.Windows.Cursors.Hand;
+            this.aaBrowserAffinity.Enabled = false;
+            this.aaBrowserAffinity.Location = new System.Drawing.Point(0, 1);
+            this.aaBrowserAffinity.Margin = new System.Windows.Forms.Padding(0);
+            this.aaBrowserAffinity.Padding = new System.Windows.Forms.Padding(0, 1, 0, 1);
+            this.aaBrowserAffinity.Size = new System.Drawing.Size(20, 15);
+            this.aaBrowserAffinity.Visible = false;
+            // 
+            // checkBrowserAffinityAll
+            // 
+            this.checkBrowserAffinityAll.AutoSize = true;
+            this.checkBrowserAffinityAll.Checked = true;
+            this.checkBrowserAffinityAll.CheckState = System.Windows.Forms.CheckState.Checked;
+            this.checkBrowserAffinityAll.Font = new System.Drawing.Font("Segoe UI", 8.25F);
+            this.checkBrowserAffinityAll.Location = new System.Drawing.Point(20, 0);
+            this.checkBrowserAffinityAll.Margin = new System.Windows.Forms.Padding(0);
+            this.checkBrowserAffinityAll.Size = new System.Drawing.Size(166, 17);
+            this.checkBrowserAffinityAll.Text = "Use all available processors";
+            this.checkBrowserAffinityAll.UseVisualStyleBackColor = true;
+            this.checkBrowserAffinityAll.CheckedChanged += new System.EventHandler(this.checkBrowserAffinityAll_CheckedChanged);
+            // 
+            // panelBrowserAffinityContainer
+            // 
+            this.panelBrowserAffinityContainer.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left) 
+            | System.Windows.Forms.AnchorStyles.Right)));
+            this.panelBrowserAffinityContainer.AutoSize = true;
+            this.panelBrowserAffinityContainer.AutoSizeFill = Gw2Launcher.UI.Controls.StackPanel.AutoSizeFillMode.Width;
+            this.panelBrowserAffinityContainer.Controls.Add(this.label81);
+            this.panelBrowserAffinityContainer.Controls.Add(this.adBrowserAffinity);
+            this.panelBrowserAffinityContainer.Location = new System.Drawing.Point(17, 284);
+            this.panelBrowserAffinityContainer.Margin = new System.Windows.Forms.Padding(4, 8, 0, 4);
+            this.panelBrowserAffinityContainer.Size = new System.Drawing.Size(349, 37);
+            this.panelBrowserAffinityContainer.Visible = false;
+            // 
+            // label81
+            // 
+            this.label81.AutoSize = true;
+            this.label81.Font = new System.Drawing.Font("Segoe UI Semilight", 8.25F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+            this.label81.Location = new System.Drawing.Point(1, 0);
+            this.label81.Margin = new System.Windows.Forms.Padding(1, 0, 0, 8);
+            this.label81.Size = new System.Drawing.Size(148, 13);
+            this.label81.Text = "Select which processors to use";
+            // 
+            // adBrowserAffinity
+            // 
+            this.adBrowserAffinity.Affinity = ((long)(0));
+            this.adBrowserAffinity.AutoSize = true;
+            this.adBrowserAffinity.Location = new System.Drawing.Point(8, 21);
+            this.adBrowserAffinity.Margin = new System.Windows.Forms.Padding(8, 0, 0, 0);
+            this.adBrowserAffinity.Size = new System.Drawing.Size(108, 16);
+            this.adBrowserAffinity.MouseDown += new System.Windows.Forms.MouseEventHandler(this.adBrowserAffinity_MouseDown);
+            // 
             // panelStatistics
             // 
             this.panelStatistics.Anchor = ((System.Windows.Forms.AnchorStyles)((((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom) 
@@ -4384,16 +4782,20 @@ namespace Gw2Launcher.UI
             this.stackPanel15.Controls.Add(this.label64);
             this.stackPanel15.Controls.Add(this.label58);
             this.stackPanel15.Controls.Add(this.label61);
-            this.stackPanel15.Controls.Add(this.label62);
             this.stackPanel15.Controls.Add(this.stackPanel16);
             this.stackPanel15.Controls.Add(this.label44);
             this.stackPanel15.Controls.Add(this.label37);
-            this.stackPanel15.Controls.Add(this.label46);
             this.stackPanel15.Controls.Add(this.stackPanel17);
+            this.stackPanel15.Controls.Add(this.label62);
+            this.stackPanel15.Controls.Add(this.label90);
+            this.stackPanel15.Controls.Add(this.stackPanel70);
+            this.stackPanel15.Controls.Add(this.label94);
+            this.stackPanel15.Controls.Add(this.label95);
+            this.stackPanel15.Controls.Add(this.stackPanel77);
             this.stackPanel15.Location = new System.Drawing.Point(0, 0);
             this.stackPanel15.Margin = new System.Windows.Forms.Padding(0, 0, 13, 0);
             this.stackPanel15.Padding = new System.Windows.Forms.Padding(13, 10, 0, 10);
-            this.stackPanel15.Size = new System.Drawing.Size(366, 344);
+            this.stackPanel15.Size = new System.Drawing.Size(366, 435);
             // 
             // label51
             // 
@@ -4493,20 +4895,9 @@ namespace Gw2Launcher.UI
             this.label61.AutoSize = true;
             this.label61.Font = new System.Drawing.Font("Segoe UI Semilight", 8.25F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
             this.label61.Location = new System.Drawing.Point(14, 186);
-            this.label61.Margin = new System.Windows.Forms.Padding(1, 1, 0, 1);
-            this.label61.Size = new System.Drawing.Size(350, 26);
-            this.label61.Text = "The daily login indicator will continue to show until there\'s a change in the acc" +
-    "ount\'s total play time";
-            // 
-            // label62
-            // 
-            this.label62.AutoSize = true;
-            this.label62.Font = new System.Drawing.Font("Segoe UI Semilight", 8.25F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            this.label62.ForeColor = System.Drawing.SystemColors.GrayText;
-            this.label62.Location = new System.Drawing.Point(14, 214);
-            this.label62.Margin = new System.Windows.Forms.Padding(1, 1, 0, 8);
-            this.label62.Size = new System.Drawing.Size(232, 13);
-            this.label62.Text = "Requires at least 1 minute played on the account";
+            this.label61.Margin = new System.Windows.Forms.Padding(1, 1, 0, 8);
+            this.label61.Size = new System.Drawing.Size(250, 13);
+            this.label61.Text = "Toggles the login indicator when the data is updated";
             // 
             // stackPanel16
             // 
@@ -4516,7 +4907,7 @@ namespace Gw2Launcher.UI
             this.stackPanel16.Controls.Add(this.checkTrackPlayedApi);
             this.stackPanel16.Controls.Add(this.labelTrackPlayedApi);
             this.stackPanel16.FlowDirection = System.Windows.Forms.FlowDirection.LeftToRight;
-            this.stackPanel16.Location = new System.Drawing.Point(21, 235);
+            this.stackPanel16.Location = new System.Drawing.Point(21, 207);
             this.stackPanel16.Margin = new System.Windows.Forms.Padding(8, 0, 0, 0);
             this.stackPanel16.Size = new System.Drawing.Size(140, 17);
             // 
@@ -4558,29 +4949,19 @@ namespace Gw2Launcher.UI
             // 
             this.label44.AutoSize = true;
             this.label44.Font = new System.Drawing.Font("Segoe UI Semibold", 9F, System.Drawing.FontStyle.Bold);
-            this.label44.Location = new System.Drawing.Point(13, 265);
+            this.label44.Location = new System.Drawing.Point(13, 237);
             this.label44.Margin = new System.Windows.Forms.Padding(0, 13, 0, 0);
-            this.label44.Size = new System.Drawing.Size(169, 15);
-            this.label44.Text = "Daily achievement completion";
+            this.label44.Size = new System.Drawing.Size(98, 15);
+            this.label44.Text = "Daily completion";
             // 
             // label37
             // 
             this.label37.AutoSize = true;
             this.label37.Font = new System.Drawing.Font("Segoe UI Semilight", 8.25F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            this.label37.Location = new System.Drawing.Point(14, 281);
-            this.label37.Margin = new System.Windows.Forms.Padding(1, 1, 0, 1);
-            this.label37.Size = new System.Drawing.Size(325, 13);
-            this.label37.Text = "Automatically toggles the daily completion indicator when completed";
-            // 
-            // label46
-            // 
-            this.label46.AutoSize = true;
-            this.label46.Font = new System.Drawing.Font("Segoe UI Semilight", 8.25F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            this.label46.ForeColor = System.Drawing.SystemColors.GrayText;
-            this.label46.Location = new System.Drawing.Point(14, 296);
-            this.label46.Margin = new System.Windows.Forms.Padding(1, 1, 0, 8);
-            this.label46.Size = new System.Drawing.Size(252, 13);
-            this.label46.Text = "Only eligible for accounts under the 15,000 point limit";
+            this.label37.Location = new System.Drawing.Point(14, 253);
+            this.label37.Margin = new System.Windows.Forms.Padding(1, 1, 0, 8);
+            this.label37.Size = new System.Drawing.Size(249, 13);
+            this.label37.Text = "Toggles the daily indicator when the chest is claimed";
             // 
             // stackPanel17
             // 
@@ -4590,7 +4971,7 @@ namespace Gw2Launcher.UI
             this.stackPanel17.Controls.Add(this.checkTrackDailyCompletionApi);
             this.stackPanel17.Controls.Add(this.labelTrackDailyCompletionApi);
             this.stackPanel17.FlowDirection = System.Windows.Forms.FlowDirection.LeftToRight;
-            this.stackPanel17.Location = new System.Drawing.Point(21, 317);
+            this.stackPanel17.Location = new System.Drawing.Point(21, 274);
             this.stackPanel17.Margin = new System.Windows.Forms.Padding(8, 0, 0, 0);
             this.stackPanel17.Size = new System.Drawing.Size(171, 17);
             // 
@@ -4627,6 +5008,134 @@ namespace Gw2Launcher.UI
             this.labelTrackDailyCompletionApi.Margin = new System.Windows.Forms.Padding(1, 0, 0, 1);
             this.labelTrackDailyCompletionApi.MinimumSize = new System.Drawing.Size(10, 0);
             this.labelTrackDailyCompletionApi.Size = new System.Drawing.Size(10, 13);
+            // 
+            // label62
+            // 
+            this.label62.AutoSize = true;
+            this.label62.Font = new System.Drawing.Font("Segoe UI Semibold", 9F, System.Drawing.FontStyle.Bold);
+            this.label62.Location = new System.Drawing.Point(13, 304);
+            this.label62.Margin = new System.Windows.Forms.Padding(0, 13, 0, 0);
+            this.label62.Size = new System.Drawing.Size(110, 15);
+            this.label62.Text = "Weekly completion";
+            // 
+            // label90
+            // 
+            this.label90.AutoSize = true;
+            this.label90.Font = new System.Drawing.Font("Segoe UI Semilight", 8.25F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+            this.label90.Location = new System.Drawing.Point(14, 320);
+            this.label90.Margin = new System.Windows.Forms.Padding(1, 1, 0, 8);
+            this.label90.Size = new System.Drawing.Size(260, 13);
+            this.label90.Text = "Toggles the weekly indicator when the chest is claimed";
+            // 
+            // stackPanel70
+            // 
+            this.stackPanel70.AutoSize = true;
+            this.stackPanel70.AutoSizeFill = Gw2Launcher.UI.Controls.StackPanel.AutoSizeFillMode.NoWrap;
+            this.stackPanel70.Controls.Add(this.aaTrackWeeklyCompletionApi);
+            this.stackPanel70.Controls.Add(this.checkTrackWeeklyCompletionApi);
+            this.stackPanel70.Controls.Add(this.labelTrackWeeklyCompletionApi);
+            this.stackPanel70.FlowDirection = System.Windows.Forms.FlowDirection.LeftToRight;
+            this.stackPanel70.Location = new System.Drawing.Point(21, 341);
+            this.stackPanel70.Margin = new System.Windows.Forms.Padding(8, 0, 0, 0);
+            this.stackPanel70.Size = new System.Drawing.Size(182, 17);
+            // 
+            // aaTrackWeeklyCompletionApi
+            // 
+            this.aaTrackWeeklyCompletionApi.Anchor = System.Windows.Forms.AnchorStyles.Left;
+            this.aaTrackWeeklyCompletionApi.Checked = false;
+            this.aaTrackWeeklyCompletionApi.Cursor = Gw2Launcher.Windows.Cursors.Hand;
+            this.aaTrackWeeklyCompletionApi.Enabled = false;
+            this.aaTrackWeeklyCompletionApi.Location = new System.Drawing.Point(0, 1);
+            this.aaTrackWeeklyCompletionApi.Margin = new System.Windows.Forms.Padding(0);
+            this.aaTrackWeeklyCompletionApi.Padding = new System.Windows.Forms.Padding(0, 1, 0, 1);
+            this.aaTrackWeeklyCompletionApi.Size = new System.Drawing.Size(20, 15);
+            this.aaTrackWeeklyCompletionApi.Visible = false;
+            // 
+            // checkTrackWeeklyCompletionApi
+            // 
+            this.checkTrackWeeklyCompletionApi.Anchor = System.Windows.Forms.AnchorStyles.None;
+            this.checkTrackWeeklyCompletionApi.AutoSize = true;
+            this.checkTrackWeeklyCompletionApi.Font = new System.Drawing.Font("Segoe UI", 8.25F);
+            this.checkTrackWeeklyCompletionApi.Location = new System.Drawing.Point(20, 0);
+            this.checkTrackWeeklyCompletionApi.Margin = new System.Windows.Forms.Padding(0);
+            this.checkTrackWeeklyCompletionApi.Size = new System.Drawing.Size(151, 17);
+            this.checkTrackWeeklyCompletionApi.Text = "Track weekly completion";
+            this.checkTrackWeeklyCompletionApi.UseVisualStyleBackColor = true;
+            // 
+            // labelTrackWeeklyCompletionApi
+            // 
+            this.labelTrackWeeklyCompletionApi.Anchor = System.Windows.Forms.AnchorStyles.None;
+            this.labelTrackWeeklyCompletionApi.AutoSize = true;
+            this.labelTrackWeeklyCompletionApi.Font = new System.Drawing.Font("Segoe UI Semilight", 8.25F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+            this.labelTrackWeeklyCompletionApi.ForeColor = System.Drawing.SystemColors.GrayText;
+            this.labelTrackWeeklyCompletionApi.Location = new System.Drawing.Point(172, 1);
+            this.labelTrackWeeklyCompletionApi.Margin = new System.Windows.Forms.Padding(1, 0, 0, 1);
+            this.labelTrackWeeklyCompletionApi.MinimumSize = new System.Drawing.Size(10, 0);
+            this.labelTrackWeeklyCompletionApi.Size = new System.Drawing.Size(10, 13);
+            // 
+            // label94
+            // 
+            this.label94.AutoSize = true;
+            this.label94.Font = new System.Drawing.Font("Segoe UI Semibold", 9F, System.Drawing.FontStyle.Bold);
+            this.label94.Location = new System.Drawing.Point(13, 371);
+            this.label94.Margin = new System.Windows.Forms.Padding(0, 13, 0, 0);
+            this.label94.Size = new System.Drawing.Size(37, 15);
+            this.label94.Text = "Astral";
+            // 
+            // label95
+            // 
+            this.label95.AutoSize = true;
+            this.label95.Font = new System.Drawing.Font("Segoe UI Semilight", 8.25F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+            this.label95.Location = new System.Drawing.Point(14, 387);
+            this.label95.Margin = new System.Windows.Forms.Padding(1, 1, 0, 8);
+            this.label95.Size = new System.Drawing.Size(134, 13);
+            this.label95.Text = "Shows the amount of astral";
+            // 
+            // stackPanel77
+            // 
+            this.stackPanel77.AutoSize = true;
+            this.stackPanel77.AutoSizeFill = Gw2Launcher.UI.Controls.StackPanel.AutoSizeFillMode.NoWrap;
+            this.stackPanel77.Controls.Add(this.aaTrackAstralApi);
+            this.stackPanel77.Controls.Add(this.checkTrackAstralApi);
+            this.stackPanel77.Controls.Add(this.labelTrackAstralApi);
+            this.stackPanel77.FlowDirection = System.Windows.Forms.FlowDirection.LeftToRight;
+            this.stackPanel77.Location = new System.Drawing.Point(21, 408);
+            this.stackPanel77.Margin = new System.Windows.Forms.Padding(8, 0, 0, 0);
+            this.stackPanel77.Size = new System.Drawing.Size(114, 17);
+            // 
+            // aaTrackAstralApi
+            // 
+            this.aaTrackAstralApi.Anchor = System.Windows.Forms.AnchorStyles.Left;
+            this.aaTrackAstralApi.Checked = false;
+            this.aaTrackAstralApi.Cursor = Gw2Launcher.Windows.Cursors.Hand;
+            this.aaTrackAstralApi.Enabled = false;
+            this.aaTrackAstralApi.Location = new System.Drawing.Point(0, 1);
+            this.aaTrackAstralApi.Margin = new System.Windows.Forms.Padding(0);
+            this.aaTrackAstralApi.Padding = new System.Windows.Forms.Padding(0, 1, 0, 1);
+            this.aaTrackAstralApi.Size = new System.Drawing.Size(20, 15);
+            this.aaTrackAstralApi.Visible = false;
+            // 
+            // checkTrackAstralApi
+            // 
+            this.checkTrackAstralApi.Anchor = System.Windows.Forms.AnchorStyles.None;
+            this.checkTrackAstralApi.AutoSize = true;
+            this.checkTrackAstralApi.Font = new System.Drawing.Font("Segoe UI", 8.25F);
+            this.checkTrackAstralApi.Location = new System.Drawing.Point(20, 0);
+            this.checkTrackAstralApi.Margin = new System.Windows.Forms.Padding(0);
+            this.checkTrackAstralApi.Size = new System.Drawing.Size(83, 17);
+            this.checkTrackAstralApi.Text = "Track astral";
+            this.checkTrackAstralApi.UseVisualStyleBackColor = true;
+            // 
+            // labelTrackAstralApi
+            // 
+            this.labelTrackAstralApi.Anchor = System.Windows.Forms.AnchorStyles.None;
+            this.labelTrackAstralApi.AutoSize = true;
+            this.labelTrackAstralApi.Font = new System.Drawing.Font("Segoe UI Semilight", 8.25F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+            this.labelTrackAstralApi.ForeColor = System.Drawing.SystemColors.GrayText;
+            this.labelTrackAstralApi.Location = new System.Drawing.Point(104, 1);
+            this.labelTrackAstralApi.Margin = new System.Windows.Forms.Padding(1, 0, 0, 1);
+            this.labelTrackAstralApi.MinimumSize = new System.Drawing.Size(10, 0);
+            this.labelTrackAstralApi.Size = new System.Drawing.Size(10, 13);
             // 
             // panelLaunchOptionsAdvanced
             // 
@@ -4856,178 +5365,26 @@ namespace Gw2Launcher.UI
             this.loadToolStripMenuItem.Text = "Load";
             this.loadToolStripMenuItem.Click += new System.EventHandler(this.loadToolStripMenuItem_Click);
             // 
-            // panelLaunchOptionsProcessBrowser
-            // 
-            this.panelLaunchOptionsProcessBrowser.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left) 
-            | System.Windows.Forms.AnchorStyles.Right)));
-            this.panelLaunchOptionsProcessBrowser.AutoSize = true;
-            this.panelLaunchOptionsProcessBrowser.AutoSizeFill = Gw2Launcher.UI.Controls.StackPanel.AutoSizeFillMode.Width;
-            this.panelLaunchOptionsProcessBrowser.Controls.Add(this.label88);
-            this.panelLaunchOptionsProcessBrowser.Controls.Add(this.label259);
-            this.panelLaunchOptionsProcessBrowser.Controls.Add(this.stackPanel65);
-            this.panelLaunchOptionsProcessBrowser.Controls.Add(this.label89);
-            this.panelLaunchOptionsProcessBrowser.Controls.Add(this.stackPanel67);
-            this.panelLaunchOptionsProcessBrowser.Location = new System.Drawing.Point(13, 165);
-            this.panelLaunchOptionsProcessBrowser.Margin = new System.Windows.Forms.Padding(0, 13, 0, 0);
-            this.panelLaunchOptionsProcessBrowser.Size = new System.Drawing.Size(353, 111);
-            // 
-            // label88
-            // 
-            this.label88.AutoSize = true;
-            this.label88.Font = new System.Drawing.Font("Segoe UI Semibold", 9F, System.Drawing.FontStyle.Bold);
-            this.label88.Location = new System.Drawing.Point(0, 0);
-            this.label88.Margin = new System.Windows.Forms.Padding(0);
-            this.label88.Size = new System.Drawing.Size(90, 15);
-            this.label88.Text = "Browser priority";
-            // 
-            // stackPanel65
-            // 
-            this.stackPanel65.AutoSize = true;
-            this.stackPanel65.AutoSizeFill = Gw2Launcher.UI.Controls.StackPanel.AutoSizeFillMode.NoWrap;
-            this.stackPanel65.Controls.Add(this.aaBrowserPriority);
-            this.stackPanel65.Controls.Add(this.checkBrowserPriority);
-            this.stackPanel65.Controls.Add(this.comboBrowserPriority);
-            this.stackPanel65.FlowDirection = System.Windows.Forms.FlowDirection.LeftToRight;
-            this.stackPanel65.Location = new System.Drawing.Point(8, 37);
-            this.stackPanel65.Margin = new System.Windows.Forms.Padding(8, 0, 0, 0);
-            this.stackPanel65.Size = new System.Drawing.Size(199, 21);
-            // 
-            // aaBrowserPriority
-            // 
-            this.aaBrowserPriority.Anchor = System.Windows.Forms.AnchorStyles.Left;
-            this.aaBrowserPriority.Checked = false;
-            this.aaBrowserPriority.Cursor = Gw2Launcher.Windows.Cursors.Hand;
-            this.aaBrowserPriority.Enabled = false;
-            this.aaBrowserPriority.Location = new System.Drawing.Point(0, 3);
-            this.aaBrowserPriority.Margin = new System.Windows.Forms.Padding(0);
-            this.aaBrowserPriority.Padding = new System.Windows.Forms.Padding(0, 1, 0, 1);
-            this.aaBrowserPriority.Size = new System.Drawing.Size(20, 15);
-            this.aaBrowserPriority.Visible = false;
-            // 
-            // checkBrowserPriority
-            // 
-            this.checkBrowserPriority.Anchor = System.Windows.Forms.AnchorStyles.None;
-            this.checkBrowserPriority.AutoSize = true;
-            this.checkBrowserPriority.Location = new System.Drawing.Point(20, 3);
-            this.checkBrowserPriority.Margin = new System.Windows.Forms.Padding(0);
-            this.checkBrowserPriority.Size = new System.Drawing.Size(15, 14);
-            this.checkBrowserPriority.UseVisualStyleBackColor = true;
-            this.checkBrowserPriority.CheckedChanged += new System.EventHandler(this.checkBrowserPriority_CheckedChanged);
-            // 
-            // comboBrowserPriority
-            // 
-            this.comboBrowserPriority.DropDownStyle = System.Windows.Forms.ComboBoxStyle.DropDownList;
-            this.comboBrowserPriority.Enabled = false;
-            this.comboBrowserPriority.FormattingEnabled = true;
-            this.comboBrowserPriority.Location = new System.Drawing.Point(42, 0);
-            this.comboBrowserPriority.Margin = new System.Windows.Forms.Padding(7, 0, 0, 0);
-            this.comboBrowserPriority.Size = new System.Drawing.Size(157, 21);
-            // 
-            // label89
-            // 
-            this.label89.AutoSize = true;
-            this.label89.Font = new System.Drawing.Font("Segoe UI Semibold", 9F, System.Drawing.FontStyle.Bold);
-            this.label89.Location = new System.Drawing.Point(0, 71);
-            this.label89.Margin = new System.Windows.Forms.Padding(0, 13, 0, 8);
-            this.label89.Size = new System.Drawing.Size(89, 15);
-            this.label89.Text = "Browser affinity";
-            // 
-            // stackPanel67
-            // 
-            this.stackPanel67.AutoSize = true;
-            this.stackPanel67.AutoSizeFill = Gw2Launcher.UI.Controls.StackPanel.AutoSizeFillMode.NoWrap;
-            this.stackPanel67.Controls.Add(this.aaBrowserAffinity);
-            this.stackPanel67.Controls.Add(this.checkBrowserAffinityAll);
-            this.stackPanel67.FlowDirection = System.Windows.Forms.FlowDirection.LeftToRight;
-            this.stackPanel67.Location = new System.Drawing.Point(8, 94);
-            this.stackPanel67.Margin = new System.Windows.Forms.Padding(8, 0, 0, 0);
-            this.stackPanel67.Size = new System.Drawing.Size(186, 17);
-            // 
-            // aaBrowserAffinity
-            // 
-            this.aaBrowserAffinity.Anchor = System.Windows.Forms.AnchorStyles.Left;
-            this.aaBrowserAffinity.Checked = false;
-            this.aaBrowserAffinity.Cursor = Gw2Launcher.Windows.Cursors.Hand;
-            this.aaBrowserAffinity.Enabled = false;
-            this.aaBrowserAffinity.Location = new System.Drawing.Point(0, 1);
-            this.aaBrowserAffinity.Margin = new System.Windows.Forms.Padding(0);
-            this.aaBrowserAffinity.Padding = new System.Windows.Forms.Padding(0, 1, 0, 1);
-            this.aaBrowserAffinity.Size = new System.Drawing.Size(20, 15);
-            this.aaBrowserAffinity.Visible = false;
-            // 
-            // checkBrowserAffinityAll
-            // 
-            this.checkBrowserAffinityAll.AutoSize = true;
-            this.checkBrowserAffinityAll.Checked = true;
-            this.checkBrowserAffinityAll.CheckState = System.Windows.Forms.CheckState.Checked;
-            this.checkBrowserAffinityAll.Font = new System.Drawing.Font("Segoe UI", 8.25F);
-            this.checkBrowserAffinityAll.Location = new System.Drawing.Point(20, 0);
-            this.checkBrowserAffinityAll.Margin = new System.Windows.Forms.Padding(0);
-            this.checkBrowserAffinityAll.Size = new System.Drawing.Size(166, 17);
-            this.checkBrowserAffinityAll.Text = "Use all available processors";
-            this.checkBrowserAffinityAll.UseVisualStyleBackColor = true;
-            this.checkBrowserAffinityAll.CheckedChanged += new System.EventHandler(this.checkBrowserAffinityAll_CheckedChanged);
-            // 
-            // panelBrowserAffinityContainer
-            // 
-            this.panelBrowserAffinityContainer.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left) 
-            | System.Windows.Forms.AnchorStyles.Right)));
-            this.panelBrowserAffinityContainer.AutoSize = true;
-            this.panelBrowserAffinityContainer.AutoSizeFill = Gw2Launcher.UI.Controls.StackPanel.AutoSizeFillMode.Width;
-            this.panelBrowserAffinityContainer.Controls.Add(this.label81);
-            this.panelBrowserAffinityContainer.Controls.Add(this.adBrowserAffinity);
-            this.panelBrowserAffinityContainer.Location = new System.Drawing.Point(17, 284);
-            this.panelBrowserAffinityContainer.Margin = new System.Windows.Forms.Padding(4, 8, 0, 4);
-            this.panelBrowserAffinityContainer.Size = new System.Drawing.Size(349, 37);
-            this.panelBrowserAffinityContainer.Visible = false;
-            // 
-            // label81
-            // 
-            this.label81.AutoSize = true;
-            this.label81.Font = new System.Drawing.Font("Segoe UI Semilight", 8.25F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            this.label81.Location = new System.Drawing.Point(1, 0);
-            this.label81.Margin = new System.Windows.Forms.Padding(1, 0, 0, 8);
-            this.label81.Size = new System.Drawing.Size(148, 13);
-            this.label81.Text = "Select which processors to use";
-            // 
-            // adBrowserAffinity
-            // 
-            this.adBrowserAffinity.Affinity = ((long)(0));
-            this.adBrowserAffinity.AutoSize = true;
-            this.adBrowserAffinity.Location = new System.Drawing.Point(8, 21);
-            this.adBrowserAffinity.Margin = new System.Windows.Forms.Padding(8, 0, 0, 0);
-            this.adBrowserAffinity.Size = new System.Drawing.Size(108, 16);
-            this.adBrowserAffinity.MouseDown += new System.Windows.Forms.MouseEventHandler(this.adBrowserAffinity_MouseDown);
-            // 
-            // label259
-            // 
-            this.label259.AutoSize = true;
-            this.label259.Font = new System.Drawing.Font("Segoe UI Semilight", 8.25F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            this.label259.Location = new System.Drawing.Point(1, 16);
-            this.label259.Margin = new System.Windows.Forms.Padding(1, 1, 0, 8);
-            this.label259.Size = new System.Drawing.Size(147, 13);
-            this.label259.Text = "Used to display web interfaces";
-            // 
             // formAccount
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(96F, 96F);
             this.BackColorName = Gw2Launcher.UI.UiColors.Colors.Custom;
             this.ClientSize = new System.Drawing.Size(574, 507);
+            this.Controls.Add(this.panelLaunchOptions);
+            this.Controls.Add(this.panelGraphics);
+            this.Controls.Add(this.panelSecurity);
+            this.Controls.Add(this.panelApi);
             this.Controls.Add(this.panelIdentifierIconLarge);
             this.Controls.Add(this.buttonCancel);
             this.Controls.Add(this.buttonOK);
             this.Controls.Add(this.sidebarPanel1);
-            this.Controls.Add(this.panelLaunchOptionsProcess);
-            this.Controls.Add(this.panelStatistics);
-            this.Controls.Add(this.panelApi);
-            this.Controls.Add(this.panelLaunchOptionsAdvanced);
-            this.Controls.Add(this.panelLaunchOptions);
             this.Controls.Add(this.panelGeneral);
-            this.Controls.Add(this.panelSecurity);
             this.Controls.Add(this.panelHotkeys);
-            this.Controls.Add(this.panelGraphics);
             this.Controls.Add(this.panelGwDat);
             this.Controls.Add(this.panelLocalDat);
+            this.Controls.Add(this.panelLaunchOptionsProcess);
+            this.Controls.Add(this.panelStatistics);
+            this.Controls.Add(this.panelLaunchOptionsAdvanced);
             this.Font = new System.Drawing.Font("Segoe UI", 8.25F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
             this.ForeColorName = Gw2Launcher.UI.UiColors.Colors.Custom;
             this.Icon = global::Gw2Launcher.Properties.Resources.Gw2Launcher;
@@ -5106,6 +5463,8 @@ namespace Gw2Launcher.UI
             this.stackPanel64.PerformLayout();
             this.stackPanel9.ResumeLayout(false);
             this.stackPanel9.PerformLayout();
+            this.stackPanel63.ResumeLayout(false);
+            this.stackPanel63.PerformLayout();
             this.stackPanel47.ResumeLayout(false);
             this.stackPanel47.PerformLayout();
             this.stackPanel48.ResumeLayout(false);
@@ -5140,14 +5499,18 @@ namespace Gw2Launcher.UI
             ((System.ComponentModel.ISupportInitialize)(this.imageTrackLoginRewardsDay)).EndInit();
             this.stackPanel24.ResumeLayout(false);
             this.stackPanel24.PerformLayout();
+            this.stackPanel75.ResumeLayout(false);
+            this.stackPanel75.PerformLayout();
+            this.stackPanel74.ResumeLayout(false);
+            this.stackPanel74.PerformLayout();
+            this.stackPanel76.ResumeLayout(false);
+            this.stackPanel76.PerformLayout();
             this.stackPanel55.ResumeLayout(false);
             this.stackPanel55.PerformLayout();
             this.panelSecurity.ResumeLayout(false);
             this.panelSecurity.PerformLayout();
             this.stackPanel32.ResumeLayout(false);
             this.stackPanel32.PerformLayout();
-            this.stackPanel44.ResumeLayout(false);
-            this.stackPanel44.PerformLayout();
             this.tableContainerPanel31.ResumeLayout(false);
             this.tableContainerPanel31.PerformLayout();
             this.stackPanel40.ResumeLayout(false);
@@ -5199,6 +5562,14 @@ namespace Gw2Launcher.UI
             this.stackPanel45.PerformLayout();
             this.panelProcessAffinityContainer.ResumeLayout(false);
             this.panelProcessAffinityContainer.PerformLayout();
+            this.panelLaunchOptionsProcessBrowser.ResumeLayout(false);
+            this.panelLaunchOptionsProcessBrowser.PerformLayout();
+            this.stackPanel65.ResumeLayout(false);
+            this.stackPanel65.PerformLayout();
+            this.stackPanel67.ResumeLayout(false);
+            this.stackPanel67.PerformLayout();
+            this.panelBrowserAffinityContainer.ResumeLayout(false);
+            this.panelBrowserAffinityContainer.PerformLayout();
             this.panelStatistics.ResumeLayout(false);
             this.panelStatistics.PerformLayout();
             this.stackPanel25.ResumeLayout(false);
@@ -5223,6 +5594,10 @@ namespace Gw2Launcher.UI
             this.stackPanel16.PerformLayout();
             this.stackPanel17.ResumeLayout(false);
             this.stackPanel17.PerformLayout();
+            this.stackPanel70.ResumeLayout(false);
+            this.stackPanel70.PerformLayout();
+            this.stackPanel77.ResumeLayout(false);
+            this.stackPanel77.PerformLayout();
             this.panelLaunchOptionsAdvanced.ResumeLayout(false);
             this.panelLaunchOptionsAdvanced.PerformLayout();
             this.stackPanel31.ResumeLayout(false);
@@ -5233,14 +5608,6 @@ namespace Gw2Launcher.UI
             this.panel2.PerformLayout();
             this.contextApplyAll.ResumeLayout(false);
             this.contextAffinity.ResumeLayout(false);
-            this.panelLaunchOptionsProcessBrowser.ResumeLayout(false);
-            this.panelLaunchOptionsProcessBrowser.PerformLayout();
-            this.stackPanel65.ResumeLayout(false);
-            this.stackPanel65.PerformLayout();
-            this.stackPanel67.ResumeLayout(false);
-            this.stackPanel67.PerformLayout();
-            this.panelBrowserAffinityContainer.ResumeLayout(false);
-            this.panelBrowserAffinityContainer.PerformLayout();
             this.ResumeLayout(false);
 
         }
@@ -5343,7 +5710,6 @@ namespace Gw2Launcher.UI
         private System.Windows.Forms.Label label44;
         private System.Windows.Forms.Label label48;
         private System.Windows.Forms.Label label51;
-        private System.Windows.Forms.Label label46;
         private System.Windows.Forms.Button buttonApiVerify;
         private Controls.AutoScrollContainerPanel panelSecurity;
         private Gw2Launcher.UI.Controls.BoxedLabelTextBox textEmail;
@@ -5363,7 +5729,6 @@ namespace Gw2Launcher.UI
         private System.Windows.Forms.Label label56;
         private Controls.FlatProgressBar progressTotpTime;
         private System.Windows.Forms.CheckBox checkTrackPlayedApi;
-        private System.Windows.Forms.Label label62;
         private System.Windows.Forms.Label label61;
         private System.Windows.Forms.Label label58;
         private System.Windows.Forms.Label label64;
@@ -5508,8 +5873,7 @@ namespace Gw2Launcher.UI
         private System.Windows.Forms.ToolStripMenuItem menuImageBackgroundDefaultToolStripMenuItem;
         private Controls.StackPanel stackPanel42;
         private Controls.ApplyAllCheckBox aaAuthenticatorKey;
-        private Controls.StackPanel stackPanel44;
-        private Controls.ApplyAllCheckBox aaAuthorization;
+        private Controls.ApplyAllCheckBox aaEmail;
         private Controls.StackPanel stackPanel43;
         private Controls.ApplyAllCheckBox aaEnableNetworkAuthorization;
         private Controls.StackPanel stackPanel59;
@@ -5658,5 +6022,36 @@ namespace Gw2Launcher.UI
         private System.Windows.Forms.Label label81;
         private Controls.AffinityDisplay adBrowserAffinity;
         private System.Windows.Forms.Label label259;
+        private System.Windows.Forms.Label labelDisableRunAfterGlobal;
+        private Controls.StackPanel stackPanel63;
+        private Controls.ApplyAllCheckBox aaDisableRunAfter;
+        private System.Windows.Forms.CheckBox checkDisableRunAfter;
+        private System.Windows.Forms.Label label62;
+        private System.Windows.Forms.Label label90;
+        private Controls.StackPanel stackPanel70;
+        private Controls.ApplyAllCheckBox aaTrackWeeklyCompletionApi;
+        private System.Windows.Forms.CheckBox checkTrackWeeklyCompletionApi;
+        private System.Windows.Forms.Label labelTrackWeeklyCompletionApi;
+        private Controls.StackPanel stackPanel75;
+        private Controls.ApplyAllCheckBox aaResetDailyCompletion;
+        private System.Windows.Forms.CheckBox checkResetDailyCompletion;
+        private System.Windows.Forms.Label label93;
+        private System.Windows.Forms.Label label92;
+        private Controls.StackPanel stackPanel74;
+        private Controls.ApplyAllCheckBox aaShowWeeklyCompletion;
+        private System.Windows.Forms.CheckBox checkShowWeeklyCompletion;
+        private Controls.LinkLabel labelShowWeeklyCompletionApi;
+        private Controls.StackPanel stackPanel76;
+        private Controls.ApplyAllCheckBox aaResetWeeklyCompletion;
+        private System.Windows.Forms.CheckBox checkResetWeeklyCompletion;
+        private System.Windows.Forms.Label label94;
+        private System.Windows.Forms.Label label95;
+        private Controls.StackPanel stackPanel77;
+        private Controls.ApplyAllCheckBox aaTrackAstralApi;
+        private System.Windows.Forms.CheckBox checkTrackAstralApi;
+        private System.Windows.Forms.Label labelTrackAstralApi;
+        private System.Windows.Forms.Label label96;
+        private Controls.ApplyAllCheckBox aaPassword;
+        private System.Windows.Forms.CheckBox checkGfxSettingsReadOnly;
     }
 }

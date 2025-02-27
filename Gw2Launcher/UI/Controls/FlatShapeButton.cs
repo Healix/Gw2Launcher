@@ -23,6 +23,7 @@ namespace Gw2Launcher.UI.Controls
             Underscore,
             SquareAndLine,
             WindowTemplate,
+            Limit1,
         }
 
         public FlatShapeButton()
@@ -668,6 +669,49 @@ namespace Gw2Launcher.UI.Controls
                             g.DrawLine(pen, p.X, p.Y, p.X + w, p.Y + h);
                             g.DrawLine(pen, p.X, p.Y + h, p.X + w, p.Y);
                         }
+                    }
+
+                    break;
+                case IconShape.Limit1:
+
+                    using (var brush = new SolidBrush(ForeColorCurrent))
+                    {
+                        w = (int)(this.lineSize * scale + 0.5f);
+                        lineSize = w / 2;
+                        h = w * 2 + lineSize * 3;
+                        p = GetPosition(w, h - 1);
+
+                        var y = p.Y;
+                        var ofsx = w * 3 /4;
+
+                        if (borderColor.A > 0)
+                        {
+                            using (var pen = new Pen(borderColor))
+                            {
+                                g.SmoothingMode = System.Drawing.Drawing2D.SmoothingMode.AntiAlias;
+                                g.DrawRectangle(pen, p.X - 0.5f, y - 0.5f, w, w);
+                                y += w + lineSize * 3;
+                                g.DrawRectangle(pen, p.X - 0.5f, y - 0.5f, w, w);
+
+                                if (!isSelected)
+                                    pen.Color = Color.FromArgb(128, borderColor);
+                                y = p.Y + w + lineSize;
+                                g.DrawRectangle(pen, p.X - ofsx - 0.5f, y - 0.5f, w + ofsx * 2, lineSize);
+
+                            }
+                            y = p.Y;
+                        }
+
+                        g.SmoothingMode = System.Drawing.Drawing2D.SmoothingMode.Default;
+                        g.FillRectangle(brush, p.X, y, w, w);
+                        y += w + lineSize * 3;
+                        g.FillRectangle(brush, p.X, y, w, w);
+
+                        if (!isSelected)
+                            brush.Color = Color.FromArgb(128, ForeColorCurrent);
+                        y = p.Y + w + lineSize;
+                        g.FillRectangle(brush, p.X - ofsx, y, w + ofsx * 2, lineSize);
+
                     }
 
                     break;

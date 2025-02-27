@@ -60,6 +60,7 @@ namespace Gw2Launcher.UI
         {
             base.OnShown(e);
 
+            this.Refresh();
             this.Opacity = 1;
         }
 

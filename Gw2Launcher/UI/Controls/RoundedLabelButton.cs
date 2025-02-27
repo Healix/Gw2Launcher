@@ -23,18 +23,16 @@ namespace Gw2Launcher.UI.Controls
             base.Padding = new Padding(10, 2, 10, 2);
             this.Cursor = Windows.Cursors.Hand;
 
-            base.BackColor = backColor = SystemColors.ControlLight;
+            backColorBase = SystemColors.Control;
             base.ForeColor = foreColor = SystemColors.ControlText;
 
-            backColorHovered = Util.Color.Darken(backColor, 0.05f);
-
-            borderColor = backColorHovered;
-            borderColorHovered = Util.Color.Darken(borderColor, 0.05f);
+            ApplyShade(backColorBase);
 
             roundedCorners = new Point(2, 2);
         }
 
-        protected byte borderSize;
+        protected byte borderSize = 1;
+        [DefaultValue(1)]
         public byte BorderSize
         {
             get
@@ -73,6 +71,8 @@ namespace Gw2Launcher.UI.Controls
 
         protected Color borderColor;
         [DefaultValue(typeof(Color), "216, 216, 216")]
+        [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
+        [Browsable(false)]
         public Color BorderColor
         {
             get
@@ -92,6 +92,8 @@ namespace Gw2Launcher.UI.Controls
 
         protected Color borderColorHovered;
         [DefaultValue(typeof(Color), "205, 205, 205")]
+        [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
+        [Browsable(false)]
         public Color BorderColorHovered
         {
             get
@@ -113,6 +115,8 @@ namespace Gw2Launcher.UI.Controls
 
         protected Color backColorHovered;
         [DefaultValue(typeof(Color), "216, 216, 216")]
+        [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
+        [Browsable(false)]
         public Color BackColorHovered
         {
             get
@@ -134,6 +138,8 @@ namespace Gw2Launcher.UI.Controls
 
         protected Color foreColorHovered;
         [DefaultValue(typeof(Color), "ControlText")]
+        [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
+        [Browsable(false)]
         public Color ForeColorHovered
         {
             get
@@ -153,6 +159,7 @@ namespace Gw2Launcher.UI.Controls
             }
         }
 
+        [Browsable(false)]
         public Color BorderColorCurrent
         {
             get
@@ -164,6 +171,7 @@ namespace Gw2Launcher.UI.Controls
             }
         }
 
+        [Browsable(false)]
         public Color BackColorCurrent
         {
             get
@@ -175,6 +183,7 @@ namespace Gw2Launcher.UI.Controls
             }
         }
 
+        [Browsable(false)]
         public Color ForeColorCurrent
         {
             get
@@ -187,18 +196,23 @@ namespace Gw2Launcher.UI.Controls
         }
 
         private Color backColor;
-        [DefaultValue(typeof(Color), "ControlLight")]
+        private Color backColorBase;
+        [DefaultValue(typeof(Color), "Control")]
         public override Color BackColor
         {
             get
             {
-                return backColor;
+                return backColorBase;
             }
             set
             {
-                if (backColor != value)
+                if (backColorBase != value)
                 {
-                    base.BackColor = backColor = value;
+                    backColorBase = value;
+                    if (_Shade != 0)
+                        ApplyShade(value);
+                    else
+                        base.BackColor = backColorBase = backColor = value;
                     if (!isHovered)
                         this.Invalidate();
                 }
@@ -357,6 +371,59 @@ namespace Gw2Launcher.UI.Controls
                     brush.Color = this.BackColorCurrent;
                     g.FillRegion(brush, regionBackground);
                 }
+            }
+        }
+
+        private byte _Shade = 25;
+        [DefaultValue(25)]
+        public byte Shade
+        {
+            get
+            {
+                return _Shade;
+            }
+            set
+            {
+                if (_Shade != value)
+                {
+                    _Shade = value;
+                    if (value != 0)
+                    {
+                        ApplyShade(this.backColor);
+                    }
+                }
+            }
+        }
+
+        public void ApplyShade(Color c)
+        {
+            var p = _Shade / 255f;
+
+            if (Util.Color.Luminance(c) > 127)
+            {
+                backColor = Util.Color.Darken(c, p);
+                backColorHovered = Util.Color.Darken(backColor, p);
+                borderColor = backColorHovered;
+                borderColorHovered = Util.Color.Darken(borderColor, p);
+            }
+            else
+            {
+                backColor = Util.Color.Lighten(c, p);
+                backColorHovered = Util.Color.Lighten(backColor, p);
+                borderColor = backColorHovered;
+                borderColorHovered = Util.Color.Lighten(borderColor, p);
+            }
+
+            base.BackColor = BackColorCurrent;
+        }
+
+        protected override void OnSystemColorsChanged(EventArgs e)
+        {
+            base.OnSystemColorsChanged(e);
+
+            if (_Shade != 0)
+            {
+                ApplyShade(this.backColor);
             }
         }
     }

@@ -390,6 +390,7 @@ namespace Gw2Launcher.Windows.Native
         WM_RENDERFORMAT = 0x0305,
         WM_RENDERALLFORMATS = 0x0306,
         WM_CLIPBOARDUPDATE = 0x031D,
+        WM_SYSCOLORCHANGE = 0x0015,
     }
 
     public enum Sizing

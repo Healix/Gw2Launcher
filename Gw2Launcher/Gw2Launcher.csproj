@@ -83,11 +83,15 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="Api\Account.cs" />
-    <Compile Include="Api\DailyAchievements.cs" />
+    <Compile Include="Api\ApiData.cs" />
+    <Compile Include="Api\Daily.cs" />
     <Compile Include="Api\Exceptions.cs" />
     <Compile Include="Api\Json.cs" />
     <Compile Include="Api\Net.cs" />
+    <Compile Include="Api\Cache\AchievementCache.cs" />
     <Compile Include="Api\TokenInfo.cs" />
+    <Compile Include="Api\Vault.cs" />
+    <Compile Include="Api\Wallet.cs" />
     <Compile Include="Client\DatManager.cs" />
     <Compile Include="Client\FileManager.cs" />
     <Compile Include="Client\Launcher.cs" />
@@ -107,6 +111,7 @@
     <Compile Include="Client\SteamProxy.cs" />
     <Compile Include="Client\Variables.cs" />
     <Compile Include="DataPath.cs" />
+    <Compile Include="IO\BlockStream.cs" />
     <Compile Include="IO\CrcStream.cs" />
     <Compile Include="Messaging\LaunchMessage.cs" />
     <Compile Include="Messaging\MappedMessage.cs" />
@@ -130,9 +135,12 @@
     <Compile Include="Security\Cryptography\Crypto.cs" />
     <Compile Include="Security\Cryptography\ProtectedString.cs" />
     <Compile Include="Security\Impersonation.cs" />
+    <Compile Include="Tools\Api\ApiRequestManager.cs" />
+    <Compile Include="Tools\Api\VaultObjectives.cs" />
     <Compile Include="Tools\AutoUpdate.cs" />
     <Compile Include="Tools\Backup\Backup.cs" />
-    <Compile Include="Tools\CoherentMonitor.cs" />
+    <Compile Include="Tools\Chromium\CefSessionMonitor.cs" />
+    <Compile Include="Tools\Chromium\CoherentMonitor.cs" />
     <Compile Include="Tools\DataStore.cs" />
     <Compile Include="Tools\DatUpdater.cs" />
     <Compile Include="Tools\Dat\Compression\Crc32.cs" />
@@ -172,17 +180,33 @@
     <Compile Include="UI\Base\PopupFlatBase.cs">
       <SubType>Form</SubType>
     </Compile>
+    <Compile Include="UI\Controls\AccountSquares.cs">
+      <SubType>Component</SubType>
+    </Compile>
+    <Compile Include="UI\Controls\ApiTimer.cs" />
     <Compile Include="UI\Controls\FlatIntegerTextBox.cs">
       <SubType>Component</SubType>
     </Compile>
     <Compile Include="UI\Controls\FlatTextBox.cs">
       <SubType>Component</SubType>
     </Compile>
+    <Compile Include="UI\Dailies\formDailyFavorites.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="UI\Dailies\formDailyFavorites.Designer.cs">
+      <DependentUpon>formDailyFavorites.cs</DependentUpon>
+    </Compile>
     <Compile Include="UI\formColors.cs">
       <SubType>Form</SubType>
     </Compile>
     <Compile Include="UI\formColors.Designer.cs">
       <DependentUpon>formColors.cs</DependentUpon>
+    </Compile>
+    <Compile Include="UI\Dailies\formDailyCategories.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="UI\Dailies\formDailyCategories.Designer.cs">
+      <DependentUpon>formDailyCategories.cs</DependentUpon>
     </Compile>
     <Compile Include="UI\formLog.cs">
       <SubType>Form</SubType>
@@ -316,6 +340,7 @@
       <SubType>Component</SubType>
     </Compile>
     <Compile Include="Util\Array.cs" />
+    <Compile Include="Util\Date.cs" />
     <Compile Include="Util\Dpi.cs" />
     <Compile Include="Windows\Clipboard.cs" />
     <Compile Include="Windows\Cursors.cs" />
@@ -325,7 +350,6 @@
     <Compile Include="Tools\JumpList.cs" />
     <Compile Include="Tools\Notes.cs" />
     <Compile Include="Tools\ProcessPriority.cs" />
-    <Compile Include="Tools\QueuedAccountApi.cs" />
     <Compile Include="Tools\DataCache.cs" />
     <Compile Include="Tools\Dat\DatFile.cs" />
     <Compile Include="Tools\Dat\Manifest.cs" />
@@ -467,10 +491,7 @@
       <SubType>Component</SubType>
     </Compile>
     <Compile Include="UI\Controls\SidebarButton.cs">
-      <SubType>UserControl</SubType>
-    </Compile>
-    <Compile Include="UI\Controls\SidebarButton.Designer.cs">
-      <DependentUpon>SidebarButton.cs</DependentUpon>
+      <SubType>Component</SubType>
     </Compile>
     <Compile Include="UI\Controls\SidebarPanel.cs">
       <SubType>Component</SubType>
@@ -622,10 +643,10 @@
     <Compile Include="UI\formCleanup.Designer.cs">
       <DependentUpon>formCleanup.cs</DependentUpon>
     </Compile>
-    <Compile Include="UI\formDailies.cs">
+    <Compile Include="UI\Dailies\formDailies.cs">
       <SubType>Form</SubType>
     </Compile>
-    <Compile Include="UI\formDailies.Designer.cs">
+    <Compile Include="UI\Dailies\formDailies.Designer.cs">
       <DependentUpon>formDailies.cs</DependentUpon>
     </Compile>
     <Compile Include="UI\formDnsDialog.cs">
@@ -861,9 +882,6 @@
     <EmbeddedResource Include="UI\Controls\ScrollablePanelContainer.resx">
       <DependentUpon>ScrollablePanelContainer.cs</DependentUpon>
     </EmbeddedResource>
-    <EmbeddedResource Include="UI\Controls\SidebarButton.resx">
-      <DependentUpon>SidebarButton.cs</DependentUpon>
-    </EmbeddedResource>
     <EmbeddedResource Include="UI\Backup\formAccountImport.resx">
       <DependentUpon>formAccountImport.cs</DependentUpon>
     </EmbeddedResource>
@@ -875,6 +893,9 @@
     </EmbeddedResource>
     <EmbeddedResource Include="UI\Backup\formBackupRestoreImport.resx">
       <DependentUpon>formBackupRestoreImport.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="UI\Dailies\formDailyFavorites.resx">
+      <DependentUpon>formDailyFavorites.cs</DependentUpon>
     </EmbeddedResource>
     <EmbeddedResource Include="UI\formAccount.resx">
       <DependentUpon>formAccount.cs</DependentUpon>
@@ -908,6 +929,9 @@
     </EmbeddedResource>
     <EmbeddedResource Include="UI\formColors.resx">
       <DependentUpon>formColors.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="UI\Dailies\formDailyCategories.resx">
+      <DependentUpon>formDailyCategories.cs</DependentUpon>
     </EmbeddedResource>
     <EmbeddedResource Include="UI\formHotkey.resx">
       <DependentUpon>formHotkey.cs</DependentUpon>
@@ -963,7 +987,7 @@
     <EmbeddedResource Include="UI\formCleanup.resx">
       <DependentUpon>formCleanup.cs</DependentUpon>
     </EmbeddedResource>
-    <EmbeddedResource Include="UI\formDailies.resx">
+    <EmbeddedResource Include="UI\Dailies\formDailies.resx">
       <DependentUpon>formDailies.cs</DependentUpon>
     </EmbeddedResource>
     <EmbeddedResource Include="UI\formDnsDialog.resx">
@@ -1022,6 +1046,9 @@
     </EmbeddedResource>
     <EmbeddedResource Include="UI\formWindowsAccount.resx">
       <DependentUpon>formWindowsAccount.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="UI\Tooltip\FloatingTooltip.resx">
+      <DependentUpon>FloatingTooltip.cs</DependentUpon>
     </EmbeddedResource>
     <EmbeddedResource Include="UI\WindowPositioning\formTemplatesCompact.resx">
       <DependentUpon>formTemplatesCompact.cs</DependentUpon>
@@ -1113,7 +1140,15 @@
     <None Include="Resources\loginreward8.jpg" />
     <None Include="Resources\loginreward9.jpg" />
   </ItemGroup>
-  <ItemGroup />
+  <ItemGroup>
+    <None Include="Resources\astral.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Resources\weekly.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Resources\astrallarge.png" />
+  </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <PropertyGroup>
     <PostBuildEvent></PostBuildEvent>

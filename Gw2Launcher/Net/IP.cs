@@ -97,10 +97,10 @@ namespace Gw2Launcher.Net
 
         public static bool IsMatch(IPAddress a, WildcardAddress[] b)
         {
-            if (a == null || b == null)
+            if (b == null)
                 return false;
 
-            var b1 = a.GetAddressBytes();
+            var b1 = a != null ? a.GetAddressBytes() : new byte[4];
 
             for (var j = 0; j < b.Length; j++)
             {

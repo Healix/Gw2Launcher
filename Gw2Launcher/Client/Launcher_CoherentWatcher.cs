@@ -226,7 +226,7 @@ namespace Gw2Launcher.Client
 
             private static int IndexOf(IntPtr ptr, byte[] value, int startIndex, int count)
             {
-                var limit = count - startIndex - value.Length;
+                var limit = count - value.Length + startIndex;
                 var zero = 0;
 
                 while (startIndex <= limit)
@@ -270,9 +270,9 @@ namespace Gw2Launcher.Client
             {
                 var l = Marshal.ReadInt32(file.View, i - 8);
 
-                if (l > 0)
+                if (l > 0 && i + l * 2 < length)
                 {
-                    return Marshal.PtrToStringUni((IntPtr)(file.View.GetValue() + i), l);
+                    return Marshal.PtrToStringUni(IntPtr.Add(file.View, i), l);
                 }
                 else
                 {

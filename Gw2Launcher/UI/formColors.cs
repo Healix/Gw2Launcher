@@ -15,9 +15,12 @@ namespace Gw2Launcher.UI
     {
         private class ColorInfo
         {
+            public event EventHandler SelectedThemeChanged;
+
             private UiColors.ColorValues values;
             private UiColors.ColorValues defaults;
             private ColorNames[][] shared;
+            private UiColors.Theme selectedTheme;
             private bool previewed;
 
             public ColorNames[] GetShared(ColorNames c)
@@ -25,12 +28,31 @@ namespace Gw2Launcher.UI
                 var i = (int)c;
 
                 if (shared == null)
-                    shared = UiColors.GetTheme(UiColors.Theme.Light).GetShared();
+                    shared = UiColors.GetTheme(selectedTheme).GetShared();
 
                 if (i < 0 || i > shared.Length || shared[i] == null)
                     return new ColorNames[0];
 
                 return shared[i];
+            }
+
+            public UiColors.Theme SelectedBaseTheme
+            {
+                get
+                {
+                    return selectedTheme;
+                }
+                set
+                {
+                    if (selectedTheme != value)
+                    {
+                        selectedTheme = value;
+                        shared = null;
+
+                        if (SelectedThemeChanged != null)
+                            SelectedThemeChanged(this, EventArgs.Empty);
+                    }
+                }
             }
 
             public UiColors.ColorValues Values
@@ -178,6 +200,7 @@ namespace Gw2Launcher.UI
         private void InitColorsRows()
         {
             colorInfo = new ColorInfo();
+            colorInfo.SelectedThemeChanged += colorInfo_SharedSourceThemeChanged;
             var rows = colorInfo.Rows = new DataGridViewRow[colorInfo.Values.Count];
 
             for (var i = 0; i < rows.Length; i++)
@@ -192,8 +215,7 @@ namespace Gw2Launcher.UI
                 r.Tag = c;
             }
 
-            darkToolStripMenuItem1.Checked = colorInfo.Values.BaseTheme == UiColors.Theme.Dark;
-            lightToolStripMenuItem1.Checked = colorInfo.Values.BaseTheme == UiColors.Theme.Light;
+            colorInfo.SelectedBaseTheme = colorInfo.Values.BaseTheme;
 
             gridColors.SuspendLayout();
 
@@ -201,6 +223,15 @@ namespace Gw2Launcher.UI
             gridColors.Sort(columnName, ListSortDirection.Ascending);
 
             gridColors.ResumeLayout();
+        }
+
+        void colorInfo_SharedSourceThemeChanged(object sender, EventArgs e)
+        {
+            darkToolStripMenuItem1.Checked = colorInfo.SelectedBaseTheme == UiColors.Theme.Dark;
+            lightToolStripMenuItem1.Checked = colorInfo.SelectedBaseTheme == UiColors.Theme.Light;
+
+            if (textColorsFilter.TextLength > 0)
+                DoColorsFilter();
         }
 
         private void gridColors_CellClick(object sender, DataGridViewCellEventArgs e)
@@ -432,9 +463,7 @@ namespace Gw2Launcher.UI
             }
 
             colorInfo.Values.BaseTheme = colors.BaseTheme;
-
-            darkToolStripMenuItem1.Checked = colors.BaseTheme == UiColors.Theme.Dark;
-            lightToolStripMenuItem1.Checked = colors.BaseTheme == UiColors.Theme.Light;
+            colorInfo.SelectedBaseTheme = colors.BaseTheme;
 
             if (previewToolStripMenuItem.Checked)
             {
@@ -484,14 +513,12 @@ namespace Gw2Launcher.UI
 
         private void lightToolStripMenuItem1_Click(object sender, EventArgs e)
         {
-            lightToolStripMenuItem.Checked = true;
-            darkToolStripMenuItem1.Checked = false;
+            colorInfo.SelectedBaseTheme = UiColors.Theme.Light;
         }
 
         private void darkToolStripMenuItem1_Click(object sender, EventArgs e)
         {
-            lightToolStripMenuItem.Checked = false;
-            darkToolStripMenuItem1.Checked = true;
+            colorInfo.SelectedBaseTheme = UiColors.Theme.Dark;
         }
     }
 }

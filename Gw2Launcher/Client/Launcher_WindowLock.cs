@@ -253,7 +253,7 @@ namespace Gw2Launcher.Client
 
                             if (w != IntPtr.Zero && w != handle)
                             {
-                                if ((a.Account.Settings.WindowOptions & Settings.WindowOptions.TopMost) == 0)
+                                if (!Windows.FindWindow.IsTopMost(w))
                                 {
                                     handles.Add(w);
                                 }
@@ -270,7 +270,7 @@ namespace Gw2Launcher.Client
                 else
                 {
                     w = UI.formMain.MainWindowHandle;
-                    if (Windows.WindowLong.HasValue(w, GWL.GWL_EXSTYLE, WindowStyle.WS_EX_TOPMOST))
+                    if (Windows.FindWindow.IsTopMost(w))
                         w = IntPtr.Zero;
                 }
 
@@ -278,6 +278,11 @@ namespace Gw2Launcher.Client
                 {
                     SetZOrder(handle, w, async);
                 }
+            }
+
+            public static void ToBackground(IntPtr handle, IntPtr top, bool async = true)
+            {
+                SetZOrder(handle, top, async);
             }
 
             /// <summary>

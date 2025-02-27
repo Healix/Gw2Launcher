@@ -444,23 +444,40 @@ namespace Gw2Launcher.Tools
             }
         }
 
+        /// <summary>
+        /// Reads through all entries, returning items in the supplied ID list
+        /// </summary>
+        /// <param name="ids">IDs to read, or null for everything; read entries will be removed from the set</param>
+        /// <param name="output">Output of items read</param>
         public void Read<TItem>(ISet<TID> ids, Dictionary<TID, TItem> output)
             where TItem : DataCache.ICacheItem<TID>, new()
         {
-            Read(ids, output, null);
+            Read(ids, output, null, null);
         }
 
+        /// <summary>
+        /// Reads through all entries, returning items in the supplied ID list
+        /// </summary>
+        /// <param name="ids">IDs to read, or null for everything; read entries will be removed from the set</param>
+        /// <param name="output">Output of items read</param>
         public Task ReadAsync<TItem>(ISet<TID> ids, Dictionary<TID, TItem> output)
             where TItem : DataCache.ICacheItem<TID>, new()
         {
             return Task.Run(new Action(
                 delegate
                 {
-                    Read(ids, output, null);
+                    Read(ids, output, null, null);
                 }));
         }
 
-        public void Read<TItem>(ISet<TID> ids, Dictionary<TID, TItem> output, Action<TItem> onRead)
+        /// <summary>
+        /// Reads through all entries, returning items in the supplied ID list
+        /// </summary>
+        /// <param name="ids">IDs to read, or null for everything; read entries will be removed from the set</param>
+        /// <param name="output">Output of items read</param>
+        /// <param name="onRead">Occurs after loading a stored item</param>
+        /// <param name="onBeforeRead">Occurs before loading a stored item; return false to skip the item</param>
+        public void Read<TItem>(ISet<TID> ids, Dictionary<TID, TItem> output, Action<TItem> onRead, Func<TID, bool> onBeforeRead)
             where TItem : DataCache.ICacheItem<TID>, new()
         {
             int count;
@@ -491,19 +508,22 @@ namespace Gw2Launcher.Tools
                         {
                             reader.BaseStream.Position = e.offset;
 
-                            TItem item;
-                            if (!output.TryGetValue(e.id, out item))
+                            if (onBeforeRead == null || onBeforeRead(e.id))
                             {
-                                output[e.id] = item = new TItem()
+                                TItem item;
+                                if (!output.TryGetValue(e.id, out item))
                                 {
-                                    ID = e.id,
-                                };
+                                    output[e.id] = item = new TItem()
+                                    {
+                                        ID = e.id,
+                                    };
+                                }
+
+                                item.ReadFrom(reader, e.length);
+
+                                if (onRead != null)
+                                    onRead(item);
                             }
-
-                            item.ReadFrom(reader, e.length);
-
-                            if (onRead != null)
-                                onRead(item);
 
                             if (--count == 0)
                                 return;
@@ -554,13 +574,20 @@ namespace Gw2Launcher.Tools
             throw new KeyNotFoundException();
         }
 
-        public Task ReadAsync<TItem>(ISet<TID> ids, Dictionary<TID, TItem> output, Action<TItem> onRead)
+        /// <summary>
+        /// Reads through all entries, returning items in the supplied ID list
+        /// </summary>
+        /// <param name="ids">IDs to read, or null for everything; read entries will be removed from the set</param>
+        /// <param name="output">Output of items read</param>
+        /// <param name="onRead">Occurs after loading a stored item</param>
+        /// <param name="onBeforeRead">Occurs before loading a stored item; return false to skip the item</param>
+        public Task ReadAsync<TItem>(ISet<TID> ids, Dictionary<TID, TItem> output, Action<TItem> onRead, Func<TID, bool> onBeforeRead = null)
             where TItem : DataCache.ICacheItem<TID>, new()
         {
             return Task.Run(new Action(
                 delegate
                 {
-                    Read(ids, output, onRead);
+                    Read(ids, output, onRead, onBeforeRead);
                 }));
         }
 
@@ -799,6 +826,9 @@ namespace Gw2Launcher.Tools
 
             foreach (var item in items)
             {
+                if (item == null)
+                    continue;
+
                 if (existing.Contains(item.ID))
                 {
                     if (modified == null)

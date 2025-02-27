@@ -642,12 +642,12 @@ namespace Gw2Launcher.UI.Controls
 
                                     s = GetPreferredSize(c, new Size(remainingWidth, int.MaxValue), force);
 
-                                    if (cStretchW && (stretch & AutoSizeStretchMode.PreferredWidth) == AutoSizeStretchMode.NoPreferredSize)
+                                    if (cStretchW && (stretch & AutoSizeStretchMode.PreferredWidth) == AutoSizeStretchMode.NoPreferredSize || c.MinimumSize.Width > s.Width)
                                     {
                                         s.Width = c.MinimumSize.Width;
                                     }
 
-                                    if (cStretchH && (stretch & AutoSizeStretchMode.PreferredHeight) == AutoSizeStretchMode.NoPreferredSize)
+                                    if (cStretchH && (stretch & AutoSizeStretchMode.PreferredHeight) == AutoSizeStretchMode.NoPreferredSize || c.MinimumSize.Height > s.Height)
                                     {
                                         s.Height = c.MinimumSize.Height;
                                     }

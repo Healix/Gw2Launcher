@@ -295,9 +295,8 @@ namespace Gw2Launcher.UI
                     var path = Path.GetFullPath(textExisting.Text);
                     Settings.IGwDatFile dat = null;
 
-                    foreach (var uid in Settings.GwDatFiles.GetKeys())
+                    foreach (var d in Settings.GwDatFiles.GetValues())
                     {
-                        var d = Settings.GwDatFiles[uid];
                         if (d.HasValue && d.Value.Path.Equals(path, StringComparison.OrdinalIgnoreCase))
                         {
                             dat = d.Value;

@@ -3,7 +3,11 @@ using System.Collections.Generic;
 using System.Runtime.InteropServices;
 using System.Diagnostics;
 using System.Threading.Tasks;
+using System.IO;
+using System.IO.MemoryMappedFiles;
+using System.Threading;
 using Gw2Launcher.Windows.Native;
+using System.Reflection;
 
 namespace Gw2Launcher.Windows
 {
@@ -35,7 +39,7 @@ namespace Gw2Launcher.Windows
             Abort,
         }
 
-        private static short[] _handleTypes;
+        private static short[] _handleTypes = new short[0];
 
         public struct TypeInfo
         {
@@ -78,6 +82,11 @@ namespace Gw2Launcher.Windows
                 get;
             }
 
+            ushort TypeIndex
+            {
+                get;
+            }
+
             UIntPtr Handle
             {
                 get;
@@ -116,6 +125,14 @@ namespace Gw2Launcher.Windows
                         return GetHandleType(typeIndex);
                     else
                         return type;
+                }
+            }
+
+            public ushort TypeIndex
+            {
+                get
+                {
+                    return typeIndex;
                 }
             }
 
@@ -356,10 +373,8 @@ namespace Gw2Launcher.Windows
 
                 case HandleType.File:
                 case HandleType.Mutex:
-                    
-                    if (_handleTypes == null)
-                        _handleTypes = GetHandleTypes();
-                    return _handleTypes[(short)t];
+
+                    return GetHandleTypes()[(short)t];
             }
 
             return -1;
@@ -367,8 +382,7 @@ namespace Gw2Launcher.Windows
 
         private static HandleType GetHandleType(ushort index)
         {
-            if (_handleTypes == null)
-                _handleTypes = GetHandleTypes();
+            var _handleTypes = GetHandleTypes();
 
             for (var i = 0; i < _handleTypes.Length; i++)
             {
@@ -991,13 +1005,64 @@ namespace Gw2Launcher.Windows
             return HandleType.Any;
         }
 
+        private static short[] GetHandleTypes()
+        {
+            if (_handleTypes.Length > 0)
+            {
+                return _handleTypes;
+            }
+            else
+            {
+                lock (_handleTypes)
+                {
+                    if (_handleTypes.Length > 0)
+                        return _handleTypes;
+
+                    try
+                    {
+                        IDisposable token = null;
+
+                        if (!Util.Users.IsCurrentEnvironmentUser())
+                        {
+                            try
+                            {
+                                token = Security.Impersonation.Impersonate();
+                            }
+                            catch (Exception ex)
+                            {
+                                Util.Logging.Log(ex);
+                            }
+                        }
+
+                        using (token)
+                        {
+                            //return GetHandleTypes(null);
+                            _handleTypes = FindHandleTypes();
+                        }
+                    }
+                    catch (Exception e)
+                    {
+                        if (Util.Logging.Enabled)
+                        {
+                            Util.Logging.LogEvent("Querying handle type information was not supported", e);
+                        }
+                        _handleTypes = new short[HANDLE_TYPES_LENGTH];
+                    }
+
+                    return _handleTypes;
+                }
+            }
+        }
+
         /// <summary>
         /// Queries handle type indexes
         /// </summary>
         /// <param name="types">Optional output for all types</param>
         /// <returns>Handle types</returns>
-        private static short[] GetHandleTypes(List<TypeInfo> types = null)
+        private static short[] GetHandleTypes(List<TypeInfo> types)
         {
+            //warning: handle types are not fully implemented under wine and may not match what's provided in the handle info
+
             int infoLength = 0x3000;
             var _info = Marshal.AllocHGlobal(infoLength);
             var handleTypes = new short[HANDLE_TYPES_LENGTH];
@@ -1042,6 +1107,7 @@ namespace Gw2Launcher.Windows
 
                 var offset = 0;
                 const short INDEX_OFFSET = 2;
+                var iofs = Settings.IsRunningWine ? (short)0 : INDEX_OFFSET;
 
                 for (var i = 0; i < handleCount; i++)
                 {
@@ -1051,11 +1117,11 @@ namespace Gw2Launcher.Windows
 
                     if (ht != HandleType.Any)
                     {
-                        handleTypes[(short)ht] = (short)(i + INDEX_OFFSET);
+                        handleTypes[(short)ht] = (short)(i + iofs);
                     }
 
                     if (b)
-                        types.Add(new TypeInfo(i + INDEX_OFFSET, s, t));
+                        types.Add(new TypeInfo(i + iofs, s, t));
 
                     //offset includes padding for byte alignment
                     offset += infoSize + (t.TypeName.MaximumLength + IntPtr.Size - 1) & ~(IntPtr.Size - 1);
@@ -1069,6 +1135,286 @@ namespace Gw2Launcher.Windows
             }
         }
 
+        public static short[] FindHandleTypes()
+        {
+            string file = null;
+            FileStream stream = null;
+            MemoryMappedFile mmf = null;
+            Mutex mutex = null;
+            var handles = new UIntPtr[3];
+            var types = new short[] { -1, -1, -1 };
+            var remaining = types.Length;
+
+            try
+            {
+                try
+                {
+                    stream = File.Open(Assembly.GetExecutingAssembly().Location, FileMode.Open, FileAccess.Read, FileShare.ReadWrite);
+                }
+                catch
+                {
+                    file = Util.FileUtil.GetTemporaryFileName(DataPath.AppDataAccountDataTemp);
+                    stream = File.Create(file);
+                }
+                handles[(short)HandleType.File] = (UIntPtr)stream.SafeFileHandle.DangerousGetHandle().GetValue();
+            }
+            catch { }
+
+            try
+            {
+                mmf = MemoryMappedFile.CreateNew("Gw2Launcher-FindType-File", 1, MemoryMappedFileAccess.Read);
+                handles[(short)HandleType.Section] = (UIntPtr)mmf.SafeMemoryMappedFileHandle.DangerousGetHandle().GetValue();
+            }
+            catch { }
+
+            try
+            {
+                mutex = new Mutex(true, "Gw2Launcher-FindType-Mutex");
+                handles[(short)HandleType.Mutex] = (UIntPtr)mutex.SafeWaitHandle.DangerousGetHandle().GetValue();
+            }
+            catch { }
+
+            try
+            {
+                GetHandle(new UIntPtr[] { (UIntPtr)Process.GetCurrentProcess().Id }, HandleType.Any,
+                    delegate(IObject o)
+                    {
+                        for (var i = 0; i < handles.Length;i++)
+                        {
+                            if (handles[i] == o.Handle)
+                            {
+                                if (types[i] == -1)
+                                {
+                                    lock (types)
+                                    {
+                                        types[i] = (short)o.TypeIndex;
+
+                                        if (--remaining == 0)
+                                        {
+                                            return CallbackResponse.Abort;
+                                        }
+                                    }
+                                }
+
+                                break;
+                            }
+                        }
+
+                        return CallbackResponse.Continue;
+                    }, true);
+            }
+            catch (Exception e)
+            {
+                if (Util.Logging.Enabled)
+                {
+                    Util.Logging.LogEvent("Unable to query handles", e);
+                }
+            }
+            finally
+            {
+                using (stream) { }
+                using (mmf) { }
+                using (mutex) { }
+
+                if (file != null)
+                {
+                    try
+                    {
+                        File.Delete(file);
+                    }
+                    catch { }
+                }
+            }
+
+            if (Util.Logging.Enabled)
+            {
+                var sb = new System.Text.StringBuilder(50);
+
+                foreach (HandleType h in Enum.GetValues(typeof(HandleType)))
+                {
+                    if (h == HandleType.Any)
+                        continue;
+
+                    if (types[(short)h] <= 0)
+                    {
+                        sb.Append(h.ToString());
+                        sb.Append(" (");
+                        sb.Append(types[(short)h]);
+                        sb.Append("), ");
+                    }
+                }
+
+                if (sb.Length > 0)
+                {
+                    sb.Length -= 2;
+
+                    Util.Logging.LogEvent("[" + sb.ToString() + "] handle type is not supported");
+                }
+            }
+
+            if (remaining > 0)
+            {
+                for (var i = 0; i < types.Length; i++)
+                {
+                    if (types[i] == -1)
+                        types[i] = 0;
+                }
+            }
+
+            return types;
+        }
+
+        public static async void Test()
+        {
+            Process p;
+
+            try
+            {
+                p = Process.GetProcessesByName("ht")[0];
+            }
+            catch
+            {
+                return;
+            }
+
+            try
+            {
+                FindHandleTypes();
+            }
+            catch (Exception e)
+            {
+                Util.Logging.LogEvent(e);
+            }
+
+            try
+            {
+                var monitor = HandleMonitor.Create(HandleType.File, p.Id, true);
+
+                monitor.HandleAdded += delegate(object o, HandleMonitor.IHandle h)
+                {
+                    var n = h.GetName();
+                    Util.Logging.LogEvent("[" + h.Handle + "][" + h.Type + "]: " + (n != null ? n : "null"));
+                };
+
+                monitor.Start();
+
+                Util.Logging.LogEvent("running...");
+
+                using (monitor)
+                {
+                    while (true)
+                    {
+                        await Task.Delay(1000);
+
+                        if (p.HasExited)
+                            return;
+                    }
+                }
+            }
+            catch (Exception e)
+            {
+                Util.Logging.LogEvent(e);
+            }
+
+            return;
+
+            short[] ht = new short[10];
+
+            try
+            {
+                var types = new List<TypeInfo>();
+                var sb = new System.Text.StringBuilder();
+
+                ht = GetHandleTypes(types);
+
+                foreach (var ti in types)
+                {
+                    sb.Append(ti.Index + ":" + ti.Name + ", ");
+                }
+
+                if (sb.Length > 0)
+                    sb.Length -= 2;
+
+                Util.Logging.LogEvent(null, sb.ToString());
+            }
+            catch(Exception ex)
+            {
+                Util.Logging.LogEvent(ex);
+            }
+
+            try
+            {
+                using (var fs = System.IO.File.Open(System.IO.Path.Combine(DataPath.AppDataAccountDataTemp, "handles.tmp"), System.IO.FileMode.OpenOrCreate, System.IO.FileAccess.Write, System.IO.FileShare.ReadWrite))
+                {
+                    using (var mmf = System.IO.MemoryMappedFiles.MemoryMappedFile.CreateOrOpen("Gw2Launcher-Win32Handles", 1))
+                    {
+                        using (var mx = new System.Threading.Mutex(true, "Gw2Launcher-Win32Handles-Mutex"))
+                        {
+                            //fs.SafeFileHandle.DangerousGetHandle();
+                            //mmf.SafeMemoryMappedFileHandle.DangerousGetHandle();
+                            //mx.SafeWaitHandle.DangerousGetHandle()
+
+                            var handles = new Dictionary<UIntPtr, ushort>();
+                            var indexes = new UIntPtr[]
+                            {
+                                (UIntPtr)fs.SafeFileHandle.DangerousGetHandle().GetValue(),
+                                (UIntPtr)mmf.SafeMemoryMappedFileHandle.DangerousGetHandle().GetValue(),
+                                (UIntPtr)mx.SafeWaitHandle.DangerousGetHandle().GetValue()
+                            };
+
+                            for (var i = 0; i < indexes.Length; i++)
+                            {
+                                handles[indexes[i]] = 65000;
+                                Util.Logging.LogEvent(null, indexes[i].ToString());
+                            }
+
+                            GetHandle(new UIntPtr[] { (UIntPtr)Process.GetCurrentProcess().Id }, HandleType.Any,
+                                delegate(IObject o)
+                                {
+                                    Util.Logging.LogEvent(null, o.Handle + ":" + o.TypeIndex);
+
+                                    lock (handles)
+                                    {
+                                        if (handles.ContainsKey(o.Handle))
+                                        {
+                                            handles[o.Handle] = o.TypeIndex;
+                                            Util.Logging.LogEvent(null, o.TypeIndex + ":FOUND:" + (o.Name != null ? o.Name : "null"));
+                                        }
+                                    }
+                                    return CallbackResponse.Continue;
+                                }, true);
+
+                            Util.Logging.LogEvent(null, 
+                                "File:" + handles[indexes[0]] + " (" + (ht[(short)HandleType.File] == handles[indexes[0]] ? "OK" : "FAIL") + 
+                                "), Section:" + handles[indexes[1]] + " (" + (ht[(short)HandleType.Section] == handles[indexes[1]] ? "OK" : "FAIL") + 
+                                "), Mutex:" + handles[indexes[2]] + " (" + (ht[(short)HandleType.Mutex] == handles[indexes[2]] ? "OK" : "FAIL") + ")");
+                        }
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                Util.Logging.LogEvent(ex);
+            }
+
+            try
+            {
+
+                Util.Logging.LogEvent("searching ht", null);
+
+                GetHandle(new UIntPtr[] { (UIntPtr)Process.GetProcessesByName("ht")[0].Id }, HandleType.Any,
+                    delegate(IObject o)
+                    {
+                        Util.Logging.LogEvent(null, o.Handle + ":" + o.TypeIndex + ": " + (o.Name != null ? o.Name : "null"));
+
+                        return CallbackResponse.Continue;
+                    }, true);
+            }
+            catch (Exception ex)
+            {
+                Util.Logging.LogEvent(ex);
+            }
+        }
 
         public static class HandleMonitor
         {
@@ -1777,16 +2123,18 @@ namespace Gw2Launcher.Windows
                         for (var i = 0; i < handleCount; i++)
                         {
                             //var handleInfo = Marshal.PtrToStructure((IntPtr)(_handle.GetValue() + i * infoSize), infoType);
-                            var ofs = i * infoSize + IntPtr.Size;
+                            int ofs;
                             int pid;
 
                             if (extended)
                             {
+                                ofs = i * infoSize + IntPtr.Size;
                                 //info = (SYSTEM_HANDLE_TABLE_ENTRY_INFO_EX)handleInfo;
                                 pid = (int)Marshal.ReadIntPtr(_handle, ofs); //info.UniqueProcessId
                             }
                             else
                             {
+                                ofs = i * infoSize;
                                 //info = (SYSTEM_HANDLE_TABLE_ENTRY_INFO)handleInfo;
                                 pid = Marshal.ReadInt16(_handle, ofs); //info.UniqueProcessId
                             }

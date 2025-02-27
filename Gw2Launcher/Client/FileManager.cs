@@ -297,12 +297,14 @@ namespace Gw2Launcher.Client
                                 var account = (Settings.IGw2Account)Settings.Accounts[uid].Value;
                                 if (Launcher.GetState(account) != Launcher.AccountState.ActiveGame)
                                     return;
-                                var path = account.GfxFile.Path;
-
-                                using (var stream = File.Open(path, FileMode.Open, FileAccess.Write, FileShare.Read))
+                                var gfx = account.GfxFile;
+                                if (gfx != null && !gfx.IsLocked)
                                 {
-                                    stream.Write(data, 0, data.Length);
-                                    stream.SetLength(stream.Position);
+                                    using (var stream = File.Open(gfx.Path, FileMode.Open, FileAccess.Write, FileShare.Read))
+                                    {
+                                        stream.Write(data, 0, data.Length);
+                                        stream.SetLength(stream.Position);
+                                    }
                                 }
                             }
 
@@ -1066,7 +1068,8 @@ namespace Gw2Launcher.Client
                 {
                     foreach (var f in Files)
                     {
-                        f.Dispose();
+                        if (f != null)
+                            f.Dispose();
                     }
                     Files = null;
                 }
@@ -1245,6 +1248,7 @@ namespace Gw2Launcher.Client
                 {
                     if ((v.Value & Settings.LocalizeAccountExecutionOptions.Enabled) != Settings.LocalizeAccountExecutionOptions.Enabled)
                     {
+                        //was disabled
                         if (DeleteLocalizedRoot(false))
                             v.Commit();
                     }
@@ -1254,15 +1258,21 @@ namespace Gw2Launcher.Client
 
                         if ((changed & Settings.LocalizeAccountExecutionOptions.OnlyIncludeBinFolders) != Settings.LocalizeAccountExecutionOptions.None)
                         {
+                            //was changed between full and binaries
                             if (DeleteLocalizedRoot(true))
                                 v.Commit();
                         }
-                        else if ((changed & (Settings.LocalizeAccountExecutionOptions.Enabled | Settings.LocalizeAccountExecutionOptions.OnlyIncludeBinFolders)) == Settings.LocalizeAccountExecutionOptions.None)
+                        //else if ((changed & (Settings.LocalizeAccountExecutionOptions.Enabled | Settings.LocalizeAccountExecutionOptions.OnlyIncludeBinFolders)) == Settings.LocalizeAccountExecutionOptions.None)
+                        //{
+                        //    v.Commit();
+                        //}
+                        //else if ((changed & Settings.LocalizeAccountExecutionOptions.Enabled) == Settings.LocalizeAccountExecutionOptions.Enabled)
+                        //{
+                        //    v.Commit();
+                        //}
+                        else
                         {
-                            v.Commit();
-                        }
-                        else if ((changed & Settings.LocalizeAccountExecutionOptions.Enabled) == Settings.LocalizeAccountExecutionOptions.Enabled)
-                        {
+                            //existing files don't need to change
                             v.Commit();
                         }
                     }
@@ -2096,10 +2106,9 @@ namespace Gw2Launcher.Client
             {
                 case FileType.Dat:
 
-                    var dat = Settings.DatFiles;
-                    foreach (var fid in dat.GetKeys())
+                    foreach (var v in Settings.DatFiles.GetValues())
                     {
-                        var f = dat[fid].Value;
+                        var f = v.Value;
                         if (f != null)
                             yield return f;
                     }
@@ -2107,10 +2116,9 @@ namespace Gw2Launcher.Client
                     break;
                 case FileType.Gfx:
 
-                    var gfx = Settings.GfxFiles;
-                    foreach (var fid in gfx.GetKeys())
+                    foreach (var v in Settings.GfxFiles.GetValues())
                     {
-                        var f = gfx[fid].Value;
+                        var f = v.Value;
                         if (f != null)
                             yield return f;
                     }
@@ -2727,10 +2735,11 @@ namespace Gw2Launcher.Client
             return null; //gw1 doesn't use special folders
         }
 
-        private static void ActivateBasic(Settings.IGw2Account account, PathData pd, bool setpermissions, int timeout)
+        private static void ActivateBasic(Settings.IGw2Account account, ProfileData profile, bool setpermissions, int timeout)
         {
             //activating a basic profile has a race condition - active accounts can overwrite the folder - must ensure that files are read-only during the process
-            
+
+            var pd = profile.Source;
             var gw2appdata = Path.Combine(pd.GetUserPath(PathData.SpecialPath.AppData), GW2_FOLDER_NAME);
             var gw2altappdata = Path.Combine(pd.GetUserPath(PathData.SpecialPath.AppData), GW2_BASIC_FOLDER_NAME);
             var profileappdata = pd.GetProfilePath(PathData.SpecialPath.Gw2AppData, account);
@@ -2769,87 +2778,97 @@ namespace Gw2Launcher.Client
                 }
             }
 
-            do
-            {
-                //note: may have to retry a few times, as multiple clients could be writing (temporary files) to the folder
+            var gfx = FileLocker.Lock(account.GfxFile.Path, 5000);
 
-                try
+            try
+            {
+                do
                 {
-                    if (Directory.Exists(gw2appdata))
-                    {
-                        if ((File.GetAttributes(gw2appdata) & FileAttributes.ReparsePoint) == FileAttributes.ReparsePoint)
-                            Directory.Delete(gw2appdata);
-                        else
-                            Util.FileUtil.DeleteDirectory(gw2appdata);
-                    }
+                    //note: may have to retry a few times, as multiple clients could be writing (temporary files) to the folder
 
                     try
                     {
-                        Windows.Symlink.CreateJunction(gw2appdata, profileappdata);
-                    }
-                    catch (Exception ex)
-                    {
-                        if (Util.Logging.Enabled)
+                        if (Directory.Exists(gw2appdata))
                         {
-                            Util.Logging.LogEvent(account, "Unable to create junction between [" + Util.Logging.GetDisplayPath(gw2appdata, 1) + "] and [" + Util.Logging.GetDisplayPath(profileappdata, 1) + "]");
-                            Util.Logging.LogEvent(account, ex.Message);
+                            if ((File.GetAttributes(gw2appdata) & FileAttributes.ReparsePoint) == FileAttributes.ReparsePoint)
+                                Directory.Delete(gw2appdata);
+                            else
+                                Util.FileUtil.DeleteDirectory(gw2appdata);
                         }
 
-                        throw;
-                    }
-
-                    if (setpermissions)
-                    {
                         try
                         {
-                            Util.FileUtil.AllowFolderAccess(gw2appdata, System.Security.AccessControl.FileSystemRights.Modify);
+                            Windows.Symlink.CreateJunction(gw2appdata, profileappdata);
                         }
                         catch (Exception ex)
                         {
                             if (Util.Logging.Enabled)
                             {
-                                Util.Logging.LogEvent(account, "Unable to set permissions on [" + Util.Logging.GetDisplayPath(gw2appdata, 1) + "]");
+                                Util.Logging.LogEvent(account, "Unable to create junction between [" + Util.Logging.GetDisplayPath(gw2appdata, 1) + "] and [" + Util.Logging.GetDisplayPath(profileappdata, 1) + "]");
                                 Util.Logging.LogEvent(account, ex.Message);
                             }
+
+                            throw;
                         }
+
+                        if (setpermissions)
+                        {
+                            try
+                            {
+                                Util.FileUtil.AllowFolderAccess(gw2appdata, System.Security.AccessControl.FileSystemRights.Modify);
+                            }
+                            catch (Exception ex)
+                            {
+                                if (Util.Logging.Enabled)
+                                {
+                                    Util.Logging.LogEvent(account, "Unable to set permissions on [" + Util.Logging.GetDisplayPath(gw2appdata, 1) + "]");
+                                    Util.Logging.LogEvent(account, ex.Message);
+                                }
+                            }
+                        }
+
+                        break;
+                    }
+                    catch (Exception e)
+                    {
+                        Util.Logging.Log(e);
+
+                        if (DateTime.UtcNow > limit)
+                            throw;
                     }
 
-                    break;
+                    System.Threading.Thread.Sleep(100);
                 }
-                catch (Exception e)
+                while (true);
+
+                if (gfx != null)
                 {
-                    Util.Logging.Log(e);
-
-                    if (DateTime.UtcNow > limit)
-                        throw;
+                    if (profile.Files == null)
+                        profile.Files = new List<FileLocker.ISharedFile>();
+                    profile.Files.Add(gfx);
+                    gfx = null;
                 }
-
-                System.Threading.Thread.Sleep(100);
             }
-            while (true);
+            finally
+            {
+                if (gfx != null)
+                    gfx.Dispose();
+            }
         }
         
         public static void ActivateBasic(Settings.IGw2Account account, Security.Impersonation.IIdentity identity, IProfileInformation profile)
         {
-            var p = (ProfileData)profile;
-            var gfx = FileLocker.Lock(account.GfxFile.Path, 5000);
-
             using (Security.Impersonation.Impersonate(identity))
             {
                 try
                 {
-                    ActivateBasic(account, p.Source, identity != null, 5000);
+                    ActivateBasic(account, (ProfileData)profile, identity != null, 5000);
                 }
                 catch
                 {
-                    gfx.Dispose();
                     throw;
                 }
             }
-
-            if (p.Files == null)
-                p.Files = new List<FileLocker.ISharedFile>();
-            p.Files.Add(gfx);
         }
 
         private static bool DeactivateBasicPath(int timeout)
@@ -2950,13 +2969,16 @@ namespace Gw2Launcher.Client
 
                         var build = Tools.Gw2Build.Build;
 
-                        foreach (var f in files)
+                        if (build > 0)
                         {
-                            if (Tools.DatUpdater.GetBuild(f.value2) == build)
+                            foreach (var f in files)
                             {
-                                Tools.DatUpdater.Create(f.value2, dat);
+                                if (Tools.DatUpdater.GetBuild(f.value2) == build)
+                                {
+                                    Tools.DatUpdater.Create(f.value2, dat);
 
-                                break;
+                                    break;
+                                }
                             }
                         }
                     }
@@ -3753,6 +3775,55 @@ namespace Gw2Launcher.Client
         }
 
         /// <summary>
+        /// Returns if the account should use localized execution
+        /// </summary>
+        public static bool IsLocalized(Settings.IGw2Account a)
+        {
+            if ((Settings.GuildWars2.LocalizeAccountExecution.Value & Settings.LocalizeAccountExecutionOptions.Enabled) == 0)
+                return false;
+
+            if (a.Proxy == Settings.LaunchProxy.Steam)
+                return false;
+
+            switch (Settings.GuildWars2.LocalizeAccountExecutionSelection.Value)
+            {
+                case Settings.LocalizeAccountExecutionSelectionOptions.Include:
+                    return a.LocalizedExecution;
+                case Settings.LocalizeAccountExecutionSelectionOptions.Exclude:
+                    return !a.LocalizedExecution;
+            }
+
+            return true;
+        }
+
+        /// <summary>
+        /// Returns the path to the account's localized execution folder, creating it if it doesn't exist
+        /// </summary>
+        /// <param name="fi">Path to Gw2.exe or null to skip creating the path</param>
+        public static string GetLocalizedPath(Settings.IGw2Account account, FileInfo fi = null)
+        {
+            if ((Settings.GuildWars2.LocalizeAccountExecution.Value & Settings.LocalizeAccountExecutionOptions.Enabled) == 0)
+                return null;
+
+            var gw2root = fi.DirectoryName;
+            var localroot = Path.Combine(gw2root, LOCALIZED_EXE_FOLDER_NAME);
+            var root = Path.Combine(localroot, account.UID.ToString());
+
+            if (Directory.Exists(root))
+                return root;
+
+            if (fi != null)
+            {
+                ActivateLocalizedPath(account, fi);
+
+                if (Directory.Exists(root))
+                    return root;
+            }
+
+            return null;
+        }
+
+        /// <summary>
         /// Activates the account's specific executable path
         /// </summary>
         /// <param name="fi">Path to Gw2.exe</param>
@@ -3760,6 +3831,9 @@ namespace Gw2Launcher.Client
         {
             if (!IsGw2LinkingSupported)
                 throw new NotSupportedException();
+
+            if (!IsLocalized(account))
+                return null;
 
             const byte RESYNC_STATE_REFRESH_ONLY = 2;
 
@@ -3772,6 +3846,7 @@ namespace Gw2Launcher.Client
             var onlyBin = v.Value.HasFlag(Settings.LocalizeAccountExecutionOptions.OnlyIncludeBinFolders);
             byte resync = v.Value.HasFlag(Settings.LocalizeAccountExecutionOptions.AutoSync) ? (byte)1 : (byte)0;
             var bin = IsGw264Bit ? "bin64" : "bin";
+            var existing = false;
 
             if (File.Exists(exe))
             {
@@ -3786,7 +3861,9 @@ namespace Gw2Launcher.Client
                 }
                 else
                 {
-                    if (!v.IsPending && File.GetLastWriteTimeUtc(exe) == fi.LastWriteTimeUtc)
+                    existing = true;
+
+                    if (File.GetLastWriteTimeUtc(exe) == fi.LastWriteTimeUtc)
                     {
                         if (File.GetLastWriteTimeUtc(Path.Combine(root, "Gw2.dat")) == File.GetLastWriteTimeUtc(Path.Combine(gw2root, "Gw2.dat")))
                         {
@@ -3830,12 +3907,9 @@ namespace Gw2Launcher.Client
                 {
                     if ((File.GetAttributes(gw2cache) & FileAttributes.ReparsePoint) == FileAttributes.ReparsePoint && Directory.Exists(profilebinuser) && Directory.Exists(gw2cache + "-user"))
                     {
-                        if (!v.IsPending)
-                        {
-                            if (resync == 0)
-                                return null;
-                            ++resync;
-                        }
+                        if (resync == 0)
+                            return null;
+                        ++resync;
                     }
                 }
                 catch { }
@@ -3886,7 +3960,7 @@ namespace Gw2Launcher.Client
             }
             else
             {
-                CopyRootFolder(gw2root, root, excludeUnknown, onlyBin, deleteUnknowns, v.Value.HasFlag(Settings.LocalizeAccountExecutionOptions.AutoSync), temp);
+                CopyRootFolder(gw2root, root, !existing, excludeUnknown, onlyBin, deleteUnknowns, v.Value.HasFlag(Settings.LocalizeAccountExecutionOptions.AutoSync), temp);
 
                 if (fullsync)
                 {
@@ -3955,7 +4029,7 @@ namespace Gw2Launcher.Client
                 try
                 {
                     var binpath = Path.Combine(root, bin);
-                    var dll = Path.Combine(binpath, "icudt.dll");
+                    var dll = Path.Combine(binpath, "cef", "icudtl.dat");
 
                     if (File.Exists(dll))
                     {
@@ -3974,7 +4048,7 @@ namespace Gw2Launcher.Client
                             continue;
                         }
 
-                        Util.FileUtil.DeleteDirectory(f, true);
+                        Util.FileUtil.DeleteDirectory(f, true, true);
                     }
 
                     if (Directory.Exists(binpath))
@@ -4019,13 +4093,16 @@ namespace Gw2Launcher.Client
         private static bool DeleteLocalizedRoot(bool convert)
         {
             var path = Settings.GuildWars2.Path.Value;
-            if (string.IsNullOrEmpty(path) || Client.Launcher.GetActiveProcessCount(Launcher.AccountType.GuildWars2) != 0)
+            if (string.IsNullOrEmpty(path))
                 return false;
             var root = Path.Combine(Path.GetDirectoryName(path), LOCALIZED_EXE_FOLDER_NAME);
             var onlyBin = (Settings.GuildWars2.LocalizeAccountExecution.Value & Settings.LocalizeAccountExecutionOptions.OnlyIncludeBinFolders) == Settings.LocalizeAccountExecutionOptions.OnlyIncludeBinFolders;
 
             if (Directory.Exists(root))
             {
+                if (Client.Launcher.GetActiveProcessCount(Launcher.AccountType.GuildWars2) != 0)
+                    return false;
+
                 foreach (var d in Directory.GetDirectories(root))
                 {
                     ushort uid;
@@ -4058,7 +4135,10 @@ namespace Gw2Launcher.Client
                     {
                         var gw2cache = Path.Combine(temp, a.UID.ToString(), Tools.DatUpdater.CUSTOM_GW2CACHE_FOLDER_NAME);
                         if (Directory.Exists(gw2cache) && File.GetAttributes(gw2cache).HasFlag(FileAttributes.ReparsePoint))
+                        {
                             Directory.Delete(gw2cache);
+                            Util.FileUtil.DeleteDirectory(gw2cache + "-user", false);
+                        }
                     }
                     catch { }
                 }
@@ -4269,7 +4349,7 @@ namespace Gw2Launcher.Client
             return true;
         }
 
-        private static void CopyRootFolder(string from, string to, bool excludeUnknown, bool onlyBin, bool deleteUnknowns, bool autosync, string temp)
+        private static void CopyRootFolder(string from, string to, bool fullCopy, bool excludeUnknown, bool onlyBin, bool deleteUnknowns, bool autosync, string temp)
         {
             if (onlyBin)
                 return;
@@ -4320,7 +4400,7 @@ namespace Gw2Launcher.Client
 
                             try
                             {
-                                CopyAddonsFolder(d, Path.Combine(to, name), temp);
+                                CopyAddonsFolder(d, Path.Combine(to, name), temp, fullCopy, deleteUnknowns, autosync);
                             }
                             catch (Exception ex)
                             {
@@ -4807,8 +4887,56 @@ namespace Gw2Launcher.Client
             }
         }
 
-        private static void CopyAddonsFolder(string from, string to, string temp)
+        private static void CopyAddonsFolder(string from, string to, string temp, bool fullCopy, bool deleteUnknowns, bool autosync, Func<string, bool> skip = null)
         {
+            CopyGenericAddonsFolder(from, to, temp, fullCopy, 0, deleteUnknowns, autosync,
+                delegate(string name)
+                {
+                    switch (name)
+                    {
+                        case "d912pxy":
+
+                            try
+                            {
+                                CopyDx912ProxyFolder(Path.Combine(from, name), Path.Combine(to, name), temp);
+                            }
+                            catch (Exception ex)
+                            {
+                                Util.Logging.Log(ex);
+
+                                try
+                                {
+                                    DeleteOrMoveFolder(Path.Combine(to, name), temp);
+                                }
+                                catch (Exception ex2)
+                                {
+                                    Util.Logging.Log(ex2);
+                                }
+                            }
+
+                            return true;
+                    }
+
+                    return false;
+                });
+        }
+
+        /// <summary>
+        /// Copies an addon folder
+        /// </summary>
+        /// <param name="from">Source</param>
+        /// <param name="to">Destination</param>
+        /// <param name="temp">Temporary location to place files that can't be removed</param>
+        /// <param name="fullCopy">True copy all files from "from" to "to, False to only copy files from "from" that exist in "to"</param>
+        /// <param name="deleteUnknowns">True to delete files that don't exist in the source</param>
+        /// <param name="autosync">True to overwrite existing files that don't match</param>
+        /// <param name="skip">Return true to skip copying the subfolder</param>
+        private static void CopyGenericAddonsFolder(string from, string to, string temp, bool fullCopy, byte depth, bool deleteUnknowns, bool autosync, Func<string, bool> skip = null)
+        {
+            var existing = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+
+            fullCopy = fullCopy || depth > 0;
+
             if (Directory.Exists(to))
             {
                 if (File.GetAttributes(to).HasFlag(FileAttributes.ReparsePoint))
@@ -4818,124 +4946,169 @@ namespace Gw2Launcher.Client
                 }
                 else
                 {
-                    return;
+                    foreach (var path in Directory.GetDirectories(to))
+                    {
+                        existing.Add(Path.GetFileName(path));
+                    }
                 }
             }
-            else
+            else if (fullCopy)
             {
                 Directory.CreateDirectory(to);
             }
+            else
+            {
+                return;
+            }
+
+            ++depth;
 
             foreach (var d in Directory.GetDirectories(from))
             {
                 var name = Path.GetFileName(d);
+                var exists = existing.Remove(name);
+                var canLink = false;
+
+                if (!exists && !fullCopy)
+                {
+                    continue;
+                }
+
+                if (skip != null && skip(name))
+                {
+                    continue;
+                }
 
                 switch (name)
                 {
-                    case "d912pxy":
+                    case "screenshots":
 
-                        try
-                        {
-                            CopyDx912ProxyFolder(d, Path.Combine(to, name), temp);
-                        }
-                        catch (Exception ex)
-                        {
-                            Util.Logging.Log(ex);
-
-                            try
-                            {
-                                Util.FileUtil.DeleteDirectory(Path.Combine(to, name));
-                            }
-                            catch (Exception ex2)
-                            {
-                                Util.Logging.Log(ex2);
-                            }
-                        }
-
-                        break;
-                    case "arcdps":
-
-                        try
-                        {
-                            CopyGenericAddonFolder(d, Path.Combine(to, name), temp, false);
-                        }
-                        catch (Exception ex)
-                        {
-                            Util.Logging.Log(ex);
-                        }
-
-                        break;
-                    default:
-
-                        MakeJunction(to, from, name, true);
+                        canLink = true;
 
                         break;
                 }
-            }
-        }
 
-        private static void CopyGenericAddonFolder(string from, string to, string temp, bool onlyLinkSubfolders)
-        {
-            if (Directory.Exists(to))
-            {
-                if (File.GetAttributes(to).HasFlag(FileAttributes.ReparsePoint))
+                try
                 {
-                    Directory.Delete(to);
-                    Directory.CreateDirectory(to);
+                    if (canLink)
+                    {
+                        if (!exists)
+                        {
+                            MakeJunction(to, from, name);
+                        }
+                    }
+                    else
+                    {
+                        CopyGenericAddonsFolder(d, Path.Combine(to, name), temp, fullCopy, depth, deleteUnknowns, autosync);
+                    }
                 }
-                else
+                catch (Exception ex)
                 {
-                    return;
+                    Util.Logging.Log(ex);
                 }
-            }
-            else
-            {
-                Directory.CreateDirectory(to);
             }
 
-            foreach (var f in Directory.GetFiles(from))
+            if (deleteUnknowns)
             {
-                var name = Path.GetFileName(f);
-                var ext = Path.GetExtension(f).ToLower();
+                foreach (var name in existing)
+                {
+                    try
+                    {
+                        Util.FileUtil.DeleteDirectory(Path.Combine(to, name), true);
+                    }
+                    catch { }
+                }
+            }
+
+            existing.Clear();
+
+            foreach (var path in Directory.GetFiles(to))
+            {
+                existing.Add(Path.GetFileName(path));
+            }
+
+            foreach (var path in Directory.GetFiles(from))
+            {
+                var name = Path.GetFileName(path);
+                var exists = existing.Remove(name);
+
+                if (!exists && !fullCopy)
+                {
+                    continue;
+                }
+
+                var output = Path.Combine(to, name);
+                var ext = Path.GetExtension(path).ToLower();
+                bool canLink;
 
                 switch (ext)
                 {
                     case ".ini":
                     case ".json":
 
-                        try
-                        {
-                            File.Copy(f, Path.Combine(to, name));
-                        }
-                        catch { }
+                        canLink = false;
 
                         break;
                     case ".log":
 
-                        break;
+                        //skip
+
+                        continue;
                     //case ".dll":
                     //case ".pdb":
                     //case ".lib":
                     //case ".exe":
                     default:
-                
-                        MakeLink(to, from, name, true, temp);
+
+                        canLink = true;
 
                         break;
                 }
-            }
 
-            foreach (var d in Directory.GetDirectories(from))
-            {
-                var name = Path.GetFileName(d);
-
-                if (onlyLinkSubfolders)
+                if (exists)
                 {
-                    MakeJunction(to, from, name, true);
+                    if (canLink)
+                    {
+                        try
+                        {
+                            if (File.GetLastWriteTimeUtc(output) == File.GetLastWriteTimeUtc(path))
+                                continue;
+                            DeleteOrMove(output, temp);
+                        }
+                        catch (UnauthorizedAccessException)
+                        {
+                            continue;
+                        }
+                    }
+                    else
+                    {
+                        continue;
+                    }
+                }
+
+                if (canLink)
+                {
+                    MakeLink(to, from, name, true, temp);
                 }
                 else
                 {
-                    CopyGenericAddonFolder(d, Path.Combine(to, name), temp, onlyLinkSubfolders);
+                    try
+                    {
+                        File.Copy(path, output);
+                    }
+                    catch { }
+                }
+            }
+
+            if (deleteUnknowns)
+            {
+                foreach (var name in existing)
+                {
+                    try
+                    {
+                        DeleteOrMove(Path.Combine(to, name), temp);
+                    }
+                    catch { }
                 }
             }
         }
@@ -5169,9 +5342,9 @@ namespace Gw2Launcher.Client
                     return true;
                 }
 
-                foreach (var uid in Settings.DatFiles.GetKeys())
+                foreach (var v in Settings.DatFiles.GetValues())
                 {
-                    var dat = Settings.DatFiles[uid].Value;
+                    var dat = v.Value;
                     if (dat != null && dat.References > 0)
                     {
                         try

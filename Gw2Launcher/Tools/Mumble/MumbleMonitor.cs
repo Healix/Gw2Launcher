@@ -9,7 +9,7 @@ using Gw2Launcher.Windows.Native;
 
 namespace Gw2Launcher.Tools.Mumble
 {
-    class MumbleMonitor
+    public class MumbleMonitor
     {
         private const int MUMBLE_DATA_LENGTH = 5460;
         private const int MUMBLE_DATA_LENGTH_BASIC = 1193;
@@ -169,12 +169,15 @@ namespace Gw2Launcher.Tools.Mumble
 
             public async Task<bool> Refresh(int timeout = -1)
             {
+                var p = Parent;
+                if (p == null)
+                    return false;
                 var t = Environment.TickCount;
-                var tick = Parent.Tick;
+                var tick = p.Tick;
 
                 do
                 {
-                    if (await Parent.Query() && tick != Parent.Tick && Parent.DataScope >= Scope)
+                    if (await p.Query() && tick != p.Tick && p.DataScope >= Scope)
                     {
                         return true;
                     }
@@ -287,6 +290,7 @@ namespace Gw2Launcher.Tools.Mumble
                         {
                             if (Verified != null)
                                 Verified(this, EventArgs.Empty);
+                            //Verified.BeginInvoke(this, EventArgs.Empty, null, null);
                         }
                     }
                 }
@@ -394,8 +398,9 @@ namespace Gw2Launcher.Tools.Mumble
                     verifying = true;
 
                     State = LinkState.Unknown;
-                    VerifyAsync();
                 }
+
+                VerifyAsync();
             }
 
             private async void VerifyAsync()
@@ -522,11 +527,20 @@ namespace Gw2Launcher.Tools.Mumble
 
             public void Push(DataBuffer buffer)
             {
+                bool b;
+
                 lock (this)
                 {
-                    if (_Tick != buffer.Ticks || DataScope != buffer.Scope)
+                    b = _Tick != buffer.Ticks;
+
+                    if (b || DataScope != buffer.Scope)
                     {
-                        Tick = buffer.Ticks;
+                        if (b)
+                        {
+                            _Tick = buffer.Ticks;
+                            LastUpdated = Environment.TickCount;
+                            b = State != LinkState.Verified && ++State == LinkState.Verified;
+                        }
 
                         if (buffer.CanShare)
                         {
@@ -546,6 +560,9 @@ namespace Gw2Launcher.Tools.Mumble
                         DataScope = buffer.Scope;
                     }
                 }
+
+                if (b && Verified != null)
+                    Verified(this, EventArgs.Empty);
 
                 if (DataAvailable != null)
                     DataAvailable(this, EventArgs.Empty);
@@ -1118,8 +1135,15 @@ namespace Gw2Launcher.Tools.Mumble
                             }
                         }
 
-                        if (buffer.Buffer == null || buffer.Buffer.Length < length)
-                            buffer.Buffer = new byte[length];
+                        if (buffer.Length != length)
+                        {
+                            buffer.Length = (ushort)length;
+
+                            if (buffer.Buffer == null || buffer.Buffer.Length < length)
+                            {
+                                buffer.Buffer = new byte[length];
+                            }
+                        }
 
                         Marshal.Copy(_view, buffer.Buffer, 0, length);
 

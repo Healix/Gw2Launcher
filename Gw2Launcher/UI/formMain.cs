@@ -13,6 +13,7 @@ using System.Runtime.InteropServices;
 using Gw2Launcher.UI.Controls;
 using Gw2Launcher.Windows.Native;
 using Gw2Launcher.Tools.Hotkeys;
+using Gw2Launcher.Tools.Api;
 
 namespace Gw2Launcher.UI
 {
@@ -229,8 +230,7 @@ namespace Gw2Launcher.UI
         private FormValue<formBackgroundPatcher> bpWindow;
         private formProgressOverlay bpProgress;
         private FormValue<formAccountBar> abWindow, qlWindow;
-        private Tools.QueuedAccountApi accountApi;
-        private formDailies dailies;
+        private Dailies.formDailies dailies;
         private Tools.Screenshots screenshotMonitor;
         private AccountGridButton focusedButton;
         private Tools.JumpList jumplist;
@@ -243,6 +243,7 @@ namespace Gw2Launcher.UI
         private Tools.Hotkeys.HotkeyManager hotkeys;
         private WindowPositioning.formTemplates templatesManager;
         private WindowPositioning.formTemplatesCompact templatesCompact;
+        private Tools.Api.ApiRequestManager apiManager;
 
         private bool shown;
 
@@ -313,6 +314,7 @@ namespace Gw2Launcher.UI
             Client.Launcher.AccountWindowEvent+=Launcher_AccountWindowEvent;
             Client.Launcher.AllQueuedLaunchesCompleteAllAccountsExited += Launcher_AllQueuedLaunchesCompleteAllAccountsExited;
             Client.Launcher.MumbleLinkVerified += Launcher_MumbleLinkVerified;
+            Client.Launcher.CefSessions.SessionEvent += CefSessions_SessionEvent;
 
             contextNotify.Opening += contextNotify_Opening;
 
@@ -346,7 +348,7 @@ namespace Gw2Launcher.UI
             gridContainer.AccountMousePressed += gridContainer_AccountMousePressed;
             gridContainer.AccountBeginMouseClick += gridContainer_AccountBeginMouseClick;
             gridContainer.AccountSelection += gridContainer_AccountSelection;
-            gridContainer.AccountNoteClicked += gridContainer_AccountNoteClicked;
+            gridContainer.AccountIconClicked += gridContainer_AccountIconClicked;
 
             contextMenu.Closed += contextMenu_Closed;
             contextMenu.Opening += contextMenu_Opening;
@@ -385,6 +387,12 @@ namespace Gw2Launcher.UI
             Settings.StyleShowDailyLoginDay.ValueChanged += OnButtonStyleChanged;
             Settings.HideExit.ValueChanged += HideExit_ValueChanged;
             Settings.HideMinimize.ValueChanged += HideMinimize_ValueChanged;
+            Settings.ShowLimit1.ValueChanged += ShowLimit1_ValueChanged;
+            Settings.Limit1Enabled.ValueChanged += Limit1Enabled_ValueChanged;
+            Settings.StyleDisplayIconOrder.ValueChanged += OnButtonStyleChanged;
+            Settings.GuildWars1.RunAfter.ValueChanged += Gw1RunAfter_ValueChanged;
+            Settings.GuildWars2.RunAfter.ValueChanged += Gw2RunAfter_ValueChanged;
+            Settings.StyleShowRun.ValueChanged += StyleShowRun_ValueChanged;
 
             Tools.BackgroundPatcher.Instance.PatchReady += bp_PatchReady;
             Tools.BackgroundPatcher.Instance.PatchBeginning += bp_PatchBeginning;
@@ -395,6 +403,7 @@ namespace Gw2Launcher.UI
             Tools.WindowManager.Load();
 
             Util.ScheduledEvents.Register(OnDailyResetCallback, GetNextDaily());
+            Util.ScheduledEvents.Register(OnWeeklyResetCallback, GetNextWeekly());
             Util.ScheduledEvents.Register(PurgeTemp, 0);
 
             LoadAccounts();
@@ -526,6 +535,116 @@ namespace Gw2Launcher.UI
             gridContainer.Invalidate(); //autosizing form can cause overlapped paints
         }
 
+        void Gw1RunAfter_ValueChanged(object sender, EventArgs e)
+        {
+            OnRunAfterChanged(Settings.AccountType.GuildWars1);
+        }
+
+        void Gw2RunAfter_ValueChanged(object sender, EventArgs e)
+        {
+            OnRunAfterChanged(Settings.AccountType.GuildWars2);
+        }
+
+        /// <summary>
+        /// Updates RunAfter settings
+        /// </summary>
+        /// <param name="t">Type of account to apply to (to start with if applying to any)</param>
+        /// <param name="any">Applies to all account types</param>
+        /// <param name="buttons">Buttons to apply to</param>
+        void OnRunAfterChanged(Settings.AccountType t, bool any = false, IEnumerable<AccountGridButton> buttons = null)
+        {
+            if (buttons == null)
+            {
+                buttons = this.buttons.Values;
+            }
+
+            if (Settings.StyleShowRun.Value)
+            {
+                var v1 = Settings.GetSettings(t).RunAfter.Value;
+                var b1 = false;
+
+                if (v1 != null)
+                {
+                    for (var i = 0; i < v1.Length; i++)
+                    {
+                        if (v1[i].Enabled)
+                        {
+                            b1 = true;
+                            break;
+                        }
+                    }
+                }
+
+                foreach (var b in buttons)
+                {
+                    if (b.AccountData != null)
+                    {
+                        if (b.AccountData.Type != t)
+                        {
+                            if (any)
+                            {
+                                t = b.AccountData.Type;
+                                v1 = Settings.GetSettings(t).RunAfter.Value;
+                                b1 = false;
+
+                                if (v1 != null)
+                                {
+                                    for (var i = 0; i < v1.Length; i++)
+                                    {
+                                        if (v1[i].Enabled)
+                                        {
+                                            b1 = true;
+                                            break;
+                                        }
+                                    }
+                                }
+                            }
+                            else
+                            {
+                                continue;
+                            }
+                        }
+
+                        if (b1)
+                        {
+                            b.ShowRun = b1;
+                        }
+                        else
+                        {
+                            var v2 = b.AccountData.RunAfter;
+                            var b2 = false;
+
+                            if (v2 != null)
+                            {
+                                for (var i = 0; i < v2.Length; i++)
+                                {
+                                    if (v2[i].Enabled)
+                                    {
+                                        b2 = true;
+                                        break;
+                                    }
+                                }
+                            }
+
+                            b.ShowRun = b2;
+                        }
+                    }
+                }
+            }
+            else if (any)
+            {
+                foreach (var b in buttons)
+                {
+                    b.ShowRun = false;
+                }
+            }
+        }
+
+        void StyleShowRun_ValueChanged(object sender, EventArgs e)
+        {
+            OnRunAfterChanged(Settings.AccountType.GuildWars2, true);
+        }
+
         void StyleBackgroundImage_ValueChanged(object sender, EventArgs e)
         {
             var v = (Settings.ISettingValue<string>)sender;
@@ -617,8 +736,23 @@ namespace Gw2Launcher.UI
             buttonTemplates.Visible = v.Value;
         }
 
-        void AccountSorting_SortingChanged(object sender, EventArgs e)
+        void ShowLimit1_ValueChanged(object sender, EventArgs e)
         {
+            var v = (Settings.ISettingValue<bool>)sender;
+            buttonLimit1.Visible = v.Value;
+        }
+
+        void Limit1Enabled_ValueChanged(object sender, EventArgs e)
+        {
+            var v = (Settings.ISettingValue<bool>)sender;
+            buttonLimit1.Selected = v.Value;
+        }
+
+        void AccountSorting_SortingChanged(object sender, Settings.AccountSorting.SortingChangedEventArgs e)
+        {
+            if (e.Page != mpWindow.Page)
+                return;
+
             var o = Settings.Sorting.Value;
 
             switch (o.Sorting.Mode)
@@ -752,7 +886,7 @@ namespace Gw2Launcher.UI
                 gridContainer.ClearSelected();
         }
 
-        private int PurgeTemp()
+        private Util.ScheduledEvents.Ticks PurgeTemp()
         {
             if (Client.Launcher.GetPendingLaunchCount() > 0 || Client.Launcher.GetActiveProcessCount() > 0)
             {
@@ -780,7 +914,7 @@ namespace Gw2Launcher.UI
                    }));
             }
 
-            return 3 * 24 * 60 * 60 * 1000;
+            return new Util.ScheduledEvents.Ticks(3 * 24 * 60 * 60 * 1000);
         }
 
         private async void PurgeNotes()
@@ -1091,7 +1225,7 @@ namespace Gw2Launcher.UI
                 });
         }
 
-        private int OnNoteCallback()
+        private Util.ScheduledEvents.Ticks OnNoteCallback()
         {
             var now = DateTime.UtcNow;
             var min = DateTime.MaxValue;
@@ -1148,24 +1282,22 @@ namespace Gw2Launcher.UI
                 if (i > 5000)
                 {
                     if (!canShow)
-                        return 5000;
-                    else if (i > int.MaxValue)
-                        return int.MaxValue;
+                        return new Util.ScheduledEvents.Ticks(5000);
                 }
                 else if (i < 1000)
                 {
                     if (count > 0)
-                        return 1000;
+                        return new Util.ScheduledEvents.Ticks(1000);
                     else if (i < 0)
-                        return 0;
+                        return new Util.ScheduledEvents.Ticks(0);
                 }
 
-                return (int)i;
+                return new Util.ScheduledEvents.Ticks(min.Ticks);
             }
             else if (!canShow)
-                return 5000;
+                return new Util.ScheduledEvents.Ticks(5000);
 
-            return -1;
+            return Util.ScheduledEvents.Ticks.None;
         }
 
         private async void ShowNoteNotification(Settings.Notes.Note note, Settings.IAccount account, int delay)
@@ -1190,20 +1322,26 @@ namespace Gw2Launcher.UI
                 formNotify.ShowNote(v.Screen, v.Anchor, text, account.Name);
         }
 
-        private int GetNextDaily()
+        private Util.ScheduledEvents.Ticks GetNextDaily()
         {
             var ticks = DateTime.UtcNow.Ticks;
             const long TICKS_PER_DAY = 864000000000;
 
-            int millisToNextDay = (int)(((ticks / TICKS_PER_DAY + 1) * TICKS_PER_DAY - ticks) / 10000) + 1;
-            if (millisToNextDay < 0)
-                return -1;
-
-            return millisToNextDay;
+            return new Util.ScheduledEvents.Ticks(Util.ScheduledEvents.TickType.MillisecondTicks, ((ticks / TICKS_PER_DAY + 1) * TICKS_PER_DAY) / 10000 + 1);
         }
 
-        private int OnDailyResetCallback()
+        private Util.ScheduledEvents.Ticks GetNextWeekly()
         {
+            return new Util.ScheduledEvents.Ticks(Util.Date.GetNextWeek(DateTime.UtcNow, DayOfWeek.Monday, 7, 30).Ticks);
+        }
+
+        private Util.ScheduledEvents.Ticks OnDailyResetCallback()
+        {
+            if (Util.Logging.Enabled)
+            {
+                Util.Logging.LogEvent("Daily reset");
+            }
+
             foreach (var button in buttons.Values)
             {
                 var account = button.AccountData;
@@ -1216,10 +1354,25 @@ namespace Gw2Launcher.UI
                         var gw2 = (Settings.IGw2Account)account;
 
                         //set the last used for active accounts if either the daily or played time is being tracked, so that the login icon doesn't take priority
-                        if ((gw2.ShowDailyCompletion || gw2.ApiData != null && gw2.ApiData.Played != null) && Client.Launcher.GetState(gw2) == Client.Launcher.AccountState.ActiveGame)
+                        if ((gw2.ShowDailyCompletion || gw2.Api != null) && Client.Launcher.GetState(gw2) == Client.Launcher.AccountState.ActiveGame)
                         {
-                            if (gw2.ApiData != null && gw2.ApiData.Played != null)
-                                QueuedAccountApi.Schedule(gw2, gw2.LastUsedUtc.Date, 0);
+                            if (gw2.Api != null)
+                                QueueApiRequest(gw2, ApiRequestManager.RequestReason.DailyReset);
+
+                            //if (gw2.ApiData != null)
+                            //{
+                            //    ApiDataRequest r;
+
+                            //    r = new ApiDataRequest(Api.ApiData.DataType.Account, gw2)
+                            //    {
+                            //        Reason = ApiDataRequest.RequestReason.Initial,
+                            //    };
+                            //    r.DataAvailable += api_DataAvailable;
+                            //    apiData.Queue(r);
+                            //}
+
+                            //if (gw2.ApiData != null && gw2.ApiData.Played != null)
+                            //    QueuedAccountApi.Schedule(gw2, gw2.LastUsedUtc.Date, 0);
                             SetLastUsed(button, DateTime.UtcNow);
                         }
 
@@ -1242,16 +1395,9 @@ namespace Gw2Launcher.UI
                 }
             }
 
-            if (dailies != null && !dailies.IsDisposed)
+            if (dailies != null && !dailies.IsDisposed && (Settings.ShowDailies.Value & Settings.DailiesMode.Show) != 0)
             {
-                var d = Settings.ShowDailies.Value;
-                if (d.HasFlag(Settings.DailiesMode.Show))
-                {
-                    if (d.HasFlag(Settings.DailiesMode.AutoLoad))
-                        dailies.LoadToday();
-                    else
-                        dailies.LoadOnShow = true;
-                }
+                dailies.OnDailyReset();
             }
 
             if (jumplist != null)
@@ -1267,17 +1413,36 @@ namespace Gw2Launcher.UI
             return GetNextDaily();
         }
 
-        private Tools.QueuedAccountApi QueuedAccountApi
+        private Util.ScheduledEvents.Ticks OnWeeklyResetCallback()
         {
-            get
+            if (Util.Logging.Enabled)
             {
-                if (accountApi == null)
-                {
-                    accountApi = new Tools.QueuedAccountApi();
-                    accountApi.DataReceived += accountApi_DataReceived;
-                }
-                return accountApi;
+                Util.Logging.LogEvent("Weekly reset");
             }
+
+            foreach (var button in buttons.Values)
+            {
+                var account = button.AccountData;
+                if (account != null)
+                {
+                    if (account.Type == Settings.AccountType.GuildWars2)
+                    {
+                        var gw2 = (Settings.IGw2Account)account;
+
+                        if (gw2.ShowWeeklyCompletion)
+                        {
+                            button.Redraw();
+                        }
+                    }
+                }
+            }
+
+            if (dailies != null && !dailies.IsDisposed && (Settings.ShowDailies.Value & Settings.DailiesMode.Show) != 0)
+            {
+                dailies.OnWeeklyReset();
+            }
+
+            return GetNextWeekly();
         }
 
         void Launcher_AccountQueued(Settings.IAccount account, Client.Launcher.LaunchMode e)
@@ -1542,7 +1707,7 @@ namespace Gw2Launcher.UI
                 if (DateTime.UtcNow > nextCheck)
                     CheckVersion();
                 else
-                    Util.ScheduledEvents.Register(OnCheckVersionCallback, nextCheck.Ticks / 10000);
+                    Util.ScheduledEvents.Register(OnCheckVersionCallback, nextCheck);
             }
 
             Util.ScheduledEvents.Register(OnNoteCallback, 0);
@@ -1572,25 +1737,785 @@ namespace Gw2Launcher.UI
             }
         }
 
-        private int OnCheckVersionCallback()
+        private Tools.Api.ApiRequestManager GetApiManager()
         {
-            long remaining = -1;
-
-            if (Settings.LastProgramVersion.HasValue)
+            if (apiManager == null)
             {
-                var nextCheck = Settings.LastProgramVersion.Value.LastCheck.AddDays(30);
-                remaining = (nextCheck.Ticks - DateTime.UtcNow.Ticks) / 10000;
+                apiManager = new Tools.Api.ApiRequestManager(new Api.ApiData());
+                apiManager.DataAvailable += apiManager_DataAvailable;
+                apiManager.DataSource.NextRequestChanged += DataSource_NextRequestChanged;
+                apiManager.DataSource.PendingChanged += DataSource_PendingChanged;
+                apiManager.DataSource.DelayChanged += DataSource_DelayChanged;
+            }
 
-                if (remaining < 0)
+            return apiManager;
+        }
+
+        private void QueueApiRequest(Settings.IGw2Account gw2, ApiRequestManager.RequestReason reason)
+        {
+            if (gw2.Api == null)
+                return;
+
+            GetApiManager().Queue(gw2, reason);
+
+            //var data = gw2.ApiData;
+
+            //if (data == null)
+            //    return;
+
+        }
+
+        private void SetApiRequestDelay(ApiTimer.DelayType t, Api.ApiData.ApiDataEventArgs e)
+        {
+            if (e.Key is Settings.ApiDataKey)
+            {
+                var accounts = ((Settings.ApiDataKey)e.Key).Accounts;
+
+                if (accounts != null)
                 {
-                    CheckVersion();
-                    remaining = -1;
+                    DateTime d;
+
+                    if (t == ApiTimer.DelayType.Pending)
+                        d = e.Delay;
+                    else
+                        d = e.NextRequest;
+
+                    if (DateTime.UtcNow < d)
+                    {
+                        Util.Invoke.Required(this,
+                            delegate
+                            {
+                                foreach (var a in accounts)
+                                {
+                                    AccountGridButton button;
+                                    if (buttons.TryGetValue(a.UID, out button))
+                                    {
+                                        button.SetApiRequestDelay(t, d);
+                                    }
+                                }
+                            });
+                    }
+                    else
+                    {
+                    }
+                }
+            }
+        }
+
+        void DataSource_DelayChanged(object sender, Api.ApiData.ApiDataEventArgs e)
+        {
+            SetApiRequestDelay(ApiTimer.DelayType.Pending, e);
+        }
+
+        void DataSource_NextRequestChanged(object sender, Api.ApiData.ApiDataEventArgs e)
+        {
+            SetApiRequestDelay(ApiTimer.DelayType.Cached, e);
+        }
+
+        void DataSource_PendingChanged(object sender, Api.ApiData.ApiDataEventArgs e)
+        {
+            if ((e.Refreshing || e.Pending == 0) && e.Key is Settings.ApiDataKey)
+            {
+                var accounts = ((Settings.ApiDataKey)e.Key).Accounts;
+
+                if (accounts != null)
+                {
+                    Util.Invoke.Required(this,
+                        delegate
+                        {
+                            foreach (var a in accounts)
+                            {
+                                AccountGridButton button;
+                                if (buttons.TryGetValue(a.UID, out button))
+                                {
+                                    button.ApiPending = e.Pending != 0;
+                                    if (e.Delay != DateTime.MinValue)
+                                        button.SetApiRequestDelay(ApiTimer.DelayType.Pending, e.Delay);
+                                }
+                            }
+                        });
+                }
+            }
+        }
+
+        private bool IsChanged(Settings.ApiTracking[] changed)
+        {
+            for (var i = 0; i < changed.Length; i++)
+            {
+                if (changed[i] != Settings.ApiTracking.None)
+                    return true;
+            }
+            return false;
+        }
+
+        void apiManager_DataAvailable(object sender, ApiRequestManager.DataAvailableEventArgs e)
+        {
+            var s = e.Key;
+
+            if (e.Status == Api.ApiData.DataStatus.Error)
+            {
+                var x = e.GetException();
+
+                if (x != null)
+                {
+                    if (x is Api.Exceptions.ApiException && (x is Api.Exceptions.InvalidKeyException || x is Api.Exceptions.PermissionRequiredException))
+                    {
+                        if (x is Api.Exceptions.InvalidKeyException)
+                        {
+                            //key is invalid and further usage of this key will be disabled
+
+                            s.Permissions = Api.TokenInfo.Permissions.None;
+                        }
+                        else if (x is Api.Exceptions.PermissionRequiredException)
+                        {
+                            //key doesn't have permission
+                        }
+                    }
+                }
+
+                return;
+            }
+
+            if (e.Type == Api.ApiData.DataType.TokenInfo)
+            {
+                #region Permissions
+
+                s.Permissions = (Api.TokenInfo.Permissions)e.Data.Value;
+
+                if ((s.Permissions & Api.TokenInfo.Permissions.Wallet) == 0)
+                {
+                    s.Data.Wallet = null;
+                }
+
+                //adjust which settings are saved based on permissions
+                //Wallet is used if tracking astral or when the progression permission isn't available for tracking the daily/weekly
+                //Played is used when tracking the login (obsolete)
+                //DailyPoints was used when tracking the daily (obsolete)
+                #endregion
+
+                return;
+            }
+
+            var accounts = s.Accounts;
+
+            if (accounts == null)
+            {
+                return;
+            }
+
+            //if (d == null)
+            //{
+            //    return;
+            //}
+
+            //var ax = e.Account;
+            var state = Settings.ApiCacheState.OK;
+            var changed = new Settings.ApiTracking[accounts.Length];
+
+            if (e.Account.UID != accounts[0].UID && !s.Contains(e.Account))
+            {
+                //API key is shared without other accounts, but what was the active account was removed from the key
+            }
+
+            if (e.Contains(ApiRequestManager.RequestReason.Update))
+            {
+                if (e.Status != Api.ApiData.DataStatus.NotModified && e.Modified)
+                {
+                    var r = e.GetLast(ApiRequestManager.RequestReason.Update);
+
+                    if (r != null && r.RepeatCount == 0 && r.Date > e.LastModifiedInLocalTime)
+                    {
+                        //var m = r.Date.Subtract(e.LastModifiedInLocalTime).TotalMinutes;
+                        var m = DateTime.UtcNow.Subtract(e.LastModifiedInLocalTime).TotalMinutes;
+
+                        //avoid checking for an update if the API was already old
+                        //if the account was being played, last modified should always be within 10m
+                        if (m > 0 && m < 15)
+                        {
+                            if (Util.Logging.Enabled)
+                            {
+                                Util.Logging.LogEvent(e.Account, "Repeating API request for [" + r.Reason + "] because data was modified");
+                            }
+                            e.Repeat(r);
+                            state = Settings.ApiCacheState.Pending;
+                        }
+                    }
                 }
             }
 
-            if (remaining > int.MaxValue)
-                return int.MaxValue;
-            return (int)remaining;
+            switch (e.Type)
+            {
+                case Api.ApiData.DataType.Account:
+
+                    #region Account
+                    {
+                        var data = (Api.Account)e.Data.Value;
+                        var t = ApiRequestManager.GetTracking(accounts, Settings.ApiTracking.Login | Settings.ApiTracking.Daily);
+                        var account = s.Data.Account;
+
+                        if (t.Summary != Settings.ApiTracking.None && account == null)
+                        {
+                            s.Data.Account = account = s.Data.CreateValue<Settings.ApiData.AccountValues>();
+                        }
+
+                        //var points = d.DailyPoints;
+                        //var played = d.Played;
+
+                        if (account != null)
+                        {
+                            var values = new Settings.ApiData.AccountValues(data);
+                            var old = account.Value;
+
+                            if (t.Contains(Settings.ApiTracking.Login))
+                            {
+                                for (var i = 0; i < accounts.Length; i++)
+                                {
+                                    if (t.Contains(i, Settings.ApiTracking.Login) && data.LastModifiedServer.Date > accounts[i].LastDailyLoginUtc)
+                                    {
+                                        changed[i] |= Settings.ApiTracking.Login;
+                                    }
+                                }
+                            }
+
+                            if (old.DailyPoints != values.DailyPoints)
+                            {
+                                if (Util.Logging.Enabled)
+                                {
+                                    if (values.DailyPoints == ushort.MaxValue)
+                                        Util.Logging.LogEvent(e.Account, "API key doesn't have permission for daily achievement points");
+                                    else
+                                        Util.Logging.LogEvent(e.Account, "Achievement points changed from " + old.DailyPoints + " to " + values.DailyPoints + " (+" + ((int)values.DailyPoints - old.DailyPoints) + ")");
+                                }
+
+                                if ((s.Permissions & (Api.TokenInfo.Permissions.Progression | Api.TokenInfo.Permissions.Wallet)) == Api.TokenInfo.Permissions.Progression)
+                                {
+                                    if (t.Contains(Settings.ApiTracking.Daily) && !e.Contains(ApiRequestManager.RequestReason.Initial) && values.DailyPoints < Api.Account.MAX_AP)
+                                    {
+                                        //daily is probably complete, request the vault to confirm
+                                        //normally the daily would be checked when the astral changes
+                                        //only applies when the wallet isn't available
+
+                                        for (var i = 0; i < accounts.Length; i++)
+                                        {
+                                            if (t.Contains(i, Settings.ApiTracking.Daily) && DateTime.UtcNow.Date > accounts[i].LastDailyCompletionUtc)
+                                            {
+                                                apiManager.Queue(new ApiRequestManager.DataRequest(Api.ApiData.DataType.VaultDaily, e.Account, s)
+                                                {
+                                                    Reason = ApiRequestManager.RequestReason.Pending,
+                                                    Date = DateTime.UtcNow,
+                                                });
+
+                                                break;
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+                            else if (e.Status != Api.ApiData.DataStatus.NotModified && e.Contains(ApiRequestManager.RequestReason.VaultClosed) && t.Contains(Settings.ApiTracking.Daily) && values.DailyPoints < Api.Account.MAX_AP)
+                            {
+                                var r = e.GetLast(ApiRequestManager.RequestReason.VaultClosed);
+
+                                if (r.RepeatCount == 0 && e.LastModifiedInLocalTime < r.Date)
+                                {
+                                    for (var i = 0; i < accounts.Length; i++)
+                                    {
+                                        if (t.Contains(i, Settings.ApiTracking.Daily))
+                                        {
+                                            if (Util.Logging.Enabled)
+                                            {
+                                                Util.Logging.LogEvent(e.Account, "Repeating [" + e.Type + "] API request for [" + r.Reason + "] because data was older than request");
+                                            }
+
+                                            e.Repeat(r);
+                                            state = Settings.ApiCacheState.Pending;
+
+                                            break;
+                                        }
+                                    }
+                                }
+                            }
+
+                            account.Value = values;
+                            account.State = state;
+                            account.LastChange = data.LastModifiedServer;
+
+                            if (IsChanged(changed))
+                            {
+                                Util.Invoke.Required(this,
+                                    delegate
+                                    {
+                                        for (var i = 0; i < accounts.Length; i++)
+                                        {
+                                            AccountGridButton button;
+                                            if (buttons.TryGetValue(accounts[i].UID, out button))
+                                            {
+                                                if ((changed[i] & Settings.ApiTracking.Login) != 0)
+                                                {
+                                                    SetLastDailyLogin(button, account.LastChange);
+                                                }
+
+                                                //if (e.Repeating != null)
+                                                //{
+                                                //    button.SetApiRequestDelay(e.NextRequest);
+                                                //}
+                                            }
+                                        }
+                                    });
+                            }
+                        }
+
+                    }
+                    #endregion
+
+                    break;
+                case Api.ApiData.DataType.Wallet:
+
+                    #region Wallet
+                    {
+                        var data = (Api.Wallet)e.Data.Value;
+                        var t = ApiRequestManager.GetTracking(accounts, Settings.ApiTracking.Astral | Settings.ApiTracking.Daily | Settings.ApiTracking.Weekly);
+                        var wallet = s.Data.Wallet;
+
+                        if (t.Summary != Settings.ApiTracking.None && wallet == null)
+                        {
+                            s.Data.Wallet = wallet = s.Data.CreateValue<Settings.ApiData.WalletValues>();
+                        }
+
+                        if (wallet != null)
+                        {
+                            var values = new Settings.ApiData.WalletValues(data);
+                            var old = wallet.Value;
+
+                            if (Util.Logging.Enabled)
+                            {
+                                if (old.Astral != values.Astral)
+                                {
+                                    Util.Logging.LogEvent(e.Account, "Astral changed from " + old.Astral + " to " + values.Astral + " (" + (values.Astral > old.Astral ? "+" : "") + ((int)values.Astral - old.Astral) + ")");
+                                }
+                                if (old.Coins != values.Coins)
+                                {
+                                    Util.Logging.LogEvent(e.Account, "Coins changed from " + Util.Text.FormatCoins(old.Coins) + " to " + Util.Text.FormatCoins(values.Coins) + " (" + (values.Coins >= old.Coins ? "+" + Util.Text.FormatCoins(values.Coins - old.Coins) : "-" + Util.Text.FormatCoins(old.Coins - values.Coins)) + ")");
+                                }
+                                if (old.Laurels != values.Laurels)
+                                {
+                                    Util.Logging.LogEvent(e.Account, "Laurels changed from " + old.Laurels + " to " + values.Laurels + " (" + (values.Laurels > old.Laurels ? "+" : "") + ((int)values.Laurels - old.Laurels) + ")");
+                                }
+                            }
+
+                            if (t.Contains(Settings.ApiTracking.Astral) && old.Astral != values.Astral)
+                            {
+                                for (var i = 0; i < accounts.Length; i++)
+                                {
+                                    if (t.Contains(i, Settings.ApiTracking.Astral))
+                                    {
+                                        changed[i] |= Settings.ApiTracking.Astral;
+                                    }
+                                }
+                            }
+
+                            if (e.Contains(ApiRequestManager.RequestReason.VaultClosed))
+                            {
+                                var r = e.GetLast(ApiRequestManager.RequestReason.VaultClosed);
+
+                                if (!e.Contains( ApiRequestManager.RequestReason.Initial))
+                                {
+                                    if ((s.Permissions & Api.TokenInfo.Permissions.Progression) != 0)
+                                    {
+                                        //the daily/weekly status isn't queried if the wallet is being queried, simply to avoid an additional 2 requests whenever the vault is closed
+                                        //the daily/weekly is only queried if the astral amount changes
+                                        //if astral is spent to cause no change, the daily/weekly will only update on account exit
+
+                                        if (old.Astral != values.Astral)
+                                        {
+                                            if (t.Contains(Settings.ApiTracking.Daily))
+                                            {
+                                                apiManager.Queue(new ApiRequestManager.DataRequest(Api.ApiData.DataType.VaultDaily, e.Account, s)
+                                                {
+                                                    Reason = ApiRequestManager.RequestReason.VaultClosed,
+                                                    Date = r.Date,
+                                                });
+                                            }
+
+                                            if (t.Contains(Settings.ApiTracking.Weekly))
+                                            {
+                                                apiManager.Queue(new ApiRequestManager.DataRequest(Api.ApiData.DataType.VaultWeekly, e.Account, s)
+                                                {
+                                                    Reason = ApiRequestManager.RequestReason.VaultClosed,
+                                                    Date = r.Date,
+                                                });
+                                            }
+                                        }
+                                    }
+                                    else
+                                    {
+                                        //alternative tracking when progression isn't available
+
+                                        if (t.Contains(Settings.ApiTracking.Daily))
+                                        {
+                                            //assuming daily is complete if...
+                                            // - earning 55 or 65 astral (4 or 5 dailies + chest)
+                                            // - earning >= 20 astral + ~1g (chest)
+                                            // - loss of astral + ~1g (spent + chest)
+
+                                            var _astral = (int)values.Astral - old.Astral;
+
+                                            if (_astral != 0)
+                                            {
+                                                const int ASTRAL_PER_GOLD = 35;
+                                                const int ASTRAL_FROM_DAILY_CHEST = 20;
+                                                const int ASTRAL_FROM_DAILIES = 55;
+                                                const int ASTRAL_FROM_DAILIES_MAX = 65;
+
+                                                var _coins = (int)values.Coins - old.Coins;
+                                                var ok = false;
+
+                                                if (_coins != 0)
+                                                {
+                                                    if (_astral == ASTRAL_FROM_DAILIES || _astral == ASTRAL_FROM_DAILIES_MAX) //4 or 5 dailies + chest
+                                                    {
+                                                        ok = true;
+
+                                                        if (Util.Logging.Enabled)
+                                                        {
+                                                            Util.Logging.LogEvent(e.Account, "Assuming daily is complete due to earning " + _astral + " astral");
+                                                        }
+                                                    }
+                                                    else if (_astral >= ASTRAL_FROM_DAILY_CHEST && (_coins > 8000 && _coins < 12000)) //chest + ~1g
+                                                    {
+                                                        ok = true;
+
+                                                        if (Util.Logging.Enabled)
+                                                        {
+                                                            Util.Logging.LogEvent(e.Account, "Assuming daily is complete due to earning " + _astral + " astral and " + Util.Text.FormatCoins((uint)_coins));
+                                                        }
+                                                    }
+                                                    else if (_astral < 0 && (_coins > 8000 && _coins < 12000)) //assuming daily was completed if astral was spent and ~1g earned
+                                                    {
+                                                        ok = true;
+
+                                                        if (Util.Logging.Enabled)
+                                                        {
+                                                            Util.Logging.LogEvent(e.Account, "Assuming daily is complete due to spending astral and earning " + Util.Text.FormatCoins((uint)_coins));
+                                                        }
+                                                    }
+                                                    else
+                                                    {
+                                                        //estimate astral earned assuming bags of gold were purchased, +1g from daily
+
+                                                        var bags = (_coins + 2000 - 10000) / 10000;
+                                                        var est = bags * ASTRAL_PER_GOLD + _astral;
+
+                                                        if (est == ASTRAL_FROM_DAILIES || est == ASTRAL_FROM_DAILIES_MAX)
+                                                        {
+                                                            ok = true;
+
+                                                            if (Util.Logging.Enabled)
+                                                            {
+                                                                Util.Logging.LogEvent(e.Account, "Assuming daily is complete, estimating " + bags + " bags of gold were purchased");
+                                                            }
+                                                        }
+                                                    }
+
+                                                    if (ok)
+                                                    {
+                                                        for (var i = 0; i < accounts.Length; i++)
+                                                        {
+                                                            if (t.Contains(i, Settings.ApiTracking.Daily))
+                                                            {
+                                                                accounts[i].LastDailyCompletionUtc = e.LastModifiedInLocalTime;
+
+                                                                changed[i] |= Settings.ApiTracking.Daily;
+                                                            }
+                                                        }
+                                                    }
+                                                }
+                                            }
+                                        }
+
+                                        if (t.Contains(Settings.ApiTracking.Weekly) && (int)values.Laurels - old.Laurels == 10)
+                                        {
+                                            var b = false;
+
+                                            for (var i = 0; i < accounts.Length; i++)
+                                            {
+                                                if (t.Contains(i, Settings.ApiTracking.Weekly))
+                                                {
+                                                    if (e.LastModifiedInLocalTime > Util.Date.GetNextWeek(accounts[i].LastWeeklyCompletionUtc, DayOfWeek.Monday, 7, 31))
+                                                    {
+                                                        b = true;
+                                                        break;
+                                                    }
+                                                }
+                                            }
+
+                                            if (b)
+                                            {
+                                                //weekly gives a bag of 10 laurels
+                                                //assuming weekly is complete if laurels increased by 10 and either the astral changed, or had previously changed
+                                                b = old.Astral != values.Astral;
+
+                                                if (!b)
+                                                {
+                                                    foreach (var r1 in e.GetReasonsEnumerable(ApiRequestManager.RequestReason.VaultClosed))
+                                                    {
+                                                        if (r1.RepeatCount > 0 && r1.Tag is bool && (bool)r1.Tag)
+                                                        {
+                                                            b = true;
+                                                            break;
+                                                        }
+                                                    }
+                                                }
+
+                                                if (b)
+                                                {
+                                                    for (var i = 0; i < accounts.Length; i++)
+                                                    {
+                                                        if (t.Contains(i, Settings.ApiTracking.Weekly))
+                                                        {
+                                                            accounts[i].LastWeeklyCompletionUtc = e.LastModifiedInLocalTime;
+
+                                                            changed[i] |= Settings.ApiTracking.Weekly;
+                                                        }
+                                                    }
+
+                                                    if (Util.Logging.Enabled)
+                                                    {
+                                                        Util.Logging.LogEvent(e.Account, "Assuming weekly is complete due to earning 10 laurels");
+                                                    }
+                                                }
+                                            }
+                                        }
+                                    }
+                                }
+
+                                if (r.RepeatCount == 0 && e.Status != Api.ApiData.DataStatus.NotModified || e.Status == Api.ApiData.DataStatus.Changed)
+                                {
+                                    t.Summary = Settings.ApiTracking.None;
+
+                                    //summarize what hasn't changed
+                                    for (var i = 0; i < accounts.Length; i++)
+                                    {
+                                        t.Tracking[i] &= ~changed[i];
+                                        t.Summary |= t.Tracking[i];
+                                    }
+
+                                    if (t.Summary != Settings.ApiTracking.None)
+                                    {
+                                        if (e.LastModifiedInLocalTime < r.Date || (s.Permissions & Api.TokenInfo.Permissions.Progression) == 0 && t.Contains(Settings.ApiTracking.Weekly) && old.Astral != values.Astral && e.LastModifiedInLocalTime.Subtract(r.Date).TotalMinutes < 2)
+                                        {
+                                            if (Util.Logging.Enabled)
+                                            {
+                                                if (e.LastModifiedInLocalTime < r.Date)
+                                                    Util.Logging.LogEvent(e.Account, "Repeating [" + e.Type + "] API request for [" + r.Reason + "] because data was older than request");
+                                                else
+                                                    Util.Logging.LogEvent(e.Account, "Repeating [" + e.Type + "] API request for [" + r.Reason + "] because of weekly tracking");
+                                            }
+                                            r.Tag = old.Astral != values.Astral;
+                                            e.Repeat(r);
+                                            state = Settings.ApiCacheState.Pending;
+                                        }
+                                    }
+                                }
+                            }
+
+                            wallet.Value = values;
+                            wallet.LastChange = e.LastModifiedInLocalTime;
+                            wallet.State = state;
+
+                            if (IsChanged(changed))
+                            {
+                                Util.Invoke.Required(this,
+                                    delegate
+                                    {
+                                        for (var i = 0; i < accounts.Length; i++)
+                                        {
+                                            AccountGridButton button;
+                                            if (buttons.TryGetValue(accounts[i].UID, out button))
+                                            {
+                                                if ((changed[i] & Settings.ApiTracking.Weekly) != 0)
+                                                {
+                                                    button.LastWeeklyCompletionUtc = accounts[i].LastWeeklyCompletionUtc;
+                                                }
+
+                                                if ((changed[i] & Settings.ApiTracking.Daily) != 0)
+                                                {
+                                                    button.LastDailyCompletionUtc = accounts[i].LastDailyCompletionUtc;
+                                                }
+
+                                                if ((changed[i] & Settings.ApiTracking.Astral) != 0)
+                                                {
+                                                    button.Astral = values.Astral;
+                                                }
+
+                                                //if (e.Repeating != null)
+                                                //{
+                                                //    button.SetApiRequestDelay(e.NextRequest);
+                                                //}
+                                            }
+                                        }
+                                    });
+                            }
+                        }
+                    }
+                    #endregion
+
+                    break;
+                case Api.ApiData.DataType.VaultDaily:
+                case Api.ApiData.DataType.VaultWeekly:
+
+                    #region VaultDaily, VaultWeekly
+                    {
+                        var data = (Api.Vault)e.Data.Value;
+                        var t = ApiRequestManager.GetTracking(accounts, Settings.ApiTracking.Daily | Settings.ApiTracking.Weekly);
+
+                        if (data.Claimed)
+                        {
+                            switch (data.Type)
+                            {
+                                case Api.Vault.VaultType.Daily:
+
+                                    if (t.Contains(Settings.ApiTracking.Daily))
+                                    {
+                                        var d = e.LastModifiedInLocalTime.AddMinutes(-1).Date;
+
+                                        for (var i = 0; i < accounts.Length; i++)
+                                        {
+                                            if (d > accounts[i].LastDailyCompletionUtc)
+                                            {
+                                                accounts[i].LastDailyCompletionUtc = e.LastModifiedInLocalTime;
+                                                changed[i] |= Settings.ApiTracking.Daily;
+
+                                                if (Util.Logging.Enabled)
+                                                {
+                                                    Util.Logging.LogEvent(accounts[i], "Assuming daily is complete due to being claimed");
+                                                }
+                                            }
+                                        }
+                                    }
+
+                                    break;
+                                case Api.Vault.VaultType.Weekly:
+
+                                    if (t.Contains(Settings.ApiTracking.Weekly))
+                                    {
+                                        for (var i = 0; i < accounts.Length; i++)
+                                        {
+                                            if (e.LastModifiedInLocalTime > Util.Date.GetNextWeek(accounts[i].LastWeeklyCompletionUtc, DayOfWeek.Monday, 7, 31))
+                                            {
+                                                accounts[i].LastWeeklyCompletionUtc = e.LastModifiedInLocalTime;
+                                                changed[i] |= Settings.ApiTracking.Weekly;
+
+                                                if (Util.Logging.Enabled)
+                                                {
+                                                    Util.Logging.LogEvent(accounts[i], "Assuming weekly is complete due to being claimed");
+                                                }
+                                            }
+                                        }
+                                    }
+
+                                    break;
+                            }
+                        }
+
+                        if (e.Contains(ApiRequestManager.RequestReason.VaultClosed))
+                        {
+                            var r = e.GetLast(ApiRequestManager.RequestReason.VaultClosed);
+
+                            if (r.RepeatCount == 0 && e.Status != Api.ApiData.DataStatus.NotModified || e.Status == Api.ApiData.DataStatus.Changed)
+                            {
+                                t.Summary = Settings.ApiTracking.None;
+
+                                //summarize what hasn't changed
+                                for (var i = 0; i < accounts.Length; i++)
+                                {
+                                    t.Tracking[i] &= ~changed[i];
+                                    t.Summary |= t.Tracking[i];
+                                }
+
+                                if (t.Summary != Settings.ApiTracking.None)
+                                {
+                                    //try again if the API wasn't modified after the vault was closed
+                                    if (e.LastModifiedInLocalTime < r.Date)
+                                    {
+                                        if (Util.Logging.Enabled)
+                                        {
+                                            Util.Logging.LogEvent(e.Account, "Repeating [" + e.Type + "] API request for [" + r.Reason + "] because data was older than request");
+                                        }
+                                        e.Repeat(r);
+                                        state = Settings.ApiCacheState.Pending;
+                                    }
+                                }
+                            }
+                        }
+
+                        if (IsChanged(changed))
+                        {
+                            Util.Invoke.Required(this,
+                                delegate
+                                {
+                                    for (var i = 0; i < accounts.Length; i++)
+                                    {
+                                        AccountGridButton button;
+                                        if (buttons.TryGetValue(accounts[i].UID, out button))
+                                        {
+                                            if ((changed[i] & Settings.ApiTracking.Weekly) != 0)
+                                            {
+                                                button.LastWeeklyCompletionUtc = accounts[i].LastWeeklyCompletionUtc;
+                                            }
+
+                                            if ((changed[i] & Settings.ApiTracking.Daily) != 0)
+                                            {
+                                                button.LastDailyCompletionUtc = accounts[i].LastDailyCompletionUtc;
+                                            }
+
+                                            //if (e.Repeating != null)
+                                            //{
+                                            //    button.SetApiRequestDelay(e.NextRequest);
+                                            //}
+                                        }
+                                    }
+                                });
+                        }
+                    }
+                    #endregion
+
+                    break;
+            }
+
+            //if (!IsChanged(changed) && (e.Status != Api.ApiData.DataStatus.Cache || e.Repeating != null))
+            //{
+            //    Util.Invoke.Required(this,
+            //        delegate
+            //        {
+            //            for (var i = 0; i < accounts.Length; i++)
+            //            {
+            //                AccountGridButton button;
+            //                if (buttons.TryGetValue(accounts[i].UID, out button))
+            //                {
+            //                    button.SetApiRequestDelay(e.NextRequest);
+            //                }
+            //            }
+            //        });
+            //}
+        }
+
+        private Util.ScheduledEvents.Ticks OnCheckVersionCallback()
+        {
+            if (Settings.LastProgramVersion.HasValue)
+            {
+                var nextCheck = Settings.LastProgramVersion.Value.LastCheck.AddDays(30);
+
+                if (DateTime.UtcNow >= nextCheck)
+                {
+                    CheckVersion();
+                }
+                else
+                {
+                    return new Util.ScheduledEvents.Ticks(nextCheck);
+                }
+            }
+
+            return Util.ScheduledEvents.Ticks.None;
         }
 
         private async void ShowChangelog()
@@ -1933,7 +2858,8 @@ namespace Gw2Launcher.UI
             if (!daily)
             {
                 var gw2 = (Settings.IGw2Account)a;
-                daily = (gw2.DisableMumbleLinkDailyLogin || Settings.Tweaks.DisableMumbleLinkDailyLogin.Value || Client.Launcher.IsMumbleLinkInvalid(gw2)) && (gw2.ApiData == null || gw2.ApiData.Played == null);
+                //flag the daily login if tracking via mumble was disabled and the API isn't used
+                daily = (gw2.DisableMumbleLinkDailyLogin || Settings.Tweaks.DisableMumbleLinkDailyLogin.Value || Client.Launcher.IsMumbleLinkInvalid(gw2)) && (gw2.Api == null || (gw2.ApiTracking & Settings.ApiTracking.Login) == 0);
             }
 
             SetLastUsed(b, d, daily);
@@ -2027,7 +2953,7 @@ namespace Gw2Launcher.UI
                 {
                     try
                     {
-                        await Windows.FindWindow.FocusWindowAsync(this.Handle, true);
+                        await Windows.FindWindow.FocusWindowAsync(this, true);
                     }
                     catch (Exception ex)
                     {
@@ -2056,7 +2982,7 @@ namespace Gw2Launcher.UI
                 {
                     try
                     {
-                        await Windows.FindWindow.FocusWindowAsync(this.Handle, true);
+                        await Windows.FindWindow.FocusWindowAsync(this, true);
                     }
                     catch (Exception ex)
                     {
@@ -2359,7 +3285,7 @@ namespace Gw2Launcher.UI
                     {
                         try
                         {
-                            Windows.FindWindow.FocusWindow(f.Handle, true);
+                            Windows.FindWindow.FocusWindow(f, true);
                         }
                         catch { }
                     };
@@ -2417,18 +3343,20 @@ namespace Gw2Launcher.UI
                         {
                             var gw2 = (Settings.IGw2Account)account;
 
-                            if (gw2.ApiData != null)
+                            if (gw2.Api != null)
                             {
-                                var minutes = e.Data is TimeSpan ? (int)((TimeSpan)e.Data).TotalMinutes : 1;
+                                QueueApiRequest(gw2, ApiRequestManager.RequestReason.Update);
 
-                                if (minutes >= 1)
-                                {
-                                    var points = gw2.ApiData.DailyPoints;
-                                    var played = gw2.ApiData.Played;
+                                //var minutes = e.Data is TimeSpan ? (int)((TimeSpan)e.Data).TotalMinutes : 1;
 
-                                    if (played != null && played.LastChange.Date != DateTime.UtcNow.Date || points != null && points.Value < Api.Account.MAX_AP && points.LastChange.Date != DateTime.UtcNow.Date)
-                                        QueuedAccountApi.Schedule(gw2, null, 0);
-                                }
+                                //if (minutes >= 1)
+                                //{
+                                //    var points = gw2.ApiData.DailyPoints;
+                                //    var played = gw2.ApiData.Played;
+
+                                //    if (played != null && played.LastChange.Date != DateTime.UtcNow.Date || points != null && points.Value < Api.Account.MAX_AP && points.LastChange.Date != DateTime.UtcNow.Date)
+                                //        QueuedAccountApi.Schedule(gw2, null, 0);
+                                //}
                             }
                         }
                     }
@@ -2441,28 +3369,8 @@ namespace Gw2Launcher.UI
                     {
                         var gw2 = (Settings.IGw2Account)account;
 
-                        if (e.State == Client.Launcher.AccountState.Active && gw2.ApiData != null)
+                        if (e.State == Client.Launcher.AccountState.Active && gw2.Api != null)
                         {
-                            //note that played time is always checked on the daily launch because what was previously stored on exit is outdated due to the API giving cached responses
-                            //whereas points only need to be checked if the state isn't okay, as it only updates once per day
-
-                            var points = gw2.ApiData.DailyPoints;
-
-                            var checkPlayed = gw2.ApiData.Played != null;
-                            var checkPoints = points != null && points.State != Settings.ApiCacheState.OK && points.Value < Api.Account.MAX_AP && points.LastChange.Date != DateTime.UtcNow.Date;
-
-                            if (checkPoints || checkPlayed)
-                            {
-                                if (account.LastUsedUtc.Date != DateTime.UtcNow.Date)
-                                {
-                                    QueuedAccountApi.Schedule(gw2, gw2.LastUsedUtc.Date, 0);
-                                }
-                                else
-                                {
-                                    if (checkPoints)
-                                        gw2.ApiData.DailyPoints.State = Settings.ApiCacheState.Pending;
-                                }
-                            }
                         }
                     }
 
@@ -2536,168 +3444,6 @@ namespace Gw2Launcher.UI
             }
         }
 
-        void accountApi_DataReceived(object sender, Tools.QueuedAccountApi.DataEventArgs e)
-        {
-            if (Util.Invoke.IfRequiredAsync(this,
-                delegate
-                {
-                    accountApi_DataReceived(sender, e);
-                }))
-                return;
-
-            var d = e.Account.ApiData;
-            if (d == null)
-                return;
-
-            var played = d.Played;
-            var points = d.DailyPoints;
-
-            var total = (ushort)(e.Response.DailyAP + e.Response.MonthlyAP);
-            bool updatedPoints = false,
-                 updatedPlayed = false;
-            sbyte _isActive = 0;
-
-            Func<bool> isActive = delegate
-            {
-                if (_isActive == 0)
-                {
-                    switch (Client.Launcher.GetState(e.Account))
-                    {
-                        case Client.Launcher.AccountState.Active:
-                        case Client.Launcher.AccountState.ActiveGame:
-                            _isActive = 1;
-                            break;
-                        default:
-                            _isActive = -1;
-                            break;
-                    }
-                }
-
-                return _isActive == 1;
-            };
-
-            if (e.Data is DateTime)
-            {
-                //this was the first launch of the day, so this data is for the last recorded launch date
-                if (points != null)
-                {
-                    points.LastChange = (DateTime)e.Data;
-                    updatedPoints = true;
-                }
-                if (played != null)
-                {
-                    played.LastChange = (DateTime)e.Data;
-                    updatedPlayed = true;
-                }
-            }
-            else if (e.Date.Date != DateTime.UtcNow.Date)
-            {
-                //the day changed, this data is no longer valid
-                if (points != null && (points.State == Settings.ApiCacheState.None || !isActive()))
-                {
-                    points.LastChange = e.Date;
-                    updatedPoints = true;
-                }
-                if (played != null && (played.State == Settings.ApiCacheState.None || !isActive()))
-                {
-                    played.LastChange = e.Date;
-                    updatedPlayed = true;
-                }
-            }
-            else
-            {
-                bool rescheduled = false;
-
-                if (e.Data is Settings.ApiCacheState)
-                {
-                    //only looking to update those with the specified state
-                    var state = (Settings.ApiCacheState)e.Data;
-                    if (points != null && points.State != state)
-                        points = null;
-                    if (played != null && played.State != state)
-                        played = null;
-                }
-
-                if (points != null)
-                {
-                    if (points.State == Settings.ApiCacheState.None)
-                    {
-                        points.LastChange = DateTime.UtcNow.Subtract(new TimeSpan(1, 0, 0, 0));
-                        updatedPoints = true;
-                    }
-                    else if (points.Value != total)
-                    {
-                        points.LastChange = e.Date;
-                        updatedPoints = true;
-                    }
-                    else if (!rescheduled)
-                    {
-                        //either the daily wasn't completed, or the api hasn't updated yet, which could be 10 minutes behind
-                        //- the api response is cached for 5 minutes and can be another 5 minutes behind
-
-                        if (e.Response.LastModified < e.DateScheduled)
-                        {
-                            if (rescheduled = e.Attempt == 0 || e.ResponsePreviousAttempt.Age != e.Response.Age && e.Attempt < 2)
-                                e.Reschedule(330000);
-                        }
-                    }
-                }
-                if (played != null)
-                {
-                    if (played.State == Settings.ApiCacheState.None)
-                    {
-                        played.LastChange = e.Account.LastUsedUtc;
-                        updatedPlayed = true;
-                    }
-                    else if (played.Value != e.Response.Age)
-                    {
-                        played.LastChange = e.Date;
-                        updatedPlayed = true;
-                    }
-                    else if (!rescheduled)
-                    {
-                        if (e.Response.LastModified < e.DateScheduled)
-                        {
-                            if (rescheduled = e.Attempt == 0)
-                                e.Reschedule(330000);
-                        }
-                    }
-                }
-            }
-
-            if (updatedPoints)
-            {
-                points.Value = total;
-
-                if (points.LastChange.Date != DateTime.UtcNow.Date && isActive())
-                    points.State = Settings.ApiCacheState.Pending;
-                else
-                    points.State = Settings.ApiCacheState.OK;
-
-                if (e.Account.ShowDailyCompletion && points.LastChange > e.Account.LastDailyCompletionUtc)
-                {
-                    e.Account.LastDailyCompletionUtc = points.LastChange;
-
-                    AccountGridButton b;
-                    if (buttons.TryGetValue(e.Account.UID, out b))
-                        b.LastDailyCompletionUtc = points.LastChange;
-                }
-            }
-            if (updatedPlayed)
-            {
-                played.Value = e.Response.Age;
-                played.LastChange = e.Response.LastModified;
-                played.State = Settings.ApiCacheState.Pending; //it's always outdated
-
-                if (e.Account.ShowDailyLogin)
-                {
-                    AccountGridButton b;
-                    if (buttons.TryGetValue(e.Account.UID, out b) && played.LastChange > b.LastDailyLoginUtc)
-                        SetLastDailyLogin(b, played.LastChange);
-                }
-            }
-        }
-
         void OnButtonDataChanged(AccountGridButton button, object data)
         {
             if (button.IsHovered)
@@ -2711,10 +3457,18 @@ namespace Gw2Launcher.UI
 
         void OnButtonsLoaded()
         {
-        }
+            foreach (var k in Settings.ApiKeys.GetValues())
+            {
+                if (k.HasValue)
+                {
+                    var accounts = k.Value.Accounts;
 
-        void OnAccountDataChanged(Settings.IAccount account)
-        {
+                    if (accounts != null)
+                    {
+                        QueueApiRequest(accounts[0], ApiRequestManager.RequestReason.Pending);
+                    }
+                }
+            }
         }
 
         void SettingsShowTray_ValueChanged(object sender, EventArgs e)
@@ -2748,6 +3502,7 @@ namespace Gw2Launcher.UI
                 Colors =  UiColors.GetTheme(),
                 Offsets = Settings.StyleOffsets.Value,
                 ShowDailyLoginDay = Settings.StyleShowDailyLoginDay.Value,
+                IconDisplayOrder = Settings.StyleDisplayIconOrder.HasValue ? new AccountGridButton.Icons.DisplayOrder(AccountGridButton.Icons.IconGroup.Main, Settings.StyleDisplayIconOrder.Value) : null,
             };
 
             gridContainer.SetStyle(s);
@@ -2786,8 +3541,8 @@ namespace Gw2Launcher.UI
             {
                 AutoSizeGrid = true;
 
-                var size = ResizeAuto(Point.Empty);
                 var bounds = Screen.PrimaryScreen.WorkingArea;
+                var size = ResizeAuto(bounds.Location);
                 var l = Point.Add(bounds.Location, new Size(bounds.Width / 2 - size.Width / 2, bounds.Height / 2 - size.Height / 2 + this.Height - this.ClientSize.Height));
 
                 if (l.Y + size.Height > bounds.Bottom)
@@ -2925,7 +3680,7 @@ namespace Gw2Launcher.UI
             {
                 if (dailies == null || dailies.IsDisposed)
                 {
-                    dailies = new formDailies(this);
+                    dailies = new Dailies.formDailies(this, GetApiManager());
                     OnChildFormCreated(dailies);
 
                     dailies.VisibleChanged += dailies_VisibleChanged;
@@ -3113,17 +3868,19 @@ namespace Gw2Launcher.UI
             buttonClose.Visible = !Settings.HideExit.Value;
             buttonMinimize.Visible = !Settings.HideMinimize.Value;
             ProcessPriority_ValueChanged(Settings.ProcessPriority, EventArgs.Empty);
+            buttonLimit1.Visible = Settings.ShowLimit1.Value;
+            buttonLimit1.Selected = Settings.Limit1Enabled.Value;
 
             disableAutomaticLoginsToolStripMenuItem.Checked = Settings.DisableAutomaticLogins.Value;
             disableAutomaticLoginsToolStripMenuItem1.Checked = Settings.DisableAutomaticLogins.Value;
             disableAutomaticLoginsToolStripMenuItem2.Checked = Settings.DisableAutomaticLogins.Value;
 
-            disableRunAfterToolStripMenuItem.Checked = Settings.DisableRunAfter.Value;
             disableRunAfterToolStripMenuItem1.Checked = Settings.DisableRunAfter.Value;
             disableRunAfterToolStripMenuItem2.Checked = Settings.DisableRunAfter.Value;
 
             if (Settings.SearchFilter.HasValue)
                 textFilter.Text = Settings.SearchFilter.Value;
+
         }
 
         private void LoadAccounts()
@@ -3187,7 +3944,7 @@ namespace Gw2Launcher.UI
             if (resizingEvents != null)
                 resizingEvents.Enabled = false;
 
-            var screen = Screen.FromControl(this).WorkingArea;
+            var screen = Screen.FromPoint(location).WorkingArea;
             var columns = Settings.StyleColumns.Value;
             if (columns < 1)
                 columns = 1;
@@ -3340,9 +4097,31 @@ namespace Gw2Launcher.UI
             }
         }
 
-        void gridContainer_AccountNoteClicked(object sender, EventArgs e)
+        void gridContainer_AccountIconClicked(object sender, AccountGridButton.IconClickedEventArgs e)
         {
-            ShowNotesDialog((AccountGridButton)sender);
+            switch (e.Type)
+            {
+                case AccountGridButton.IconData.IconType.Note:
+
+                    ShowNotesDialog((AccountGridButton)sender);
+
+                    break;
+                case AccountGridButton.IconData.IconType.Run:
+
+                    var button = (AccountGridButton)sender;
+                    var f = new formRunAfterPopup(button.AccountData, true);
+                    var b = button.GetIconBounds(e.Type);
+
+                    if (!b.IsEmpty)
+                    {
+                        b.Location = button.PointToScreen(b.Location);
+                        f.AttachTo(b);
+                    }
+
+                    f.Show();
+
+                    break;
+            }
         }
 
         void gridContainer_AccountBeginMouseClick(object sender, AccountGridButtonContainer.MousePressedEventArgs e)
@@ -3644,6 +4423,76 @@ namespace Gw2Launcher.UI
             }
         }
 
+        /// <summary>
+        /// When the selected context menu should be populated
+        /// </summary>
+        /// <param name="button">The button the menu originated from</param>
+        /// <param name="selected">Buttons that were selected</param>
+        void OnContextSelectedOpening(AccountGridButton button, IList<AccountGridButton> selected)
+        {
+            const byte
+                //states
+                NONE = 0,
+                TRUE = 1,
+                FALSE = 2,
+
+                //indexes
+                WINDOWED = 0,
+                RUNAFTER = 1,
+                LOCALIZED = 2,
+                
+                LENGTH = 3;
+
+            var states = new byte[LENGTH];
+            var remaining = states.Length;
+
+            if ((Settings.GuildWars2.LocalizeAccountExecution.Value & Settings.LocalizeAccountExecutionOptions.Enabled) == 0)
+            {
+                states[LOCALIZED] = FALSE;
+                --remaining;
+            }
+
+            foreach (var b in selected)
+            {
+                var a = b.AccountData;
+
+                if (a != null)
+                {
+                    if (states[WINDOWED] == NONE && a.Windowed && !a.WindowBounds.IsEmpty)
+                    {
+                        var state = Client.Launcher.GetState(a);
+                        if (state == Client.Launcher.AccountState.Active || state == Client.Launcher.AccountState.ActiveGame)
+                        {
+                            states[WINDOWED] = TRUE;
+                            if (--remaining == 0)
+                                break;
+                        }
+                    }
+
+                    if (states[RUNAFTER] == NONE && a.DisableRunAfter)
+                    {
+                        states[RUNAFTER] = TRUE;
+                        if (--remaining == 0)
+                            break;
+                    }
+
+                    if (states[LOCALIZED] == NONE && a.Type == Settings.AccountType.GuildWars2 && Client.FileManager.IsLocalized((Settings.IGw2Account)a))
+                    {
+                        states[LOCALIZED] = TRUE;
+                        if (--remaining == 0)
+                            break;
+                    }
+                }
+            }
+
+            applyWindowedBoundsToolStripMenuItem.Enabled = states[WINDOWED] == TRUE;
+            disableRunAfterSelectedToolStripMenuItem.Checked = states[RUNAFTER] == TRUE;
+            openLocalizedExecutionFolderToolStripMenuItem.Enabled = states[LOCALIZED] == TRUE;
+            openLocalizedExecutionFolderToolStripMenuItem.Visible = states[LOCALIZED] != FALSE;
+
+            pinToTopToolStripMenuItem.Checked = button != null && button.Pinned;
+        }
+
         void gridContainer_AccountSelection(object sender, MouseEventArgs e)
         {
             if (e.Button == MouseButtons.Right)
@@ -3654,24 +4503,8 @@ namespace Gw2Launcher.UI
                 clearSelectionToolStripMenuItem.Enabled = true;
                 selectedToolStripMenuItem.Tag = selected;
 
-                applyWindowedBoundsToolStripMenuItem.Enabled = false;
-                pinToTopToolStripMenuItem.Checked = button != null && button.Pinned;
+                OnContextSelectedOpening(button, selected);
 
-                foreach (var b in selected)
-                {
-                    var a = b.AccountData;
-                    if (a != null && a.Windowed && !a.WindowBounds.IsEmpty)
-                    {
-                        var state = Client.Launcher.GetState(a);
-                        if (state == Client.Launcher.AccountState.Active || state == Client.Launcher.AccountState.ActiveGame)
-                        {
-                            applyWindowedBoundsToolStripMenuItem.Enabled = true;
-                            break;
-                        }
-                    }
-                }
-
-                //disableAutomaticLoginsToolStripMenuItem1.Enabled = (int)disableAutomaticLoginsToolStripMenuItem1.Tag > 0;
                 applyWindowedBoundsToolStripMenuItem1.Enabled = (int)applyWindowedBoundsToolStripMenuItem1.Tag > 0;
 
                 contextMenu.Tag = null;
@@ -3710,35 +4543,7 @@ namespace Gw2Launcher.UI
                     editmultipleToolStripMenuItem.Visible = selected.Count > 1;
                 }
 
-                var enabled = new bool[]
-                {
-                    false, //windowed
-                    //false, //run after
-                };
-                var remaining = enabled.Length;
-
-                foreach (var b in selected)
-                {
-                    var a = b.AccountData;
-
-                    if (a != null)
-                    {
-                        if (!enabled[0] && a.Windowed && !a.WindowBounds.IsEmpty)
-                        {
-                            var state = Client.Launcher.GetState(a);
-                            if (state == Client.Launcher.AccountState.Active || state == Client.Launcher.AccountState.ActiveGame)
-                            {
-                                enabled[0] = true;
-                                if (--remaining == 0)
-                                    break;
-                            }
-                        }
-
-                    }
-                }
-
-                applyWindowedBoundsToolStripMenuItem.Enabled = enabled[0];
-                //launchWithoutRunAfterToolStripMenuItem.Visible = enabled[1];
+                OnContextSelectedOpening(button, selected);
 
                 int pending = Client.Launcher.GetPendingLaunchCount();
 
@@ -3746,8 +4551,6 @@ namespace Gw2Launcher.UI
                 toolStripMenuItemCancelSep.Visible = pending > 0;
                 //disableAutomaticLoginsToolStripMenuItem1.Enabled = (int)disableAutomaticLoginsToolStripMenuItem1.Tag > 0;
                 applyWindowedBoundsToolStripMenuItem1.Enabled = (int)applyWindowedBoundsToolStripMenuItem1.Tag > 0;
-
-                pinToTopToolStripMenuItem.Checked = button.Pinned;
 
                 contextMenu.Tag = button;
 
@@ -3859,7 +4662,7 @@ namespace Gw2Launcher.UI
                 }
                 else
                 {
-                    Util.ScheduledEvents.Register(OnCheckVersionCallback, int.MaxValue);
+                    Util.ScheduledEvents.Register(OnCheckVersionCallback, DateTime.UtcNow.AddDays(30));
                 }
             }
             else
@@ -3952,7 +4755,7 @@ namespace Gw2Launcher.UI
                         }
                         else
                         {
-                            Util.ScheduledEvents.Register(OnCheckVersionCallback, int.MaxValue);
+                            Util.ScheduledEvents.Register(OnCheckVersionCallback, DateTime.UtcNow.AddDays(30));
                         }
                     }
                 }
@@ -4156,6 +4959,7 @@ namespace Gw2Launcher.UI
                         if (pg > mpWindow.Pages)
                             mpWindow.Pages = pg;
                         AddAccount(f.Account, true);
+                        OnAccountSettingsUpdated(f.Account, true, false);
                     }
                 }
             }
@@ -4220,16 +5024,6 @@ namespace Gw2Launcher.UI
                 applyWindowedBoundsToolStripMenuItem1.Tag = (int)applyWindowedBoundsToolStripMenuItem1.Tag + 1;
             //if (account.AutomaticLogin)
             //    disableAutomaticLoginsToolStripMenuItem1.Tag = (int)disableAutomaticLoginsToolStripMenuItem1.Tag + 1;
-
-            if (account.Type == Settings.AccountType.GuildWars2)
-            {
-                var gw2 = (Settings.IGw2Account)account;
-                var d = gw2.ApiData;
-                if (d != null && (d.Played != null && d.Played.State == Settings.ApiCacheState.None || d.DailyPoints != null && d.DailyPoints.State == Settings.ApiCacheState.None))
-                {
-                    QueuedAccountApi.Schedule(gw2, Settings.ApiCacheState.None, 0);
-                }
-            }
         }
 
         void OnAccountRemoved(Settings.IAccount account)
@@ -4245,9 +5039,18 @@ namespace Gw2Launcher.UI
             OnAccountRemoved(account);
         }
 
-        void OnAccountSettingsUpdated(Settings.IAccount account, bool cancelled)
+        void OnAccountSettingsUpdated(Settings.IAccount account, bool added, bool cancelled)
         {
-            OnAccountAdded(account);
+            if (!added)
+            {
+                OnAccountAdded(account);
+            }
+
+            if (!cancelled && account.Type == Settings.AccountType.GuildWars2)
+            {
+                //note RequestReason.Initial only queues what hasn't been requested yet
+                QueueApiRequest((Settings.IGw2Account)account, ApiRequestManager.RequestReason.Initial);
+            }
         }
 
         void OnChildFormCreated(Form form)
@@ -4667,6 +5470,13 @@ namespace Gw2Launcher.UI
                     nameBefore = new string[count];
                     userBefore = new string[count];
 
+                    var raChanged = false;
+
+                    EventHandler onRunAfterChanged = delegate
+                    {
+                        raChanged = true;
+                    };
+
                     for (var i = 0; i < count; i++ )
                     {
                         nameBefore[i] = accounts[i].Name;
@@ -4692,6 +5502,8 @@ namespace Gw2Launcher.UI
                             }
                         }
 
+                        accounts[i].RunAfterChanged += onRunAfterChanged;
+
                         OnBeforeAccountSettingsUpdated(accounts[i]);
                     }
 
@@ -4706,11 +5518,15 @@ namespace Gw2Launcher.UI
                         {
                             var a = accounts[i];
                             var b = buttons[i];
+
                             b.AccountData = a;
+
                             if (string.IsNullOrEmpty(a.WindowsAccount))
                                 b.AccountName = "(current user)";
 
-                            OnAccountSettingsUpdated(a, false);
+                            a.RunAfterChanged -= onRunAfterChanged;
+
+                            OnAccountSettingsUpdated(a, false, false);
 
                             if (!sort)
                             {
@@ -4728,6 +5544,11 @@ namespace Gw2Launcher.UI
                             gridContainer.RefreshFilter(button, i == 0 && !sort);
                         }
 
+                        if (raChanged)
+                        {
+                            OnRunAfterChanged(account.Type, true, buttons);
+                        }
+
                         if (sort)
                             gridContainer.Sort(Settings.Sorting.Value);
                     }
@@ -4735,7 +5556,9 @@ namespace Gw2Launcher.UI
                     {
                         foreach (var a in accounts)
                         {
-                            OnAccountSettingsUpdated(a, true);
+                            a.RunAfterChanged -= onRunAfterChanged;
+
+                            OnAccountSettingsUpdated(a, false, true);
                         }
                     }
                 }
@@ -5043,7 +5866,11 @@ namespace Gw2Launcher.UI
             return gridContainer.GetVisible();
         }
 
-        private IList<Controls.AccountGridButton> GetSelected()
+        /// <summary>
+        /// Returns buttons that are currently selected
+        /// </summary>
+        /// <param name="autoselect">True to return the last selected button if no buttons are currently selected</param>
+        private IList<Controls.AccountGridButton> GetSelected(bool autoselect = true)
         {
             var selected = gridContainer.GetSelected();
             if (selected.Count == 0)
@@ -5531,8 +6358,6 @@ namespace Gw2Launcher.UI
 
                         break;
                 }
-
-                base.WndProc(ref m);
 
                 return;
             }
@@ -7239,11 +8064,10 @@ namespace Gw2Launcher.UI
 
         private void disableRunAfterToolStripMenuItem_Click(object sender, EventArgs e)
         {
-            disableRunAfterToolStripMenuItem.Checked = !disableRunAfterToolStripMenuItem.Checked;
-            disableRunAfterToolStripMenuItem1.Checked = disableRunAfterToolStripMenuItem.Checked;
-            disableRunAfterToolStripMenuItem2.Checked = disableRunAfterToolStripMenuItem.Checked;
+            disableRunAfterToolStripMenuItem1.Checked = !disableRunAfterToolStripMenuItem1.Checked;
+            disableRunAfterToolStripMenuItem2.Checked = disableRunAfterToolStripMenuItem1.Checked;
 
-            Settings.DisableRunAfter.Value = disableRunAfterToolStripMenuItem.Checked;
+            Settings.DisableRunAfter.Value = disableRunAfterToolStripMenuItem1.Checked;
         }
 
         private void buttonTemplates_Click(object sender, EventArgs e)
@@ -7295,27 +8119,7 @@ namespace Gw2Launcher.UI
 
             f = new formLog();
             logToolStripMenuItem.Tag = f;
-            f.Show(this);
-        }
-
-        private void buttonLaunchDaily_Click(object sender, EventArgs e)
-        {
-            var d = DateTime.UtcNow.Date;
-
-            Client.Launcher.LaunchMode mode;
-            if (Settings.ActionInactiveLClick.Value == Settings.ButtonAction.LaunchSingle)
-                mode = Client.Launcher.LaunchMode.LaunchSingle;
-            else
-                mode = Client.Launcher.LaunchMode.Launch;
-
-            foreach (var b in GetVisible())
-            {
-                var a = b.AccountData;
-                if (a != null && b.ShowDailyLogin && b.LastDailyLoginUtc.Date != d)
-                {
-                    Client.Launcher.Launch(a, mode);
-                }
-            }
+            f.Show();
         }
 
         private void launchWithoutRunAfterToolStripMenuItem_Click(object sender, EventArgs e)
@@ -7348,6 +8152,180 @@ namespace Gw2Launcher.UI
                 if (account != null)
                 {
                     Client.Launcher.Launch(account, Client.Launcher.LaunchMode.Launch, options);
+                }
+            }
+        }
+
+        private Settings.ButtonAction GetLaunchAction(Settings.ButtonActions actions, MouseButtons button)
+        {
+            if (actions != null)
+            {
+                return actions[button];
+            }
+            else
+            {
+                if (Settings.ActionInactiveLClick.Value == Settings.ButtonAction.LaunchSingle)
+                    return Settings.ButtonAction.LaunchSingle;
+                else
+                    return Settings.ButtonAction.Launch;
+            }
+        }
+
+        private void LaunchAll(Settings.ButtonActions actions, MouseButtons e, bool daily)
+        {
+            var a = GetLaunchAction(actions, e);
+
+            Client.Launcher.LaunchMode mode;
+            IList<AccountGridButton> buttons;
+
+            switch (a)
+            {
+                case Settings.ButtonAction.Launch:
+                case Settings.ButtonAction.LaunchSelected:
+
+                    mode = Client.Launcher.LaunchMode.Launch;
+
+                    break;
+                case Settings.ButtonAction.LaunchSelectedSingle:
+                case Settings.ButtonAction.LaunchSingle:
+
+                    mode = Client.Launcher.LaunchMode.LaunchSingle;
+
+                    break;
+                default:
+
+                    return;
+            }
+
+            switch (a)
+            {
+                case Settings.ButtonAction.LaunchSelected:
+                case Settings.ButtonAction.LaunchSelectedSingle:
+
+                    buttons = GetSelected(false);
+
+                    break;
+                default:
+
+                    buttons = GetVisible();
+
+                    break;
+            }
+
+            var d = DateTime.UtcNow.Date;
+
+            foreach (var b in buttons)
+            {
+                var account = b.AccountData;
+                if (account != null)
+                {
+                    if (!daily || b.ShowDailyLogin && b.LastDailyLoginUtc.Date != d)
+                    {
+                        Client.Launcher.Launch(account, mode);
+                    }
+                }
+            }
+        }
+
+        private void buttonLaunchAll_MouseClick(object sender, MouseEventArgs e)
+        {
+            LaunchAll(Settings.ActionLaunchAll.Value, e.Button, false);
+        }
+
+        private void buttonLaunchDaily_MouseClick(object sender, MouseEventArgs e)
+        {
+            LaunchAll(Settings.ActionLaunchDaily.Value, e.Button, true);
+        }
+
+        private void buttonLimit1_Click(object sender, EventArgs e)
+        {
+            Settings.Limit1Enabled.Value = !buttonLimit1.Selected;
+        }
+
+        private void disableRunAfterSelectedToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            disableRunAfterSelectedToolStripMenuItem.Checked = !disableRunAfterSelectedToolStripMenuItem.Checked;
+
+            foreach (var a in GetSelectedAccounts())
+            {
+                a.DisableRunAfter = disableRunAfterSelectedToolStripMenuItem.Checked;
+            }
+        }
+
+        private void openLocalizedExecutionFolderToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            FileInfo fi = null;
+
+            foreach (var a in GetSelectedAccounts())
+            {
+                if (a.Type == Settings.AccountType.GuildWars2)
+                {
+                    var gw2 = (Settings.IGw2Account)a;
+
+                    if (Client.FileManager.IsLocalized(gw2))
+                    {
+                        try
+                        {
+                            if (fi == null)
+                            {
+                                if (!string.IsNullOrEmpty(Settings.GuildWars2.Path.Value))
+                                {
+                                    fi = new FileInfo(Settings.GuildWars2.Path.Value);
+                                    if (!fi.Exists)
+                                        fi = null;
+                                }
+                            }
+
+                            var path = Client.FileManager.GetLocalizedPath(gw2, fi);
+
+                            if (path != null)
+                            {
+                                Util.Explorer.OpenFolder(path);
+                            }
+                        }
+                        catch (Exception ex)
+                        {
+                            if (Util.Logging.Enabled)
+                                Util.Logging.LogEvent(a, "Unable to open localized execution folder", ex);
+                        }
+                    }
+                }
+            }
+        }
+
+        private void CefSessions_SessionEvent(object sender, Tools.Chromium.CefSessionMonitor.SessionEventArgs e)
+        {
+            if (Util.Logging.Enabled)
+            {
+                Util.Logging.LogEvent((Settings.IGw2Account)e.Account, e.Type.ToString());
+            }
+
+            if (e.Account.Type == Settings.AccountType.GuildWars2)
+            {
+                ApiRequestManager.RequestReason r;
+
+                switch (e.Type)
+                {
+                    case Tools.Chromium.CefSessionMonitor.SessionEventArgs.EventType.VaultOpened:
+
+                        r = ApiRequestManager.RequestReason.VaultOpened;
+
+                        break;
+                    case Tools.Chromium.CefSessionMonitor.SessionEventArgs.EventType.VaultClosed:
+
+                        r = ApiRequestManager.RequestReason.VaultClosed;
+
+                        break;
+                    default:
+
+                        r = ApiRequestManager.RequestReason.None;
+
+                        break;
+                }
+
+                if (r != ApiRequestManager.RequestReason.None)
+                {
+                    QueueApiRequest((Settings.IGw2Account)e.Account, r);
                 }
             }
         }

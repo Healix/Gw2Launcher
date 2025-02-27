@@ -9,12 +9,13 @@ namespace Gw2Launcher.UI.Controls
 {
     class FlatButton : Base.BaseControl
     {
-        public event EventHandler SelectedChanged;
+        public event EventHandler SelectedChanged, MouseEnteredChanged;
 
         protected bool 
             redraw, 
             isHovered, 
-            isSelected;
+            isSelected,
+            isEntered;
 
         protected BufferedGraphics buffer;
 
@@ -26,8 +27,11 @@ namespace Gw2Launcher.UI.Controls
 
         protected void OnRedrawRequired()
         {
-            redraw = true;
-            this.Invalidate();
+            if (!redraw)
+            {
+                redraw = true;
+                this.Invalidate();
+            }
         }
 
         protected override void OnSizeChanged(EventArgs e)
@@ -50,7 +54,7 @@ namespace Gw2Launcher.UI.Controls
         protected override void OnBackColorChanged(EventArgs e)
         {
             base.OnBackColorChanged(e);
-            isHovered = false;
+            IsHovered = false;
             OnRedrawRequired();
         }
 
@@ -94,11 +98,50 @@ namespace Gw2Launcher.UI.Controls
             }
         }
 
+        [DefaultValue(false)]
         public bool IsHovered
         {
             get
             {
                 return isHovered;
+            }
+            set
+            {
+                if (isHovered != value)
+                {
+                    isHovered = value;
+                    OnRedrawRequired();
+                }
+            }
+        }
+
+        [DefaultValue(false)]
+        public bool DisableMouseEnterHover
+        {
+            get;
+            set;
+        }
+
+        public bool IsMouseEntered
+        {
+            get
+            {
+                return isEntered;
+            }
+            protected set
+            {
+                if (isEntered != value)
+                {
+                    isEntered = value;
+
+                    if (!DisableMouseEnterHover)
+                    {
+                        IsHovered = value;
+                    }
+
+                    if (MouseEnteredChanged != null)
+                        MouseEnteredChanged(this, EventArgs.Empty);
+                }
             }
         }
 
@@ -393,15 +436,157 @@ namespace Gw2Launcher.UI.Controls
             }
         }
 
+        protected Color borderColorSelectedHovered;
+        [DefaultValue(typeof(Color), "")]
+        public Color BorderColorSelectedHovered
+        {
+            get
+            {
+                if (borderColorSelectedHovered.IsEmpty && !DesignMode)
+                {
+                    if (PrioritizeSelectedColoring)
+                        return BorderColorSelected;
+                    else
+                        return BorderColorHovered;
+                }
+                return borderColorSelectedHovered;
+            }
+            set
+            {
+                if (borderColorSelectedHovered != value)
+                {
+                    borderColorSelectedHovered = value;
+                    if (isSelected && isHovered)
+                        OnRedrawRequired();
+                }
+            }
+        }
+
+        protected UiColors.Colors _BorderColorSelectedHoveredName = UiColors.Colors.Custom;
+        [DefaultValue(UiColors.Colors.Custom)]
+        [UiPropertyColor()]
+        [TypeConverter(typeof(UiColorTypeConverter))]
+        [Editor(typeof(UiColorTypeEditor), typeof(UITypeEditor))]
+        public UiColors.Colors BorderColorSelectedHoveredName
+        {
+            get
+            {
+                return _BorderColorSelectedHoveredName;
+            }
+            set
+            {
+                if (_BorderColorSelectedHoveredName != value)
+                {
+                    _BorderColorSelectedHoveredName = value;
+                    RefreshColors();
+                }
+            }
+        }
+
+        protected Color backColorSelectedHovered;
+        [DefaultValue(typeof(Color), "")]
+        public Color BackColorSelectedHovered
+        {
+            get
+            {
+                if (backColorSelectedHovered.IsEmpty && !DesignMode)
+                {
+                    if (PrioritizeSelectedColoring)
+                        return BackColorSelected;
+                    else
+                        return BackColorHovered;
+                }
+                return backColorSelectedHovered;
+            }
+            set
+            {
+                if (backColorSelectedHovered != value)
+                {
+                    backColorSelectedHovered = value;
+                    if (isSelected && isHovered)
+                        OnRedrawRequired();
+                }
+            }
+        }
+
+        protected UiColors.Colors _BackColorSelectedHoveredName = UiColors.Colors.Custom;
+        [DefaultValue(UiColors.Colors.Custom)]
+        [UiPropertyColor()]
+        [TypeConverter(typeof(UiColorTypeConverter))]
+        [Editor(typeof(UiColorTypeEditor), typeof(UITypeEditor))]
+        public UiColors.Colors BackColorSelectedHoveredName
+        {
+            get
+            {
+                return _BackColorSelectedHoveredName;
+            }
+            set
+            {
+                if (_BackColorSelectedHoveredName != value)
+                {
+                    _BackColorSelectedHoveredName = value;
+                    RefreshColors();
+                }
+            }
+        }
+
+        protected Color foreColorSelectedHovered;
+        [DefaultValue(typeof(Color), "")]
+        public Color ForeColorSelectedHovered
+        {
+            get
+            {
+                if (foreColorSelectedHovered.IsEmpty && !DesignMode)
+                {
+                    if (PrioritizeSelectedColoring)
+                        return ForeColorSelected;
+                    else
+                        return ForeColorHovered;
+                }
+                return foreColorSelectedHovered;
+            }
+            set
+            {
+                if (foreColorSelectedHovered != value)
+                {
+                    foreColorSelectedHovered = value;
+                    if (isSelected && isHovered)
+                        OnRedrawRequired();
+                }
+            }
+        }
+
+        protected UiColors.Colors _ForeColorSelectedHoveredName = UiColors.Colors.Custom;
+        [DefaultValue(UiColors.Colors.Custom)]
+        [UiPropertyColor()]
+        [TypeConverter(typeof(UiColorTypeConverter))]
+        [Editor(typeof(UiColorTypeEditor), typeof(UITypeEditor))]
+        public UiColors.Colors ForeColorSelectedHoveredName
+        {
+            get
+            {
+                return _ForeColorSelectedHoveredName;
+            }
+            set
+            {
+                if (_ForeColorSelectedHoveredName != value)
+                {
+                    _ForeColorSelectedHoveredName = value;
+                    RefreshColors();
+                }
+            }
+        }
+
         public Color BackColorCurrent
         {
             get
             {
                 if (isHovered)
                 {
-                    if (isSelected && PrioritizeSelectedColoring)
-                        return this.BackColorSelected;
-                    return this.BackColorHovered;
+                    if (isSelected)
+                        return this.BackColorSelectedHovered;
+                    else
+                        return this.BackColorHovered;
                 }
                 else if (isSelected)
                     return this.BackColorSelected;
@@ -416,9 +601,10 @@ namespace Gw2Launcher.UI.Controls
             {
                 if (isHovered)
                 {
-                    if (isSelected && PrioritizeSelectedColoring)
-                        return this.ForeColorSelected;
-                    return this.ForeColorHovered;
+                    if (isSelected)
+                        return this.ForeColorSelectedHovered;
+                    else
+                        return this.ForeColorHovered;
                 }
                 else if (isSelected)
                     return this.ForeColorSelected;
@@ -433,9 +619,10 @@ namespace Gw2Launcher.UI.Controls
             {
                 if (isHovered)
                 {
-                    if (isSelected && PrioritizeSelectedColoring)
-                        return this.BorderColorSelected;
-                    return this.BorderColorHovered;
+                    if (isSelected)
+                        return this.BorderColorSelectedHovered;
+                    else
+                        return this.BorderColorHovered;
                 }
                 else if (isSelected)
                     return this.BorderColorSelected;
@@ -539,22 +726,25 @@ namespace Gw2Launcher.UI.Controls
             TextRenderer.DrawText(g, text, this.Font, new Rectangle(x, y, w, h), ForeColorCurrent, BackColorCurrent, f);
         }
 
-        protected virtual Size GetScaledDimensions(Image image, int maxW, int maxH)
+        protected virtual Size GetScaledDimensions(Size size, int maxW, int maxH)
         {
-            int w = image.Width,
-                h = image.Height;
+            float rw, rh, r;
 
-            float rw = (float)maxW / w,
-                  rh = (float)maxH / h,
-                  r = rw < rh ? rw : rh;
+            if (maxW <= 0 || maxH <= 0)
+            {
+                return Size.Empty;
+            }
+
+            rw = size.Width > 0 ? (float)maxW / size.Width : maxW;
+            rh = size.Height > 0 ? (float)maxH / size.Height : maxH;
+            r = rw < rh ? rw : rh;
 
             if (r < 1)
             {
-                w = (int)(w * r + 0.5f);
-                h = (int)(h * r + 0.5f);
+                return new Size((int)(size.Width * r + 0.5f), (int)(size.Height * r + 0.5f));
             }
-            
-            return new Size(w, h);
+
+            return size;
         }
 
         protected void DrawImage(Graphics g, Image image, int x, int y)
@@ -602,7 +792,7 @@ namespace Gw2Launcher.UI.Controls
             {
                 try
                 {
-                    var sz = GetScaledDimensions(image, w, h);
+                    var sz = GetScaledDimensions(image.Size, w, h);
 
                     if (this.Text != null)
                     {
@@ -702,16 +892,24 @@ namespace Gw2Launcher.UI.Controls
         {
             base.OnMouseEnter(e);
 
-            isHovered = true;
-            OnRedrawRequired();
+            IsMouseEntered = true;
         }
 
         protected override void OnMouseLeave(EventArgs e)
         {
             base.OnMouseLeave(e);
 
-            isHovered = false;
-            OnRedrawRequired();
+            IsMouseEntered = false;
+        }
+
+        protected override void OnVisibleChanged(EventArgs e)
+        {
+            base.OnVisibleChanged(e);
+
+            if (!this.Visible)
+            {
+                IsMouseEntered = false;
+            }
         }
 
         protected override void Dispose(bool disposing)
@@ -746,6 +944,12 @@ namespace Gw2Launcher.UI.Controls
                 this.BorderColorHovered = UiColors.GetColor(_BorderColorHoveredName);
             if (_BorderColorName != UiColors.Colors.Custom)
                 this.BorderColor = UiColors.GetColor(_BorderColorName);
+            if (_BorderColorSelectedHoveredName != UiColors.Colors.Custom)
+                this.BorderColorSelectedHovered = UiColors.GetColor(_BorderColorSelectedHoveredName);
+            if (_BackColorSelectedHoveredName != UiColors.Colors.Custom)
+                this.BackColorSelectedHovered = UiColors.GetColor(_BackColorSelectedHoveredName);
+            if (_ForeColorSelectedHoveredName != UiColors.Colors.Custom)
+                this.ForeColorSelectedHovered = UiColors.GetColor(_ForeColorSelectedHoveredName);
         }
     }
 }

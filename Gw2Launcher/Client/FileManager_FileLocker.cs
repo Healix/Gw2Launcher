@@ -19,6 +19,11 @@ namespace Gw2Launcher.Client
                     get;
                 }
 
+                Settings.IFile File
+                {
+                    get;
+                }
+
                 ISharedFile Copy();
             }
 
@@ -35,16 +40,30 @@ namespace Gw2Launcher.Client
                 {
                     get
                     {
-                        return file.Path;
+                        lock (this)
+                        {
+                            if (file != null)
+                                return file.Path;
+                            return null;
+                        }
                     }
+                }
+
+                public Settings.IFile File
+                {
+                    get;
+                    set;
                 }
 
                 public ISharedFile Copy()
                 {
-                    if (file.IsAlive)
+                    lock (files)
                     {
-                        file.Lock();
-                        return new SharedDisposable(file);
+                        if (file.IsAlive)
+                        {
+                            file.Lock();
+                            return new SharedDisposable(file);
+                        }
                     }
 
                     throw new ObjectDisposedException("SharedFile");
@@ -186,10 +205,13 @@ namespace Gw2Launcher.Client
             /// <param name="force">Forces a file with only 1 reference to lock</param>
             public static ISharedFile Lock(Settings.IFile file, int timeout, bool force = false)
             {
-                if (file == null || file.References <= 1 && !force)
+                if (file == null || !force && !file.IsLocked && file.References <= 1)
                     return null;
 
-                return Lock(file.Path, timeout);
+                var l = Lock(file.Path, timeout);
+                ((SharedDisposable)l).File = file;
+
+                return l;
             }
 
             private static void Remove(SharedFile sf)

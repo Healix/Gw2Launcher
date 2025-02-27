@@ -457,9 +457,8 @@ namespace Gw2Launcher.Tools
 
                             //additionally check Local.dat -- manifests are not always updated
 
-                            foreach (var fid in Settings.DatFiles.GetKeys())
+                            foreach (var dat in Settings.DatFiles.GetValues())
                             {
-                                var dat = Settings.DatFiles[fid];
                                 if (dat != null && dat.Value != null && !string.IsNullOrEmpty(dat.Value.Path) && File.Exists(dat.Value.Path))
                                 {
                                     var entries = Dat.DatFile.Read(dat.Value.Path);

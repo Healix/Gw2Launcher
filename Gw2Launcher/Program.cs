@@ -17,9 +17,9 @@ namespace Gw2Launcher
 {
     static class Program
     {
-        public const byte RELEASE_VERSION = 20;
-        public const uint BUILD = 7254;
-        public const long RELEASE_TIMESTAMP = 5249906402427387904;
+        public const byte RELEASE_VERSION = 21;
+        public const uint BUILD = 7691;
+        public const long RELEASE_TIMESTAMP = 5250400610427387904;
         private const string MUTEX_NAME = "Gw2Launcher_Mutex";
 
         [STAThread]
@@ -1022,6 +1022,15 @@ namespace Gw2Launcher
                         return e.HResult;
                     }
                 }
+
+#if DEBUG
+                if (mutex == null && Debugger.IsAttached)
+                {
+                    Settings.ReadOnly = true;
+                    mutex = new Mutex();
+                    mutex.WaitOne();
+                }
+#endif
 
                 if (mutex == null)
                 {

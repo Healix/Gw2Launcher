@@ -4,6 +4,7 @@ using System.Windows.Forms;
 using System.Drawing;
 using System.Drawing.Imaging;
 using Gw2Launcher.Api;
+using System.ComponentModel;
 
 namespace Gw2Launcher.UI.Controls
 {
@@ -11,6 +12,53 @@ namespace Gw2Launcher.UI.Controls
     {
         private BufferedGraphics buffer;
         private bool redraw, resize;
+        private bool hovered;
+
+        public interface IDataSource
+        {
+            ushort ID
+            {
+                get;
+            }
+
+            string Name
+            {
+                get;
+            }
+
+            string Description
+            {
+                get;
+            }
+
+            Image Icon
+            {
+                get;
+            }
+
+            bool IsUnknown
+            {
+                get;
+            }
+
+            Settings.TaggedType Tagged
+            {
+                get;
+                set;
+            }
+
+            bool Favorite
+            {
+                get;
+                set;
+            }
+        }
+
+        public enum FavoriteAlignment
+        {
+            Right,
+            Left,
+        }
 
         private class Control
         {
@@ -38,10 +86,82 @@ namespace Gw2Launcher.UI.Controls
             }
         }
 
+        private class Favorite : Control
+        {
+            public FavoriteVisibility visibility;
+            public bool enabled;
+            public bool selected;
+            public FavoriteAlignment alignment;
+
+            public void Draw(Graphics g)
+            {
+                var x = bounds.X;
+                var y = bounds.Y;
+                var w = bounds.Width;
+                var h = bounds.Height;
+
+                var points = new PointF[]
+                {
+                    new PointF(x + w * 0.5f, y + h * 0.1765f),
+                    new PointF(x + w * 0.65f, y),
+                    new PointF(x + w * 0.85f, y),
+                    new PointF(x + w, y + h * 0.1765f),
+                    new PointF(x + w, y + h * 0.4118f),
+                    new PointF(x + w * 0.55f, y + h * 0.9412f),
+                    new PointF(x + w * 0.45f, y + h * 0.9412f),
+                    new PointF(x + w * 0.0f, y + h * 0.4118f),
+                    new PointF(x, y + h * 0.1765f),
+                    new PointF(x + w * 0.15f, y),
+                    new PointF(x + w * 0.35f, y),
+                };
+
+                Color fillColor, borderColor;
+
+                if (selected)
+                {
+                    fillColor = Color.FromArgb(230, 60, 70); //UiColors.GetColor(UiColors.Colors.DailiesTextLight);
+                    borderColor = Color.FromArgb(218, 29, 37); //UiColors.GetColor(UiColors.Colors.DailiesTextLight);
+                }
+                else
+                {
+                    fillColor = Color.Transparent;
+                    borderColor = UiColors.GetColor(UiColors.Colors.DailiesTextLight);
+                }
+
+                using (var b = new SolidBrush(borderColor))
+                {
+                    using (var p = new Pen(b))
+                    {
+                        g.SmoothingMode = System.Drawing.Drawing2D.SmoothingMode.HighQuality;
+
+                        if (fillColor.A != 0)
+                        {
+                            b.Color = fillColor;
+                            g.FillPolygon(b, points);
+                        }
+
+                        g.DrawPolygon(p, points);
+
+                        g.SmoothingMode = System.Drawing.Drawing2D.SmoothingMode.Default;
+                    }
+                }
+            }
+        }
+
+        [Flags]
+        public enum FavoriteVisibility
+        {
+            Never = 0,
+            Always = 1,
+            Hovered = 2,
+            Selected = 4,
+        }
+
         private Label labelName, labelDescription, labelLevel;
         private Control icon;
+        private Favorite favorite;
         private Image image;
-        private DailyAchievements.Daily daily;
+        private IDataSource source;
 
         public DailyAchievement()
         {
@@ -64,6 +184,7 @@ namespace Gw2Launcher.UI.Controls
                 font = this.Font,
             };
             icon = new Control();
+            favorite = new Favorite();
         }
 
         protected override void OnForeColorChanged(EventArgs e)
@@ -72,8 +193,21 @@ namespace Gw2Launcher.UI.Controls
 
             labelName.foreColor = this.ForeColor;
             labelDescription.foreColor = this.ForeColor;
-            redraw = resize = true;
-            this.Invalidate();
+            OnRedrawRequired(false);
+        }
+
+        private void OnRedrawRequired(bool resize)
+        {
+            if (resize)
+            {
+                this.resize = true;
+            }
+
+            if (!redraw)
+            {
+                redraw = true;
+                this.Invalidate();
+            }
         }
 
         [System.ComponentModel.Browsable(false)]
@@ -90,27 +224,37 @@ namespace Gw2Launcher.UI.Controls
             }
         }
 
-        public DailyAchievements.Daily Daily
+        public Daily.Category Category
+        {
+            get;
+            set;
+        }
+
+        public IDataSource DataSource
         {
             get
             {
-                return daily;
+                return source;
             }
             set
             {
                 if (value == null)
                 {
-                    daily = null;
+                    source = null;
                 }
-                else if (daily != value)
+                else if (!object.ReferenceEquals(source, value))
                 {
-                    daily = value;
-                    labelName.value = daily.Name;
-                    labelDescription.value = daily.Requirement;
-                    labelLevel.value = "Level " + daily.MinLevel + " to " + daily.MaxLevel;
-                    image = daily.Icon;
-                    redraw = resize = true;
-                    this.Invalidate();
+                    source = value;
+                    labelName.value = value.Name;
+                    labelDescription.value = value.Description;
+                    //labelLevel.value = "Level " + daily.MinLevel + " to " + daily.MaxLevel;
+                    image = value.Icon;
+                    if (favorite.selected != value.Favorite)
+                    {
+                        favorite.selected = value.Favorite;
+                        OnFavStateChanged();
+                    }
+                    OnRedrawRequired(true);
                 }
             }
         }
@@ -124,8 +268,7 @@ namespace Gw2Launcher.UI.Controls
             set
             {
                 labelName.value = value;
-                redraw = resize = true;
-                this.Invalidate();
+                OnRedrawRequired(true);
             }
         }
 
@@ -137,9 +280,11 @@ namespace Gw2Launcher.UI.Controls
             }
             set
             {
-                labelName.visible = value;
-                redraw = resize = true;
-                this.Invalidate();
+                if (labelName.visible != value)
+                {
+                    labelName.visible = value;
+                    OnRedrawRequired(true);
+                }
             }
         }
 
@@ -152,8 +297,7 @@ namespace Gw2Launcher.UI.Controls
             set
             {
                 labelName.font = value;
-                redraw = resize = true;
-                this.Invalidate();
+                OnRedrawRequired(true);
             }
         }
 
@@ -166,8 +310,7 @@ namespace Gw2Launcher.UI.Controls
             set
             {
                 labelDescription.value = value;
-                redraw = resize = true;
-                this.Invalidate();
+                OnRedrawRequired(true);
             }
         }
 
@@ -179,9 +322,11 @@ namespace Gw2Launcher.UI.Controls
             }
             set
             {
-                labelDescription.visible = value;
-                redraw = resize = true;
-                this.Invalidate();
+                if (labelDescription.visible != value)
+                {
+                    labelDescription.visible = value;
+                    OnRedrawRequired(true);
+                }
             }
         }
 
@@ -194,8 +339,7 @@ namespace Gw2Launcher.UI.Controls
             set
             {
                 labelDescription.font = value;
-                redraw = resize = true;
-                this.Invalidate();
+                OnRedrawRequired(true);
             }
         }
 
@@ -208,8 +352,7 @@ namespace Gw2Launcher.UI.Controls
             set
             {
                 labelLevel.value = value;
-                redraw = resize = true;
-                this.Invalidate();
+                OnRedrawRequired(true);
             }
         }
 
@@ -221,9 +364,11 @@ namespace Gw2Launcher.UI.Controls
             }
             set
             {
-                labelLevel.visible = value;
-                redraw = resize = true;
-                this.Invalidate();
+                if (labelLevel.visible != value)
+                {
+                    labelLevel.visible = value;
+                    OnRedrawRequired(true);
+                }
             }
         }
 
@@ -236,8 +381,7 @@ namespace Gw2Launcher.UI.Controls
             set
             {
                 labelLevel.font = value;
-                redraw = resize = true;
-                this.Invalidate();
+                OnRedrawRequired(true);
             }
         }
 
@@ -250,13 +394,18 @@ namespace Gw2Launcher.UI.Controls
             set
             {
                 image = value;
-                if (image != null && icon.bounds.Size.IsEmpty)
+                if (icon.visible)
                 {
-                    icon.bounds.Size = image.Size;
-                    resize = true;
+                    if (image != null && icon.bounds.Size.IsEmpty)
+                    {
+                        icon.bounds.Size = image.Size;
+                        OnRedrawRequired(true);
+                    }
+                    else
+                    {
+                        OnRedrawRequired(false);
+                    }
                 }
-                redraw = true;
-                this.Invalidate();
             }
         }
 
@@ -269,8 +418,10 @@ namespace Gw2Launcher.UI.Controls
             set
             {
                 icon.bounds.Size = value;
-                redraw = resize = true;
-                this.Invalidate();
+                if (icon.visible)
+                {
+                    OnRedrawRequired(true);
+                }
             }
         }
 
@@ -282,9 +433,313 @@ namespace Gw2Launcher.UI.Controls
             }
             set
             {
-                icon.visible = value;
-                redraw = resize = true;
-                this.Invalidate();
+                if (icon.visible != value)
+                {
+                    icon.visible = value;
+                    OnRedrawRequired(true);
+                }
+            }
+        }
+
+        public bool ProgressVisible
+        {
+            get
+            {
+                return _ProgressValue != 0;
+            }
+            set
+            {
+                if (value)
+                {
+                    if (_ProgressValue == 0)
+                    {
+                        _ProgressValue = 1;
+                    }
+
+                    if (_ProgressDisplayedVisible)
+                    {
+                        OnRedrawRequired(true);
+                    }
+                }
+                else if (_ProgressValue != 0)
+                {
+                    OnRedrawRequired(_ProgressValue == 255 || _ProgressDisplayedVisible);
+                    _ProgressValue = 0;
+                }
+            }
+        }
+
+        public bool ProgressClaimed
+        {
+            get
+            {
+                return _ProgressValue == 255;
+            }
+            set
+            {
+                if (_ProgressValue != 0)
+                {
+                    if (value)
+                    {
+                        if (_ProgressValue != 255)
+                        {
+                            _ProgressValue = 255;
+                            OnRedrawRequired(true);
+                        }
+                    }
+                    else if (_ProgressValue == 255)
+                    {
+                        _ProgressValue = 254;
+                        OnRedrawRequired(true);
+                    }
+                }
+            }
+        }
+
+        private byte _ProgressValue; //0 = disabled, 1-254 = %, 255 = claimed
+        public float ProgressValue
+        {
+            get
+            {
+                switch (_ProgressValue)
+                {
+                    case 0:
+                    case 1:
+
+                        return 0;
+
+                    case 254:
+                    case 255:
+
+                        return 1;
+
+                    default:
+
+                        return (_ProgressValue - 1) / 253f;
+                }
+            }
+            set
+            {
+                if (_ProgressValue != 0)
+                {
+                    var v = (int)(value * 253) + 1;
+                    if (v < 1)
+                    {
+                        v = 1;
+                    }
+                    else if (v > 254)
+                    {
+                        v = 254;
+                    }
+                    if (v != _ProgressValue)
+                    {
+                        OnRedrawRequired(_ProgressValue == 255);
+                        _ProgressValue = (byte)v;
+                    }
+                }
+            }
+        }
+
+        private bool _ProgressDisplayedVisible;
+        public bool ProgressDisplayedVisible
+        {
+            get
+            {
+                return _ProgressDisplayedVisible;
+            }
+            set
+            {
+                if (_ProgressDisplayedVisible != value)
+                {
+                    _ProgressDisplayedVisible = value;
+
+                    if (ProgressVisible)
+                    {
+                        OnRedrawRequired(_ProgressValue != 255);
+                    }
+                }
+            }
+        }
+
+        private ushort _ProgressDisplayedValue;
+        public ushort ProgressDisplayedValue
+        {
+            get
+            {
+                return _ProgressDisplayedValue;
+            }
+            set
+            {
+                if (_ProgressDisplayedValue != value)
+                {
+                    _ProgressDisplayedValue = value;
+
+                    if (_ProgressDisplayedVisible && ProgressVisible)
+                    {
+                        OnRedrawRequired(false);
+                    }
+                }
+            }
+        }
+
+        private ushort _ProgressDisplayedTotal;
+        /// <summary>
+        /// Optional total; 0 will not be shown
+        /// </summary>
+        public ushort ProgressDisplayedTotal
+        {
+            get
+            {
+                return _ProgressDisplayedTotal;
+            }
+            set
+            {
+                if (_ProgressDisplayedTotal != value)
+                {
+                    _ProgressDisplayedTotal = value;
+
+                    if (_ProgressDisplayedVisible && ProgressVisible)
+                    {
+                        OnRedrawRequired(false);
+                    }
+                }
+            }
+        }
+
+        private bool _ShowNotification;
+        public bool ShowNotification
+        {
+            get
+            {
+                return _ShowNotification;
+            }
+            set
+            {
+                if (_ShowNotification != value)
+                {
+                    _ShowNotification = value;
+                    OnRedrawRequired(false);
+                }
+            }
+        }
+
+        public Size FavSize
+        {
+            get
+            {
+                return favorite.bounds.Size;
+            }
+            set
+            {
+                favorite.bounds.Size = value;
+                if (favorite.visible)
+                {
+                    OnRedrawRequired(true);
+                }
+            }
+        }
+
+        public FavoriteVisibility FavVisibility
+        {
+            get
+            {
+                return favorite.visibility;
+            }
+            set
+            {
+                if (favorite.visibility != value)
+                {
+                    if (value == FavoriteVisibility.Never || favorite.visibility == FavoriteVisibility.Never)
+                    {
+                        OnRedrawRequired(true);
+                    }
+
+                    favorite.visibility = value;
+                    OnFavStateChanged();
+                }
+            }
+        }
+
+        /// <summary>
+        /// Fav icon can be interacted with
+        /// </summary>
+        public FavoriteAlignment FavAlignment
+        {
+            get
+            {
+                return favorite.alignment;
+            }
+            set
+            {
+                if (favorite.alignment != value)
+                {
+                    favorite.alignment = value;
+                    if (favorite.visible)
+                    {
+                        OnRedrawRequired(true);
+                    }
+                }
+            }
+        }
+
+        /// <summary>
+        /// Fav icon can be interacted with
+        /// </summary>
+        public bool FavEnabled
+        {
+            get
+            {
+                return favorite.enabled;
+            }
+            set
+            {
+                favorite.enabled = value;
+            }
+        }
+
+        /// <summary>
+        /// Fav icon is filled
+        /// </summary>
+        public bool FavSelected
+        {
+            get
+            {
+                return favorite.selected;
+            }
+            set
+            {
+                if (favorite.selected != value)
+                {
+                    favorite.selected = value;
+                    OnFavStateChanged();
+                    if (favorite.visible)
+                    {
+                        OnRedrawRequired(false);
+                    }
+                }
+            }
+        }
+
+        private void OnFavStateChanged()
+        {
+            var v = FavoriteVisibility.Always;
+
+            if (favorite.selected)
+            {
+                v |= FavoriteVisibility.Selected;
+            }
+
+            if (hovered)
+            {
+                v |= FavoriteVisibility.Hovered;
+            }
+
+            var b = (favorite.visibility & v) != 0;
+
+            if (favorite.visible != b)
+            {
+                favorite.visible = b;
+                OnRedrawRequired(false);
             }
         }
 
@@ -298,8 +753,41 @@ namespace Gw2Launcher.UI.Controls
                 buffer = null;
             }
 
-            resize = redraw = true;
-            this.Invalidate();
+            OnRedrawRequired(true);
+        }
+
+        protected override void OnMouseEnter(EventArgs e)
+        {
+            base.OnMouseEnter(e);
+
+            hovered = true;
+
+            if (_ProgressDisplayedVisible && _ProgressValue != 0 && _ProgressValue != 255)
+            {
+                OnRedrawRequired(false);
+            }
+
+            if ((favorite.visibility & FavoriteVisibility.Hovered) != 0)
+            {
+                OnFavStateChanged();
+            }
+        }
+
+        protected override void OnMouseLeave(EventArgs e)
+        {
+            base.OnMouseLeave(e);
+
+            hovered = false;
+
+            if (_ProgressDisplayedVisible && _ProgressValue != 0 && _ProgressValue != 255)
+            {
+                OnRedrawRequired(false);
+            }
+
+            if ((favorite.visibility & FavoriteVisibility.Hovered) != 0)
+            {
+                OnFavStateChanged();
+            }
         }
 
         protected void PerformLayout(Graphics g)
@@ -308,8 +796,17 @@ namespace Gw2Launcher.UI.Controls
                 h = this.Height,
                 lw, lx;
 
-            lx = icon.bounds.Width + 20;
+            if (icon.visible)
+                lx = icon.bounds.Width + 20;
+            else
+                lx = 20;
             lw = w - lx - 10;
+
+            if (favorite.alignment == FavoriteAlignment.Right && (favorite.visibility != FavoriteVisibility.Never || _ProgressValue == 255 || _ProgressDisplayedVisible))
+            {
+                lw -= favorite.bounds.Width + 5;
+                favorite.bounds.Location = new Point(lx + lw + 5, h / 2 - favorite.bounds.Height / 2);
+            }
 
             var sizeName = labelName.Measure(g, new Size(lw, h));
 
@@ -343,6 +840,11 @@ namespace Gw2Launcher.UI.Controls
                 labelDescription.bounds = Rectangle.Empty;
                 icon.bounds.Location = new Point(10, h / 2 - icon.bounds.Height / 2);
             }
+
+            if (favorite.alignment == FavoriteAlignment.Left && favorite.visibility != FavoriteVisibility.Never)
+            {
+                favorite.bounds.Location = new Point(w - favorite.bounds.Width - 5, labelName.bounds.Y);//icon.bounds.X + icon.bounds.Width / 2 - favorite.bounds.Width / 2, icon.bounds.Bottom - favorite.bounds.Height / 2);
+            }
         }
 
         public override Size GetPreferredSize(Size proposedSize)
@@ -358,6 +860,12 @@ namespace Gw2Launcher.UI.Controls
                 {
                     var lx = icon.bounds.Width + 20;
                     var lw = w - lx - 10;
+
+                    if (favorite.visibility != FavoriteVisibility.Never)
+                    {
+                        lw -= favorite.bounds.Width + 5;
+                    }
+
                     var sizeName = labelName.Measure(g, new Size(lw, h));
 
                     if (labelDescription.visible)
@@ -384,7 +892,28 @@ namespace Gw2Launcher.UI.Controls
 
                     if (icon.bounds.Height > h)
                         h = icon.bounds.Height;
-                    return new Size(w, h + 20);
+
+                    h += 20;
+
+                    if (this.MinimumSize.Width > w)
+                    {
+                        w = this.MinimumSize.Width;
+                    }
+                    else if (this.MaximumSize.Width > 0 && this.MaximumSize.Width < w)
+                    {
+                        w = this.MaximumSize.Width;
+                    }
+
+                    if (this.MinimumSize.Height > h)
+                    {
+                        h = this.MinimumSize.Height;
+                    }
+                    else if (this.MaximumSize.Height > 0 && this.MaximumSize.Height < h)
+                    {
+                        h = this.MaximumSize.Height;
+                    }
+
+                    return new Size(w, h);
                 }
             }
 
@@ -405,6 +934,157 @@ namespace Gw2Launcher.UI.Controls
                     PerformLayout(g);
                 }
 
+                if (_ShowNotification)
+                {
+                    var sz = (int)(11 * g.DpiX / 96f + 0.5f);
+
+                    var y = (int)(3 * g.DpiX / 96f + 0.5f);
+                    var x = y;
+
+                    g.CompositingQuality = System.Drawing.Drawing2D.CompositingQuality.HighQuality;
+                    g.SmoothingMode = System.Drawing.Drawing2D.SmoothingMode.HighQuality;
+
+                    using (var b = new SolidBrush(Color.FromArgb(230, 0, 0)))
+                    {
+                        g.FillEllipse(b, x, y, sz - 1, sz - 1);
+                    }
+
+                    using (var p = new Pen(Color.White, sz * 0.15f))
+                    {
+                        p.Alignment = System.Drawing.Drawing2D.PenAlignment.Center;
+
+                        var gap = sz * 0.2f;
+                        var x1 = x + sz / 2f - 0.5f;
+                        var y1 = y + gap;
+                        var h1 = sz - gap * 2 - 1;
+                        var h2 = h1 * 0.25f;
+                        var y2 = y1 + h1 - h2 - (sz * 0.1f);
+
+                        g.DrawLine(p, x1, y1, x1, y2);
+                        g.DrawLine(p, x1, y1 + h1 - h2, x1, y1 + h1);
+                    }
+
+                    g.CompositingQuality = System.Drawing.Drawing2D.CompositingQuality.Default;
+                    g.SmoothingMode = System.Drawing.Drawing2D.SmoothingMode.Default;
+                }
+
+                if (_ProgressValue != 0)
+                {
+                    var w = this.Width;
+                    var h = this.Height;
+                    var pw = (int)(w * ProgressValue + 0.5f);
+
+                    if (pw > 0)
+                    {
+                        if (_ProgressValue == 255)
+                        {
+                            //claimed - a checkmark is shown instead of progress
+
+                            var scale = g.DpiX / 96f;
+                            var px = (int)(scale + 0.5f);
+                            var bounds = Rectangle.Inflate(favorite.bounds, px, px);
+                            var colorCheck = Color.White;
+                            var colorBackground = Color.FromArgb(59, 140, 39);
+
+                            var x = bounds.X + px;
+                            var y = bounds.Y - px;
+                            w = bounds.Width;
+                            h = bounds.Height;
+
+                            var points = new PointF[]
+                            {
+                                new PointF(x + w * 0.933f, y),
+                                new PointF(x + w, y + h * 0.167f),
+                                new PointF(x + w * 0.467f, y + h),
+                                new PointF(x, y + h * 0.583f),
+                                new PointF(x + w * 0.2f, y + h * 0.417f),
+                                new PointF(x + w * 0.4f, y + h * 0.667f),
+                            };
+
+                            using (var b = new SolidBrush(colorBackground))
+                            {
+                                using (var p = new Pen(b, px))
+                                {
+                                    g.SmoothingMode = System.Drawing.Drawing2D.SmoothingMode.HighQuality;
+
+                                    var sz = bounds.Width >= bounds.Height ? bounds.Width : bounds.Height;
+
+                                    g.FillEllipse(b, bounds.X, bounds.Y, sz, sz);
+
+                                    if (colorCheck.A != 0)
+                                    {
+
+                                        b.Color = colorCheck;
+                                        g.FillPolygon(b, points);
+                                    }
+
+                                    p.Color = Color.FromArgb(128, 0, 0, 0);
+                                    g.DrawPolygon(p, points);
+
+                                    g.SmoothingMode = System.Drawing.Drawing2D.SmoothingMode.Default;
+                                }
+                            }
+                        }
+                        else
+                        {
+                            //not claimed - show progress
+
+                            using (var b = new SolidBrush(Color.FromArgb(15, 0, 255, 0)))
+                            {
+                                var scale = g.DpiX / 96f;
+                                var bw = (int)(scale * 2 + 0.5f);
+
+                                pw -= bw;
+
+                                var padding = (int)(scale * 1 + 0.5f);
+
+                                if (pw > 0)
+                                {
+                                    g.FillRectangle(b, 0, padding + bw, pw, h - padding * 2 - bw * 2); //background
+                                }
+
+                                b.Color = Color.FromArgb(25, 0, 255, 0);
+
+                                g.FillRectangle(b, pw, padding, bw, h - padding * 2); //right
+                                g.FillRectangle(b, 0, padding, pw, bw); //top
+                                g.FillRectangle(b, 0, h - padding - bw, pw, bw); //bottom
+
+                            }
+                        }
+                    }
+
+                    if (hovered && _ProgressDisplayedVisible && _ProgressValue != 255)
+                    {
+                        using (var f1 = new Font("Segoe UI Semibold", 8f, FontStyle.Bold, GraphicsUnit.Point))
+                        {
+                            const TextFormatFlags tf = TextFormatFlags.SingleLine | TextFormatFlags.NoPadding;
+
+                            var s1 = _ProgressDisplayedValue.ToString();
+                            var sz1 = TextRenderer.MeasureText(g, s1, f1, Size.Empty, tf);
+
+                            if (_ProgressDisplayedTotal != 0)
+                            {
+                                using (var f2 = new Font("Segoe UI", 6f, FontStyle.Regular, GraphicsUnit.Point))
+                                {
+                                    var s2 = _ProgressDisplayedTotal.ToString();
+                                    var sz2 = TextRenderer.MeasureText(g, s2, f2, Size.Empty, tf);
+                                    var r1 = new Rectangle(favorite.bounds.Right - sz1.Width, (h - sz1.Height - sz2.Height / 2) / 2, sz1.Width, sz1.Height);
+                                    var r2 = new Rectangle(favorite.bounds.Right - sz2.Width, r1.Bottom, sz2.Width, sz2.Height);
+
+                                    TextRenderer.DrawText(g, s1, f1, r1, this.ForeColor, Color.Transparent, tf);
+                                    TextRenderer.DrawText(g, s2, f2, r2, Util.Color.Gradient(this.ForeColor, this.BackColor, 0.4f), Color.Transparent, tf);
+                                }
+                            }
+                            else
+                            {
+                                var r1 = new Rectangle(favorite.bounds.Right - sz1.Width, (h - sz1.Height) / 2, sz1.Width, sz1.Height);
+
+                                TextRenderer.DrawText(g, s1, f1, r1, this.ForeColor, Color.Transparent, tf);
+                            }
+                        }
+                    }
+                }
+
                 if (icon.visible)
                 {
                     g.InterpolationMode = System.Drawing.Drawing2D.InterpolationMode.HighQualityBicubic;
@@ -412,6 +1092,11 @@ namespace Gw2Launcher.UI.Controls
                     {
                         g.DrawImage(image, icon.bounds);
                     }
+                }
+
+                if (favorite.visible)
+                {
+                    favorite.Draw(g);
                 }
 
                 labelName.Draw(g);
@@ -422,42 +1107,6 @@ namespace Gw2Launcher.UI.Controls
             buffer.Render(e.Graphics);
 
             base.OnPaint(e);
-        }
-
-        protected void DrawImage(Graphics g, Image image, int x, int y, int w, int h, byte opacity, bool grayscale)
-        {
-            if (grayscale)
-            {
-                using (var ia = new ImageAttributes())
-                {
-                    ia.SetColorMatrix(new ColorMatrix(new float[][] 
-                        {
-                            new float[] {.3f, .3f, .3f, 0, 0},
-                            new float[] {.6f, .6f, .6f, 0, 0},
-                            new float[] {.1f, .1f, .1f, 0, 0},
-                            new float[] {0, 0, 0, opacity / 255f, 0},
-                            new float[] {0, 0, 0, 0, 1}
-                        }));
-
-                    g.DrawImage(image, new Rectangle(x, y, w, h), 0, 0, w, h, GraphicsUnit.Pixel, ia);
-                }
-            }
-            else if (opacity != 255)
-            {
-                using (var ia = new ImageAttributes())
-                {
-                    ia.SetColorMatrix(new ColorMatrix()
-                    {
-                        Matrix33 = opacity / 255f,
-                    });
-
-                    g.DrawImage(image, new Rectangle(x, y, w, h), 0, 0, w, h, GraphicsUnit.Pixel, ia);
-                }
-            }
-            else
-            {
-                g.DrawImage(image, new Rectangle(x, y, w, h), 0, 0, w, h, GraphicsUnit.Pixel);
-            }
         }
 
         protected override void OnPaintBackground(PaintEventArgs e)
@@ -471,40 +1120,6 @@ namespace Gw2Launcher.UI.Controls
 
                 g.Clear(this.BackColor);
 
-                if (daily != null && daily.Access != DailyAchievements.Daily.AccessCondition.None)
-                {
-                    int w = this.Width,
-                        h = this.Height;
-                    var hasAccess = (daily.Access & DailyAchievements.Daily.AccessCondition.HasAccess) == DailyAchievements.Daily.AccessCondition.HasAccess;
-                    Bitmap icon;
-
-                    switch (daily.Access & ~DailyAchievements.Daily.AccessCondition.HasAccess)
-                    {
-                        case DailyAchievements.Daily.AccessCondition.HeartOfThorns:
-
-                            icon = Properties.Resources.hot32;
-
-                            break;
-                        case DailyAchievements.Daily.AccessCondition.PathOfFire:
-
-                            icon = Properties.Resources.pof32;
-
-                            break;
-                        case DailyAchievements.Daily.AccessCondition.EndOfDragons:
-                        default:
-                        case DailyAchievements.Daily.AccessCondition.Unknown:
-
-                            icon = null;
-                            TextRenderer.DrawText(g, daily.UnknownName != null ? daily.UnknownName : "?", new Font(this.Font.FontFamily, 8f), new Rectangle(0, 0, w - 5, h), hasAccess ? Color.FromArgb(60, 60, 60) : Color.FromArgb(180, 180, 180), TextFormatFlags.Right | TextFormatFlags.VerticalCenter);
-
-                            break;
-                    }
-
-                    if (icon != null)
-                    {
-                        DrawImage(g, icon, w - 32 - 5, (h - 32) / 2, 32, 32, hasAccess ? (byte)220 : (byte)180, !hasAccess);
-                    }
-                }
             }
         }
 
@@ -525,8 +1140,8 @@ namespace Gw2Launcher.UI.Controls
         public override void RefreshColors()
         {
             labelLevel.foreColor = UiColors.GetColor(UiColors.Colors.DailiesTextLight);
-            redraw = true;
-            this.Invalidate();
+
+            OnRedrawRequired(false);
 
             base.RefreshColors();
         }

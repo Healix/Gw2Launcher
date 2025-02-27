@@ -122,24 +122,34 @@ namespace Gw2Launcher.UI.Controls
                 var selStart = this.SelectionStart;
                 var selLength = this.SelectionLength;
                 var length = this.TextLength;
+                var count = this.MaxLength - length + selLength;
 
-                if (selLength == 0)
+                if (length < this.MaxLength || selLength > 0)
                 {
-                    if (selStart == length)
+                    if (selLength == 0)
+                    {
+                        if (selStart == length)
+                            _password.AppendChar(charCode);
+                        else
+                            _password.InsertAt(selStart, charCode);
+                    }
+                    else if (selLength == length)
+                    {
+                        _password.Clear();
                         _password.AppendChar(charCode);
+                    }
                     else
-                        _password.InsertAt(selStart, charCode);
-                }
-                else if (selLength == length)
-                {
-                    _password.Clear();
-                    _password.AppendChar(charCode);
-                }
-                else
-                {
-                    for (int i = selStart + selLength - 1; i >= selStart; i--)
-                        _password.RemoveAt(i);
-                    _password.InsertAt(selStart, charCode);
+                    {
+                        for (int i = selStart + selLength - 1; i >= selStart; i--)
+                        {
+                            _password.RemoveAt(i);
+                        }
+
+                        if (length - selLength < this.MaxLength)
+                        {
+                            _password.InsertAt(selStart, charCode);
+                        }
+                    }
                 }
 
                 e.KeyChar = this.PasswordChar;
@@ -168,15 +178,39 @@ namespace Gw2Launcher.UI.Controls
 
                 if (value != null)
                 {
-                    if (selStart + selLength == length)
+                    var count = this.MaxLength - length + selLength;
+
+                    if (count > 0)
                     {
-                        foreach (char c in value)
-                            _password.AppendChar(c);
+                        var l = value.Length;
+
+                        if (l > count)
+                        {
+                            value = value.Substring(0, count);
+                        }
+                        else
+                        {
+                            count = l;
+                        }
+
+                        if (selStart + selLength == length)
+                        {
+                            foreach (char c in value)
+                            {
+                                _password.AppendChar(c);
+                            }
+                        }
+                        else
+                        {
+                            foreach (char c in value)
+                            {
+                                _password.InsertAt(selStart++, c);
+                            }
+                        }
                     }
                     else
                     {
-                        foreach (char c in value)
-                            _password.InsertAt(selStart++, c);
+                        value = null;
                     }
                 }
 

@@ -32,6 +32,15 @@ namespace Gw2Launcher.Tools.Backup
                 get;
                 set;
             }
+
+            /// <summary>
+            /// Optional override encryption; null to use settings
+            /// </summary>
+            public Settings.EncryptionOptions Encryption
+            {
+                get;
+                set;
+            }
         }
 
         public interface IFileInformation
@@ -508,10 +517,8 @@ namespace Gw2Launcher.Tools.Backup
 
                                 if (this.Options.IncludeGfxSettings)
                                 {
-                                    foreach (var uid in Settings.GfxFiles.GetKeys())
+                                    foreach (var v in Settings.GfxFiles.GetValues())
                                     {
-                                        var v = Settings.GfxFiles[uid];
-
                                         if (v.HasValue && v.Value.References > 0 && !string.IsNullOrEmpty(v.Value.Path))
                                         {
                                             files.Add(new FileInformation()
@@ -529,10 +536,8 @@ namespace Gw2Launcher.Tools.Backup
 
                                 if (this.Options.IncludeLocalDat)
                                 {
-                                    foreach (var uid in Settings.DatFiles.GetKeys())
+                                    foreach (var v in Settings.DatFiles.GetValues())
                                     {
-                                        var v = Settings.DatFiles[uid];
-
                                         if (v.HasValue && v.Value.References > 0 && !string.IsNullOrEmpty(v.Value.Path))
                                         {
                                             files.Add(new FileInformation()
@@ -658,7 +663,7 @@ namespace Gw2Launcher.Tools.Backup
                                         {
                                             using (var ms = new MemoryStream(streams[i] == null ? 10000 : (int)streams[i].Length + 1000))
                                             {
-                                                Settings.WriteTo(ms);
+                                                Settings.WriteTo(ms, this.Options.Encryption);
                                                 ms.Position = 0;
 
                                                 if (this.Options.Format == BackupFormat.Directory)

@@ -11,7 +11,7 @@ using System.Windows.Forms;
 namespace Gw2Launcher.UI.Controls
 {
     [DefaultEvent("Click")]
-    public partial class SidebarButton : UserControl
+    public partial class SidebarButton : Control
     {
         public event EventHandler BeginExpand;
         public event EventHandler BeginCollapse;
@@ -45,8 +45,6 @@ namespace Gw2Launcher.UI.Controls
             label = new Label();
             Index = -1;
 
-            InitializeComponent();
-
             SetStyle(ControlStyles.UserPaint, true);
             SetStyle(ControlStyles.AllPaintingInWmPaint, true);
             SetStyle(ControlStyles.OptimizedDoubleBuffer, true);
@@ -60,12 +58,6 @@ namespace Gw2Launcher.UI.Controls
 
         protected override void Dispose(bool disposing)
         {
-            if (disposing)
-            {
-                if (components != null)
-                    components.Dispose();
-            }
-
             base.Dispose(disposing);
 
             if (disposing)

@@ -335,7 +335,7 @@ namespace Gw2Launcher.UI
                         await Task.Delay(1000);
                         try
                         {
-                            Windows.FindWindow.FocusWindow(this.Handle);
+                            Windows.FindWindow.FocusWindow(this);
                         }
                         catch (Exception ex)
                         {

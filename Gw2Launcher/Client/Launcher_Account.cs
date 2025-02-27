@@ -10,6 +10,15 @@ namespace Gw2Launcher.Client
     {
         private class Account
         {
+            [Flags]
+            public enum Provider : byte
+            {
+                None = 0,
+                Portal = 1,
+                Steam = 2,
+                Unknown = 4,
+            }
+
             public class LaunchSession : IDisposable
             {
                 public LaunchSession(Account a, string path, LaunchMode mode, LaunchOptions options = null)
@@ -50,6 +59,24 @@ namespace Gw2Launcher.Client
                 }
 
                 public CefPaths.ICefPath CefPath
+                {
+                    get;
+                    set;
+                }
+
+                public Settings.WindowOptions WindowOptions
+                {
+                    get;
+                    set;
+                }
+
+                public Settings.LaunchProxy Proxy
+                {
+                    get;
+                    set;
+                }
+
+                public Provider Provider
                 {
                     get;
                     set;
@@ -219,12 +246,6 @@ namespace Gw2Launcher.Client
                     }
                 }
 
-                public Settings.WindowOptions WindowOptions
-                {
-                    get;
-                    set;
-                }
-
                 private Tools.Mumble.MumbleMonitor.IMumbleProcess _MumbleLink;
                 public Tools.Mumble.MumbleMonitor.IMumbleProcess MumbleLink
                 {
@@ -270,10 +291,25 @@ namespace Gw2Launcher.Client
                     }
                 }
 
-                public Settings.LaunchProxy Proxy
+                private Tools.Chromium.CefSessionMonitor.IMonitor _CefMonitor;
+                public Tools.Chromium.CefSessionMonitor.IMonitor CefMonitor
                 {
-                    get;
-                    set;
+                    get
+                    {
+                        return _CefMonitor;
+                    }
+                    set
+                    {
+                        lock (this)
+                        {
+                            if (_CefMonitor != value)
+                            {
+                                if (_CefMonitor != null)
+                                    _CefMonitor.Dispose();
+                                _CefMonitor = value;
+                            }
+                        }
+                    }
                 }
 
                 private bool isDisposed;
@@ -298,6 +334,8 @@ namespace Gw2Launcher.Client
                         WindowTemplate = null;
                         MumbleLink = null;
                         RunAfter = null;
+                        Hidden = null;
+                        CefMonitor = null;
 
                         isDisposed = true;
                     }

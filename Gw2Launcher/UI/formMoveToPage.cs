@@ -14,7 +14,7 @@ namespace Gw2Launcher.UI
     {
         private byte pages;
 
-        public formMoveToPage(byte page, byte pages)
+        public formMoveToPage(byte page, byte pages, bool showRemove = true)
         {
             InitializeComponents();
 
@@ -24,6 +24,8 @@ namespace Gw2Launcher.UI
             textPage.Value = page;
 
             textPage.TextBox.KeyDown += textPage_KeyDown;
+
+            checkRemoveCurrent.Visible = showRemove;
         }
 
         protected override void OnInitializeComponents()

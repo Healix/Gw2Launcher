@@ -43,7 +43,7 @@ namespace Gw2Launcher.UI.Controls
 
             this.Controls.Add(new Label()
             {
-                Font = new System.Drawing.Font("Segoe UI Semibold", parent.TemplateText.Font.Size, System.Drawing.FontStyle.Bold),// parent.TemplateText.Font,
+                Font = new System.Drawing.Font("Segoe UI Semibold", parent.TemplateText.Font.SizeInPoints, System.Drawing.FontStyle.Bold),// parent.TemplateText.Font,
                 Anchor = AnchorStyles.Top | AnchorStyles.Left,
                 Margin = new Padding(parent.TemplateText.Margin.Left, parent.TemplateText.Margin.Top * 3, 0, parent.TemplateText.Margin.Top),
                 Text = "",

@@ -361,21 +361,21 @@ namespace Gw2Launcher.Tools.Backup
                     delegate(FieldData.FieldOptions o)
                     {
                         var gw2 = o.Account as Settings.IGw2Account;
-                        if (gw2 == null)
+                        if (gw2 == null || gw2.Api == null)
                             return "";
-                        return gw2.ApiKey;
+                        return gw2.Api.Key;
                     },
                     delegate(Settings.IAccount a, string v)
                     {
                         var gw2 = a as Settings.IGw2Account;
                         if (gw2 == null)
                             return;
-                        gw2.ApiKey = v;
+                        gw2.Api = Settings.ApiDataKey.Create(v);
                     }),
                 new FieldData("Color", Tags.COLOR, AccountType.Any, FieldFlags.None, 
                     delegate(FieldData.FieldOptions o)
                     {
-                        if (o.Account.ColorKey.IsEmpty)
+                        if (o.Account.ColorKeyIsDefault)
                             return "";
                         return ColorTranslator.ToHtml(o.Account.ColorKey);
                     },

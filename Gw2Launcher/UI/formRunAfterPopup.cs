@@ -105,6 +105,7 @@ namespace Gw2Launcher.UI
                 {
                     this.BackgroundImage = source.GetValue();
                 }
+                this.IconDefaultSize = 0;
             }
 
             protected override void Dispose(bool disposing)
@@ -125,11 +126,27 @@ namespace Gw2Launcher.UI
             /// Occurs when the manager or its processes change
             /// </summary>
             public event EventHandler ManagerProcessesChanged;
+            public event EventHandler CollapsedChanged;
+
+            [Flags]
+            public enum CollapsedState : byte
+            {
+                None = 0,
+                /// <summary>
+                /// Panel is collapsed
+                /// </summary>
+                Collapsed = 1,
+                /// <summary>
+                /// State was manually set
+                /// </summary>
+                Manual = 2,
+            }
+
+            private CollapsedState collapsed;
 
             public AccountContainerPanel(Settings.IAccount account, Label header, Label status)
             {
                 AutoSize = true;
-                Margin = new Padding(0, 5, 0, 0);
                 Anchor = AnchorStyles.Top | AnchorStyles.Left | AnchorStyles.Right;
                 FlowDirection = FlowDirection.TopDown;
 
@@ -141,7 +158,7 @@ namespace Gw2Launcher.UI
                 header.Text = account.Name;
                 account.NameChanged += account_NameChanged;
 
-                header.MouseClick += OnMouseClick;
+                header.MouseClick += OnHeaderMouseClick;
                 status.MouseClick += OnMouseClick;
 
                 this.Controls.AddRange(new Control[] { header, status, this.Container });
@@ -149,6 +166,15 @@ namespace Gw2Launcher.UI
 
             void OnMouseClick(object sender, MouseEventArgs e)
             {
+                this.OnMouseClick(e);
+            }
+
+            void OnHeaderMouseClick(object sender, MouseEventArgs e)
+            {
+                if (e.Button == System.Windows.Forms.MouseButtons.Left && CanCollapse)
+                {
+                    Collapsed = IsCollapsed ? CollapsedState.Manual : CollapsedState.Collapsed | CollapsedState.Manual;
+                }
                 this.OnMouseClick(e);
             }
 
@@ -245,6 +271,47 @@ namespace Gw2Launcher.UI
                 }
             }
 
+            public bool CanCollapse
+            {
+                get;
+                set;
+            }
+
+            public bool IsCollapsed
+            {
+                get
+                {
+                    return (collapsed & CollapsedState.Collapsed) != 0;
+                }
+                set
+                {
+                    if (value != IsCollapsed)
+                    {
+                        Collapsed = value ? collapsed | CollapsedState.Collapsed : collapsed & ~CollapsedState.Collapsed;
+                    }
+                }
+            }
+
+            public CollapsedState Collapsed
+            {
+                get
+                {
+                    return collapsed;
+                }
+                set
+                {
+                    if (Collapsed != value)
+                    {
+                        var b = (value & CollapsedState.Collapsed) != (collapsed & CollapsedState.Collapsed);
+
+                        collapsed = value;
+
+                        if (b && CollapsedChanged != null)
+                            CollapsedChanged(this, EventArgs.Empty);
+                    }
+                }
+            }
+
             void account_NameChanged(object sender, EventArgs e)
             {
                 Util.Invoke.Required(this, new Action(
@@ -270,17 +337,45 @@ namespace Gw2Launcher.UI
                 int w = 0,
                     h = 0;
 
-                foreach (Control c in this.Controls)
+                if (IsCollapsed)
                 {
-                    if (!c.Visible)
-                        continue;
+                    var sz = this.Header.GetPreferredSize(proposedSize);
 
-                    var sz = c.GetPreferredSize(proposedSize);
-                    var szw = sz.Width + c.Margin.Horizontal;
+                    w = sz.Width + this.Header.Margin.Horizontal;
+                    h = sz.Height + this.Header.Margin.Vertical / 5;
+                }
+                else
+                {
+                    foreach (Control c in this.Controls)
+                    {
+                        if (!c.Visible)
+                            continue;
 
-                    if (szw > w)
-                        w = szw;
-                    h += c.Height + c.Margin.Vertical;
+                        var sz = c.GetPreferredSize(proposedSize);
+                        var szw = sz.Width + c.Margin.Horizontal;
+
+                        if (szw > w)
+                            w = szw;
+                        h += c.Height + c.Margin.Vertical;
+                    }
+                }
+
+                if (this.MinimumSize.Width > w)
+                {
+                    w = this.MinimumSize.Width;
+                }
+                else if (this.MaximumSize.Width > 0 && this.MaximumSize.Width < w)
+                {
+                    w = this.MaximumSize.Width;
+                }
+
+                if (this.MinimumSize.Height > h)
+                {
+                    h = this.MinimumSize.Height;
+                }
+                else if (this.MaximumSize.Height > 0 && this.MaximumSize.Height < h)
+                {
+                    h = this.MaximumSize.Height;
                 }
 
                 return new Size(w, h);
@@ -318,18 +413,6 @@ namespace Gw2Launcher.UI
                 }
             }
 
-            public Label Header
-            {
-                get;
-                set;
-            }
-
-            public Label Status
-            {
-                get;
-                set;
-            }
-
             public int VisibleCount
             {
                 get;
@@ -359,6 +442,24 @@ namespace Gw2Launcher.UI
                     w = proposedSize.Width;
                 }
 
+                if (this.MinimumSize.Width > w)
+                {
+                    w = this.MinimumSize.Width;
+                }
+                else if (this.MaximumSize.Width > 0 && this.MaximumSize.Width < w)
+                {
+                    w = this.MaximumSize.Width;
+                }
+
+                if (this.MinimumSize.Height > h)
+                {
+                    h = this.MinimumSize.Height;
+                }
+                else if (this.MaximumSize.Height > 0 && this.MaximumSize.Height < h)
+                {
+                    h = this.MaximumSize.Height;
+                }
+
                 return new Size(w, h);
             }
         }
@@ -382,19 +483,28 @@ namespace Gw2Launcher.UI
         private Settings.RunAfterPopupSorting sorting;
         private SortingAction _sorting;
         private bool _autosizing;
+        private Rectangle attachBounds;
+        private bool displayAsMenu;
 
-        public formRunAfterPopup(IList<Settings.IAccount> accounts)
+        public formRunAfterPopup(IList<Settings.IAccount> accounts, bool displayAsMenu = false)
         {
             this.accounts = accounts;
             this.images = new Tools.Shared.Images(false);
+            this.displayAsMenu = displayAsMenu;
+            this.HideOnDeactivate = displayAsMenu;
 
             InitializeComponents();
         }
 
-        public formRunAfterPopup(Settings.IAccount account, System.Diagnostics.Process p)
-            : this(new Settings.IAccount[] { account })
+        public formRunAfterPopup(Settings.IAccount account, System.Diagnostics.Process p, bool displayAsMenu = false)
+            : this(new Settings.IAccount[] { account }, displayAsMenu)
         {
             this.process = p;
+        }
+
+        public formRunAfterPopup(Settings.IAccount account, bool displayAsMenu = false)
+            : this(new Settings.IAccount[] { account }, displayAsMenu)
+        {
         }
 
         protected override CreateParams CreateParams
@@ -422,21 +532,24 @@ namespace Gw2Launcher.UI
             typeToolStripMenuItem.Checked = (sorting & Settings.RunAfterPopupSorting.Type) != 0;
             descendingToolStripMenuItem.Checked = (sorting & Settings.RunAfterPopupSorting.Descending) != 0;
 
-            filter = Settings.RunAfterPopup.Filter.HasValue
-                ? Settings.RunAfterPopup.Filter.Value
-                : Settings.RunAfterPopupFilter.None;
+            if (!displayAsMenu)
+            {
+                filter = Settings.RunAfterPopup.Filter.HasValue
+                    ? Settings.RunAfterPopup.Filter.Value
+                    : Settings.RunAfterPopupFilter.None;
 
-            isAccountActiveToolStripMenuItem.Checked = (filter & Settings.RunAfterPopupFilter.ActiveAccount) != 0;
-            isActiveToolStripMenuItem.Checked = (filter & Settings.RunAfterPopupFilter.ProcessActive) != 0;
-            isNotActiveToolStripMenuItem.Checked = (filter & Settings.RunAfterPopupFilter.ProcessInactive) != 0;
-            isStartedManuallyToolStripMenuItem.Checked = (filter & Settings.RunAfterPopupFilter.ManualStartup) != 0;
-            hasNotBeenStartedToolStripMenuItem.Checked = (filter & Settings.RunAfterPopupFilter.ProcessHasNotStarted) != 0;
+                isAccountActiveToolStripMenuItem.Checked = (filter & Settings.RunAfterPopupFilter.ActiveAccount) != 0;
+                isActiveToolStripMenuItem.Checked = (filter & Settings.RunAfterPopupFilter.ProcessActive) != 0;
+                isNotActiveToolStripMenuItem.Checked = (filter & Settings.RunAfterPopupFilter.ProcessInactive) != 0;
+                isStartedManuallyToolStripMenuItem.Checked = (filter & Settings.RunAfterPopupFilter.ManualStartup) != 0;
+                hasNotBeenStartedToolStripMenuItem.Checked = (filter & Settings.RunAfterPopupFilter.ProcessHasNotStarted) != 0;
+            }
 
             options = Settings.RunAfterPopup.Options.HasValue
                 ? Settings.RunAfterPopup.Options.Value
                 : Settings.RunAfterPopupOptions.ShowIcon | Settings.RunAfterPopupOptions.ShowClose;
 
-            keepWindowOpenToolStripMenuItem.Checked = (options & Settings.RunAfterPopupOptions.KeepOpen) != 0;
+            keepWindowOpenToolStripMenuItem.Checked = (options & Settings.RunAfterPopupOptions.KeepOpen) != 0 && !displayAsMenu;
             showIconToolStripMenuItem.Checked = (options & Settings.RunAfterPopupOptions.ShowIcon) != 0;
             showProcessExitButtonToolStripMenuItem.Checked = (options & Settings.RunAfterPopupOptions.ShowClose) != 0;
 
@@ -444,10 +557,11 @@ namespace Gw2Launcher.UI
 
             panelContent.SuspendLayout();
 
-            var first = true;
+            var hasVisible = false;
 
-            foreach (var a in accounts)
+            for (int i = 0, count = accounts.Count; i < count; i++)
             {
+                var a = accounts[i];
                 var m = Client.Launcher.GetRunAfter(a);
 
                 var panel = new AccountContainerPanel(a, CreateHeader(), CreateStatus())
@@ -455,20 +569,44 @@ namespace Gw2Launcher.UI
                     Visible = true,
                     Manager = m,
                     Process = Client.Launcher.GetProcess(a),
+                    CanCollapse = count > 1,
                 };
 
                 panel.MouseClick += OnMouseClick;
                 panel.ManagerProcessesChanged += panel_ManagerProcessesChanged;
 
-                if (first)
-                {
-                    first = false;
-                    panel.Margin = new Padding(0);
-                }
-
                 panels[a] = panel;
 
                 AddButtons(panel);
+
+                if (i != count - 1)
+                {
+                    if (panel.Container.VisibleCount == 0)
+                    {
+                        panel.IsCollapsed = true;
+                    }
+                    else
+                    {
+                        hasVisible = true;
+                    }
+
+                    panel.Margin = new Padding(0, 0, 0, panel.IsCollapsed ? 2 : 5);
+                }
+                else
+                {
+                    panel.Margin = Padding.Empty;
+
+                    if (count == 1)
+                    {
+                        panel.Collapsed = AccountContainerPanel.CollapsedState.Manual;
+                    }
+                    else
+                    {
+                        panel.IsCollapsed = panel.Container.VisibleCount == 0 && hasVisible;
+                    }
+                }
+
+                panel.CollapsedChanged += panel_CollapsedChanged;
 
                 panelContent.Controls.Add(panel);
             }
@@ -494,6 +632,26 @@ namespace Gw2Launcher.UI
                 });
         }
 
+        void panel_CollapsedChanged(object sender, EventArgs e)
+        {
+            var p = (AccountContainerPanel)sender;
+            var b = p.Margin.Bottom;
+
+            if (b != 0)
+            {
+                b = Scale(p.IsCollapsed ? 2 : 5);
+
+                if (p.Margin.Bottom != b)
+                {
+                    p.Margin = new Padding(0, 0, 0, b);
+
+                    return;
+                }
+            }
+
+            panelContent.PerformLayout(p, null);
+        }
+
         void panel_ManagerProcessesChanged(object sender, EventArgs e)
         {
             AddButtons((AccountContainerPanel)sender);
@@ -505,7 +663,7 @@ namespace Gw2Launcher.UI
                     delegate
                     {
                         _autosizing = false;
-                        this.Bounds = GetPreferredWindowBounds(this.Location, true);
+                        this.Bounds = GetPreferredWindowBounds(new Rectangle(this.Location, new Size()), true);
                     });
             }
         }
@@ -583,7 +741,10 @@ namespace Gw2Launcher.UI
             panelScroll.FlatVScroll.ScrollChange = labelStatus.MinimumSize.Height;
 
             this.MinimumSize = new System.Drawing.Size(100, labelStatus.MinimumSize.Height + panelScroll.Top * 2 + labelHeader.Height + labelHeader.Margin.Vertical);
-            this.Bounds = GetPreferredWindowBounds(Cursor.Position, false);
+            if (attachBounds.IsEmpty)
+                this.Bounds = GetPreferredWindowBounds(new Rectangle(Cursor.Position, new Size()));
+            else
+                this.Bounds = GetPreferredWindowBounds(attachBounds, false, false, true);
 
             Client.Launcher.AccountProcessExited += Launcher_AccountProcessExited;
             Client.Launcher.RunAfterChanged += Launcher_RunAfterChanged;
@@ -606,29 +767,21 @@ namespace Gw2Launcher.UI
                 AutoClose();
             }
 
-            FadeIn(0.9f, 100);
+            FadeIn(0.98f, 100);
         }
 
-        private Rectangle GetPreferredWindowBounds(Point initialLocation, bool keepLocation = false)
+        private Rectangle GetPreferredWindowBounds(Rectangle initialLocation, bool keepLocation = false, bool keepSize = false, bool anchored = false)
         {
-            var screen = Screen.FromPoint(initialLocation).WorkingArea;
+            var screen = Screen.FromRectangle(initialLocation).WorkingArea;
             var maxW = screen.Width / 4;
             var pad = Scale(40);
             var contentW = this.Width;
 
-            if (contentW < maxW)
+            if (!keepSize && contentW < maxW)
             {
                 foreach (Control c in panelContent.Controls)
                 {
                     int _w = 0;
-
-                    //if (c is Label)
-                    //{
-                    //    _w = c.GetPreferredSize(new Size(maxW, int.MaxValue)).Width;
-                    //}
-                    //else if (c is BarContainerPanel)
-                    //{
-                    //}
 
                     _w = c.GetPreferredSize(new Size(maxW, int.MaxValue)).Width + pad;
 
@@ -648,8 +801,8 @@ namespace Gw2Launcher.UI
             else if (contentW > maxW)
                 contentW = maxW;
 
-            var sz = panelContent.GetPreferredSize(new Size(contentW, screen.Height), true);
-            var szh = sz.Height + panelScroll.Top * 2;
+            var sz = keepSize ? this.Size : panelContent.GetPreferredSize(new Size(contentW, screen.Height), true);
+            var szh = keepSize ? sz.Height : sz.Height + panelScroll.Top * 2;
             var h = screen.Height * 3 / 4;
             var w = sz.Width;
 
@@ -660,7 +813,7 @@ namespace Gw2Launcher.UI
                     h = _h;
             }
 
-            if (szh < h)
+            if (szh <= h)
                 h = szh;
             else
                 w += panelScroll.FlatVScroll.Width + panelScroll.FlatVScroll.Margin.Horizontal;
@@ -670,7 +823,34 @@ namespace Gw2Launcher.UI
             if (h < this.MinimumSize.Height)
                 h = this.MinimumSize.Height;
 
-            var b = keepLocation ? new Rectangle(initialLocation.X, initialLocation.Y, w, h) : new Rectangle(Cursor.Position.X - w / 2, Cursor.Position.Y - h / 2, w, h);
+            var b = new Rectangle(initialLocation.X, initialLocation.Y, w, h);
+
+            if (keepLocation || anchored)
+            {
+                if (initialLocation.Width > 0)
+                {
+                    b.X += initialLocation.Width / 2 - w / 2;
+                }
+            }
+            else
+            {
+                b.X = Cursor.Position.X - w / 2;
+            }
+
+            if (keepLocation || anchored)
+            {
+                if (initialLocation.Height > 0)
+                {
+                    b.Y -= panelScroll.Top + labelHeader.Height / 2 - initialLocation.Height / 2;
+                }
+            }
+            else
+            {
+                b.Y = Cursor.Position.Y - panelScroll.Top - labelHeader.Height / 2;
+            }
+
+            //var b = keepLocation ? 
+            //    new Rectangle(initialLocation.X, initialLocation.Y, w, h) : 
             var hasConstraint = false;
 
             if (!keepLocation && process != null)
@@ -692,6 +872,22 @@ namespace Gw2Launcher.UI
                 b = Util.RectangleConstraint.ConstrainToScreen(b);
 
             return b;
+        }
+
+        public void AttachTo(Rectangle bounds)
+        {
+            this.attachBounds = bounds;
+                    
+            if (this.Visible)
+            {
+                this.Bounds = GetPreferredWindowBounds(bounds, false, false, true);
+            }
+        }
+
+        public bool HideOnDeactivate
+        {
+            get;
+            set;
         }
 
         private async void AutoClose()
@@ -718,13 +914,18 @@ namespace Gw2Launcher.UI
 
             while (true)
             {
-                await Task.Delay(500);
+                await Task.Delay(this.HideOnDeactivate ? 100 : 500);
 
                 if (this.IsDisposed)
                     return;
                 if (wasActive)
                     break;
-                if (boundsChanged)
+                if (this.HideOnDeactivate)
+                {
+                    this.HideOnDeactivate = false;
+                    bounds = this.Bounds;
+                }
+                else if (boundsChanged)
                 {
                     boundsChanged = false;
                     bounds = Rectangle.Inflate(this.Bounds, Cursor.Size.Width / 2, Cursor.Size.Height / 2);
@@ -827,6 +1028,7 @@ namespace Gw2Launcher.UI
             else
             {
                 b.ImageSource = null;
+                b.IconDefaultSize = 0;
             }
         }
 
@@ -985,6 +1187,7 @@ namespace Gw2Launcher.UI
                 IconVisible = (options & Settings.RunAfterPopupOptions.ShowIcon) != 0,
                 TextVisible = true,
                 Height = buttonTemplate.Height,
+                IconDefaultSize = Scale(16),
             };
         }
 
@@ -1212,7 +1415,7 @@ namespace Gw2Launcher.UI
             {
                 try
                 {
-                    if (process.Id == e.Id)
+                    if (object.ReferenceEquals(process, e) || process.Id == e.Id)
                     {
                         Util.Invoke.Async(this, Dispose);
                     }
@@ -1242,6 +1445,11 @@ namespace Gw2Launcher.UI
 
             p.Container.VisibleCount = visible;
             p.StatusVisible = visible == 0;
+
+            if (visible > 0 && (p.Collapsed & (AccountContainerPanel.CollapsedState.Manual | AccountContainerPanel.CollapsedState.Collapsed)) == 0)
+            {
+                p.IsCollapsed = false;
+            }
 
             p.Container.ResumeLayout();
             p.ResumeLayout();

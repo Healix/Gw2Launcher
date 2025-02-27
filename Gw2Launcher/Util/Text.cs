@@ -29,6 +29,45 @@ namespace Gw2Launcher.Util
             }
         }
 
+        public static string FormatCoins(uint coins)
+        {
+            var sb = new StringBuilder(15); //12345g 67s 89c
+
+            if (coins >= 10000)
+            {
+                var c = coins / 10000;
+
+                sb.Append(c);
+                sb.Append('g');
+
+                coins -= c * 10000;
+            }
+
+            if (coins >= 100)
+            {
+                if (sb.Length > 0)
+                    sb.Append(' ');
+
+                var c = coins / 100;
+
+                sb.Append(c);
+                sb.Append('s');
+
+                coins -= c * 100;
+            }
+
+            if (coins > 0 || sb.Length == 0)
+            {
+                if (sb.Length > 0)
+                    sb.Append(' ');
+
+                sb.Append(coins);
+                sb.Append('c');
+            }
+
+            return sb.ToString();
+        }
+
         public static TextFormatFlags GetAlignmentFlags(System.Drawing.ContentAlignment alignment)
         {
             switch (alignment)

@@ -28,6 +28,18 @@ namespace Gw2Launcher.Util
             return From(c.R * percent + a, c.G * percent + a, c.B * percent + a);
         }
 
+        public static System.Drawing.Color LightenOrDarken(System.Drawing.Color c, float percent)
+        {
+            if (Luminance(c) > 127)
+                return Lighten(c, percent);
+            else
+                return Darken(c, percent);
+        }
+
+        /// <summary>
+        /// Shifts color from A to B
+        /// </summary>
+        /// <param name="percent">0% (A) to 100% (B)</param>
         public static System.Drawing.Color Gradient(System.Drawing.Color ca, System.Drawing.Color cb, float percent)
         {
             float r, g, b;
@@ -100,6 +112,41 @@ namespace Gw2Launcher.Util
             {
                 return System.Drawing.Color.Empty;
             }
+        }
+
+        public static byte Luminance(System.Drawing.Color c)
+        {
+            if (c.A != 255)
+            {
+                var ca = c.A / 255f;
+                var cbg = 255 * (1 - ca);
+
+                return (byte)(0.299f * (c.R * ca + cbg) + 0.587f * (c.G * ca + cbg) + 0.114f * (c.B * ca + cbg));
+            }
+            else
+            {
+                return (byte)(0.299f * c.R + 0.587f * c.G + 0.114f * c.B);
+            }
+        }
+
+        public static byte Luminance(System.Drawing.Color c, System.Drawing.Color background)
+        {
+            if (c.A != 255)
+            {
+                var ca = c.A / 255f;
+                var ica = 1 - ca;
+
+                return (byte)(0.299f * (c.R * ca + background.R * ica) + 0.587f * (c.G * ca + background.G * ica) + 0.114f * (c.B * ca + background.B * ica));
+            }
+            else
+            {
+                return (byte)(0.299f * c.R + 0.587f * c.G + 0.114f * c.B);
+            }
+        }
+
+        public static bool IsDark(System.Drawing.Color c)
+        {
+            return Luminance(c) <= 127;
         }
     }
 }

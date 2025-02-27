@@ -334,5 +334,32 @@ namespace Gw2Launcher.Util
                 File.SetAccessControl(to, ac);
             }
         }
+
+        /// <summary>
+        /// Tests if a file is locked
+        /// </summary>
+        public static bool IsFileLocked(string path)
+        {
+            try
+            {
+                using (var f = File.Open(path, FileMode.Open, FileAccess.Read, FileShare.None))
+                {
+                    return false;
+                }
+            }
+            catch (IOException e)
+            {
+                switch (e.HResult & 0xFFFF)
+                {
+                    case 32: //ERROR_SHARING_VIOLATION
+                    case 33: //ERROR_LOCK_VIOLATION
+
+                        return true;
+                }
+            }
+            catch { }
+
+            return false;
+        }
     }
 }

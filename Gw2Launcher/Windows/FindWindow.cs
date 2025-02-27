@@ -422,20 +422,57 @@ namespace Gw2Launcher.Windows
             return data.limit == 0 || data.limit < data.results.Count;
         }
 
+        public static bool FocusWindow(System.Windows.Forms.Form f, bool force = false)
+        {
+            var b = FocusWindow(f.Handle, false);
+
+            if (!b && force)
+            {
+                b = ForceWindowToFront(f);
+            }
+
+            return b;
+        }
+
         public static bool FocusWindow(IntPtr handle, bool force = false)
         {
             var p = WindowSize.GetWindowPlacement(handle);
             if (p.showCmd == ShowWindowCommands.ShowMinimized)
                 NativeMethods.ShowWindow(handle, ShowWindowCommands.Restore);
-            if (!NativeMethods.SetForegroundWindow(handle))
+            var b = NativeMethods.SetForegroundWindow(handle);
+            if (!b)
             {
                 NativeMethods.BringWindowToTop(handle);
-
                 if (force)
-                    return ForceWindowToFront(handle);
+                {
+                    b = ForceWindowToFront(handle);
+                }
+            }
+            return b;
+        }
+
+        public static async Task<bool> FocusWindowAsync(System.Windows.Forms.Form f, bool force = false)
+        {
+            var h = f.Handle;
+
+            var b = await Task.Run<bool>(
+                delegate
+                {
+                    return FocusWindow(h, false);
+                });
+
+            if (!b && force)
+            {
+                var children = GetHandles(f.OwnedForms);
+
+                b = await Task.Run<bool>(
+                    delegate
+                    {
+                        return ForceWindowToFront(h, children);
+                    });
             }
 
-            return true;
+            return b;
         }
 
         public static Task<bool> FocusWindowAsync(IntPtr handle, bool force = false)
@@ -455,17 +492,65 @@ namespace Gw2Launcher.Windows
             return false;
         }
 
-        public static bool ForceWindowToFront(IntPtr handle)
+        private static IntPtr[] GetHandles(System.Windows.Forms.Form[] forms)
         {
-            if (!WindowLong.HasValue(handle, GWL.GWL_EXSTYLE, WindowStyle.WS_EX_TOPMOST))
+            if (forms.Length == 0)
             {
-                NativeMethods.SetWindowPos(handle, (IntPtr)WindowZOrder.HWND_TOPMOST, 0, 0, 0, 0, SetWindowPosFlags.SWP_ASYNCWINDOWPOS | SetWindowPosFlags.SWP_NOMOVE | SetWindowPosFlags.SWP_NOOWNERZORDER | SetWindowPosFlags.SWP_NOSENDCHANGING | SetWindowPosFlags.SWP_NOSIZE);
-                NativeMethods.SetWindowPos(handle, (IntPtr)WindowZOrder.HWND_NOTOPMOST, 0, 0, 0, 0, SetWindowPosFlags.SWP_ASYNCWINDOWPOS | SetWindowPosFlags.SWP_NOMOVE | SetWindowPosFlags.SWP_NOOWNERZORDER | SetWindowPosFlags.SWP_NOSENDCHANGING | SetWindowPosFlags.SWP_NOSIZE);
+                return null;
+            }
+
+            var handles = new IntPtr[forms.Length];
+
+            for (var i = 0; i < forms.Length; i++)
+            {
+                if (forms[i].IsHandleCreated)
+                {
+                    handles[i] = forms[i].Handle;
+                }
+            }
+
+            return handles;
+        }
+
+        public static bool ForceWindowToFront(System.Windows.Forms.Form f)
+        {
+            return ForceWindowToFront(f.Handle, GetHandles(f.OwnedForms));
+        }
+
+        public static bool ForceWindowToFront(IntPtr handle, IntPtr[] children = null)
+        {
+            try
+            {
+                var top = IsTopMost(handle);
+                var flags = SetWindowPosFlags.SWP_ASYNCWINDOWPOS | SetWindowPosFlags.SWP_NOMOVE | SetWindowPosFlags.SWP_NOOWNERZORDER | SetWindowPosFlags.SWP_NOSENDCHANGING | SetWindowPosFlags.SWP_NOSIZE;
+
+                NativeMethods.SetWindowPos(handle, (IntPtr)WindowZOrder.HWND_TOPMOST, 0, 0, 0, 0, flags);
+                if (!top)
+                {
+                    NativeMethods.SetWindowPos(handle, (IntPtr)WindowZOrder.HWND_NOTOPMOST, 0, 0, 0, 0, flags);
+                }
+
+                if (children != null)
+                {
+                    for (var i = 0; i < children.Length; i++)
+                    {
+                        if (children[i] != IntPtr.Zero)
+                        {
+                            NativeMethods.SetWindowPos(children[i], (IntPtr)(IsTopMost(children[i]) ? WindowZOrder.HWND_TOPMOST : WindowZOrder.HWND_TOP), 0, 0, 0, 0, flags | SetWindowPosFlags.SWP_NOACTIVATE);
+                        }
+                    }
+                }
 
                 return true;
             }
+            catch { }
 
             return false;
+        }
+
+        public static bool IsTopMost(IntPtr handle)
+        {
+            return WindowLong.HasValue(handle, GWL.GWL_EXSTYLE, WindowStyle.WS_EX_TOPMOST);
         }
 
         public static bool IsMinimized(IntPtr handle)
@@ -495,6 +580,37 @@ namespace Gw2Launcher.Windows
                     return true;
                 }
             }
+            return false;
+        }
+
+        public static bool IsWindowOverlapped(IntPtr h)
+        {
+            var w = GetWindow(h, GetWindowType.GW_HWNDFIRST);
+            byte counter = 0;
+            RECT r1;
+            NativeMethods.GetWindowRect(h, out r1);
+
+            while (w != IntPtr.Zero && w != h)
+            {
+                if (NativeMethods.IsWindowVisible(w))
+                {
+                    RECT r2;
+                    if (NativeMethods.GetWindowRect(w, out r2))
+                    {
+                        if (r1.left < r2.right && r1.right > r2.left && r1.top < r2.bottom && r1.bottom > r2.top)
+                        {
+                            return true;
+                        }
+                    }
+                }
+
+                w = GetWindow(w, GetWindowType.GW_HWNDNEXT);
+                
+                //next can go back to a previous window, causing an infinite loop
+                if (++counter == 255)
+                    break;
+            }
+
             return false;
         }
     }

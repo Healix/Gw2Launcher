@@ -142,6 +142,34 @@ namespace Gw2Launcher.Util
                 return false;
             }
         }
+        
+        public static void LogEvent(Settings.IAccount account, Exception e)
+        {
+            LogEvent(account, "(" + e.HResult.ToString("x") + ") " + e.ToString());
+        }
+
+        public static void LogEvent(Exception e)
+        {
+            LogEvent(null, "(" + e.HResult.ToString("x") + ") " + e.ToString());
+        }
+
+        public static void LogEvent(string message)
+        {
+            LogEvent(null, message);
+        }
+
+        public static void LogEvent(string message, Exception e)
+        {
+            LogEvent(null, message, e);
+        }
+
+        public static void LogEvent(Settings.IAccount account, string message, Exception e)
+        {
+            if (e != null)
+                LogEvent(account, message + "\n(" + e.HResult.ToString("x") + ") " + e.ToString());
+            else
+                LogEvent(account, message);
+        }
 
         public static void LogEvent(Settings.IAccount account, string message)
         {

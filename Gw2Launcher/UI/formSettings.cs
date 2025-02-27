@@ -244,6 +244,7 @@ namespace Gw2Launcher.UI
         private Tools.Markers.MarkerIcons markerIcons;
         private UI.Tooltip.FloatingTooltip ftooltip;
         private ColorInfo colorInfo;
+        private bool hasTempSettings;
 
         public formSettings(formMain owner)
         {
@@ -533,6 +534,7 @@ namespace Gw2Launcher.UI
             checkDeleteCacheOnLaunch.Checked = Settings.DeleteCacheOnLaunch.Value;
             checkShowDailies.Checked = Settings.ShowDailies.Value.HasFlag(Settings.DailiesMode.Show);
             checkShowDailiesAuto.Checked = Settings.ShowDailies.Value.HasFlag(Settings.DailiesMode.AutoLoad);
+            checkShowDailiesAutoFavorite.Checked = Settings.ShowDailies.Value.HasFlag(Settings.DailiesMode.AutoLoadFavorite);
 
             if (Settings.BackgroundPatchingProgress.HasValue)
             {
@@ -920,6 +922,7 @@ namespace Gw2Launcher.UI
             checkStyleShowTemplatesToggle.Checked = Settings.ShowWindowTemplatesToggle.Value;
             checkStyleShowMinimizeRestoreAll.Checked = Settings.ShowMinimizeRestoreAll.Value;
             checkStyleShowAccountBarToggle.Checked = Settings.ShowAccountBarToggle.Value;
+            checkStyleShowLimit1.Checked = Settings.ShowLimit1.Value;
 
             checkStyleShowLoginRewardIcon.Checked = Settings.StyleShowDailyLoginDay.Value != Settings.DailyLoginDayIconFlags.None;
             checkStyleMarkActive.Checked = Settings.StyleHighlightActive.Value;
@@ -1065,7 +1068,49 @@ namespace Gw2Launcher.UI
                 checkGw2BrowserAffinityAll.Checked = false;
             }
 
+            if (Settings.ActionLaunchAll.HasValue)
+            {
+                var actions = Settings.ActionLaunchAll.Value;
 
+                Util.ComboItem<Settings.ButtonAction>.Select(comboActionLaunchAllLClick, actions[Settings.ButtonActions.ActionType.LeftClick]);
+                Util.ComboItem<Settings.ButtonAction>.Select(comboActionLaunchAllMClick, actions[Settings.ButtonActions.ActionType.MiddleClick]);
+                Util.ComboItem<Settings.ButtonAction>.Select(comboActionLaunchAllRClick, actions[Settings.ButtonActions.ActionType.RightClick]);
+            }
+            else
+            {
+                Util.ComboItem<Settings.ButtonAction>.Select(comboActionLaunchAllLClick, Settings.ButtonAction.Launch);
+                Util.ComboItem<Settings.ButtonAction>.Select(comboActionLaunchAllMClick, Settings.ButtonAction.None);
+                Util.ComboItem<Settings.ButtonAction>.Select(comboActionLaunchAllRClick, Settings.ButtonAction.None);
+            }
+
+            if (Settings.ActionLaunchDaily.HasValue)
+            {
+                var actions = Settings.ActionLaunchDaily.Value;
+
+                Util.ComboItem<Settings.ButtonAction>.Select(comboActionLaunchDailyLClick, actions[Settings.ButtonActions.ActionType.LeftClick]);
+                Util.ComboItem<Settings.ButtonAction>.Select(comboActionLaunchDailyMClick, actions[Settings.ButtonActions.ActionType.MiddleClick]);
+                Util.ComboItem<Settings.ButtonAction>.Select(comboActionLaunchDailyRClick, actions[Settings.ButtonActions.ActionType.RightClick]);
+            }
+            else
+            {
+                Util.ComboItem<Settings.ButtonAction>.Select(comboActionLaunchDailyLClick, Settings.ButtonAction.Launch);
+                Util.ComboItem<Settings.ButtonAction>.Select(comboActionLaunchDailyMClick, Settings.ButtonAction.None);
+                Util.ComboItem<Settings.ButtonAction>.Select(comboActionLaunchDailyRClick, Settings.ButtonAction.None);
+            }
+
+            checkStyleIconOrder.Checked = Settings.StyleDisplayIconOrder.HasValue;
+
+            if (Settings.ExternalLaunchMonitor.HasValue)
+            {
+                var v = Settings.ExternalLaunchMonitor.Value;
+
+                checkExternalLaunchGw1.Checked = (v & Client.Launcher.AccountType.GuildWars1) != 0;
+                checkExternalLaunchGw2.Checked = (v & Client.Launcher.AccountType.GuildWars2) != 0;
+            }
+
+            checkLaunchToFront.Checked = Settings.LaunchToFront.Value;
+            checkTweakDisableVaultUsage.Checked = Settings.Tweaks.DisableVaultMonitor.Value;
+            checkStyleAccountRunAfter.Checked = Settings.StyleShowRun.Value;
 
 
 
@@ -1081,9 +1126,76 @@ namespace Gw2Launcher.UI
             buttonSample.SizeChanged += buttonSample_SizeChanged;
         }
 
+        private void InitIconDisplayOrder()
+        {
+            var order = Settings.StyleDisplayIconOrder.Value;
+            var items = new Util.ComboItem<Settings.DisplayIcons>[]
+                {
+                    new Util.ComboItem<Settings.DisplayIcons>(Settings.DisplayIcons.Login, "Login/Daily"),
+                    new Util.ComboItem<Settings.DisplayIcons>(Settings.DisplayIcons.Weekly, "Weekly"),
+                    new Util.ComboItem<Settings.DisplayIcons>(Settings.DisplayIcons.Astral, "Astral"),
+                };
+
+            if (order != null)
+            {
+                var d = new Dictionary<Settings.DisplayIcons, Util.ComboItem<Settings.DisplayIcons>>();
+                var result = new Util.ComboItem<Settings.DisplayIcons>[items.Length];
+                var k = 0;
+
+                foreach (var i in items)
+                {
+                    d[i.Value] = i;
+                }
+
+                foreach (var o in order)
+                {
+                    Util.ComboItem<Settings.DisplayIcons> i;
+
+                    if (d.TryGetValue(o, out i))
+                    {
+                        d.Remove(o);
+
+                        result[k++] = i;
+                    }
+                }
+
+                if (d.Count > 0)
+                {
+                    foreach (var i in items)
+                    {
+                        if (d.Remove(i.Value))
+                        {
+                            result[k++] = i;
+                            if (d.Count == 0)
+                                break;
+                        }
+                    }
+                }
+
+                items = result;
+            }
+
+            var rows = new DataGridViewRow[items.Length];
+            var rh = gridStyleIconOrder.RowTemplate.Height;
+
+            for (var i = 0; i < items.Length;i++)
+            {
+                var r = rows[i] = new DataGridViewRow();
+                r.CreateCells(gridStyleIconOrder);
+                r.Cells[0].Value = items[i];
+                r.Height = rh;
+            }
+
+            gridStyleIconOrder.ScrollBars = ScrollBars.None;
+            gridStyleIconOrder.Height = (rh + 1) * rows.Length;
+            gridStyleIconOrder.Rows.AddRange(rows);
+        }
+
         void panelSecurity_PreVisiblePropertyChanged(object sender, bool e)
         {
             panelSecurity.PreVisiblePropertyChanged -= panelSecurity_PreVisiblePropertyChanged;
+
+            comboEncryptionScope.Enabled = true;
 
             if (Settings.IPAddresses.HasValue)
             {
@@ -1187,6 +1299,8 @@ namespace Gw2Launcher.UI
             }
 
             panelStyleLoginRewardIcons.ResumeLayout();
+
+            InitIconDisplayOrder();
         }
 
         void buttonSample_SizeChanged(object sender, EventArgs e)
@@ -1230,6 +1344,9 @@ namespace Gw2Launcher.UI
             base.OnInitializeComponents();
 
             InitializeComponent();
+            MarkTemporarySettings();
+
+            sidebarPanel1.BackColor = Util.Color.Lighten(this.BackColor, Util.Color.Luminance(this.ForeColor) <= 127 ? 0.9f : 0.1f);
 
             Control p;
 
@@ -1238,6 +1355,51 @@ namespace Gw2Launcher.UI
 
             p = panelScreenshotImageFormatJpg.Parent;
             p.Margin = new System.Windows.Forms.Padding(comboScreenshotImageFormat.Left - 2, p.Margin.Top, p.Margin.Right, p.Margin.Bottom);
+        }
+
+        protected void MarkTemporarySettings()
+        {
+            if (!Settings.HAS_TEMP_SETTINGS)
+                return;
+
+            var controls = new Control[]
+            {
+                comboActionLaunchAllLClick,
+                comboActionLaunchAllMClick,
+                comboActionLaunchAllRClick,
+                comboActionLaunchDailyLClick,
+                comboActionLaunchDailyMClick,
+                comboActionLaunchDailyRClick,
+                checkStyleIconOrder,
+                checkExternalLaunchGw1,
+                checkExternalLaunchGw2,
+                checkLaunchToFront,
+                checkTweakDisableVaultUsage,
+                checkStyleAccountRunAfter,
+                checkShowDailiesAutoFavorite,
+            };
+
+            foreach (var c in controls)
+            {
+                MarkTemporary(c);
+            }
+        }
+
+        protected void MarkTemporary(Control c)
+        {
+            if (!hasTempSettings)
+            {
+                hasTempSettings = true;
+                if (!Settings.NotifiedTemporarySettings)
+                    this.Shown += hasTempSettings_Shown;
+            }
+            c.ForeColor = Color.Purple;
+        }
+
+        void hasTempSettings_Shown(object sender, EventArgs e)
+        {
+            MessageBox.Show(this, "This version contains purple marked settings are temporary and may reset in future versions.\n\nThis will reappear after a reset.", "Temporary settings", MessageBoxButtons.OK, MessageBoxIcon.Exclamation);
+            Settings.NotifiedTemporarySettings = true;
         }
 
         private int GetScopeWeigth(Settings.EncryptionScope scope)
@@ -1251,9 +1413,8 @@ namespace Gw2Launcher.UI
                 case Settings.EncryptionScope.Portable:
                     return 2;
                 case Settings.EncryptionScope.Unencrypted:
-                    return 255;
                 default:
-                    throw new NotSupportedException();
+                    return 255;
             }
         }
 
@@ -1267,6 +1428,8 @@ namespace Gw2Launcher.UI
             var close = new Util.ComboItem<Settings.ButtonAction>(Settings.ButtonAction.Close, "Terminate");
             var launch = new Util.ComboItem<Settings.ButtonAction>(Settings.ButtonAction.Launch, "Launch");
             var launchNormal = new Util.ComboItem<Settings.ButtonAction>(Settings.ButtonAction.LaunchSingle, "Launch (normal)");
+            var launchSelected = new Util.ComboItem<Settings.ButtonAction>(Settings.ButtonAction.LaunchSelected, "Launch selected");
+            var launchSelectedNormal = new Util.ComboItem<Settings.ButtonAction>(Settings.ButtonAction.LaunchSelectedSingle, "Launch selected (normal)");
             
             comboActionActiveLClick.Items.AddRange(new object[]
                 {
@@ -1309,6 +1472,23 @@ namespace Gw2Launcher.UI
                     copyAuth,
                     showAuth,
                 });
+
+            var actionsLaunch = new object[]
+            {
+                none,
+                launch,
+                launchNormal,
+                launchSelected,
+                launchSelectedNormal,
+            };
+
+            comboActionLaunchAllLClick.Items.AddRange(actionsLaunch);
+            comboActionLaunchAllMClick.Items.AddRange(actionsLaunch);
+            comboActionLaunchAllRClick.Items.AddRange(actionsLaunch);
+
+            comboActionLaunchDailyLClick.Items.AddRange(actionsLaunch);
+            comboActionLaunchDailyMClick.Items.AddRange(actionsLaunch);
+            comboActionLaunchDailyRClick.Items.AddRange(actionsLaunch);
         }
 
         public static CheckBox[] InitializeArguments(Settings.AccountType type, Panel container, Label templateHeader, CheckBox templateCheck, Label templateSwitch, Label templateDescription, EventHandler onCheckChanged)
@@ -1788,6 +1968,16 @@ namespace Gw2Launcher.UI
             Settings.ActionActiveMClick.Value = Util.ComboItem<Settings.ButtonAction>.SelectedValue(comboActionActiveMClick, Settings.ButtonAction.None);
             Settings.ActionInactiveMClick.Value = Util.ComboItem<Settings.ButtonAction>.SelectedValue(comboActionInactiveMClick, Settings.ButtonAction.None);
 
+            Settings.ActionLaunchAll.Value = new Settings.ButtonActions(
+                Util.ComboItem<Settings.ButtonAction>.SelectedValue(comboActionLaunchAllLClick, Settings.ButtonAction.None),
+                Util.ComboItem<Settings.ButtonAction>.SelectedValue(comboActionLaunchAllMClick, Settings.ButtonAction.None),
+                Util.ComboItem<Settings.ButtonAction>.SelectedValue(comboActionLaunchAllRClick, Settings.ButtonAction.None));
+
+            Settings.ActionLaunchDaily.Value = new Settings.ButtonActions(
+                Util.ComboItem<Settings.ButtonAction>.SelectedValue(comboActionLaunchDailyLClick, Settings.ButtonAction.None),
+                Util.ComboItem<Settings.ButtonAction>.SelectedValue(comboActionLaunchDailyMClick, Settings.ButtonAction.None),
+                Util.ComboItem<Settings.ButtonAction>.SelectedValue(comboActionLaunchDailyRClick, Settings.ButtonAction.None));
+
             Settings.GuildWars2.AutomaticRememberedLogin.Value = checkGw2AutomaticLauncherLogin.Checked;
 
             if (checkGw2MuteAll.Checked || checkGw2MuteMusic.Checked || checkGw2MuteVoices.Checked)
@@ -1853,21 +2043,24 @@ namespace Gw2Launcher.UI
             Settings.DeleteCacheOnLaunch.Value = checkDeleteCacheOnLaunch.Checked;
             if (checkShowDailies.Checked)
             {
-                Settings.DailiesMode showDailies = Settings.ShowDailies.Value;
+                var showDailies = Settings.ShowDailies.Value & ~(Settings.DailiesMode.AutoLoad | Settings.DailiesMode.AutoLoadFavorite);
 
                 showDailies |= Settings.DailiesMode.Show;
+
                 if (checkShowDailiesAuto.Checked)
+                {
                     showDailies |= Settings.DailiesMode.AutoLoad;
-                else
-                    showDailies &= ~Settings.DailiesMode.AutoLoad;
+                    if (checkShowDailiesAutoFavorite.Checked)
+                        showDailies |= Settings.DailiesMode.AutoLoadFavorite;
+                }
 
                 Settings.ShowDailies.Value = showDailies;
             }
             else
             {
                 Settings.ShowDailies.Clear();
-                if (Settings.WindowBounds.Contains(typeof(formDailies)))
-                    Settings.WindowBounds[typeof(formDailies)].Clear();
+                if (Settings.WindowBounds.Contains(typeof(Dailies.formDailies)))
+                    Settings.WindowBounds[typeof(Dailies.formDailies)].Clear();
             }
 
             if (checkAutoUpdateDownloadProgress.Checked)
@@ -2076,10 +2269,7 @@ namespace Gw2Launcher.UI
                     }
                     else if (o == null || o.Scope != scope)
                     {
-                        byte[] key = null;
-                        if (scope == Settings.EncryptionScope.Portable)
-                            key = Security.Cryptography.Crypto.GenerateCryptoKey();
-                        Settings.Encryption.Value = new Settings.EncryptionOptions(scope, key);
+                        Settings.Encryption.Value = new Settings.EncryptionOptions(scope);
                     }
                 }
             }
@@ -2221,6 +2411,10 @@ namespace Gw2Launcher.UI
             Settings.ShowWindowTemplatesToggle.Value = checkStyleShowTemplatesToggle.Checked;
             Settings.ShowMinimizeRestoreAll.Value = checkStyleShowMinimizeRestoreAll.Checked;
             Settings.ShowAccountBarToggle.Value = checkStyleShowAccountBarToggle.Checked;
+            Settings.ShowLimit1.Value = checkStyleShowLimit1.Checked;
+
+            if (!checkStyleShowLimit1.Checked)
+                Settings.Limit1Enabled.Clear();
 
             if (panelStyleLoginRewardIcons.Controls.Count > 0)
             {
@@ -2411,11 +2605,43 @@ namespace Gw2Launcher.UI
             else
                 Settings.GuildWars2.ChromiumAffinity.Clear();
 
+            if (checkStyleIconOrder.Checked)
+            {
+                if (gridStyleIconOrder.Tag != null)
+                {
+                    var order = new Settings.DisplayIcons[gridStyleIconOrder.Rows.Count];
 
+                    for (var i = 0; i < order.Length; i++)
+                    {
+                        order[i] = ((Util.ComboItem<Settings.DisplayIcons>)gridStyleIconOrder.Rows[i].Cells[0].Value).Value;
+                    }
 
+                    Settings.StyleDisplayIconOrder.Value = order;
+                }
+            }
+            else
+                Settings.StyleDisplayIconOrder.Clear();
 
+            if (checkExternalLaunchGw1.Checked || checkExternalLaunchGw2.Checked)
+            {
+                var types = Client.Launcher.AccountType.None;
+                if (checkExternalLaunchGw1.Checked)
+                    types |= Client.Launcher.AccountType.GuildWars1;
+                if (checkExternalLaunchGw2.Checked)
+                    types |= Client.Launcher.AccountType.GuildWars2;
+                Settings.ExternalLaunchMonitor.Value = types;
+            }
+            else
+                Settings.ExternalLaunchMonitor.Clear();
 
+            Settings.LaunchToFront.Value = checkLaunchToFront.Checked;
 
+            if (checkTweakDisableVaultUsage.Checked)
+                Settings.Tweaks.DisableVaultMonitor.Value = true;
+            else
+                Settings.Tweaks.DisableVaultMonitor.Clear();
+
+            Settings.StyleShowRun.Value = checkStyleAccountRunAfter.Checked;
 
 
 
@@ -2431,7 +2657,10 @@ namespace Gw2Launcher.UI
 
         private void buttonWindowReset_Click(object sender, EventArgs e)
         {
-            Settings.WindowBounds[typeof(formMain)].Clear();
+            var v = Settings.WindowBounds[typeof(formMain)];
+            if (!v.HasValue)
+                v.Value = owner.Bounds;
+            v.Clear();
         }
 
         private void buttonCancel_Click(object sender, EventArgs e)
@@ -2585,6 +2814,7 @@ namespace Gw2Launcher.UI
         private void checkShowDailies_CheckedChanged(object sender, EventArgs e)
         {
             checkShowDailiesAuto.Enabled = checkShowDailies.Checked;
+            checkShowDailiesAutoFavorite.Enabled = checkShowDailiesAuto.Checked && checkShowDailies.Checked;
         }
 
         private void buttonCustomUsername_Click(object sender, EventArgs e)
@@ -2739,22 +2969,27 @@ namespace Gw2Launcher.UI
                 OnScreenshotNameFormatChangedCallback();
         }
 
-        private int OnScreenshotNameFormatChangedCallback()
+        private Util.ScheduledEvents.Ticks OnScreenshotNameFormatChangedCallback()
         {
+            Tools.Screenshots.Formatter format = null;
+
             try
             {
-                var format = Tools.Screenshots.Formatter.Convert(comboScreenshotNameFormat.Text);
+                format = Tools.Screenshots.Formatter.Convert(comboScreenshotNameFormat.Text);
+                
                 if (format != null)
                 {
                     labelScreenshotNameFormatSample.Text = format.ToString(1, DateTime.Now);
-                    return -1;
                 }
             }
             catch { }
 
-            labelScreenshotNameFormatSample.Text = "invalid";
+            if (format == null)
+            {
+                labelScreenshotNameFormatSample.Text = "invalid";
+            }
 
-            return -1;
+            return Util.ScheduledEvents.Ticks.None;
         }
 
         protected override void Dispose(bool disposing)
@@ -3316,40 +3551,63 @@ namespace Gw2Launcher.UI
 
                 if (GetScopeWeigth(selected.Value) > GetScopeWeigth(scope))
                 {
-                    Settings.IAccount account = null;
-                    var date = DateTime.MaxValue;
-                    var puid = ushort.MaxValue;
-                    bool b;
+                    HashSet<ushort> ignored = null;
 
-                    foreach (var a in Util.Accounts.GetAccounts())
+                    while (true)
                     {
-                        if (!a.HasCredentials)
-                            continue;
+                        Settings.IAccount account = null;
+                        var date = DateTime.MaxValue;
+                        var puid = ushort.MaxValue;
+                        bool b;
 
-                        if (a.Password.UID < puid || a.Password.UID == puid && a.CreatedUtc < date)
+                        foreach (var a in Util.Accounts.GetAccounts())
                         {
-                            account = a;
-                            puid = a.Password.UID;
-                            date = a.CreatedUtc;
-                        }
-                    }
+                            if (!a.HasCredentials)
+                                continue;
 
-                    if (!(b = account == null))
-                    {
-                        using (var f = new formPassword(account.Email, account.Password.ToSecureString()))
+                            if (a.Password.UID < puid || a.Password.UID == puid && a.CreatedUtc < date)
+                            {
+                                if (ignored == null || !ignored.Contains(a.UID))
+                                {
+                                    account = a;
+                                    puid = a.Password.UID;
+                                    date = a.CreatedUtc;
+                                }
+                            }
+                        }
+
+                        if (!(b = account == null))
                         {
-                            b = f.ShowDialog(this) == System.Windows.Forms.DialogResult.OK;
-                        }
-                    }
+                            System.Security.SecureString p;
 
-                    if (!b)
-                    {
-                        Util.ComboItem<Settings.EncryptionScope>.Select(comboEncryptionScope, scope);
-                        return;
-                    }
-                    else
-                    {
-                        encryptionState = ArgsState.Loaded;
+                            try
+                            {
+                                p = account.Password.ToSecureString();
+                            }
+                            catch
+                            {
+                                if (ignored == null)
+                                    ignored = new HashSet<ushort>();
+                                ignored.Add(account.UID);
+                                continue;
+                            }
+
+                            using (var f = new formPassword(account.Email, p))
+                            {
+                                b = f.ShowDialog(this) == System.Windows.Forms.DialogResult.OK;
+                            }
+                        }
+
+                        if (!b)
+                        {
+                            Util.ComboItem<Settings.EncryptionScope>.Select(comboEncryptionScope, scope);
+                            return;
+                        }
+                        else
+                        {
+                            encryptionState = ArgsState.Loaded;
+                            return;
+                        }
                     }
                 }
             }
@@ -4325,6 +4583,8 @@ namespace Gw2Launcher.UI
                 path = f.FileName;
             }
 
+            var bscope = comboEncryptionScope.Enabled;
+
             this.Enabled = false;
 
             using (var f = new formProgressBar()
@@ -4346,6 +4606,18 @@ namespace Gw2Launcher.UI
                         IncludeGfxSettings = checkBackupIncludeGfxSettings.Checked,
                     };
 
+                    if (bscope)
+                    {
+                        var eo = Settings.Encryption.Value;
+                        var scope2 = eo != null ? eo.Scope : Settings.EncryptionScope.CurrentUser;
+                        var scope = Util.ComboItem<Settings.EncryptionScope>.SelectedValue(comboEncryptionScope);
+
+                        if (scope != scope2 && (encryptionState == ArgsState.Loaded || GetScopeWeigth(scope) <= GetScopeWeigth(scope2)))
+                        {
+                            o.Encryption = new Settings.EncryptionOptions(scope);
+                        }
+                    }
+
                     var backup = new Tools.Backup.Backup.Exporter(path, o);
 
                     backup.ProgressChanged += delegate
@@ -4365,7 +4637,23 @@ namespace Gw2Launcher.UI
 
                     try
                     {
-                        await t;
+                        var tc = Environment.TickCount;
+
+                        try
+                        {
+                            await t;
+
+                            if (Environment.TickCount - tc < 1000)
+                            {
+                                await Task.Delay(500);
+                            }
+                        }
+                        finally
+                        {
+                            this.Enabled = true;
+                            this.Focus();
+                        }
+
                         f.Hide();
                     }
                     catch (Exception ex)
@@ -4376,8 +4664,6 @@ namespace Gw2Launcher.UI
                     }
                 }
             }
-
-            this.Enabled = true;
         }
 
         private void labelBackupRestore_Click(object sender, EventArgs e)
@@ -5304,6 +5590,100 @@ namespace Gw2Launcher.UI
         private void checkGw2BrowserAffinityAll_CheckedChanged(object sender, EventArgs e)
         {
             panelGw2BrowserAffinity.Visible = !checkGw2BrowserAffinityAll.Checked;
+        }
+
+        private bool MoveSelectedIconOrder(bool up)
+        {
+            var selected = new DataGridViewRow[gridStyleIconOrder.SelectedRows.Count];
+
+            gridStyleIconOrder.SelectedRows.CopyTo(selected, 0);
+
+            if (selected.Length > 1)
+            {
+                Array.Sort(selected, delegate(DataGridViewRow a, DataGridViewRow b)
+                {
+                    return a.Index.CompareTo(b.Index);
+                });
+            }
+
+            var count = gridStyleIconOrder.Rows.Count;
+            var ofs = up ? -1 : 1;
+            var changed = false;
+
+            for (var i = 0; i < selected.Length; i++)
+            {
+                DataGridViewRow r1, r2;
+
+                if (up)
+                {
+                    r1 = selected[i];
+                }
+                else
+                {
+                    r1 = selected[selected.Length - i - 1];
+                }
+
+                if (up)
+                {
+                    if (r1.Index <= 0)
+                        continue;
+                }
+                else
+                {
+                    if (r1.Index == count - 1)
+                        continue;
+                }
+
+                r2 = gridStyleIconOrder.Rows[r1.Index + ofs];
+
+                if (r2.Selected)
+                    continue;
+
+                var v = r2.Cells[0].Value;
+
+                r2.Cells[0].Value = r1.Cells[0].Value;
+                r1.Cells[0].Value = v;
+
+                r1.Selected = false;
+                r2.Selected = true;
+                changed = true;
+            }
+
+            return changed;
+        }
+
+        private void checkStyleIconOrder_CheckedChanged(object sender, EventArgs e)
+        {
+            gridStyleIconOrder.Parent.Visible = checkStyleIconOrder.Checked;
+        }
+
+        private void buttonStyleIconOrder_MouseDown(object sender, MouseEventArgs e)
+        {
+            if (e.Button == System.Windows.Forms.MouseButtons.Left)
+            {
+                if (MoveSelectedIconOrder(sender == buttonStyleIconOrderUp))
+                {
+                    if (gridStyleIconOrder.Tag == null)
+                        gridStyleIconOrder.Tag = true;
+                }
+            }
+        }
+
+        private void checkStyleAccountRunAfter_CheckedChanged(object sender, EventArgs e)
+        {
+            buttonSample.ShowRun = checkStyleAccountRunAfter.Checked;
+        }
+
+        private void checkShowDailiesAuto_CheckedChanged(object sender, EventArgs e)
+        {
+            checkShowDailiesAutoFavorite.Enabled = checkShowDailiesAuto.Checked && checkShowDailies.Checked;
+        }
+
+        protected override void OnSystemColorsChanged(EventArgs e)
+        {
+            base.OnSystemColorsChanged(e);
+
+            sidebarPanel1.BackColor = Util.Color.Lighten(this.BackColor, Util.Color.Luminance(this.ForeColor) <= 127 ? 0.9f : 0.1f);
         }
     }
 }

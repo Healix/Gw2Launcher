@@ -198,19 +198,20 @@ namespace Gw2Launcher.UI.Controls
 
             if (isActive)
             {
+                //warning: DrawArc can cause out of memory error on certain values of sweepAngle when value is < 1.0
                 if (_Value > PROGRESS_ANIM_END)
                 {
                     var ofs = (float)(360 * (Math.Sin(Math.PI * (_Value - PROGRESS_ANIM_END) / PROGRESS_ANIM_SUM - Math.PI / 2) / 2 + 0.5));
-                    g.DrawArc(penStroke, phalf, phalf, this.Width - psize, this.Height - psize, -90f + ofs, 360 * _Value - ofs);
+                    g.DrawArc(penStroke, phalf, phalf, this.Width - psize, this.Height - psize, -90f + ofs, (int)(360 * _Value - ofs));
                 }
                 else if (_Value < PROGRESS_ANIM_BEGIN)
                 {
                     var ofs = (float)(360 * (Math.Sin(Math.PI * (_Value + (1 - PROGRESS_ANIM_END)) / PROGRESS_ANIM_SUM - Math.PI / 2) / 2 + 0.5));
-                    g.DrawArc(penStroke, phalf, phalf, this.Width - psize, this.Height - psize, -90f + ofs, 360 - ofs + 360 * _Value);
+                    g.DrawArc(penStroke, phalf, phalf, this.Width - psize, this.Height - psize, -90f + ofs,  (int)(360 - ofs + 360 * _Value));
                 }
                 else
                 {
-                    g.DrawArc(penStroke, phalf, phalf, this.Width - psize, this.Height - psize, -90f, 360 * _Value);
+                    g.DrawArc(penStroke, phalf, phalf, this.Width - psize, this.Height - psize, -90f,  (int)(360 * _Value));
                 }
             }
 

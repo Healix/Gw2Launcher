@@ -78,6 +78,8 @@ namespace Gw2Launcher.UI
         {
             InitializeComponents();
 
+            sidebarPanel1.BackColor = Util.Color.Lighten(this.BackColor, Util.Color.Luminance(this.ForeColor) <= 127 ? 0.9f : 0.1f);
+
             cancelToken = new CancellationTokenSource();
 
             this.FormClosing += new System.Windows.Forms.FormClosingEventHandler(this.formSupport_FormClosing);
@@ -1862,6 +1864,13 @@ namespace Gw2Launcher.UI
         private void copyLogin_Click(object sender, EventArgs e)
         {
             Clipboard.SetData(DataFormats.Text, GridToString(gridLoginServers));
+        }
+
+        protected override void OnSystemColorsChanged(EventArgs e)
+        {
+            base.OnSystemColorsChanged(e);
+
+            sidebarPanel1.BackColor = Util.Color.Lighten(this.BackColor, Util.Color.Luminance(this.ForeColor) <= 127 ? 0.9f : 0.1f);
         }
     }
 }

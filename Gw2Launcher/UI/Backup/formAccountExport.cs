@@ -9,6 +9,7 @@ using System.Threading.Tasks;
 using System.Windows.Forms;
 using System.IO;
 using Gw2Launcher.Tools.Backup;
+using System.Security;
 
 namespace Gw2Launcher.UI.Backup
 {
@@ -100,35 +101,57 @@ namespace Gw2Launcher.UI.Backup
             if (level == AccountExporter.EncodingType.Text || level == requested)
                 return true;
 
-            Settings.IAccount account = null;
-            var date = DateTime.MaxValue;
-            var puid = ushort.MaxValue;
-            bool b;
+            HashSet<ushort> ignored = null;
 
-            foreach (var a in Util.Accounts.GetAccounts())
+            while (true)
             {
-                if (!a.HasCredentials)
-                    continue;
+                Settings.IAccount account = null;
+                var date = DateTime.MaxValue;
+                var puid = ushort.MaxValue;
+                bool b;
 
-                if (a.Password.UID < puid || a.Password.UID == puid && a.CreatedUtc < date)
+                foreach (var a in Util.Accounts.GetAccounts())
                 {
-                    account = a;
-                    puid = a.Password.UID;
-                    date = a.CreatedUtc;
-                }
-            }
+                    if (!a.HasCredentials)
+                        continue;
 
-            if (!(b = account == null))
-            {
-                using (var f = new formPassword(account.Email, account.Password.ToSecureString()))
+                    if (a.Password.UID < puid || a.Password.UID == puid && a.CreatedUtc < date)
+                    {
+                        if (ignored == null || !ignored.Contains(a.UID))
+                        {
+                            account = a;
+                            puid = a.Password.UID;
+                            date = a.CreatedUtc;
+                        }
+                    }
+                }
+
+                if (!(b = account == null))
                 {
-                    b = f.ShowDialog(this) == System.Windows.Forms.DialogResult.OK;
-                    if (b)
-                        level = AccountExporter.EncodingType.Text;
-                }
-            }
+                    SecureString p;
 
-            return b;
+                    try
+                    {
+                        p = account.Password.ToSecureString();
+                    }
+                    catch
+                    {
+                        if (ignored == null)
+                            ignored = new HashSet<ushort>();
+                        ignored.Add(account.UID);
+                        continue;
+                    }
+
+                    using (var f = new formPassword(account.Email, p))
+                    {
+                        b = f.ShowDialog(this) == System.Windows.Forms.DialogResult.OK;
+                        if (b)
+                            level = AccountExporter.EncodingType.Text;
+                    }
+                }
+
+                return b;
+            }
         }
 
         private List<Settings.IAccount> GetAccounts()
