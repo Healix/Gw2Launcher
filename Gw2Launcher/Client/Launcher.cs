@@ -1950,6 +1950,7 @@ namespace Gw2Launcher.Client
         private static Limiter limiter;
         private static Tools.Mumble.MumbleMonitor mumble;
         private static Tools.Chromium.CefSessionMonitor cefSessions;
+        private static Account focused;
 
         static Launcher()
         {
@@ -2436,6 +2437,44 @@ namespace Gw2Launcher.Client
             return m != null && !m.IsValid;
         }
 
+        /// <summary>
+        /// Returns the most recently focused active account from the supplied accounts
+        /// </summary>
+        public static KeyValuePair<Settings.IAccount, DateTime> GetLastFocused(params Settings.IAccount[] account)
+        {
+            var date = DateTime.MinValue;
+            Settings.IAccount a = null;
+
+            if (account != null && account.Length > 0)
+            {
+                lock (accounts)
+                {
+                    for (var i = 0; i < account.Length; i++)
+                    {
+                        if (account[i] != null)
+                        {
+                            Account _account;
+                            if (accounts.TryGetValue(account[i].UID, out _account))
+                            {
+                                var s = _account.Session;
+
+                                if (s != null)
+                                {
+                                    if (s.LastFocus > date)
+                                    {
+                                        date = s.LastFocus;
+                                        a = _account.Settings;
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+
+            return new KeyValuePair<Settings.IAccount, DateTime>(a, date);
+        }
+
         public static Process GetProcess(Settings.IAccount account)
         {
             lock (accounts)
@@ -2691,6 +2730,21 @@ namespace Gw2Launcher.Client
             return waiting;
         }
 
+        private static Settings.AccountType GetAccountType(AccountType type)
+        {
+            switch (type)
+            {
+                case AccountType.GuildWars1:
+                    
+                    return Settings.AccountType.GuildWars1;
+
+                case AccountType.GuildWars2:
+                default:
+
+                    return Settings.AccountType.GuildWars2;
+            }
+        }
+
         private static bool WaitOnSteam(AccountType type, CancellationToken cancel, bool interruptOnQueueChange)
         {
             Account account;
@@ -2782,23 +2836,18 @@ namespace Gw2Launcher.Client
                                         }
                                         else
                                         {
+                                            var appId = Steam.GetAppId(GetAccountType(type));
+
+                                            if (appId == 0)
+                                            {
+                                                throw new NotSupportedException();
+                                            }
+
                                             while (!waiter.WaitOne(1000))
                                             {
                                                 try
                                                 {
-                                                    if (type == AccountType.GuildWars2)
-                                                    {
-                                                        if (!Steam.IsRunning(Steam.APPID_GW2))
-                                                        {
-                                                            break;
-                                                        }
-                                                    }
-                                                    else
-                                                    {
-                                                        throw new NotSupportedException();
-                                                    }
-
-                                                    if (steam.HasExited)
+                                                    if (!Steam.IsRunning(appId) || steam.HasExited)
                                                     {
                                                         break;
                                                     }
@@ -2977,12 +3026,9 @@ namespace Gw2Launcher.Client
 
             account = null;
 
-            if (type == AccountType.GuildWars2)
+            if (Steam.IsRunning(Steam.GetAppId(GetAccountType(type))))
             {
-                if (Steam.IsRunning(Steam.APPID_GW2))
-                {
-                    return true;
-                }
+                return true;
             }
 
             return false;
@@ -3923,7 +3969,7 @@ namespace Gw2Launcher.Client
                             DumpQueue(
                                 delegate(QueuedLaunch _q)
                                 {
-                                    return _q.account != null && _q.Type == type && _q.account.Settings.Proxy == Settings.LaunchProxy.Steam;
+                                    return _q.account != null && (_q.account.Settings.Proxy == Settings.LaunchProxy.Steam || _q.account.Settings.Provider == Settings.AccountProvider.Steam);
                                 }, e);
 
                             continue;
@@ -4872,7 +4918,7 @@ namespace Gw2Launcher.Client
 
                     try
                     {
-                        var useProxy = !isUpdate && !q.disableProxy && (account.Settings.Proxy == Settings.LaunchProxy.Steam || account.Type == AccountType.GuildWars2 && ((Settings.IGw2Account)account.Settings).Provider == Settings.AccountProvider.Steam)
+                        var useProxy = !isUpdate && !q.disableProxy && (account.Settings.Proxy == Settings.LaunchProxy.Steam || account.Settings.Provider == Settings.AccountProvider.Steam)
                             //note the proxy must be used when launching on another user's account due to changing the environmental variables - alternatively, all variables must be set
                             || processOptions.UserName != null && (customProfile == null || customProfile != null && customProfile.UserProfile == null);
 
@@ -4912,7 +4958,7 @@ namespace Gw2Launcher.Client
                                     Util.Logging.LogEvent(q.account.Settings, "Using Steam proxy");
                                 }
 
-                                if (type == AccountType.GuildWars2)
+                                if (type == AccountType.GuildWars2 || type == AccountType.GuildWars1)
                                 {
                                     string steam;
                                     if (Settings.Steam.Path.HasValue)
@@ -4920,13 +4966,13 @@ namespace Gw2Launcher.Client
                                     else
                                         steam = Steam.Path;
                                     if (!File.Exists(steam))
-                                        throw new InvalidSteamPathException(AccountType.GuildWars2, "Path to Steam not found");
+                                        throw new InvalidSteamPathException(type, "Path to Steam not found");
                                     try
                                     {
-                                        if (Steam.Launch(steam, Steam.APPID_GW2, processOptions.Arguments, cancel))
+                                        if (Steam.Launch(steam, Steam.GetAppId(account.Settings.Type), processOptions.Arguments, cancel))
                                         {
                                             string n;
-                                            if (Settings.GuildWars2.PathSteam.HasValue)
+                                            if (type == AccountType.GuildWars2 && Settings.GuildWars2.PathSteam.HasValue)
                                                 n = Path.GetFileNameWithoutExtension(Settings.GuildWars2.PathSteam.Value);
                                             else
                                                 n = Path.GetFileNameWithoutExtension(fi.Name);
@@ -4934,7 +4980,7 @@ namespace Gw2Launcher.Client
                                             if (p != null)
                                                 account.Process.Attach(p);
                                             s.Proxy = Settings.LaunchProxy.Steam;
-                                            if (Settings.GuildWars2.PathSteam.HasValue)
+                                            if (type == AccountType.GuildWars2 && Settings.GuildWars2.PathSteam.HasValue)
                                                 s.Path = Settings.GuildWars2.PathSteam.Value;
                                         }
                                         else
@@ -5231,6 +5277,8 @@ namespace Gw2Launcher.Client
 
                                         if (okay = !p.HasExited)
                                         {
+                                            s.LastFocus = DateTime.UtcNow;
+
                                             if (AccountWindowEvent != null)
                                             {
                                                 try
@@ -5578,7 +5626,7 @@ namespace Gw2Launcher.Client
 
         private static int RunAfter(Settings.RunAfter.RunAfterWhen state, Account a)
         {
-            if (!Settings.DisableRunAfter.Value)
+            if (!Settings.DisableRunAfter.Value && !a.Settings.DisableRunAfter)
             {
                 try
                 {
@@ -6068,14 +6116,6 @@ namespace Gw2Launcher.Client
                     
                     if (!string.IsNullOrEmpty(account.Arguments))
                     {
-                        if (Util.Args.Contains(account.Arguments, "dx11"))
-                        {
-                            arguments = Util.Args.AddOrReplace(arguments, "dx9", "");
-                        }
-                        else if (Util.Args.Contains(account.Arguments, "dx9"))
-                        {
-                            arguments = Util.Args.AddOrReplace(arguments, "dx11", "");
-                        }
                         args.Append(' ');
                         if (disableAutologin)
                             args.Append(Util.Args.AddOrReplace(account.Arguments, "autologin", ""));
@@ -6115,9 +6155,9 @@ namespace Gw2Launcher.Client
                     var gw1 = (Settings.IGw1Account)account;
                     settings = Settings.GuildWars1;
 
-                    if (!string.IsNullOrEmpty(gw1.CharacterName))
+                    if (!disableAutologin)
                     {
-                        if (!disableAutologin && account.AutomaticLogin && account.HasCredentials)
+                        if (account.AutomaticLogin && !string.IsNullOrEmpty(gw1.CharacterName) && account.HasCredentials)
                         {
                             args.Append(" -email \"");
                             args.Append(account.Email);
@@ -6145,6 +6185,10 @@ namespace Gw2Launcher.Client
                         args.Append(" -character \"");
                         args.Append(gw1.CharacterName);
                         args.Append('"');
+                    }
+                    else if (account.AutomaticRememberedLogin)
+                    {
+                        args.Append(" -autologin");
                     }
                 }
                 else
@@ -6247,14 +6291,11 @@ namespace Gw2Launcher.Client
         {
             var account = q.account.Settings;
             var options = new ProcessOptions();
-            var appId = 0;
 
             options.FileName = fi.FullName;
             if (account.Type == Settings.AccountType.GuildWars2)
             {
                 options.Arguments = GetArguments(account, Settings.GuildWars2.Arguments.Value, q.options != null ? q.options.Args : null, q.mode);
-                if (((Settings.IGw2Account)account).Provider == Settings.AccountProvider.Steam)
-                    appId = Steam.APPID_GW2;
             }
             else
             {
@@ -6271,9 +6312,14 @@ namespace Gw2Launcher.Client
                 options.Password = password;
             }
 
-            if (appId != 0)
+            if (account.Provider == Settings.AccountProvider.Steam)
             {
-                options.Variables[ProcessOptions.VAR_STEAM_ID] = appId.ToString();
+                var appId = Steam.GetAppId(account.Type);
+
+                if (appId != 0)
+                {
+                    options.Variables[ProcessOptions.VAR_STEAM_ID] = appId.ToString();
+                }
             }
 
             if (account.Proxy == Settings.LaunchProxy.None || q.disableProxy)
@@ -7301,6 +7347,50 @@ namespace Gw2Launcher.Client
                 }
             }
 
+            if (focused == account)
+            {
+                focused = null;
+
+                var w = NativeMethods.GetForegroundWindow();
+
+                if (w != IntPtr.Zero)
+                {
+                    uint pid;
+                    NativeMethods.GetWindowThreadProcessId(w, out pid);
+                    if (pid != 0)
+                    {
+                        Util.Logging.LogEvent(account.Settings, "Exited with focused; " + w.ToString() + ", PID " + pid + " has focus");
+
+                        var a = LinkedProcess.GetAccount((int)pid);
+
+                        if (a != null)
+                        {
+                            focused = a;
+
+                            var s = a.Session;
+
+                            if (s != null)
+                            {
+                                s.LastFocus = DateTime.UtcNow;
+                            }
+
+                            Util.Logging.LogEvent(a.Settings, "Focused was changed on exit");
+
+                            if (AccountWindowEvent != null)
+                            {
+                                try
+                                {
+                                    AccountWindowEvent(account.Settings, new AccountWindowEventEventArgs(AccountWindowEventEventArgs.EventType.Focused, a.Process.Process, w));
+                                }
+                                catch { }
+                            }
+                        }
+                    }
+                }
+                else
+                    Util.Logging.LogEvent(account.Settings, "Exited with focused; 0 has focus");
+            }
+
             if (account.Settings.Type == Settings.AccountType.GuildWars2)
             {
                 var s = account.Session;
@@ -8215,6 +8305,31 @@ namespace Gw2Launcher.Client
 
         static void events_ForegroundChanged(object sender, WindowEvents.WindowEventsEventArgs e)
         {
+            var n = DateTime.UtcNow;
+            var s = e.Account.Session;
+
+            if (focused == e.Account)
+            {
+                if (s != null)
+                {
+                    if (n.Ticks - s.LastFocus.Ticks < 1000000)
+                    {
+                        return;
+                    }
+
+                    s.LastFocus = n;
+                }
+            }
+            else
+            {
+                focused = e.Account;
+
+                if (s != null)
+                {
+                    s.LastFocus = n;
+                }
+            }
+
             if (IsWindowed(e.Account.Settings) && e.Account.State == AccountState.ActiveGame)
             {
                 OnWindowStateChanged(e.Handle, e.Account);

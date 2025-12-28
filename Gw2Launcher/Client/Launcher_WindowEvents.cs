@@ -161,7 +161,7 @@ namespace Gw2Launcher.Client
                 public Events(Account account)
                 {
                     this.account = account;
-                    this.events = new RegisteredEvent[3];
+                    this.events = new RegisteredEvent[4];
                     this.proc = new WinEventDelegate(WinEventProc);
                 }
 
@@ -190,8 +190,10 @@ namespace Gw2Launcher.Client
 
                     try
                     {
-                        this.events[0] = new RegisteredEvent(pid, 0x0003, 0x0017, proc);
+                        this.events[0] = new RegisteredEvent(pid, 0x000A, 0x0017, proc);
                         this.events[1] = new RegisteredEvent(pid, 0x8004, 0x8004, proc);
+
+                        this.events[3] = new RegisteredEvent(pid, 0x0003, 0x0003, proc);
                     }
                     catch (Exception e)
                     {
@@ -221,21 +223,14 @@ namespace Gw2Launcher.Client
 
                             break;
                         case 0x0016: //EVENT_SYSTEM_MINIMIZESTART
-                            
+
                             if (MinimizeStart != null)
                                 MinimizeStart(this, new WindowEventsEventArgs(account, hwnd, eventType, idObject, idChild, dwEventThread));
 
                             break;
                         case 0x0017: //EVENT_SYSTEM_MINIMIZEEND
 
-                            if (this.events[2] == null)
-                            {
-                                try
-                                {
-                                    this.events[2] = new RegisteredEvent(account.Process.Process.Id, 0x800B, 0x800B, proc);
-                                }
-                                catch { }
-                            }
+                            DelayedMinimizeEnd(new WindowEventsEventArgs(account, hwnd, eventType, idObject, idChild, dwEventThread));
 
                             break;
                         case 0x000B: //EVENT_SYSTEM_MOVESIZEEND
@@ -249,16 +244,19 @@ namespace Gw2Launcher.Client
                             if (idObject == -4) //OBJID_CLIENT
                             {
                                 //backup for EVENT_SYSTEM_FOREGROUND, which  isn't fired if the window was loaded in the background
-                                try
+
+                                if (ForegroundChanged != null)
                                 {
-                                    var f = NativeMethods.GetForegroundWindow();
-                                    if (dwEventThread == NativeMethods.GetWindowThreadId(f))
+                                    try
                                     {
-                                        if (ForegroundChanged != null)
+                                        var f = NativeMethods.GetForegroundWindow();
+                                        if (dwEventThread == NativeMethods.GetWindowThreadId(f))
+                                        {
                                             ForegroundChanged(this, new WindowEventsEventArgs(account, f, eventType, idObject, idChild, dwEventThread));
+                                        }
                                     }
+                                    catch { }
                                 }
-                                catch { }
                             }
 
                             break;
@@ -286,8 +284,7 @@ namespace Gw2Launcher.Client
                                     var f = NativeMethods.GetForegroundWindow();
                                     if (dwEventThread == NativeMethods.GetWindowThreadId(f))
                                     {
-                                        if (ForegroundChanged != null)
-                                            ForegroundChanged(this, new WindowEventsEventArgs(account, f, eventType, idObject, idChild, dwEventThread));
+                                        ForegroundChanged(this, new WindowEventsEventArgs(account, f, eventType, idObject, idChild, dwEventThread));
                                     }
                                 }
                                 catch { }
@@ -298,12 +295,63 @@ namespace Gw2Launcher.Client
 
                             //Note: unreliable. The event will fail to fire when multiple windows are opened, and can be fired after another window has already taken the foreground
 
-                            //if (ForegroundChanged != null)
-                            //    ForegroundChanged(this, new WindowEventsEventArgs(account, hwnd, eventType, idObject, idChild, dwEventThread));
+                            if (ForegroundChanged != null)
+                            {
+                                try
+                                {
+                                    var f = NativeMethods.GetForegroundWindow();
+                                    if (dwEventThread == NativeMethods.GetWindowThreadId(f))
+                                    {
+                                        ForegroundChanged(this, new WindowEventsEventArgs(account, f, eventType, idObject, idChild, dwEventThread));
+                                    }
+                                }
+                                catch { }
+                            }
 
                             break;
                     }
+                }
 
+                private void OnForegroundChanged(uint eventType, int idObject, int idChild, uint dwEventThread)
+                {
+                    try
+                    {
+                        var f = NativeMethods.GetForegroundWindow();
+                        if (dwEventThread == NativeMethods.GetWindowThreadId(f))
+                        {
+                            ForegroundChanged(this, new WindowEventsEventArgs(account, f, eventType, idObject, idChild, dwEventThread));
+                        }
+                    }
+                    catch { }
+                }
+
+                private async void DelayedMinimizeEnd(WindowEventsEventArgs e, int delay = 100)
+                {
+                    await Task.Delay(delay);
+
+                    if (MinimizeEnd != null)
+                    {
+                        MinimizeEnd(this, e);
+                    }
+
+                    //calling ForegroundChanged, as reordering may not occur after restoring the window
+
+                    if (ForegroundChanged != null)
+                    {
+                        try
+                        {
+                            var f = NativeMethods.GetForegroundWindow();
+                            if (e.EventThread == NativeMethods.GetWindowThreadId(f))
+                            {
+                                if (e.Handle != f)
+                                {
+                                    e = new WindowEventsEventArgs(account, f, e.EventType, e.EventObject, e.EventChild, e.EventThread);
+                                }
+                                ForegroundChanged(this, e);
+                            }
+                        }
+                        catch { }
+                    }
                 }
 
                 public void Destroy()

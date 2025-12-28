@@ -195,10 +195,24 @@ namespace Gw2Launcher.Api
                 set;
             }
 
+            private string _Name;
             public string Name
             {
-                get;
-                set;
+                get
+                {
+                    if (_Name != null)
+                    {
+                        return _Name;
+                    }
+                    else
+                    {
+                        return ID.ToString();
+                    }
+                }
+                set
+                {
+                    _Name = value;
+                }
             }
 
             public IImage Icon
@@ -681,7 +695,7 @@ namespace Gw2Launcher.Api
         {
             get
             {
-                return Settings.ShowDailiesLanguage.Value;
+                return Settings.Dailies.Language.Value;
             }
         }
 
@@ -739,6 +753,19 @@ namespace Gw2Launcher.Api
             return await PopulateIcons(icons);
         }
 
+        private bool Match(Category[] categories, AchievementsGroup gcache, AchievementsGroup group, int[] indexes, int startAt, bool equals)
+        {
+            for (var ci = startAt + 1; ci < indexes.Length; ci++)
+            {
+                if (indexes[ci] != -1 && gcache.Categories[indexes[ci]].Equals(group.Categories[ci]) == equals)
+                {
+                    return false;
+                }
+            }
+
+            return true;
+        }
+
         public async Task<Achievements> GetDailies(ICollection<ushort> ids)
         {
             var date = DateTime.UtcNow;
@@ -762,9 +789,18 @@ namespace Gw2Launcher.Api
 
             if (cache != null)
             {
+                Util.Logging.LogEvent("[daily] cache sum: " + cache.Summary + ", age: " + cache.Age + ", group: " + summary + ", tomorrow: " + (cache.Tomorrow == null ? "null" : "ok"));
+
                 if (cache.Summary == summary && cache.Age == 0 && cache.Today.Equals(groups[cache.Tomorrow == null ? TOMORROW : TODAY]))
                 {
+                    Util.Logging.LogEvent("[daily] not modified");
+
                     cache.Date = date;
+
+                    if (verified && !cache.Verified)
+                    {
+                        cache.Verified = true;
+                    }
 
                     throw new DailyNotModifiedException()
                     {
@@ -773,103 +809,212 @@ namespace Gw2Launcher.Api
                 }
                 else if (!verified)
                 {
+                    Util.Logging.LogEvent("[daily] !verified age:" + cache.Age + ", verified:" + cache.Verified);
                     //api usually updates within a few minutes after reset, but can take longer (worst seen: ~45m)
+                    //warning: api can be partially updated, giving a mix of the previous today/tomorrow dailies, where one category may be correct while another is showing yesterday's dailies, which can cause tomorrow to show the same daily
 
-                    #region Find an existing category that can be matched to the new data
-
-                    var ciCache = -1;
-                    var ciGroup = 0;
-
-                    for (; ciGroup < categories.Length; ciGroup++)
+                    if (cache.Verified && cache.Age < 2)
                     {
-                        if (cache.Categories.Length > ciGroup && cache.Categories[ciGroup].ID == categories[ciGroup].ID)
-                        {
-                            ciCache = ciGroup;
-                        }
-                        else
-                        {
-                            var c = cache.GetCategory(categories[ciGroup].ID);
+                        #region Find an existing category that can be matched to the new data
 
-                            if (c != null)
+                        var ciGroup = -1;
+                        var canSum = true;
+                        var cIndexes = new int[categories.Length];
+                        var untrusted = false;
+
+                        for (var gi = 0; gi < categories.Length; gi++)
+                        {
+                            int ci;
+
+                            if (cache.Categories.Length > gi && cache.Categories[gi].ID == categories[gi].ID)
                             {
-                                ciCache = c.Index;
+                                ci = gi;
                             }
                             else
                             {
-                                continue;
+                                var c = cache.GetCategory(categories[gi].ID);
+
+                                if (c != null)
+                                {
+                                    ci = c.Index;
+                                }
+                                else
+                                {
+                                    ci = -1;
+                                    canSum = false;
+                                }
                             }
+
+                            if (ci != -1)
+                            {
+                                //ensure the category doesn't have the same achievements every day
+                                if (groups[TODAY].Categories[gi].Count > 0 && groups[TOMORROW].Categories[gi].Count > 0)
+                                {
+                                    if (!groups[TODAY].Categories[gi].Equals(groups[TOMORROW].Categories[gi]))
+                                    {
+                                        if (ciGroup == -1)
+                                        {
+                                            ciGroup = gi;
+                                        }
+                                    }
+                                    else
+                                    {
+                                        Util.Logging.LogEvent("[daily] untrusted");
+
+                                        //today and tomorrow is same - can't be trusted
+                                        untrusted = true;
+
+                                        cache.Date = date;
+                                        throw new DailyNotModifiedException()
+                                        {
+                                            Date = date,
+                                        };
+                                    }
+                                    //break;
+                                }
+                                else
+                                {
+                                    ci = -1;
+                                    canSum = false;
+                                }
+                            }
+
+                            cIndexes[gi] = ci;
                         }
 
-                        //ensure the category doesn't have the same achievements every day
-                        if (groups[TODAY].Categories[ciGroup].Count > 0 && groups[TOMORROW].Categories[ciGroup].Count > 0 && !groups[TODAY].Categories[ciGroup].Equals(groups[TOMORROW].Categories[ciGroup]))
+                        #endregion
+
+                        if (ciGroup != -1)
                         {
-                            break;
+                            var b = false;
+
+                            switch (cache.Age)
+                            {
+                                case 0: //cache is for today
+
+                                    if (cache.Tomorrow == null)
+                                    {
+                                        if (canSum)
+                                        {
+                                            Util.Logging.LogEvent("[daily] age:0, tomorrow:null, sum:" + (cache.Today.Summary == groups[TODAY].Summary));
+
+                                            if (cache.Today.Summary == groups[TODAY].Summary)
+                                            {
+                                                verified = !untrusted;
+                                            }
+                                            else
+                                            {
+                                                b = cache.Today.Summary == groups[TOMORROW].Summary;
+                                            }
+                                        }
+                                        else if (cache.Today.Categories[cIndexes[ciGroup]].Equals(groups[TODAY].Categories[ciGroup]))
+                                        {
+                                            verified = !untrusted && Match(categories, cache.Today, groups[TODAY], cIndexes, ciGroup + 1, false);
+                                            Util.Logging.LogEvent("[daily] age:0, tomorrow:null, cache.today==api.group v:" + verified);
+
+                                        }
+                                        else
+                                        {
+                                            b = cache.Today.Categories[cIndexes[ciGroup]].Equals(groups[TOMORROW].Categories[ciGroup]);
+                                            Util.Logging.LogEvent("[daily] age:0, tomorrow:null, b:" + b);
+                                        }
+                                    }
+                                    else if (!untrusted)
+                                    {
+                                        //the api can give a mix of yesterday/today dailies for today
+                                        //can only assume it's valid if tomorrow becomes today
+
+                                        if (canSum)
+                                        {
+                                            verified = cache.Tomorrow.Summary == groups[TODAY].Summary;
+                                            Util.Logging.LogEvent("[daily] age:0, sum v:" + verified);
+                                        }
+                                        else if (!cache.Today.Categories[cIndexes[ciGroup]].Equals(groups[TODAY].Categories[ciGroup]))
+                                        {
+                                            //today has updated
+                                            verified = Match(categories, cache.Tomorrow, groups[TODAY], cIndexes, ciGroup + 1, false);
+                                            Util.Logging.LogEvent("[daily] age:0, v:" + verified);
+                                        }
+                                    }
+
+                                    break;
+                                case 1: //cache is 1 day old (cache.tomorrow should be api.today)
+
+                                    if (cache.Tomorrow != null)
+                                    {
+                                        if (canSum)
+                                        {
+                                            Util.Logging.LogEvent("[daily] age:1, cache.tomorrow==api.today v:" + (cache.Tomorrow.Summary == groups[TODAY].Summary));
+
+                                            if (cache.Tomorrow.Summary == groups[TODAY].Summary)
+                                            {
+                                                verified = !untrusted;
+                                            }
+                                            else
+                                            {
+                                                b = cache.Tomorrow.Summary == groups[TOMORROW].Summary;
+                                            }
+                                        }
+                                        else if (cache.Tomorrow.Categories[cIndexes[ciGroup]].Equals(groups[TODAY].Categories[ciGroup]))
+                                        {
+                                            verified = !untrusted && Match(categories, cache.Tomorrow, groups[TODAY], cIndexes, ciGroup + 1, false);
+                                            Util.Logging.LogEvent("[daily] age:1, cache.tomorrow==api.today v:" + verified);
+                                        }
+                                        else
+                                        {
+                                            b = cache.Tomorrow.Categories[cIndexes[ciGroup]].Equals(groups[TOMORROW].Categories[ciGroup]);
+                                            Util.Logging.LogEvent("[daily] age:1, b:" + b);
+                                        }
+                                    }
+                                    else
+                                    {
+                                        if (canSum)
+                                        {
+                                            b = cache.Today.Summary == groups[TODAY].Summary;
+                                            Util.Logging.LogEvent("[daily] age:1, tomorrow:null sum:" + b);
+                                        }
+                                        else
+                                        {
+                                            b = cache.Today.Categories[cIndexes[ciGroup]].Equals(groups[TODAY].Categories[ciGroup]);
+                                            Util.Logging.LogEvent("[daily] age:1, tomorrow:null b:" + b);
+                                        }
+                                    }
+
+                                    //b = cache.Today.Categories[ciCache].Equals(groups[TODAY].Categories[ciGroup]);
+                                    //verified = !b;
+
+                                    break;
+                                //can't be trusted since the api can give a mix of today/tomorrow as today
+                                //case 2: //cache is 2 days old (cache.tomorrow should not be api.today)
+
+                                //    //if cache.tomorrow is still api.today, the api hasn't updated
+                                //    if (cache.Tomorrow != null)
+                                //    {
+                                //        b = cache.Tomorrow.Categories[ciCache].Equals(groups[TODAY].Categories[ciGroup]);
+                                //        verified = !b;
+                                //    }
+
+                                //    break;
+                                default:
+
+                                    //anything older can't be compared
+
+                                    break;
+                            }
+
+                            if (b)
+                            {
+                                Util.Logging.LogEvent("[daily] using tomorrow as today");
+                                //daily hasn't been updated yet, tomorrow is today
+                                groups[TODAY] = groups[TOMORROW];
+                                groups[TOMORROW] = null;
+                                verified = cache.Verified;
+                            }
                         }
                         else
                         {
-                            ciCache = -1;
+                            //categories have changed, there is nothing to compare to
                         }
-                    }
-
-                    #endregion
-
-                    if (ciCache != -1)
-                    {
-                        var b = false;
-
-                        switch (cache.Age)
-                        {
-                            case 0: //cache is for today
-
-                                if (cache.Tomorrow == null)
-                                {
-                                    //tomorrow was previously swapped with today
-                                    //if cache.today is still api.tomorrow, the api hasn't updated
-                                    b = cache.Today.Categories[ciCache].Equals(groups[TOMORROW].Categories[ciGroup]);
-                                    verified = !b;
-                                }
-                                else if (!cache.Today.Categories[ciCache].Equals(groups[TODAY].Categories[ciGroup]))
-                                {
-                                    //today has updated
-                                    verified = true;
-                                }
-
-                                break;
-                            case 1: //cache is 1 day old (cache.tomorrow should be api.today)
-
-                                //if cache.today is still api.today, the api hasn't updated
-                                b = cache.Today.Categories[ciCache].Equals(groups[TODAY].Categories[ciGroup]);
-                                verified = !b;
-
-                                break;
-                            case 2: //cache is 2 days old (cache.tomorrow should not be api.today)
-
-                                //if cache.tomorrow is still api.today, the api hasn't updated
-                                if (cache.Tomorrow != null)
-                                {
-                                    b = cache.Tomorrow.Categories[ciCache].Equals(groups[TODAY].Categories[ciGroup]);
-                                    verified = !b;
-                                }
-
-                                break;
-                            default:
-
-                                //anything older can't be compared
-
-                                break;
-                        }
-
-                        if (b)
-                        {
-                            //daily hasn't been updated yet, tomorrow is today
-                            groups[TODAY] = groups[TOMORROW];
-                            groups[TOMORROW] = null;
-                            verified = cache.Verified;
-                        }
-                    }
-                    else
-                    {
-                        //categories have changed, there is nothing to compare to
                     }
                 }
             }
@@ -879,6 +1024,13 @@ namespace Gw2Launcher.Api
             //    verified = minutes >= 60;
             //}
 
+            if (verified)
+            {
+                if (groups[1] != null)
+                    Util.Logging.LogEvent("daily for today and tomorrow is verified");
+                else
+                    Util.Logging.LogEvent("daily for today is verified");
+            }
 
             //if (current != null && current.Summary == summary)
             //{

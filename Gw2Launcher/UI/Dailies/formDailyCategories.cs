@@ -171,7 +171,7 @@ namespace Gw2Launcher.UI.Dailies
 
             try
             {
-                var categories = await Daily.GetCategoriesAsync(Settings.ShowDailiesLanguage.Value);
+                var categories = await Daily.GetCategoriesAsync(Settings.Dailies.Language.Value);
 
                 if (IsDisposed)
                 {

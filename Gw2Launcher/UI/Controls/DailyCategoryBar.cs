@@ -28,33 +28,44 @@ namespace Gw2Launcher.UI.Controls
             public Rectangle rect;
         }
 
-        [Flags]
-        private enum RedrawType : byte
-        {
-            None,
-            Full = 1,
-            Partial = 2,
-        }
-
-        private BufferedGraphics buffer;
+        private Util.BufferedGraphics buffer;
         private bool 
             collapsed,
             layout;
-        private RedrawType redraw;
         private Area[] areas;
         private int widthText;
         private sbyte hovered;
         private ComboBox combo;
         private ApiTimer apiTimer;
+        private int entered;
 
         public DailyCategoryBar()
         {
             SetStyle(ControlStyles.UserPaint, true);
             SetStyle(ControlStyles.AllPaintingInWmPaint, true);
 
+            buffer = new Util.BufferedGraphics();
             hovered = -1;
             layout = true;
             areas = new Area[2];
+        }
+
+        private Color _ColorKey;
+        [DefaultValue(null)]
+        public Color ColorKey
+        {
+            get
+            {
+                return _ColorKey;
+            }
+            set
+            {
+                if (_ColorKey != value)
+                {
+                    _ColorKey = value;
+                    OnRedrawRequired(GetIndex(AreaType.Text));
+                }
+            }
         }
 
         private bool _ButtonEyeVisible;
@@ -247,11 +258,7 @@ namespace Gw2Launcher.UI.Controls
         {
             base.OnSizeChanged(e);
 
-            if (buffer != null)
-            {
-                buffer.Dispose();
-                buffer = null;
-            }
+            buffer.Deallocate();
 
             OnRedrawRequired(true);
         }
@@ -260,11 +267,11 @@ namespace Gw2Launcher.UI.Controls
         {
             if (area != -1)
             {
-                if ((redraw & RedrawType.Full) == 0)
+                if (buffer.Redraw != Util.BufferedGraphics.RedrawType.Full)
                 {
-                    redraw |= RedrawType.Partial;
-                    this.Invalidate(areas[area].rect);
+                    buffer.Invalidate(this, areas[area].rect);
                 }
+
             }
         }
 
@@ -275,11 +282,8 @@ namespace Gw2Launcher.UI.Controls
                 this.layout = true;
             }
 
-            if ((redraw & RedrawType.Full) == 0)
-            {
-                redraw = RedrawType.Full;
-                this.Invalidate();
-            }
+            buffer.Invalidate(this);
+
         }
 
         private void DoLayout()
@@ -356,7 +360,7 @@ namespace Gw2Launcher.UI.Controls
         {
             base.OnMouseWheel(e);
 
-            if (hovered != -1 && areas[hovered].type == AreaType.Text && _ButtonDropDownArrowVisible && _DropDownItems != null && _DropDownItems.Length > 1)
+            if (entered != Cursor.Position.GetHashCode() && hovered != -1 && areas[hovered].type == AreaType.Text && _ButtonDropDownArrowVisible && _DropDownItems != null && _DropDownItems.Length > 1)
             {
                 if (e is HandledMouseEventArgs)
                     ((HandledMouseEventArgs)e).Handled = true;
@@ -396,6 +400,13 @@ namespace Gw2Launcher.UI.Controls
                     }
                 }
             }
+        }
+
+        protected override void OnMouseEnter(EventArgs e)
+        {
+            base.OnMouseEnter(e);
+
+            entered = Cursor.Position.GetHashCode();
         }
 
         protected override void OnMouseLeave(EventArgs e)
@@ -545,10 +556,8 @@ namespace Gw2Launcher.UI.Controls
 
         protected override void OnPaint(PaintEventArgs e)
         {
-            if (redraw != RedrawType.None)
+            if (buffer.Redraw != Util.BufferedGraphics.RedrawType.None)
             {
-                redraw = RedrawType.None;
-
                 if (layout)
                 {
                     layout = false;
@@ -560,29 +569,38 @@ namespace Gw2Launcher.UI.Controls
                 int cx, cr;
                 Graphics g;
 
-                if (buffer == null)
+                if (buffer.Allocated)
                 {
-                    buffer = BufferedGraphicsManager.Current.Allocate(e.Graphics, this.DisplayRectangle);
+                    g = buffer.Graphics;
+
+                    if (buffer.Redraw == Util.BufferedGraphics.RedrawType.Partial)
+                    {
+                        cx = buffer.ClipRectangle.X;
+                        cr = buffer.ClipRectangle.Right;
+
+                        g.SetClip(buffer.ClipRectangle);
+                    }
+                    else
+                    {
+                        cx = 0;
+                        cr = int.MaxValue;
+
+                        g.ResetClip();
+                    }
+
+                }
+                else
+                {
+                    buffer.Allocate(e.Graphics, this.DisplayRectangle);
 
                     g = buffer.Graphics;
                     cx = 0;
                     cr = int.MaxValue;
+
+                    g.ResetClip();
                 }
-                else
-                {
-                    g = buffer.Graphics;
-                    //cr = e.ClipRectangle.Right;
-                    cr = int.MaxValue;
-                    cx = 0;
-                    //if (cr == 0)
-                    //{
-                    //}
-                    //else
-                    //{
-                    //    cx = e.ClipRectangle.X;
-                    //    g.SetClip(e.ClipRectangle);
-                    //}
-                }
+
+                buffer.ResetClip();
 
                 var scale = g.DpiX / 96f;
 
@@ -590,6 +608,18 @@ namespace Gw2Launcher.UI.Controls
 
                 if (cr > areas[0].rect.X && cx < areas[0].rect.Right)
                 {
+                    if (_ColorKey.A != 0)
+                    {
+                        using (var brush = new SolidBrush(_ColorKey))
+                        {
+                            var w = (int)(scale * 5 + 0.5f);
+
+                            g.FillRectangle(brush, 0, 0, w, this.Height);
+                            brush.Color = this.Parent.BackColor;
+                            g.FillRectangle(brush, w, 0, 1, this.Height);
+                        }
+                    }
+
                     var wofs = this.Padding.Left;
 
                     if (_ButtonDropDownArrowVisible)
@@ -732,21 +762,50 @@ namespace Gw2Launcher.UI.Controls
                                                     bh);
                                             }
 
-                                            var bw1 = (int)(b.Width * apiTimer.Progress + 0.5f);
-                                            var bw2 = b.Width - bw1;
-
-                                            if (bw1 > 0)
-                                            {
-                                                brush.Color = Color.FromArgb(200, c);
-
-                                                g.FillRectangle(brush, b.X, b.Y, bw1, b.Height);
-                                            }
-
-                                            if (bw2 > 0)
+                                            if (apiTimer.Updating)
                                             {
                                                 brush.Color = Color.FromArgb(100, c);
 
-                                                g.FillRectangle(brush, b.X + bw1, b.Y, bw2, b.Height);
+                                                var bx = b.X;
+                                                var bsz = b.Width / 4;
+
+                                                g.FillRectangle(brush, b.X, b.Y, bsz, b.Height);
+                                                g.FillRectangle(brush, b.Right - bsz, b.Y, bsz, b.Height);
+                                                    
+                                                brush.Color = Color.FromArgb(200, c);
+
+                                                g.FillRectangle(brush, b.X + bsz, b.Y, b.Width - bsz * 2, b.Height);
+
+                                                //do
+                                                //{
+                                                //    g.FillRectangle(brush, bx, b.Y, b.Height, b.Height);
+
+                                                //    bx += b.Height * 2;
+                                                //}
+                                                //while (bx < br);
+
+                                                //g.FillRectangle(brush, bx, b.Y, b.Right - bx, b.Height);
+
+                                                //g.FillRectangle(brush, b.X, b.Y, b.Width, b.Height);
+                                            }
+                                            else
+                                            {
+                                                var bw1 = (int)(b.Width * apiTimer.Progress + 0.5f);
+                                                var bw2 = b.Width - bw1;
+
+                                                if (bw1 > 0)
+                                                {
+                                                    brush.Color = Color.FromArgb(200, c);
+
+                                                    g.FillRectangle(brush, b.X, b.Y, bw1, b.Height);
+                                                }
+
+                                                if (bw2 > 0)
+                                                {
+                                                    brush.Color = Color.FromArgb(100, c);
+
+                                                    g.FillRectangle(brush, b.X + bw1, b.Y, bw2, b.Height);
+                                                }
                                             }
                                             brush.Color = c;
                                         }
@@ -869,6 +928,15 @@ namespace Gw2Launcher.UI.Controls
             }
         }
 
+        void apiTimer_BeginRequest(object sender, EventArgs e)
+        {
+            if (_ButtonEyeVisible && _ButtonEyeEnabled && !_ButtonEyeTimerEnabled)
+            {
+                _ButtonEyeTimerEnabled = true;
+                apiTimer.Enabled = true;
+            }
+        }
+
         public void SetApi(Settings.IAccount account, Api.ApiData manager, Api.ApiData.DataType type = ApiTimer.ANY_TYPE)
         {
             if (account != null && account.Type == Settings.AccountType.GuildWars2)
@@ -878,6 +946,7 @@ namespace Gw2Launcher.UI.Controls
                     apiTimer = new ApiTimer(null, manager, type);
                     apiTimer.Enabled = _ButtonEyeTimerEnabled;
                     apiTimer.Tick += apiTimer_Tick;
+                    apiTimer.BeginRequest += apiTimer_BeginRequest;
                 }
                 apiTimer.SetApi(account, type);
             }

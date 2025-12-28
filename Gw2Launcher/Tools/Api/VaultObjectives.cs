@@ -7,7 +7,7 @@ using Gw2Launcher.Api;
 
 namespace Gw2Launcher.Tools.Api
 {
-    class VaultObjectives
+    public class VaultObjectives
     {
         public event EventHandler Cleared;
         public event EventHandler<DataChangedEventArgs> DataChanged;
@@ -86,6 +86,10 @@ namespace Gw2Launcher.Tools.Api
             /// Delay until the next update
             /// </summary>
             Delayed = 4,
+            /// <summary>
+            /// Ensure latest update
+            /// </summary>
+            Latest = 2 | 8,
         }
 
         [Flags]
@@ -177,13 +181,15 @@ namespace Gw2Launcher.Tools.Api
         public class RefreshStatus : IDisposable
         {
             public event EventHandler Complete;
+            public event EventHandler<ApiData.DataAvailableEventArgs> Delayed;
 
             private ApiRequestManager.DataRequest[] requests;
             private int remaining;
 
-            public RefreshStatus(Vault.VaultType type, ApiRequestManager.DataRequest[] requests)
+            public RefreshStatus(Vault.VaultType type, ApiRequestManager.DataRequest[] requests, DateTime next)
             {
                 this.Type = type;
+                this.NextUpdate = next;
 
                 this.requests = requests;
                 this.remaining = requests.Length;
@@ -198,10 +204,30 @@ namespace Gw2Launcher.Tools.Api
                     }
 
                     requests[i].Complete += r_Complete;
+                    requests[i].RequestDelayed += r_RequestDelayed;
+                }
+            }
+
+            void r_RequestDelayed(object sender, ApiData.DataAvailableEventArgs e)
+            {
+                NextUpdate = e.NextRequest;
+
+                if (Delayed != null)
+                {
+                    Delayed(this, e);
                 }
             }
 
             public Vault.VaultType Type
+            {
+                get;
+                private set;
+            }
+
+            /// <summary>
+            /// When the earliest request can occur
+            /// </summary>
+            public DateTime NextUpdate
             {
                 get;
                 private set;
@@ -228,9 +254,27 @@ namespace Gw2Launcher.Tools.Api
                 }
             }
 
+            public void Abort()
+            {
+                if (remaining > 0)
+                {
+                    for (var i = 0; i < requests.Length; i++)
+                    {
+                        if (requests[i] == null)
+                        {
+                            break;
+                        }
+
+                        requests[i].RequestDelayed -= r_RequestDelayed;
+                        requests[i].Abort();
+                    }
+                }
+            }
+
             public void Dispose()
             {
                 Complete = null;
+                Delayed = null;
             }
         }
 
@@ -699,11 +743,58 @@ namespace Gw2Launcher.Tools.Api
                 }
             }
 
+            /// <summary>
+            /// Returns a new array of accounts without nulls
+            /// </summary>
+            public Settings.IAccount[] GetAccounts()
+            {
+                if (accounts != null)
+                {
+                    lock (this)
+                    {
+                        var count = accounts.Length;
+
+                        while (count > 0 && accounts[count - 1] == null)
+                        {
+                            --count;
+                        }
+
+                        if (count > 0)
+                        {
+                            var _accounts = new Settings.IAccount[count];
+                            Array.Copy(accounts, 0, _accounts, 0, count);
+                            return _accounts;
+                        }
+                    }
+                }
+                return null;
+            }
+
             public bool HasAccounts
             {
                 get
                 {
                     return accounts != null && accounts[0] != null;
+                }
+            }
+
+            public int AccountsCount
+            {
+                get
+                {
+                    if (accounts != null)
+                    {
+                        var count = accounts.Length;
+
+                        while (count > 0 && accounts[count-1] == null)
+                        {
+                            --count;
+                        }
+
+                        return count;
+                    }
+
+                    return 0;
                 }
             }
 
@@ -922,13 +1013,16 @@ namespace Gw2Launcher.Tools.Api
 
             var keys = new bool[byte.MaxValue];
 
-            foreach (var a in Util.Accounts.GetGw2Accounts())
+            foreach (var a in Settings.ApiKeys.GetValues())
             {
-                var k = GetGroupKey(type, a);
-
-                if (k > 0)
+                if (a.HasValue)
                 {
-                    keys[k - 1] = true;
+                    var k = GetGroupKey(type, a.Value);
+
+                    if (k > 0)
+                    {
+                        keys[k - 1] = true;
+                    }
                 }
             }
 
@@ -1738,11 +1832,10 @@ namespace Gw2Launcher.Tools.Api
         }
 
         /// <summary>
-        /// Refreshes the account if no data is cached
+        /// Refreshes data for the account
         /// </summary>
-        /// <param name="required">Forces a refresh</param>
-        /// <param name="delayed">If refreshing, delay until the next update</param>
-        /// <param name="query">If the api should be queried (if needed)</param>
+        /// <param name="type">Type of data to refresh</param>
+        /// <param name="options"></param>
         public RefreshStatus Refresh(Vault.VaultType type, Settings.IGw2Account account, RefreshOptions options) //, bool required, bool delayed, bool query)
         {
             return Refresh(type, account, options, OnDataChanged);
@@ -1857,15 +1950,12 @@ namespace Gw2Launcher.Tools.Api
                             //    rd = ChangeType.Accounts;
                             //}
                         }
-                        else
-                        {
-                            refresh = true;
-                        }
                     }
                     else if (!refresh || !ao.IsPending(type))
                     {
-                        if (og.Summary == 0 && !og.Pending || refresh && DateTime.UtcNow.Subtract(ao.GetDate(type)).TotalMinutes > 5 && !ao.IsComplete(type))
+                        if (og.Summary == 0 && !og.Pending || (refresh || ao.IsPending(type)) && DateTime.UtcNow.Subtract(ao.GetDate(type)).TotalMinutes > 5 && !ao.IsComplete(type))
                         {
+                            refresh = true;
                         }
                         else
                         {
@@ -1909,16 +1999,16 @@ namespace Gw2Launcher.Tools.Api
 
                         var requests = new ApiRequestManager.DataRequest[]
                         {
-                            new ApiRequest(t, account, account.Api, o)
+                            new ApiRequest(t, account, api, o)
                             {
                                 Date = DateTime.UtcNow,
                                 Reason = ApiRequestManager.RequestReason.None,
                                 Delay = delay,
-                                EnsureLatest = (options & RefreshOptions.Update) != 0,
+                                EnsureLatest = (options & RefreshOptions.Latest) == RefreshOptions.Latest,
                             },
                         };
 
-                        rs = new RefreshStatus(type, requests);
+                        rs = new RefreshStatus(type, requests, apiManager.DataSource.GetNext(api.Key, t));
 
                         if (og != null)
                         {
@@ -2130,7 +2220,7 @@ namespace Gw2Launcher.Tools.Api
 
                 if (count > 0)
                 {
-                    var rs = new RefreshStatus(type, requests);
+                    var rs = new RefreshStatus(type, requests, DateTime.MinValue);
 
                     apiManager.Queue(requests);
 
@@ -2205,10 +2295,12 @@ namespace Gw2Launcher.Tools.Api
 
         void r_Complete(object sender, EventArgs e)
         {
+            Util.Logging.LogEvent("request complete");
         }
 
         void r_DataAvailable(object sender, ApiData.RequestDataAvailableEventArgs e)
         {
+            Util.Logging.LogEvent("request DataAvailable [" + e.Type + "][" + e.Status + "]");
         }
 
         private DateTime GetStartingDate(ApiData.DataType type)

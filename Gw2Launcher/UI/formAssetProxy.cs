@@ -962,7 +962,7 @@ namespace Gw2Launcher.UI
             if (checkDisableCaching.Checked)
                 options |= Settings.PatchingFlags.DisableCaching;
             else
-                options &= Settings.PatchingFlags.DisableCaching;
+                options &= ~Settings.PatchingFlags.DisableCaching;
 
             if (checkUseHttps.Checked)
                 options |= Settings.PatchingFlags.UseHttps;

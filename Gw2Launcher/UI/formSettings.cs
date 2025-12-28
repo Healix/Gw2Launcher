@@ -281,12 +281,12 @@ namespace Gw2Launcher.UI
             checkArgsGw2 = InitializeArguments(Settings.AccountType.GuildWars2, panelArgsGw2, labelArgsTemplateHeader, checkArgsTemplate, null, labelArgsTemplateDesc, checkArgsGw2_CheckedChanged);
             checkArgsGw1 = InitializeArguments(Settings.AccountType.GuildWars1, panelArgsGw1, labelArgsTemplateHeader, checkArgsTemplate, null, labelArgsTemplateDesc, checkArgsGw1_CheckedChanged);
 
-            buttonGeneral.Panels = new Panel[] { panelGeneral, panelLaunchConfiguration, panelWindows, panelHotkeys };
-            buttonGeneral.SubItems = new string[] { "Launching", "Windows", "Hotkeys" };
+            buttonGeneral.Panels = new Panel[] { panelGeneral, panelLaunchConfiguration, panelSteam, panelWindows, panelHotkeys };
+            buttonGeneral.SubItems = new string[] { "Launching", "Steam", "Windows", "Hotkeys" };
 
-            buttonGuildWars2.Panels = new Panel[] { panelGw2, panelLaunchOptionsGw2, panelLaunchConfigurationGw2, panelSteamGw2, panelTweaksGw2,
+            buttonGuildWars2.Panels = new Panel[] { panelGw2, panelLaunchOptionsGw2, panelLaunchConfigurationGw2, panelTweaksGw2,
                                                     panelLaunchOptionsAdvancedGw2 };
-            buttonGuildWars2.SubItems = new string[] { "Launch options", "Management", "Steam", "Tweaks" };
+            buttonGuildWars2.SubItems = new string[] { "Launch options", "Management", "Tweaks" };
 
             buttonGuildWars1.Panels = new Panel[] { panelGw1, panelLaunchOptionsGw1,
                                                     panelLaunchOptionsAdvancedGw1 };
@@ -532,9 +532,14 @@ namespace Gw2Launcher.UI
             }
 
             checkDeleteCacheOnLaunch.Checked = Settings.DeleteCacheOnLaunch.Value;
-            checkShowDailies.Checked = Settings.ShowDailies.Value.HasFlag(Settings.DailiesMode.Show);
-            checkShowDailiesAuto.Checked = Settings.ShowDailies.Value.HasFlag(Settings.DailiesMode.AutoLoad);
-            checkShowDailiesAutoFavorite.Checked = Settings.ShowDailies.Value.HasFlag(Settings.DailiesMode.AutoLoadFavorite);
+
+            if (Settings.Dailies.Options.HasValue)
+            {
+                var v = Settings.Dailies.Options.Value;
+                checkShowDailies.Checked = (v & Settings.DailiesOptions.Show) != 0;
+                checkShowDailiesAuto.Checked = (v & Settings.DailiesOptions.AutoLoad) != 0;
+                checkShowDailiesAutoFavorite.Checked = (v & Settings.DailiesOptions.AutoLoadFavorite) != 0;
+            }
 
             if (Settings.BackgroundPatchingProgress.HasValue)
             {
@@ -942,7 +947,7 @@ namespace Gw2Launcher.UI
                     new Util.ComboItem<Settings.Language>(Settings.Language.ZH, "ZH"),
                 });
 
-            Util.ComboItem<Settings.Language>.Select(comboShowDailiesLang, Settings.ShowDailiesLanguage.Value);
+            Util.ComboItem<Settings.Language>.Select(comboShowDailiesLang, Settings.Dailies.Language.Value);
 
             comboTweakEmailMethod.Items.AddRange(new object[]
                 {
@@ -2043,24 +2048,29 @@ namespace Gw2Launcher.UI
             Settings.DeleteCacheOnLaunch.Value = checkDeleteCacheOnLaunch.Checked;
             if (checkShowDailies.Checked)
             {
-                var showDailies = Settings.ShowDailies.Value & ~(Settings.DailiesMode.AutoLoad | Settings.DailiesMode.AutoLoadFavorite);
+                var showDailies = Settings.Dailies.Options.Value & ~(Settings.DailiesOptions.AutoLoad | Settings.DailiesOptions.AutoLoadFavorite);
 
-                showDailies |= Settings.DailiesMode.Show;
+                showDailies |= Settings.DailiesOptions.Show;
 
                 if (checkShowDailiesAuto.Checked)
                 {
-                    showDailies |= Settings.DailiesMode.AutoLoad;
+                    showDailies |= Settings.DailiesOptions.AutoLoad;
                     if (checkShowDailiesAutoFavorite.Checked)
-                        showDailies |= Settings.DailiesMode.AutoLoadFavorite;
+                        showDailies |= Settings.DailiesOptions.AutoLoadFavorite;
                 }
 
-                Settings.ShowDailies.Value = showDailies;
+                Settings.Dailies.Options.Value = showDailies;
             }
             else
             {
-                Settings.ShowDailies.Clear();
+                Settings.Dailies.Options.Clear();
+                Settings.Dailies.DailyCategories.Clear();
+                Settings.Dailies.ItemOptions.Clear();
+                Settings.Dailies.KnownVaultSpecials.Clear();
                 if (Settings.WindowBounds.Contains(typeof(Dailies.formDailies)))
                     Settings.WindowBounds[typeof(Dailies.formDailies)].Clear();
+                if (Settings.WindowBounds.Contains(typeof(Dailies.formDailies.formDailiesVault)))
+                    Settings.WindowBounds[typeof(Dailies.formDailies.formDailiesVault)].Clear();
             }
 
             if (checkAutoUpdateDownloadProgress.Checked)
@@ -2454,7 +2464,7 @@ namespace Gw2Launcher.UI
             else
                 Settings.DxTimeout.Clear();
 
-            Settings.ShowDailiesLanguage.Value = Util.ComboItem<Settings.Language>.SelectedValue(comboShowDailiesLang, Settings.Language.EN);
+            Settings.Dailies.Language.Value = Util.ComboItem<Settings.Language>.SelectedValue(comboShowDailiesLang, Settings.Language.EN);
 
             if (labelLocalizedExecutionAccountsSelected.Tag != null)
             {
@@ -5032,9 +5042,9 @@ namespace Gw2Launcher.UI
             buttonSteamPath.Enabled = b;
         }
 
-        private void panelSteamGw2_PreVisiblePropertyChanged(object sender, bool e)
+        private void panelSteam_PreVisiblePropertyChanged(object sender, bool e)
         {
-            panelSteamGw2.PreVisiblePropertyChanged -= panelSteamGw2_PreVisiblePropertyChanged;
+            panelSteam.PreVisiblePropertyChanged -= panelSteam_PreVisiblePropertyChanged;
 
             if (!checkSteamPath.Checked)
             {

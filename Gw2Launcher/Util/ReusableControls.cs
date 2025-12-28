@@ -41,6 +41,10 @@ namespace Gw2Launcher.Util
             /// Adds new controls to the parent control
             /// </summary>
             void AddNew(Control parent);
+            /// <summary>
+            /// Hides any remaining controls and adds any new controls to the parent
+            /// </summary>
+            void HideAndAdd(Control parent);
         }
 
         public interface IResult<T> : IResult
@@ -57,22 +61,58 @@ namespace Gw2Launcher.Util
             public int index;
             public int count;
             public int offset;
+            public Func<T> createNew;
 
-            public Result(Controls<T> owner, T[] controls, int offset, int count, T[] controlsNew)
+            public Result(Controls<T> owner, T[] controls, int offset, int count, T[] controlsNew, Func<T> createNew = null)
             {
                 this.owner = owner;
                 this.controls = controls;
                 this.controlsNew = controlsNew;
                 this.count = count;
                 this.offset = offset;
+                this.createNew = createNew;
             }
 
             public T GetNext()
             {
                 if (index < count)
+                {
                     return controls[offset + index++];
-                else
-                    throw new IndexOutOfRangeException();
+                }
+                else if (createNew != null)
+                {
+                    var i = owner.Capacity - owner.Used;
+
+                    if (i == 0 || i > 10)
+                    {
+                        i = 10;
+                    }
+
+                    using (var extended = (Result<T>)owner.Create(i, createNew))
+                    {
+                        controls = extended.controls;
+                        offset = extended.offset;
+                        index = extended.index;
+                        count = extended.count;
+                        extended.count = 0;
+
+                        if (controlsNew == null)
+                        {
+                            controlsNew = extended.controlsNew;
+                        }
+                        else if (extended.controlsNew != null)
+                        {
+                            i = controlsNew.Length;
+                            System.Array.Resize<T>(ref controlsNew, i + extended.controlsNew.Length);
+                            System.Array.Copy(extended.controlsNew, 0, controlsNew, i, extended.controlsNew.Length);
+                        }
+                    }
+
+                    if (index < count)
+                        return controls[offset + index++];
+                }
+
+                throw new IndexOutOfRangeException();
             }
 
             public void HideRemaining()
@@ -89,6 +129,12 @@ namespace Gw2Launcher.Util
                 {
                     parent.Controls.AddRange(controlsNew);
                 }
+            }
+
+            public void HideAndAdd(Control parent)
+            {
+                HideRemaining();
+                AddNew(parent);
             }
 
             public bool HasNext
@@ -122,6 +168,11 @@ namespace Gw2Launcher.Util
                     owner.Release(controls, offset + index, count - index);
                     index = count;
                 }
+
+                controls = null;
+                createNew = null;
+                owner = null;
+                createNew = null;
             }
 
             public IEnumerator<Control> GetEnumerator()
@@ -150,6 +201,22 @@ namespace Gw2Launcher.Util
                 canReleaseAll = true;
             }
 
+            public int Capacity
+            {
+                get
+                {
+                    return capacity;
+                }
+            }
+
+            public int Used
+            {
+                get
+                {
+                    return index;
+                }
+            }
+
             public void Initialize(int capacity)
             {
                 if (this.capacity == 0)
@@ -172,20 +239,26 @@ namespace Gw2Launcher.Util
             /// <summary>
             /// Returns all of the available controls and creates new one if necessary
             /// </summary>
-            public IResult<T> CreateOrAll(int count, Func<T> createNew)
+            /// <param name="count">Number of controls to get</param>
+            /// <param name="createNew">Function to create control</param>
+            /// <param name="canIncreaseCount">Allows adding more controls beyond the requested count if more controls are needed</param>
+            public IResult<T> CreateOrAll(int count, Func<T> createNew, bool canIncreaseCount = true)
             {
                 int available = this.count - index;
                 if (available > count)
                 {
                     count = available;
                 }
-                return Create(count, createNew);
+                return Create(count, createNew, canIncreaseCount);
             }
 
             /// <summary>
             /// Returns the specified number of controls, creating new ones if necessary
             /// </summary>
-            public IResult<T> Create(int count, Func<T> createNew)
+            /// <param name="count">Number of controls to get</param>
+            /// <param name="createNew">Function to create control</param>
+            /// <param name="canIncreaseCount">Allows adding more controls beyond the requested count if more controls are needed</param>
+            public IResult<T> Create(int count, Func<T> createNew, bool canIncreaseCount = true)
             {
                 int k = index;
 
@@ -204,7 +277,7 @@ namespace Gw2Launcher.Util
                         }
 
                         index = count;
-                        return new Result<T>(this, controls, 0, count, controls);
+                        return new Result<T>(this, controls, 0, count, controls, canIncreaseCount ? createNew : null);
                     }
 
                     var _count = this.count + add;
@@ -229,11 +302,11 @@ namespace Gw2Launcher.Util
                     this.count = _count;
 
                     index += count;
-                    return new Result<T>(this, this.controls, k, count, _new);
+                    return new Result<T>(this, this.controls, k, count, _new, canIncreaseCount ? createNew : null);
                 }
 
                 index += count;
-                return new Result<T>(this, controls, k, count, null);
+                return new Result<T>(this, controls, k, count, null, canIncreaseCount ? createNew : null);
 
                 //_controls = new T[count];
                 //Array.Copy(controls, index, _controls, 0, count);
@@ -281,9 +354,14 @@ namespace Gw2Launcher.Util
 
             public void Dispose()
             {
-                for (var i = 0; i < count; i++)
+                if (count > 0)
                 {
-                    controls[i].Dispose();
+                    for (var i = 0; i < count; i++)
+                    {
+                        controls[i].Dispose();
+                    }
+                    System.Array.Clear(controls, 0, count);
+                    count = 0;
                 }
             }
         }

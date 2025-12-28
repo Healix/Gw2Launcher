@@ -40,15 +40,22 @@ namespace Gw2Launcher.Util
         }
 
         /// <summary>
-        /// Executes the action on the control's thread
+        /// Executes the action on the control's thread, optionally async if invoking
         /// </summary>
-        public static void Required(Control c, Action a)
+        public static void Required(Control c, Action a, bool async = false)
         {
             if (c == null || c.InvokeRequired)
             {
                 try
                 {
-                    c.Invoke(Run(c, a));
+                    if (async)
+                    {
+                        c.BeginInvoke(Run(c, a));
+                    }
+                    else
+                    {
+                        c.Invoke(Run(c, a));
+                    }
                 }
                 catch (Exception e)
                 {

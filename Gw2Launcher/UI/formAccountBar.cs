@@ -1248,7 +1248,7 @@ namespace Gw2Launcher.UI
         {
             base.OnVisibleChanged(e);
 
-            if (ShowTopMost)
+            if (ShowTopMost && this.Visible)
             {
                 NativeMethods.SetWindowPos(this.Handle, (IntPtr)WindowZOrder.HWND_TOPMOST, 0, 0, 0, 0, SetWindowPosFlags.SWP_NOMOVE | SetWindowPosFlags.SWP_NOSIZE | SetWindowPosFlags.SWP_NOACTIVATE);
             }
@@ -1811,6 +1811,7 @@ namespace Gw2Launcher.UI
             b.button.IconVisible = ShowAccountIcon;
             b.button.ColorKeyVisible = ShowColorKey;
             b.button.CloseVisible = ShowCloseButton && b.IsActive;
+            b.button.CanPress = b.IsActive;
 
             b.button.ColorKey = b.account.ColorKey;
             b.Icon = GetIcon(b.account);
@@ -2620,7 +2621,10 @@ namespace Gw2Launcher.UI
             }
 
             if (b.button != null)
+            {
                 b.button.CloseVisible = _ShowClose;
+                b.button.CanPress = true;
+            }
 
             var changed = SetVisible(b, MatchFilter(b));
 
@@ -2643,7 +2647,10 @@ namespace Gw2Launcher.UI
             }
 
             if (b.button != null)
+            {
                 b.button.CloseVisible = false;
+                b.button.CanPress = false;
+            }
 
             if (focused == b)
                 SetFocused(null);
@@ -2862,6 +2869,7 @@ namespace Gw2Launcher.UI
                     b.button.IconVisible = _ShowIcon;
                     b.button.ColorKeyVisible = _ShowColor;
                     b.button.CloseVisible = _ShowClose && b.IsActive;
+                    b.button.CanPress = b.IsActive;
                 }
             }
         }

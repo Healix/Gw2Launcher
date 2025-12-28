@@ -377,7 +377,7 @@ namespace Gw2Launcher.Util
             }
         }
 
-        public static void Unregister(ScheduledEventCallbackEventHandler e)
+        public static void Unregister(params ScheduledEventCallbackEventHandler[] e)
         {
             if (contextId != Thread.CurrentThread.ManagedThreadId)
             {
@@ -389,27 +389,30 @@ namespace Gw2Launcher.Util
                 return;
             }
 
-            Node n;
-            if (!events.TryGetValue(e, out n))
-                return;
-
-            events.Remove(e);
-
-            if (count == 1)
+            for (var i = 0; i < e.Length; i++)
             {
-                first = last = null;
-            }
-            else
-            {
-                if (first == n)
-                    first = n.next;
-                else if (last == n)
-                    last = n.previous;
+                Node n;
+                if (!events.TryGetValue(e[i], out n))
+                    continue;
 
-                n.Detach();
-            }
+                events.Remove(e[i]);
 
-            count--;
+                if (count == 1)
+                {
+                    first = last = null;
+                }
+                else
+                {
+                    if (first == n)
+                        first = n.next;
+                    else if (last == n)
+                        last = n.previous;
+
+                    n.Detach();
+                }
+
+                count--;
+            }
         }
 
         private static Node RemoveFirst()

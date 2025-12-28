@@ -10,6 +10,129 @@ namespace Gw2Launcher.UI.Controls
     {
         protected Bitmap bufferText;
         private Size sizeText;
+        private VerticalTagType tags;
+
+        [Flags]
+        public enum VerticalTagType : byte
+        {
+            None = 0,
+            Top = 1,
+            Bottom = 2,
+        }
+
+        public class TagData
+        {
+            public event EventHandler Changed;
+
+            public TagData()
+            {
+            }
+
+            private Color _ForeColor;
+            public Color ForeColor
+            {
+                get
+                {
+                    return _ForeColor;
+                }
+                set
+                {
+                    if (_ForeColor != value)
+                    {
+                        _ForeColor = value;
+                        if (_Visible)
+                        {
+                            OnChanged();
+                        }
+                    }
+                }
+            }
+
+            private Color _BackColor;
+            public Color BackColor
+            {
+                get
+                {
+                    return _BackColor;
+                }
+                set
+                {
+                    if (_BackColor != value)
+                    {
+                        _BackColor = value;
+                        if (_Visible)
+                        {
+                            OnChanged();
+                        }
+                    }
+                }
+            }
+
+            private string _Text;
+            public string Text
+            {
+                get
+                {
+                    return _Text;
+                }
+                set
+                {
+                    if (_Text != value)
+                    {
+                        _Text = value;
+                        if (_Visible)
+                        {
+                            OnChanged();
+                        }
+                    }
+                }
+            }
+
+            private Font _Font;
+            public Font Font
+            {
+                get
+                {
+                    return _Font;
+                }
+                set
+                {
+                    if (_Font != value)
+                    {
+                        _Font = value;
+                        if (_Visible)
+                        {
+                            OnChanged();
+                        }
+                    }
+                }
+            }
+
+            private bool _Visible;
+            public bool Visible
+            {
+                get
+                {
+                    return _Visible;
+                }
+                set
+                {
+                    if (_Visible != value)
+                    {
+                        _Visible = value;
+                        OnChanged();
+                    }
+                }
+            }
+
+            private void OnChanged()
+            {
+                if (Changed != null)
+                {
+                    Changed(this, EventArgs.Empty);
+                }
+            }
+        }
 
         public FlatVerticalButton()
             : base()
@@ -47,6 +170,113 @@ namespace Gw2Launcher.UI.Controls
                     OnRedrawRequired();
                 }
             }
+        }
+
+        private TagData _TopTag;
+        [Browsable(false)]
+        [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
+        public TagData TopTag
+        {
+            get
+            {
+                return _TopTag;
+            }
+            set
+            {
+                if (_TopTag != value)
+                {
+                    var b = false;
+                    if (_TopTag != null)
+                    {
+                        b = _TopTag.Visible;
+                        _TopTag.Changed -= TagData_Changed;
+                    }
+                    if (value != null)
+                    {
+                        b = value.Visible || b;
+                        value.Changed += TagData_Changed;
+                    }
+                    if (value != null && value.Visible)
+                        tags |= VerticalTagType.Top;
+                    else
+                        tags &= ~VerticalTagType.Top;
+                    _TopTag = value;
+                    if (b)
+                    {
+                        OnRedrawRequired();
+                    }
+                }
+            }
+        }
+
+        private TagData _BottomTag;
+        [Browsable(false)]
+        [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
+        public TagData BottomTag
+        {
+            get
+            {
+                return _BottomTag;
+            }
+            set
+            {
+                if (_BottomTag != value)
+                {
+                    var b = false;
+                    if (_BottomTag != null)
+                    {
+                        b = _BottomTag.Visible;
+                        _BottomTag.Changed -= TagData_Changed;
+                    }
+                    if (value != null)
+                    {
+                        b = value.Visible || b;
+                        value.Changed += TagData_Changed;
+                    }
+                    if (value != null && value.Visible)
+                        tags |= VerticalTagType.Bottom;
+                    else
+                        tags &= ~VerticalTagType.Bottom;
+                    _BottomTag = value;
+                    if (b)
+                    {
+                        OnRedrawRequired();
+                    }
+                }
+            }
+        }
+
+        void TagData_Changed(object sender, EventArgs e)
+        {
+            var t = (TagData)sender;
+            var ty = VerticalTagType.None;
+
+            if (_TopTag == t)
+            {
+                ty = VerticalTagType.Top;
+            }
+            else if (_BottomTag == t)
+            {
+                ty = VerticalTagType.Bottom;
+            }
+            else
+            {
+                return;
+            }
+
+            if ((tags & ty) != 0)
+            {
+                if (!t.Visible)
+                {
+                    tags &= ~ty;
+                }
+            }
+            else if (t.Visible)
+            {
+                tags |= ty;
+            }
+
+            OnRedrawRequired();
         }
 
         private void OnRedrawTextRequired()
@@ -179,6 +409,36 @@ namespace Gw2Launcher.UI.Controls
             g.RotateTransform(90);
             g.DrawImage(bufferText, new Point(0, 0));
             g.ResetTransform();
+
+            if (tags != VerticalTagType.None)
+            {
+                using (var brush = new SolidBrush(Color.Transparent))
+                {
+                    if ((tags & VerticalTagType.Top) != 0)
+                    {
+                        brush.Color = _TopTag.BackColor;
+
+                        var f = _TopTag.Font != null ? _TopTag.Font : this.Font;
+                        var h = (int)(f.GetHeight(g) + 0.5f);
+                        var r = new Rectangle(0, -1, this.Width, h);
+
+                        g.FillRectangle(brush, 0, 0, r.Width, h - 1);
+                        TextRenderer.DrawText(g, _TopTag.Text, f, r, _TopTag.ForeColor, TextFormatFlags.HorizontalCenter | TextFormatFlags.NoPadding | TextFormatFlags.SingleLine);
+                    }
+
+                    if ((tags & VerticalTagType.Bottom) != 0)
+                    {
+                        brush.Color = _BottomTag.BackColor;
+
+                        var f = _BottomTag.Font != null ? _BottomTag.Font : this.Font;
+                        var h = (int)(f.GetHeight(g) + 0.5f);
+                        var r = new Rectangle(0, this.Height - h, this.Width, h);
+
+                        g.FillRectangle(brush, 0, r.Y + 1, r.Width, h - 1);
+                        TextRenderer.DrawText(g, _BottomTag.Text, f, r, _BottomTag.ForeColor, TextFormatFlags.HorizontalCenter | TextFormatFlags.NoPadding | TextFormatFlags.SingleLine);
+                    }
+                }
+            }
 
             if (_ShowNotification)
             {

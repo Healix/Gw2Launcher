@@ -99,7 +99,8 @@ namespace Gw2Launcher.UI.Controls
             if (e == enabled)
                 return;
 
-            timer.Enabled = enabled = e;
+            enabled = e;
+            timer.Enabled = e && !DesignMode;
             if (enabled)
                 startTime = Environment.TickCount;
 

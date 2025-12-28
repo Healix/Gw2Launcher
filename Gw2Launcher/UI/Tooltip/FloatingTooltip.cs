@@ -118,7 +118,7 @@ namespace Gw2Launcher.UI.Tooltip
             if (!this.Visible)
                 AttachedTo = null;
             else
-                NativeMethods.SetWindowPos(this.Handle, (IntPtr)WindowZOrder.HWND_TOPMOST, 0, 0, 0, 0, SetWindowPosFlags.SWP_NOMOVE | SetWindowPosFlags.SWP_NOSIZE | SetWindowPosFlags.SWP_NOACTIVATE);
+                NativeMethods.SetWindowPos(this.Handle, (IntPtr)WindowZOrder.HWND_TOP, 0, 0, 0, 0, SetWindowPosFlags.SWP_NOMOVE | SetWindowPosFlags.SWP_NOSIZE | SetWindowPosFlags.SWP_NOACTIVATE | SetWindowPosFlags.SWP_NOOWNERZORDER);
         }
 
         void control_MouseLeave(object sender, EventArgs e)

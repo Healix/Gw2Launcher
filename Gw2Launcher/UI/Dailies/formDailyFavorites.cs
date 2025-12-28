@@ -16,9 +16,10 @@ namespace Gw2Launcher.UI.Dailies
         private DataGridViewRow[] rows;
         private Api.Daily daily;
         private int filtering;
-        private Settings.TaggedType type;
+        private bool filteringb;
+        private Settings.DailiesItemOptions type;
 
-        public formDailyFavorites(Api.Daily daily, Settings.TaggedType type)
+        public formDailyFavorites(Api.Daily daily, Settings.DailiesItemOptions type)
         {
             this.achievements = new Dictionary<int, DataGridViewRow>();
             this.daily = daily;
@@ -33,24 +34,24 @@ namespace Gw2Launcher.UI.Dailies
 
             switch (type)
             {
-                case Settings.TaggedType.Favorite:
+                case Settings.DailiesItemOptions.Favorite:
 
                     this.Text = "Favorites";
 
                     break;
-                case Settings.TaggedType.Ignored:
+                case Settings.DailiesItemOptions.Ignored:
 
                     this.Text = "Ignored";
 
                     break;
             }
 
-            var tags = Settings.TaggedDailies.ToArray();
+            var tags = Settings.Dailies.ItemOptions.ToArray();
             var count = 0;
 
             for (var i = 0; i < tags.Length; i++)
             {
-                if (tags[i].Value == type)
+                if (tags[i].Key.Type == Settings.DailiesKeyType.DailyObjective && tags[i].Value == type)
                 {
                     if (count != i)
                     {
@@ -66,7 +67,7 @@ namespace Gw2Launcher.UI.Dailies
 
                 for (var i = 0; i < count; i++)
                 {
-                    var id = tags[i].Key;
+                    var id = tags[i].Key.ID;
                     var row = CreateRow(id);
 
                     row.Cells[columnSelected.Index].Value = CheckState.Checked;
@@ -155,29 +156,35 @@ namespace Gw2Launcher.UI.Dailies
                     Array.Resize<DataGridViewRow>(ref _rows, count);
                 }
 
-                if (!string.IsNullOrWhiteSpace(textAdvanced.Text))
+                using (var o = gridAchievements.BeginUpdate(false))
                 {
-                    Filter(_rows);
-                }
-
-                gridAchievements.Rows.AddRange(_rows);
-
-                if (this.rows != null)
-                {
-                    if (this.rows.Length + count == rows.Length)
+                    if (!string.IsNullOrWhiteSpace(textAdvanced.Text))
                     {
-                        _rows = rows;
-                    }
-                    else
-                    {
-                        _rows = new DataGridViewRow[this.rows.Length + count];
+                        if (this.rows != null)
+                        {
+                            Filter(this.rows);
+                        }
+                        Filter(_rows);
                     }
 
-                    Array.Copy(rows, 0, _rows, this.rows.Length, count);
-                    Array.Copy(this.rows, _rows, this.rows.Length);
-                }
+                    if (this.rows != null)
+                    {
+                        if (this.rows.Length + count == rows.Length)
+                        {
+                            _rows = rows;
+                        }
+                        else
+                        {
+                            _rows = new DataGridViewRow[this.rows.Length + count];
+                        }
 
-                this.rows = _rows;
+                        Array.Copy(rows, 0, _rows, this.rows.Length, count);
+                        Array.Copy(this.rows, _rows, this.rows.Length);
+                    }
+
+                    this.rows = _rows;
+                    o.Rows = _rows;
+                }
             }
         }
 
@@ -189,8 +196,12 @@ namespace Gw2Launcher.UI.Dailies
         private async void OnFilterChanged()
         {
             var b = filtering != 0;
-            
+
             filtering = Environment.TickCount;
+            filteringb = true;
+
+            if (filtering == 0)
+                ++filtering;
 
             if (b)
             {
@@ -205,7 +216,7 @@ namespace Gw2Launcher.UI.Dailies
 
             filtering = 0;
 
-            if (!IsDisposed)
+            if (!IsDisposed && filteringb)
             {
                 DoFilter();
             }
@@ -213,6 +224,8 @@ namespace Gw2Launcher.UI.Dailies
 
         private void DoFilter()
         {
+            filteringb = false;
+
             using (var o = gridAchievements.BeginUpdate(false))
             {
                 Filter(rows);
@@ -262,18 +275,64 @@ namespace Gw2Launcher.UI.Dailies
 
             c.Value = b ? CheckState.Unchecked : CheckState.Checked;
 
+            SetValue(id, b);
+
+            Modified = true;
+        }
+
+        private void SetValue(ushort id, bool b)
+        {
+            var key = new Settings.DailiesItemKey(Settings.DailiesKeyType.DailyObjective, id);
+
             if (b)
             {
-                Settings.TaggedDailies.Remove(id);
+                Settings.Dailies.ItemOptions.Remove(key);
             }
             else
             {
-                Settings.TaggedDailies[id] = type;
+                Settings.Dailies.ItemOptions[key] = type;
             }
+        }
 
-            Settings.FavoriteDailies[id] = !b;
+        private void textAdvanced_KeyDown(object sender, KeyEventArgs e)
+        {
+            if (e.KeyCode == Keys.Enter)
+            {
+                ushort id;
+                if (ushort.TryParse(textAdvanced.Text, out id) && id > 0)
+                {
+                    DataGridViewRow row;
 
-            Modified = true;
+                    if (!achievements.TryGetValue(id, out row))
+                    {
+                        row = CreateRow(id);
+
+                        row.Cells[columnSelected.Index].Value = CheckState.Checked;
+                        row.Cells[columnName.Index].Value = "(" + id + ")";
+
+                        achievements[id] = row;
+
+                        var _rows = new DataGridViewRow[rows.Length + 1];
+
+                        Array.Copy(rows, 0, _rows, 1, rows.Length);
+                        _rows[0] = row;
+                        rows = _rows;
+
+                        textAdvanced.Clear();
+
+                        e.SuppressKeyPress = true;
+                        e.Handled = true;
+
+                        SetValue(id, true);
+                        DoFilter();
+                        Modified = true;
+                    }
+                }
+            }
+        }
+
+        private void textAdvanced_KeyUp(object sender, KeyEventArgs e)
+        {
         }
     }
 }

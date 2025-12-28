@@ -5,6 +5,7 @@ using System.Drawing;
 using System.Drawing.Imaging;
 using Gw2Launcher.Api;
 using System.ComponentModel;
+using System.Threading.Tasks;
 
 namespace Gw2Launcher.UI.Controls
 {
@@ -41,7 +42,12 @@ namespace Gw2Launcher.UI.Controls
                 get;
             }
 
-            Settings.TaggedType Tagged
+            bool IsNew
+            {
+                get;
+            }
+
+            Settings.DailiesItemOptions Options
             {
                 get;
                 set;
@@ -162,6 +168,7 @@ namespace Gw2Launcher.UI.Controls
         private Favorite favorite;
         private Image image;
         private IDataSource source;
+        private Tools.Api.VaultObjectives.RefreshStatus rs;
 
         public DailyAchievement()
         {
@@ -267,8 +274,11 @@ namespace Gw2Launcher.UI.Controls
             }
             set
             {
-                labelName.value = value;
-                OnRedrawRequired(true);
+                if (labelName.value != value)
+                {
+                    labelName.value = value;
+                    OnRedrawRequired(true);
+                }
             }
         }
 
@@ -441,6 +451,23 @@ namespace Gw2Launcher.UI.Controls
             }
         }
 
+        private Color _ColorKey;
+        public Color ColorKey
+        {
+            get
+            {
+                return _ColorKey;
+            }
+            set
+            {
+                if (_ColorKey != value)
+                {
+                    _ColorKey = value;
+                    OnRedrawRequired(false);
+                }
+            }
+        }
+
         public bool ProgressVisible
         {
             get
@@ -537,6 +564,14 @@ namespace Gw2Launcher.UI.Controls
                         _ProgressValue = (byte)v;
                     }
                 }
+            }
+        }
+
+        public byte ProgressValueRaw
+        {
+            get
+            {
+                return _ProgressValue;
             }
         }
 
@@ -743,6 +778,132 @@ namespace Gw2Launcher.UI.Controls
             }
         }
 
+        private int _PendingTick;
+        public bool Pending
+        {
+            get
+            {
+                return _PendingTick != 0;
+            }
+            set
+            {
+                if ((_PendingTick != 0) != value)
+                {
+                    if (value)
+                    {
+                        _PendingTick = Environment.TickCount;
+                        if (_PendingTick == 0)
+                        {
+                            _PendingTick = 1;
+                        }
+                        DoPendingRefresh();
+                    }
+                    else
+                    {
+                        _PendingTick = 0;
+                    }
+                    OnRedrawRequired(true);
+                }
+            }
+        }
+
+        private async void DoPendingRefresh()
+        {
+            var t = _PendingTick;
+
+            while (true)
+            {
+                await Task.Delay(501 - (Environment.TickCount - t) % 500);
+
+                if (_PendingTick == t)
+                {
+                    if (Environment.TickCount - t > 10000) //timeout
+                    {
+                        Util.Logging.Log("timeout");
+                        SetPending(null);
+
+                        break;
+                    }
+                    else
+                    {
+                        OnRedrawRequired(true);
+                    }
+                }
+                else
+                {
+                    break;
+                }
+            }
+        }
+
+        public void SetPending(Tools.Api.VaultObjectives.RefreshStatus rs)
+        {
+            if (this.rs == rs)
+            {
+                return;
+            }
+
+            if (this.rs != null)
+            {
+                this.rs.Complete -= rs_Complete;
+                this.rs.Delayed -= rs_Delayed;
+            }
+
+            this.rs = rs;
+
+            if (rs != null)
+            {
+                rs.Complete += rs_Complete;
+                rs.Delayed += rs_Delayed;
+
+                if (rs.IsComplete || rs.NextUpdate != DateTime.MinValue && rs.NextUpdate.Subtract(DateTime.UtcNow).TotalSeconds > 10)
+                {
+                    SetPending(null);
+                }
+                else
+                {
+                    this.Pending = true;
+                }
+            }
+            else
+            {
+                this.Pending = false;
+            }
+        }
+
+        void rs_Delayed(object sender, ApiData.DataAvailableEventArgs e)
+        {
+            Util.Logging.Log("rs_Delayed " + e.NextRequest.Subtract(DateTime.UtcNow).TotalSeconds + "s");
+
+            if (e.NextRequest.Subtract(DateTime.UtcNow).TotalSeconds > 10)
+            {
+                Util.Invoke.Required(this,
+                    delegate
+                    {
+                        if (this.rs == sender)
+                        {
+                            SetPending(null);
+                        }
+                    }, true);
+            }
+        }
+
+        void rs_Complete(object sender, EventArgs e)
+        {
+            ((Tools.Api.VaultObjectives.RefreshStatus)sender).Complete -= rs_Complete;
+
+            Util.Invoke.Required(this, 
+                delegate
+                {
+                    if (this.rs == sender)
+                    {
+                        Util.Logging.Log("rs_Complete");
+                        this.rs = null;
+                        this.Pending = false;
+                    }
+                }, true);
+        }
+
         protected override void OnSizeChanged(EventArgs e)
         {
             base.OnSizeChanged(e);
@@ -762,7 +923,7 @@ namespace Gw2Launcher.UI.Controls
 
             hovered = true;
 
-            if (_ProgressDisplayedVisible && _ProgressValue != 0 && _ProgressValue != 255)
+            if (_ProgressDisplayedVisible && _ProgressValue != 0 && _ProgressValue != 255 && _ProgressDisplayedTotal != 1)
             {
                 OnRedrawRequired(false);
             }
@@ -799,10 +960,10 @@ namespace Gw2Launcher.UI.Controls
             if (icon.visible)
                 lx = icon.bounds.Width + 20;
             else
-                lx = 20;
+                lx = 15;
             lw = w - lx - 10;
 
-            if (favorite.alignment == FavoriteAlignment.Right && (favorite.visibility != FavoriteVisibility.Never || _ProgressValue == 255 || _ProgressDisplayedVisible))
+            if (favorite.alignment == FavoriteAlignment.Right && (favorite.visibility != FavoriteVisibility.Never || _ProgressValue == 255 || _ProgressDisplayedVisible || _PendingTick != 0))
             {
                 lw -= favorite.bounds.Width + 5;
                 favorite.bounds.Location = new Point(lx + lw + 5, h / 2 - favorite.bounds.Height / 2);
@@ -1053,7 +1214,36 @@ namespace Gw2Launcher.UI.Controls
                         }
                     }
 
-                    if (hovered && _ProgressDisplayedVisible && _ProgressValue != 255)
+                    if (_PendingTick != 0 && _ProgressValue != 255)
+                    {
+                        var scale = g.DpiX / 96f;
+                        var sz = (int)(2 * scale + 0.5f);
+                        var x = favorite.bounds.Right;
+                        var y = favorite.bounds.Y + favorite.bounds.Height / 2;
+                        var color = Util.Color.Gradient(this.ForeColor, this.BackColor, 0.4f);
+
+                        using (var b = new SolidBrush(color))
+                        {
+                            var t = (uint)Environment.TickCount % 2000 / 500;
+
+                            for (var i = 0; i < 3; i++)
+                            {
+                                if (i == t)
+                                {
+                                    b.Color = this.ForeColor;
+                                    g.FillRectangle(b, x - sz - sz / 2, y - sz, sz * 2, sz * 2);
+                                    b.Color = color;
+                                }
+                                else
+                                {
+                                    g.FillRectangle(b, x - sz, y - sz / 2, sz, sz);
+                                }
+
+                                x -= sz * 2;
+                            }
+                        }
+                    }
+                    else if (hovered && _ProgressDisplayedVisible && _ProgressValue != 255 && _ProgressDisplayedTotal > 1)
                     {
                         using (var f1 = new Font("Segoe UI Semibold", 8f, FontStyle.Bold, GraphicsUnit.Point))
                         {
@@ -1097,6 +1287,14 @@ namespace Gw2Launcher.UI.Controls
                 if (favorite.visible)
                 {
                     favorite.Draw(g);
+                }
+
+                if (_ColorKey.A != 0)
+                {
+                    using (var b = new SolidBrush(_ColorKey))
+                    {
+                        g.FillRectangle(b, 1, 1, (int)(4 * g.DpiX / 96f + 0.5f), this.Height - 2);
+                    }
                 }
 
                 labelName.Draw(g);

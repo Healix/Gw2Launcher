@@ -13,6 +13,7 @@ namespace Gw2Launcher.Client
     static class Steam
     {
         public const int APPID_GW2 = 1284210;
+        public const int APPID_GW1 = 29720;
 
         public class AlreadyRunningSteamException : Exception
         {
@@ -27,6 +28,8 @@ namespace Gw2Launcher.Client
             {
                 case Settings.AccountType.GuildWars2:
                     return APPID_GW2;
+                case Settings.AccountType.GuildWars1:
+                    return APPID_GW1;
             }
 
             return 0;

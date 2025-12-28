@@ -367,7 +367,7 @@ namespace Gw2Launcher.UI
             Settings.StyleColumns.ValueChanged += StyleColumns_ValueChanged;
             Settings.BackgroundPatchingEnabled.ValueChanged += BackgroundPatchingEnabled_ValueChanged;
             Settings.TopMost.ValueChanged += TopMost_ValueChanged;
-            Settings.ShowDailies.ValueChanged += ShowDailies_ValueChanged;
+            Settings.Dailies.Options.ValueChanged += DailiesOptions_ValueChanged;
             Settings.ScreenshotNaming.ValueChanged += ScreenshotSettings_ValueChanged;
             Settings.ScreenshotConversion.ValueChanged += ScreenshotSettings_ValueChanged;
             Settings.ShowKillAllAccounts.ValueChanged += ShowKillAllAccounts_ValueChanged;
@@ -1324,10 +1324,7 @@ namespace Gw2Launcher.UI
 
         private Util.ScheduledEvents.Ticks GetNextDaily()
         {
-            var ticks = DateTime.UtcNow.Ticks;
-            const long TICKS_PER_DAY = 864000000000;
-
-            return new Util.ScheduledEvents.Ticks(Util.ScheduledEvents.TickType.MillisecondTicks, ((ticks / TICKS_PER_DAY + 1) * TICKS_PER_DAY) / 10000 + 1);
+            return new Util.ScheduledEvents.Ticks(Util.ScheduledEvents.TickType.MillisecondTicks, (DateTime.UtcNow.Ticks / Util.Date.TICKS_PER_DAY + 1) * Util.Date.MILLIS_PER_DAY + 1);
         }
 
         private Util.ScheduledEvents.Ticks GetNextWeekly()
@@ -1395,7 +1392,7 @@ namespace Gw2Launcher.UI
                 }
             }
 
-            if (dailies != null && !dailies.IsDisposed && (Settings.ShowDailies.Value & Settings.DailiesMode.Show) != 0)
+            if (dailies != null && !dailies.IsDisposed && (Settings.Dailies.Options.Value & Settings.DailiesOptions.Show) != 0)
             {
                 dailies.OnDailyReset();
             }
@@ -1437,7 +1434,7 @@ namespace Gw2Launcher.UI
                 }
             }
 
-            if (dailies != null && !dailies.IsDisposed && (Settings.ShowDailies.Value & Settings.DailiesMode.Show) != 0)
+            if (dailies != null && !dailies.IsDisposed && (Settings.Dailies.Options.Value & Settings.DailiesOptions.Show) != 0)
             {
                 dailies.OnWeeklyReset();
             }
@@ -1715,7 +1712,7 @@ namespace Gw2Launcher.UI
             if (Settings.AccountBar.Enabled.Value)
                 ShowAccountBar(false);
 
-            ShowDailies_ValueChanged(Settings.ShowDailies, EventArgs.Empty);
+            DailiesOptions_ValueChanged(Settings.Dailies.Options, EventArgs.Empty);
 
             if ((Settings.JumpList.Value & Settings.JumpListOptions.Enabled) == Settings.JumpListOptions.Enabled && Windows.JumpList.IsSupported)
             {
@@ -1773,12 +1770,13 @@ namespace Gw2Launcher.UI
 
                 if (accounts != null)
                 {
-                    DateTime d;
+                    DateTime d, l;
 
                     if (t == ApiTimer.DelayType.Pending)
                         d = e.Delay;
                     else
                         d = e.NextRequest;
+                    l = e.LastRequest;
 
                     if (DateTime.UtcNow < d)
                     {
@@ -1790,13 +1788,14 @@ namespace Gw2Launcher.UI
                                     AccountGridButton button;
                                     if (buttons.TryGetValue(a.UID, out button))
                                     {
-                                        button.SetApiRequestDelay(t, d);
+                                        button.SetApiRequestDelay(t, d, l);
                                     }
                                 }
                             });
                     }
                     else
                     {
+                        Util.Logging.LogEvent("SetApiRequestDelay expired");
                     }
                 }
             }
@@ -1830,7 +1829,7 @@ namespace Gw2Launcher.UI
                                 {
                                     button.ApiPending = e.Pending != 0;
                                     if (e.Delay != DateTime.MinValue)
-                                        button.SetApiRequestDelay(ApiTimer.DelayType.Pending, e.Delay);
+                                        button.SetApiRequestDelay(ApiTimer.DelayType.Pending, e.Delay, e.LastRequest);
                                 }
                             }
                         });
@@ -3672,11 +3671,11 @@ namespace Gw2Launcher.UI
             }
         }
 
-        void ShowDailies_ValueChanged(object sender, EventArgs e)
+        void DailiesOptions_ValueChanged(object sender, EventArgs e)
         {
-            var setting = sender as Settings.ISettingValue<Settings.DailiesMode>;
+            var setting = sender as Settings.ISettingValue<Settings.DailiesOptions>;
 
-            if (setting.Value.HasFlag(Settings.DailiesMode.Show))
+            if (setting.Value.HasFlag(Settings.DailiesOptions.Show))
             {
                 if (dailies == null || dailies.IsDisposed)
                 {

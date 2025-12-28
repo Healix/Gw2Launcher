@@ -92,12 +92,15 @@ namespace Gw2Launcher.UI.Controls
 
             for (var i = 0; i < count; i++)
             {
-                if (accounts[i] == null)
+                var a = accounts[i];
+
+                if (a == null)
                 {
                     count = i;
                     break;
                 }
-                Add(accounts[i]);
+
+                Add(a);
             }
 
             return count > 0;
@@ -148,79 +151,80 @@ namespace Gw2Launcher.UI.Controls
         {
             var count = accounts.Count;
 
-            if (count == 0)
+            if (count > 0 && this.size > 0)
             {
-                return new TargetArea()
+                if (_Style == DisplayStyle.Squares)
                 {
-                    index = -1,
-                    x1 = 0,
-                    x2 = ushort.MaxValue,
-                };
-            }
-            else if (_Style == DisplayStyle.Squares)
-            {
-                var sz = (int)(this.size + 0.5f);
-                var w = this.Width - this.Padding.Right;
-                var spaces = (int)(w / sz);
-                var ofs = w - (int)(spaces * sz);
-                var a = new TargetArea()
-                {
-                    index = spaces - (int)((x - ofs) / sz) - 1,
-                };
+                    var sz = (int)(this.size + 0.5f);
+                    var w = this.Width - this.Padding.Right;
+                    var spaces = (int)(w / sz);
+                    var ofs = w - (int)(spaces * sz);
+                    var a = new TargetArea()
+                    {
+                        index = spaces - (int)((x - ofs) / sz) - 1,
+                    };
 
-                if (a.index < 0)
-                {
-                    a.x1 = (ushort)w;
-                    a.x2 = (ushort)this.Width;
-                    a.index = -1;
-                }
-                else if (a.index >= count)
-                {
-                    a.x1 = 0;
-                    a.x2 = (ushort)(w - (count * sz));
-                    a.index = -1;
+                    if (a.index < 0)
+                    {
+                        a.x1 = (ushort)w;
+                        a.x2 = (ushort)this.Width;
+                        a.index = -1;
+                    }
+                    else if (a.index >= count)
+                    {
+                        a.x1 = 0;
+                        a.x2 = (ushort)(w - (count * sz));
+                        a.index = -1;
+                    }
+                    else
+                    {
+                        a.x2 = (ushort)(w - (sz * a.index));
+                        a.x1 = (ushort)(a.x2 - sz);
+                    }
+
+                    return a;
                 }
                 else
                 {
-                    a.x2 = (ushort)(w - (sz * a.index));
-                    a.x1 = (ushort)(a.x2 - sz);
-                }
+                    var w = this.Width;
+                    var i = (int)(x / this.size);
+                    var x1 = (int)((i + 1) * this.size) - 1;
 
-                return a;
+                    if (x > x1)
+                    {
+                        ++i;
+                        x1 = (int)((i + 1) * this.size) - 1;
+                    }
+
+                    if (i < 0)
+                    {
+                        i = 0;
+                    }
+                    else if (i >= count)
+                    {
+                        i = count - 1;
+                    }
+
+                    if (x1 >= w - 1)
+                    {
+                        x1 = w;
+                    }
+
+                    return new TargetArea()
+                    {
+                        index = i,
+                        x1 = (ushort)(i * this.size),
+                        x2 = (ushort)x1,
+                    };
+                }
             }
-            else
+
+            return new TargetArea()
             {
-                var w = this.Width;
-                var i = (int)(x / this.size);
-                var x1 = (int)((i + 1) * this.size) - 1;
-
-                if (x > x1)
-                {
-                    ++i;
-                    x1 = (int)((i + 1) * this.size) - 1;
-                }
-
-                if (i < 0)
-                {
-                    i = 0;
-                }
-                else if (i >= count)
-                {
-                    i = count - 1;
-                }
-
-                if (x1 >= w - 1)
-                {
-                    x1 = w;
-                }
-
-                return new TargetArea()
-                {
-                    index = i,
-                    x1 = (ushort)(i * this.size),
-                    x2 = (ushort)x1,
-                };
-            }
+                index = -1,
+                x1 = 0,
+                x2 = ushort.MaxValue,
+            };
         }
 
         protected override void OnMouseMove(MouseEventArgs e)

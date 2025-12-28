@@ -475,7 +475,7 @@ namespace Gw2Launcher.UI
             this.panelGw1RunAfterPrograms = new Gw2Launcher.UI.Controls.StackPanel();
             this.panelGw1RunAfterProgramsAddSeparator = new System.Windows.Forms.Panel();
             this.labelGw1RunAfterProgramsAdd = new Gw2Launcher.UI.Controls.LinkLabel();
-            this.panelSteamGw2 = new Gw2Launcher.UI.Controls.AutoScrollContainerPanel();
+            this.panelSteam = new Gw2Launcher.UI.Controls.AutoScrollContainerPanel();
             this.stackPanel110 = new Gw2Launcher.UI.Controls.StackPanel();
             this.label242 = new System.Windows.Forms.Label();
             this.label249 = new System.Windows.Forms.Label();
@@ -926,7 +926,7 @@ namespace Gw2Launcher.UI
             this.stackPanel17.SuspendLayout();
             this.stackPanel50.SuspendLayout();
             this.stackPanel51.SuspendLayout();
-            this.panelSteamGw2.SuspendLayout();
+            this.panelSteam.SuspendLayout();
             this.stackPanel110.SuspendLayout();
             this.stackPanel111.SuspendLayout();
             this.stackPanel113.SuspendLayout();
@@ -1796,7 +1796,6 @@ namespace Gw2Launcher.UI
             this.buttonSample.AccountData = null;
             this.buttonSample.AccountName = "User name";
             this.buttonSample.AccountType = Gw2Launcher.Settings.AccountType.GuildWars2;
-            this.buttonSample.ApiPending = false;
             this.buttonSample.Astral = ((ushort)(0));
             this.buttonSample.BackColor = System.Drawing.Color.White;
             this.buttonSample.ColorKey = System.Drawing.Color.Empty;
@@ -2102,24 +2101,24 @@ namespace Gw2Launcher.UI
             // buttonStyleIconOrderUp
             // 
             this.buttonStyleIconOrderUp.Cursor = Gw2Launcher.Windows.Cursors.Hand;
+            this.buttonStyleIconOrderUp.ForeColor = System.Drawing.Color.FromArgb(((int)(((byte)(150)))), ((int)(((byte)(150)))), ((int)(((byte)(150)))));
+            this.buttonStyleIconOrderUp.ForeColorHovered = System.Drawing.SystemColors.ControlText;
             this.buttonStyleIconOrderUp.Location = new System.Drawing.Point(3, 3);
             this.buttonStyleIconOrderUp.ShapeDirection = System.Windows.Forms.ArrowDirection.Up;
             this.buttonStyleIconOrderUp.ShapeSize = new System.Drawing.Size(8, 4);
             this.buttonStyleIconOrderUp.Size = new System.Drawing.Size(20, 15);
             this.buttonStyleIconOrderUp.MouseDown += new System.Windows.Forms.MouseEventHandler(this.buttonStyleIconOrder_MouseDown);
-            this.buttonStyleIconOrderUp.ForeColor = System.Drawing.Color.FromArgb(((int)(((byte)(150)))), ((int)(((byte)(150)))), ((int)(((byte)(150)))));
-            this.buttonStyleIconOrderUp.ForeColorHovered = System.Drawing.SystemColors.ControlText;
             // 
             // buttonStyleIconOrderDown
             // 
             this.buttonStyleIconOrderDown.Cursor = Gw2Launcher.Windows.Cursors.Hand;
+            this.buttonStyleIconOrderDown.ForeColor = System.Drawing.Color.FromArgb(((int)(((byte)(150)))), ((int)(((byte)(150)))), ((int)(((byte)(150)))));
+            this.buttonStyleIconOrderDown.ForeColorHovered = System.Drawing.SystemColors.ControlText;
             this.buttonStyleIconOrderDown.Location = new System.Drawing.Point(3, 24);
             this.buttonStyleIconOrderDown.ShapeDirection = System.Windows.Forms.ArrowDirection.Down;
             this.buttonStyleIconOrderDown.ShapeSize = new System.Drawing.Size(8, 4);
             this.buttonStyleIconOrderDown.Size = new System.Drawing.Size(20, 15);
             this.buttonStyleIconOrderDown.MouseDown += new System.Windows.Forms.MouseEventHandler(this.buttonStyleIconOrder_MouseDown);
-            this.buttonStyleIconOrderDown.ForeColor = System.Drawing.Color.FromArgb(((int)(((byte)(150)))), ((int)(((byte)(150)))), ((int)(((byte)(150)))));
-            this.buttonStyleIconOrderDown.ForeColorHovered = System.Drawing.SystemColors.ControlText;
             // 
             // label15
             // 
@@ -3186,6 +3185,7 @@ namespace Gw2Launcher.UI
             this.labelWindowCaptionVariables.Location = new System.Drawing.Point(30, 27);
             this.labelWindowCaptionVariables.Margin = new System.Windows.Forms.Padding(7, 5, 0, 0);
             this.labelWindowCaptionVariables.Padding = new System.Windows.Forms.Padding(10, 2, 10, 2);
+            this.labelWindowCaptionVariables.Shade = ((byte)(25));
             this.labelWindowCaptionVariables.Size = new System.Drawing.Size(71, 17);
             this.labelWindowCaptionVariables.Text = "variables";
             this.labelWindowCaptionVariables.Click += new System.EventHandler(this.labelWindowCaptionVariables_Click);
@@ -6054,14 +6054,14 @@ namespace Gw2Launcher.UI
             // 
             // panelSteamGw2
             // 
-            this.panelSteamGw2.Anchor = ((System.Windows.Forms.AnchorStyles)((((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom) 
+            this.panelSteam.Anchor = ((System.Windows.Forms.AnchorStyles)((((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom) 
             | System.Windows.Forms.AnchorStyles.Left) 
             | System.Windows.Forms.AnchorStyles.Right)));
-            this.panelSteamGw2.Controls.Add(this.stackPanel110);
-            this.panelSteamGw2.Location = new System.Drawing.Point(183, 12);
-            this.panelSteamGw2.Size = new System.Drawing.Size(373, 439);
-            this.panelSteamGw2.Visible = false;
-            this.panelSteamGw2.PreVisiblePropertyChanged += new System.EventHandler<bool>(this.panelSteamGw2_PreVisiblePropertyChanged);
+            this.panelSteam.Controls.Add(this.stackPanel110);
+            this.panelSteam.Location = new System.Drawing.Point(183, 12);
+            this.panelSteam.Size = new System.Drawing.Size(373, 439);
+            this.panelSteam.Visible = false;
+            this.panelSteam.PreVisiblePropertyChanged += new System.EventHandler<bool>(this.panelSteam_PreVisiblePropertyChanged);
             // 
             // stackPanel110
             // 
@@ -9117,6 +9117,7 @@ namespace Gw2Launcher.UI
             this.labelGw2MumbleNameVariables.Location = new System.Drawing.Point(30, 27);
             this.labelGw2MumbleNameVariables.Margin = new System.Windows.Forms.Padding(7, 5, 0, 0);
             this.labelGw2MumbleNameVariables.Padding = new System.Windows.Forms.Padding(10, 2, 10, 2);
+            this.labelGw2MumbleNameVariables.Shade = ((byte)(25));
             this.labelGw2MumbleNameVariables.Size = new System.Drawing.Size(71, 17);
             this.labelGw2MumbleNameVariables.Text = "variables";
             this.labelGw2MumbleNameVariables.Click += new System.EventHandler(this.labelGw2MumbleNameVariables_Click);
@@ -9735,16 +9736,10 @@ namespace Gw2Launcher.UI
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(96F, 96F);
             this.ClientSize = new System.Drawing.Size(568, 507);
+            this.Controls.Add(this.panelSteam);
             this.Controls.Add(this.buttonCancel);
             this.Controls.Add(this.buttonOK);
             this.Controls.Add(this.sidebarPanel1);
-            this.Controls.Add(this.panelGeneral);
-            this.Controls.Add(this.panelLaunchConfigurationGw2);
-            this.Controls.Add(this.panelSecurity);
-            this.Controls.Add(this.panelColors);
-            this.Controls.Add(this.panelLaunchOptionsGw2);
-            this.Controls.Add(this.panelTweaksGw2);
-            this.Controls.Add(this.panelTools);
             this.Controls.Add(this.panelStyle);
             this.Controls.Add(this.panelLaunchConfiguration);
             this.Controls.Add(this.panelWindows);
@@ -9760,9 +9755,15 @@ namespace Gw2Launcher.UI
             this.Controls.Add(this.panelLaunchOptionsAdvancedGw2);
             this.Controls.Add(this.panelGw1);
             this.Controls.Add(this.panelLaunchOptionsGw1);
-            this.Controls.Add(this.panelSteamGw2);
             this.Controls.Add(this.panelUpdates);
             this.Controls.Add(this.panelActions);
+            this.Controls.Add(this.panelGeneral);
+            this.Controls.Add(this.panelLaunchConfigurationGw2);
+            this.Controls.Add(this.panelSecurity);
+            this.Controls.Add(this.panelColors);
+            this.Controls.Add(this.panelLaunchOptionsGw2);
+            this.Controls.Add(this.panelTweaksGw2);
+            this.Controls.Add(this.panelTools);
             this.Icon = global::Gw2Launcher.Properties.Resources.Gw2Launcher;
             this.Margin = new System.Windows.Forms.Padding(4);
             this.MaximizeBox = false;
@@ -9973,8 +9974,8 @@ namespace Gw2Launcher.UI
             this.stackPanel50.PerformLayout();
             this.stackPanel51.ResumeLayout(false);
             this.stackPanel51.PerformLayout();
-            this.panelSteamGw2.ResumeLayout(false);
-            this.panelSteamGw2.PerformLayout();
+            this.panelSteam.ResumeLayout(false);
+            this.panelSteam.PerformLayout();
             this.stackPanel110.ResumeLayout(false);
             this.stackPanel110.PerformLayout();
             this.stackPanel111.ResumeLayout(false);
@@ -10800,7 +10801,7 @@ namespace Gw2Launcher.UI
         private System.Windows.Forms.CheckBox checkGw2PathSteam;
         private System.Windows.Forms.TextBox textGw2PathSteam;
         private System.Windows.Forms.Button buttonGw2PathSteam;
-        private Controls.AutoScrollContainerPanel panelSteamGw2;
+        private Controls.AutoScrollContainerPanel panelSteam;
         private Controls.StackPanel stackPanel110;
         private System.Windows.Forms.Label label242;
         private System.Windows.Forms.Label label249;

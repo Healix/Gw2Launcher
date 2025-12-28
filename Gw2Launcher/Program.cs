@@ -18,8 +18,8 @@ namespace Gw2Launcher
     static class Program
     {
         public const byte RELEASE_VERSION = 21;
-        public const uint BUILD = 7691;
-        public const long RELEASE_TIMESTAMP = 5250400610427387904;
+        public const uint BUILD = 7805;
+        public const long RELEASE_TIMESTAMP = 5250710786427387904;
         private const string MUTEX_NAME = "Gw2Launcher_Mutex";
 
         [STAThread]

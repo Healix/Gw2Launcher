@@ -316,11 +316,9 @@ namespace Gw2Launcher.Client
         public static bool LaunchSteam(Settings.IAccount account, Launcher.ProcessOptions options)
         {
             var path = Steam.Path;
-            int appId;
+            var appId = Steam.GetAppId(account.Type);
 
-            if (account.Type == Settings.AccountType.GuildWars2)
-                appId = Steam.APPID_GW2;
-            else
+            if (appId == 0)
                 throw new NotSupportedException();
 
             var startInfo = new ProcessStartInfo(path, "-applaunch " + appId + (string.IsNullOrEmpty(options.Arguments) ? "" : " " + options.Arguments))

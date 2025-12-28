@@ -3,6 +3,7 @@ using System.Text;
 using System.Windows.Forms;
 using System.Drawing;
 using System.Drawing.Imaging;
+using System.Threading.Tasks;
 
 namespace Gw2Launcher.UI.Controls
 {
@@ -10,6 +11,7 @@ namespace Gw2Launcher.UI.Controls
     {
         public event MouseEventHandler CloseClicked;
         public event MouseEventHandler BarClicked;
+        public event EventHandler Pressed;
 
         public enum EdgeAlignment
         {
@@ -18,6 +20,15 @@ namespace Gw2Launcher.UI.Controls
             Top,
             Right,
             Bottom,
+        }
+
+        protected enum PressedState : byte
+        {
+            None,
+            Pending,
+            Pressing,
+            Flashing,
+            Complete,
         }
 
         protected SolidBrush brush, brushKey;
@@ -30,6 +41,8 @@ namespace Gw2Launcher.UI.Controls
         protected byte opacityIcon;
         protected bool showClose, showText, showIcon, showColor;
         protected int minimumIconWidth;
+        protected byte pressed;
+        protected PressedState pressedState;
 
         public AccountBarButton()
         {
@@ -214,6 +227,12 @@ namespace Gw2Launcher.UI.Controls
             }
         }
 
+        public bool CanPress
+        {
+            get;
+            set;
+        }
+
         public byte IconOpacity
         {
             get
@@ -277,6 +296,127 @@ namespace Gw2Launcher.UI.Controls
             }
         }
 
+        protected async void BeginPressed()
+        {
+            if (pressedState != 0)
+                return;
+
+            const float DURATION_PRESS = 500;
+            const float DURATION_FLASH = 500;
+
+            var abort = false;
+            var up = false;
+
+            pressedState = PressedState.Pending;
+
+            MouseEventHandler onMouseUp = delegate
+            {
+                up = true;
+
+                if (pressedState <= PressedState.Pressing)
+                {
+                    abort = true;
+                }
+            };
+
+            EventHandler onMouseLeave = delegate
+            {
+                if (pressedState <= PressedState.Pressing)
+                {
+                    abort = true;
+                }
+            };
+
+            this.MouseUp += onMouseUp;
+            this.MouseLeave += onMouseLeave;
+
+            await Task.Delay(100);
+
+            if (!abort)
+            {
+                var duration = DURATION_PRESS;
+
+                pressedState = PressedState.Pressing;
+                pressed = 0;
+
+                var t = Environment.TickCount;
+
+                do
+                {
+                    OnRedrawRequired();
+
+                    var p = (Environment.TickCount - t) / duration;
+
+                    if (p >= 1)
+                    {
+                        pressed = 255;
+
+                        await Task.Delay(50);
+
+                        if (pressedState == PressedState.Pressing)
+                        {
+                            pressedState = PressedState.Flashing;
+                            pressed = 0;
+                            duration = DURATION_FLASH;
+                            t = Environment.TickCount;
+
+                            OnPressed();
+                        }
+                        else
+                        {
+                            pressedState = PressedState.Complete;
+
+                            break;
+                        }
+                    }
+                    else
+                    {
+                        pressed = (byte)(p * 255);
+
+                        await Task.Delay(10);
+                    }
+                }
+                while (!abort);
+
+                OnRedrawRequired();
+            }
+
+            this.MouseUp -= onMouseUp;
+            this.MouseLeave -= onMouseLeave;
+
+            if (up)
+            {
+                pressedState = PressedState.None;
+            }
+        }
+
+        private void OnPressed()
+        {
+            if (CloseClicked != null)
+                CloseClicked(this, null);
+        }
+
+        protected override void OnMouseUp(MouseEventArgs e)
+        {
+            base.OnMouseUp(e);
+
+            if (pressedState <= PressedState.Pressing || pressedState == PressedState.Complete)
+            {
+                pressedState = PressedState.None;
+            }
+        }
+
+        protected override void OnMouseDown(MouseEventArgs e)
+        {
+            base.OnMouseDown(e);
+
+            if (!hoveredClose && e.Button == System.Windows.Forms.MouseButtons.Left && CanPress)
+            {
+                if (Settings.ActionActiveLPress.Value == Settings.ButtonAction.Close)
+                    BeginPressed();
+            }
+        }
+
         protected override void OnMouseClick(MouseEventArgs e)
         {
             if (hoveredClose)
@@ -284,7 +424,7 @@ namespace Gw2Launcher.UI.Controls
                 if (CloseClicked != null)
                     CloseClicked(this, e);
             }
-            else
+            else if (pressedState <= PressedState.Pending)
             {
                 if (BarClicked != null)
                     BarClicked(this, e);
@@ -309,14 +449,9 @@ namespace Gw2Launcher.UI.Controls
             base.OnBackgroundImageChanged(e);
         }
 
-        protected override void OnPaintBackgroundBuffer(Graphics g)
-        {
-            base.OnPaintBackgroundBuffer(g);
-        }
-
         protected override void DrawText(Graphics g, string text, int x, int y, int w, int h)
         {
-            TextRenderer.DrawText(g, text, this.Font, new Rectangle(x, y, w, h), ForeColorCurrent, BackColorCurrent, TextFormatFlags.VerticalCenter);
+            TextRenderer.DrawText(g, text, this.Font, new Rectangle(x, y, w, h), ForeColorCurrent, Color.Transparent, TextFormatFlags.VerticalCenter);
         }
 
         private void DrawImage(Graphics g, Image image, Rectangle bounds, byte opacity)
@@ -348,6 +483,22 @@ namespace Gw2Launcher.UI.Controls
                 h = this.Height;
 
             var scale = g.DpiX / 96f;
+            
+            switch (pressedState)
+            {
+                case PressedState.Pressing:
+
+                    brush.Color = Color.FromArgb(128, 125, 0, 0);
+                    g.FillRectangle(brush, 0, 0, (int)(pressed / 255f * w + 0.5f), h);
+
+                    break;
+                case PressedState.Flashing:
+
+                    brush.Color = Color.FromArgb(255 - pressed, 125, 0, 0);
+                    g.FillRectangle(brush, 0, 0, w, h);
+
+                    break;
+            }
 
             Image image;
             if (showIcon && ((image = this.BackgroundImage) != null || minimumIconWidth > 0))
@@ -491,11 +642,11 @@ namespace Gw2Launcher.UI.Controls
 
                     using (var gradient = new System.Drawing.Drawing2D.LinearGradientBrush(new Point(boundsClose.Left - fadeWidth - fadePad, 0), new Point(boundsClose.Left - fadePad, 0), Color.Transparent, this.BackColorCurrent))
                     {
-                        g.FillRectangle(gradient, boundsClose.Left - fadePad - fadePad, this.Padding.Top, fadeWidth, h - this.Padding.Vertical);
+                        g.FillRectangle(gradient, boundsClose.Left - fadeWidth - fadePad, 0, fadeWidth, h);
                     }
 
                     brush.Color = this.BackColorCurrent;
-                    g.FillRectangle(brush, boundsClose.Left - fadePad, this.Padding.Top, w - boundsClose.Left - Padding.Right + fadePad, h - this.Padding.Vertical);
+                    g.FillRectangle(brush, boundsClose.Left - fadePad, 0, w - boundsClose.Left + fadePad, h);
                 }
 
                 var colorClose = hoveredClose ? Color.White : Color.FromArgb(170, 170, 170);
@@ -508,13 +659,13 @@ namespace Gw2Launcher.UI.Controls
             }
             else
             {
-                int x = this.Width - this.Padding.Right;
+                int x = this.Width;
 
                 if (boundsText.Right > x)
                 {
                     using (var gradient = new System.Drawing.Drawing2D.LinearGradientBrush(new Point(x - fadeWidth, 0), new Point(x, 0), Color.Transparent, this.BackColorCurrent))
                     {
-                        g.FillRectangle(gradient, x - fadeWidth, this.Padding.Top, fadeWidth, h - this.Padding.Vertical);
+                        g.FillRectangle(gradient, x - fadeWidth, 0 /*this.Padding.Top*/, fadeWidth, h /* - this.Padding.Vertical*/);
                     }
                 }
             }

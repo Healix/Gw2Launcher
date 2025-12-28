@@ -28,8 +28,8 @@ namespace Gw2Launcher.UI.Dailies
         /// </summary>
         private void InitializeComponent()
         {
-            System.Windows.Forms.DataGridViewCellStyle dataGridViewCellStyle2 = new System.Windows.Forms.DataGridViewCellStyle();
-            System.Windows.Forms.DataGridViewCellStyle dataGridViewCellStyle1 = new System.Windows.Forms.DataGridViewCellStyle();
+            System.Windows.Forms.DataGridViewCellStyle dataGridViewCellStyle4 = new System.Windows.Forms.DataGridViewCellStyle();
+            System.Windows.Forms.DataGridViewCellStyle dataGridViewCellStyle3 = new System.Windows.Forms.DataGridViewCellStyle();
             this.textAdvanced = new System.Windows.Forms.TextBox();
             this.gridAchievements = new Gw2Launcher.UI.Controls.ScaledDataGridView();
             this.columnSelected = new System.Windows.Forms.DataGridViewCheckBoxColumn();
@@ -46,6 +46,8 @@ namespace Gw2Launcher.UI.Dailies
             this.textAdvanced.Margin = new System.Windows.Forms.Padding(0, 10, 0, 0);
             this.textAdvanced.Size = new System.Drawing.Size(473, 22);
             this.textAdvanced.TextChanged += new System.EventHandler(this.textAdvanced_TextChanged);
+            this.textAdvanced.KeyDown += new System.Windows.Forms.KeyEventHandler(this.textAdvanced_KeyDown);
+            this.textAdvanced.KeyUp += new System.Windows.Forms.KeyEventHandler(this.textAdvanced_KeyUp);
             // 
             // gridAchievements
             // 
@@ -65,14 +67,14 @@ namespace Gw2Launcher.UI.Dailies
             this.columnSelected,
             this.columnId,
             this.columnName});
-            dataGridViewCellStyle2.Alignment = System.Windows.Forms.DataGridViewContentAlignment.MiddleLeft;
-            dataGridViewCellStyle2.BackColor = System.Drawing.SystemColors.Window;
-            dataGridViewCellStyle2.Font = new System.Drawing.Font("Segoe UI", 8.25F);
-            dataGridViewCellStyle2.ForeColor = System.Drawing.SystemColors.ControlText;
-            dataGridViewCellStyle2.SelectionBackColor = System.Drawing.SystemColors.ControlLight;
-            dataGridViewCellStyle2.SelectionForeColor = System.Drawing.SystemColors.ControlText;
-            dataGridViewCellStyle2.WrapMode = System.Windows.Forms.DataGridViewTriState.False;
-            this.gridAchievements.DefaultCellStyle = dataGridViewCellStyle2;
+            dataGridViewCellStyle4.Alignment = System.Windows.Forms.DataGridViewContentAlignment.MiddleLeft;
+            dataGridViewCellStyle4.BackColor = System.Drawing.SystemColors.Window;
+            dataGridViewCellStyle4.Font = new System.Drawing.Font("Segoe UI", 8.25F);
+            dataGridViewCellStyle4.ForeColor = System.Drawing.SystemColors.ControlText;
+            dataGridViewCellStyle4.SelectionBackColor = System.Drawing.SystemColors.ControlLight;
+            dataGridViewCellStyle4.SelectionForeColor = System.Drawing.SystemColors.ControlText;
+            dataGridViewCellStyle4.WrapMode = System.Windows.Forms.DataGridViewTriState.False;
+            this.gridAchievements.DefaultCellStyle = dataGridViewCellStyle4;
             this.gridAchievements.EditMode = System.Windows.Forms.DataGridViewEditMode.EditProgrammatically;
             this.gridAchievements.Location = new System.Drawing.Point(9, 9);
             this.gridAchievements.Margin = new System.Windows.Forms.Padding(0);
@@ -94,8 +96,8 @@ namespace Gw2Launcher.UI.Dailies
             // 
             // columnId
             // 
-            dataGridViewCellStyle1.ForeColor = System.Drawing.SystemColors.GrayText;
-            this.columnId.DefaultCellStyle = dataGridViewCellStyle1;
+            dataGridViewCellStyle3.ForeColor = System.Drawing.SystemColors.GrayText;
+            this.columnId.DefaultCellStyle = dataGridViewCellStyle3;
             this.columnId.HeaderText = "";
             this.columnId.ReadOnly = true;
             this.columnId.Resizable = System.Windows.Forms.DataGridViewTriState.False;

@@ -25,9 +25,10 @@ namespace Gw2Launcher.UI.Controls
         }
 
         public event EventHandler Tick;
+        public event EventHandler BeginRequest;
 
         private Settings.ApiDataKey api;
-        private DateTime date;
+        private sbyte current;
         private DateTime[] dates;
         private int start;
         private float limit;
@@ -35,14 +36,18 @@ namespace Gw2Launcher.UI.Controls
         private bool resize;
         private bool active;
         private bool pending;
+        private bool updating;
+        private bool requesting;
         private Api.ApiData manager;
         private Api.ApiData.DataType type;
+        private Api.ApiData.DataRequest request;
         private bool enabled;
 
         public ApiTimer(Settings.IAccount account = null, Api.ApiData manager = null, Api.ApiData.DataType type = ANY_TYPE)
         {
             this.manager = manager;
             this.enabled = true;
+            this.current = -1;
 
             resize = true;
             dates = new DateTime[2];
@@ -58,6 +63,39 @@ namespace Gw2Launcher.UI.Controls
                 manager.PendingChanged += manager_PendingChanged;
                 manager.NextRequestChanged += manager_NextRequestChanged;
                 manager.DelayChanged += manager_DelayChanged;
+                manager.EndUpdate += manager_EndUpdate;
+                manager.BeginUpdate += manager_BeginUpdate;
+            }
+        }
+
+        void manager_BeginUpdate(object sender, Api.ApiData.ApiDataEventArgs e)
+        {
+            if (object.ReferenceEquals(this.api, e.Key))
+            {
+                updating = true;
+
+                if (BeginRequest != null)
+                    BeginRequest(this, EventArgs.Empty);
+
+                if (pending && enabled)
+                {
+                    if (Tick != null)
+                        Tick(this, EventArgs.Empty);
+                }
+            }
+        }
+
+        void manager_EndUpdate(object sender, Api.ApiData.ApiDataEventArgs e)
+        {
+            if (object.ReferenceEquals(this.api, e.Key))
+            {
+                updating = false;
+
+                if (pending && enabled)
+                {
+                    if (Tick != null)
+                        Tick(this, EventArgs.Empty);
+                }
             }
         }
 
@@ -65,7 +103,7 @@ namespace Gw2Launcher.UI.Controls
         {
             if (object.ReferenceEquals(this.api, e.Key))
             {
-                SetTimer(DelayType.Pending, e.Delay);
+                SetTimer(DelayType.Pending, e.Delay, DateTime.MinValue);
             }
         }
 
@@ -73,7 +111,7 @@ namespace Gw2Launcher.UI.Controls
         {
             if (object.ReferenceEquals(this.api, e.Key) && DateTime.UtcNow < e.NextRequest)
             {
-                SetTimer(DelayType.Cached, e.NextRequest);
+                SetTimer(DelayType.Cached, e.NextRequest, DateTime.MinValue);
             }
         }
 
@@ -91,13 +129,13 @@ namespace Gw2Launcher.UI.Controls
 
                         if (pending)
                         {
-                            Restart();
+                            Restart(DateTime.MinValue);
                         }
                     }
 
                     if (e.Delay != DateTime.MinValue)
                     {
-                        SetTimer(DelayType.Pending, e.Delay);
+                        SetTimer(DelayType.Pending, e.Delay, DateTime.MinValue);
                     }
                 }
             }
@@ -122,6 +160,10 @@ namespace Gw2Launcher.UI.Controls
                     {
                         Util.ScheduledEvents.Register(OnScheduledTick, Frequency);
                     }
+                    else if (value)
+                    {
+                        Start(DateTime.MinValue);
+                    }
                 }
             }
         }
@@ -134,8 +176,9 @@ namespace Gw2Launcher.UI.Controls
 
                 if (this.type != type || api != a)
                 {
-                    api = a;
+                    this.updating = this.updating && api == a;
                     this.type = type;
+                    this.api = a;
 
                     if (a != null && manager != null)
                     {
@@ -144,11 +187,15 @@ namespace Gw2Launcher.UI.Controls
                         if (cache != null)
                         {
                             this.pending = type == ANY_TYPE ? cache.Pending != 0 : cache.GetPending(type) != 0;
-                            
+
                             dates[0] = cache.NextRequest;
                             dates[1] = cache.Delay;
 
-                            Restart();
+                            if (DateTime.UtcNow.Subtract(cache.LastRequest).TotalMinutes < 5)
+                                Restart(cache.LastRequest);
+                            else
+                                Restart(DateTime.MinValue);
+
                         }
                         else
                         {
@@ -164,6 +211,7 @@ namespace Gw2Launcher.UI.Controls
             else if (api != null)
             {
                 api = null;
+                updating = false;
 
                 if (active)
                 {
@@ -172,38 +220,66 @@ namespace Gw2Launcher.UI.Controls
             }
         }
 
-        private bool Start()
+        public void SetRequest(Api.ApiData.DataRequest r)
         {
-            var n = DateTime.UtcNow;
-            var i = 0;
-
-            while (n >= dates[i])
+            if (request != null)
             {
-                if (++i == dates.Length)
-                {
-                    if (active)
-                    {
-                        active = false;
-
-                        if (enabled)
-                        {
-                            if (Tick != null)
-                                Tick(this, EventArgs.Empty);
-                        }
-
-                        return true;
-                    }
-
-                    return false;
-                }
+                request.DataAvailable -= request_DataAvailable;
+                request.Complete -= request_Complete;
             }
 
-            if ((date.Ticks - dates[i].Ticks) / 10000000 != 0)
+            request = r;
+
+            if (r != null)
             {
-                date = dates[i];
-                start = Environment.TickCount;
-                limit = (float)date.Subtract(n).TotalMilliseconds + 1;
-                active = limit > 0;
+                requesting = true;
+
+                r.DataAvailable += request_DataAvailable;
+                r.Complete += request_Complete;
+
+                if ((r.State & (Gw2Launcher.Api.ApiData.DataRequest.RequestState.Complete | Gw2Launcher.Api.ApiData.DataRequest.RequestState.Aborted)) != 0)
+                {
+                    SetRequest(null);
+                }
+            }
+            else
+            {
+                requesting = false;
+            }
+        }
+
+        void request_Complete(object sender, EventArgs e)
+        {
+            SetRequest(null);
+        }
+
+        void request_DataAvailable(object sender, Api.ApiData.RequestDataAvailableEventArgs e)
+        {
+            SetRequest(null);
+        }
+
+        private bool Start(DateTime last)
+        {
+            var n = DateTime.UtcNow;
+
+            for (sbyte i = 0; i < dates.Length; i++)
+            {
+                if (n >= dates[i])
+                    continue;
+
+                if (last != DateTime.MinValue)
+                {
+                    start = Environment.TickCount - (int)n.Subtract(last).TotalMilliseconds;
+                    limit = (float)dates[i].Subtract(last).TotalMilliseconds + 1;
+                }
+                else
+                {
+                    start = Environment.TickCount;
+                    limit = (float)dates[i].Subtract(n).TotalMilliseconds + 1;
+                }
+
+                current = i;
+                active = true;
 
                 if (enabled)
                 {
@@ -211,6 +287,19 @@ namespace Gw2Launcher.UI.Controls
                         Tick(this, EventArgs.Empty);
 
                     Util.ScheduledEvents.Register(OnScheduledTick, Frequency);
+                }
+
+                return true;
+            }
+
+            if (active)
+            {
+                active = false;
+
+                if (enabled)
+                {
+                    if (Tick != null)
+                        Tick(this, EventArgs.Empty);
                 }
 
                 return true;
@@ -225,13 +314,17 @@ namespace Gw2Launcher.UI.Controls
             {
                 if (active)
                 {
-                    if (Tick != null)
-                        Tick(this, EventArgs.Empty);
-                }
+                    if (Environment.TickCount - start > limit)
+                    {
+                        Start(DateTime.MinValue);
+                    }
+                    else
+                    {
+                        if (Tick != null)
+                            Tick(this, EventArgs.Empty);
 
-                if (Active)
-                {
-                    return new Util.ScheduledEvents.Ticks(Frequency);
+                        return new Util.ScheduledEvents.Ticks(Frequency);
+                    }
                 }
             }
 
@@ -244,7 +337,7 @@ namespace Gw2Launcher.UI.Controls
             {
                 dates[i] = DateTime.MinValue;
             }
-            date = DateTime.MinValue;
+            current = -1;
             if (active)
             {
                 active = false;
@@ -256,41 +349,48 @@ namespace Gw2Launcher.UI.Controls
             }
         }
 
-        public void Restart()
+        public void Restart(DateTime last)
         {
-            date = DateTime.MinValue;
-            Start();
+            current = -1;
+            Start(last);
         }
 
-        private void Start(DateTime d)
+        public void SetTimer(DelayType t, DateTime d, DateTime last)
         {
-            date = d;
-            start = Environment.TickCount;
-            limit = (float)d.Subtract(DateTime.UtcNow).TotalMilliseconds + 1;
-            if (limit < 1)
-                limit = 1;
+            //var b = date == -1 || d > dates[date] || date == (byte)t && DateTime.UtcNow < dates[date];
+
+            if (dates[(byte)t] != d)
+            {
+                var n = DateTime.UtcNow;
+
+                if (n < d)
+                {
+                    var b = current == -1 || current >= (byte)t && dates[current] != d || n > dates[current];
+
+                    dates[(byte)t] = d;
+
+                    if (b)
+                        Start(last);
+                }
+            }
+
+
+            //b = date == (byte)t && d != dates[date] || d > n && (date == -1 || n > dates[date]);
+
+            //dates[(byte)t] = d;
+            //if (b)
+            //    Start(last);
         }
 
         public void SetTimer(DelayType t, DateTime d)
         {
-            var b = d > date || dates[(byte)t] == date && DateTime.UtcNow < date;
-            dates[(byte)t] = d;
-            if (b)
-                Start();
+            SetTimer(t, d, DateTime.MinValue);
         }
 
         public bool Active
         {
             get
             {
-                if (active)
-                {
-                    if (Environment.TickCount - start > limit)
-                    {
-                        Start();
-                    }
-                }
-
                 return active;
             }
         }
@@ -322,13 +422,16 @@ namespace Gw2Launcher.UI.Controls
 
                     if (v > 1)
                     {
-                        Start();
                         return 1;
                     }
                     else if (v < 0)
                         return 0;
                     else
                         return v;
+                }
+                else if (requesting)
+                {
+                    return 1;
                 }
                 else
                 {
@@ -361,6 +464,36 @@ namespace Gw2Launcher.UI.Controls
             set
             {
                 pending = value;
+            }
+        }
+
+        /// <summary>
+        /// API is being updated
+        /// </summary>
+        public bool Updating
+        {
+            get
+            {
+                return updating;
+            }
+            set
+            {
+                updating = value;
+            }
+        }
+
+        /// <summary>
+        /// The supplied API request is pending
+        /// </summary>
+        public bool Requesting
+        {
+            get
+            {
+                return requesting;
+            }
+            set
+            {
+                requesting = value;
             }
         }
 
@@ -434,8 +567,12 @@ namespace Gw2Launcher.UI.Controls
                 manager.PendingChanged -= manager_PendingChanged;
                 manager.NextRequestChanged -= manager_NextRequestChanged;
                 manager.DelayChanged -= manager_DelayChanged;
+                manager.EndUpdate -= manager_EndUpdate;
+                manager.BeginUpdate -= manager_BeginUpdate;
                 manager = null;
             }
+
+            SetRequest(null);
 
             if (active && enabled)
             {

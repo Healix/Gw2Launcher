@@ -4227,19 +4227,21 @@ namespace Gw2Launcher.UI.Controls
 
         }
 
-        public void SetApiRequestDelay(ApiTimer.DelayType t, DateTime d)
+        public void SetApiRequestDelay(ApiTimer.DelayType t, DateTime d, DateTime l)
         {
             if (DateTime.UtcNow < d)
             {
-                GetApiTimer().SetTimer(t, d);
+                GetApiTimer().SetTimer(t, d, DateTime.MinValue);
             }
             else if (apiTimer != null)
             {
-                apiTimer.SetTimer(t, d);
+                apiTimer.SetTimer(t, d, DateTime.MinValue);
             }
 
         }
 
+        [Browsable(false)]
+        [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
         public bool ApiPending
         {
             get
@@ -4258,7 +4260,7 @@ namespace Gw2Launcher.UI.Controls
 
                         if (value)
                         {
-                            t.Restart();
+                            t.Restart(DateTime.MinValue);
                         }
                         else if (!t.Ticking)
                         {

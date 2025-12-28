@@ -4029,13 +4029,20 @@ namespace Gw2Launcher.Client
                 try
                 {
                     var binpath = Path.Combine(root, bin);
-                    var dll = Path.Combine(binpath, "cef", "icudtl.dat");
-
-                    if (File.Exists(dll))
+                    var dlls = new string[] 
                     {
-                        File.Delete(dll);
-                    }
+                        Path.Combine(binpath, "cef", "icudtl.dat"), //default path
+                        Path.Combine(binpath, "icudtl.dat"), //directly in bin64 folder for binaries mode
+                    };
 
+                    for (var i = 0; i < dlls.Length; i++)
+                    {
+                        if (File.Exists(dlls[i]))
+                        {
+                            File.Delete(dlls[i]);
+                        }
+                    }
+                    
                     foreach (var f in Directory.GetFiles(root))
                     {
                         File.Delete(f);

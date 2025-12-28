@@ -99,6 +99,7 @@
     <Compile Include="Client\Launcher_Autologin.cs" />
     <Compile Include="Client\FileManager_FileLocker.cs" />
     <Compile Include="Client\Launcher_CoherentWatcher.cs" />
+    <Compile Include="Client\Launcher_FocusWatcher.cs" />
     <Compile Include="Client\Launcher_LinkedProcess.cs" />
     <Compile Include="Client\Launcher_RunAfter.cs" />
     <Compile Include="Client\Steam.cs" />
@@ -340,6 +341,7 @@
       <SubType>Component</SubType>
     </Compile>
     <Compile Include="Util\Array.cs" />
+    <Compile Include="Util\BufferedGraphics.cs" />
     <Compile Include="Util\Date.cs" />
     <Compile Include="Util\Dpi.cs" />
     <Compile Include="Windows\Clipboard.cs" />

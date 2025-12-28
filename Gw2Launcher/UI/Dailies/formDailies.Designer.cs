@@ -29,19 +29,40 @@ namespace Gw2Launcher.UI.Dailies
             this.contextMenu = new System.Windows.Forms.ContextMenuStrip(this.components);
             this.categoriesToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.favoritesToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.ignoredToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.combineAccountsToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.autoSelectCurrentAccountToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.autoScrollToCurrentAccountToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.sortGroupsByToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.focusedToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.groupToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.accountToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.toolStripMenuItem2 = new System.Windows.Forms.ToolStripSeparator();
+            this.descendingToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.sortObjectivesByToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.objectiveNameToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.objectiveProgressToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.toolStripMenuItem3 = new System.Windows.Forms.ToolStripSeparator();
+            this.objectiveDescendingToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.toolStripMenuItem1 = new System.Windows.Forms.ToolStripSeparator();
             this.showOnTopToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.splitVaultObjectivesToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.refreshDailiesToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.buttonInfoToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.buttonVault = new Gw2Launcher.UI.Controls.FlatVerticalButton();
             this.panelTabs = new Gw2Launcher.UI.Dailies.formDailies.TransparentStackPanel();
             this.buttonDaySwap = new Gw2Launcher.UI.Controls.FlatShapeButton();
             this.panelSep = new Gw2Launcher.UI.Controls.StackPanel();
             this.buttonWeekly = new Gw2Launcher.UI.Controls.FlatVerticalButton();
             this.buttonSpecial = new Gw2Launcher.UI.Controls.FlatVerticalButton();
-            this.ignoredToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.contextMenuDaily = new System.Windows.Forms.ContextMenuStrip(this.components);
+            this.ignoreDailyToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.objectiveIdToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.panelContainer.SuspendLayout();
             this.panelMessage.SuspendLayout();
             this.contextMenu.SuspendLayout();
             this.panelTabs.SuspendLayout();
+            this.contextMenuDaily.SuspendLayout();
             this.SuspendLayout();
             // 
             // scrollV
@@ -171,31 +192,155 @@ namespace Gw2Launcher.UI.Dailies
             this.categoriesToolStripMenuItem,
             this.favoritesToolStripMenuItem,
             this.ignoredToolStripMenuItem,
+            this.combineAccountsToolStripMenuItem,
+            this.autoSelectCurrentAccountToolStripMenuItem,
+            this.autoScrollToCurrentAccountToolStripMenuItem,
+            this.sortGroupsByToolStripMenuItem,
+            this.sortObjectivesByToolStripMenuItem,
             this.toolStripMenuItem1,
-            this.showOnTopToolStripMenuItem});
-            this.contextMenu.Size = new System.Drawing.Size(237, 120);
+            this.showOnTopToolStripMenuItem,
+            this.splitVaultObjectivesToolStripMenuItem,
+            this.refreshDailiesToolStripMenuItem,
+            this.buttonInfoToolStripMenuItem});
+            this.contextMenu.Size = new System.Drawing.Size(308, 274);
             // 
             // categoriesToolStripMenuItem
             // 
-            this.categoriesToolStripMenuItem.Size = new System.Drawing.Size(236, 22);
+            this.categoriesToolStripMenuItem.Size = new System.Drawing.Size(307, 22);
             this.categoriesToolStripMenuItem.Text = "Categories";
             this.categoriesToolStripMenuItem.Click += new System.EventHandler(this.categoriesToolStripMenuItem_Click);
             // 
             // favoritesToolStripMenuItem
             // 
-            this.favoritesToolStripMenuItem.Size = new System.Drawing.Size(236, 22);
+            this.favoritesToolStripMenuItem.Size = new System.Drawing.Size(307, 22);
             this.favoritesToolStripMenuItem.Text = "Favorites";
             this.favoritesToolStripMenuItem.Click += new System.EventHandler(this.favoritesToolStripMenuItem_Click);
             // 
+            // ignoredToolStripMenuItem
+            // 
+            this.ignoredToolStripMenuItem.Size = new System.Drawing.Size(307, 22);
+            this.ignoredToolStripMenuItem.Text = "Ignored";
+            this.ignoredToolStripMenuItem.Click += new System.EventHandler(this.ignoredToolStripMenuItem_Click);
+            // 
+            // combineAccountsToolStripMenuItem
+            // 
+            this.combineAccountsToolStripMenuItem.Checked = true;
+            this.combineAccountsToolStripMenuItem.CheckState = System.Windows.Forms.CheckState.Checked;
+            this.combineAccountsToolStripMenuItem.Size = new System.Drawing.Size(307, 22);
+            this.combineAccountsToolStripMenuItem.Text = "Combine accounts with the same objectives";
+            this.combineAccountsToolStripMenuItem.Click += new System.EventHandler(this.combineAccountsToolStripMenuItem_Click);
+            // 
+            // autoSelectCurrentAccountToolStripMenuItem
+            // 
+            this.autoSelectCurrentAccountToolStripMenuItem.Size = new System.Drawing.Size(307, 22);
+            this.autoSelectCurrentAccountToolStripMenuItem.Text = "Auto select current account";
+            this.autoSelectCurrentAccountToolStripMenuItem.Click += new System.EventHandler(this.autoSelectCurrentAccountToolStripMenuItem_Click);
+            // 
+            // autoScrollToCurrentAccountToolStripMenuItem
+            // 
+            this.autoScrollToCurrentAccountToolStripMenuItem.Size = new System.Drawing.Size(307, 22);
+            this.autoScrollToCurrentAccountToolStripMenuItem.Text = "Auto scroll to current account";
+            this.autoScrollToCurrentAccountToolStripMenuItem.Click += new System.EventHandler(this.autoScrollToCurrentAccountToolStripMenuItem_Click);
+            // 
+            // sortGroupsByToolStripMenuItem
+            // 
+            this.sortGroupsByToolStripMenuItem.DropDownItems.AddRange(new System.Windows.Forms.ToolStripItem[] {
+            this.focusedToolStripMenuItem,
+            this.groupToolStripMenuItem,
+            this.accountToolStripMenuItem,
+            this.toolStripMenuItem2,
+            this.descendingToolStripMenuItem});
+            this.sortGroupsByToolStripMenuItem.Size = new System.Drawing.Size(307, 22);
+            this.sortGroupsByToolStripMenuItem.Text = "Sort groups by";
+            // 
+            // focusedToolStripMenuItem
+            // 
+            this.focusedToolStripMenuItem.Size = new System.Drawing.Size(152, 22);
+            this.focusedToolStripMenuItem.Text = "Focused";
+            this.focusedToolStripMenuItem.Click += new System.EventHandler(this.sortingGroupsToolStripMenuItem_Click);
+            // 
+            // groupToolStripMenuItem
+            // 
+            this.groupToolStripMenuItem.Size = new System.Drawing.Size(152, 22);
+            this.groupToolStripMenuItem.Text = "Group";
+            this.groupToolStripMenuItem.Click += new System.EventHandler(this.sortingGroupsToolStripMenuItem_Click);
+            // 
+            // accountToolStripMenuItem
+            // 
+            this.accountToolStripMenuItem.Size = new System.Drawing.Size(152, 22);
+            this.accountToolStripMenuItem.Text = "Account";
+            this.accountToolStripMenuItem.Click += new System.EventHandler(this.sortingGroupsToolStripMenuItem_Click);
+            // 
+            // toolStripMenuItem2
+            // 
+            this.toolStripMenuItem2.Size = new System.Drawing.Size(149, 6);
+            // 
+            // descendingToolStripMenuItem
+            // 
+            this.descendingToolStripMenuItem.Size = new System.Drawing.Size(152, 22);
+            this.descendingToolStripMenuItem.Text = "Descending";
+            this.descendingToolStripMenuItem.Click += new System.EventHandler(this.sortingGroupsToolStripMenuItem_Click);
+            // 
+            // sortObjectivesByToolStripMenuItem
+            // 
+            this.sortObjectivesByToolStripMenuItem.DropDownItems.AddRange(new System.Windows.Forms.ToolStripItem[] {
+            this.objectiveIdToolStripMenuItem,
+            this.objectiveNameToolStripMenuItem,
+            this.objectiveProgressToolStripMenuItem,
+            this.toolStripMenuItem3,
+            this.objectiveDescendingToolStripMenuItem});
+            this.sortObjectivesByToolStripMenuItem.Size = new System.Drawing.Size(307, 22);
+            this.sortObjectivesByToolStripMenuItem.Text = "Sort objectives by";
+            // 
+            // objectiveNameToolStripMenuItem
+            // 
+            this.objectiveNameToolStripMenuItem.Size = new System.Drawing.Size(152, 22);
+            this.objectiveNameToolStripMenuItem.Text = "Name";
+            this.objectiveNameToolStripMenuItem.Click += new System.EventHandler(this.sortingObjectivesToolStripMenuItem_Click);
+            // 
+            // objectiveProgressToolStripMenuItem
+            // 
+            this.objectiveProgressToolStripMenuItem.Size = new System.Drawing.Size(152, 22);
+            this.objectiveProgressToolStripMenuItem.Text = "Progress";
+            this.objectiveProgressToolStripMenuItem.Click += new System.EventHandler(this.sortingObjectivesToolStripMenuItem_Click);
+            // 
+            // toolStripMenuItem3
+            // 
+            this.toolStripMenuItem3.Size = new System.Drawing.Size(149, 6);
+            // 
+            // objectiveDescendingToolStripMenuItem
+            // 
+            this.objectiveDescendingToolStripMenuItem.Size = new System.Drawing.Size(152, 22);
+            this.objectiveDescendingToolStripMenuItem.Text = "Descending";
+            this.objectiveDescendingToolStripMenuItem.Click += new System.EventHandler(this.sortingObjectivesToolStripMenuItem_Click);
+            // 
             // toolStripMenuItem1
             // 
-            this.toolStripMenuItem1.Size = new System.Drawing.Size(233, 6);
+            this.toolStripMenuItem1.Size = new System.Drawing.Size(304, 6);
             // 
             // showOnTopToolStripMenuItem
             // 
-            this.showOnTopToolStripMenuItem.Size = new System.Drawing.Size(236, 22);
+            this.showOnTopToolStripMenuItem.Size = new System.Drawing.Size(307, 22);
             this.showOnTopToolStripMenuItem.Text = "Show on top of other windows";
             this.showOnTopToolStripMenuItem.Click += new System.EventHandler(this.showOnTopToolStripMenuItem_Click);
+            // 
+            // splitVaultObjectivesToolStripMenuItem
+            // 
+            this.splitVaultObjectivesToolStripMenuItem.Size = new System.Drawing.Size(307, 22);
+            this.splitVaultObjectivesToolStripMenuItem.Text = "Split vault objectives";
+            this.splitVaultObjectivesToolStripMenuItem.Click += new System.EventHandler(this.splitVaultObjectivesToolStripMenuItem_Click);
+            // 
+            // refreshDailiesToolStripMenuItem
+            // 
+            this.refreshDailiesToolStripMenuItem.Size = new System.Drawing.Size(307, 22);
+            this.refreshDailiesToolStripMenuItem.Text = "Refresh dailies";
+            this.refreshDailiesToolStripMenuItem.Click += new System.EventHandler(this.refreshDailiesToolStripMenuItem_Click);
+            // 
+            // buttonInfoToolStripMenuItem
+            // 
+            this.buttonInfoToolStripMenuItem.Size = new System.Drawing.Size(307, 22);
+            this.buttonInfoToolStripMenuItem.Text = "Button info";
+            this.buttonInfoToolStripMenuItem.Click += new System.EventHandler(this.buttonInfoToolStripMenuItem_Click);
             // 
             // buttonVault
             // 
@@ -206,7 +351,7 @@ namespace Gw2Launcher.UI.Dailies
             this.buttonVault.BackColorHoveredName = Gw2Launcher.UI.UiColors.Colors.DailiesHeader;
             this.buttonVault.BackColorSelectedName = Gw2Launcher.UI.UiColors.Colors.DailiesHeader;
             this.buttonVault.Location = new System.Drawing.Point(0, 193);
-            this.buttonVault.Margin = new System.Windows.Forms.Padding(0);
+            this.buttonVault.Margin = new System.Windows.Forms.Padding(0, 0, 0, 2);
             this.buttonVault.Padding = new System.Windows.Forms.Padding(0, 5, 0, 5);
             this.buttonVault.Size = new System.Drawing.Size(30, 63);
             this.buttonVault.Text = "Vault";
@@ -259,8 +404,8 @@ namespace Gw2Launcher.UI.Dailies
             this.buttonWeekly.AutoSize = true;
             this.buttonWeekly.BackColorHoveredName = Gw2Launcher.UI.UiColors.Colors.DailiesHeader;
             this.buttonWeekly.BackColorSelectedName = Gw2Launcher.UI.UiColors.Colors.DailiesHeader;
-            this.buttonWeekly.Location = new System.Drawing.Point(0, 256);
-            this.buttonWeekly.Margin = new System.Windows.Forms.Padding(0);
+            this.buttonWeekly.Location = new System.Drawing.Point(0, 258);
+            this.buttonWeekly.Margin = new System.Windows.Forms.Padding(0, 0, 0, 2);
             this.buttonWeekly.Padding = new System.Windows.Forms.Padding(0, 5, 0, 5);
             this.buttonWeekly.Size = new System.Drawing.Size(30, 75);
             this.buttonWeekly.Text = "Weekly";
@@ -274,18 +419,30 @@ namespace Gw2Launcher.UI.Dailies
             this.buttonSpecial.AutoSize = true;
             this.buttonSpecial.BackColorHoveredName = Gw2Launcher.UI.UiColors.Colors.DailiesHeader;
             this.buttonSpecial.BackColorSelectedName = Gw2Launcher.UI.UiColors.Colors.DailiesHeader;
-            this.buttonSpecial.Location = new System.Drawing.Point(0, 331);
+            this.buttonSpecial.Location = new System.Drawing.Point(0, 335);
             this.buttonSpecial.Margin = new System.Windows.Forms.Padding(0);
             this.buttonSpecial.Padding = new System.Windows.Forms.Padding(0, 5, 0, 5);
             this.buttonSpecial.Size = new System.Drawing.Size(30, 74);
             this.buttonSpecial.Text = "Special";
             this.buttonSpecial.MouseDown += new System.Windows.Forms.MouseEventHandler(this.buttonVault_MouseDown);
             // 
-            // ignoredToolStripMenuItem
+            // contextMenuDaily
             // 
-            this.ignoredToolStripMenuItem.Size = new System.Drawing.Size(236, 22);
-            this.ignoredToolStripMenuItem.Text = "Ignored";
-            this.ignoredToolStripMenuItem.Click += new System.EventHandler(this.ignoredToolStripMenuItem_Click);
+            this.contextMenuDaily.Items.AddRange(new System.Windows.Forms.ToolStripItem[] {
+            this.ignoreDailyToolStripMenuItem});
+            this.contextMenuDaily.Size = new System.Drawing.Size(109, 26);
+            // 
+            // ignoreDailyToolStripMenuItem
+            // 
+            this.ignoreDailyToolStripMenuItem.Size = new System.Drawing.Size(108, 22);
+            this.ignoreDailyToolStripMenuItem.Text = "Ignore";
+            this.ignoreDailyToolStripMenuItem.Click += new System.EventHandler(this.ignoreDailyToolStripMenuItem_Click);
+            // 
+            // objectiveIdToolStripMenuItem
+            // 
+            this.objectiveIdToolStripMenuItem.Size = new System.Drawing.Size(152, 22);
+            this.objectiveIdToolStripMenuItem.Text = "ID";
+            this.objectiveIdToolStripMenuItem.Click += new System.EventHandler(this.sortingObjectivesToolStripMenuItem_Click);
             // 
             // formDailies
             // 
@@ -310,6 +467,7 @@ namespace Gw2Launcher.UI.Dailies
             this.contextMenu.ResumeLayout(false);
             this.panelTabs.ResumeLayout(false);
             this.panelTabs.PerformLayout();
+            this.contextMenuDaily.ResumeLayout(false);
             this.ResumeLayout(false);
 
         }
@@ -338,5 +496,25 @@ namespace Gw2Launcher.UI.Dailies
         private Controls.FlatVerticalButton buttonSpecial;
         private Controls.FlatShapeButton buttonDaySwap;
         private System.Windows.Forms.ToolStripMenuItem ignoredToolStripMenuItem;
+        private System.Windows.Forms.ToolStripMenuItem refreshDailiesToolStripMenuItem;
+        private System.Windows.Forms.ToolStripMenuItem buttonInfoToolStripMenuItem;
+        private System.Windows.Forms.ToolStripMenuItem combineAccountsToolStripMenuItem;
+        private System.Windows.Forms.ToolStripMenuItem splitVaultObjectivesToolStripMenuItem;
+        private System.Windows.Forms.ToolStripMenuItem autoSelectCurrentAccountToolStripMenuItem;
+        private System.Windows.Forms.ToolStripMenuItem autoScrollToCurrentAccountToolStripMenuItem;
+        private System.Windows.Forms.ToolStripMenuItem sortGroupsByToolStripMenuItem;
+        private System.Windows.Forms.ToolStripMenuItem groupToolStripMenuItem;
+        private System.Windows.Forms.ToolStripMenuItem focusedToolStripMenuItem;
+        private System.Windows.Forms.ToolStripMenuItem accountToolStripMenuItem;
+        private System.Windows.Forms.ToolStripSeparator toolStripMenuItem2;
+        private System.Windows.Forms.ToolStripMenuItem descendingToolStripMenuItem;
+        private System.Windows.Forms.ContextMenuStrip contextMenuDaily;
+        private System.Windows.Forms.ToolStripMenuItem ignoreDailyToolStripMenuItem;
+        private System.Windows.Forms.ToolStripMenuItem sortObjectivesByToolStripMenuItem;
+        private System.Windows.Forms.ToolStripMenuItem objectiveNameToolStripMenuItem;
+        private System.Windows.Forms.ToolStripMenuItem objectiveProgressToolStripMenuItem;
+        private System.Windows.Forms.ToolStripSeparator toolStripMenuItem3;
+        private System.Windows.Forms.ToolStripMenuItem objectiveDescendingToolStripMenuItem;
+        private System.Windows.Forms.ToolStripMenuItem objectiveIdToolStripMenuItem;
     }
 }

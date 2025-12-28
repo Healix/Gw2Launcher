@@ -150,7 +150,7 @@ namespace Gw2Launcher.Api
         
         public static async Task<Vault> GetVaultAsync(VaultType type, string key)
         {
-            return await GetVaultAsync(type, key, Settings.ShowDailiesLanguage.Value);
+            return await GetVaultAsync(type, key, Settings.Dailies.Language.Value);
         }
 
         public static async Task<Vault> GetVaultAsync(VaultType type, string key, Settings.Language lang)

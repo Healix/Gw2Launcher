@@ -312,6 +312,12 @@ namespace Gw2Launcher.Client
                     }
                 }
 
+                public DateTime LastFocus
+                {
+                    get;
+                    set;
+                }
+
                 private bool isDisposed;
                 public bool IsDisposed
                 {

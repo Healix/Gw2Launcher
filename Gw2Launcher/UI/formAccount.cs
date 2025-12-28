@@ -312,15 +312,12 @@ namespace Gw2Launcher.UI
                 checkShowDailyCompletion.Parent.Visible = false;
                 checkResetDailyCompletion.Parent.Visible = false;
                 panelAutoLoginGw2.Visible = false;
-                panelAccountTypeGw2.Visible = false;
                 checkMuteMusic.Visible = false;
                 checkMuteVoices.Visible = false;
                 panelClientPortGw2.Visible = false;
                 panelMumbleNameGw2.Visible = false;
-                panelAutomaticLauncherLoginGw2.Visible = false;
                 labelAutologinConfigure.Visible = false;
                 panelTrackLoginRewardsDay.Visible = false;
-                panelLaunchSteamGw2.Visible = false;
                 panelLaunchOptionsProcessBrowser.Visible = false;
                 label93.Visible = false;
                 label92.Visible = false;
@@ -530,6 +527,13 @@ namespace Gw2Launcher.UI
             }
 
             checkShowDailyLogin.Checked = account.ShowDailyLogin;
+            checkAutomaticLauncherLogin.Checked = account.AutomaticRememberedLogin;
+
+            if (account.Provider == Settings.AccountProvider.Steam)
+                radioAccountTypeSteam.Checked = true;
+
+            if (account.Proxy == Settings.LaunchProxy.Steam)
+                checkLaunchSteam.Checked = true;
 
             if (account.Type == Settings.AccountType.GuildWars1)
             {
@@ -572,7 +576,6 @@ namespace Gw2Launcher.UI
                     checkGfxSettingsReadOnly.Checked = gw2.GfxFile.IsLocked;
                 }
 
-                checkAutomaticLauncherLogin.Checked = gw2.AutomaticRememberedLogin;
                 checkPort80.Checked = gw2.ClientPort == 80;
                 checkPort443.Checked = gw2.ClientPort == 443;
 
@@ -611,12 +614,6 @@ namespace Gw2Launcher.UI
                     checkTrackLoginRewardsDay.Checked = true;
                     textTrackLoginRewardsDay.Value = gw2.DailyLoginDay;
                 }
-
-                if (gw2.Provider == Settings.AccountProvider.Steam)
-                    radioAccountTypeSteam.Checked = true;
-
-                if (gw2.Proxy == Settings.LaunchProxy.Steam)
-                    checkLaunchSteam.Checked = true;
 
                 if (!gw2.DisableMumbleLinkDailyLogin)
                     checkDailyLoginMumbleLink.CheckState = Settings.Tweaks.DisableMumbleLinkDailyLogin.Value ? CheckState.Indeterminate : CheckState.Checked;
@@ -1227,15 +1224,18 @@ namespace Gw2Launcher.UI
 
         private void checkAutomaticLogin_CheckedChanged(object sender, EventArgs e)
         {
-            tableLogin.Parent.SuspendLayout();
+            if (accountType == Settings.AccountType.GuildWars2)
+            {
+                tableLogin.Parent.SuspendLayout();
 
-            var b = checkAutomaticLogin.Checked;
+                var b = checkAutomaticLogin.Checked;
 
-            textAutoLoginEmail.Enabled = textAutoLoginPassword.Enabled = b;
-            panelAutomaticLauncherLoginGw2.Visible = panelAutomaticLauncherLoginGw2.Enabled = !b && radioAccountTypeGw2.Checked;
-            tableLogin.Visible = tableLogin.Enabled = b && radioAccountTypeGw2.Checked;
+                textAutoLoginEmail.Enabled = textAutoLoginPassword.Enabled = b;
+                panelAutomaticLauncherLogin.Visible = panelAutomaticLauncherLogin.Enabled = !b && radioAccountTypeArenaNet.Checked;
+                tableLogin.Visible = tableLogin.Enabled = b && radioAccountTypeArenaNet.Checked;
 
-            tableLogin.Parent.ResumeLayout();
+                tableLogin.Parent.ResumeLayout();
+            }
         }
 
         protected override void OnFormClosing(FormClosingEventArgs e)
@@ -2630,6 +2630,22 @@ namespace Gw2Launcher.UI
                     a.ShowDailyLogin = checkShowDailyLogin.Checked;
                 }
 
+                if (isMaster || aaAutomaticLauncherLogin.Checked)
+                {
+                    if (panelAutomaticLauncherLogin.Enabled)
+                        a.AutomaticRememberedLogin = checkAutomaticLauncherLogin.Checked;
+                }
+
+                if (isMaster || aaAccountType.Checked)
+                {
+                    a.Provider = radioAccountTypeSteam.Checked ? Settings.AccountProvider.Steam : Settings.AccountProvider.ArenaNet;
+                }
+
+                if (isMaster || aaLaunchSteam.Checked)
+                {
+                    a.Proxy = checkLaunchSteam.Checked ? Settings.LaunchProxy.Steam : Settings.LaunchProxy.None;
+                }
+
                 if (a.Type == accountType)
                 {
                     switch (a.Type)
@@ -2659,11 +2675,11 @@ namespace Gw2Launcher.UI
                                 gw2.AutomaticPlay = checkAutomaticLoginPlay.Checked;
                             }
 
-                            if (isMaster || aaAutomaticLauncherLogin.Checked)
-                            {
-                                if (panelAutomaticLauncherLoginGw2.Enabled)
-                                    gw2.AutomaticRememberedLogin = checkAutomaticLauncherLogin.Checked;
-                            }
+                            //if (isMaster || aaAutomaticLauncherLogin.Checked)
+                            //{
+                            //    if (panelAutomaticLauncherLogin.Enabled)
+                            //        gw2.AutomaticRememberedLogin = checkAutomaticLauncherLogin.Checked;
+                            //}
 
                             if (isMaster || aaPort.Checked)
                             {
@@ -2849,16 +2865,6 @@ namespace Gw2Launcher.UI
                             if (isMaster || aaTrackLoginRewardsDay.Checked)
                             {
                                 gw2.DailyLoginDay = checkTrackLoginRewardsDay.Checked ? (byte)textTrackLoginRewardsDay.Value : (byte)0;
-                            }
-
-                            if (isMaster || aaAccountTypeGw2.Checked)
-                            {
-                                gw2.Provider = radioAccountTypeSteam.Checked ? Settings.AccountProvider.Steam : Settings.AccountProvider.ArenaNet;
-                            }
-
-                            if (isMaster || aaLaunchSteam.Checked)
-                            {
-                                gw2.Proxy = checkLaunchSteam.Checked ? Settings.LaunchProxy.Steam : Settings.LaunchProxy.None;
                             }
 
                             if (isMaster || aaDailyLoginMumbleLink.Checked)
@@ -4005,8 +4011,15 @@ namespace Gw2Launcher.UI
 
         private void checkAutomaticLoginGw1_CheckedChanged(object sender, EventArgs e)
         {
-            textAutoLoginCharacter.Enabled = textAutoLoginEmail.Enabled = textAutoLoginPassword.Enabled = checkAutomaticLoginGw1.Checked;
-            tableLogin.Visible = tableLogin.Enabled = checkAutomaticLoginGw1.Checked;
+            tableLogin.Parent.SuspendLayout();
+
+            var b = checkAutomaticLoginGw1.Checked;
+
+            textAutoLoginCharacter.Enabled = textAutoLoginEmail.Enabled = textAutoLoginPassword.Enabled = b;
+            tableLogin.Visible = tableLogin.Enabled = b;
+            panelAutomaticLauncherLogin.Visible = panelAutomaticLauncherLogin.Enabled = !b;
+
+            tableLogin.Parent.ResumeLayout();
         }
 
         private void checkGw2MumbleName_CheckedChanged(object sender, EventArgs e)
@@ -4897,21 +4910,33 @@ namespace Gw2Launcher.UI
 
         private void checkAccountTypeSteam_CheckedChanged(object sender, EventArgs e)
         {
-            var b = radioAccountTypeSteam.Checked;
+            if (accountType == Settings.AccountType.GuildWars2)
+            {
+                var b = radioAccountTypeSteam.Checked;
 
-            checkAutomaticLogin.Enabled = !b;
-            panelAutomaticLauncherLoginGw2.Visible = panelAutomaticLauncherLoginGw2.Enabled = !b && !checkAutomaticLogin.Checked;
-            tableLogin.Visible = tableLogin.Enabled = !b && checkAutomaticLogin.Checked;
+                checkAutomaticLogin.Enabled = !b;
+                panelAutomaticLauncherLogin.Visible = panelAutomaticLauncherLogin.Enabled = !b && !checkAutomaticLogin.Checked;
+                tableLogin.Visible = tableLogin.Enabled = !b && checkAutomaticLogin.Checked;
+            }
         }
 
         private void checkLaunchSteam_CheckedChanged(object sender, EventArgs e)
         {
-            panelLaunchSteamGw2.SuspendLayout();
+            if (accountType == Settings.AccountType.GuildWars2)
+            {
+                panelLaunchSteam.SuspendLayout();
 
-            labelLaunchSteamBasicWarning.Visible = checkLaunchSteam.Checked;
-            labelLaunchSteamFeatureWarning.Visible = checkLaunchSteam.Checked;
+                var b = checkLaunchSteam.Checked;
 
-            panelLaunchSteamGw2.ResumeLayout();
+                labelLaunchSteamBasicWarning.Visible = b;
+                labelLaunchSteamFeatureWarning.Visible = b;
+
+                panelLaunchSteam.ResumeLayout();
+            }
+            else if (accountType == Settings.AccountType.GuildWars1)
+            {
+                labelGwDatSteam.Visible = checkLaunchSteam.Checked;
+            }
         }
 
         private void saveToolStripMenuItem_Click(object sender, EventArgs e)

@@ -29,11 +29,32 @@ namespace Gw2Launcher
 
         #region Enums
 
-        public enum TaggedType : byte
+        public enum DailiesKeyType : byte
+        {
+            Invalid = 0,
+            
+            DailyCategory = 1,
+            DailyObjective = 2,
+
+            VaultDailyCategory = 3,
+            VaultWeeklyCategory = 4,
+            VaultSpecialCategory = 5,
+
+            VaultDailyAccountCategory = 6,
+            VaultWeeklyAccountCategory = 7,
+            VaultSpecialAccountCategory = 8,
+        }
+
+        [Flags]
+        public enum DailiesItemOptions : byte
         {
             None = 0,
+
             Favorite = 1,
             Ignored = 2,
+
+            Collapsed = 64,
+            Watched = 128,
         }
 
         public enum DisplayIcons : byte
@@ -78,6 +99,7 @@ namespace Gw2Launcher
         {
             ArenaNet = 0,
             Steam = 1,
+            Epic = 2,
         }
 
         public enum LaunchProxy : byte
@@ -302,7 +324,7 @@ namespace Gw2Launcher
         }
 
         [Flags]
-        public enum DailiesMode : byte
+        public enum DailiesOptions : byte
         {
             None = 0,
             Show = 1,
@@ -310,6 +332,42 @@ namespace Gw2Launcher
             AutoLoad = 4,
             AutoLoadFavorite = 8,
             TopMost = 16,
+        }
+
+        [Flags]
+        public enum DailiesVaultOptions : byte
+        {
+            None = 0,
+            Split = 1,
+            AutoScroll = 2,
+            AutoSelect = 4,
+            DELETED = 8,
+        }
+
+        [Flags]
+        public enum DailiesVaultSorting : byte
+        {
+            None = 0,
+
+            Descending = 1,
+            Sorting = 254,
+
+            Group = 2,
+            Focused = 4,
+            Account = 8,
+        }
+
+        [Flags]
+        public enum DailiesVaultObjectiveSorting : byte
+        {
+            None = 0,
+
+            Descending = 1,
+            Sorting = 254,
+
+            ID = 2,
+            Name = 4,
+            Progress = 8,
         }
 
         [Flags]
@@ -512,6 +570,120 @@ namespace Gw2Launcher
 
         #region Classes/Interfaces
 
+        public struct DailiesItemKey : IEquatable<DailiesItemKey>
+        {
+            public DailiesItemKey(DailiesKeyType type, ushort id)
+            {
+                this.Type = type;
+                this.ID = id;
+            }
+
+            public DailiesKeyType Type;
+            public ushort ID;
+
+            public override bool Equals(object o)
+            {
+                if (o is DailiesItemKey)
+                {
+                    return Equals((DailiesItemKey)o);
+                }
+
+                return base.Equals(o);
+            }
+
+            public bool Equals(DailiesItemKey o)
+            {
+                return Type == o.Type && ID == o.ID;
+            }
+
+            public override int GetHashCode()
+            {
+                return ID | (int)Type << 16;
+            }
+
+            public static bool operator ==(DailiesItemKey a, DailiesItemKey b)
+            {
+                return a.Equals(b);
+            }
+
+            public static bool operator !=(DailiesItemKey a, DailiesItemKey b)
+            {
+                return !a.Equals(b);
+            }
+
+            public override string ToString()
+            {
+                return Type + ":" + ID;
+            }
+        }
+
+        public struct KnownVaultObjectives
+        {
+            private ushort[] latest;
+            private ushort[] seen;
+
+            public KnownVaultObjectives(ushort[] latest, ushort[] seen = null)
+            {
+                if (seen != null && seen.Length == 0)
+                {
+                    seen = null;
+                }
+
+                this.seen = seen;
+                this.latest = latest;
+            }
+
+            public KnownVaultObjectives(ushort[][] values)
+            {
+                this.latest = values[0];
+                this.seen = values[1] != null && values[1].Length > 0 ? values[1] : null;
+            }
+
+            public ushort[] Latest
+            {
+                get
+                {
+                    return latest;
+                }
+            }
+
+            public ushort[] Seen
+            {
+                get
+                {
+                    return seen;
+                }
+            }
+
+            public ushort[] SeenOrLatest
+            {
+                get
+                {
+                    if (seen == null)
+                    {
+                        return latest;
+                    }
+
+                    return seen;
+                }
+            }
+
+            public KnownVaultObjectives ToLatest()
+            {
+                if (this.seen != null)
+                {
+                    return new KnownVaultObjectives(this.latest);
+                }
+
+                return this;
+            }
+
+            public ushort[][] ToArray()
+            {
+                return new ushort[][] { latest, seen };
+            }
+        }
+
         public class ApiData
         {
             public struct WalletValues : IEquatable<WalletValues>
@@ -595,7 +767,13 @@ namespace Gw2Launcher
 
             public struct VaultGrouping
             {
+                /// <summary>
+                /// Group ID (0 is none)
+                /// </summary>
                 public byte Daily;
+                /// <summary>
+                /// Group ID (0 is none)
+                /// </summary>
                 public byte Weekly;
             }
 
@@ -2778,6 +2956,24 @@ namespace Gw2Launcher
                 get;
                 set;
             }
+
+            /// <summary>
+            /// Provider for this account
+            /// </summary>
+            AccountProvider Provider
+            {
+                get;
+                set;
+            }
+
+            /// <summary>
+            /// Enables the -autologin option
+            /// </summary>
+            bool AutomaticRememberedLogin
+            {
+                get;
+                set;
+            }
         }
 
         public interface IGw2Account : IAccount
@@ -2865,15 +3061,6 @@ namespace Gw2Launcher
             }
 
             /// <summary>
-            /// Enables the -autologin option
-            /// </summary>
-            bool AutomaticRememberedLogin
-            {
-                get;
-                set;
-            }
-
-            /// <summary>
             /// Enables the -clientport option with the port
             /// </summary>
             ushort ClientPort
@@ -2913,15 +3100,6 @@ namespace Gw2Launcher
             /// True to include/exclude the account for localized execution
             /// </summary>
             bool LocalizedExecution
-            {
-                get;
-                set;
-            }
-
-            /// <summary>
-            /// Provider for this account
-            /// </summary>
-            AccountProvider Provider
             {
                 get;
                 set;
@@ -3058,6 +3236,7 @@ namespace Gw2Launcher
         {
             event EventHandler<KeyValuePair<TKey, TValue>> ValueChanged, ValueAdded;
             event EventHandler<TKey> ValueRemoved;
+            event EventHandler Cleared;
 
             bool Contains(TKey key);
             bool TryGetValue(TKey key, out TValue value);
@@ -3079,6 +3258,8 @@ namespace Gw2Launcher
             TValue[] GetValues();
 
             KeyValuePair<TKey, TValue>[] ToArray();
+
+            void Clear();
         }
 
         public interface IHashSetProperty<T>
@@ -3381,6 +3562,7 @@ namespace Gw2Launcher
         {
             public event EventHandler<KeyValuePair<TKey, TValue>> ValueChanged, ValueAdded;
             public event EventHandler<TKey> ValueRemoved;
+            public event EventHandler Cleared;
 
             public Dictionary<TKey, TValue> _dictionary;
 
@@ -3401,6 +3583,8 @@ namespace Gw2Launcher
                     _dictionary.Add(key, value);
                 }
 
+                OnValueChanged();
+
                 if (ValueAdded != null)
                     ValueAdded(this, new KeyValuePair<TKey, TValue>(key, value));
             }
@@ -3416,6 +3600,8 @@ namespace Gw2Launcher
 
                 if (removed)
                 {
+                    OnValueChanged();
+
                     if (ValueRemoved != null)
                         ValueRemoved(this, key);
 
@@ -3458,7 +3644,12 @@ namespace Gw2Launcher
                 {
                     lock (this)
                     {
-                        return _dictionary[key];
+                        TValue v;
+                        if (_dictionary.TryGetValue(key, out v))
+                        {
+                            return v;
+                        }
+                        return default(TValue);
                     }
 
                 }
@@ -3542,10 +3733,35 @@ namespace Gw2Launcher
 
             public void Clear()
             {
+                TKey[] keys;
+
                 lock (this)
                 {
+                    if (_dictionary.Count == 0)
+                        return;
+                    if (ValueRemoved != null)
+                        keys = _dictionary.Keys.ToArray<TKey>();
+                    else
+                        keys = null;
                     _dictionary.Clear();
                 }
+
+                if (ValueRemoved != null && keys != null)
+                {
+                    try
+                    {
+                        for (var i = 0; i < keys.Length; i++)
+                        {
+                            ValueRemoved(this, keys[i]);
+                        }
+                    }
+                    catch { }
+                }
+
+                OnValueChanged();
+
+                if (Cleared != null)
+                    Cleared(this, EventArgs.Empty);
             }
 
             public KeyValuePair<TKey, TValue>[] ToArray()
@@ -3618,8 +3834,11 @@ namespace Gw2Launcher
             {
                 lock (this)
                 {
+                    if (_hashset.Count == 0)
+                        return;
                     _hashset.Clear();
                 }
+                OnValueChanged();
             }
 
             public int Count
@@ -3720,8 +3939,11 @@ namespace Gw2Launcher
             {
                 lock (this)
                 {
+                    if (_list.Count == 0)
+                        return;
                     _list.Clear();
                 }
+                OnValueChanged();
             }
 
             public void ReplaceOrAdd(T oldValue, T newValue)
@@ -4983,6 +5205,40 @@ namespace Gw2Launcher
                 }
             }
 
+            public AccountProvider _Provider;
+            public AccountProvider Provider
+            {
+                get
+                {
+                    return _Provider;
+                }
+                set
+                {
+                    if (_Provider != value)
+                    {
+                        _Provider = value;
+                        OnValueChanged();
+                    }
+                }
+            }
+
+            public bool _AutomaticRememberedLogin;
+            public bool AutomaticRememberedLogin
+            {
+                get
+                {
+                    return _AutomaticRememberedLogin;
+                }
+                set
+                {
+                    if (_AutomaticRememberedLogin != value)
+                    {
+                        _AutomaticRememberedLogin = value;
+                        OnValueChanged();
+                    }
+                }
+            }
+
             protected void CloneTo(Account a)
             {
                 a._Arguments = _Arguments;
@@ -5021,6 +5277,8 @@ namespace Gw2Launcher
                 //_Hotkeys is not included
                 a._Proxy = _Proxy;
                 a._DisableRunAfter = _DisableRunAfter;
+                a._Provider = _Provider;
+                a._AutomaticRememberedLogin = _AutomaticRememberedLogin;
 
                 a._PendingFiles = _PendingFiles;
 
@@ -5192,23 +5450,6 @@ namespace Gw2Launcher
                 }
             }
 
-            public bool _AutomaticRememberedLogin;
-            public bool AutomaticRememberedLogin
-            {
-                get
-                {
-                    return _AutomaticRememberedLogin;
-                }
-                set
-                {
-                    if (_AutomaticRememberedLogin != value)
-                    {
-                        _AutomaticRememberedLogin = value;
-                        OnValueChanged();
-                    }
-                }
-            }
-
             public ushort _ClientPort;
             public ushort ClientPort
             {
@@ -5327,23 +5568,6 @@ namespace Gw2Launcher
                     if (_LocalizedExecution != value)
                     {
                         _LocalizedExecution = value;
-                        OnValueChanged();
-                    }
-                }
-            }
-
-            public AccountProvider _Provider;
-            public AccountProvider Provider
-            {
-                get
-                {
-                    return _Provider;
-                }
-                set
-                {
-                    if (_Provider != value)
-                    {
-                        _Provider = value;
                         OnValueChanged();
                     }
                 }
@@ -5474,13 +5698,11 @@ namespace Gw2Launcher
                 CloneTo(a);
 
                 a._ApiTracking = _ApiTracking;
-                a._AutomaticRememberedLogin = _AutomaticRememberedLogin;
                 a._ClientPort = _ClientPort;
                 a._LastDailyCompletionUtc = _LastDailyCompletionUtc;
                 a._MumbleLinkName = _MumbleLinkName;
                 a._DailyLoginDay = _DailyLoginDay;
                 a._LocalizedExecution = _LocalizedExecution;
-                a._Provider = _Provider;
                 a._LastDailyLoginUtc = _LastDailyLoginUtc;
                 a._DisableMumbleLinkDailyLogin = _DisableMumbleLinkDailyLogin;
                 a._ChromiumPriority = _ChromiumPriority;
@@ -5514,7 +5736,7 @@ namespace Gw2Launcher
                 CloneTo(a);
 
                 a.DatFile = _DatFile;
-                a.CharacterName = _CharacterName;
+                a._CharacterName = _CharacterName;
 
                 return a;
             }
@@ -8025,6 +8247,7 @@ namespace Gw2Launcher
                 typeof(UI.formSettings),
                 typeof(UI.WindowPositioning.formTemplates),
                 typeof(UI.WindowPositioning.formTemplatesCompact),
+                typeof(UI.Dailies.formDailies.formDailiesVault),
             };
 
             _WindowBounds = new KeyedProperty<Type, Rectangle>();
@@ -8067,8 +8290,7 @@ namespace Gw2Launcher
             _TopMost = new SettingValue<bool>();
             _ActionActiveLClick = new SettingValue<ButtonAction>();
             _ActionActiveLPress = new SettingValue<ButtonAction>();
-            _ShowDailies = new SettingValue<DailiesMode>();
-            _HiddenDailyCategories = new HashSetProperty<ushort>();
+            _DailiesOptions = new SettingValue<DailiesOptions>();
             _BackgroundPatchingProgress = new SettingValue<Rectangle>();
             _Network = new SettingValue<NetworkOptions>();
             _ScreenshotNaming = new SettingValue<string>();
@@ -8151,7 +8373,7 @@ namespace Gw2Launcher
             _RunAfterPopupSorting = new SettingValue<RunAfterPopupSorting>();
             _RunAfterPopupFilter = new SettingValue<RunAfterPopupFilter>();
             _RunAfterPopupOptions = new SettingValue<RunAfterPopupOptions>();
-            _ShowDailiesLanguage = new SettingValue<Language>();
+            _DailiesLanguage = new SettingValue<Language>();
             _LoginTweaks = new SettingValue<LoginTweaks>();
             _LauncherTweaks = new SettingValue<LauncherTweaks>();
             _SteamPath = new SettingValue<string>();
@@ -8175,12 +8397,15 @@ namespace Gw2Launcher
             _ExternalLaunchMonitor = new SettingValue<Client.Launcher.AccountType>();
             _LaunchToFront = new SettingValue<bool>();
             _DisableVaultMonitor = new SettingValue<bool>();
-            _ShowDailiesCategories = new SettingValue<ushort[]>();
-            _FavoriteDailies = new HashSetProperty<ushort>();
+            _DailiesCategories = new SettingValue<ushort[]>();
             _StyleShowRun = new SettingValue<bool>();
             _AccountBarDisplaySize = new SettingValue<byte>();
             _AccountBarPage = new SettingValue<byte>();
-            _TaggedDailies = new DictionaryProperty<ushort, TaggedType>();
+            _KnownVaultSpecials = new SettingValue<KnownVaultObjectives>();
+            _DailiesVaultOptions = new SettingValue<DailiesVaultOptions>();
+            _DailiesItemOptions = new DictionaryProperty<DailiesItemKey, DailiesItemOptions>();
+            _DailiesVaultSorting = new SettingValue<DailiesVaultSorting>();
+            _DailiesVaultObjectiveSorting = new SettingValue<DailiesVaultObjectiveSorting>();
 
             //_Markers = new ListProperty<IMarker>();
 
@@ -8690,7 +8915,7 @@ namespace Gw2Launcher
                     //48
                     _ActionActiveLClick.HasValue,
                     _ActionActiveLPress.HasValue,
-                    _ShowDailies.HasValue,
+                    _DailiesOptions.HasValue,
                     _BackgroundPatchingProgress.HasValue,
                     _Network.HasValue,
                     _ScreenshotNaming.HasValue,
@@ -8821,7 +9046,7 @@ namespace Gw2Launcher
                     _RunAfterPopupSorting.HasValue,
                     _RunAfterPopupFilter.HasValue,
                     _RunAfterPopupOptions.HasValue,
-                    _ShowDailiesLanguage.HasValue,
+                    _DailiesLanguage.HasValue,
                     //168
                     _LoginTweaks.HasValue,
                     _LauncherTweaks.HasValue,
@@ -8976,7 +9201,7 @@ namespace Gw2Launcher
                 if (booleans[49])
                     writer.Write((byte)_ActionActiveLPress.Value);
                 if (booleans[50])
-                    writer.Write((byte)_ShowDailies.Value);
+                    writer.Write((byte)_DailiesOptions.Value);
                 if (booleans[51])
                 {
                     var r = _BackgroundPatchingProgress.Value;
@@ -9311,7 +9536,7 @@ namespace Gw2Launcher
                     writer.Write((byte)_RunAfterPopupOptions.Value);
 
                 if (booleans[167])
-                    writer.Write((byte)_ShowDailiesLanguage.Value);
+                    writer.Write((byte)_DailiesLanguage.Value);
 
                 if (booleans[168])
                 {
@@ -9781,6 +10006,8 @@ namespace Gw2Launcher
                                     a._DatFile != null,
                                     !string.IsNullOrEmpty(a._CharacterName),
                                     //2
+                                    a._AutomaticRememberedLogin,
+                                    a._Provider == AccountProvider.Steam,
                                 };
 
                                 b = CompressBooleans(booleans);
@@ -9926,21 +10153,7 @@ namespace Gw2Launcher
                 }
 
                 //v4
-                lock (_HiddenDailyCategories)
-                {
-                    var items = _HiddenDailyCategories.ToArray();
-                    var count = items.Length;
-                    if (count > byte.MaxValue)
-                        count = byte.MaxValue;
-
-                    count = 0;
-                    writer.Write((byte)count);
-
-                    for (var i = 0; i < count; i++)
-                    {
-                        writer.Write(items[i]);
-                    }
-                }
+                writer.Write((byte)0); //_HiddenDailyCategories
 
 
 
@@ -9988,16 +10201,20 @@ namespace Gw2Launcher
                             _DisableVaultMonitor.HasValue,
                             //8
                             _DisableVaultMonitor.Value,
-                            _ShowDailiesCategories.HasValue,
-                            _FavoriteDailies.Count > 0,
-                            _HiddenDailyCategories.Count > 0,
+                            _DailiesCategories.HasValue,
+                            false, //_FavoriteDailies.Count > 0,
+                            false, //_HiddenDailyCategories.Count > 0,
                             _StyleShowRun.HasValue,
                             _StyleShowRun.Value,
                             _AccountBarOptions.HasValue,
                             _AccountBarDisplaySize.HasValue,
                             //16
                             _AccountBarPage.Value != 0,
-                            _TaggedDailies.Count > 0,
+                            false, //_TaggedDailies.Count > 0,
+                            _KnownVaultSpecials.HasValue,
+                            _DailiesVaultOptions.HasValue,
+                            _DailiesItemOptions.Count > 0,
+                            _DailiesVaultSorting.HasValue,
                             //
                         };
 
@@ -10026,7 +10243,7 @@ namespace Gw2Launcher
                             writer.Write((byte)_ExternalLaunchMonitor.Value);
                         if (booleans[9])
                         {
-                            var categories = _ShowDailiesCategories.Value;
+                            var categories = _DailiesCategories.Value;
 
                             WriteVariableLength(writer, categories.Length);
 
@@ -10037,27 +10254,11 @@ namespace Gw2Launcher
                         }
                         if (booleans[10])
                         {
-                            lock (_FavoriteDailies)
-                            {
-                                WriteVariableLength(writer, _FavoriteDailies.Count);
-
-                                foreach (var id in _FavoriteDailies)
-                                {
-                                    writer.Write(id);
-                                }
-                            }
+                            WriteVariableLength(writer, 0);
                         }
                         if (booleans[11])
                         {
-                            lock (_HiddenDailyCategories)
-                            {
-                                WriteVariableLength(writer, _HiddenDailyCategories.Count);
-
-                                foreach (var id in _HiddenDailyCategories)
-                                {
-                                    writer.Write(id);
-                                }
-                            }
+                            WriteVariableLength(writer, 0);
                         }
                         if (booleans[14])
                             writer.Write((ushort)_AccountBarOptions.Value);
@@ -10067,17 +10268,42 @@ namespace Gw2Launcher
                             writer.Write(_AccountBarPage.Value);
                         if (booleans[17])
                         {
-                            lock (_TaggedDailies)
-                            {
-                                WriteVariableLength(writer, _TaggedDailies.Count);
+                            WriteVariableLength(writer, 0);
+                        }
+                        if (booleans[18])
+                        {
+                            var vo = _KnownVaultSpecials.Value.ToArray();
 
-                                foreach (var kv in _TaggedDailies)
+                            for (var j = 0; j < vo.Length; j++)
+                            {
+                                var length = vo[j] != null ? vo[j].Length : 0;
+
+                                WriteVariableLength(writer, length);
+
+                                for (var i = 0; i < length; i++)
                                 {
-                                    writer.Write(kv.Key);
+                                    writer.Write(vo[j][i]);
+                                }
+                            }
+                        }
+                        if (booleans[19])
+                            writer.Write((byte)_DailiesVaultOptions.Value);
+                        if (booleans[20])
+                        {
+                            lock (_DailiesItemOptions)
+                            {
+                                WriteVariableLength(writer, _DailiesItemOptions.Count);
+
+                                foreach (var kv in _DailiesItemOptions)
+                                {
+                                    writer.Write((byte)kv.Key.Type);
+                                    writer.Write(kv.Key.ID);
                                     writer.Write((byte)kv.Value);
                                 }
                             }
                         }
+                        if (booleans[21])
+                            writer.Write((byte)_DailiesVaultSorting.Value);
                     }
                 }
 
@@ -10509,39 +10735,41 @@ namespace Gw2Launcher
                                     categories[i] = reader.ReadUInt16();
                                 }
 
-                                _ShowDailiesCategories.SetValue(categories);
+                                _DailiesCategories.SetValue(categories);
                             }
                             else
-                                _ShowDailiesCategories.Clear();
+                                _DailiesCategories.Clear();
 
-                            lock (_FavoriteDailies)
+                            ushort[] _FavoriteDailies;
+
+                            if (booleans[10])
                             {
-                                _FavoriteDailies.Clear();
+                                _FavoriteDailies = new ushort[ReadVariableLength(reader)];
 
-                                if (booleans[10])
+                                for (var i = 0; i < _FavoriteDailies.Length; i++)
                                 {
-                                    var l = ReadVariableLength(reader);
-
-                                    for (; l > 0; --l)
-                                    {
-                                        _FavoriteDailies._hashset.Add(reader.ReadUInt16());
-                                    }
+                                    _FavoriteDailies[i] = reader.ReadUInt16();
                                 }
                             }
-
-                            lock (_HiddenDailyCategories)
+                            else
                             {
-                                _HiddenDailyCategories.Clear();
+                                _FavoriteDailies = new ushort[0];
+                            }
 
-                                if (booleans[11])
+                            ushort[] _HiddenDailyCategories;
+                            
+                            if (booleans[11])
+                            {
+                                _HiddenDailyCategories = new ushort[ReadVariableLength(reader)];
+
+                                for (var i = 0; i < _HiddenDailyCategories.Length; i++)
                                 {
-                                    var l = ReadVariableLength(reader);
-
-                                    for (; l > 0; --l)
-                                    {
-                                        _HiddenDailyCategories._hashset.Add(reader.ReadUInt16());
-                                    }
+                                    _HiddenDailyCategories[i] = reader.ReadUInt16();
                                 }
+                            }
+                            else
+                            {
+                                _HiddenDailyCategories = new ushort[0];
                             }
 
                             if (booleans[12])
@@ -10564,27 +10792,89 @@ namespace Gw2Launcher
                             else
                                 _AccountBarPage.Clear();
 
-                            lock (_TaggedDailies)
-                            {
-                                _TaggedDailies.Clear();
+                            KeyValuePair<ushort, DailiesItemOptions>[] _TaggedDailies;
 
-                                if (booleans[17])
+                            if (booleans[17])
+                            {
+                                _TaggedDailies = new KeyValuePair<ushort, DailiesItemOptions>[ReadVariableLength(reader)];
+
+                                for (var i = 0; i < _TaggedDailies.Length; i++)
+                                {
+                                    _TaggedDailies[i] = new KeyValuePair<ushort, DailiesItemOptions>(reader.ReadUInt16(), (DailiesItemOptions)reader.ReadByte());
+                                }
+                            }
+                            else
+                            {
+                                _TaggedDailies = new KeyValuePair<ushort, DailiesItemOptions>[0];
+                            }
+
+                            //lock (_DailiesItemOptions)
+                            //{
+                            if (booleans[18])
+                            {
+                                var vo = new ushort[2][];
+
+                                for (var j = 0; j < vo.Length; j++)
+                                {
+                                    var length = ReadVariableLength(reader);
+
+                                    if (length > 0)
+                                    {
+                                        vo[j] = new ushort[length];
+
+                                        for (var i = 0; i < length; i++)
+                                        {
+                                            vo[j][i] = reader.ReadUInt16();
+                                        }
+                                    }
+                                }
+
+                                _KnownVaultSpecials.SetValue(new KnownVaultObjectives(vo));
+                            }
+                            else
+                                _KnownVaultSpecials.Clear();
+
+                            if (booleans[19])
+                                _DailiesVaultOptions.SetValue((DailiesVaultOptions)reader.ReadByte());
+                            else
+                                _DailiesVaultOptions.Clear();
+
+                            lock (_DailiesItemOptions)
+                            {
+                                _DailiesItemOptions.Clear();
+
+                                if (booleans[20])
                                 {
                                     var l = ReadVariableLength(reader);
 
                                     for (; l > 0; --l)
                                     {
-                                        _TaggedDailies._dictionary.Add(reader.ReadUInt16(), (TaggedType)reader.ReadByte());
+                                        var k = new DailiesItemKey((DailiesKeyType)reader.ReadByte(), reader.ReadUInt16());
+                                        var dio = (DailiesItemOptions)reader.ReadByte();
+
+                                        if (dio != DailiesItemOptions.None)
+                                        {
+                                            _DailiesItemOptions._dictionary.Add(k, dio);
+                                        }
                                     }
                                 }
                                 else
                                 {
                                     foreach (var id in _FavoriteDailies)
                                     {
-                                        _TaggedDailies[id] = TaggedType.Favorite;
+                                        _DailiesItemOptions[new DailiesItemKey(DailiesKeyType.DailyObjective, id)] = DailiesItemOptions.Favorite;
+                                    }
+                                    foreach (var kv in _TaggedDailies)
+                                    {
+                                        _DailiesItemOptions[new DailiesItemKey(DailiesKeyType.DailyObjective, kv.Key)] = kv.Value;
                                     }
                                 }
                             }
+
+                            if (booleans[21])
+                                _DailiesVaultSorting.SetValue((DailiesVaultSorting)reader.ReadByte());
+                            else
+                                _DailiesVaultSorting.Clear();
                         }
                         catch { }
                     }
@@ -11159,9 +11449,9 @@ namespace Gw2Launcher
                         _ActionActiveLPress.Clear();
 
                     if (booleans[50])
-                        _ShowDailies.SetValue((DailiesMode)reader.ReadByte());
+                        _DailiesOptions.SetValue((DailiesOptions)reader.ReadByte());
                     else
-                        _ShowDailies.Clear();
+                        _DailiesOptions.Clear();
 
                     if (booleans[51])
                         _BackgroundPatchingProgress.SetValue(new Rectangle(reader.ReadInt32(), reader.ReadInt32(), reader.ReadInt32(), reader.ReadInt32()));
@@ -11910,9 +12200,9 @@ namespace Gw2Launcher
                         _RunAfterPopupOptions.Clear();
 
                     if (booleans[167])
-                        _ShowDailiesLanguage.SetValue((Language)reader.ReadByte());
+                        _DailiesLanguage.SetValue((Language)reader.ReadByte());
                     else
-                        _ShowDailiesLanguage.Clear();
+                        _DailiesLanguage.Clear();
 
                     if (booleans[168])
                     {
@@ -12573,6 +12863,12 @@ namespace Gw2Launcher
 
                                     if (booleans[1])
                                         a._CharacterName = reader.ReadString();
+
+                                    if (version >= 15)
+                                    {
+                                        a._AutomaticRememberedLogin = booleans[2];
+                                        a._Provider = booleans[3] ? AccountProvider.Steam : AccountProvider.ArenaNet;
+                                    }
                                 }
                                 else
                                 {
@@ -12758,15 +13054,15 @@ namespace Gw2Launcher
 
                 if (version >= 4)
                 {
-                    lock (_HiddenDailyCategories)
+                    lock (_DailiesItemOptions)
                     {
-                        _HiddenDailyCategories.Clear();
+                        _DailiesItemOptions.Clear();
 
                         var count = reader.ReadByte();
                         for (int i = 0; i < count; i++)
                         {
                             if (version >= 16)
-                                _HiddenDailyCategories._hashset.Add(reader.ReadUInt16());
+                                _DailiesItemOptions._dictionary[new Settings.DailiesItemKey(DailiesKeyType.DailyCategory, reader.ReadUInt16())] = DailiesItemOptions.Collapsed;
                             else
                                 reader.ReadByte(); //old IDs no longer valid for version 16
                         }
@@ -13877,24 +14173,6 @@ namespace Gw2Launcher
             }
         }
 
-        private static SettingValue<DailiesMode> _ShowDailies;
-        public static ISettingValue<DailiesMode> ShowDailies
-        {
-            get
-            {
-                return _ShowDailies;
-            }
-        }
-
-        private static HashSetProperty<ushort> _HiddenDailyCategories;
-        public static IHashSetProperty<ushort> HiddenDailyCategories
-        {
-            get
-            {
-                return _HiddenDailyCategories;
-            }
-        }
-
         private static SettingValue<NetworkOptions> _Network;
         public static ISettingValue<NetworkOptions> Network
         {
@@ -14519,15 +14797,6 @@ namespace Gw2Launcher
             }
         }
 
-        private static SettingValue<Language> _ShowDailiesLanguage;
-        public static ISettingValue<Language> ShowDailiesLanguage
-        {
-            get
-            {
-                return _ShowDailiesLanguage;
-            }
-        }
-
         private static SettingValue<LoginTweaks> _LoginTweaks;
         private static SettingValue<LauncherTweaks> _LauncherTweaks;
         private static SettingValue<bool> _DisableMumbleLinkDailyLogin;
@@ -14743,39 +15012,116 @@ namespace Gw2Launcher
             }
         }
 
-        private static SettingValue<ushort[]> _ShowDailiesCategories;
-        public static ISettingValue<ushort[]> ShowDailiesCategories
-        {
-            get
-            {
-                return _ShowDailiesCategories;
-            }
-        }
-
-        private static HashSetProperty<ushort> _FavoriteDailies;
-        public static IHashSetProperty<ushort> FavoriteDailies
-        {
-            get
-            {
-                return _FavoriteDailies;
-            }
-        }
-
-        private static DictionaryProperty<ushort, TaggedType> _TaggedDailies;
-        public static IDictionaryProperty<ushort, TaggedType> TaggedDailies
-        {
-            get
-            {
-                return _TaggedDailies;
-            }
-        }
-
         private static SettingValue<bool> _StyleShowRun;
         public static ISettingValue<bool> StyleShowRun
         {
             get
             {
                 return _StyleShowRun;
+            }
+        }
+
+
+        private static SettingValue<DailiesOptions> _DailiesOptions;
+        private static SettingValue<Language> _DailiesLanguage;
+        private static SettingValue<ushort[]> _DailiesCategories;
+        private static SettingValue<KnownVaultObjectives> _KnownVaultSpecials;
+        private static SettingValue<DailiesVaultOptions> _DailiesVaultOptions;
+        private static DictionaryProperty<DailiesItemKey, DailiesItemOptions> _DailiesItemOptions;
+        private static SettingValue<DailiesVaultSorting> _DailiesVaultSorting;
+        private static SettingValue<DailiesVaultObjectiveSorting> _DailiesVaultObjectiveSorting;
+
+        //private static DictionaryProperty<ushort, DailiesItemOptions> _TaggedDailies;
+        //private static HashSetProperty<ushort> _HiddenDailyCategories;
+        //private static HashSetProperty<ushort> _FavoriteDailies;
+
+        public static class Dailies
+        {
+            public static ISettingValue<DailiesOptions> Options
+            {
+                get
+                {
+                    return _DailiesOptions;
+                }
+            }
+
+            public static ISettingValue<Language> Language
+            {
+                get
+                {
+                    return _DailiesLanguage;
+                }
+            }
+
+            public static ISettingValue<ushort[]> DailyCategories
+            {
+                get
+                {
+                    return _DailiesCategories;
+                }
+            }
+
+            //public static IHashSetProperty<ushort> HiddenDailyCategories
+            //{
+            //    get
+            //    {
+            //        return _HiddenDailyCategories;
+            //    }
+            //}
+            //public static IHashSetProperty<ushort> FavoriteDailies
+            //{
+            //    get
+            //    {
+            //        return _FavoriteDailies;
+            //    }
+            //}
+            //public static IDictionaryProperty<ushort, DailiesItemOptions> TaggedDailies
+            //{
+            //    get
+            //    {
+            //        return _TaggedDailies;
+            //    }
+            //}
+
+
+            public static ISettingValue<DailiesVaultOptions> VaultOptions
+            {
+                get
+                {
+                    return _DailiesVaultOptions;
+                }
+            }
+
+            public static ISettingValue<DailiesVaultSorting> VaultSorting
+            {
+                get
+                {
+                    return _DailiesVaultSorting;
+                }
+            }
+
+            public static ISettingValue<DailiesVaultObjectiveSorting> VaultObjectiveSorting
+            {
+                get
+                {
+                    return _DailiesVaultObjectiveSorting;
+                }
+            }
+
+            public static ISettingValue<KnownVaultObjectives> KnownVaultSpecials
+            {
+                get
+                {
+                    return _KnownVaultSpecials;
+                }
+            }
+
+            public static IDictionaryProperty<DailiesItemKey, DailiesItemOptions> ItemOptions
+            {
+                get
+                {
+                    return _DailiesItemOptions;
+                }
             }
         }
 

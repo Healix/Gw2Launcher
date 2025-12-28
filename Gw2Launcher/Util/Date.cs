@@ -8,6 +8,9 @@ namespace Gw2Launcher.Util
 {
     static class Date
     {
+        public const long TICKS_PER_DAY = 864000000000;
+        public const long MILLIS_PER_DAY = 86400000;
+
         /// <summary>
         /// Returns the next week
         /// </summary>
@@ -73,6 +76,11 @@ namespace Gw2Launcher.Util
             }
 
             return date.Subtract(first).Days / 7;
+        }
+
+        public static DateTime GetNextDay(DateTime date)
+        {
+            return new DateTime((date.Ticks / TICKS_PER_DAY + 1) * TICKS_PER_DAY, date.Kind);
         }
     }
 }

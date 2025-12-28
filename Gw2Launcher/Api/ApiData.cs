@@ -18,6 +18,14 @@ namespace Gw2Launcher.Api
         /// Occurs after all DataAvailable events
         /// </summary>
         public event EventHandler<DataAvailableEventArgs> EndDataAvailable;
+        /// <summary>
+        /// Occurs before updating the account api
+        /// </summary>
+        public event EventHandler<ApiDataEventArgs> BeginUpdate;
+        /// <summary>
+        /// Occurs after updating the account api and any other apis that were pending
+        /// </summary>
+        public event EventHandler<ApiDataEventArgs> EndUpdate;
 
         public interface IApiKey
         {
@@ -176,6 +184,10 @@ namespace Gw2Launcher.Api
             /// Occurs when a request needs to be updated
             /// </summary>
             public event EventHandler RequestChanged;
+            /// <summary>
+            /// Occurs when a NoCache request is delayed until the next refresh
+            /// </summary>
+            public event EventHandler<DataAvailableEventArgs> RequestDelayed;
 
             public DataRequest(DataType type, IApiKey key, RequestOptions options = RequestOptions.None)
             {
@@ -313,7 +325,10 @@ namespace Gw2Launcher.Api
             {
                 if (State == RequestState.Complete)
                 {
-                    ++RepeatCount;
+                    if (RepeatCount < byte.MaxValue)
+                    {
+                        ++RepeatCount;
+                    }
                     State = RequestState.Pending;
                     return true;
                 }
@@ -347,7 +362,10 @@ namespace Gw2Launcher.Api
 
                         if (e.Repeat && !this.Aborted)
                         {
-                            ++RepeatCount;
+                            if (RepeatCount < byte.MaxValue)
+                            {
+                                ++RepeatCount;
+                            }
                             SetState(RequestState.Pending, true);
 
                             return;
@@ -360,6 +378,21 @@ namespace Gw2Launcher.Api
                 }
 
                 this.State = RequestState.Complete;
+            }
+
+            public void OnRequestDelayed(DataType type, DataStatus status, ICache data, object value)
+            {
+                if (RequestDelayed != null)
+                {
+                    try
+                    {
+                        RequestDelayed(this, new DataAvailableEventArgs(type, status, data, value));
+                    }
+                    catch (Exception e)
+                    {
+                        Util.Logging.Log(e);
+                    }
+                }
             }
         }
 
@@ -544,6 +577,17 @@ namespace Gw2Launcher.Api
             }
 
             /// <summary>
+            /// The last time the API was requested
+            /// </summary>
+            public DateTime LastRequest
+            {
+                get
+                {
+                    return cache.LastRequest;
+                }
+            }
+
+            /// <summary>
             /// The earliest delay
             /// </summary>
             public DateTime Delay
@@ -566,11 +610,30 @@ namespace Gw2Launcher.Api
             }
 
             /// <summary>
+            /// Number of delayed requests
+            /// </summary>
+            public ushort Delayed
+            {
+                get
+                {
+                    return cache.Delayed;
+                }
+            }
+
+            /// <summary>
             /// Number of pending requests for the specified type
             /// </summary>
             public int GetPending(DataType t)
             {
                 return cache.GetPending(t);
+            }
+
+            /// <summary>
+            /// Number of delayed requests for the specified type
+            /// </summary>
+            public int GetDelayed(DataType t)
+            {
+                return cache.GetDelayed(t);
             }
 
             /// <summary>
@@ -623,7 +686,23 @@ namespace Gw2Launcher.Api
             }
 
             /// <summary>
-            /// When the API was last queried
+            /// Number of delayed requests waiting
+            /// </summary>
+            ushort Delayed
+            {
+                get;
+            }
+
+            /// <summary>
+            /// When the API was last requested
+            /// </summary>
+            DateTime LastRequest
+            {
+                get;
+            }
+
+            /// <summary>
+            /// When a response was last received from the API
             /// </summary>
             DateTime LastResponse
             {
@@ -658,6 +737,11 @@ namespace Gw2Launcher.Api
             /// Number of requests waiting for the specified type of data
             /// </summary>
             int GetPending(DataType type);
+
+            /// <summary>
+            /// Number of delayed requests waiting for the specified type of data
+            /// </summary>
+            int GetDelayed(DataType type);
 
             /// <summary>
             /// If this cache has been removed
@@ -696,9 +780,18 @@ namespace Gw2Launcher.Api
             }
 
             /// <summary>
-            /// Last time the API was requested
+            /// The last time a response was received from the API
             /// </summary>
             public DateTime LastResponse
+            {
+                get;
+                set;
+            }
+
+            /// <summary>
+            /// The last time the API was requested
+            /// </summary>
+            public DateTime LastRequest
             {
                 get;
                 set;
@@ -826,6 +919,14 @@ namespace Gw2Launcher.Api
                 }
             }
 
+            public DateTime LastRequest
+            {
+                get
+                {
+                    return Data[0].LastRequest;
+                }
+            }
+
             public DateTime LastResponse
             {
                 get
@@ -944,6 +1045,21 @@ namespace Gw2Launcher.Api
                 return 0;
             }
 
+            public int GetDelayed(DataType type)
+            {
+                var d = Data[(int)type];
+
+                if (d != null)
+                {
+                    lock (this)
+                    {
+                        return d.Delayed;
+                    }
+                }
+
+                return 0;
+            }
+
             public DataObject GetDataObject(DataType type)
             {
                 lock (this)
@@ -1021,11 +1137,19 @@ namespace Gw2Launcher.Api
                                 {
                                     if (r.Delayed)
                                     {
+                                        Util.Logging.LogEvent("Ignoring delay");
                                         RemoveDelay(d, r);
                                     }
                                     r.OnDataAvailable(type, status, this, value);
                                     requeue = r.Pending;
                                 }
+                            }
+                            else if ((r.Options & DataRequest.RequestOptions.NoCache) != 0)
+                            {
+                                Util.Logging.Log("2nocache, status: " + status + ", next: " + d.NextRequest);
+                                r.OnRequestDelayed(type, status, this, value);
+                                //d.NextRequest;
+                                //announce delay?
                             }
 
                             if (requeue)
@@ -1423,6 +1547,10 @@ namespace Gw2Launcher.Api
                     {
                         task = null;
 
+                        if (Util.Logging.Enabled)
+                        {
+                            Util.Logging.LogEvent("API queue empty");
+                        }
 
                         #region Purge
 
@@ -1606,6 +1734,8 @@ namespace Gw2Launcher.Api
                         //note data provided by the API is cached for 5 minutes once requested
                         //the account API can be used to check if the data has been modified, so it (0) will be used to determine if other APIs should be checked for updated data
 
+                        var doEndUpdate = false;
+
                         for (var i = 0; i < _data.Length; i++)
                         {
                             var d = _data[i];
@@ -1622,6 +1752,19 @@ namespace Gw2Launcher.Api
                                 if (i == 0)
                                 {
                                     b = data.Pending != data.Delayed;
+                                    doEndUpdate = b;
+
+                                    if (b && BeginUpdate != null)
+                                    {
+                                        try
+                                        {
+                                            BeginUpdate(this, new ApiDataEventArgs(data));
+                                        }
+                                        catch (Exception e)
+                                        {
+                                            Util.Logging.Log(e);
+                                        }
+                                    }
                                 }
                                 else
                                 {
@@ -1642,6 +1785,8 @@ namespace Gw2Launcher.Api
                                     {
                                         Util.Logging.LogEvent("Querying [" + t + "] API for [" + GetAccountNames(data.Key) + "]");
                                     }
+
+                                    d.LastRequest = DateTime.UtcNow;
 
                                     switch (t)
                                     {
@@ -1804,6 +1949,11 @@ namespace Gw2Launcher.Api
 
                                             break;
                                     }
+
+                                    if (Util.Logging.Enabled)
+                                    {
+                                        Util.Logging.LogEvent("Completed querying [" + t + "] API for [" + GetAccountNames(data.Key) + "] (" + DateTime.UtcNow.Subtract(d.LastRequest).TotalSeconds.ToString("0.00") + "s)");
+                                    }
                                 }
                                 catch (Exception e)
                                 {
@@ -1883,6 +2033,18 @@ namespace Gw2Launcher.Api
                                 //announce the cached data to requests that haven't been handled yet
 
                                 OnDataAvailable((DataType)i, DataStatus.Cache, data);
+                            }
+                        }
+
+                        if (doEndUpdate && EndUpdate != null)
+                        {
+                            try
+                            {
+                                EndUpdate(this, new ApiDataEventArgs(data));
+                            }
+                            catch (Exception e)
+                            {
+                                Util.Logging.Log(e);
                             }
                         }
 
@@ -2020,7 +2182,7 @@ namespace Gw2Launcher.Api
                     }
                 }
 
-                await Task.Delay(5000);
+                await Task.Delay(1000);
             }
 
             if (queue == null)
@@ -2081,7 +2243,10 @@ namespace Gw2Launcher.Api
                     {
                         DataAvailable(this, e);
                     }
-                    catch { }
+                    catch (Exception ex)
+                    {
+                        Util.Logging.Log(ex);
+                    }
                 }
 
                 if (doEnd)
@@ -2090,7 +2255,10 @@ namespace Gw2Launcher.Api
                     {
                         EndDataAvailable(this, e);
                     }
-                    catch { }
+                    catch (Exception ex)
+                    {
+                        Util.Logging.Log(ex);
+                    }
                 }
             }
 
@@ -2111,12 +2279,19 @@ namespace Gw2Launcher.Api
                 {
                     NextRequestChanged(this, new ApiDataEventArgs(data));
                 }
-                catch { }
+                catch (Exception e)
+                {
+                    Util.Logging.Log(e);
+                }
             }
         }
 
         private void OnPendingChanged(DataCache data, bool refresh = false)
         {
+            if (Util.Logging.Enabled)
+            {
+                Util.Logging.LogEvent("Pending changed for [" + GetAccountNames(data.Key) + "] to " + data.Pending);
+            }
 
             if (PendingChanged != null)
             {
@@ -2124,12 +2299,19 @@ namespace Gw2Launcher.Api
                 {
                     PendingChanged(this, new ApiDataEventArgs(data, refresh));
                 }
-                catch { }
+                catch (Exception e)
+                {
+                    Util.Logging.Log(e);
+                }
             }
         }
 
         private void OnDelayChanged(DataCache data)
         {
+            if (Util.Logging.Enabled)
+            {
+                Util.Logging.LogEvent("Delay changed for [" + GetAccountNames(data.Key) + "] to " + data.Delay);
+            }
 
             if (DelayChanged != null)
             {
@@ -2137,7 +2319,10 @@ namespace Gw2Launcher.Api
                 {
                     DelayChanged(this, new ApiDataEventArgs(data));
                 }
-                catch { }
+                catch (Exception e)
+                {
+                    Util.Logging.Log(e);
+                }
             }
         }
 
@@ -2160,7 +2345,7 @@ namespace Gw2Launcher.Api
         /// Returns when the next API request can be made
         /// </summary>
         /// <param name="key">API key</param>
-        public DateTime GetNext(string key)
+        public DateTime GetNext(string key, DataType type = DataType.Account)
         {
             lock (cache)
             {
@@ -2168,7 +2353,26 @@ namespace Gw2Launcher.Api
 
                 if (cache.TryGetValue(key, out data))
                 {
-                    return data.NextRequest;
+                    if (type == DataType.Account)
+                    {
+                        return data.NextRequest;
+                    }
+                    else
+                    {
+                        var d = data.Data[(int)type];
+
+                        if (d != null && d.CacheKey == data.CacheKey)
+                        {
+                            if (data.NextRequest > d.NextRequest)
+                            {
+                                return data.NextRequest;
+                            }
+                            else
+                            {
+                                return d.NextRequest;
+                            }
+                        }
+                    }
                 }
             }
 

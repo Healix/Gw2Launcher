@@ -146,7 +146,6 @@ namespace Gw2Launcher.UI.Dailies
 
                     await Task.Delay(10);
                 }
-
             }
 
             public void SetData(DailyAchievement.IDataSource daily, Daily.Category category)
@@ -250,8 +249,8 @@ namespace Gw2Launcher.UI.Dailies
 
             void buttonMinimize_MouseHover(object sender, EventArgs e)
             {
-                if (!Settings.ShowDailies.Value.HasFlag(Settings.DailiesMode.Positioned))
-                    owner.Show(parent.ContainsFocus);
+                if (!Settings.Dailies.Options.Value.HasFlag(Settings.DailiesOptions.Positioned))
+                    owner.Show(this.ContainsFocus || parent.ContainsFocus);
             }
 
             protected override bool ShowWithoutActivation
@@ -414,7 +413,7 @@ namespace Gw2Launcher.UI.Dailies
                 {
                     this.Show(parent);
                     if (focus)
-                        this.Focus();
+                        parent.Focus();
                 }
                 else
                 {
@@ -498,6 +497,513 @@ namespace Gw2Launcher.UI.Dailies
             }
         }
 
+        private class AccountsPopup : Base.BaseForm
+        {
+            private class Arrow : Base.BaseForm
+            {
+                public Arrow()
+                {
+                    InitializeComponents();
+                }
+
+                protected override void OnInitializeComponents()
+                {
+                    this.Opacity = 0;
+                    this.FormBorderStyle = System.Windows.Forms.FormBorderStyle.None;
+                    this.ShowInTaskbar = false;
+                    this.StartPosition = FormStartPosition.Manual;
+                    this.ForeColorName = UiColors.Colors.DailiesHeader;
+                }
+
+                protected override bool ShowWithoutActivation
+                {
+                    get
+                    {
+                        return true;
+                    }
+                }
+
+                protected override CreateParams CreateParams
+                {
+                    get
+                    {
+                        CreateParams createParams = base.CreateParams;
+                        createParams.ExStyle |= (int)(WindowStyle.WS_EX_TRANSPARENT | WindowStyle.WS_EX_LAYERED | WindowStyle.WS_EX_NOACTIVATE);
+                        return createParams;
+                    }
+                }
+
+                protected override void WndProc(ref Message m)
+                {
+                    base.WndProc(ref m);
+
+                    if (m.Msg == (int)WindowMessages.WM_NCHITTEST)
+                    {
+                        m.Result = (IntPtr)HitTest.Transparent;
+                    }
+                }
+
+                protected override void OnShown(EventArgs e)
+                {
+                    base.OnShown(e);
+
+                    this.Size = Scale(11, 22);
+                }
+
+                protected override void OnPaint(PaintEventArgs e)
+                {
+                    using (var b = new SolidBrush(this.ForeColor))
+                    {
+                        var g = e.Graphics;
+                        var w = this.Width;
+                        var h = this.Height / 2;
+
+                        Point[] points;
+
+                        if (_RightArrow)
+                        {
+                            points = new Point[]
+                            {
+                                new Point(0,0),
+                                new Point(h,h),
+                                new Point(0,h*2)
+                            };
+                        }
+                        else
+                        {
+                            points = new Point[]
+                            {
+                                new Point(w, 0),
+                                new Point(w-h,h),
+                                new Point(w,h*2)
+                            };
+                        }
+
+                        g.FillPolygon(b, points);
+                    }
+                }
+
+                private bool _RightArrow;
+                public bool RightArrow
+                {
+                    get
+                    {
+                        return _RightArrow;
+                    }
+                    set
+                    {
+                        if (_RightArrow != value)
+                        {
+                            _RightArrow = value;
+                            this.Invalidate();
+                        }
+                    }
+                }
+
+                public override void RefreshColors()
+                {
+                    base.RefreshColors();
+
+                    var c = this.ForeColor;
+
+                    c = Color.FromArgb(c.R, c.G, c.B > 0 ? c.B - 1 : c.B + 1);
+
+                    this.BackColor = c;
+                    this.TransparencyKey = c;
+                }
+            }
+
+            private Util.ReusableControls reusable;
+            private DailyAchievement attached;
+            private Rectangle screen;
+            private byte counter;
+            private Arrow arrow;
+            private Control[] group;
+            private Watched.WatchedGroup wa;
+            private Settings.IAccount[] accounts;
+            private DailyAchievement[] controls;
+
+            public AccountsPopup()
+            {
+                InitializeComponents();
+
+                arrow = new Arrow();
+            }
+
+            protected override void OnInitializeComponents()
+            {
+                this.Opacity = 0;
+                this.FormBorderStyle = System.Windows.Forms.FormBorderStyle.None;
+                this.ShowInTaskbar = false;
+                this.StartPosition = FormStartPosition.Manual;
+                this.BackColorName = UiColors.Colors.DailiesHeader;
+                this.ForeColorName = UiColors.Colors.DailiesText;
+            }
+
+            protected override bool ShowWithoutActivation
+            {
+                get
+                {
+                    return true;
+                }
+            }
+
+            protected override CreateParams CreateParams
+            {
+                get
+                {
+                    CreateParams createParams = base.CreateParams;
+                    createParams.ExStyle |= (int)(WindowStyle.WS_EX_TRANSPARENT | WindowStyle.WS_EX_LAYERED | WindowStyle.WS_EX_NOACTIVATE);
+                    return createParams;
+                }
+            }
+
+            protected override void OnShown(EventArgs e)
+            {
+                base.OnShown(e);
+            }
+
+            protected override void OnVisibleChanged(EventArgs e)
+            {
+                if (this.Visible)
+                {
+                    if (!arrow.Visible)
+                    {
+                        arrow.Show(this);
+                    }
+
+                    FadeIn();
+                }
+                else
+                {
+                    if (wa != null)
+                    {
+                        wa.popup = false;
+                    }
+
+                    this.Opacity = 0;
+                    arrow.Opacity = 0;
+                    arrow.Visible = false;
+                }
+
+                base.OnVisibleChanged(e);
+            }
+
+            private async void FadeIn()
+            {
+                const int DELAY = 100;
+                const int DURATION = 100;
+                const float MAX_OPACITY = 0.98f;
+
+                var active = true;
+
+                EventHandler onVisible = null;
+                onVisible = delegate
+                {
+                    if (!this.Visible)
+                    {
+                        active = false;
+                        this.VisibleChanged -= onVisible;
+                    }
+                };
+                this.VisibleChanged += onVisible;
+
+                await Task.Delay(DELAY);
+
+                var start = DateTime.UtcNow;
+
+                while (active)
+                {
+                    var p = DateTime.UtcNow.Subtract(start).TotalMilliseconds / DURATION;
+                    if (p >= 1)
+                    {
+                        this.Opacity = MAX_OPACITY;
+                        arrow.Opacity = MAX_OPACITY;
+
+                        this.VisibleChanged -= onVisible;
+
+                        break;
+                    }
+                    else
+                    {
+                        p *= MAX_OPACITY;
+
+                        this.Opacity = p;
+                        arrow.Opacity = p;
+                    }
+
+                    await Task.Delay(10);
+                }
+            }
+
+            public bool SetData(Settings.IAccount[] accounts, bool[] claimed, ushort[] progress, ushort max, Tools.Api.VaultObjectives.RefreshStatus[] requests = null)
+            {
+                if (reusable == null)
+                    reusable = new Util.ReusableControls();
+                else
+                    reusable.ReleaseAll();
+
+                var controls = reusable.CreateOrAll<DailyAchievement>(accounts.Length, new Func<DailyAchievement>(
+                    delegate
+                    {
+                        var control = new DailyAchievement()
+                        {
+                            BackColorName = UiColors.Colors.DailiesBackColor,
+                            NameVisible = true,
+                            NameFont = this.Font,
+                            Anchor = AnchorStyles.Left | AnchorStyles.Top,
+                        };
+
+                        return control;
+                    }));
+
+                this.accounts = accounts;
+                this.Requests = requests;
+                this.controls = new DailyAchievement[accounts.Length];
+
+                this.SuspendLayout();
+
+                var border = Scale(3);
+                var sz = new Size(Scale(250) - border * 2, Scale(30));
+                var y = border;
+
+                for (var i = 0; i < accounts.Length; i++)
+                {
+                    if (accounts[i] == null)
+                    {
+                        break;
+                    }
+
+                    var d = controls.GetNext();
+
+                    this.controls[i] = d;
+
+                    d.ProgressVisible = true;
+                    d.NameValue = accounts[i].Name;
+                    d.ColorKey = accounts[i].ColorKey;
+                    d.FavSize = Scale(14, 12);
+                    d.SetPending(requests != null ? requests[i] : null);
+
+                    if (claimed[i])
+                    {
+                        d.ProgressClaimed=true;
+                    }
+                    else if (progress[i] == 0 || max == 0)
+                    {
+                        d.ProgressValue = 0;
+                    }
+                    else if (progress[i] == max)
+                    {
+                        d.ProgressValue = 1;
+                    }
+                    else
+                    {
+                        d.ProgressValue = (float)progress[i] / max;
+                    }
+
+                    d.Bounds = new Rectangle(border, y, sz.Width, sz.Height);
+                    d.Visible = true;
+
+                    y += sz.Height;
+                }
+
+                controls.HideAndAdd(this);
+
+                this.Size = new Size(Scale(250), y + border);
+
+                this.ResumeLayout();
+
+                return y > border;
+            }
+
+            public void AttachTo(DailyAchievement c, Control[] controls = null, Watched.WatchedGroup wa = null)
+            {
+                if (this.wa != wa)
+                {
+                    if (this.wa != null)
+                    {
+                        this.wa.popup = false;
+                    }
+
+                    this.wa = wa;
+
+                    if (wa != null)
+                    {
+                        wa.popup = true;
+                    }
+                }
+
+                if (attached == c)
+                {
+                    return;
+                }
+
+                if (attached != null)
+                {
+                    attached.MouseMove -= attached_MouseMove;
+                    attached.MouseLeave -= attached_MouseLeave;
+                }
+
+                if (c != null)
+                {
+                    c.ForeColor = Color.Empty;
+
+                    if (attached != null)
+                    {
+                        attached.ForeColor = Util.Color.Gradient(c.ForeColor, c.BackColor, 0.6f);
+                    }
+                }
+
+                if (controls != group)
+                {
+                    if (group != null)
+                    {
+                        for (var i = 0; i < group.Length; i++)
+                        {
+                            group[i].ForeColor = Color.Empty;
+                        }
+                    }
+
+                    group = controls;
+
+                    if (controls != null)
+                    {
+                        var color = Util.Color.Gradient(c.ForeColor, c.BackColor, 0.6f);
+
+                        for (var i = 0; i < controls.Length; i++)
+                        {
+                            if (controls[i] != c)
+                            {
+                                controls[i].ForeColor = color;
+                            }
+                        }
+                    }
+                }
+
+                attached = c;
+
+                if (c != null)
+                {
+                    c.MouseMove += attached_MouseMove;
+                    c.MouseLeave += attached_MouseLeave;
+
+                    this.screen = Screen.FromControl(c).Bounds;
+
+                    if (this.Height > screen.Height)
+                    {
+                        this.Height = screen.Height;
+                    }
+
+                    MoveToCursor();
+                }
+
+                ++counter;
+            }
+
+            private void MoveToCursor()
+            {
+                var p = Cursor.Position;
+                var cw = Cursor.Size.Width;
+                var ap = attached.PointToScreen(Point.Empty);
+
+                int x = p.X + cw,
+                    y = p.Y - this.Height / 2,
+                    x2, y2;
+
+                if (p.X < ap.X + attached.Width / 3 && p.X - cw - this.Width > screen.X || x + this.Width > screen.Right)
+                {
+                    x2 = p.X - cw;
+                    x = x2 - this.Width;
+                    arrow.RightArrow = true;
+                }
+                else
+                {
+                    x2 = x - arrow.Width;
+                    arrow.RightArrow = false;
+                }
+
+                if (y < screen.Top)
+                {
+                    y = screen.Top;
+                }
+                else if (y + this.Height > screen.Bottom)
+                {
+                    y = screen.Bottom - this.Height;
+                }
+
+                y2 = attached.PointToScreen(Point.Empty).Y + attached.Height / 2 - arrow.Height / 2;
+
+                if (y2 < y)
+                {
+                    y2 = y;
+                }
+                else if (y2 + arrow.Height > y + this.Height)
+                {
+                    y2 = y + this.Height - arrow.Height;
+                }
+
+                this.Location = new Point(x, y);
+                arrow.Location = new Point(x2, y2);
+            }
+
+            private async void DelayedHide()
+            {
+                var c = counter;
+
+                await Task.Delay(50);
+
+                if (counter == c)
+                {
+                    this.Visible = false;
+                    this.AttachTo(null);
+                }
+            }
+
+            void attached_MouseLeave(object sender, EventArgs e)
+            {
+                DelayedHide();
+            }
+
+            void attached_MouseMove(object sender, MouseEventArgs e)
+            {
+                MoveToCursor();
+            }
+
+            public DailyAchievement Attached
+            {
+                get
+                {
+                    return attached;
+                }
+            }
+
+            public Settings.DailiesItemKey Group
+            {
+                get;
+                set;
+            }
+
+            public Settings.IAccount[] Accounts
+            {
+                get
+                {
+                    return accounts;
+                }
+            }
+
+            public Tools.Api.VaultObjectives.RefreshStatus[] Requests
+            {
+                get;
+                private set;
+            }
+
+            public DateTime Date
+            {
+                get;
+                set;
+            }
+        }
+
         private class ApiRequest : Tools.Api.ApiRequestManager.DataRequest
         {
             public ApiRequest(ApiData.DataType type, Settings.IAccount account, Settings.ApiDataKey key, RequestOptions options = RequestOptions.None)
@@ -506,7 +1012,19 @@ namespace Gw2Launcher.UI.Dailies
 
             }
 
-            public WatchedAccount Watched
+            public Watched.WatchedGroup Watched
+            {
+                get;
+                set;
+            }
+
+            public Watched.AccountData AccountData
+            {
+                get;
+                set;
+            }
+
+            public bool ForceRepeat
             {
                 get;
                 set;
@@ -534,22 +1052,112 @@ namespace Gw2Launcher.UI.Dailies
 
                 return null;
             }
+
+            public ItemGroup GetGroupFromAccount(Settings.IAccount a)
+            {
+                if (a != null && groups != null && (type & DataType.Vault) != 0)
+                {
+                    for (var i = 0; i < groups.Length; i++)
+                    {
+                        var accounts = groups[i].accounts;
+
+                        if (accounts != null)
+                        {
+                            for (var j = 0; j < accounts.Length; j++)
+                            {
+                                if (accounts[j] == a)
+                                {
+                                    return groups[i];
+                                }
+                            }
+                        }
+
+                    }
+                }
+
+                return null;
+            }
         }
 
         private class ItemGroup
         {
-            public ushort id;
+            public Settings.DailiesItemKey id;
+            public ushort count;
+            public ushort index;
+            public ushort accountid;
             public object source;
+            public Settings.IAccount[] accounts;
             public IData[] items;
             public DailyCategoryBar bar;
             public AccountSquares squares;
             public LastUpdatedLabel updated;
+            public Label unavailable;
             public DailyAchievement[] controls;
             public Daily.Category category;
-            public WatchedAccount watched;
-            public int count;
+            public Watched.WatchedGroup watched;
             public bool collapsed;
-            public int index;
+            public DateTime focused;
+
+            public Settings.IAccount GetSelectedAccount()
+            {
+                if (squares != null)
+                {
+                    return squares.Selected;
+                }
+                else if (accounts != null && accounts.Length > 0)
+                {
+                    return accounts[0];
+                }
+                else
+                {
+                    return null;
+                }
+            }
+
+            public bool IsHidden()
+            {
+                return count == 0 && unavailable == null;
+            }
+
+            public Control GetBottomControl()
+            {
+                Control c;
+
+                if (collapsed)
+                {
+                    c = bar;
+                }
+                else if (updated != null && updated.Enabled)
+                {
+                    c = updated;
+                }
+                else if (controls != null && count > 0)
+                {
+                    c = controls[count - 1];
+                }
+                else if (unavailable != null)
+                {
+                    c = unavailable;
+                }
+                else
+                {
+                    c = bar;
+                }
+
+                return c;
+            }
+        }
+
+        private struct ObjectiveGroupData
+        {
+            public Tools.Api.VaultObjectives.ObjectivesGroup data;
+            public Settings.IAccount[] accounts;
+            public byte count;
+            public byte index;
+            /// <summary>
+            /// Account index + 1; 0 is none
+            /// </summary>
+            public ushort selected;
         }
 
         private class LastUpdatedLabel : Label
@@ -570,7 +1178,7 @@ namespace Gw2Launcher.UI.Dailies
                 {
                     m = 1;
                 }
-                else if (m > 30)
+                else if (m > 15)
                 {
                     m = 0;
                 }
@@ -598,6 +1206,7 @@ namespace Gw2Launcher.UI.Dailies
             }
         }
 
+        [Flags]
         private enum DataType : byte
         {
             None = 0,
@@ -626,12 +1235,20 @@ namespace Gw2Launcher.UI.Dailies
         {
             protected Image icon;
 
-            public ObjectiveDataSource(Tools.Api.VaultObjectives.ObjectiveData source)
+            public ObjectiveDataSource(Tools.Api.VaultObjectives.ObjectiveData source, ItemGroup group, byte sourceIndex)
             {
                 this.Source = source;
+                this.Group = group;
+                this.SourceIndex = sourceIndex;
             }
 
             public Tools.Api.VaultObjectives.ObjectiveData Source
+            {
+                get;
+                set;
+            }
+
+            public ItemGroup Group
             {
                 get;
                 set;
@@ -643,6 +1260,12 @@ namespace Gw2Launcher.UI.Dailies
                 {
                     return Source.ID;
                 }
+            }
+
+            public byte SourceIndex
+            {
+                get;
+                private set;
             }
 
             public string Name
@@ -681,7 +1304,7 @@ namespace Gw2Launcher.UI.Dailies
                 }
             }
 
-            public Settings.TaggedType Tagged
+            public Settings.DailiesItemOptions Options
             {
                 get;
                 set;
@@ -691,19 +1314,25 @@ namespace Gw2Launcher.UI.Dailies
             {
                 get
                 {
-                    return Tagged == Settings.TaggedType.Favorite;
+                    return Options == Settings.DailiesItemOptions.Favorite;
                 }
                 set
                 {
                     if (value)
                     {
-                        Tagged = Settings.TaggedType.Favorite;
+                        Options = Settings.DailiesItemOptions.Favorite;
                     }
-                    else if (Tagged == Settings.TaggedType.Favorite)
+                    else if (Options == Settings.DailiesItemOptions.Favorite)
                     {
-                        Tagged = Settings.TaggedType.None;
+                        Options = Settings.DailiesItemOptions.None;
                     }
                 }
+            }
+
+            public bool IsNew
+            {
+                get;
+                set;
             }
         }
 
@@ -754,6 +1383,12 @@ namespace Gw2Launcher.UI.Dailies
                 }
             }
 
+            public bool IsNew
+            {
+                get;
+                set;
+            }
+
             public Image Icon
             {
                 get
@@ -770,7 +1405,7 @@ namespace Gw2Launcher.UI.Dailies
                 }
             }
 
-            public Settings.TaggedType Tagged
+            public Settings.DailiesItemOptions Options
             {
                 get;
                 set;
@@ -780,58 +1415,204 @@ namespace Gw2Launcher.UI.Dailies
             {
                 get
                 {
-                    return Tagged == Settings.TaggedType.Favorite;
+                    return Options == Settings.DailiesItemOptions.Favorite;
                 }
                 set
                 {
                     if (value)
                     {
-                        Tagged = Settings.TaggedType.Favorite;
+                        Options = Settings.DailiesItemOptions.Favorite;
                     }
-                    else if (Tagged == Settings.TaggedType.Favorite)
+                    else if (Options == Settings.DailiesItemOptions.Favorite)
                     {
-                        Tagged = Settings.TaggedType.None;
+                        Options = Settings.DailiesItemOptions.None;
                     }
                 }
             }
         }
 
-        private class WatchedAccount
+        private class Watched
         {
-            public WatchedAccount(ushort id, Settings.IGw2Account account)
+            public class WatchedGroup
             {
-                this.id = id;
-                this.account = account;
-                this.api = account.Api;
-            }
-
-            public readonly ushort id;
-            public readonly Settings.IGw2Account account;
-            public readonly Settings.ApiDataKey api;
-            public bool watched;
-            public float position;
-            public DateTime date;
-            public ApiRequest request;
-            public int group;
-
-            public bool GetGroup(DataGroup data, out ItemGroup g)
-            {
-                g = data.GetGroupFromIndex(group);
-
-                return g != null && g.watched == this;
-            }
-
-            public void Abort()
-            {
-                if (request != null)
+                public WatchedGroup(AccountData a)
                 {
-                    request.Abort();
+                    this.accountdata = a;
+                }
+
+                public AccountData accountdata;
+
+                public bool watched;
+                //public ApiRequest request;
+                public ItemGroup group;
+                public bool popup;
+                public bool requested;
+                public byte focusedKey;
+
+                public bool GetGroup(DataGroup data, out ItemGroup g)
+                {
+                    if (group != null)
+                    {
+                        g = data.GetGroupFromIndex(group.index);
+
+                        if (object.ReferenceEquals(group, g))
+                        {
+                            return g.watched == this;
+                        }
+                    }
+
+                    g = null;
+                    return false;
+                }
+
+                public void Abort()
+                {
+                    var r = accountdata.request;
+
+                    if (r != null)
+                    {
+                        accountdata.request = null;
+                        r.Abort();
+                    }
+                }
+
+                public bool IsAccount(AccountData a)
+                {
+                    return object.ReferenceEquals(this.accountdata, a);
+                }
+
+                public bool IsAccount(Settings.IAccount a)
+                {
+                    return object.ReferenceEquals(this.accountdata.account, a);
+                }
+
+                public void SetAccount(AccountData a, bool abort = true)
+                {
+                    if (!object.ReferenceEquals(accountdata, a))
+                    {
+                        if (abort)
+                        {
+                            Abort();
+                        }
+                        accountdata = a;
+                    }
+                }
+
+                public void Dispose()
+                {
+                    if (accountdata != null)
+                    {
+                        Abort();
+                        accountdata = null;
+                    }
+                    group = null;
+                }
+            }
+
+            public class AccountData
+            {
+                public AccountData(Settings.IGw2Account a)
+                {
+                    this.account = a;
+                }
+
+                public readonly Settings.IGw2Account account;
+                public DateTime date;
+                public float position;
+                public ApiRequest request;
+            }
+
+            private Dictionary<Settings.DailiesItemKey, WatchedGroup> watched;
+            private Dictionary<ushort, AccountData> accounts;
+
+            public Watched()
+            {
+                watched = new Dictionary<Settings.DailiesItemKey, WatchedGroup>();
+                accounts = new Dictionary<ushort, AccountData>();
+            }
+
+            public AccountData GetAccount(Settings.IGw2Account a)
+            {
+                AccountData d;
+
+                if (!accounts.TryGetValue(a.UID, out d))
+                {
+                    accounts[a.UID] = d = new AccountData(a);
+                }
+
+                return d;
+            }
+
+            public bool Remove(Settings.DailiesItemKey k)
+            {
+                return watched.Remove(k);
+            }
+
+            public void Add(Settings.DailiesItemKey k, WatchedGroup g)
+            {
+                watched[k] = g;
+            }
+
+            public WatchedGroup Add(Settings.DailiesItemKey k, Settings.IGw2Account a)
+            {
+                WatchedGroup g;
+
+                watched[k] = g = new WatchedGroup(GetAccount(a));
+
+                return g;
+            }
+
+            public WatchedGroup this[Settings.DailiesItemKey k]
+            {
+                get
+                {
+                    WatchedGroup g;
+                    watched.TryGetValue(k, out g);
+                    return g;
+                }
+                set
+                {
+                    if (value != null)
+                    {
+                        watched[k] = value;
+                    }
+                    else
+                    {
+                        watched.Remove(k);
+                    }
+                }
+            }
+
+            public AccountData this[Settings.IGw2Account a]
+            {
+                get
+                {
+                    return GetAccount(a);
+                }
+            }
+
+            public bool TryGetValue(Settings.DailiesItemKey k, out WatchedGroup g)
+            {
+                return watched.TryGetValue(k, out g);
+            }
+
+            public void Purge()
+            {
+                this.accounts.Clear();
+
+                foreach (var w in this.watched.Values)
+                {
+                    this.accounts[w.accountdata.account.UID] = w.accountdata;
                 }
             }
         }
 
         private class TabData
         {
+            public TabData()
+            {
+            }
+
             public DateTime Date
             {
                 get;
@@ -851,18 +1632,6 @@ namespace Gw2Launcher.UI.Dailies
                         return (int)DateTime.UtcNow.Subtract(Date).TotalSeconds;
                     }
                 }
-            }
-
-            public HashSet<ushort> Collapsed
-            {
-                get;
-                set;
-            }
-
-            public Dictionary<ushort, WatchedAccount> Watched
-            {
-                get;
-                set;
             }
 
             public bool Refresh
@@ -903,6 +1672,15 @@ namespace Gw2Launcher.UI.Dailies
             }
         }
 
+        public class formDailiesVault : formDailies
+        {
+            public formDailiesVault(formDailies parent, Tools.Api.VaultObjectives vob)
+                : base(parent, vob)
+            {
+
+            }
+        }
+
         private enum ShowOnLoadOptions : byte
         {
             None,
@@ -918,13 +1696,15 @@ namespace Gw2Launcher.UI.Dailies
         }
 
         private DataType isLoading, isRetrying;
+        private DataType displayedTabs, enabledTabs;
+        private DataType currentTab, loadedTab;
         private Daily.Achievements dailies;
         private Tools.Api.VaultObjectives vob;
         private TabData[] tabs;
-        private DataType currentTab, loadedTab;
         private Popup popup;
+        private AccountsPopup popupObjectives;
         private Daily da;
-        private Image[] imageDefault;
+        private Image[] defaultImages;
         private Font fontBar, fontName, fontDescription, fontUpdated;
         private Util.ReusableControls reusable;
         private FlatVerticalButton selectedTab;
@@ -946,16 +1726,22 @@ namespace Gw2Launcher.UI.Dailies
         private DateTime retryingAt;
         private ushort[] categories;
         private int reposition;
+        private HashSet<ushort> specials;
+        private Settings.IAccount focused;
+        private byte focusedKey;
+        private Watched watched;
 
         private Form parent;
+        private formDailies child;
 
         public formDailies(Form parent, Tools.Api.ApiRequestManager apiManager)
         {
-            SetStyle(ControlStyles.ResizeRedraw, true);
-
             InitializeComponents();
+            RemoveInvalidItemKeys();
 
-            reposition = int.MaxValue;
+            this.parent = parent;
+            this.vob = new Tools.Api.VaultObjectives(apiManager);
+            this.watched = new Watched();
 
             tabs = new TabData[]
             {
@@ -964,19 +1750,6 @@ namespace Gw2Launcher.UI.Dailies
                 new TabData(),
                 new TabData(),
             };
-
-            this.parent = parent;
-            this.Opacity = 0;
-            this.KeyPreview = true;
-
-            panelContent.BackColor = UiColors.GetColor(UiColors.Colors.DailiesSeparator);
-
-            alignment = HorizontalAlignment.Right;
-
-            fontBar = new System.Drawing.Font("Segoe UI Semibold", 9.75f, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            fontName = new System.Drawing.Font("Segoe UI Semibold", 9f, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            fontDescription = new System.Drawing.Font("Segoe UI Semilight", 8.25f, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            fontUpdated = new System.Drawing.Font("Segoe UI", 6f, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
 
             if (parent.FormBorderStyle == System.Windows.Forms.FormBorderStyle.None || !NativeMethods.IsDwmCompositionEnabled())
                 padding = 5;
@@ -987,42 +1760,157 @@ namespace Gw2Launcher.UI.Dailies
             //else
             //    padding = 5;
 
-            imageDefault = new Image[3];
-            imageDefault[0] = Properties.Resources.icon42684;
-            if (Settings.ShowDailiesCategories.HasValue)
-                categories = Settings.ShowDailiesCategories.Value;
+            defaultImages = new Image[3];
+            defaultImages[0] = Properties.Resources.icon42684;
+            if (Settings.Dailies.DailyCategories.HasValue)
+                categories = Settings.Dailies.DailyCategories.Value;
             else
                 categories = Daily.GetDefaultCategories();
 
-            da = new Daily();
-            vob = new Tools.Api.VaultObjectives(apiManager);
-
-            vob.DataChanged += vob_DataChanged;
-            vob.AccountDataChanged += vob_AccountDataChanged;
-
-            popup = new Popup(imageDefault[0]);
+            popup = new Popup(defaultImages[0]);
             popup.Owner = this;
+
+            da = new Daily();
+
+            Settings.Dailies.DailyCategories.ValueChanged += Categories_ValueChanged;
+            Settings.Dailies.Options.ValueChanged += DailiesSettings_ValueChanged;
+
+            Init(DataType.Daily | DataType.Vault);
+            displayedTabs = enabledTabs;
+
+            if (Settings.Dailies.KnownVaultSpecials.HasValue)
+            {
+                var seen = Settings.Dailies.KnownVaultSpecials.Value.Seen;
+                var latest = Settings.Dailies.KnownVaultSpecials.Value.Latest;
+
+                if (seen != null && latest != null)
+                {
+                    var sum = seen.Length - latest.Length;
+
+                    if (sum == 0)
+                    {
+                        for (var i = 0; i < seen.Length; i++)
+                        {
+                            sum += seen[i];
+                            sum -= latest[i];
+                        }
+                    }
+
+                    if (sum != 0)
+                    {
+                        specials = new HashSet<ushort>(seen);
+                        buttonSpecial.TopTag.Visible = true;
+                    }
+                }
+            }
+
+            Client.Launcher.AllQueuedLaunchesCompleteAllAccountsExited += Launcher_AllQueuedLaunchesCompleteAllAccountsExited;
+
+            if (Settings.Dailies.Options.Value.HasFlag(Settings.DailiesOptions.AutoLoad))
+                SelectTab(GetDefaultTab());
+            else
+                loadOnShow = true;
+        }
+
+        private formDailies(formDailies parent, Tools.Api.VaultObjectives vob)
+        {
+            InitializeComponents();
+
+            this.parent = parent;
+            this.vob = vob;
+            this.tabs = parent.tabs;
+            this.defaultImages = parent.defaultImages;
+            this.watched = parent.watched;
+
+            Init(DataType.Vault);
+
+            SetTabs(enabledTabs);
+            splitVaultObjectivesToolStripMenuItem.Checked = true;
+
+        }
+
+        private void Init(DataType type)
+        {
+            SetStyle(ControlStyles.ResizeRedraw, true);
+
+            enabledTabs = type;
+            reposition = int.MaxValue;
+            alignment = HorizontalAlignment.Right;
+
+            this.Opacity = 0;
+            this.KeyPreview = true;
+
+            panelContent.BackColor = UiColors.GetColor(UiColors.Colors.DailiesSeparator);
+
+            fontBar = new System.Drawing.Font("Segoe UI Semibold", 9.75f, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+            fontName = new System.Drawing.Font("Segoe UI Semibold", 9f, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+            fontDescription = new System.Drawing.Font("Segoe UI Semilight", 8.25f, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+            fontUpdated = new System.Drawing.Font("Segoe UI", 7f, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+
+            if ((type & DataType.Vault) != 0)
+            {
+                var fontTag = new System.Drawing.Font("Segoe UI", 7f, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+
+                buttonVault.BottomTag = new FlatVerticalButton.TagData()
+                {
+                    BackColor = Color.Gray,
+                    ForeColor = Color.Black,
+                    Font = fontTag,
+                };
+
+                buttonWeekly.BottomTag = new FlatVerticalButton.TagData()
+                {
+                    BackColor = Color.Gray,
+                    ForeColor = Color.Black,
+                    Font = fontTag,
+                };
+
+                buttonSpecial.TopTag = new FlatVerticalButton.TagData()
+                {
+                    BackColor = Color.Gold,
+                    ForeColor = Color.Black,
+                    Font = fontTag,
+                    Text = "new",
+                };
+
+                vob.DataChanged += vob_DataChanged;
+                vob.AccountDataChanged += vob_AccountDataChanged;
+
+                Client.Launcher.AccountWindowEvent += Launcher_AccountWindowEvent;
+                Settings.Dailies.VaultOptions.ValueChanged += VaultSettings_ValueChanged;
+                Settings.Dailies.VaultSorting.ValueChanged += VaultSorting_ValueChanged;
+                Settings.Dailies.VaultObjectiveSorting.ValueChanged += VaultObjectiveSorting_ValueChanged;
+
+                VaultSettings_ValueChanged(Settings.Dailies.VaultOptions, EventArgs.Empty);
+                VaultSorting_ValueChanged(Settings.Dailies.VaultSorting, EventArgs.Empty);
+                VaultObjectiveSorting_ValueChanged(Settings.Dailies.VaultObjectiveSorting, EventArgs.Empty);
+            }
+
+            if ((type & DataType.Daily) != 0)
+            {
+            }
+
+            Settings.Dailies.Language.ValueChanged += Language_ValueChanged;
 
             panelContainer.MouseWheel += panelContainer_MouseWheel;
             panelContainer.MouseHover += panelContainer_MouseHover;
             this.MouseWheel += panelContainer_MouseWheel;
-            Settings.ShowDailies.ValueChanged += Settings_ValueChanged;
-            Settings.ShowDailiesLanguage.ValueChanged += Language_ValueChanged;
-            Settings.ShowDailiesCategories.ValueChanged += Categories_ValueChanged;
             parent.VisibleChanged += parent_VisibleChanged;
 
             Client.Launcher.MumbleLinkVerified += Launcher_MumbleLinkVerified;
             Client.Launcher.CefSessions.SessionEvent += CefSessions_SessionEvent;
             Client.Launcher.AccountExited += Launcher_AccountExited;
 
-            Settings_ValueChanged(Settings.ShowDailies, EventArgs.Empty);
+            if (IsMainWindow)
+            {
+                DailiesSettings_ValueChanged(Settings.Dailies.Options, EventArgs.Empty);
+            }
 
-            if (Settings.ShowDailies.Value.HasFlag(Settings.DailiesMode.AutoLoad))
-                SelectTab(DataType.DailyToday);
-            else
-                loadOnShow = true;
+            var now = DateTime.UtcNow;
+            Util.ScheduledEvents.Register(OnScheduledBeforeDailyReset, Util.Date.GetNextDay(now).AddHours(-1));
+            Util.ScheduledEvents.Register(OnScheduledBeforeWeeklyReset, Util.Date.GetNextWeek(now).AddHours(-24));
         }
-        
+
         protected override void OnInitializeComponents()
         {
             InitializeComponent();
@@ -1030,9 +1918,17 @@ namespace Gw2Launcher.UI.Dailies
             buttonToday.MinimumSize = new Size(0, buttonTomorrow.Height);
         }
 
+        public bool IsMainWindow
+        {
+            get
+            {
+                return !(parent is formDailies);
+            }
+        }
+
         void parent_VisibleChanged(object sender, EventArgs e)
         {
-            if (linkedToParent)
+            if (linkedToParent || !IsMainWindow)
             {
                 if (!parent.Visible)
                 {
@@ -1044,34 +1940,79 @@ namespace Gw2Launcher.UI.Dailies
             }
         }
 
-        void Settings_ValueChanged(object sender, EventArgs e)
+        void Launcher_AllQueuedLaunchesCompleteAllAccountsExited(object sender, EventArgs e)
         {
-            var setting = sender as Settings.ISettingValue<Settings.DailiesMode>;
-            var options = setting.Value;
+            lock (watched)
+            {
+                watched.Purge();
+            }
+        }
 
-            if (!setting.HasValue || (options & Settings.DailiesMode.Show) == 0)
+        void VaultSettings_ValueChanged(object sender, EventArgs e)
+        {
+            var v = (Settings.ISettingValue<Settings.DailiesVaultOptions>)sender;
+            var o = v.Value;
+
+            if ((o & Settings.DailiesVaultOptions.Split) == 0 && child != null)
+            {
+                ShowSplitVaultObjectives(false);
+            }
+
+            autoScrollToCurrentAccountToolStripMenuItem.Checked = (o & Settings.DailiesVaultOptions.AutoScroll) != 0;
+            autoSelectCurrentAccountToolStripMenuItem.Checked = (o & Settings.DailiesVaultOptions.AutoSelect) != 0;
+        }
+
+        void VaultSorting_ValueChanged(object sender, EventArgs e)
+        {
+            var v = (Settings.ISettingValue<Settings.DailiesVaultSorting>)sender;
+            var o = v.Value;
+            var s = o & Settings.DailiesVaultSorting.Sorting;
+
+            descendingToolStripMenuItem.Checked = (o & Settings.DailiesVaultSorting.Descending) != 0;
+            groupToolStripMenuItem.Checked = s == Settings.DailiesVaultSorting.Group;
+            focusedToolStripMenuItem.Checked = s == Settings.DailiesVaultSorting.Focused;
+            accountToolStripMenuItem.Checked = s == Settings.DailiesVaultSorting.Account;
+        }
+
+        void VaultObjectiveSorting_ValueChanged(object sender, EventArgs e)
+        {
+            var v = (Settings.ISettingValue<Settings.DailiesVaultObjectiveSorting>)sender;
+            var o = v.Value;
+
+            objectiveDescendingToolStripMenuItem.Checked = (o & Settings.DailiesVaultObjectiveSorting.Descending) != 0;
+            objectiveIdToolStripMenuItem.Checked = (o & Settings.DailiesVaultObjectiveSorting.ID) != 0;
+            objectiveNameToolStripMenuItem.Checked = (o & Settings.DailiesVaultObjectiveSorting.Name) != 0;
+            objectiveProgressToolStripMenuItem.Checked = (o & Settings.DailiesVaultObjectiveSorting.Progress) != 0;
+        }
+
+        void DailiesSettings_ValueChanged(object sender, EventArgs e)
+        {
+            var v = (Settings.ISettingValue<Settings.DailiesOptions>)sender;
+            var o = v.Value;
+
+            if (!v.HasValue || (o & Settings.DailiesOptions.Show) == 0)
             {
                 if (this.IsHandleCreated)
                 {
                     this.Dispose();
-                    return;
                 }
+                return;
             }
 
             var bounds = Settings.WindowBounds[typeof(formDailies)];
-            var positioned = (options & Settings.DailiesMode.Positioned) != 0;
+            var positioned = (o & Settings.DailiesOptions.Positioned) != 0;
 
-            if ((options & Settings.DailiesMode.AutoLoadFavorite) != 0)
+            if ((o & Settings.DailiesOptions.AutoLoadFavorite) != 0)
                 showOnLoad = ShowOnLoadOptions.Favorite;
-            else if ((options & Settings.DailiesMode.AutoLoad) != 0)
+            else if ((o & Settings.DailiesOptions.AutoLoad) != 0)
                 showOnLoad = ShowOnLoadOptions.Always;
             else
                 showOnLoad = ShowOnLoadOptions.None;
 
             AutoMinimize = !positioned;
 
-            showOnTopToolStripMenuItem.Checked = (options & Settings.DailiesMode.TopMost) != 0;
-            TopMost = positioned && (options & Settings.DailiesMode.TopMost) != 0;
+            showOnTopToolStripMenuItem.Checked = (o & Settings.DailiesOptions.TopMost) != 0;
+            TopMost = positioned && (o & Settings.DailiesOptions.TopMost) != 0;
 
             if (positioned)
             {
@@ -1100,7 +2041,7 @@ namespace Gw2Launcher.UI.Dailies
         void Categories_ValueChanged(object sender, EventArgs e)
         {
             var old = this.categories;
-            var categories = this.categories = Settings.ShowDailiesCategories.Value;
+            var categories = this.categories = Settings.Dailies.DailyCategories.Value;
             var tab = GetTab(DataType.DailyToday);
 
             if (!tab.Refresh && dailies != null)
@@ -1232,7 +2173,7 @@ namespace Gw2Launcher.UI.Dailies
         {
             if (e.Button == System.Windows.Forms.MouseButtons.Right)
             {
-                contextMenu.Show(Cursor.Position);
+                ShowMenu(DataType.Daily);
             }
             else if (selectedTab != sender)
             {
@@ -1248,7 +2189,7 @@ namespace Gw2Launcher.UI.Dailies
         {
             if (e.Button == System.Windows.Forms.MouseButtons.Right)
             {
-                contextMenu.Show(Cursor.Position);
+                ShowMenu(DataType.Daily);
             }
             else if (selectedTab != sender)
             {
@@ -1260,29 +2201,214 @@ namespace Gw2Launcher.UI.Dailies
             }
         }
 
+        private void CreateObjectivesPopup(DailyAchievement control)
+        {
+            var d = (ObjectiveDataSource)control.DataSource;
+            var ok = false;
+
+            if (d.Group.source is ObjectiveGroupData)
+            {
+                var ogd = (ObjectiveGroupData)d.Group.source;
+                var og = ogd.data;
+                var _accounts = ogd.accounts;
+
+                if (_accounts.Length > 0)
+                {
+                    var changed = true;
+                    var canRequest = true;
+
+                    Settings.IAccount[] accounts = null;
+                    Tools.Api.VaultObjectives.RefreshStatus[] requests = null;
+
+                    if (popupObjectives != null)
+                    {
+                        accounts = popupObjectives.Accounts;
+                        requests = popupObjectives.Requests;
+
+                        changed = !object.ReferenceEquals(accounts, _accounts);
+
+                        //if (popupObjectives.Group == d.Group.id && accounts != null && accounts.Length == _accounts.Length)
+                        //{
+                        //    changed = false;
+
+                        //    for (var i = 0; i < accounts.Length; i++)
+                        //    {
+                        //        if (_accounts[i] != accounts[i])
+                        //        {
+                        //            changed = true;
+
+                        if (requests != null)
+                        {
+                            for (var i = 0; i < requests.Length; i++)
+                            {
+                                if (requests[i] != null)
+                                {
+                                    if (changed)
+                                    {
+                                        requests[i].Abort();
+                                        requests[i].Dispose();
+                                    }
+                                    else if (requests[i].IsComplete)
+                                    {
+                                        requests[i] = null;
+                                    }
+                                }
+                            }
+                        }
+                    }
+
+                    if (changed)
+                    {
+                        //accounts = new Settings.IAccount[_accounts.Length];
+                        accounts = _accounts;
+                        requests = new Tools.Api.VaultObjectives.RefreshStatus[accounts.Length];
+
+                        //Array.Copy(_accounts, accounts, accounts.Length);
+                    }
+                    else
+                    {
+                        canRequest = requests != null && DateTime.UtcNow.Subtract(popupObjectives.Date).TotalMinutes > 1;
+                    }
+
+                    var claimed = new bool[accounts.Length];
+                    var progress = new ushort[accounts.Length];
+
+                    var objs = og.Objectives;
+                    var oi = -1;
+                    var count = 0;
+
+                    if (d.SourceIndex < objs.Length && objs[d.SourceIndex].ID == d.Source.ID)
+                    {
+                        oi = d.SourceIndex;
+                    }
+                    else
+                    {
+                        for (var i = 0; i < objs.Length; i++)
+                        {
+                            if (objs[i].ID == d.Source.ID)
+                            {
+                                oi = i;
+
+                                break;
+                            }
+                        }
+                    }
+
+                    for (; count < accounts.Length; count++)
+                    {
+                        var ao = vob.GetObjectives(accounts[count]);
+
+                        if (ao != null)
+                        {
+                            var o = ao.GetObjective(og.Type, d.Source.ID, oi);
+
+                            if (canRequest && (requests[count] == null || requests[count].IsComplete) && DateTime.UtcNow.Subtract(ao.GetDate(og.Type)).TotalMinutes > 5)
+                            {
+                                var b = ao.IsPending(og.Type);
+
+                                if (!b && !ao.IsComplete(og.Type) && Client.Launcher.GetState(accounts[count]) == Client.Launcher.AccountState.ActiveGame)
+                                {
+                                    ao.SetPending(og.Type, true);
+                                    b = true;
+                                }
+
+                                if (b)
+                                {
+                                    requests[count] = vob.Refresh(og.Type, (Settings.IGw2Account)accounts[count], Tools.Api.VaultObjectives.RefreshOptions.None | Tools.Api.VaultObjectives.RefreshOptions.Update);
+                                }
+                            }
+
+                            if (o != null)
+                            {
+                                claimed[count] = o.Claimed;
+                                progress[count] = o.ProgressCurrent;
+                            }
+                        }
+                    }
+
+                    if (count > 0)
+                    {
+                        if (popupObjectives == null || popupObjectives.IsDisposed)
+                        {
+                            popupObjectives = new AccountsPopup()
+                            {
+                                TopMost = true,
+                            };
+                        }
+
+                        if (canRequest)
+                        {
+                            popupObjectives.Date = DateTime.UtcNow;
+                        }
+                        popupObjectives.Group = d.Group.id;
+
+                        if (popupObjectives.SetData(accounts, claimed, progress, d.Source.ProgressComplete, requests))
+                        {
+                            var wa = d.Group.watched;
+
+                            if (wa == null)
+                            {
+                                OnWatchedChanged(d.Group.bar);
+                                wa = d.Group.watched;
+                            }
+                            
+                            popupObjectives.AttachTo(control, d.Group.controls, wa);
+
+                            if (!popupObjectives.Visible)
+                            {
+                                popupObjectives.Show(this);
+                            }
+
+                            ok = true;
+                        }
+                        else
+                        {
+                            popupObjectives.AttachTo(null);
+                        }
+                    }
+                }
+            }
+
+            if (!ok && popupObjectives != null && popupObjectives.Visible)
+            {
+                popupObjectives.Visible = false;
+            }
+        }
+
         void control_MouseClick(object sender, MouseEventArgs e)
         {
             var control = (DailyAchievement)sender;
 
             if (e.Button == System.Windows.Forms.MouseButtons.Left)
             {
-                if (control.DataSource is AchievementDataSource)
+                if ((currentTab & DataType.Vault) != 0 && control.DataSource is ObjectiveDataSource)
+                {
+                    if (popupObjectives == null || !popupObjectives.Visible)
+                    {
+                        CreateObjectivesPopup(control);
+                    }
+                    else
+                    {
+                        popupObjectives.Visible = false;
+                        popupObjectives.AttachTo(null);
+                    }
+                }
+                else if (control.DataSource is AchievementDataSource)
                 {
                     var d = (AchievementDataSource)control.DataSource;
                     var groups = this.data.groups;
                     var b = !control.FavSelected;
+                    var k = new Settings.DailiesItemKey(Settings.DailiesKeyType.DailyObjective, d.ID);
 
                     popup.Control.FavSelected = b;
                     d.Favorite = b;
-                    Settings.FavoriteDailies[d.ID] = b;
-
                     if (b)
                     {
-                        Settings.TaggedDailies[d.ID] = Settings.TaggedType.Favorite;
+                        Settings.Dailies.ItemOptions[k] = Settings.DailiesItemOptions.Favorite;
                     }
                     else
                     {
-                        Settings.TaggedDailies.Remove(d.ID);
+                        Settings.Dailies.ItemOptions.Remove(k);
                     }
 
                     if (groups != null)
@@ -1303,11 +2429,16 @@ namespace Gw2Launcher.UI.Dailies
                     }
                 }
             }
+            else if (e.Button == System.Windows.Forms.MouseButtons.Right)
+            {
+                contextMenuDaily.Tag = control;
+                contextMenuDaily.Show(Cursor.Position);
+            }
         }
 
         void control_MouseLeave(object sender, EventArgs e)
         {
-            if (popup.Visible)
+            if (popup != null && popup.Visible)
                 popup.Hide();
         }
 
@@ -1315,7 +2446,14 @@ namespace Gw2Launcher.UI.Dailies
         {
             var control = (DailyAchievement)sender;
 
-            if (control.DataSource != null && !string.IsNullOrEmpty(control.DataSource.Description))
+            if ((currentTab & DataType.Vault) != 0 && control.DataSource is ObjectiveDataSource)
+            {
+                if (popupObjectives != null && popupObjectives.Visible)
+                {
+                    CreateObjectivesPopup(control);
+                }
+            }
+            else if (control.DataSource != null && !string.IsNullOrEmpty(control.DataSource.Description))
             {
                 popup.Width = control.Width + scrollV.Width + 1;
 
@@ -1353,7 +2491,7 @@ namespace Gw2Launcher.UI.Dailies
             }
         }
 
-        private async void RefreshDailies(bool clearCache, bool refresh = true)
+        private async void RefreshDailies(bool clearCache, bool refresh = true, bool reload = false, bool silent = false)
         {
             switch (currentTab)
             {
@@ -1366,9 +2504,17 @@ namespace Gw2Launcher.UI.Dailies
             }
 
             if (!this.Visible)
+            {
                 loadOnShow = true;
+                loadedTab = DataType.None;
+            }
             else
-                GetData(currentTab, refresh);
+                GetData(currentTab, refresh, reload, silent);
+        }
+
+        private void ReloadDailies()
+        {
+            RefreshDailies(false, false, true, true);
         }
 
         protected override void OnPaintBackground(PaintEventArgs e)
@@ -1396,7 +2542,7 @@ namespace Gw2Launcher.UI.Dailies
         {
             vob.Clear(Vault.VaultType.Daily);
 
-            if ((Settings.ShowDailies.Value & (Settings.DailiesMode.AutoLoad | Settings.DailiesMode.AutoLoadFavorite)) != 0)
+            if ((Settings.Dailies.Options.Value & (Settings.DailiesOptions.AutoLoad | Settings.DailiesOptions.AutoLoadFavorite)) != 0)
             {
                 AutoShow = true;
                 SelectTab(DataType.DailyToday);
@@ -1433,13 +2579,27 @@ namespace Gw2Launcher.UI.Dailies
             {
                 if (value && this.Visible)
                 {
-                    SelectTab(DataType.DailyToday);
+                    SelectTab(GetDefaultTab());
                 }
                 else
                 {
                     loadOnShow = value;
                 }
             }
+        }
+
+        private DataType GetDefaultTab()
+        {
+            if ((displayedTabs & DataType.DailyToday) != 0)
+            {
+                return DataType.DailyToday;
+            }
+            else if ((displayedTabs & DataType.VaultDaily) != 0)
+            {
+                return DataType.VaultDaily;
+            }
+
+            return DataType.None;
         }
 
         private void SelectTab(DataType type, bool select = true)
@@ -1456,7 +2616,7 @@ namespace Gw2Launcher.UI.Dailies
 
                     buttonDaySwap.ShapeDirection = ArrowDirection.Right;
                     buttonToday.Visible = true;
-                    buttonTomorrow.Visible = false;
+                    buttonTomorrow.Visible = (displayedTabs & DataType.Vault) == 0;
 
                     panelTabs.ResumeLayout();
 
@@ -1469,7 +2629,7 @@ namespace Gw2Launcher.UI.Dailies
 
                     buttonDaySwap.ShapeDirection = ArrowDirection.Left;
                     buttonTomorrow.Visible = true;
-                    buttonToday.Visible = false;
+                    buttonToday.Visible = (displayedTabs & DataType.Vault) == 0;
 
                     panelTabs.ResumeLayout();
 
@@ -1504,6 +2664,8 @@ namespace Gw2Launcher.UI.Dailies
                         button.Selected = true;
                     selectedTab = button;
                 }
+
+                currentTab = type;
 
                 GetData(type);
             }
@@ -1590,13 +2752,34 @@ namespace Gw2Launcher.UI.Dailies
                         Enabled = false,
                         Size = new Size(panelContent.Width, Scale(18)),
                         Font = fontUpdated,
-                        ForeColor = Util.Color.Gradient(UiColors.GetColor(UiColors.Colors.DailiesTextLight), panelContent.BackColor, 0.5f),
-                        TextAlign = ContentAlignment.MiddleRight,
+                        ForeColor = Util.Color.Gradient(UiColors.GetColor(UiColors.Colors.DailiesTextLight), panelContent.BackColor, 0.4f),
+                        TextAlign = ContentAlignment.TopRight,
                         Anchor = AnchorStyles.Left | AnchorStyles.Right | AnchorStyles.Top,
                         BackColor = UiColors.GetColor(UiColors.Colors.DailiesBackColor),
                     };
 
                     control.EnabledChanged += updated_EnabledChanged;
+
+                    return control;
+                });
+        }
+
+        private Util.ReusableControls.IResult<Label> CreateUnavailableControls(int count)
+        {
+            return reusable.CreateOrAll<Label>(count,
+                delegate
+                {
+                    var control = new Label()
+                    {
+                        AutoSize = false,
+                        Size = new Size(panelContent.Width, Scale(50)),
+                        Padding = new Padding(Scale(10), 0, 0, 0),
+                        ForeColor = Util.Color.Gradient(UiColors.GetColor(UiColors.Colors.DailiesTextLight), panelContent.BackColor, 0.5f),
+                        TextAlign = ContentAlignment.MiddleLeft,
+                        Anchor = AnchorStyles.Left | AnchorStyles.Right | AnchorStyles.Top,
+                        BackColor = UiColors.GetColor(UiColors.Colors.DailiesBackColor),
+                        Text = "Unavailable",
+                    };
 
                     return control;
                 });
@@ -1612,60 +2795,50 @@ namespace Gw2Launcher.UI.Dailies
             }
         }
 
-        private DataType GetTypeFromVaultKey(ushort key)
+        private Settings.DailiesItemKey GetKey(DataType type, ushort id, bool objective)
         {
-            switch (key >> 8)
-            {
-                case 1:
-
-                    return DataType.VaultDaily;
-
-                case 2:
-
-                    return DataType.VaultWeekly;
-
-                case 3:
-
-                    return DataType.VaultSpecial;
-
-                default:
-
-                    return DataType.None;
-            }
-        }
-
-        private byte GetIDFromVaultKey(ushort key)
-        {
-            return (byte)(key & 255);
-        }
-
-        private ushort GetVaultKey(DataType type, byte id)
-        {
-            ushort k;
+            Settings.DailiesKeyType k;
 
             switch (type)
             {
-                case DataType.VaultDaily:
+                case DataType.DailyToday:
+                case DataType.DailyTomorrow:
 
-                    k = 1 << 8;
+                    k = objective ? Settings.DailiesKeyType.DailyObjective : Settings.DailiesKeyType.DailyCategory;
 
                     break;
-                case DataType.VaultWeekly:
+                case DataType.VaultDaily:
 
-                    k = 2 << 8;
+                    if (combineAccountsToolStripMenuItem.Checked)
+                        k = Settings.DailiesKeyType.VaultDailyCategory;
+                    else
+                        k = Settings.DailiesKeyType.VaultDailyAccountCategory;
 
                     break;
                 case DataType.VaultSpecial:
 
-                    k = 3 << 8;
+                    if (combineAccountsToolStripMenuItem.Checked)
+                        k = Settings.DailiesKeyType.VaultSpecialCategory;
+                    else
+                        k = Settings.DailiesKeyType.VaultSpecialAccountCategory;
+
+                    break;
+                case DataType.VaultWeekly:
+
+                    if (combineAccountsToolStripMenuItem.Checked)
+                        k = Settings.DailiesKeyType.VaultWeeklyCategory;
+                    else
+                        k = Settings.DailiesKeyType.VaultWeeklyAccountCategory;
 
                     break;
                 default:
 
-                    return id;
+                    k = Settings.DailiesKeyType.Invalid;
+
+                    break;
             }
 
-            return (ushort)(id | k);
+            return new Settings.DailiesItemKey(k, id);
         }
 
         private async void LoadDefaultIcons()
@@ -1686,12 +2859,12 @@ namespace Gw2Launcher.UI.Dailies
                         {
                             case 3:
 
-                                imageDefault[1] = img;
+                                defaultImages[1] = img;
 
                                 break;
                             case 13:
 
-                                imageDefault[2] = img;
+                                defaultImages[2] = img;
 
                                 break;
                         }
@@ -1710,12 +2883,12 @@ namespace Gw2Launcher.UI.Dailies
                         {
                             case 42676:
 
-                                imageDefault[1] = img;
+                                defaultImages[1] = img;
 
                                 break;
                             case 338457:
 
-                                imageDefault[2] = img;
+                                defaultImages[2] = img;
 
                                 break;
                         }
@@ -1723,44 +2896,32 @@ namespace Gw2Launcher.UI.Dailies
                 }
             }
 
-            if (this.data != null)
+            if (this.data != null && (this.data.type & DataType.Vault) != 0)
             {
-                switch (this.data.type)
+                foreach (var g in this.data.groups)
                 {
-                    case DataType.VaultDaily:
-                    case DataType.VaultWeekly:
-                    case DataType.VaultSpecial:
-
-                        foreach (var g in this.data.groups)
+                    for (var i = 0; i < g.count; i++)
+                    {
+                        if (g.items[i] is ObjectiveDataSource)
                         {
-                            if (g.count > 0)
+                            switch (((ObjectiveDataSource)g.items[i]).Source.Type)
                             {
-                                for (var i = 0; i < g.count; i++)
-                                {
-                                    if (g.items[i] is ObjectiveDataSource)
-                                    {
-                                        switch (((ObjectiveDataSource)g.items[i]).Source.Type)
-                                        {
-                                            case Vault.ObjectiveType.PvP:
+                                case Vault.ObjectiveType.PvP:
 
-                                                g.controls[i].IconValue = imageDefault[1];
+                                    g.controls[i].IconValue = defaultImages[1];
 
-                                                break;
-                                            case Vault.ObjectiveType.WvW:
+                                    break;
+                                case Vault.ObjectiveType.WvW:
 
-                                                g.controls[i].IconValue = imageDefault[2];
+                                    g.controls[i].IconValue = defaultImages[2];
 
-                                                break;
-                                            default:
+                                    break;
+                                default:
 
-                                                continue;
-                                        }
-                                    }
-                                }
+                                    continue;
                             }
                         }
-
-                        break;
+                    }
                 }
             }
         }
@@ -1778,10 +2939,11 @@ namespace Gw2Launcher.UI.Dailies
                 lastIndex,
                 groupCount,
                 itemCount,
-                barCount;
+                barCount,
+                labelCount = 0;
 
             var showIcon = true;
-            var gfav = new ItemGroup();
+            ItemGroup gfav = null;
             var tab = GetTab(type);
 
             switch (type)
@@ -1791,34 +2953,127 @@ namespace Gw2Launcher.UI.Dailies
 
                     var dailies = (Daily.Achievements)data;
 
+                    gfav = new ItemGroup()
+                    {
+                        id = GetKey(type, 0, false),
+                    };
                     groupCount = categories.Length;
                     itemCount = dailies.Count;
                     barCount = dailies.Categories.Length;
-
-                    gfav.collapsed = Settings.HiddenDailyCategories.Contains(0);
-
+                    
+                    Settings.DailiesItemOptions o;
+                    gfav.collapsed = Settings.Dailies.ItemOptions.TryGetValue(new Settings.DailiesItemKey(Settings.DailiesKeyType.DailyCategory, 0), out o) && (o & Settings.DailiesItemOptions.Collapsed) != 0;
                     break;
                 case DataType.VaultDaily:
                 case DataType.VaultWeekly:
                 case DataType.VaultSpecial:
 
-                    var objectives = (Tools.Api.VaultObjectives.ObjectivesGroup[])data;
-                    var objs = new Tools.Api.VaultObjectives.ObjectivesGroup[objectives.Length];
+                    var ogdata = (Tools.Api.VaultObjectives.ObjectivesGroup[])data;
+                    ObjectiveGroupData[] og;
 
-                    itemCount = 0;
-                    barCount = 0;
-                    gfav.collapsed = false;
-
-                    for (var i = 0; i < objectives.Length; i++)
+                    if (combineAccountsToolStripMenuItem.Checked)
                     {
-                        if (objectives[i] != null && objectives[i].Count > 0 && objectives[i].HasAccounts)
-                        {
-                            objs[barCount] = objectives[i];
+                        itemCount = 0;
+                        barCount = 0;
 
-                            barCount++;
-                            itemCount += objectives[i].Objectives.Length;
+                        og = new ObjectiveGroupData[ogdata.Length];
+
+                        for (var i = 0; i < ogdata.Length; i++)
+                        {
+                            if (ogdata[i] != null)
+                            {
+                                var accounts = ogdata[i].GetAccounts();
+                                if (accounts == null)
+                                    continue;
+                                var l = ogdata[i].Count;
+
+                                og[barCount] = new ObjectiveGroupData()
+                                {
+                                    data = ogdata[i],
+                                    index = (byte)i,
+                                    count = (byte)l,
+                                    accounts = accounts,
+                                    selected = 0,
+                                };
+
+                                barCount++;
+
+                                if (l > 0)
+                                {
+                                    itemCount += l;
+                                }
+                                else
+                                {
+                                    labelCount++;
+                                }
+                            }
                         }
                     }
+                    else
+                    {
+                        barCount = 0;
+                        itemCount = 0;
+
+                        var _accounts = new Settings.IAccount[ogdata.Length][];
+
+                        for (var i = 0; i < ogdata.Length; i++)
+                        {
+                            if (ogdata[i] != null)
+                            {
+                                _accounts[i] = ogdata[i].GetAccounts();
+
+                                if (_accounts[i] != null)
+                                {
+                                    barCount += _accounts[i].Length;
+                                }
+                            }
+                        }
+
+                        og = new ObjectiveGroupData[barCount];
+                        barCount = 0;
+
+                        for (var i = 0; i < ogdata.Length; i++)
+                        {
+                            if (ogdata[i] != null)
+                            {
+                                var accounts = _accounts[i];
+                                if (accounts == null)
+                                    continue;
+                                var l = ogdata[i].Count;
+
+                                for (var j = 0; j < accounts.Length; j++)
+                                {
+                                    if (barCount == og.Length)
+                                    {
+                                        break;
+                                    }
+
+                                    og[barCount] = new ObjectiveGroupData()
+                                    {
+                                        data = ogdata[i],
+                                        index = (byte)i,
+                                        count = (byte)l,
+                                        accounts = accounts,
+                                        selected = (ushort)(j+1),
+                                    };
+
+                                    barCount++;
+
+                                    if (l > 0)
+                                    {
+                                        itemCount += l;
+                                    }
+                                    else
+                                    {
+                                        labelCount++;
+                                    }
+                                }
+                            }
+                        }
+                    }
+
+
+                    //gfav.collapsed = false;
 
                     //Array.Sort<Tools.Api.VaultObjectives.ObjectivesGroup>(objs, 0, barCount, Comparer<Tools.Api.VaultObjectives.ObjectivesGroup>.Create(new Comparison<Tools.Api.VaultObjectives.ObjectivesGroup>(
                     //    delegate(Tools.Api.VaultObjectives.ObjectivesGroup a, Tools.Api.VaultObjectives.ObjectivesGroup b)
@@ -1827,7 +3082,7 @@ namespace Gw2Launcher.UI.Dailies
                     //    })));
 
                     groupCount = barCount;
-                    data = objs;
+                    data = og;
 
                     break;
                 default:
@@ -1838,7 +3093,7 @@ namespace Gw2Launcher.UI.Dailies
 
             var items = CreateDailyControls(itemCount);
             var bars = CreateBarControls(barCount + 1);
-            var groups = new ItemGroup[groupCount + 1];
+            var groups = new ItemGroup[gfav == null ? groupCount : groupCount + 1];
             var dgroup = this.data = new DataGroup()
             {
                 type = type,
@@ -1849,13 +3104,16 @@ namespace Gw2Launcher.UI.Dailies
 
             lastIndex = groups.Length - 1;
 
-            if (gfav.collapsed)
+            if (gfav != null)
             {
-                groups[lastIndex--] = gfav;
-            }
-            else
-            {
-                groups[firstIndex++] = gfav;
+                if (gfav.collapsed)
+                {
+                    groups[lastIndex--] = gfav;
+                }
+                else
+                {
+                    groups[firstIndex++] = gfav;
+                }
             }
 
             if ((type & DataType.Daily) != 0)
@@ -1871,10 +3129,15 @@ namespace Gw2Launcher.UI.Dailies
 
                     var group = new ItemGroup()
                     {
-                        id = id,
+                        id = GetKey(type, id, false),
                         category = c,
-                        collapsed = Settings.HiddenDailyCategories.Contains(id),
                     };
+
+                    Settings.DailiesItemOptions o;
+                    if (Settings.Dailies.ItemOptions.TryGetValue(group.id, out o) && (o & Settings.DailiesItemOptions.Collapsed) != 0)
+                    {
+                        group.collapsed = true;
+                    }
 
                     Daily.Achievement[] das;
 
@@ -1891,24 +3154,23 @@ namespace Gw2Launcher.UI.Dailies
                     {
                         group.items = new IData[das.Length];
 
-                        var i = 0;
+                        ushort i = 0;
 
                         foreach (var a in das)
                         {
                             if (!a.IsUnknown)
                             {
-                                Settings.TaggedType tt;
-                                if (Settings.TaggedDailies.TryGetValue(a.ID, out tt) && tt == Settings.TaggedType.Ignored)
+                                if (Settings.Dailies.ItemOptions.TryGetValue(new Settings.DailiesItemKey(Settings.DailiesKeyType.DailyObjective, a.ID), out o) && o == Settings.DailiesItemOptions.Ignored)
                                 {
                                     continue;
                                 }
 
                                 var d = new AchievementDataSource(a)
                                 {
-                                    Tagged = tt,
+                                    Options = o,
                                 };
 
-                                if (tt == Settings.TaggedType.Favorite)
+                                if (o == Settings.DailiesItemOptions.Favorite)
                                 {
                                     if (a.Icon == null)
                                         d.Icon = c.Icon.GetImage();
@@ -1943,37 +3205,83 @@ namespace Gw2Launcher.UI.Dailies
             }
             else if ((type & DataType.Vault) != 0)
             {
-                var squares = CreateSquaresControls(barCount);
+                var squares = CreateSquaresControls(combineAccountsToolStripMenuItem.Checked ? barCount : 0);
                 var updated = CreateLastUpdatedControls(barCount);
+                var unavailable = CreateUnavailableControls(labelCount);
+                var hasNew = false;
+                HashSet<ushort> known = null;
+
+                if (type == DataType.VaultSpecial)
+                {
+                    if (Settings.Dailies.KnownVaultSpecials.HasValue)
+                    {
+                        if (specials != null)
+                        {
+                            known = specials;
+                        }
+                        else
+                        {
+                            var ids = Settings.Dailies.KnownVaultSpecials.Value.SeenOrLatest;
+                            if (ids == null)
+                                ids = new ushort[0];
+                            known = new HashSet<ushort>(ids);
+                        }
+                    }
+                    else
+                    {
+                        hasNew = true;
+                    }
+                }
 
                 #region Vault
 
-                var objectives = (Tools.Api.VaultObjectives.ObjectivesGroup[])data;
+                var og = (ObjectiveGroupData[])data;
                 var hasOtherIcons = false;
                 var wcount = 0;
+                var combined = combineAccountsToolStripMenuItem.Checked;
 
                 HashSet<ushort> hfav = null;
 
                 for (var i = 0; i < barCount; i++)
                 {
-                    var group = new ItemGroup()
-                    {
-                        id = GetVaultKey(type, objectives[i].ID),
-                        collapsed = tab.Collapsed != null && tab.Collapsed.Contains(objectives[i].ID),
-                    };
+                    var accounts = og[i].accounts;
+                    var selected = accounts[og[i].selected > 0 ? og[i].selected - 1 : 0];
+                    Settings.DailiesItemOptions o;
+                    ItemGroup group;
 
-                    var objs = objectives[i].Objectives;
+                    if (combined)
+                    {
+                        group = new ItemGroup()
+                        {
+                            id = GetKey(type, og[i].data.ID,false),
+                            accounts = accounts,
+                            accountid = selected.UID,
+                        };
+                    }
+                    else
+                    {
+                        group = new ItemGroup()
+                        {
+                            id = GetKey(type, selected.UID, false),
+                            accounts = new Settings.IAccount[] { selected },
+                            accountid = selected.UID,
+                        };
+                    }
+
+
+                    var count = og[i].count;
+                    var objs = og[i].data.Objectives;
                     var c = new Daily.Category()
                     {
-                        ID = group.id,
-                        Name = group.id.ToString(),
+                        ID = group.id.ID,
                     };
-                    
-                    group.items = new IData[objs.Length];
-                    group.category = c;
-                    group.source = objectives[i];
 
-                    for (var k = 0; k < objs.Length; k++)
+                    group.items = new IData[count];
+                    group.category = c;
+                    group.source = og[i];
+                    group.collapsed = Settings.Dailies.ItemOptions.TryGetValue(group.id, out o) && (o & Settings.DailiesItemOptions.Collapsed) != 0;
+
+                    for (var k = 0; k < count; k++)
                     {
                         if (objs[k].ID == 133)
                         {
@@ -1981,7 +3289,7 @@ namespace Gw2Launcher.UI.Dailies
                         }
                         else
                         {
-                            var d = new ObjectiveDataSource(objs[k]);
+                            var d = new ObjectiveDataSource(objs[k], group, (byte)k);
 
                             group.items[group.count++] = d;
 
@@ -1989,7 +3297,7 @@ namespace Gw2Launcher.UI.Dailies
                             {
                                 case Vault.ObjectiveType.PvP:
 
-                                    d.Icon = imageDefault[1];
+                                    d.Icon = defaultImages[1];
                                     if (d.Icon == null)
                                     {
                                         hasOtherIcons = true;
@@ -1998,7 +3306,7 @@ namespace Gw2Launcher.UI.Dailies
                                     break;
                                 case Vault.ObjectiveType.WvW:
 
-                                    d.Icon = imageDefault[2];
+                                    d.Icon = defaultImages[2];
                                     if (d.Icon == null)
                                     {
                                         hasOtherIcons = true;
@@ -2006,72 +3314,122 @@ namespace Gw2Launcher.UI.Dailies
 
                                     break;
                             }
+
+                            if (known != null && !known.Contains(objs[k].ID))
+                            {
+                                d.IsNew = true;
+                                hasNew = true;
+                            }
                         }
 
                         
 
                     }
 
-                    if (group.count > 0)
+                    if (hasNew && type == DataType.VaultSpecial)
+                    {
+                        specials = known;
+
+                    }
+
+                    if (group.count > 0 || true)
                     {
                         var bar = group.bar = bars.GetNext();
 
                         bar.SetState(group.collapsed);
                         bar.ButtonEyeVisible = true;
                         bar.ButtonEyeTimerEnabled = false;
-                        bar.DropDownItems = GetDropDownItems(objectives[i].Accounts);
+                        bar.DropDownItems = combined ? GetDropDownItems(accounts) : null;
                         bar.ButtonDropDownArrowVisible = bar.DropDownItems != null && bar.DropDownItems.Length > 1;
 
+                        if (combined)
+                            group.focused = Client.Launcher.GetLastFocused(accounts).Value;
+                        else
+                            group.focused = Client.Launcher.GetLastFocused(selected).Value;
+
                         var watched = false;
-                        int index;
-                        Settings.IAccount selected;
+                        int index = -1;
+                        //Settings.IAccount selected;
 
-                        if (objectives[i].HasAccounts)
+                        lock (this.watched)
                         {
-                            selected = objectives[i].Accounts[0];
-                            index = -1;
+                            Watched.WatchedGroup wa;
 
-                            if (tab.Watched != null)
+                            if (this.watched.TryGetValue(group.id, out wa))
                             {
-                                lock (tab.Watched)
+                                if (combined)
                                 {
-                                    WatchedAccount wa;
-
-                                    if (tab.Watched.TryGetValue(group.id, out wa))
+                                    if (autoSelectCurrentAccountToolStripMenuItem.Checked && wa.focusedKey != focusedKey && focused != null && (index = GetDropDownItem(bar.DropDownItems, focused)) != -1)
                                     {
-                                        index = GetDropDownItem(bar.DropDownItems, wa.account);
+                                        selected = ((Util.ComboItem<Settings.IAccount>[])bar.DropDownItems)[index].Value;
 
-                                        if (index == -1)
+                                        if (!wa.IsAccount(selected))
                                         {
-                                            //index = 0;
-                                            tab.Watched.Remove(group.id);
-                                        }
-                                        else
-                                        {
-                                            watched = wa.watched;
-                                            selected = wa.account;
+                                            wa.SetAccount(this.watched.GetAccount((Settings.IGw2Account)selected));
 
-                                            group.watched = wa;
-                                            bar.ButtonEyeTimerEnabled = wa.request != null;
+                                            //wa.Abort();
+                                            //this.watched[group.id] = wa = new Watched.WatchedGroup(this.watched.GetAccount((Settings.IGw2Account)selected))
+                                            //{
+                                            //    watched = wa.watched,
+                                            //};
                                         }
+                                    }
+                                    else
+                                    {
+                                        index = GetDropDownItem(bar.DropDownItems, wa.accountdata.account);
+                                    }
+                                }
+                                else if (wa.IsAccount(selected))
+                                {
+                                    index = 0;
+                                }
+
+                                watched = wa.watched;
+
+                                if (index == -1)
+                                {
+                                    wa.Dispose();
+                                    this.watched.Remove(group.id);
+                                }
+                                else
+                                {
+                                    group.watched = wa;
+                                    wa.group = group;
+                                    wa.focusedKey = focusedKey;
+
+                                    if (combined)
+                                    {
+                                        selected = wa.accountdata.account;
                                     }
                                 }
                             }
+                        }
 
-                            if (index == -1)
+                        if (index == -1)
+                        {
+                            if (combined)
                             {
-                                index = GetDropDownItem(bar.DropDownItems, selected);
+                                if (autoSelectCurrentAccountToolStripMenuItem.Checked && focused != null && (index = GetDropDownItem(bar.DropDownItems, focused)) != -1)
+                                {
+                                    selected = ((Util.ComboItem<Settings.IAccount>[])bar.DropDownItems)[index].Value;
+                                }
+                                else
+                                {
+                                    index = GetDropDownItem(bar.DropDownItems, selected);
+                                }
+                            }
+                            else
+                            {
+                                index = 0;
                             }
 
-                            bar.Text = selected.Name;
+                            if (Settings.Dailies.ItemOptions.TryGetValue(group.id, out o) && (o & Settings.DailiesItemOptions.Watched) != 0)
+                            {
+                                watched = true;
+                            }
                         }
-                        else
-                        {
-                            selected = null;
-                            index = -1;
 
-                            bar.Text = c.Name;
-                        }
+                        bar.Text = selected.Name;
 
                         bar.DropDownSelectedIndex = index;
 
@@ -2123,23 +3481,30 @@ namespace Gw2Launcher.UI.Dailies
                             bar.SetApi(null, null);
                         }
 
-                        var square = group.squares = squares.GetNext();
+                        if (combined)
+                        {
+                            var square = group.squares = squares.GetNext();
 
-                        square.SetAccounts(objectives[i].Accounts);
-                        square.Selected = selected;
-                        square.Tag = group;
+                            square.SetAccounts(accounts);
+                            square.Selected = selected;
+                            square.Tag = group;
+                        }
 
                         var updatedLabel = group.updated = updated.GetNext();
 
-                        updatedLabel.Font = new System.Drawing.Font("Segoe UI", 7f, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-                        updatedLabel.Height = Scale(18);
-                        updatedLabel.TextAlign = ContentAlignment.TopRight;
-                        updatedLabel.BackColor = UiColors.GetColor(UiColors.Colors.DailiesBackColor);
-                        updatedLabel.ForeColor = Util.Color.Gradient(UiColors.GetColor(UiColors.Colors.DailiesTextLight), panelContent.BackColor, 0.4f);
                         updatedLabel.Enabled = false;
                         updatedLabel.Date = DateTime.MinValue;
                         updatedLabel.Tag = group;
 
+                        if (count == 0)
+                        {
+                            group.unavailable = unavailable.GetNext();
+                        }
+
+                        if (Settings.Dailies.VaultObjectiveSorting.Value != 0 || hasNew)
+                        {
+                            SortObjectives(group, selected, Settings.Dailies.VaultObjectiveSorting.Value);
+                        }
                     }
 
                     if (group.collapsed)
@@ -2155,24 +3520,23 @@ namespace Gw2Launcher.UI.Dailies
 
                 if (hasOtherIcons)
                 {
-                    if (imageDefault[1] == null)
+                    if (defaultImages[1] == null)
                     {
-                        imageDefault[1] = imageDefault[2] = imageDefault[0];
+                        defaultImages[1] = defaultImages[2] = defaultImages[0];
                         LoadDefaultIcons();
                     }
                 }
 
                 #endregion
 
-                squares.HideRemaining();
-                squares.AddNew(panelContent);
-                updated.HideRemaining();
-                updated.AddNew(panelContent);
+                squares.HideAndAdd(panelContent);
+                updated.HideAndAdd(panelContent);
+                unavailable.HideAndAdd(panelContent);
             }
 
-            var favs = CreateDailyControls(favorites.Count);
+            var favs = CreateDailyControls(gfav != null ? favorites.Count : 0);
 
-            if (favorites.Count > 0)
+            if (gfav != null && favorites.Count > 0)
             {
                 var group = gfav;
                 var bar = group.bar = bars.GetNext();
@@ -2183,7 +3547,7 @@ namespace Gw2Launcher.UI.Dailies
                 };
 
                 group.items = favorites.ToArray();
-                group.count = group.items.Length;
+                group.count = (ushort)group.items.Length;
 
                 bar.SetState(group.collapsed);
                 bar.Text = group.category.Name;
@@ -2192,7 +3556,11 @@ namespace Gw2Launcher.UI.Dailies
                 bar.DropDownItems = null;
             }
 
-            if (firstIndex != groups.Length)
+            if ((type & DataType.Vault) != 0 && Settings.Dailies.VaultSorting.Value != Settings.DailiesVaultSorting.None)
+            {
+                Sort(groups, groups.Length, Settings.Dailies.VaultSorting.Value & Settings.DailiesVaultSorting.Sorting, (Settings.Dailies.VaultSorting.Value & Settings.DailiesVaultSorting.Descending) != 0);
+            }
+            else if (firstIndex != groups.Length)
             {
                 var count = groups.Length - firstIndex;
                 if (count > 1)
@@ -2203,14 +3571,14 @@ namespace Gw2Launcher.UI.Dailies
 
             foreach (var group in groups)
             {
-                group.index = firstIndex++;
+                group.index = (ushort)firstIndex++;
 
-                if (group.count > 0)
+                if (group.count > 0 || (type & DataType.Vault) != 0)
                 {
                     var bar = group.bar;
                     var controls = items;
 
-                    if (group.id == 0)
+                    if (group.id.Type == Settings.DailiesKeyType.DailyCategory && group.id.ID == 0)
                     {
                         controls = favs;
                     }
@@ -2237,11 +3605,6 @@ namespace Gw2Launcher.UI.Dailies
                             y += group.squares.Height;
                     }
 
-                    if (group.watched != null)
-                    {
-                        group.watched.group = group.index;
-                    }
-
                     for (var i = 0; i < group.count; i++)
                     {
                         var d = group.items[i];
@@ -2259,15 +3622,16 @@ namespace Gw2Launcher.UI.Dailies
                         control.IconVisible = showIcon;
                         control.ProgressVisible = watched;
                         control.ProgressDisplayedVisible = watched;
+                        control.ColorKey = d.IsNew ? Color.Gold : Color.Empty;
 
                         if (showIcon && control.IconValue == null)
                         {
-                            var icon = imageDefault[0];
+                            var icon = defaultImages[0];
                             if (group.category != null)
                             {
                                 icon = group.category.GetIcon();
                                 if (icon == null)
-                                    icon = imageDefault[0];
+                                    icon = defaultImages[0];
                             }
                             control.IconValue = icon;
                         }
@@ -2289,7 +3653,18 @@ namespace Gw2Launcher.UI.Dailies
                         //    }
                         //}
 
-                        OnWatchedChanged(bar);
+                        OnWatchedChanged(bar, false, false);
+                    }
+
+                    if (group.unavailable != null)
+                    {
+                        var b = group.count == 0;
+
+                        group.unavailable.Location = new Point(x, y);
+                        group.unavailable.Visible = b;
+
+                        if (b)
+                            y += group.unavailable.Height;
                     }
 
                     if (group.updated != null)
@@ -2306,31 +3681,28 @@ namespace Gw2Launcher.UI.Dailies
                 }
             }
 
-            bars.HideRemaining();
-            items.HideRemaining();
-            favs.HideRemaining();
+            bars.HideAndAdd(panelContent);
+            items.HideAndAdd(panelContent);
+            favs.HideAndAdd(panelContent);
 
             reusable.HideRemaining();
 
             panelContent.Height = y;
             scrollV.Maximum = y - panelContainer.Height;
 
-            bars.AddNew(panelContent);
-            items.AddNew(panelContent);
-            favs.AddNew(panelContent);
-
             reposition = int.MaxValue;
         }
 
-        private bool UpdateProgress(ItemGroup group)
+        private bool UpdateProgress(ItemGroup group, bool sort)
         {
-            if (group.bar.ButtonEyeVisible && group.bar.ButtonEyeEnabled && group.squares != null)
+            if (group.bar.ButtonEyeVisible && group.bar.ButtonEyeEnabled && group.accounts != null)
             {
-                var selected = group.squares.Selected;
-                var og = group.source as Tools.Api.VaultObjectives.ObjectivesGroup;
-                
-                if (og != null && selected != null)
+                var selected = group.GetSelectedAccount();
+                var changed = false;
+
+                if (group.source != null && selected != null)
                 {
+                    var og = ((ObjectiveGroupData)group.source).data;
                     var ao = vob.GetObjectives(selected);
 
                     if (ao != null)
@@ -2345,7 +3717,8 @@ namespace Gw2Launcher.UI.Dailies
                             c.ProgressDisplayedVisible = true;
                             c.ProgressDisplayedTotal = ((ObjectiveDataSource)group.items[i]).Source.ProgressComplete;
 
-                            var o = ao.GetObjective(og.Type, group.items[i].ID, i);
+                            var o = ao.GetObjective(og.Type, group.items[i].ID, ((ObjectiveDataSource)group.items[i]).SourceIndex);
+                            var v = c.ProgressValueRaw;
 
                             if (o != null)
                             {
@@ -2386,6 +3759,11 @@ namespace Gw2Launcher.UI.Dailies
                                 c.ProgressValue = 0;
                                 c.ProgressDisplayedValue = 0;
                             }
+
+                            if (c.ProgressValueRaw != v)
+                            {
+                                changed = true;
+                            }
                         }
 
                         if (remaining > 0)
@@ -2397,6 +3775,15 @@ namespace Gw2Launcher.UI.Dailies
                         {
                             group.updated.Date = DateTime.MinValue;
                             group.updated.UpdateText();
+                        }
+
+                        if (changed && sort)
+                        {
+                            if ((Settings.Dailies.VaultObjectiveSorting.Value & Settings.DailiesVaultObjectiveSorting.Progress) != 0)
+                            {
+                                SortObjectives(group, selected, Settings.Dailies.VaultObjectiveSorting.Value);
+                                PendingReposition(group.index);
+                            }
                         }
 
                         return remaining > 0;
@@ -2466,7 +3853,24 @@ namespace Gw2Launcher.UI.Dailies
 
             for (var i = 0; i < count; i++)
             {
-                items[i] = new Util.ComboItem<Settings.IAccount>(accounts[i], accounts[i].Name);
+                var a = accounts[i];
+
+                if (a != null)
+                {
+                    items[i] = new Util.ComboItem<Settings.IAccount>(a, a.Name);
+                }
+                else
+                {
+                    if (i == 0)
+                    {
+                        return null;
+                    }
+
+                    Array.Resize<Util.ComboItem<Settings.IAccount>>(ref items, i);
+                    count = i;
+
+                    break;
+                }
             }
 
             if (count > 1)
@@ -2494,21 +3898,13 @@ namespace Gw2Launcher.UI.Dailies
                 for (var i = startAt - 1; i >= 0; i--)
                 {
                     var g = groups[i];
-                    if (g.count == 0)
+                    
+                    if (g.count == 0 && g.unavailable == null)
+                    {
                         continue;
+                    }
 
-                    if (g.collapsed)
-                    {
-                        y = g.bar.Bottom;
-                    }
-                    else if (g.updated != null && g.updated.Enabled)
-                    {
-                        y = g.updated.Bottom;
-                    }
-                    else
-                    {
-                        y = g.controls[g.count - 1].Bottom;
-                    }
+                    y = g.GetBottomControl().Bottom;
 
                     break;
                 }
@@ -2517,7 +3913,7 @@ namespace Gw2Launcher.UI.Dailies
             for (int i = startAt, l = groups.Length; i < l; i++)
             {
                 var g = groups[i];
-                if (g.count == 0)
+                if (g.IsHidden())
                     continue;
                 var visible = !g.collapsed;
 
@@ -2551,6 +3947,19 @@ namespace Gw2Launcher.UI.Dailies
                     c.Visible = visible;
                 }
 
+                if (g.unavailable != null)
+                {
+                    var b = visible && g.count == 0;
+
+                    if (b)
+                    {
+                        g.unavailable.Top = y;
+                        y += g.unavailable.Height;
+                    }
+
+                    g.unavailable.Visible = b;
+                }
+
                 if (g.updated != null)
                 {
                     var b = visible && g.updated.Enabled;
@@ -2572,10 +3981,22 @@ namespace Gw2Launcher.UI.Dailies
 
         private void OnCollapsedChanged(ItemGroup group, bool collapsed)
         {
-            Settings.HiddenDailyCategories[group.id] = collapsed;
+            Settings.DailiesItemOptions o;
+            if (Settings.Dailies.ItemOptions.TryGetValue(group.id, out o))
+            {
+                if (collapsed)
+                    o |= Settings.DailiesItemOptions.Collapsed;
+                else
+                    o &= ~Settings.DailiesItemOptions.Collapsed;
+                Settings.Dailies.ItemOptions[group.id] = o;
+            }
+            else if (collapsed)
+            {
+                Settings.Dailies.ItemOptions[group.id] = Settings.DailiesItemOptions.Collapsed;
+            }
 
             group.collapsed = collapsed;
-            PositionGroups(group.index);
+            DoPendingReposition(group.index);
         }
 
         void bar_Expanded(object sender, EventArgs e)
@@ -2588,83 +4009,70 @@ namespace Gw2Launcher.UI.Dailies
             OnCollapsedChanged((ItemGroup)((DailyCategoryBar)sender).Tag, true);
         }
 
-        private void OnWatchedChanged(DailyCategoryBar bar)
+        private void OnWatchedChanged(DailyCategoryBar bar, bool refresh = false, bool sort = true)
         {
             var g = (ItemGroup)bar.Tag;
 
-            if (g.squares == null)
+            if (g.accounts == null)
                 return;
 
-            var selected = (Settings.IGw2Account)g.squares.Selected;
+            var selected = (Settings.IGw2Account)g.GetSelectedAccount();
             //var selected = (Util.ComboItem<Settings.IAccount>)bar.DropDownSelectedItem;
 
             if (selected != null && this.data.Contains(g))
             {
                 var tab = GetTab(this.data.type);
-
-                if (tab.Watched == null)
-                {
-                    tab.Watched = new Dictionary<ushort, WatchedAccount>();
-                }
-
                 var watched = bar.ButtonEyeVisible && bar.ButtonEyeEnabled;
                 var wa = g.watched;
-                ApiRequest r;
 
-                lock (tab.Watched)
+                lock (this.watched)
                 {
                     if (wa != null)
                     {
-                        r = wa.request;
-
-                        if (wa.account == selected)
+                        if (!wa.IsAccount(selected))
                         {
-                            wa.watched = watched;
+                            //if (refresh)
+                            wa.SetAccount(this.watched.GetAccount(selected), !refresh);
+                        }
 
-                            if (watched)
-                            {
-                                r = null;
-                            }
-                        }
-                        else
+                        wa.watched = watched;
+
+                        var r = wa.accountdata.request;
+
+                        if (r != null && (!watched || r.Type != GetApiType(this.data.type)))
                         {
-                            wa = null;
+                            wa.Abort();
+                            wa.requested = false;
                         }
-                    }
-                    else
-                    {
-                        r = null;
                     }
 
                     if (wa == null)
                     {
-                        tab.Watched[g.id] = wa = new WatchedAccount(g.id, selected)
+                        this.watched[g.id] = wa = new Watched.WatchedGroup(this.watched.GetAccount(selected))
                         {
                             watched = watched,
-                            group = g.index,
+                            group = g,
+                            focusedKey = focusedKey,
                         };
 
                         g.watched = wa;
                     }
                 }
 
-                if (r != null)
-                {
-                    r.Abort();
-                }
-
                 if (watched)
                 {
-                    if (wa.request == null)
+                    if (wa.accountdata.request == null)
                     {
                         var ao = vob.GetObjectives(selected);
                         var vt = GetVaultType(this.data.type);
 
                         if (ao != null && !ao.IsComplete(vt) && (ao.IsPending(vt) || Client.Launcher.IsActive(selected)))
                         {
-                            Util.Logging.LogEvent(wa.account, "[OnWatchedChanged] Queueing request for [" + this.data.type + "]");
+                            if (QueueApiRequest(this.data.type, wa, false, refresh))
+                            {
+                                //wa.requested = false;
 
-                            QueueApiRequest(this.data.type, wa, false);
+                            }
                         }
                     }
 
@@ -2680,29 +4088,32 @@ namespace Gw2Launcher.UI.Dailies
                     bar.SetApi(null, null);
                 }
 
-                bar.ButtonEyeTimerEnabled = wa.request != null;
-                UpdateProgress(g);
+                bar.ButtonEyeTimerEnabled = wa.requested && wa.accountdata.request != null;
+                UpdateProgress(g, sort);
             }
         }
 
-        private bool QueueApiRequest(DataType t, WatchedAccount w, bool nocache)
+        private bool QueueApiRequest(DataType t, Watched.WatchedGroup w, bool nocache, bool repeat = false)
         {
-            var api = w.account.Api;
+            var api = w.accountdata.account.Api;
 
             if (api == null)
             {
                 return false;
             }
 
-            var r = new ApiRequest(GetApiType(t), w.account, api, nocache ? ApiData.DataRequest.RequestOptions.NoCache : ApiData.DataRequest.RequestOptions.None)
+            var r = new ApiRequest(GetApiType(t), w.accountdata.account, api, nocache ? ApiData.DataRequest.RequestOptions.NoCache : ApiData.DataRequest.RequestOptions.None)
             {
                 Watched = w,
+                AccountData = w.accountdata,
+                ForceRepeat = repeat,
             };
 
             r.Complete += OnWatchedRequestComplete;
             r.DataAvailable += OnWatchedRequestDataAvailable;
 
-            w.request = r;
+            w.accountdata.request = r;
+            w.requested = nocache || DateTime.UtcNow > vob.ApiManager.DataSource.GetNext(api.Key);
 
             vob.ApiManager.Queue(r);
 
@@ -2715,49 +4126,86 @@ namespace Gw2Launcher.UI.Dailies
                 return;
 
             var r = (ApiRequest)sender;
-            var t = GetType(e.Type);
+            var wa = r.Watched;
+            var d = r.AccountData;
 
-            if (currentTab == t)
+            if (d.request != r || IsDisposed)
             {
-                var wa = r.Watched;
+                return;
+            }
+
+            var t = GetType(e.Type);
+            var b = currentTab == t && wa.watched && (r.RepeatCount == 0 && r.ForceRepeat || DateTime.UtcNow.Subtract(wa.accountdata.date).TotalMinutes < 3) && Client.Launcher.IsActive(r.Account);
+
+            if (!wa.requested && wa.IsAccount(d))
+            {
+                wa.requested = true;
+            }
+
+            Util.Invoke.Async(this, delegate
+            {
                 ItemGroup g;
 
-                if (wa.watched && wa.GetGroup(this.data, out g) && Client.Launcher.IsActive(r.Account))
+                if (d.request == r)
                 {
-                    if (DateTime.UtcNow.Subtract(wa.date).TotalMinutes < 3)
+                    if (!b)
                     {
-                        e.Repeat = true;
+                        d.request = null;
+                    }
 
-                        Util.Logging.LogEvent(r.Account, "[OnWatchedRequestDataAvailable] Repeating request for [" + r.Type + "]");
+                    if (currentTab == t && wa.watched && wa.IsAccount(d) && wa.GetGroup(this.data, out g))
+                    {
+                        g.bar.ButtonEyeTimerEnabled = wa.requested && d.request != null;
+                    }
+                    else if (b)
+                    {
+                        r.Abort();
+                        d.request = null;
                     }
                 }
+                else if (b)
+                {
+                    r.Abort();
+                }
+
+                //if (d.request == r && currentTab == t && wa.watched && wa.IsAccount(d) && wa.GetGroup(this.data, out g))
+                //{
+            });
+
+            if (b)
+            {
+                e.Repeat = true;
+
             }
+
         }
 
         void OnWatchedRequestComplete(object sender, EventArgs e)
         {
             var r = (ApiRequest)sender;
-            var wa = r.Watched;
+            //var wa = r.Watched;
+            var d = r.AccountData;
 
-            if (wa.request == r)
+            if (d.request != r || IsDisposed)
             {
-                wa.request = null;
-
-                var t = GetType(r.Type);
-
-                if (currentTab == t)
-                {
-                    Util.Invoke.Async(this, delegate
-                    {
-                        ItemGroup g;
-
-                        if (currentTab == t && wa.watched && wa.request == null && wa.GetGroup(this.data, out g))
-                        {
-                            g.bar.ButtonEyeTimerEnabled = GetPending(wa.account.Api, r.Type) != 0;
-                        }
-                    });
-                }
+                return;
             }
+
+            Util.Invoke.Async(this, delegate
+            {
+                //var t = GetType(r.Type);
+
+                if (d.request == r)
+                {
+                    d.request = null;
+
+                    ItemGroup g;
+
+                    //if (currentTab == t && wa.watched && wa.IsAccount(d) && wa.GetGroup(this.data, out g))
+                    //{
+                }
+            });
+
         }
 
         private int GetPending(Settings.ApiDataKey api, ApiData.DataType t)
@@ -2778,13 +4226,20 @@ namespace Gw2Launcher.UI.Dailies
         void bar_EyeClicked(object sender, EventArgs e)
         {
             var bar = (DailyCategoryBar)sender;
+            var g = (ItemGroup)bar.Tag;
 
             OnWatchedChanged(bar);
             DoPendingReposition();
 
             if (bar.ButtonEyeVisible && bar.ButtonEyeEnabled)
             {
+                Settings.Dailies.ItemOptions[g.id] |= Settings.DailiesItemOptions.Watched;
+
                 Util.ScheduledEvents.Register(OnScheduledRefreshWatched, 5000);
+            }
+            else
+            {
+                Settings.Dailies.ItemOptions[g.id] &= ~Settings.DailiesItemOptions.Watched;
             }
         }
 
@@ -2863,7 +4318,7 @@ namespace Gw2Launcher.UI.Dailies
 
                 for (var i = 0; i < groups.Length; i++)
                 {
-                    if (groups[i].id == id)
+                    if (groups[i].id.ID == id)
                     {
                         return groups[i];
                     }
@@ -2873,14 +4328,38 @@ namespace Gw2Launcher.UI.Dailies
             return null;
         }
 
-        private async void GetData(DataType type, bool refresh = false)
+        /// <summary>
+        /// Returns if the data contains data for the specified type
+        /// </summary>
+        private bool IsValid(Daily.Achievements dailies, DataType type)
+        {
+            switch (dailies.Age)
+            {
+                case 0:
+
+                    return type == DataType.DailyToday || type == DataType.DailyTomorrow && dailies.Tomorrow != null;
+
+                case 1:
+
+                    return type == DataType.DailyToday && dailies.Tomorrow != null;
+            }
+
+            return false;
+        }
+
+        /// <summary>
+        /// Displays data for dailies
+        /// </summary>
+        /// <param name="type">Type to refresh</param>
+        /// <param name="refresh">True to force a refresh</param>
+        /// <param name="reload">True to force reloading displayed data</param>
+        /// <param name="silent">True to hide download when the data is already displayed</param>
+        private async void GetData(DataType type, bool refresh = false, bool reload = false, bool silent = false)
         {
             var tab = GetTab(type);
-            if (tab == null)
+            if (tab == null || IsDisposed)
                 return;
-            currentTab = type;
-            if (IsDisposed)
-                return;
+            //currentTab = type;
             if ((isLoading & type) != 0)
             {
                 OnTabLoading();
@@ -2917,6 +4396,10 @@ namespace Gw2Launcher.UI.Dailies
                     {
                         refresh = true;
                     }
+                    else if (!current.Verified && DateTime.UtcNow.Subtract(current.Date.Date).TotalHours >= 1)
+                    {
+                        refresh = true;
+                    }
                     else
                     {
                         var age = current.Age;
@@ -2934,10 +4417,6 @@ namespace Gw2Launcher.UI.Dailies
                                 refresh = true;
                             }
                         }
-                        else if (!current.Verified && DateTime.UtcNow.Subtract(current.Date.Date).TotalHours >= 1)
-                        {
-                            refresh = true;
-                        }
                         else if (type == DataType.DailyTomorrow && current.Tomorrow == null)
                         {
                             if (DateTime.UtcNow.Subtract(current.Date).TotalMinutes > 1)
@@ -2952,21 +4431,18 @@ namespace Gw2Launcher.UI.Dailies
                     }
                 }
 
+
                 if (refresh)
                 {
                     try
                     {
                         tab.Retrying = false;
 
-                        OnTabLoading();
-
-                        //if (isRetrying != DailyType.None)
-                        //{
-                        //    isRetrying = DailyType.None;
-                        //    labelRetry.Visible = false;
-
-                        //    Util.ScheduledEvents.Unregister(OnScheduledRetry);
-                        //}
+                        //hide loading if data isn't expected to change
+                        if (!silent || current == null || (loadedTab & DataType.Daily) == 0 || !IsValid(current, type) || !panelContent.Visible)
+                        {
+                            OnTabLoading();
+                        }
 
                         o = await da.GetDailies(categories);
 
@@ -2992,11 +4468,6 @@ namespace Gw2Launcher.UI.Dailies
                             o = null;
                             error = true;
                         }
-                    }
-
-                    if (IsDisposed)
-                    {
-                        return;
                     }
                 }
 
@@ -3039,7 +4510,10 @@ namespace Gw2Launcher.UI.Dailies
 
                     if (!hasData)
                     {
-                        OnTabLoading();
+                        if ((type & currentTab) != 0)
+                        {
+                            OnTabLoading();
+                        }
 
                         var d = DateTime.UtcNow.AddSeconds(10);
 
@@ -3066,7 +4540,7 @@ namespace Gw2Launcher.UI.Dailies
 
             isLoading &= ~type;
 
-            if ((type & currentTab) != 0)
+            if ((type & currentTab) != 0 && !IsDisposed)
             {
                 waitingBounce.Visible = false;
 
@@ -3076,7 +4550,7 @@ namespace Gw2Launcher.UI.Dailies
                     display = currentTab;
                 }
 
-                if (type == DataType.DailyToday || type == DataType.DailyTomorrow)
+                if ((type & DataType.Daily) != 0)
                 {
                     #region Dailies
 
@@ -3109,8 +4583,6 @@ namespace Gw2Launcher.UI.Dailies
                                     {
                                         minutes = 61 - minutes;
                                     }
-
-                                    Util.Logging.LogEvent("[daily] OnScheduledRefresh in " + minutes);
 
                                     if (minutes > 0)
                                     {
@@ -3155,7 +4627,7 @@ namespace Gw2Launcher.UI.Dailies
 
                         if (hasData && dailies.Count > 0)
                         {
-                            OnTabLoaded(display, changed, sliderValue, dailies);
+                            OnTabLoaded(display, changed, reload, scrollV.Maximum == 0 ? sliderValue : scrollV.Value, dailies);
                         }
                         else
                         {
@@ -3199,7 +4671,7 @@ namespace Gw2Launcher.UI.Dailies
 
                     if (hasData)
                     {
-                        OnTabLoaded(type, changed, sliderValue, objectives);
+                        OnTabLoaded(type, changed, reload, sliderValue, objectives);
                     }
                     else
                     {
@@ -3237,9 +4709,9 @@ namespace Gw2Launcher.UI.Dailies
                 loadOnShow = true;
         }
 
-        private void OnTabLoaded(DataType display, bool changed, int sliderValue, object data)
+        private void OnTabLoaded(DataType display, bool changed, bool reload, int sliderValue, object data)
         {
-            if (changed || loadedTab != display)
+            if (changed || reload || loadedTab != display)
             {
                 if ((loadedTab & display) == 0)
                 {
@@ -3248,7 +4720,7 @@ namespace Gw2Launcher.UI.Dailies
 
                 loadedTab = display;
 
-                if (popup.Visible)
+                if (popup != null && popup.Visible)
                     popup.Hide();
 
                 SetupControls(display, data);
@@ -3293,6 +4765,14 @@ namespace Gw2Launcher.UI.Dailies
                         }
                     }
                 }
+
+                if ((currentTab & DataType.Vault) != 0 && autoScrollToCurrentAccountToolStripMenuItem.Checked && focused != null)
+                {
+                    if (ScrollTo(focused, sliderValue))
+                    {
+                        sliderValue = scrollV.Value;
+                    }
+                }
             }
             else
             {
@@ -3311,7 +4791,7 @@ namespace Gw2Launcher.UI.Dailies
             {
                 if (dailies != null && (!dailies.Verified || dailies.Tomorrow == null))
                 {
-                    RefreshDailies(false, true);
+                    RefreshDailies(false, true, false, true);
                 }
             }
 
@@ -3365,7 +4845,10 @@ namespace Gw2Launcher.UI.Dailies
             return Util.ScheduledEvents.Ticks.None;
         }
 
-        private async Task<ActivityType> FindActive(Settings.IGw2Account gw2)
+        /// <summary>
+        /// Checks if an account is active, either by recent api usage or link activity
+        /// </summary>
+        private async Task<ActivityType> IsActive(Settings.IGw2Account gw2)
         {
             var api = gw2.Api;
 
@@ -3433,7 +4916,7 @@ namespace Gw2Launcher.UI.Dailies
                     {
                         focused = a;
                         taccount = (Settings.IGw2Account)a;
-                        t = await FindActive(taccount);
+                        t = await IsActive(taccount);
                     }
                 }
             }
@@ -3450,7 +4933,7 @@ namespace Gw2Launcher.UI.Dailies
                             continue;
 
                         taccount = (Settings.IGw2Account)a;
-                        t = await FindActive(taccount);
+                        t = await IsActive(taccount);
 
                         if (t != ActivityType.None || !_MonitorVaultSpecial)
                         {
@@ -3469,12 +4952,12 @@ namespace Gw2Launcher.UI.Dailies
                     switch (t)
                     {
                         case ActivityType.ApiActive:
-
+                            
                             vob.ApiManager.Queue(new ApiRequest(ApiData.DataType.VaultSpecial, taccount, api, ApiData.DataRequest.RequestOptions.None));
 
                             break;
                         case ActivityType.LinkActive:
-
+                            
                             vob.ApiManager.Queue(new ApiRequest(ApiData.DataType.Account, taccount, api, ApiData.DataRequest.RequestOptions.NoCache));
 
                             break;
@@ -3485,30 +4968,33 @@ namespace Gw2Launcher.UI.Dailies
 
         void Launcher_MumbleLinkVerified(Settings.IAccount account, Tools.Mumble.MumbleMonitor.IMumbleProcess e)
         {
-            Vault.VaultType current;
-
-            if ((currentTab & DataType.Vault) != 0)
+            if ((displayedTabs & DataType.Vault) != 0)
             {
-                current = GetVaultType(currentTab);
-                vob.Refresh(current, (Settings.IGw2Account)account, Tools.Api.VaultObjectives.RefreshOptions.Delayed);
-            }
-            else
-            {
-                current = (Vault.VaultType)(-1);
-            }
+                Vault.VaultType current;
 
-            var types = new Vault.VaultType[] 
-            { 
-                Vault.VaultType.Daily, 
-                Vault.VaultType.Weekly, 
-                Vault.VaultType.Special,
-            };
-
-            foreach (var t in types)
-            {
-                if (t != current)
+                if ((currentTab & DataType.Vault) != 0)
                 {
-                    vob.Refresh(t, (Settings.IGw2Account)account, Tools.Api.VaultObjectives.RefreshOptions.NoQuery);
+                    current = GetVaultType(currentTab);
+                    vob.Refresh(current, (Settings.IGw2Account)account, Tools.Api.VaultObjectives.RefreshOptions.Delayed);
+                }
+                else
+                {
+                    current = (Vault.VaultType)(-1);
+                }
+
+                var types = new Vault.VaultType[] 
+                { 
+                    Vault.VaultType.Daily, 
+                    Vault.VaultType.Weekly, 
+                    Vault.VaultType.Special,
+                };
+
+                foreach (var t in types)
+                {
+                    if (t != current)
+                    {
+                        vob.Refresh(t, (Settings.IGw2Account)account, Tools.Api.VaultObjectives.RefreshOptions.NoQuery);
+                    }
                 }
             }
 
@@ -3521,11 +5007,43 @@ namespace Gw2Launcher.UI.Dailies
 
         private void Launcher_AccountExited(Settings.IAccount account)
         {
-            vob.Refresh((Settings.IGw2Account)account);
+            if (focused == account)
+            {
+                focused = null;
+            }
+
+            if ((displayedTabs & DataType.Vault) == 0)
+                return;
+
+            if (account.Type == Settings.AccountType.GuildWars2)
+            {
+                var a = (Settings.IGw2Account)account;
+
+                vob.Refresh(a);
+
+            }
+        }
+
+        void Launcher_AccountWindowEvent(Settings.IAccount account, Client.Launcher.AccountWindowEventEventArgs e)
+        {
+            if (e.Type == Client.Launcher.AccountWindowEventEventArgs.EventType.Focused)
+            {
+                if (focused != account)
+                {
+                    focused = account;
+                    ++focusedKey;
+
+                    if (this.IsHandleCreated)
+                        Util.Invoke.Async(this, OnFocusedChanged);
+                }
+            }
         }
 
         private void CefSessions_SessionEvent(object sender, Tools.Chromium.CefSessionMonitor.SessionEventArgs e)
         {
+            if ((displayedTabs & DataType.Vault) == 0)
+                return;
+
             if (e.Type == Tools.Chromium.CefSessionMonitor.SessionEventArgs.EventType.VaultClosed)
             {
                 var a = (Settings.IGw2Account)e.Account;
@@ -3543,22 +5061,319 @@ namespace Gw2Launcher.UI.Dailies
                     {
                         vob.Refresh(vt, a, Tools.Api.VaultObjectives.RefreshOptions.None);
                     }
-                    else if (tab.Watched != null)
+                    else
                     {
-                        if (o != null)
+                        lock (watched)
                         {
-                            lock (tab.Watched)
-                            {
-                                WatchedAccount wa;
+                            Watched.WatchedGroup wa;
 
-                                if (!tab.Watched.TryGetValue(GetVaultKey(currentTab, o.ID), out wa) || !wa.watched || wa.account != a)
+                            var id = combineAccountsToolStripMenuItem.Checked ? o.ID : a.UID;
+
+                            if (!watched.TryGetValue(GetKey(currentTab, id, false), out wa) || !wa.watched || !wa.IsAccount(a))
+                            {
+                                return;
+                            }
+                        }
+
+                        vob.Refresh(vt, a, Tools.Api.VaultObjectives.RefreshOptions.Delayed | Tools.Api.VaultObjectives.RefreshOptions.Update | Tools.Api.VaultObjectives.RefreshOptions.Latest);
+                    }
+                }
+            }
+        }
+
+        private void SortObjectives(ItemGroup[] groups, int count, Settings.DailiesVaultObjectiveSorting sorting)
+        {
+            for (var i = 0; i < groups.Length; i++)
+            {
+                if (groups[i].count > 0)
+                {
+                    SortObjectives(groups[i], groups[i].GetSelectedAccount(), sorting);
+                }
+            }
+        }
+
+        private void SortObjectives(ItemGroup group, Settings.IAccount selected, Settings.DailiesVaultObjectiveSorting sorting)
+        {
+            var ao = (sorting & Settings.DailiesVaultObjectiveSorting.Progress) != 0 && selected != null ? vob.GetObjectives(selected) : null;
+
+            Array.Sort<IData, DailyAchievement>(group.items, group.controls, 0, group.count, Comparer<IData>.Create(new Comparison<IData>(
+                delegate(IData a, IData b)
+                {
+                    if (a.IsNew != b.IsNew)
+                    {
+                        return a.IsNew ? -1 : 1;
+                    }
+
+                    int r;
+
+                    if ((sorting & Settings.DailiesVaultObjectiveSorting.Progress) != 0 && ao != null)
+                    {
+                        var d1 = (ObjectiveDataSource)a;
+                        var d2 = (ObjectiveDataSource)b;
+                        var o1 = ao.GetObjective(((ObjectiveGroupData)group.source).data.Type, d1.ID, d1.SourceIndex);
+                        var o2 = ao.GetObjective(((ObjectiveGroupData)group.source).data.Type, d2.ID, d2.SourceIndex);
+
+                        if (o1 == null && o2 == null)
+                        {
+                            r = 0;
+                        }
+                        else
+                        {
+                            var claimed1 = o1 != null && o1.Claimed;
+                            var claimed2 = o2 != null && o2.Claimed;
+
+                            //claimed on bottom, higher progress on top
+
+                            if (claimed1)
+                            {
+                                r = claimed2 ? 0 : 1;
+                            }
+                            else if (claimed2)
+                            {
+                                r = -1;
+                            }
+                            else
+                            {
+                                var progress1 = o1 != null ? o1.ProgressCurrent : 0;
+                                var progress2 = o2 != null ? o2.ProgressCurrent : 0;
+
+                                if (progress1 == 0)
                                 {
-                                    return;
+                                    r = progress2 == 0 ? 0 : 1;
+                                }
+                                else if (progress2 == 0)
+                                {
+                                    r = -1;
+                                }
+                                else if (d1.Source.ProgressComplete == d2.Source.ProgressComplete)
+                                {
+                                    r = -progress1.CompareTo(progress2);
+                                }
+                                else
+                                {
+                                    r = -(progress1 / (float)d1.Source.ProgressComplete).CompareTo((progress2 / (float)d2.Source.ProgressComplete));
                                 }
                             }
-
-                            vob.Refresh(vt, a, Tools.Api.VaultObjectives.RefreshOptions.Delayed | Tools.Api.VaultObjectives.RefreshOptions.Update);
                         }
+                    }
+                    else
+                    {
+                        r = 0;
+                    }
+
+                    if (r == 0 && (sorting & Settings.DailiesVaultObjectiveSorting.Name) != 0)
+                    {
+                        if (a.Name != null)
+                        {
+                            r = a.Name.CompareTo(b.Name);
+                        }
+                        else
+                        {
+                            r = b.Name == null ? 0 : 1;
+                        }
+                    }
+
+                    if (r == 0 && (sorting & Settings.DailiesVaultObjectiveSorting.ID) != 0)
+                    {
+                        r = a.ID.CompareTo(b.ID);
+                    }
+
+                    if (r == 0)
+                    {
+                        r = ((ObjectiveDataSource)a).SourceIndex.CompareTo(((ObjectiveDataSource)b).SourceIndex);
+                    }
+
+                    if ((sorting & Settings.DailiesVaultObjectiveSorting.Descending) != 0)
+                        return -r;
+                    else
+                        return r;
+                })));
+        }
+
+        private void Sort(ItemGroup[] groups, int count, Settings.DailiesVaultSorting sorting, bool descending)
+        {
+            Array.Sort<ItemGroup>(groups, 0, count, Comparer<ItemGroup>.Create(new Comparison<ItemGroup>(
+                delegate(ItemGroup a, ItemGroup b)
+                {
+                    if (a.IsHidden() || b.IsHidden())
+                    {
+                        return b.IsHidden().CompareTo(a.IsHidden());
+                    }
+                    else if (a.collapsed == b.collapsed)
+                    {
+                        int r;
+
+                        switch (sorting)
+                        {
+                            case Settings.DailiesVaultSorting.Group:
+
+                                r = ((ObjectiveGroupData)a.source).data.ID.CompareTo(((ObjectiveGroupData)b.source).data.ID);
+
+                                break;
+                            case Settings.DailiesVaultSorting.Focused:
+
+                                r = -a.focused.CompareTo(b.focused);
+
+                                break;
+                            case Settings.DailiesVaultSorting.Account:
+
+                                r = a.accountid.CompareTo(b.accountid);
+
+                                break;
+                            default:
+
+                                r = 0;
+
+                                break;
+                        }
+
+                        if (r == 0)
+                        {
+                            r = ((ObjectiveGroupData)a.source).index.CompareTo(((ObjectiveGroupData)b.source).index);
+                        }
+
+                        return descending ? -r : r;
+                    }
+                    else
+                    {
+                        var r = a.collapsed ? 1 : -1;
+
+                        if (sorting == Settings.DailiesVaultSorting.Focused && descending)
+                        {
+                            r = -r;
+                        }
+
+                        return r;
+                    }
+                })));
+
+            for (var i = 0; i < count; i++)
+            {
+                groups[i].index = (ushort)i;
+            }
+        }
+
+        private bool ScrollTo(Settings.IAccount a, int scrollV)
+        {
+            var g = this.data.GetGroupFromAccount(a);
+
+            if (g != null)
+            {
+                return ScrollTo(g, scrollV);
+            }
+
+            return false;
+        }
+
+        private bool ScrollTo(ItemGroup g, int scrollV)
+        {
+            var c = g.GetBottomControl();
+
+            if (c != null)
+            {
+                var y1 = g.bar.Top - scrollV;
+                var y2 = c.Bottom - scrollV;
+                var h = panelContainer.Height;
+
+                if (y2 < 0 || y1 > h)
+                {
+                    this.scrollV.Value = g.bar.Top;
+
+                    return true;
+                }
+                else if (y1 < 0)
+                {
+                    if (y2 < h)
+                    {
+                        this.scrollV.Value = g.bar.Top;
+
+                        return true;
+                    }
+                }
+                else if (y2 > h)
+                {
+                    if (c.Bottom - g.bar.Top < h)
+                    {
+                        this.scrollV.Value = c.Bottom - h;
+
+                        return true;
+                    }
+                }
+
+            }
+
+            return false;
+        }
+
+        private void OnFocusedChanged()
+        {
+            if ((currentTab & DataType.Vault) != 0 && (autoScrollToCurrentAccountToolStripMenuItem.Checked || autoSelectCurrentAccountToolStripMenuItem.Checked || focusedToolStripMenuItem.Checked) && Invalidate(currentTab))
+            {
+                var a = this.focused;
+                var g = data.GetGroupFromAccount(a);
+
+                if (g != null)
+                {
+                    g.focused = DateTime.UtcNow;
+
+                    //select
+                    if (autoSelectCurrentAccountToolStripMenuItem.Checked && g.bar.ButtonDropDownArrowVisible && g.GetSelectedAccount() != a)
+                    {
+                        var i = GetDropDownItem(g.bar.DropDownItems, a);
+
+                        if (i != -1)
+                        {
+                            if (g.squares != null)
+                            {
+                                g.squares.Selected = a;
+                            }
+                            g.bar.DropDownSelectedIndex = i;
+                            g.bar.Text = a.Name;
+
+                            OnWatchedChanged(g.bar, true);
+                        }
+                    }
+
+                    //sort
+                    if (!g.collapsed && focusedToolStripMenuItem.Checked)
+                    {
+                        if (descendingToolStripMenuItem.Checked)
+                        {
+                            var l = data.groups.Length - 1;
+
+                            if (g.index < l)
+                            {
+                                PendingReposition(g.index);
+
+                                for (var i = g.index; i < l; i++)
+                                {
+                                    data.groups[i] = data.groups[i + 1];
+                                    data.groups[i].index = i;
+                                }
+                                data.groups[l] = g;
+                                g.index = (ushort)l;
+                            }
+                        }
+                        else if (g.index > 0)
+                        {
+                            for (var i = g.index; i > 0; --i)
+                            {
+                                data.groups[i] = data.groups[i - 1];
+                                data.groups[i].index = i;
+                            }
+                            data.groups[0] = g;
+                            g.index = 0;
+
+                            PendingReposition(0);
+                        }
+                    }
+
+                    DoPendingReposition();
+
+                    //scroll
+                    if (!g.collapsed && autoScrollToCurrentAccountToolStripMenuItem.Checked)
+                    {
+                        ScrollTo(g, scrollV.Value);
                     }
                 }
             }
@@ -3568,18 +5383,46 @@ namespace Gw2Launcher.UI.Dailies
         {
             if (disposing)
             {
-                Util.ScheduledEvents.Unregister(OnScheduledRetry);
-                Util.ScheduledEvents.Unregister(OnScheduledDailiesRefresh);
+                if (vob != null)
+                {
+                    vob.DataChanged -= vob_DataChanged;
+                    vob.AccountDataChanged -= vob_AccountDataChanged;
+                }
+
+                if (_MonitorVaultSpecial)
+                {
+                    MonitorVaultSpecial(false);
+                }
+
+                Util.ScheduledEvents.Unregister(
+                    OnScheduledRetry,
+                    OnScheduledDailiesRefresh,
+                    OnScheduledBeforeDailyReset,
+                    OnScheduledBeforeWeeklyReset,
+                    OnScheduledVaultSpecial,
+                    OnScheduledVaultSpecialRefresh);
 
                 Client.Launcher.MumbleLinkVerified -= Launcher_MumbleLinkVerified;
                 Client.Launcher.CefSessions.SessionEvent -= CefSessions_SessionEvent;
+                Client.Launcher.AccountExited -= Launcher_AccountExited;
 
-                Settings.ShowDailies.ValueChanged -= Settings_ValueChanged;
-                Settings.ShowDailiesLanguage.ValueChanged -= Language_ValueChanged;
+                if (IsMainWindow)
+                {
+                    Settings.Dailies.DailyCategories.ValueChanged -= Categories_ValueChanged;
+                    Settings.Dailies.Options.ValueChanged -= DailiesSettings_ValueChanged;
+                }
+
+                if ((enabledTabs & DataType.Vault) != 0)
+                {
+                    Client.Launcher.AccountWindowEvent -= Launcher_AccountWindowEvent;
+                    Settings.Dailies.VaultOptions.ValueChanged -= VaultSettings_ValueChanged;
+                    Settings.Dailies.VaultSorting.ValueChanged -= VaultSorting_ValueChanged;
+                    Settings.Dailies.VaultObjectiveSorting.ValueChanged -= VaultObjectiveSorting_ValueChanged;
+                }
+
+                Settings.Dailies.Language.ValueChanged -= Language_ValueChanged;
 
                 parent.VisibleChanged -= parent_VisibleChanged;
-
-                MonitorVaultSpecial(false);
 
                 if (components != null)
                     components.Dispose();
@@ -3607,65 +5450,91 @@ namespace Gw2Launcher.UI.Dailies
             base.Dispose(disposing);
         }
 
+        protected override void OnShown(EventArgs e)
+        {
+            base.OnShown(e);
+
+            if (IsMainWindow && (Settings.Dailies.VaultOptions.Value & Settings.DailiesVaultOptions.Split) != 0)
+            {
+                ShowSplitVaultObjectives(true);
+            }
+        }
+
         public void Show(bool focus)
         {
-            bool autoMinimize = !Settings.ShowDailies.Value.HasFlag(Settings.DailiesMode.Positioned);
-
-            if (!this.Visible)
+            if (IsMainWindow)
             {
-                if (autoMinimize)
-                {
-                    SetShape(buttonMinimize, FlatShapeButton.IconShape.Ellipse);
-                }
-                else
-                {
-                    SetShape(buttonMinimize, FlatShapeButton.IconShape.Arrow);
-                    if (alignment == HorizontalAlignment.Right)
-                        buttonMinimize.ShapeDirection = ArrowDirection.Left;
-                    else
-                        buttonMinimize.ShapeDirection = ArrowDirection.Right;
-                }
+                bool autoMinimize = (Settings.Dailies.Options.Value & Settings.DailiesOptions.Positioned) == 0;
 
-                this.minimizeOnMouseLeave = autoMinimize;
-
-                if (loadOnShow)
+                if (!this.Visible)
                 {
-                    loadOnShow = false;
-                    SelectTab(DataType.DailyToday);
-                }
-
-                if (linkedToParent)
-                {
-                    if (!parent.Visible)
+                    if (autoMinimize)
                     {
-                        EventHandler onVisible = null;
-                        onVisible = delegate
+                        SetShape(buttonMinimize, FlatShapeButton.IconShape.Ellipse);
+                    }
+                    else
+                    {
+                        SetShape(buttonMinimize, FlatShapeButton.IconShape.Arrow);
+                        if (alignment == HorizontalAlignment.Right)
+                            buttonMinimize.ShapeDirection = ArrowDirection.Left;
+                        else
+                            buttonMinimize.ShapeDirection = ArrowDirection.Right;
+                    }
+
+                    this.minimizeOnMouseLeave = autoMinimize;
+
+                    if (loadOnShow || currentTab == DataType.None)
+                    {
+                        loadOnShow = false;
+                        SelectTab(GetDefaultTab());
+                    }
+
+                    if (linkedToParent)
+                    {
+                        if (!parent.Visible)
                         {
-                            if (parent.Visible)
+                            EventHandler onVisible = null;
+                            onVisible = delegate
                             {
-                                parent.VisibleChanged -= onVisible;
-                                if (!this.IsDisposed && !this.Visible)
+                                if (parent.Visible)
                                 {
-                                    this.Show(parent);
-                                    if (autoMinimize)
-                                        MinimizeOnMouseLeave();
-                                    if (focus)
-                                        this.Focus();
+                                    parent.VisibleChanged -= onVisible;
+                                    if (!this.IsDisposed && !this.Visible)
+                                    {
+                                        this.Show(parent);
+                                        if ((Settings.Dailies.Options.Value & Settings.DailiesOptions.Positioned) == 0)
+                                            MinimizeOnMouseLeave();
+                                        if (focus)
+                                            this.Focus();
+                                    }
                                 }
-                            }
-                        };
-                        parent.VisibleChanged += onVisible;
+                            };
+                            parent.VisibleChanged += onVisible;
+                        }
+                        else
+                        {
+                            this.Show(parent);
+                        }
                     }
                     else
-                    {
-                        this.Show(parent);
-                    }
-                }
-                else
-                    this.Show();
+                        this.Show();
 
-                if (autoMinimize && this.Visible)
-                    MinimizeOnMouseLeave();
+                    if (autoMinimize && this.Visible)
+                        MinimizeOnMouseLeave();
+                }
+            }
+            else
+            {
+                if (!this.Visible)
+                {
+                    if (loadOnShow)
+                    {
+                        loadOnShow = false;
+                        SelectTab(GetDefaultTab());
+                    }
+
+                    this.Show(parent);
+                }
             }
             if (focus && this.Visible)
                 this.Focus();
@@ -3673,17 +5542,32 @@ namespace Gw2Launcher.UI.Dailies
 
         protected override void OnVisibleChanged(EventArgs e)
         {
-            if (this.Visible)
+            var v = this.Visible;
+
+            if (v)
             {
+                if (loadOnShow)
+                {
+                    loadOnShow = false;
+                    SelectTab(GetDefaultTab());
+                }
+
                 this.Refresh();
                 this.Opacity = 1;
-                NativeMethods.ShowWindow(this.Handle, ShowWindowCommands.ShowNoActivate);
-                MonitorVaultSpecial(true);
             }
             else
             {
                 this.Opacity = 0;
-                MonitorVaultSpecial(false);
+            }
+
+            if (IsMainWindow)
+            {
+                MonitorVaultSpecial(v);
+            }
+
+            if (child != null)
+            {
+                child.Visible = v;
             }
 
             base.OnVisibleChanged(e);
@@ -3844,16 +5728,23 @@ namespace Gw2Launcher.UI.Dailies
 
         private void buttonMinimize_Click(object sender, EventArgs e)
         {
-            if (minimizeOnMouseLeave)
+            if (IsMainWindow)
             {
-                minimizeOnMouseLeave = false;
+                if (minimizeOnMouseLeave)
+                {
+                    minimizeOnMouseLeave = false;
 
-                SetShape(buttonMinimize, FlatShapeButton.IconShape.Arrow);
-                buttonMinimize.ShapeDirection = alignment == HorizontalAlignment.Right ? ArrowDirection.Left : ArrowDirection.Right;
+                    SetShape(buttonMinimize, FlatShapeButton.IconShape.Arrow);
+                    buttonMinimize.ShapeDirection = alignment == HorizontalAlignment.Right ? ArrowDirection.Left : ArrowDirection.Right;
+                }
+                else
+                {
+                    Minimize(true);
+                }
             }
             else
             {
-                Minimize(true);
+                ShowSplitVaultObjectives(false);
             }
         }
 
@@ -3882,7 +5773,7 @@ namespace Gw2Launcher.UI.Dailies
             while (true);
 
             waitingToMinimize = false;
-            this.Minimize(false);
+            this.Minimize(this.ContainsFocus);
         }
 
         private int Abs(int i)
@@ -3894,10 +5785,19 @@ namespace Gw2Launcher.UI.Dailies
 
         protected override void OnFormClosing(FormClosingEventArgs e)
         {
-            if (e.CloseReason== CloseReason.UserClosing)
+            if (e.CloseReason == CloseReason.UserClosing)
             {
-                e.Cancel = true;
-                Minimize(true);
+                if (IsMainWindow)
+                {
+                    e.Cancel = true;
+                    Minimize(true);
+                }
+                else
+                {
+                    var f = (formDailies)parent;
+
+                    f.SetTabs(f.displayedTabs | this.displayedTabs);
+                }
             }
             base.OnFormClosing(e);
         }
@@ -3978,36 +5878,39 @@ namespace Gw2Launcher.UI.Dailies
 
                     base.WndProc(ref m);
 
-                    r = (RECT)m.GetLParam(typeof(RECT));
-                    p = Point.Subtract(Cursor.Position, (Size)sizingOrigin);
-
-                    w = r.right - r.left;
-                    h = r.bottom - r.top;
-
-                    r.left = sizingBounds.left + p.X;
-                    r.top = sizingBounds.top + p.Y;
-                    r.right = r.left + w;
-                    r.bottom = r.top + h;
-
-                    if (r.top < parent.Bottom && r.bottom > parent.Top)
+                    if (IsMainWindow)
                     {
-                        if (Abs(parent.Right + padding - r.left) < 10)
-                        {
-                            r.left = parent.Right + padding;
-                            r.right = r.left + w;
-                            r.top = parent.Top + parent.Height / 2 - h / 2;
-                            r.bottom = r.top + h;
-                        }
-                        else if (Abs(parent.Left - padding - r.right) < 10)
-                        {
-                            r.right = parent.Left - padding;
-                            r.left = r.right - w;
-                            r.top = parent.Top + parent.Height / 2 - h / 2;
-                            r.bottom = r.top + h;
-                        }
-                    }
+                        r = (RECT)m.GetLParam(typeof(RECT));
+                        p = Point.Subtract(Cursor.Position, (Size)sizingOrigin);
 
-                    System.Runtime.InteropServices.Marshal.StructureToPtr(r, m.LParam, false);
+                        w = r.right - r.left;
+                        h = r.bottom - r.top;
+
+                        r.left = sizingBounds.left + p.X;
+                        r.top = sizingBounds.top + p.Y;
+                        r.right = r.left + w;
+                        r.bottom = r.top + h;
+
+                        if (r.top < parent.Bottom && r.bottom > parent.Top)
+                        {
+                            if (Abs(parent.Right + padding - r.left) < 10)
+                            {
+                                r.left = parent.Right + padding;
+                                r.right = r.left + w;
+                                r.top = parent.Top + parent.Height / 2 - h / 2;
+                                r.bottom = r.top + h;
+                            }
+                            else if (Abs(parent.Left - padding - r.right) < 10)
+                            {
+                                r.right = parent.Left - padding;
+                                r.left = r.right - w;
+                                r.top = parent.Top + parent.Height / 2 - h / 2;
+                                r.bottom = r.top + h;
+                            }
+                        }
+
+                        System.Runtime.InteropServices.Marshal.StructureToPtr(r, m.LParam, false);
+                    }
 
                     break;
                 case WindowMessages.WM_ENTERSIZEMOVE:
@@ -4024,7 +5927,7 @@ namespace Gw2Launcher.UI.Dailies
                         bottom = this.Bottom,
                     };
 
-                    if (!linkedToParent && parent.Visible)
+                    if (!linkedToParent && parent.Visible && IsMainWindow)
                     {
                         this.LocationChanged += OnBeginLocationChanged;
                     }
@@ -4035,30 +5938,55 @@ namespace Gw2Launcher.UI.Dailies
                     base.WndProc(ref m);
 
                     sizing = false;
-                    this.LocationChanged -= OnBeginLocationChanged;
 
-                    bool l;
-                    if (Settings.IsRunningWine)
-                        l = this.Top < parent.Bottom && this.Bottom > parent.Top && (Abs(parent.Right + padding - this.Left) < 10 || Abs(parent.Left - padding - this.Right) < 10);
-                    else
-                        l = (this.Left == parent.Right + padding || this.Right == parent.Left - padding);
-                    if (l && l == linkedToParent)
-                        PositionToParent();
-                    else
-                        LinkedToParent = l;
-
-                    if (minimized != null)
-                        minimized.PositionToParent();
-
-                    if (linkedToParent)
+                    if (IsMainWindow)
                     {
-                        Settings.WindowBounds[this.GetType()].Value = new Rectangle(new Point(int.MinValue, int.MinValue), this.Size);
-                        Settings.ShowDailies.Value &= ~Settings.DailiesMode.Positioned;
+                        this.LocationChanged -= OnBeginLocationChanged;
+
+                        bool l;
+                        if (Settings.IsRunningWine)
+                            l = this.Top < parent.Bottom && this.Bottom > parent.Top && (Abs(parent.Right + padding - this.Left) < 10 || Abs(parent.Left - padding - this.Right) < 10);
+                        else
+                            l = (this.Left == parent.Right + padding || this.Right == parent.Left - padding);
+                        if (l && l == linkedToParent)
+                            PositionToParent();
+                        else
+                            LinkedToParent = l;
+
+                        if (minimized != null)
+                            minimized.PositionToParent();
+
+                        if (linkedToParent)
+                        {
+                            Settings.WindowBounds[this.GetType()].Value = new Rectangle(new Point(int.MinValue, int.MinValue), this.Size);
+                            Settings.Dailies.Options.Value &= ~Settings.DailiesOptions.Positioned;
+                        }
+                        else
+                        {
+                            Settings.WindowBounds[this.GetType()].Value = this.Bounds;
+                            Settings.Dailies.Options.Value |= Settings.DailiesOptions.Positioned;
+                        }
                     }
                     else
                     {
-                        Settings.WindowBounds[this.GetType()].Value = this.Bounds;
-                        Settings.ShowDailies.Value |= Settings.DailiesMode.Positioned;
+                        var t = this.GetType();
+
+                        if (t != typeof(formDailies))
+                        {
+                            Settings.WindowBounds[t].Value = this.Bounds;
+                        }
+                    }
+
+                    break;
+                case WindowMessages.WM_NCMOUSELEAVE:
+
+                    base.WndProc(ref m);
+
+                    foreach (Control c in panelTabs.Controls)
+                    {
+                        if (c is FlatButton && ((FlatButton)c).IsMouseEntered)
+                        {
+                        }
                     }
 
                     break;
@@ -4108,11 +6036,11 @@ namespace Gw2Launcher.UI.Dailies
                 {
                     if (Util.Array.Equals<ushort>(Daily.GetDefaultCategories(), f.SelectedCategories))
                     {
-                        Settings.ShowDailiesCategories.Clear();
+                        Settings.Dailies.DailyCategories.Clear();
                     }
-                    else if (!Util.Array.Equals<ushort>(Settings.ShowDailiesCategories.Value, f.SelectedCategories))
+                    else if (!Util.Array.Equals<ushort>(Settings.Dailies.DailyCategories.Value, f.SelectedCategories))
                     {
-                        Settings.ShowDailiesCategories.Value = f.SelectedCategories;
+                        Settings.Dailies.DailyCategories.Value = f.SelectedCategories;
                     }
                 }
             }
@@ -4120,23 +6048,23 @@ namespace Gw2Launcher.UI.Dailies
 
         private void favoritesToolStripMenuItem_Click(object sender, EventArgs e)
         {
-            ShowTaggedDialog(Settings.TaggedType.Favorite);
+            ShowTaggedDialog(Settings.DailiesItemOptions.Favorite);
         }
 
         private void ignoredToolStripMenuItem_Click(object sender, EventArgs e)
         {
-            ShowTaggedDialog(Settings.TaggedType.Ignored);
+            ShowTaggedDialog(Settings.DailiesItemOptions.Ignored);
         }
 
         private void showOnTopToolStripMenuItem_Click(object sender, EventArgs e)
         {
             if (!showOnTopToolStripMenuItem.Checked)
             {
-                Settings.ShowDailies.Value |= Settings.DailiesMode.TopMost;
+                Settings.Dailies.Options.Value |= Settings.DailiesOptions.TopMost;
             }
             else
             {
-                Settings.ShowDailies.Value &= ~Settings.DailiesMode.TopMost;
+                Settings.Dailies.Options.Value &= ~Settings.DailiesOptions.TopMost;
             }
         }
 
@@ -4144,7 +6072,7 @@ namespace Gw2Launcher.UI.Dailies
         {
             if (e.Button == System.Windows.Forms.MouseButtons.Right)
             {
-                contextMenu.Show(Cursor.Position);
+                ShowMenu(DataType.Vault);
             }
             else
             {
@@ -4154,11 +6082,29 @@ namespace Gw2Launcher.UI.Dailies
                 {
                     t = DataType.VaultSpecial;
 
-                    if (buttonSpecial.ShowNotification)
+                    if (buttonSpecial.TopTag.Visible)
                     {
                         if (currentTab == DataType.VaultSpecial)
                         {
-                            buttonSpecial.ShowNotification = false;
+                            if (this.data != null && this.data.type == t)
+                            {
+                                foreach (var g in this.data.groups)
+                                {
+                                    for (var i = 0; i < g.count; i++)
+                                    {
+                                        g.controls[i].ColorKey = Color.Empty;
+
+                                    }
+                                }
+                            }
+
+                            specials = null;
+                            if (Settings.Dailies.KnownVaultSpecials.HasValue && Settings.Dailies.KnownVaultSpecials.Value.Seen != null)
+                            {
+                                Settings.Dailies.KnownVaultSpecials.Value = Settings.Dailies.KnownVaultSpecials.Value.ToLatest();
+                            }
+
+                            SetSpecialVisible(false);
                             buttonSpecial.SelectedChanged -= buttonSpecial_SelectedChanged;
                         }
                         else
@@ -4180,11 +6126,38 @@ namespace Gw2Launcher.UI.Dailies
             }
         }
 
+        private void SetSpecialVisible(bool visible, HashSet<ushort> specials = null, sbyte broadcast = 0)
+        {
+            if ((enabledTabs & DataType.VaultSpecial) != 0)
+            {
+                buttonSpecial.TopTag.Visible = visible;
+                this.specials = specials;
+            }
+
+            if (broadcast <= 0 && parent is formDailies)
+            {
+                ((formDailies)parent).SetSpecialVisible(visible, specials, -1);
+            }
+
+            if (broadcast >= 0 && child != null)
+            {
+                child.SetSpecialVisible(visible, specials, 1);
+            }
+        }
+
         void buttonSpecial_SelectedChanged(object sender, EventArgs e)
         {
             if (!buttonSpecial.Selected)
             {
-                buttonSpecial.ShowNotification = false;
+                if (buttonSpecial.TopTag.Visible)
+                {
+                    specials = null;
+                    if (Settings.Dailies.KnownVaultSpecials.HasValue && Settings.Dailies.KnownVaultSpecials.Value.Seen != null)
+                    {
+                        Settings.Dailies.KnownVaultSpecials.Value = Settings.Dailies.KnownVaultSpecials.Value.ToLatest();
+                    }
+                    SetSpecialVisible(false);
+                }
                 buttonSpecial.SelectedChanged -= buttonSpecial_SelectedChanged;
             }
         }
@@ -4306,6 +6279,21 @@ namespace Gw2Launcher.UI.Dailies
             }
         }
 
+        private void DoPendingReposition(int i)
+        {
+            if (i < 0)
+            {
+                i = 0;
+            }
+            else if (reposition < i)
+            {
+                i = reposition;
+            }
+
+            PositionGroups(i);
+            reposition = int.MaxValue;
+        }
+
         void vob_AccountDataChanged(object sender, Tools.Api.VaultObjectives.DataChangedEventArgs e)
         {
             if ((e.Changed & Tools.Api.VaultObjectives.ChangeType.Objectives) == 0 && (e.Changed & (Tools.Api.VaultObjectives.ChangeType.Date | Tools.Api.VaultObjectives.ChangeType.Values)) != 0)
@@ -4316,34 +6304,45 @@ namespace Gw2Launcher.UI.Dailies
                 {
                     var tab = GetTab(t);
 
-                    if (tab.Watched != null)
+                    Watched.WatchedGroup wa;
+
+                    lock (watched)
                     {
-                        WatchedAccount wa;
+                        var id = combineAccountsToolStripMenuItem.Checked ? e.Group.ID : e.Data.Account.UID;
 
-                        lock (tab.Watched)
+                        if (!watched.TryGetValue(GetKey(t, id, false), out wa) || !wa.popup && (!wa.watched || !wa.IsAccount(e.Data.Account)))
                         {
-                            if (!tab.Watched.TryGetValue(GetVaultKey(t, e.Group.ID), out wa) || !wa.watched || wa.account != e.Data.Account)
-                            {
-                                return;
-                            }
+                            return;
                         }
+                    }
 
-                        Util.Invoke.Async(this, delegate
+                    Util.Invoke.Async(this, delegate
+                    {
+                        if (Invalidate(t))
                         {
-                            if (currentTab == t && IsLoaded(t))
+                            ItemGroup g;
+                            if (wa.GetGroup(this.data, out g))
                             {
-                                ItemGroup g;
-                                if (wa.GetGroup(this.data, out g))
+                                if (wa.popup)
                                 {
-                                    if (!UpdateProgress(g))
+                                    if (popupObjectives.Visible && popupObjectives.Attached != null)
+                                    {
+                                        CreateObjectivesPopup(popupObjectives.Attached);
+                                    }
+                                }
+
+                                if (wa.watched && wa.IsAccount(e.Data.Account))
+                                {
+                                    if (!UpdateProgress(g, true))
                                     {
                                         wa.Abort();
                                     }
-                                    DoPendingReposition();
                                 }
+
+                                DoPendingReposition();
                             }
-                        });
-                    }
+                        }
+                    });
                 }
             }
         }
@@ -4369,10 +6368,32 @@ namespace Gw2Launcher.UI.Dailies
                         }
                     }
 
-                    if ((e.Changed & Tools.Api.VaultObjectives.ChangeType.ObjectivesAdded) != 0)
+                    if ((e.Changed & Tools.Api.VaultObjectives.ChangeType.Objectives) != 0)
                     {
-                        buttonSpecial.ShowNotification = true;
-                        Util.Logging.LogEvent("New special objectives");
+                        if (IsMainWindow)
+                        {
+                            var od = e.Group.Objectives;
+                            var ids = new ushort[od.Length];
+                            var seen = Settings.Dailies.KnownVaultSpecials.HasValue ? Settings.Dailies.KnownVaultSpecials.Value.SeenOrLatest : null;
+                            var changed = seen == null;
+                            var h = !changed ? new HashSet<ushort>(seen) : null;
+
+                            for (var i = 0; i < od.Length; i++)
+                            {
+                                ids[i] = od[i].ID;
+
+                                if (!changed && !h.Contains(ids[i]))
+                                {
+                                    changed = true;
+                                }
+                            }
+
+                            if (changed)
+                            {
+                                Settings.Dailies.KnownVaultSpecials.Value = new Settings.KnownVaultObjectives(ids, seen);
+                                SetSpecialVisible(seen != null, h);
+                            }
+                        }
                     }
                 }
 
@@ -4389,86 +6410,129 @@ namespace Gw2Launcher.UI.Dailies
                 {
                     Util.Invoke.Async(this, delegate
                     {
-                        if (currentTab == t && IsLoaded(t))
+                        if (!combineAccountsToolStripMenuItem.Checked)
+                        {
+                            tab.Refresh = true;
+
+                            if (currentTab == t)
+                            {
+                                Util.ScheduledEvents.Register(OnScheduledVaultRefresh, 1000);
+                            }
+                        }
+                        else if (Invalidate(t))
                         {
                             foreach (var g in this.data.groups)
                             {
-                                if (g.count > 0 && g.source == e.Group)
-                                {
-                                    if ((e.Changed & Tools.Api.VaultObjectives.ChangeType.Accounts) != 0)
-                                    {
-                                        var items = GetDropDownItems(e.Group.Accounts);
+                                if (g.IsHidden())
+                                    continue;
 
-                                        if (items == null)
+                                var ogd = (ObjectiveGroupData)g.source;
+
+                                if (!object.ReferenceEquals(ogd.data, e.Group))
+                                    continue;
+
+                                if ((e.Changed & Tools.Api.VaultObjectives.ChangeType.Accounts) != 0)
+                                {
+                                    var accounts = e.Group.GetAccounts();
+                                    var items = GetDropDownItems(accounts);
+
+                                    g.accounts = accounts;
+
+                                    ogd.accounts = accounts;
+                                    g.source = ogd;
+
+                                    if (items == null)
+                                    {
+                                        tab.Refresh = true;
+                                        Util.ScheduledEvents.Register(OnScheduledVaultRefresh, 5000);
+                                    }
+                                    else
+                                    {
+                                        var hasFocused = false;
+
+                                        if (focused != null && (currentTab & DataType.Vault) != 0 && (autoScrollToCurrentAccountToolStripMenuItem.Checked || autoSelectCurrentAccountToolStripMenuItem.Checked || focusedToolStripMenuItem.Checked))
                                         {
-                                            tab.Refresh = true;
-                                            Util.ScheduledEvents.Register(OnScheduledVaultRefresh, 5000);
+                                            if (GetDropDownItem(g.bar.DropDownItems, focused) == -1)
+                                            {
+                                                for (var j = 0; j < accounts.Length; j++)
+                                                {
+                                                    if (accounts[j] == focused)
+                                                    {
+                                                        hasFocused = true;
+                                                        break;
+                                                    }
+                                                }
+                                            }
+                                        }
+
+                                        var selected = (Util.ComboItem<Settings.IAccount>)g.bar.DropDownSelectedItem;
+
+                                        int i;
+
+                                        if (selected != null)
+                                        {
+                                            i = GetDropDownItem(items, selected.Value, g.bar.DropDownSelectedIndex);
                                         }
                                         else
                                         {
-                                            var selected = (Util.ComboItem<Settings.IAccount>)g.bar.DropDownSelectedItem;
+                                            i = -1;
+                                        }
 
-                                            int i;
+                                        var wchanged = false;
 
-                                            if (selected != null)
+                                        if (i == -1)
+                                        {
+                                            //an account that was selected was removed from the group
+                                            i = 0;
+                                            g.bar.Text = items[i].Value.Name;
+
+                                            if (g.watched != null)
                                             {
-                                                i = GetDropDownItem(items, selected.Value, g.bar.DropDownSelectedIndex);
-                                            }
-                                            else
-                                            {
-                                                i = -1;
-                                            }
+                                                wchanged = true;
 
-                                            if (i == -1)
-                                            {
-                                                //an account that was selected was removed from the group
-                                                i = 0;
-                                                g.bar.Text = items[i].Value.Name;
+                                                g.watched.Dispose();
+                                                g.watched = null;
 
-                                                if (g.watched != null)
+                                                lock (watched)
                                                 {
-                                                    g.watched.Abort();
-                                                    g.watched = null;
-
-                                                    if (tab.Watched != null)
-                                                    {
-                                                        lock (tab.Watched)
-                                                        {
-                                                            tab.Watched.Remove(e.Group.ID);
-                                                        }
-                                                    }
-
-                                                    if (g.bar.ButtonEyeEnabled)
-                                                    {
-                                                        g.bar.ButtonEyeEnabled = false;
-                                                        UpdateProgress(g);
-                                                    }
+                                                    watched.Remove(g.id);
                                                 }
-                                            }
 
-                                            g.bar.DropDownItems = items;
-                                            g.bar.DropDownSelectedIndex = i;
-                                            g.bar.ButtonDropDownArrowVisible = items.Length > 1;
-
-                                            if (g.squares != null)
-                                            {
-                                                var b = g.squares.Count > 1;
-
-                                                g.squares.SetAccounts(e.Group.Accounts);
-                                                g.squares.Selected = items[i].Value;
-
-                                                if (b != (g.squares.Count > 1))
-                                                {
-                                                    PendingReposition(g.index);
-                                                }
                                             }
                                         }
+
+                                        g.bar.DropDownItems = items;
+                                        g.bar.DropDownSelectedIndex = i;
+                                        g.bar.ButtonDropDownArrowVisible = items.Length > 1;
+
+                                        if (g.squares != null)
+                                        {
+                                            var b = g.squares.Count > 1;
+
+                                            g.squares.SetAccounts(accounts);
+                                            g.squares.Selected = items[i].Value;
+
+                                            if (b != (g.squares.Count > 1))
+                                            {
+                                                PendingReposition(g.index);
+                                            }
+                                        }
+
+                                        if (wchanged)
+                                        {
+                                            OnWatchedChanged(g.bar);
+                                        }
+
+                                        if (hasFocused)
+                                        {
+                                            OnFocusedChanged();
+                                        }
                                     }
-
-                                    DoPendingReposition();
-
-                                    break;
                                 }
+
+                                DoPendingReposition();
+
+                                break;
                             }
                         }
                     });
@@ -4479,6 +6543,23 @@ namespace Gw2Launcher.UI.Dailies
         private bool IsLoaded(DataType t)
         {
             return (isLoading & t) == 0 && this.data != null && this.data.type == t;
+        }
+
+        /// <summary>
+        /// Returns true if the tab is being shown. If not shown, the tab will be reloaded the next time it's shown
+        /// </summary>
+        private bool Invalidate(DataType t)
+        {
+            if (currentTab == t)
+            {
+                return IsLoaded(t);
+            }
+            else if (loadedTab == t)
+            {
+                loadedTab = DataType.None;
+            }
+
+            return false;
         }
 
         private Util.ScheduledEvents.Ticks OnScheduledRefreshWatched()
@@ -4506,26 +6587,22 @@ namespace Gw2Launcher.UI.Dailies
                     g.updated.UpdateText();
                 }
 
-                var ao = vob.GetObjectives(wa.account);
+                var ao = vob.GetObjectives(wa.accountdata.account);
 
                 if (ao == null || !ao.IsComplete(vt))
                 {
                     ++count;
 
-                    if (ao != null && Client.Launcher.IsActive(wa.account))
+                    if (ao != null && Client.Launcher.IsActive(wa.accountdata.account))
                     {
                         Refresh(wa);
                     }
                 }
-                else
+                else if (wa.accountdata.request != null)
                 {
-                    wa.date = DateTime.MinValue;
+                    wa.Abort();
                 }
 
-                if (wa.request == null)
-                {
-                    g.bar.ButtonEyeTimerEnabled = GetPending(wa.account.Api, at) != 0;
-                }
             }
 
             DoPendingReposition();
@@ -4540,11 +6617,12 @@ namespace Gw2Launcher.UI.Dailies
             }
         }
 
-        private async void Refresh(WatchedAccount w, int limit = 10000)
+        private async void Refresh(Watched.WatchedGroup wa, int limit = 10000)
         {
             var refresh = false;
             var t = this.currentTab;
-            var l = Client.Launcher.GetMumbleLink(w.account);
+            var a = wa.accountdata;
+            var l = Client.Launcher.GetMumbleLink(a.account);
             Tools.Mumble.MumbleMonitor.IMumbleSubscriber m;
 
             if (l != null && l.IsValid && (m = l.Subscribe(Tools.Mumble.MumbleMonitor.DataScope.Basic)) != null)
@@ -4559,10 +6637,10 @@ namespace Gw2Launcher.UI.Dailies
                         {
                             var sum = d.fAvatarPosition[0] + d.fAvatarPosition[1] + d.fAvatarPosition[2];
 
-                            if (w.position != sum)
+                            if (a.position != sum)
                             {
-                                w.position = sum;
-                                w.date = DateTime.UtcNow;
+                                a.position = sum;
+                                a.date = DateTime.UtcNow;
                                 refresh = true;
                             }
                         }
@@ -4579,7 +6657,7 @@ namespace Gw2Launcher.UI.Dailies
             }
             else
             {
-                w.date = DateTime.UtcNow;
+                a.date = DateTime.UtcNow;
                 refresh = true;
             }
 
@@ -4587,13 +6665,11 @@ namespace Gw2Launcher.UI.Dailies
             {
                 ItemGroup g;
 
-                if (t == currentTab && w.watched && w.request == null && w.GetGroup(data, out g))
+                if (t == currentTab && wa.watched && wa.accountdata.request == null && wa.GetGroup(data, out g) && wa.IsAccount(a))
                 {
-                    Util.Logging.LogEvent(w.account, "[Refresh] Queueing request for [" + currentTab + "]");
-
-                    if (QueueApiRequest(currentTab, w, false))
+                    if (QueueApiRequest(currentTab, wa, false))
                     {
-                        g.bar.ButtonEyeTimerEnabled = true;
+                        //g.bar.ButtonEyeTimerEnabled = false;
                     }
                 }
             }
@@ -4755,7 +6831,7 @@ namespace Gw2Launcher.UI.Dailies
             }
         }
 
-        private void ShowTaggedDialog(Settings.TaggedType type)
+        private void ShowTaggedDialog(Settings.DailiesItemOptions type)
         {
             using (var f = new formDailyFavorites(da, type))
             {
@@ -4763,7 +6839,7 @@ namespace Gw2Launcher.UI.Dailies
 
                 if (f.Modified && this.data != null && (this.data.type & DataType.Daily) != 0)
                 {
-                    var refresh = type == Settings.TaggedType.Ignored;
+                    var refresh = type == Settings.DailiesItemOptions.Ignored;
                     var groups = this.data.groups;
 
                     if (!refresh)
@@ -4774,19 +6850,19 @@ namespace Gw2Launcher.UI.Dailies
                             {
                                 var c = g.controls[i];
 
-                                Settings.TaggedType tt;
-                                Settings.TaggedDailies.TryGetValue(c.DataSource.ID, out tt);
+                                Settings.DailiesItemOptions tt;
+                                Settings.Dailies.ItemOptions.TryGetValue(new Settings.DailiesItemKey(Settings.DailiesKeyType.DailyObjective, c.DataSource.ID), out tt);
 
-                                if (c.DataSource.Tagged != tt)
+                                if (c.DataSource.Options != tt)
                                 {
-                                    if (c.DataSource.Tagged == Settings.TaggedType.Ignored || tt == Settings.TaggedType.Ignored)
+                                    if (c.DataSource.Options == Settings.DailiesItemOptions.Ignored || tt == Settings.DailiesItemOptions.Ignored)
                                     {
                                         refresh = true;
                                         break;
                                     }
 
-                                    c.DataSource.Tagged = tt;
-                                    c.FavSelected = tt == Settings.TaggedType.Favorite;
+                                    c.DataSource.Options = tt;
+                                    c.FavSelected = tt == Settings.DailiesItemOptions.Favorite;
                                 }
                             }
                         }
@@ -4794,9 +6870,515 @@ namespace Gw2Launcher.UI.Dailies
 
                     if (refresh)
                     {
-                        loadedTab = DataType.None;
-                        RefreshDailies(false, false);
+                        ReloadDailies();
                     }
+                }
+            }
+        }
+
+        private Util.ScheduledEvents.Ticks OnScheduledBeforeDailyReset()
+        {
+            const int MILLIS_BEFORE = 60 * 60 * 1000;
+
+            var ticks = DateTime.UtcNow.Ticks / 10000;
+            var next = (ticks / Util.Date.MILLIS_PER_DAY + 1) * Util.Date.MILLIS_PER_DAY;
+            var s = (next - ticks) / 1000;
+            string t;
+
+            if (s > 3600) //over 1 hour - next reset
+            {
+                t = null;
+                next -= MILLIS_BEFORE;
+            }
+            else
+            {
+                if (s > 60 * 5 && dailies != null && (!dailies.Verified || dailies.Tomorrow == null || dailies.Age >= 1))
+                {
+                    //the api can return a mix of yesterday/today dailies for up to an hour after reset
+                    //to confirm the dailies, tomorrow needs to be cached before reset
+
+                    GetData((currentTab & DataType.Daily) != 0 ? currentTab : DataType.DailyToday, true, false, true);
+                }
+
+                if (s > 30) //show minutes
+                {
+                    var m = (int)(s / 60f + 0.5f);
+
+                    t = m + "m";
+                    next += -(m - 1) * 60 * 1000;
+                }
+                else //expired
+                {
+                    t = null;
+                    next += Util.Date.MILLIS_PER_DAY - MILLIS_BEFORE;
+                }
+            }
+
+            buttonVault.BottomTag.Text = t;
+            buttonVault.BottomTag.Visible = t != null;
+
+            return new Util.ScheduledEvents.Ticks(Util.ScheduledEvents.TickType.MillisecondTicks, next);
+        }
+
+        private Util.ScheduledEvents.Ticks OnScheduledBeforeWeeklyReset()
+        {
+            //show a timer 24h before weekly reset
+
+            var now = DateTime.UtcNow;
+            var next = Util.Date.GetNextWeek(now);
+            var s = (int)(next.Subtract(now).Ticks / 10000000);
+            string t;
+
+            if (s > 24*60*60) //over 24 hours - reset to next week
+            {
+                t = null;
+                next = next.AddHours(-24);
+            }
+            else if (s > 90 * 60) //over 90 minutes - show hours
+            {
+                var h = (int)(s / 3600f + 0.5f);
+
+                t = h + "h";
+                if (h > 2) //hour timer
+                {
+                    next = next.AddSeconds(-(h - 1) * 3600 - 1800);
+                }
+                else //begin 90m timer
+                {
+                    next = next.AddSeconds(-90 * 60);
+                }
+            }
+            else if (s > 30) //over 30 seconds - show minutes
+            {
+                var m = (int)(s / 60f + 0.5f);
+
+                t = m + "m";
+                next = next.AddSeconds(-(m - 1) * 60);
+            }
+            else //expired
+            {
+                t = null;
+                next = now.AddMinutes(1);
+            }
+
+            buttonWeekly.BottomTag.Text = t;
+            buttonWeekly.BottomTag.Visible = t != null;
+
+            return new Util.ScheduledEvents.Ticks(next);
+        }
+
+        private void refreshDailiesToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            GetData((currentTab & DataType.Daily) != 0 ? currentTab : DataType.DailyToday, true, true, true);
+        }
+
+        private void buttonInfoToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            MessageBox.Show("IsMouseEntered?\t" + buttonToday.IsMouseEntered + ", " + buttonTomorrow.IsMouseEntered + ", " + buttonDaySwap.IsMouseEntered + ", " + buttonVault.IsMouseEntered + ", " + buttonWeekly.IsMouseEntered + ", " + buttonSpecial.IsMouseEntered +
+                "\nIsHovered?\t" + buttonToday.IsHovered + ", " + buttonTomorrow.IsHovered + ", " + buttonDaySwap.IsHovered + ", " + buttonVault.IsHovered + ", " + buttonWeekly.IsHovered + ", " + buttonSpecial.IsHovered +
+                "\nSelected?\t" + buttonToday.Selected + ", " + buttonTomorrow.Selected + ", " + buttonDaySwap.Selected + ", " + buttonVault.Selected + ", " + buttonWeekly.Selected + ", " + buttonSpecial.Selected);
+
+
+            foreach (Control c in panelTabs.Controls)
+            {
+                if (c is FlatButton && ((FlatButton)c).IsMouseEntered)
+                {
+                    NativeMethods.PostMessage(c.Handle, WindowMessages.WM_MOUSELEAVE, IntPtr.Zero, IntPtr.Zero);
+                }
+            }
+        }
+
+        private void combineAccountsToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            combineAccountsToolStripMenuItem.Checked ^= true;
+
+            var keys = Settings.Dailies.ItemOptions.GetKeys();
+
+            for (var i = 0; i < keys.Length; i++)
+            {
+                switch (keys[i].Type)
+                {
+                    case Settings.DailiesKeyType.VaultDailyCategory:
+                    case Settings.DailiesKeyType.VaultSpecialCategory:
+                    case Settings.DailiesKeyType.VaultWeeklyCategory:
+                    case Settings.DailiesKeyType.VaultDailyAccountCategory:
+                    case Settings.DailiesKeyType.VaultSpecialAccountCategory:
+                    case Settings.DailiesKeyType.VaultWeeklyAccountCategory:
+
+                        Settings.Dailies.ItemOptions.Remove(keys[i]);
+
+                        break;
+                }
+            }
+
+            if ((currentTab & DataType.Vault) != 0)
+            {
+                ReloadDailies();
+            }
+        }
+
+        private void ShowSplitVaultObjectives(bool show)
+        {
+            if (IsMainWindow)
+            {
+                if (show)
+                {
+                    if (child != null && !child.IsDisposed)
+                    {
+                        if (!child.Visible)
+                        {
+                            child.Show(this);
+                        }
+                    }
+                    else
+                    {
+                        child = new formDailiesVault(this, vob);
+
+                        var bounds = Settings.WindowBounds[typeof(formDailiesVault)];
+
+                        if (bounds.HasValue)
+                        {
+                            child.Bounds = Util.ScreenUtil.Constrain(bounds.Value);
+                        }
+                        else
+                        {
+                            var screen = Screen.FromControl(this).WorkingArea;
+                            var l = this.Location;
+
+                            if (this.Right + this.Width / 4 > screen.Right)
+                            {
+                                l.X -= this.Width / 4;
+                            }
+                            else
+                            {
+                                l.X += this.Width / 4;
+                            }
+
+                            if (this.Bottom + this.Height / 4 > screen.Bottom)
+                            {
+                                l.Y -= this.Height / 4;
+                            }
+                            else
+                            {
+                                l.Y += this.Height / 4;
+                            }
+
+                            child.Bounds = new Rectangle(l, this.Size);
+                        }
+
+                        if (buttonSpecial.TopTag.Visible)
+                            child.buttonSpecial.TopTag.Visible = true;
+                        child.SelectTab((currentTab & DataType.Vault) != 0 ? currentTab : DataType.VaultDaily);
+                        child.Show(false);
+                    }
+
+                    SetTabs(DataType.Daily);
+                }
+                else if (child != null)
+                {
+                    child.Dispose();
+                    child = null;
+                    SetTabs(DataType.Daily | DataType.Vault);
+                }
+
+                splitVaultObjectivesToolStripMenuItem.Checked = show;
+            }
+            else if (!show)
+            {
+                this.Dispose();
+            }
+
+            if (show)
+            {
+                Settings.Dailies.VaultOptions.Value |= Settings.DailiesVaultOptions.Split;
+            }
+            else
+            {
+                Settings.Dailies.VaultOptions.Value &= ~Settings.DailiesVaultOptions.Split;
+            }
+        }
+
+        private void splitVaultObjectivesToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            var b = splitVaultObjectivesToolStripMenuItem.Checked;
+
+            if (b)
+            {
+                Settings.WindowBounds[typeof(formDailiesVault)].Clear();
+            }
+
+            ShowSplitVaultObjectives(!b);
+        }
+
+        private void SetTabs(DataType types)
+        {
+            panelTabs.SuspendLayout();
+
+            this.displayedTabs = types;
+
+            var daily = (types & DataType.Daily) != 0;
+            var vault = (types & DataType.Vault) != 0;
+
+            buttonToday.Visible = daily && (buttonDaySwap.ShapeDirection == ArrowDirection.Right || !vault);
+            buttonTomorrow.Visible = daily && (buttonDaySwap.ShapeDirection == ArrowDirection.Left || !vault);
+            buttonDaySwap.Visible = daily && vault;
+
+            if (daily)
+            {
+                buttonToday.Margin = vault ? Padding.Empty : buttonVault.Margin;
+            }
+
+            panelSep.Visible = daily && vault;
+
+            buttonVault.Visible = vault;
+            buttonWeekly.Visible = vault;
+            buttonSpecial.Visible = vault;
+
+            if (IsMainWindow)
+            {
+                splitVaultObjectivesToolStripMenuItem.Checked = !vault;
+            }
+
+            if (currentTab != DataType.None && (currentTab & types) == 0)
+            {
+                if (daily)
+                {
+                    SelectTab(DataType.DailyToday);
+                }
+                else if (vault)
+                {
+                    SelectTab(DataType.Vault);
+                }
+            }
+
+            panelTabs.ResumeLayout();
+        }
+
+        private void SetOption(Settings.DailiesVaultOptions o, bool value)
+        {
+            if (value)
+            {
+                Settings.Dailies.VaultOptions.Value |= o;
+            }
+            else
+            {
+                Settings.Dailies.VaultOptions.Value &= ~o;
+            }
+        }
+
+        private void autoSelectCurrentAccountToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            SetOption(Settings.DailiesVaultOptions.AutoSelect, !autoSelectCurrentAccountToolStripMenuItem.Checked);
+        }
+
+        private void autoScrollToCurrentAccountToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            SetOption(Settings.DailiesVaultOptions.AutoScroll, !autoScrollToCurrentAccountToolStripMenuItem.Checked);
+        }
+
+        private void RemoveInvalidItemKeys()
+        {
+            var keys = Settings.Dailies.ItemOptions.GetKeys();
+            if (keys.Length == 0)
+                return;
+
+            byte[] ids = null;
+            var combined = combineAccountsToolStripMenuItem.Checked;
+
+            for (var i = 0; i < keys.Length; i++)
+            {
+                byte flag;
+
+                switch (keys[i].Type)
+                {
+                    case Settings.DailiesKeyType.VaultDailyCategory:
+
+                        flag = 1;
+
+                        break;
+                    case Settings.DailiesKeyType.VaultWeeklyCategory:
+
+                        flag = 2;
+
+                        break;
+                    case Settings.DailiesKeyType.VaultDailyAccountCategory:
+                    case Settings.DailiesKeyType.VaultWeeklyAccountCategory:
+
+                        if (combined || !Settings.Accounts.Contains(keys[i].ID))
+                        {
+                            Settings.Dailies.ItemOptions.Remove(keys[i]);
+                        }
+
+                        continue;
+                    default:
+
+                        continue;
+                }
+
+                if (combined && keys[i].ID > 0 && keys[i].ID <= 255)
+                {
+                    if (ids == null)
+                    {
+                        //ids are from 1 to 255 (0 is none)
+
+                        var v = Settings.ApiKeys.GetValues();
+                        ids = new byte[256];
+
+                        for (var j = 0; j < v.Length; j++)
+                        {
+                            if (v[j].HasValue)
+                            {
+                                var g = v[j].Value.Data.VaultGroup;
+
+                                if (g.Daily > 0)
+                                {
+                                    ids[g.Daily] |= 1;
+                                }
+                                if (g.Weekly > 0)
+                                {
+                                    ids[g.Weekly] |= 2;
+                                }
+                            }
+                        }
+                    }
+
+                    if ((ids[keys[i].ID] & flag) == flag)
+                    {
+                        continue;
+                    }
+                }
+
+                Settings.Dailies.ItemOptions.Remove(keys[i]);
+            }
+        }
+
+        private void sortingGroupsToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            var t = (ToolStripMenuItem)sender;
+            Settings.DailiesVaultSorting s;
+
+            if (t == descendingToolStripMenuItem)
+            {
+                s = Settings.Dailies.VaultSorting.Value & Settings.DailiesVaultSorting.Sorting;
+
+                if (!t.Checked)
+                {
+                    s |= Settings.DailiesVaultSorting.Descending;
+                }
+            }
+            else
+            {
+                if (t.Checked)
+                {
+                    s = Settings.DailiesVaultSorting.None;
+                }
+                else if (t == groupToolStripMenuItem)
+                {
+                    s = Settings.DailiesVaultSorting.Group;
+                }
+                else if (t == focusedToolStripMenuItem)
+                {
+                    s = Settings.DailiesVaultSorting.Focused;
+                }
+                else if (t == accountToolStripMenuItem)
+                {
+                    s = Settings.DailiesVaultSorting.Account;
+                }
+                else
+                {
+                    return;
+                }
+
+                s |= Settings.Dailies.VaultSorting.Value & ~Settings.DailiesVaultSorting.Sorting;
+            }
+
+            Settings.Dailies.VaultSorting.Value = s;
+
+            if ((currentTab & DataType.Vault) != 0 && Invalidate(currentTab))
+            {
+                Sort(data.groups, data.groups.Length, s & Settings.DailiesVaultSorting.Sorting, (s & Settings.DailiesVaultSorting.Descending) != 0);
+                DoPendingReposition(0);
+            }
+        }
+
+        private void ShowMenu(DataType t)
+        {
+            var dailies = (t & DataType.Daily) != 0;
+            var vault = (t & DataType.Vault) != 0;
+
+            categoriesToolStripMenuItem.Visible = dailies;
+            favoritesToolStripMenuItem.Visible = dailies;
+            ignoredToolStripMenuItem.Visible = dailies;
+            showOnTopToolStripMenuItem.Visible = dailies;
+
+            sortGroupsByToolStripMenuItem.Visible = vault;
+            sortObjectivesByToolStripMenuItem.Visible = vault;
+            autoScrollToCurrentAccountToolStripMenuItem.Visible = vault;
+            autoSelectCurrentAccountToolStripMenuItem.Visible = vault;
+            combineAccountsToolStripMenuItem.Visible = vault;
+
+            contextMenu.Show(Cursor.Position);
+        }
+
+        private void ignoreDailyToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            var control = (DailyAchievement)contextMenuDaily.Tag;
+
+            if (control.DataSource is AchievementDataSource)
+            {
+                var d = (AchievementDataSource)control.DataSource;
+                var k = new Settings.DailiesItemKey(Settings.DailiesKeyType.DailyObjective, d.ID);
+
+                Settings.Dailies.ItemOptions[k] = Settings.DailiesItemOptions.Ignored;
+
+                ReloadDailies();
+            }
+        }
+
+        private void sortingObjectivesToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            var t = (ToolStripMenuItem)sender;
+            var v = Settings.Dailies.VaultObjectiveSorting.Value;
+            Settings.DailiesVaultObjectiveSorting s;
+            
+            if (t == objectiveDescendingToolStripMenuItem)
+            {
+                s = Settings.DailiesVaultObjectiveSorting.Descending;
+            }
+            else if (t == objectiveIdToolStripMenuItem)
+            {
+                s = Settings.DailiesVaultObjectiveSorting.ID;
+            }
+            else if (t == objectiveNameToolStripMenuItem)
+            {
+                s = Settings.DailiesVaultObjectiveSorting.Name;
+            }
+            else if (t == objectiveProgressToolStripMenuItem)
+            {
+                s = Settings.DailiesVaultObjectiveSorting.Progress;
+            }
+            else
+            {
+                return;
+            }
+
+            if (t.Checked)
+            {
+                v &= ~s;
+            }
+            else
+            {
+                v |= s;
+            }
+
+            if (Settings.Dailies.VaultObjectiveSorting.Value != v)
+            {
+                Settings.Dailies.VaultObjectiveSorting.Value = v;
+
+                if ((currentTab & DataType.Vault) != 0 && Invalidate(currentTab))
+                {
+                    SortObjectives(data.groups, data.groups.Length, v);
+                    DoPendingReposition(0);
                 }
             }
         }
