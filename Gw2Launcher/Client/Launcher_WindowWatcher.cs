@@ -1672,7 +1672,7 @@ namespace Gw2Launcher.Client
                                             {
                                                 using (var pi = new Windows.ProcessInfo())
                                                 {
-                                                    var modules = new string[] { "GwLoginClient.dll" };
+                                                    var modules = new string[] { "steam_api.dll", "AUDIOSES.DLL", "dxgi.dll" };
                                                     var canRead = pi.Open(process.Id);
 
                                                     do
@@ -1957,7 +1957,7 @@ namespace Gw2Launcher.Client
                                         using (var pi = new Windows.ProcessInfo())
                                         {
                                             //note audioses.dll/midimap.dll won't be loaded when -nosound is used, wintypes.dll isn't loaded until the window is focused
-                                            var modules = new string[] { "AUDIOSES.DLL", "midimap.dll", "wintypes.dll" };
+                                            var modules = new string[] { "AUDIOSES.DLL", "dxcore.dll" };
                                             var canRead = pi.Open(process.Id);
 
                                             limit = DateTime.UtcNow.AddSeconds(10);

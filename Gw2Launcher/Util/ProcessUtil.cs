@@ -96,7 +96,7 @@ namespace Gw2Launcher.Util
             {
                 case Settings.AccountType.GuildWars1:
 
-                    return "AN-Mutex-Window-Guild Wars";
+                    return "AN-Mutex-Window-Guild Wars Reforged";
 
                 case Settings.AccountType.GuildWars2:
 
