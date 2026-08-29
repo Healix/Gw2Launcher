@@ -18,7 +18,7 @@ namespace Gw2Launcher
     static class Program
     {
         public const byte RELEASE_VERSION = 21;
-        public const uint BUILD = 7805;
+        public const uint BUILD = 7807;
         public const long RELEASE_TIMESTAMP = 5250710786427387904;
         private const string MUTEX_NAME = "Gw2Launcher_Mutex";
 
@@ -840,6 +840,8 @@ namespace Gw2Launcher
                     Messaging.LaunchMessage launch = null;
                     bool hasArgs = false,
                          disableRunAfter = false;
+                    var mode = Client.Launcher.LaunchMode.Launch;
+                    var hasMode = false;
 
                     foreach (var arg in args)
                     {
@@ -847,6 +849,16 @@ namespace Gw2Launcher
                             Settings.Silent = true;
                         else if (arg == "-l:disablera")
                             disableRunAfter = true;
+                        else if (arg == "-l:single")
+                        {
+                            mode = Client.Launcher.LaunchMode.LaunchSingle;
+                            hasMode = true;
+                        }
+                        else if (arg == "-l:multi")
+                        {
+                            mode = Client.Launcher.LaunchMode.Launch;
+                            hasMode = true;
+                        }
                         else if (arg.StartsWith("-l:uid:"))
                         {
                             var i = 7;
@@ -881,6 +893,8 @@ namespace Gw2Launcher
 
                     if (launch != null)
                     {
+                        launch.mode = mode;
+                        launch.hasMode = hasMode;
                         launch.disableRunAfter = disableRunAfter;
 
                         if (hasArgs)
@@ -1162,6 +1176,7 @@ namespace Gw2Launcher
             catch (Exception e)
             {
                 Util.Logging.Crash(e);
+                MessageBox.Show(e.ToString());
                 return -1;
             }
 #endif

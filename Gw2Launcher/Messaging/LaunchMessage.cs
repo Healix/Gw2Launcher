@@ -18,6 +18,8 @@ namespace Gw2Launcher.Messaging
         public List<ushort> accounts;
         public string args;
         public bool disableRunAfter;
+        public Client.Launcher.LaunchMode mode;
+        public bool hasMode;
 
         public MappedMessage ToMap()
         {
@@ -48,6 +50,8 @@ namespace Gw2Launcher.Messaging
                 stream.Write((ushort)_args.Length);
                 stream.Write(_args);
                 stream.Write(disableRunAfter);
+                stream.Write(hasMode);
+                stream.Write((byte)mode);
             }
 
             return new MappedMessage(id, mmf);
@@ -69,6 +73,8 @@ namespace Gw2Launcher.Messaging
                     m.args = Encoding.UTF8.GetString(stream.ReadBytes(length));
 
                     m.disableRunAfter = stream.ReadBoolean();
+                    m.hasMode = stream.ReadBoolean();
+                    m.mode = (Client.Launcher.LaunchMode)stream.ReadByte();
 
                     return m;
                 }
@@ -84,7 +90,7 @@ namespace Gw2Launcher.Messaging
         {
             if (accounts.Count > 0)
             {
-                if (string.IsNullOrEmpty(args))
+                if (string.IsNullOrEmpty(args) && !disableRunAfter && !hasMode)
                 {
                     foreach (var uid in accounts)
                         Messaging.Messager.Post(handle, Messaging.Messager.MessageType.Launch, uid);

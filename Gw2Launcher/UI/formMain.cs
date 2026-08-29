@@ -6289,14 +6289,43 @@ namespace Gw2Launcher.UI
                         {
                             var launch = Messaging.LaunchMessage.FromMap(m.LParam.GetValue32());
 
+                            foreach (var uid in launch.accounts)
+                            {
+                                try
+                                {
+                                    var v = Settings.Accounts[uid];
+
+                                    if (v.HasValue)
+                                    {
+                                        var a = v.Value;
+
+                                        if (Client.Launcher.IsActive(a))
+                                        {
+                                            var p = Client.Launcher.GetProcess(a);
+                                            if (p != null)
+                                            {
+                                                FocusWindowAsync(p);
+                                                break;
+                                            }
+                                        }
+                                    }
+                                }
+                                catch { }
+                            }
+
                             this.BeginInvoke(new MethodInvoker(
                                 delegate
                                 {
                                     Client.Launcher.LaunchMode mode;
-                                    if (Settings.ActionInactiveLClick.Value == Settings.ButtonAction.LaunchSingle)
-                                        mode = Client.Launcher.LaunchMode.LaunchSingle;
+                                    if (!launch.hasMode)
+                                    {
+                                        if (Settings.ActionInactiveLClick.Value == Settings.ButtonAction.LaunchSingle)
+                                            mode = Client.Launcher.LaunchMode.LaunchSingle;
+                                        else
+                                            mode = Client.Launcher.LaunchMode.Launch;
+                                    }
                                     else
-                                        mode = Client.Launcher.LaunchMode.Launch;
+                                        mode = launch.mode;
                                     var options = new Client.Launcher.LaunchOptions(launch.args)
                                     {
                                         DisableRunAfter = launch.disableRunAfter,
